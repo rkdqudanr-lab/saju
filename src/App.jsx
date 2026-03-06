@@ -556,7 +556,7 @@ function ReportBody({text}){
 //  🏠 메인 앱
 // ═══════════════════════════════════════════════════════════
 export default function App(){
-  const[isDark,setIsDark]=useState(true);
+  const[isDark,setIsDark]=useState(false);
   const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트
   const[form,setForm]=useState({name:'',by:'',bm:'',bd:'',bh:'',gender:'',noTime:false});
   const[cat,setCat]=useState(0);
