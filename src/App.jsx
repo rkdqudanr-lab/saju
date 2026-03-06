@@ -622,23 +622,25 @@ export default function App(){
     return stripMarkdown(data.text||'');
   },[buildCtx]);
 
-  // 메인 API 호출
+  // 메인 API 호출 — 병렬 처리 (순차 타임아웃 방지)
   const askClaude=async()=>{
     if(!selQs.length)return;
     setStep(3);setAnswers([]);setTypedSet(new Set());setOpenAcc(0);
-    try{
-      const newAnswers=[];
-      for(let i=0;i<selQs.length;i++){
-        const text=await callApi(`[질문]\n${selQs[i]}`);
-        newAnswers.push(text);
-      }
-      setAnswers(newAnswers);setChatHistory([]);setChatUsed(0);setLatestChatIdx(-1);
-      setStep(4);setOpenAcc(0);
-    }catch(err){
-      console.error(err);
-      setAnswers(['별이 잠시 길을 잃었어요 🌙\n네트워크를 확인하고 다시 시도해봐요!']);
-      setStep(4);
-    }
+
+    // 모든 질문을 동시에 호출 (순차 시 Vercel 30초 타임아웃 위험)
+    const results=await Promise.allSettled(
+      selQs.map(q=>callApi(`[질문]\n${q}`))
+    );
+
+    const newAnswers=results.map((r,i)=>
+      r.status==='fulfilled'
+        ? r.value
+        : `Q${i+1} 답변을 불러오지 못했어요 🌙\n잠시 후 다시 시도해봐요.`
+    );
+
+    setAnswers(newAnswers);
+    setChatHistory([]);setChatUsed(0);setLatestChatIdx(-1);
+    setStep(4);setOpenAcc(0);
   };
 
   const handleTypingDone=useCallback((idx)=>{
