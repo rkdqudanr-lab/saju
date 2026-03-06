@@ -444,20 +444,59 @@ export default function App(){
     return header + parts.join("\n\n---\n\n");
   };
 
-  // TODO: API 연동 시 아래 askClaude 함수를 사용하세요
-  // const askClaude=async()=>{ ... fetch("https://api.anthropic.com/v1/messages", ...) ... }
-
-  const askClaude = () => {
-    if(!selQs.length) return;
+  // ── 실제 Claude API 호출 ──
+  const askClaude = async () => {
+    if (!selQs.length) return;
     setStep(4);
-    // 로딩 시뮬레이션 후 결과 표시
-    setTimeout(() => {
+
+    const sys = `당신은 한국 전통 사주 명리학과 서양 점성술을 깊이 이해하는 따뜻한 AI 상담가예요.
+말투는 친근한 경어체로, 마치 오랜 친구가 진심으로 들어주듯이 답해주세요.
+이모지를 자연스럽게 써주시고, 딱딱하거나 너무 공식적인 표현은 피해주세요.
+각 질문에 대해:
+1. 그 마음에 공감해주세요 (1-2문장)
+2. 사주/점성술 데이터를 바탕으로 따뜻하게 해석해주세요 (3-4문장)
+3. 구체적이고 실천 가능한 조언을 해주세요 (1-2문장)
+한 질문당 220-280자, 여러 질문이면 각각 번호 붙여서 답해주세요. **중요 키워드**는 볼드로 강조해주세요.`;
+
+    const age = form.by ? new Date().getFullYear() - +form.by : 0;
+    let ctx = `[${form.name || "고객님"}에 대한 정보]\n나이: ${age}세 / 성별: ${form.gender}\n`;
+    if (mode === "saju" && saju) {
+      ctx += `[사주 정보]\n연주:${saju.yeon.g}${saju.yeon.j} 월주:${saju.wol.g}${saju.wol.j} 일주:${saju.il.g}${saju.il.j} 시주:${saju.si.g}${saju.si.j}\n일간:${saju.ilgan} / 오행분포:${Object.entries(saju.or).map(([k,v]) => k+v+"개").join(" ")}\n`;
+    } else if (mode === "astro" && sun) {
+      ctx += `[점성술 정보]\n태양궁:${sun.n}(${sun.s}) / 달궁:${moon?.n || "?"} / 상승궁:${asc?.n || "시각 미입력"}\n`;
+    }
+    ctx += `\n[오늘의 질문]\n${selQs.map((q, i) => (i+1)+". "+q).join("\n")}`;
+
+    try {
+      // 로컬: vite proxy → /api/ask
+      // Vercel 배포: /api/ask (serverless function)
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ system: sys, userMessage: ctx }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "API 오류");
+      }
+
       setLp(100); setLm(4);
       setTimeout(() => {
-        setResult(getSimResult());
+        setResult(data.text || "해석 중 오류가 났어요. 다시 시도해봐요 🌙");
         setStep(5);
-      }, 800);
-    }, 3400); // 로딩 애니메이션 총 시간과 맞춤
+      }, 900);
+
+    } catch (err) {
+      console.error("askClaude error:", err);
+      // API 실패 시 시뮬 결과로 폴백
+      setLp(100); setLm(4);
+      setTimeout(() => {
+        setResult(getSimResult() + "\n\n*(현재 데모 모드예요. API 키 연동 후 실제 AI 답변을 받을 수 있어요 🌙)*");
+        setStep(5);
+      }, 900);
+    }
   };
 
   const fmt=t=>t.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br/>");
