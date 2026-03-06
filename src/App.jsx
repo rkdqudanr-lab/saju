@@ -376,6 +376,18 @@ select.inp option{background:var(--bg2)}
 .report-skip-btn{padding:8px 20px;border-radius:50px;border:1px solid var(--acc);background:transparent;color:var(--gold);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:background .2s}
 .report-skip-btn:hover{background:var(--goldf)}
 
+
+/* ══ 피드백 ══ */
+.fb-wrap{display:flex;align-items:center;gap:8px;justify-content:center;padding:var(--sp2) 0;border-top:1px solid var(--line);margin-top:var(--sp1)}
+.fb-label{font-size:var(--xs);color:var(--t4)}
+.fb-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.fb-btn:hover{border-color:var(--gold);transform:scale(1.1)}
+.fb-btn.selected{background:var(--goldf);border-color:var(--gold)}
+.fb-done{font-size:var(--xs);color:var(--gold);animation:fadeUp .3s ease}
+
+/* ══ 공유 카드 ══ */
+.share-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
+.share-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .hint{font-size:var(--xs);color:var(--t4)}
 `;
@@ -475,6 +487,21 @@ function useWordTyping(text, active, speed=130){
 }
 
 // ═══════════════════════════════════════════════════════════
+//  👍👎 피드백 버튼
+// ═══════════════════════════════════════════════════════════
+function FeedbackBtn({qIdx}){
+  const[sel,setSel]=useState(null);
+  if(sel!==null) return <div className="fb-wrap"><span className="fb-done">✦ 고마워요!</span></div>;
+  return(
+    <div className="fb-wrap">
+      <span className="fb-label">이 이야기가 도움이 됐나요?</span>
+      <button className="fb-btn" onClick={()=>setSel('up')}>👍</button>
+      <button className="fb-btn" onClick={()=>setSel('down')}>👎</button>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
 //  아코디언 아이템 (typedSet으로 재오픈 방지)
 // ═══════════════════════════════════════════════════════════
 function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
@@ -556,7 +583,7 @@ function ReportBody({text}){
 //  🏠 메인 앱
 // ═══════════════════════════════════════════════════════════
 export default function App(){
-  const[isDark,setIsDark]=useState(false);
+  const[isDark,setIsDark]=useState(true);
   const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트
   const[form,setForm]=useState({name:'',by:'',bm:'',bd:'',bh:'',gender:'',noTime:false});
   const[cat,setCat]=useState(0);
@@ -629,6 +656,72 @@ export default function App(){
     return stripMarkdown(data.text||'');
   },[buildCtx]);
 
+  // ── 공유 이미지 생성 (canvas) ──
+  const shareCard=useCallback((idx)=>{
+    const q=selQs[idx]||'';
+    const text=answers[idx]||'';
+    const preview=text.slice(0,120)+'…';
+    const canvas=document.createElement('canvas');
+    canvas.width=900;canvas.height=520;
+    const ctx=canvas.getContext('2d');
+    const bg=isDark?'#0D0B14':'#F7F4EF';
+    const t1=isDark?'#F0EBF8':'#1A1420';
+    const t3=isDark?'#8A7FA0':'#8A7FA0';
+    const gold='#E8B048';
+    // 배경
+    ctx.fillStyle=bg;ctx.fillRect(0,0,900,520);
+    // 상단 골드 라인
+    ctx.fillStyle=gold;ctx.fillRect(0,0,900,3);
+    // 워터마크
+    ctx.font='500 22px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle=gold;ctx.letterSpacing='0.3em';
+    ctx.fillText('byeolsoom  ✦',48,56);
+    // 날짜
+    ctx.font='400 16px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle=t3;
+    ctx.fillText(`${today.month}월 ${today.day}일의 이야기`,48,88);
+    // 질문
+    ctx.font='600 20px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle=t1;
+    ctx.fillText(q.length>36?q.slice(0,36)+'…':q,48,148);
+    // 본문 미리보기
+    ctx.font='300 17px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle=t3;
+    const words=preview.split('');
+    let line='',y=200,lineH=32;
+    for(const ch of words){
+      const test=line+ch;
+      if(ctx.measureText(test).width>800){
+        ctx.fillText(line,48,y);y+=lineH;line=ch;
+        if(y>360){ctx.fillText(line+'…',48,y);line='';break;}
+      } else line=test;
+    }
+    if(line)ctx.fillText(line,48,y);
+    // 별자리 칩
+    const chips=[];
+    if(sun)chips.push(sun.s+' '+sun.n);
+    if(saju)chips.push('✦ '+['목','화','토','금','수'][['목','화','토','금','수'].indexOf(saju.dom[0])||0]||'✦');
+    ctx.font='500 15px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle=gold;
+    chips.slice(0,2).forEach((chip,i)=>{
+      const w=ctx.measureText(chip).width+24;
+      const x=48+i*(w+10);
+      ctx.strokeStyle='rgba(232,176,72,0.3)';
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.roundRect(x,400,w,30,15);ctx.stroke();
+      ctx.fillText(chip,x+12,420);
+    });
+    // 하단 카피
+    ctx.font='400 14px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle=t3;
+    ctx.fillText('✦ 별숨이 전하는 오늘의 이야기',48,480);
+    // 다운로드
+    const a=document.createElement('a');
+    a.download=`byeolsoom_${today.month}${today.day}.png`;
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+  },[selQs,answers,isDark,today,sun,saju]);
+
   // 메인 API 호출 — 병렬 처리 (순차 타임아웃 방지)
   const askClaude=async()=>{
     if(!selQs.length)return;
@@ -652,6 +745,12 @@ export default function App(){
 
   const handleTypingDone=useCallback((idx)=>{
     setTypedSet(p=>{const n=new Set(p);n.add(idx);return n;});
+    // Q 완료 후 다음 질문 자동 오픈 (있을 경우)
+    setOpenAcc(p=>{
+      const next=idx+1;
+      if(p===idx) return next; // 현재 열린 게 방금 완료된 것이면 다음으로
+      return p;
+    });
   },[]);
 
   const handleAccToggle=i=>{setOpenAcc(p=>p===i?-1:i);};
@@ -910,13 +1009,26 @@ export default function App(){
 
                 {/* 아코디언 */}
                 {selQs.map((q,i)=>(
-                  <AccItem
-                    key={i} q={q} text={answers[i]||''} idx={i}
-                    isOpen={openAcc===i}
-                    onToggle={()=>handleAccToggle(i)}
-                    shouldType={!typedSet.has(i)}
-                    onTypingDone={handleTypingDone}
-                  />
+                  <div key={i}>
+                    <AccItem
+                      q={q} text={answers[i]||''} idx={i}
+                      isOpen={openAcc===i}
+                      onToggle={()=>handleAccToggle(i)}
+                      shouldType={!typedSet.has(i)}
+                      onTypingDone={handleTypingDone}
+                    />
+                    {/* Q 완료 후 피드백 + 공유 */}
+                    {openAcc===i&&typedSet.has(i)&&answers[i]&&(
+                      <div style={{padding:'0 var(--sp3) var(--sp2)',borderBottom:'1px solid var(--line)'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                          <FeedbackBtn qIdx={i}/>
+                          <button className="share-btn" onClick={()=>shareCard(i)}>
+                            ↗ 이미지 저장
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))}
 
                 {/* 액션 */}
