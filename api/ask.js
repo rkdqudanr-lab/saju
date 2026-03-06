@@ -13,7 +13,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "userMessage가 없어요" });
   }
 
-  const apiKey = process.env.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;
+  // ✅ 올바른 방법: 환경변수에서 읽기
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: "API 키가 설정되지 않았어요" });
   }
