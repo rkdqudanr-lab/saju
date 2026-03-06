@@ -1,0 +1,2 @@
+/* 글로벌 리셋 — 나머지는 App.jsx 안 CSS에 있어요 */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
