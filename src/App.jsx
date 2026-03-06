@@ -314,7 +314,8 @@ select.inp option{background:var(--bg2)}
 .acc-chevron{font-size:.6rem;color:var(--t4);transition:transform .3s,color .3s}
 .acc-chevron.open{transform:rotate(180deg);color:var(--gold)}
 .acc-body{overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
-.acc-body.closed{max-height:0;opacity:0}.acc-body.open{max-height:4000px;opacity:1}
+.acc-body.closed{max-height:0!important;opacity:0!important;overflow:hidden!important}
+.acc-body.open{max-height:3000px;opacity:1}
 .acc-content{padding:0 var(--sp3) var(--sp4);font-size:var(--sm);color:var(--t2);line-height:2.2;letter-spacing:-.005em;white-space:pre-wrap}
 .acc-content p:first-child::first-letter{font-size:2.4em;font-weight:700;color:var(--gold);float:left;line-height:.82;margin:.06em .1em 0 0}
 .typing-cursor{display:inline-block;width:2px;height:.9em;background:var(--gold);margin-left:2px;vertical-align:text-bottom;animation:blink .7s infinite}
@@ -444,16 +445,14 @@ function SkeletonLoader({qCount}){
 // ═══════════════════════════════════════════════════════════
 //  단어 단위 타이핑 훅
 // ═══════════════════════════════════════════════════════════
-function useWordTyping(text, active, speed=45){
+function useWordTyping(text, active, speed=130){
   const[shown,setShown]=useState('');
   const[done,setDone]=useState(false);
   const timerRef=useRef(null);
 
   useEffect(()=>{
-    if(!active||!text){
-      if(!active&&text){setShown(text);setDone(true);}
-      return;
-    }
+    // active=false일 때 즉시 세팅 금지 — AccItem에서 직접 처리
+    if(!active||!text) return;
     setShown('');setDone(false);
     const words=text.split(/(\s+)/);
     let idx=0;
@@ -479,12 +478,20 @@ function useWordTyping(text, active, speed=45){
 //  아코디언 아이템 (typedSet으로 재오픈 방지)
 // ═══════════════════════════════════════════════════════════
 function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
-  const alreadyDone=!shouldType;
-  const{shown,done,skipToEnd}=useWordTyping(text,shouldType&&isOpen,45);
-  const display=alreadyDone?text:shown;
-  const isDone=alreadyDone||done;
+  // shouldType=false → 이미 완료된 항목, text 바로 표시
+  // shouldType=true + isOpen=false → 아직 열리지 않은 항목, 빈 상태 유지 (즉시 세팅 금지)
+  // shouldType=true + isOpen=true  → 타이핑 시작
+  const isTyping = shouldType && isOpen;
+  const{shown,done,skipToEnd}=useWordTyping(text, isTyping, 130);
 
-  useEffect(()=>{if(done&&!alreadyDone)onTypingDone(idx);},[done,alreadyDone,idx,onTypingDone]);
+  // 표시할 텍스트 결정
+  const display = !shouldType ? text   // 이미 완료 → 전체
+                : isOpen      ? shown  // 열려있음 → 타이핑 진행 중
+                :               '';   // 아직 안 열림 → 비워둠
+
+  const isDone = !shouldType || done;
+
+  useEffect(()=>{if(done&&shouldType)onTypingDone(idx);},[done,shouldType,idx,onTypingDone]);
 
   return(
     <div className="acc-item">
@@ -639,7 +646,7 @@ export default function App(){
     );
 
     setAnswers(newAnswers);
-    setChatHistory([]);setChatUsed(0);setLatestChatIdx(-1);
+    setLatestChatIdx(-1);
     setStep(4);setOpenAcc(0);
   };
 
