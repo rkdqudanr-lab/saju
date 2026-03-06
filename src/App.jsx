@@ -587,9 +587,9 @@ export default function App(){
   const rmQ=i=>setSelQs(p=>p.filter((_,x)=>x!==i));
 
   // 통합 컨텍스트 빌더
+  // 사용자 컨텍스트 (서버로 전달)
   const buildCtx=useCallback(()=>{
-    let c=`[오늘 날짜: ${today.solar} / ${today.lunar} / ${today.jeolgi}]\n`;
-    c+=`[${form.name||'고객님'} · ${age}세 · ${form.gender}]\n\n`;
+    let c=`[${form.name||'고객님'} · ${age}세 · ${form.gender}]\n\n`;
     if(saju){
       c+=`[사주 기운]\n`;
       c+=`연주: ${saju.yeon.g}${saju.yeon.j} / 월주: ${saju.wol.g}${saju.wol.j} / 일주: ${saju.il.g}${saju.il.j} / 시주: ${saju.si.g}${saju.si.j}\n`;
@@ -603,74 +603,34 @@ export default function App(){
       if(asc)c+=`상승: ${asc.n}(${asc.s}) — ${asc.desc}\n`;
     }
     return c;
-  },[form,saju,sun,moon,asc,age,today]);
+  },[form,saju,sun,moon,asc,age]);
 
-  // 시스템 프롬프트
-  const buildSys=useCallback(()=>`당신은 '별숨'의 AI 운세 상담가예요. 동양의 사주 기운과 서양의 별자리 기운을 함께 읽어서, 20년차 에세이 작가처럼 사람의 언어로 이야기해줘요.
-
-━━━ 오늘 날짜 ━━━
-${today.solar} / ${today.lunar}
-이 날짜를 기준으로 운세를 해석해요. 날짜와 계절이 맞지 않는 이야기는 하지 않아요.
-
-━━━ 핵심 철학 ━━━
-사주와 별자리 데이터는 취재 노트예요. 노트를 보여주는 게 아니라, 그걸 바탕으로 쓴 이야기를 들려줘요.
-사주와 별자리를 자연스럽게 함께 녹여서 하나의 이야기로 만들어요.
-
-━━━ 절대 금지 — 형식 ━━━
-- ## 제목을 절대 쓰지 않아요
-- --- 구분선을 절대 쓰지 않아요
-- ** 볼드를 절대 쓰지 않아요
-- - 리스트를 절대 쓰지 않아요
-- 번호 매기기(1. 2. 3.)를 절대 안 해요
-- 섹션을 나누거나 소제목을 달지 않아요
-- 마침표와 자연스러운 줄바꿈만으로 흐름을 만들어요
-
-━━━ 절대 금지 — 단어 ━━━
-갑목·을목·병화·정화·무토·기토·경금·신금·임수·계수
-연주·월주·일주·시주·일간·일지·오행·상생·상극·대운·세운·용신
-태양궁·달궁·상승궁·어센던트·트랜짓·천간·지지
-"사주에 따르면"·"별자리상으로"·"명리학적으로"·"점성술적으로"
-
-━━━ 시작 금지 패턴 ━━━
-"당신은 ~한 사람이에요"로 시작하지 않아요
-"오늘의 운세는"으로 시작하지 않아요
-"먼저", "첫째로", "결론적으로"로 시작하지 않아요
-질문을 그대로 반복하며 시작하지 않아요
-
-━━━ 답변 구조 (800-1000자, 에세이 형식) ━━━
-① 공감 도입 (3-4문장): 그 마음이 어떤 느낌인지 구체적으로 그려줘요. '맞아, 이런 기분이었어'가 나와야 해요.
-② 두 별의 언어로 (4-5문장): 사주와 별자리 기운을 섞어서 하나의 이야기로 풀어줘요. 전문용어 없이.
-③ 지금 이 시기 (3문장): 왜 지금인지, 이 시기의 의미를 따뜻하게 재해석해줘요.
-④ 오늘 할 수 있는 것 (2문장): 아주 작고 구체적인 행동.
-⑤ 응원 (2문장): 읽고 나서 힘이 나는 마무리.
-
-━━━ 좋은 예시 (이 톤으로 써요) ━━━
-"자꾸 생각나는 사람이 생겼을 때, 그 감정이 진짜인지 아닌지 스스로한테 계속 확인하게 되죠. 설레는 동시에 무서운 그 감각, 익숙하지 않아서 어쩔 줄 모르는 느낌이요.
-
-원래 당신은 확신이 생겼을 때 움직이고 싶은 사람이에요. 막 표현하기보다 한 번 재보고 싶은 거죠. 동양의 별은 당신에게 새로운 시작을 열고 싶은 기운이 가득하다고 말하고, 서양의 별은 올봄이 당신에게 관계가 깊어지는 시기라고 속삭여요. 두 별이 같은 말을 하고 있어요.
-
-지금 이 설렘은 당신이 살아있다는 신호예요. 억지로 끊어내거나 분석하려 하지 않아도 돼요. 이런 감정이 찾아온 건 당신이 그만큼 마음이 열려있다는 뜻이니까요.
-
-오늘 그 사람한테 짧은 메시지 하나 보내봐요. 거창하지 않아도 돼요. 그 작은 한 발이 당신 안에 쌓인 망설임을 조금 풀어줄 거예요 🌸
-
-이 설렘을 느낄 수 있는 당신이 저는 참 좋아요."
-
-━━━ 말투 ━━━
-친한 언니가 진심으로 들어주는 말투 / "~하죠", "~이에요", "~해봐요" / 이모지 문단 끝 1-2개 / 공감 먼저, 분석 나중`,[today]);
+  // API 공통 헬퍼 (프롬프트는 서버 ask.js에서 관리)
+  const callApi=useCallback(async(userMessage,opts={})=>{
+    const res=await fetch('/api/ask',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        userMessage,
+        context:buildCtx(),
+        isChat:opts.isChat||false,
+        isReport:opts.isReport||false,
+      }),
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'API 오류');
+    return stripMarkdown(data.text||'');
+  },[buildCtx]);
 
   // 메인 API 호출
   const askClaude=async()=>{
     if(!selQs.length)return;
     setStep(3);setAnswers([]);setTypedSet(new Set());setOpenAcc(0);
-    const sys=buildSys(),ctx=buildCtx();
     try{
       const newAnswers=[];
       for(let i=0;i<selQs.length;i++){
-        const res=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({system:sys,userMessage:ctx+`\n[질문]\n${selQs[i]}`})});
-        const data=await res.json();
-        if(!res.ok)throw new Error(data.error||'API 오류');
-        newAnswers.push(stripMarkdown(data.text||''));
+        const text=await callApi(`[질문]\n${selQs[i]}`);
+        newAnswers.push(text);
       }
       setAnswers(newAnswers);setChatHistory([]);setChatUsed(0);setLatestChatIdx(-1);
       setStep(4);setOpenAcc(0);
@@ -691,18 +651,13 @@ ${today.solar} / ${today.lunar}
   const sendChat=async()=>{
     if(!chatInput.trim()||chatLoading||chatLeft<=0)return;
     const userMsg=chatInput.trim();setChatInput('');
-    const newHistory=[...chatHistory,{role:'user',text:userMsg}];
-    setChatHistory(newHistory);setChatLoading(true);setChatUsed(p=>p+1);
-    const sys=buildSys()+'\n\n이미 첫 답변을 드린 상태예요. 후속 질문에 자연스럽게 이어서 답해줘요. 형식 금지 규칙 동일하게 적용해요.';
+    setChatHistory(p=>[...p,{role:'user',text:userMsg}]);
+    setChatLoading(true);setChatUsed(p=>p+1);
     const prevQAs=selQs.map((q,i)=>`[질문 ${i+1}] ${q}\n[답변] ${answers[i]||''}`).join('\n\n');
     const prevChat=chatHistory.map(m=>`[${m.role==='ai'?'별숨':'나'}] ${m.text}`).join('\n');
-    const ctx=buildCtx()+`\n[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
+    const fullMsg=`[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
     try{
-      const res=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({system:sys,userMessage:ctx})});
-      const data=await res.json();
-      if(!res.ok)throw new Error(data.error);
-      const aiText=stripMarkdown(data.text||'');
+      const aiText=await callApi(fullMsg,{isChat:true});
       setChatHistory(p=>{
         const updated=[...p,{role:'ai',text:aiText}];
         setLatestChatIdx(updated.length-1);
@@ -716,12 +671,9 @@ ${today.solar} / ${today.lunar}
   // 리포트 생성
   const genReport=async()=>{
     setStep(6);setReportText('');setReportLoading(true);
-    const sys=buildSys()+`\n\n${today.solar}을 기준으로 이번 달 종합 운세 리포트를 에세이 형식으로 작성해줘요. 연애운·직업운·재물운·건강운·이달의 특별한 흐름·행운의 날짜와 색깔을 포함해요. 형식 금지 규칙 동일하게 적용(## 제목, 구분선, 볼드, 리스트 절대 금지). 자연스러운 에세이로, 총 900-1100자. 각 파트 사이에 빈 줄 하나로 구분.`;
     try{
-      const res=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({system:sys,userMessage:buildCtx()+'\n[요청] 이번 달 종합 운세 리포트'})});
-      const data=await res.json();
-      setReportText(stripMarkdown(data.text||''));
+      const text=await callApi('[요청] 이번 달 종합 운세 리포트',{isReport:true});
+      setReportText(text);
     }catch{setReportText('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!');}
     finally{setReportLoading(false);}
   };
