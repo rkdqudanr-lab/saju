@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.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;
   if (!apiKey) {
     return res.status(500).json({ error: "API 키가 설정되지 않았어요. Vercel 환경변수를 확인해주세요." });
   }
