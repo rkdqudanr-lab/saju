@@ -1,6 +1,5 @@
-// api/ask.js
-// Vercel Serverless Function
-// API 키가 서버에서만 처리되어 브라우저에 노출되지 않아요
+// api/ask.js — Vercel Serverless Function
+// ANTHROPIC_API_KEY 환경변수 이름을 정확히 이렇게 설정해야 해요!
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -8,15 +7,14 @@ export default async function handler(req, res) {
   }
 
   const { system, userMessage } = req.body;
-
   if (!userMessage) {
     return res.status(400).json({ error: "userMessage가 없어요" });
   }
 
-  // ✅ 올바른 방법: 환경변수에서 읽기
+  // ✅ Vercel 환경변수 이름: ANTHROPIC_API_KEY (정확히 이 이름으로!)
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: "API 키가 설정되지 않았어요" });
+    return res.status(500).json({ error: "API 키가 설정되지 않았어요. Vercel > Settings > Environment Variables에서 ANTHROPIC_API_KEY를 설정해주세요!" });
   }
 
   try {
@@ -29,7 +27,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1200,
+        max_tokens: 1500,
         system: system,
         messages: [{ role: "user", content: userMessage }],
       }),
