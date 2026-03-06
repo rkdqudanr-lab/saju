@@ -101,6 +101,41 @@ function getMoon(y,m,d){
 }
 function getAsc(h,bm){return SIGNS[(Math.floor(h/2)+bm+6)%12];}
 
+
+// ── 오늘의 한마디 (날짜 기반 순환) ──
+const DAILY_WORDS = [
+  "오늘은 오래 미룬 연락 하나를 보내기 좋은 날이에요.",
+  "지금 느끼는 불안은 당신이 그만큼 진심이라는 뜻이에요.",
+  "멈춰있는 것처럼 보여도, 당신은 분명히 자라고 있어요.",
+  "오늘은 결정을 서두르지 않아도 괜찮은 날이에요.",
+  "당신이 지나온 길이 지금 서 있는 곳을 만들었어요.",
+  "작은 용기 하나가 오늘 당신의 하루를 바꿀 수 있어요.",
+  "지금 당신 곁에 있는 사람들은 이유가 있어 거기 있어요.",
+  "오늘은 남의 기준이 아닌 내 기준으로 판단해봐요.",
+  "당신의 섬세함은 약점이 아니라 가장 강한 무기예요.",
+  "기다림도 하나의 선택이에요. 흔들리지 않아도 돼요.",
+  "오늘 하늘의 기운은 새로운 시작을 응원하고 있어요.",
+  "당신이 지금 느끼는 감정, 충분히 그럴 만해요.",
+  "오늘은 조금 느려도 괜찮은 날이에요. 숨 먼저 쉬어요.",
+  "한 발이 작아 보여도, 방향이 맞으면 충분해요.",
+  "당신의 직감은 생각보다 훨씬 정확해요.",
+  "오늘 만나는 인연엔 조금 더 마음을 열어봐요.",
+  "지금 힘든 건 당신이 뭔가를 간절히 원한다는 신호예요.",
+  "완벽하지 않아도 충분히 빛나고 있어요.",
+  "오늘은 비교하지 말고 어제의 나와만 대화해봐요.",
+  "당신이 포기하지 않는 한, 이건 아직 끝이 아니에요.",
+  "오늘의 작은 친절이 내일 당신에게 돌아와요.",
+  "지금 이 순간이 나중엔 가장 빛나는 기억이 될 수 있어요.",
+  "당신은 지금 당신이 생각하는 것보다 훨씬 괜찮아요.",
+  "오늘은 무언가를 내려놓아도 좋은 날이에요.",
+  "새로운 문이 열리기 전엔 늘 복도가 있어요. 지금은 복도예요.",
+  "당신의 기다림은 반드시 의미 있는 형태로 돌아와요.",
+  "오늘 하루의 끝, 스스로에게 수고했다고 말해줘요.",
+  "당신이 선택한 길이 정답이에요. 믿어봐요.",
+  "지금 이 시기는 씨앗을 심는 계절이에요. 조급해하지 않아도 돼요.",
+  "오늘 당신의 별은 조용히, 하지만 분명히 빛나고 있어요.",
+];
+function getDailyWord(d){ return DAILY_WORDS[(d-1)%DAILY_WORDS.length]; }
 // ═══════════════════════════════════════════════════════════
 //  🧹 마크다운 전처리기
 // ═══════════════════════════════════════════════════════════
@@ -386,6 +421,17 @@ select.inp option{background:var(--bg2)}
 .fb-done{font-size:var(--xs);color:var(--gold);animation:fadeUp .3s ease}
 
 /* ══ 공유 카드 ══ */
+
+/* ══ 오늘의 한마디 ══ */
+
+/* ══ 별의 한 줄 요약 ══ */
+.star-summary{padding:var(--sp2) var(--sp3);background:var(--goldf);border-bottom:1px solid var(--acc);display:flex;align-items:flex-start;gap:8px}
+.star-summary-icon{color:var(--gold);flex-shrink:0;font-size:.9rem;margin-top:2px}
+.star-summary-text{font-size:var(--sm);color:var(--gold);font-weight:500;line-height:1.65;font-style:italic}
+.daily-word{margin:var(--sp3) 0 var(--sp2);padding:var(--sp2) var(--sp3);background:var(--goldf);border:1px solid var(--acc);border-radius:var(--r2);text-align:center;animation:fadeUp .8s .85s both}
+.daily-label{font-size:var(--xs);color:var(--gold);letter-spacing:.1em;margin-bottom:5px}
+.daily-text{font-size:var(--sm);color:var(--t1);line-height:1.75;font-weight:300}
+.daily-date{font-size:var(--xs);color:var(--t4);margin-top:4px}
 .share-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
 .share-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -462,17 +508,26 @@ function useWordTyping(text, active, speed=130){
   const[done,setDone]=useState(false);
   const timerRef=useRef(null);
 
+  // 마침표 호흡 딜레이 계산 — 편지 읽는 리듬
+  const getDelay=(word,base)=>{
+    const trimmed=word.trimEnd();
+    if(/[.!?…]$/.test(trimmed)) return base+350; // 문장 끝 — 깊게 숨
+    if(/[,]$/.test(trimmed))     return base+180; // 쉼표 — 살짝 쉬고
+    if(/\n/.test(word))          return base+250; // 줄바꿈 — 문단 호흡
+    return base;                                   // 일반 단어
+  };
+
   useEffect(()=>{
-    // active=false일 때 즉시 세팅 금지 — AccItem에서 직접 처리
     if(!active||!text) return;
     setShown('');setDone(false);
     const words=text.split(/(\s+)/);
     let idx=0;
     const tick=()=>{
       if(idx>=words.length){setDone(true);return;}
+      const word=words[idx];
       idx++;
       setShown(words.slice(0,idx).join(''));
-      timerRef.current=setTimeout(tick,speed);
+      timerRef.current=setTimeout(tick, getDelay(word,speed));
     };
     timerRef.current=setTimeout(tick,speed);
     return()=>clearTimeout(timerRef.current);
@@ -526,6 +581,7 @@ function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
         <div className="acc-q-wrap">
           <div className="acc-q-num">Q{idx+1}</div>
           <div className="acc-q-text">{q}</div>
+          {!isOpen&&!display&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
         </div>
         <div className="acc-right">
           {isOpen&&!isDone&&<button className="skip-btn" onClick={e=>{e.stopPropagation();skipToEnd();}}>바로 보기</button>}
@@ -585,7 +641,13 @@ function ReportBody({text}){
 export default function App(){
   const[isDark,setIsDark]=useState(true);
   const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트
-  const[form,setForm]=useState({name:'',by:'',bm:'',bd:'',bh:'',gender:'',noTime:false});
+  const[form,setForm]=useState(()=>{
+    try{
+      const saved=localStorage.getItem('byeolsoom_profile');
+      if(saved){const p=JSON.parse(saved);return{name:p.name||'',by:p.by||'',bm:p.bm||'',bd:p.bd||'',bh:p.bh||'',gender:p.gender||'',noTime:p.noTime||false};}
+    }catch(e){}
+    return{name:'',by:'',bm:'',bd:'',bh:'',gender:'',noTime:false};
+  });
   const[cat,setCat]=useState(0);
   const[selQs,setSelQs]=useState([]);
   const[diy,setDiy]=useState('');
@@ -606,6 +668,12 @@ export default function App(){
   const today=useMemo(()=>getTodayInfo(),[]);
 
   useEffect(()=>{document.documentElement.setAttribute('data-theme',isDark?'dark':'light');},[isDark]);
+  useEffect(()=>{
+    if(form.by&&form.bm&&form.bd){
+      try{localStorage.setItem('byeolsoom_profile',JSON.stringify(form));}catch(e){}
+    }
+  },[form]);
+  useEffect(()=>{window.scrollTo({top:0,behavior:'smooth'});},[step]);
   useEffect(()=>{chatEndRef.current?.scrollIntoView({behavior:'smooth'});},[chatHistory,chatLoading]);
 
   const saju=useMemo(()=>(form.by&&form.bm&&form.bd)?getSaju(+form.by,+form.bm,+form.bd,form.noTime?12:+(form.bh||12)):null,[form]);
@@ -813,6 +881,10 @@ export default function App(){
                 <span>32,841명</span><span>·</span>
                 <span>무료 체험 가능</span>
               </div>
+              <div className="daily-word">
+                <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
+                <div className="daily-text">"{getDailyWord(today.day)}"</div>
+              </div>
               <div className="rev-wrap">
                 <div className="rev-track">
                   {REVIEWS.map((r,i)=>(
@@ -844,7 +916,7 @@ export default function App(){
 
                 <label className="lbl">생년월일</label>
                 <div className="row" style={{marginBottom:'var(--sp3)'}}>
-                  <div className="col"><input className="inp" placeholder="1998" maxLength={4} value={form.by} onChange={e=>setForm(f=>({...f,by:e.target.value.replace(/\D/,'')}))} style={{marginBottom:0}}/></div>
+                  <div className="col"><input className="inp" placeholder="1998" maxLength={4} inputMode="numeric" pattern="[0-9]*" value={form.by} onChange={e=>setForm(f=>({...f,by:e.target.value.replace(/\D/,'')}))} style={{marginBottom:0}}/></div>
                   <div className="col"><select className="inp" value={form.bm} onChange={e=>setForm(f=>({...f,bm:e.target.value}))} style={{marginBottom:0}}><option value="">월</option>{[...Array(12)].map((_,i)=><option key={i+1} value={i+1}>{i+1}월</option>)}</select></div>
                   <div className="col"><select className="inp" value={form.bd} onChange={e=>setForm(f=>({...f,bd:e.target.value}))} style={{marginBottom:0}}><option value="">일</option>{[...Array(31)].map((_,i)=><option key={i+1} value={i+1}>{i+1}일</option>)}</select></div>
                 </div>
@@ -996,7 +1068,7 @@ export default function App(){
                 <div className="res-header">
                   <div className="res-av">✦</div>
                   <div>
-                    <div className="res-name">{form.name||'당신'}님께 보내는 별의 메시지</div>
+                    <div className="res-name">{form.name ? `${form.name}에게 전하는 별의 이야기` : '오늘 밤 당신에게 전하는 이야기'}</div>
                     <div className="res-chips">
                       {saju&&<div className="res-chip">🀄 {ON[saju.dom]} 기운</div>}
                       {sun&&<div className="res-chip">{sun.s} {sun.n}</div>}
@@ -1006,6 +1078,20 @@ export default function App(){
                     </div>
                   </div>
                 </div>
+
+                {/* 별의 한 줄 요약 */}
+                {answers[0]&&(()=>{
+                  // 첫 답변의 두 번째 문장 추출
+                  const sents=answers[0].split(/(?<=[.!?])\s+/).filter(s=>s.length>15);
+                  const pick=sents[1]||sents[0]||'';
+                  const short=pick.length>60?pick.slice(0,60)+'…':pick;
+                  return short?(
+                    <div className="star-summary">
+                      <span className="star-summary-icon">✦</span>
+                      <span className="star-summary-text">{short}</span>
+                    </div>
+                  ):null;
+                })()}
 
                 {/* 아코디언 */}
                 {selQs.map((q,i)=>(
