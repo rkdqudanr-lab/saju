@@ -186,6 +186,40 @@ function stripMarkdown(text){
 // ═══════════════════════════════════════════════════════════
 //  데이터
 // ═══════════════════════════════════════════════════════════
+
+// ══ 시나리오 궁합 장소 ══
+const PLACES = [
+  {id:'burger',emoji:'🍔',label:'버거킹',hint:'패스트푸드'},
+  {id:'cafe',emoji:'☕',label:'카페',hint:'브런치'},
+  {id:'cvs',emoji:'🏪',label:'편의점',hint:'야식'},
+  {id:'cinema',emoji:'🎬',label:'영화관',hint:'데이트'},
+  {id:'travel',emoji:'✈️',label:'여행',hint:'장거리'},
+  {id:'pub',emoji:'🍺',label:'술집',hint:'밤'},
+  {id:'market',emoji:'🛒',label:'마트',hint:'장보기'},
+];
+
+// ══ 별자리 무드 (결과 배너용) ══
+const SIGN_MOOD = {
+  '양자리':  {color:'#E8624A',bg:'rgba(232,98,74,.1)',word:'불꽃같은 에너지',emoji:'🔥'},
+  '황소자리': {color:'#7CB87A',bg:'rgba(124,184,122,.1)',word:'포근하고 안정적',emoji:'🌿'},
+  '쌍둥이자리':{color:'#6BBFB5',bg:'rgba(107,191,181,.1)',word:'호기심 가득한',emoji:'💫'},
+  '게자리':  {color:'#6B9EC4',bg:'rgba(107,158,196,.1)',word:'감성이 풍부한',emoji:'🌙'},
+  '사자자리': {color:'#E8B048',bg:'rgba(232,176,72,.1)',word:'당당하게 빛나는',emoji:'✨'},
+  '처녀자리': {color:'#A8C87A',bg:'rgba(168,200,122,.1)',word:'섬세하고 성실한',emoji:'🌾'},
+  '천칭자리': {color:'#C4A8D8',bg:'rgba(196,168,216,.1)',word:'균형잡힌 심미안',emoji:'⚖️'},
+  '전갈자리': {color:'#9B4EC4',bg:'rgba(155,78,196,.1)',word:'깊고 강렬한',emoji:'🔮'},
+  '사수자리': {color:'#E8A048',bg:'rgba(232,160,72,.1)',word:'자유롭고 낙천적',emoji:'🏹'},
+  '염소자리': {color:'#8A8A8A',bg:'rgba(138,138,138,.1)',word:'묵직한 뚝심',emoji:'⛰️'},
+  '물병자리': {color:'#48B4E8',bg:'rgba(72,180,232,.1)',word:'독창적인 시각',emoji:'⚡'},
+  '물고기자리':{color:'#8EC4E8',bg:'rgba(142,196,232,.1)',word:'공감능력이 넘치는',emoji:'🌊'},
+};
+
+// ══ 랜딩 샘플 에세이 (20초 미리보기) ══
+const SAMPLE_ESSAYS = [
+  "지수는 태어날 때부터 남들이 못 보는 것을 보는 눈을 가지고 있었어요. 물고기자리의 감성과 계수의 섬세함이 만나서, 마음 속 깊은 곳에서 세상을 느끼는 사람이에요. 오늘 하루 당신이 느끼는 막막함은 사실 변화의 전조예요...",
+  "민준의 사주에는 화(火) 기운이 강하게 흐르고 있어요. 사자자리의 태양과 만나 더욱 선명해진 이 에너지는 당신을 어딜 가나 빛나게 만들죠. 지금 고민하는 그 선택, 결국 당신 것이에요...",
+  "서연에게 오늘은 조용히 자신을 돌아보기 좋은 날이에요. 천칭자리의 균형 감각과 기토의 조화로운 기질이 함께 속삭이고 있어요. 너무 많은 것을 혼자 짊어지지 않아도 괜찮아요...",
+];
 const CATS=[
   {id:"love",icon:"💕",label:"연애",qs:["요즘 좋아하는 사람이 생겼는데 이 감정이 맞는 건지 모르겠어요","언제쯤 새로운 인연이 찾아올까요?","지금 사귀는 사람이랑 미래가 있을까요?","짝사랑하는 사람이 나를 어떻게 생각할까요?","내가 먼저 고백해도 될까요?","연애를 시작하기 좋은 시기인가요?"]},
   {id:"work",icon:"💼",label:"일·커리어",qs:["이직을 고민 중인데 지금 타이밍이 맞을까요?","직장 상사 때문에 너무 힘들어요","나에게 진짜 잘 맞는 일이 뭔지 알고 싶어요","승진할 수 있는 운이 있을까요?","창업을 해도 될까요?","지금 하는 일이 나한테 맞는지 모르겠어요"]},
@@ -226,9 +260,13 @@ const CSS=`
   --t1:#F0EBF8;--t2:#C8BEDE;--t3:#8A7FA0;--t4:#4A4260;
   --gold:#E8B048;--gold2:#C89030;
   --goldf:rgba(232,176,72,.1);--golds:rgba(232,176,72,.05);--acc:rgba(232,176,72,.2);
+  --lav:#9B8EC4;--lavf:rgba(155,142,196,.1);--lavacc:rgba(155,142,196,.25);
+  --teal:#6BBFB5;--tealf:rgba(107,191,181,.1);--tealacc:rgba(107,191,181,.25);
+  --rose:#E87B8A;--rosef:rgba(232,123,138,.1);--roseacc:rgba(232,123,138,.25);
   --sp1:8px;--sp2:16px;--sp3:24px;--sp4:32px;--sp5:48px;--sp6:64px;
   --r1:12px;--r2:20px;--r3:28px;--r4:36px;
   --xl:1.75rem;--lg:1.125rem;--md:0.9375rem;--sm:0.8125rem;--xs:0.6875rem;
+  --trans-fast:.15s ease;--trans:.25s ease;--trans-slow:.4s ease;
 }
 [data-theme="light"]{
   --bg:#F7F4EF;--bg1:#FFFFFF;--bg2:#F0EBE2;--bg3:#E8E0D5;--bg4:#DDD5C8;
@@ -464,6 +502,142 @@ select.inp option{background:var(--bg2)}
 .daily-label{font-size:var(--xs);color:var(--gold);letter-spacing:.1em;margin-bottom:5px}
 .daily-text{font-size:var(--sm);color:var(--t1);line-height:1.75;font-weight:300}
 .daily-date{font-size:var(--xs);color:var(--t4);margin-top:4px}
+
+
+/* ══ 무드 배너 ══ */
+.mood-banner{padding:12px var(--sp3);display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);animation:fadeUp .5s ease}
+.mood-orb{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
+.mood-word{font-size:var(--sm);font-weight:600}
+
+/* ══ 시나리오 궁합 ══ */
+.compat-page{width:100%;max-width:480px;animation:fadeUp .5s ease}
+.compat-header{text-align:center;padding:var(--sp4) var(--sp3) var(--sp3)}
+.compat-title{font-size:var(--xl);font-weight:700;color:var(--t1);margin-bottom:6px}
+.compat-sub{font-size:var(--sm);color:var(--t3);line-height:1.75}
+.compat-section{margin-bottom:var(--sp3)}
+.compat-label{font-size:var(--xs);font-weight:700;color:var(--t4);letter-spacing:.08em;margin-bottom:10px}
+.person-cards{display:flex;gap:10px}
+.person-card{flex:1;background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp2);position:relative}
+.person-card.a-card{border-color:var(--lavacc)}
+.person-card.b-card{border-color:var(--tealacc)}
+.person-badge{font-size:var(--xs);font-weight:700;padding:2px 8px;border-radius:50px;margin-bottom:8px;display:inline-block}
+.person-badge.a{background:var(--lavf);color:var(--lav)}
+.person-badge.b{background:var(--tealf);color:var(--teal)}
+.place-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.place-btn{padding:10px 4px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);text-align:center;cursor:pointer;transition:all var(--trans);font-family:var(--ff)}
+.place-btn:hover{border-color:var(--t4);transform:translateY(-2px)}
+.place-btn.on{background:var(--goldf);border-color:var(--gold)}
+.place-emoji{font-size:1.4rem;display:block;margin-bottom:3px}
+.place-label{font-size:var(--xs);color:var(--t3);display:block}
+.place-btn.on .place-label{color:var(--gold)}
+.scenario-wrap{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;margin-bottom:var(--sp3)}
+.scenario-header{padding:var(--sp2) var(--sp3);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.scenario-place-icon{font-size:1.3rem}
+.scenario-place-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
+.scenario-sub{font-size:var(--xs);color:var(--t4)}
+.bubble-list{padding:var(--sp3);display:flex;flex-direction:column;gap:10px}
+.bubble-row{display:flex;gap:8px;animation:fadeUp .3s ease}
+.bubble-row.b-row{flex-direction:row-reverse}
+.bubble-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.bubble-avatar.a-av{background:var(--lavf);border:1px solid var(--lavacc);color:var(--lav)}
+.bubble-avatar.b-av{background:var(--tealf);border:1px solid var(--tealacc);color:var(--teal)}
+.bubble-name{font-size:var(--xs);color:var(--t4);margin-bottom:3px}
+.bubble-row.b-row .bubble-name{text-align:right}
+.bubble-text{padding:10px 14px;border-radius:18px;font-size:var(--sm);line-height:1.65;max-width:78%}
+.bubble-row.a-row .bubble-text{background:var(--bg2);border:1px solid var(--line);border-bottom-left-radius:4px;color:var(--t1)}
+.bubble-row.b-row .bubble-text{background:var(--tealf);border:1px solid var(--tealacc);border-bottom-right-radius:4px;color:var(--t1)}
+.scenario-summary{padding:var(--sp2) var(--sp3);background:var(--goldf);border-top:1px solid var(--acc);font-size:var(--xs);color:var(--gold);line-height:1.75;font-style:italic;text-align:center}
+.scenario-loading{padding:var(--sp4);text-align:center;color:var(--t3);font-size:var(--sm)}
+.scenario-typing-dots{display:flex;gap:5px;justify-content:center;margin:var(--sp2) 0}
+.scenario-typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--t4);animation:dot 1.2s infinite}
+.scenario-typing-dots span:nth-child(2){animation-delay:.2s}
+.scenario-typing-dots span:nth-child(3){animation-delay:.4s}
+.compat-total{padding:var(--sp3);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);margin-bottom:var(--sp3);text-align:center}
+.compat-total-label{font-size:var(--xs);color:var(--t4);margin-bottom:6px;letter-spacing:.08em}
+.compat-total-text{font-size:var(--sm);color:var(--t1);line-height:1.75}
+.kizmet-bar{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;margin:10px 0}
+.kizmet-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--lav),var(--gold));transition:width 1.2s cubic-bezier(.34,1.56,.64,1)}
+.kizmet-score{font-size:var(--xl);font-weight:700;color:var(--gold)}
+.compat-btns{display:flex;gap:8px}
+
+/* ══ 별의 편지 ══ */
+.letter-page{width:100%;max-width:480px;animation:fadeUp .5s ease}
+.letter-envelope{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;margin-bottom:var(--sp3)}
+.letter-env-top{height:80px;background:linear-gradient(135deg,var(--goldf),var(--lavf));display:flex;align-items:center;justify-content:center;font-size:2rem;border-bottom:1px solid var(--line)}
+.letter-body{padding:var(--sp4) var(--sp3)}
+.letter-date-to{font-size:var(--xs);color:var(--t4);margin-bottom:var(--sp2);letter-spacing:.06em}
+.letter-date-to strong{color:var(--gold)}
+.letter-content{font-size:var(--sm);color:var(--t2);line-height:2.2;white-space:pre-wrap;letter-spacing:-.005em}
+.letter-content p:first-child::first-letter{font-size:2.4em;font-weight:700;color:var(--gold);float:left;line-height:.82;margin:.06em .1em 0 0}
+.letter-seal{display:flex;flex-direction:column;align-items:center;gap:6px;padding:var(--sp3);border-top:1px solid var(--line)}
+.seal-icon{font-size:1.5rem;animation:orbPulse 3s infinite}
+.seal-text{font-size:var(--xs);color:var(--t4);letter-spacing:.08em}
+.letter-actions{display:flex;gap:8px}
+
+/* ══ 랜딩 샘플 미리보기 ══ */
+.sample-preview{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);margin:var(--sp3) 0;text-align:left;position:relative;overflow:hidden;animation:fadeUp .8s .7s both}
+.sample-preview::before{content:'미리보기 ✦';position:absolute;top:10px;right:14px;font-size:var(--xs);color:var(--t4);letter-spacing:.07em}
+.sample-name{font-size:var(--xs);color:var(--gold);margin-bottom:8px;letter-spacing:.06em}
+.sample-text{font-size:var(--xs);color:var(--t2);line-height:1.9;min-height:60px}
+.sample-cursor{display:inline-block;width:1.5px;height:.85em;background:var(--gold);margin-left:1px;vertical-align:text-bottom;animation:blink .7s infinite}
+
+/* ══ 결과 액션 메뉴 확장 ══ */
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--sp2)}
+.action-card{padding:var(--sp2);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:all var(--trans);text-align:left}
+.action-card:hover{border-color:var(--acc);background:var(--goldf);transform:translateY(-2px)}
+.action-card-icon{font-size:1.3rem;margin-bottom:5px}
+.action-card-title{font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:2px}
+.action-card-sub{font-size:var(--xs);color:var(--t3);line-height:1.5}
+.action-card.compat{border-color:var(--lavacc)}
+.action-card.compat:hover{background:var(--lavf);border-color:var(--lav)}
+.action-card.letter{border-color:var(--roseacc)}
+.action-card.letter:hover{background:var(--rosef);border-color:var(--rose)}
+
+/* ══ 로딩 고도화 ══ */
+.load-orb-wrap{display:flex;justify-content:center;margin:var(--sp4) 0}
+.load-orb{width:80px;height:80px;border-radius:50%;position:relative;margin:0 auto}
+.load-orb-core{position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(232,176,72,.6),rgba(155,142,196,.4),rgba(50,30,90,.9));animation:orbPulse 2s infinite}
+.load-orb-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(232,176,72,.3);animation:orbSpin 3s linear infinite}
+.load-orb-ring2{position:absolute;inset:-8px;border-radius:50%;border:1px dashed rgba(155,142,196,.2);animation:orbSpin 7s linear infinite reverse}
+.load-pillars{display:flex;gap:6px;justify-content:center;margin:var(--sp2) 0}
+.load-pillar{width:36px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center;animation:fadeUp .4s ease both}
+.load-pillar:nth-child(1){animation-delay:.0s}
+.load-pillar:nth-child(2){animation-delay:.1s}
+.load-pillar:nth-child(3){animation-delay:.2s}
+.load-pillar:nth-child(4){animation-delay:.3s}
+.load-p-hj{font-size:.9rem;color:var(--gold);font-weight:600;line-height:1.2}
+.load-p-lbl{font-size:.5rem;color:var(--t4);margin-top:2px}
+
+/* ══ step 전환 fade ══ */
+.step-fade{animation:stepFadeIn .45s cubic-bezier(.4,0,.2,1)}
+@keyframes stepFadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ 카카오 로그인 ══ */
+.kakao-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:600;color:#191919;transition:all .2s}
+.kakao-btn:hover{background:#F0D800;transform:translateY(-1px)}
+.kakao-btn svg{flex-shrink:0}
+.kakao-nudge{padding:var(--sp2) var(--sp3);background:rgba(254,229,0,.1);border:1px solid rgba(254,229,0,.3);border-radius:var(--r2);margin-bottom:var(--sp2);display:flex;align-items:center;gap:10px}
+.kakao-nudge-text{font-size:var(--xs);color:var(--t3);flex:1}
+.user-chip{display:flex;align-items:center;gap:6px;padding:5px 10px 5px 5px;border-radius:50px;background:var(--goldf);border:1px solid var(--acc);cursor:pointer}
+.user-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.user-chip span{font-size:var(--xs);color:var(--t2)}
+
+/* ══ 결제 모달 ══ */
+.pay-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
+.pay-sheet{width:100%;max-width:480px;background:var(--bg);border-radius:24px 24px 0 0;padding:var(--sp4);animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.pay-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto var(--sp3)}
+.pay-title{font-size:1.1rem;font-weight:600;color:var(--t1);margin-bottom:4px}
+.pay-desc{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp3)}
+.pay-preview{background:var(--card);border-radius:var(--r2);padding:var(--sp2) var(--sp3);margin-bottom:var(--sp3)}
+.pay-preview-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:var(--xs);color:var(--t2)}
+.pay-preview-item::before{content:'✦';color:var(--gold);flex-shrink:0}
+.pay-price{font-size:1.4rem;font-weight:700;color:var(--gold);text-align:center;margin-bottom:var(--sp3)}
+.pay-kakao-btn{width:100%;padding:16px;border-radius:12px;background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:1rem;font-weight:700;color:#191919;display:flex;align-items:center;justify-content:center;gap:8px}
+.pay-kakao-btn:disabled{opacity:.6;cursor:not-allowed}
+.pay-cancel{width:100%;padding:12px;border:none;background:transparent;color:var(--t4);font-family:var(--ff);font-size:var(--xs);cursor:pointer;margin-top:8px}
 .share-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
 .share-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -507,16 +681,34 @@ function StarCanvas({isDark}){
 // ═══════════════════════════════════════════════════════════
 //  Skeleton 로더
 // ═══════════════════════════════════════════════════════════
-function SkeletonLoader({qCount}){
+function SkeletonLoader({qCount,saju}){
   const[si,setSi]=useState(0);
   useEffect(()=>{const id=setInterval(()=>setSi(p=>(p+1)%LOAD_STATES.length),2000);return()=>clearInterval(id);},[]);
+  const pillars=[['연','yeon'],['월','wol'],['일','il'],['시','si']];
   return(
     <div className="loading-page">
-      <div className="skel-header">
-        <div className="skel-av"/>
-        <div className="skel-lines"><div className="skel-line w60"/><div className="skel-line w40"/></div>
+      {/* 오브 애니메이션 */}
+      <div className="load-orb-wrap">
+        <div className="load-orb">
+          <div className="load-orb-core"/>
+          <div className="load-orb-ring"/>
+          <div className="load-orb-ring2"/>
+        </div>
       </div>
-      <div className="skel-body">
+      {/* 사주 기둥 등장 */}
+      {saju&&(
+        <div className="load-pillars">
+          {pillars.map(([l,k],i)=>(
+            <div key={l} className="load-pillar">
+              <div className="load-p-hj" style={{color:OC[saju[k]?CGO[Object.values(saju[k]).length]||'금':'금']||'var(--gold)'}}>{saju[k]?.gh}</div>
+              <div className="load-p-hj" style={{opacity:.7}}>{saju[k]?.jh}</div>
+              <div className="load-p-lbl">{l}주</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* 스켈레톤 */}
+      <div className="skel-body" style={{marginTop:'var(--sp2)'}}>
         {Array.from({length:Math.min(qCount,2)}).map((_,i)=>(
           <div key={i} className="skel-para">
             <div className="skel-line full"/><div className="skel-line full"/><div className="skel-line w80"/>
@@ -667,12 +859,378 @@ function ReportBody({text}){
   );
 }
 
+
+// ═══════════════════════════════════════════════════════════
+//  📖 랜딩 샘플 에세이 미리보기
+// ═══════════════════════════════════════════════════════════
+function SamplePreview(){
+  const[text,setText]=useState('');
+  const[essayIdx,setEssayIdx]=useState(0);
+  const timerRef=useRef(null);
+  const idxRef=useRef(0);
+
+  useEffect(()=>{
+    const essay=SAMPLE_ESSAYS[essayIdx];
+    setText('');idxRef.current=0;
+    const tick=()=>{
+      if(idxRef.current>=essay.length){
+        // 2초 후 다음 에세이
+        timerRef.current=setTimeout(()=>{
+          setEssayIdx(p=>(p+1)%SAMPLE_ESSAYS.length);
+        },2000);
+        return;
+      }
+      idxRef.current++;
+      setText(essay.slice(0,idxRef.current));
+      const ch=essay[idxRef.current-1];
+      const delay=ch==='.'||ch==='!'||ch==='?'?280:ch===','?120:ch==='\n'?200:28;
+      timerRef.current=setTimeout(tick,delay);
+    };
+    timerRef.current=setTimeout(tick,400);
+    return()=>clearTimeout(timerRef.current);
+  },[essayIdx]);
+
+  const names=['지수님','민준님','서연님'];
+  return(
+    <div className="sample-preview">
+      <div className="sample-name">✦ {names[essayIdx]}께 전하는 오늘의 이야기</div>
+      <div className="sample-text">{text}<span className="sample-cursor"/></div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  💌 별의 편지 페이지
+// ═══════════════════════════════════════════════════════════
+function LetterPage({form,saju,sun,moon,today,callApi,buildCtx,onBack}){
+  const[letterText,setLetterText]=useState('');
+  const[loading,setLoading]=useState(true);
+  const futureDate=useMemo(()=>{
+    const d=new Date();d.setDate(d.getDate()+92);
+    return`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+  },[]);
+  const{shown,done,skipToEnd}=useWordTyping(letterText,!!letterText&&!loading,35);
+
+  useEffect(()=>{
+    (async()=>{
+      try{
+        const res=await fetch('/api/ask',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            userMessage:`[요청] 3개월 후(${futureDate})의 나에게 보내는 별의 편지를 써줘요. "미래의 나에게"로 시작하는 편지 형식으로, 지금의 나에게 3개월 뒤가 어떤 모습일지, 어떤 변화가 있을지, 무엇을 기억하면 좋을지를 따뜻하게 담아줘요.`,
+            context:buildCtx(),
+            isChat:false,isReport:false,isLetter:true,
+          }),
+        });
+        const data=await res.json();
+        if(!res.ok)throw new Error(data.error);
+        setLetterText(data.text||'');
+      }catch{
+        setLetterText('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!');
+      }finally{setLoading(false);}
+    })();
+  },[]);
+
+  const saveImage=()=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=900;canvas.height=600;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#0D0B14';ctx.fillRect(0,0,900,600);
+    ctx.fillStyle='#E8B048';ctx.fillRect(0,0,900,3);
+    ctx.font='500 18px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle='#E8B048';ctx.fillText('byeolsoom ✦ 별의 편지',48,50);
+    ctx.font='400 15px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle='#8A7FA0';ctx.fillText(`${futureDate}에 열어봐요`,48,80);
+    ctx.font='300 16px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle='#C8BEDE';
+    const lines=letterText.slice(0,300).split('\n');
+    let y=130;
+    lines.forEach(line=>{
+      if(y>520)return;
+      const chunks=[];let tmp='';
+      for(const ch of line){
+        if(ctx.measureText(tmp+ch).width>800){chunks.push(tmp);tmp=ch;}else tmp+=ch;
+      }
+      if(tmp)chunks.push(tmp);
+      chunks.forEach(chunk=>{ctx.fillText(chunk,48,y);y+=28;});
+      y+=8;
+    });
+    ctx.font='400 13px Pretendard,-apple-system,sans-serif';
+    ctx.fillStyle='#4A4260';ctx.fillText('✦ 별숨이 당신에게 보낸 편지',48,570);
+    const a=document.createElement('a');
+    a.download=`byeolsoom_letter.png`;a.href=canvas.toDataURL('image/png');a.click();
+  };
+
+  return(
+    <div className="page-top">
+      <div className="letter-page">
+        <div className="letter-envelope">
+          <div className="letter-env-top">💌</div>
+          <div className="letter-body">
+            <div className="letter-date-to">
+              <strong>{futureDate}</strong>의 {form.name||'당신'}에게 전하는 편지
+            </div>
+            {loading?(
+              <div style={{textAlign:'center',padding:'var(--sp4)',color:'var(--t3)'}}>
+                <div style={{fontSize:'1.5rem',marginBottom:'var(--sp2)',animation:'orbPulse 2s infinite'}}>✦</div>
+                별이 당신의 3개월 뒤를 읽고 있어요...
+              </div>
+            ):(
+              <div className="letter-content">
+                <p>{shown}{!done&&<span className="typing-cursor"/>}</p>
+              </div>
+            )}
+          </div>
+          <div className="letter-seal">
+            <span className="seal-icon">✦</span>
+            <span className="seal-text">byeolsoom · 별숨이 씀</span>
+          </div>
+        </div>
+        <div className="letter-actions">
+          {done&&<button className="res-btn" onClick={saveImage} style={{flex:1}}>↗ 이미지 저장</button>}
+          {!done&&letterText&&<button className="res-btn" onClick={skipToEnd} style={{flex:1}}>바로 보기 ✦</button>}
+          <button className="res-btn" onClick={onBack} style={{flex:1}}>← 돌아가기</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  💞 시나리오 궁합 페이지
+// ═══════════════════════════════════════════════════════════
+function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
+  const[partner,setPartner]=useState({name:'',by:'',bm:'',bd:'',gender:''});
+  const[place,setPlace]=useState('burger');
+  const[result,setResult]=useState(null);
+  const[loading,setLoading]=useState(false);
+  const[phase,setPhase]=useState('input'); // 'input' | 'result'
+
+  const partnerSaju=useMemo(()=>(partner.by&&partner.bm&&partner.bd)?getSaju(+partner.by,+partner.bm,+partner.bd,12):null,[partner]);
+  const partnerSun=useMemo(()=>(partner.bm&&partner.bd)?getSun(+partner.bm,+partner.bd):null,[partner.bm,partner.bd]);
+  const partnerOk=partner.by&&partner.bm&&partner.bd&&partner.gender;
+  const selectedPlace=PLACES.find(p=>p.id===place)||PLACES[0];
+
+  // 궁합 점수 계산 (오행 상생/상극 기반)
+  const compatScore=useMemo(()=>{
+    if(!mySaju||!partnerSaju)return 75;
+    const SENG={목:['수','목'],화:['목','화'],토:['화','토'],금:['토','금'],수:['금','수']};
+    const a=mySaju.dom,b=partnerSaju.dom;
+    if(SENG[a]?.includes(b)||SENG[b]?.includes(a))return Math.floor(Math.random()*15)+80;
+    if(a===b)return Math.floor(Math.random()*10)+75;
+    return Math.floor(Math.random()*20)+60;
+  },[mySaju,partnerSaju]);
+
+  const buildPartnerCtx=()=>{
+    let c=`[나 — ${myForm.name||'A'}]
+`;
+    c+=`${buildCtx()}
+`;
+    c+=`[상대방 — ${partner.name||'B'} · ${+new Date().getFullYear()-+partner.by}세 · ${partner.gender}]
+`;
+    if(partnerSaju){
+      c+=`연주: ${partnerSaju.yeon.g}${partnerSaju.yeon.j} / 월주: ${partnerSaju.wol.g}${partnerSaju.wol.j} / 일주: ${partnerSaju.il.g}${partnerSaju.il.j}
+`;
+      c+=`기질: ${partnerSaju.ilganDesc}
+강한 기운: ${ON[partnerSaju.dom]}
+
+`;
+    }
+    if(partnerSun)c+=`별자리: ${partnerSun.n}(${partnerSun.s}) — ${partnerSun.desc}
+`;
+    return c;
+  };
+
+  const run=async()=>{
+    setLoading(true);setPhase('result');setResult(null);
+    const placeObj=PLACES.find(p=>p.id===place)||PLACES[0];
+    try{
+      const res=await fetch('/api/ask',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          userMessage:`[요청] 두 사람이 ${placeObj.label}에 갔을 때의 짧은 시나리오를 써줘요.
+
+규칙:
+- 말풍선 형식으로 6~8개 대사
+- JSON 배열로만 응답: [{"who":"A","text":"..."}, {"who":"B","text":"..."},...,{"summary":"두 사람 관계 한 줄 총평"}]
+- 두 사람의 기질 차이가 자연스럽게 드러나게
+- 웃음 포인트 1개, 공감 포인트 1개
+- 마지막 객체에 summary 키로 총평 한 문장`,
+          context:buildPartnerCtx(),
+          isChat:false,isReport:false,isScenario:true,
+        }),
+      });
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error);
+      // JSON 파싱
+      try{
+        const raw=data.text.replace(/```json|```/g,'').trim();
+        const parsed=JSON.parse(raw);
+        setResult({bubbles:parsed.filter(b=>b.who),summary:parsed.find(b=>b.summary)?.summary||''});
+      }catch{
+        setResult({bubbles:[{who:'A',text:data.text}],summary:''});
+      }
+    }catch{
+      setResult({bubbles:[{who:'A',text:'별이 잠시 쉬고 있어요 🌙 다시 시도해봐요!'}],summary:''});
+    }finally{setLoading(false);}
+  };
+
+  if(phase==='result'){
+    return(
+      <div className="page-top">
+        <div className="compat-page">
+          <div className="compat-header">
+            <div style={{fontSize:'2rem',marginBottom:8}}>{selectedPlace.emoji}</div>
+            <div className="compat-title">{myForm.name||'나'} × {partner.name||'상대'}</div>
+            <div className="compat-sub">{selectedPlace.label}에서 만났을 때</div>
+          </div>
+
+          {/* 궁합 점수 */}
+          <div className="compat-total" style={{marginBottom:'var(--sp2)'}}>
+            <div className="compat-total-label">✦ 두 별의 공명 지수</div>
+            <div className="kizmet-score">{compatScore}%</div>
+            <div className="kizmet-bar"><div className="kizmet-fill" style={{width:`${compatScore}%`}}/></div>
+            {mySaju&&partnerSaju&&(
+              <div style={{fontSize:'var(--xs)',color:'var(--t3)'}}>
+                {ON[mySaju.dom]} 기운 × {ON[partnerSaju.dom]} 기운
+              </div>
+            )}
+          </div>
+
+          {/* 말풍선 시나리오 */}
+          <div className="scenario-wrap">
+            <div className="scenario-header">
+              <span className="scenario-place-icon">{selectedPlace.emoji}</span>
+              <div>
+                <div className="scenario-place-name">{selectedPlace.label} 시나리오</div>
+                <div className="scenario-sub">{myForm.name||'A'} × {partner.name||'B'}</div>
+              </div>
+            </div>
+            {loading?(
+              <div className="scenario-loading">
+                <div className="scenario-typing-dots"><span/><span/><span/></div>
+                두 별의 이야기를 쓰고 있어요...
+              </div>
+            ):(
+              <div className="bubble-list">
+                {result?.bubbles.map((b,i)=>(
+                  <div key={i} className={`bubble-row ${b.who==='B'?'b-row':'a-row'}`} style={{animationDelay:`${i*0.1}s`}}>
+                    <div className={`bubble-avatar ${b.who==='B'?'b-av':'a-av'}`}>
+                      {b.who==='A'?(myForm.name||'A').slice(0,1):(partner.name||'B').slice(0,1)}
+                    </div>
+                    <div>
+                      <div className="bubble-name">{b.who==='A'?myForm.name||'A':partner.name||'B'}</div>
+                      <div className="bubble-text">{b.text}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {result?.summary&&(
+              <div className="scenario-summary">✦ {result.summary}</div>
+            )}
+          </div>
+
+          <div className="compat-btns">
+            <button className="res-btn" style={{flex:1}} onClick={()=>{setPhase('input');setResult(null);}}>↩ 다시 하기</button>
+            <button className="res-btn" style={{flex:1}} onClick={onBack}>← 결과로</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div className="page">
+      <div className="inner">
+        <div className="compat-page">
+          <div className="compat-header">
+            <div className="compat-title">우리가 만나면 💞</div>
+            <div className="compat-sub">상대방의 생년월일을 입력하면<br/>두 별이 만나는 장면을 보여드려요</div>
+          </div>
+
+          {/* 나 카드 */}
+          <div className="compat-section">
+            <div className="compat-label">두 사람</div>
+            <div className="person-cards">
+              <div className="person-card a-card">
+                <span className="person-badge a">나 (A)</span>
+                <div style={{fontSize:'var(--xs)',color:'var(--t2)',lineHeight:1.7}}>
+                  <div>{myForm.name||'나'} · {+new Date().getFullYear()-+myForm.by}세</div>
+                  {mySun&&<div>{mySun.s} {mySun.n}</div>}
+                  {mySaju&&<div>{ON[mySaju.dom]} 기운</div>}
+                </div>
+              </div>
+              <div className="person-card b-card">
+                <span className="person-badge b">상대 (B)</span>
+                <input className="inp" placeholder="이름(선택)" value={partner.name}
+                  onChange={e=>setPartner(p=>({...p,name:e.target.value}))}
+                  style={{marginBottom:6,padding:'7px 10px',fontSize:'var(--xs)'}}/>
+                <div className="row" style={{gap:4}}>
+                  <input className="inp" placeholder="년도" maxLength={4} inputMode="numeric"
+                    value={partner.by} onChange={e=>setPartner(p=>({...p,by:e.target.value.replace(/\D/,'')}))}
+                    style={{marginBottom:0,padding:'7px 6px',fontSize:'var(--xs)'}}/>
+                  <select className="inp" value={partner.bm} onChange={e=>setPartner(p=>({...p,bm:e.target.value}))}
+                    style={{marginBottom:0,padding:'7px 4px',fontSize:'var(--xs)'}}>
+                    <option value="">월</option>{[...Array(12)].map((_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}
+                  </select>
+                  <select className="inp" value={partner.bd} onChange={e=>setPartner(p=>({...p,bd:e.target.value}))}
+                    style={{marginBottom:0,padding:'7px 4px',fontSize:'var(--xs)'}}>
+                    <option value="">일</option>{[...Array(31)].map((_,i)=><option key={i+1} value={i+1}>{i+1}</option>)}
+                  </select>
+                </div>
+                <div className="gender-group" style={{marginTop:6,marginBottom:0}}>
+                  {['여성','남성','기타'].map(g=>(
+                    <button key={g} className={`gbtn ${partner.gender===g?'on':''}`}
+                      onClick={()=>setPartner(p=>({...p,gender:g}))}
+                      style={{padding:'6px 4px',fontSize:'var(--xs)'}}>{g}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 장소 선택 */}
+          <div className="compat-section">
+            <div className="compat-label">어디서 만날까요?</div>
+            <div className="place-grid">
+              {PLACES.map(p=>(
+                <button key={p.id} className={`place-btn ${place===p.id?'on':''}`} onClick={()=>setPlace(p.id)}>
+                  <span className="place-emoji">{p.emoji}</span>
+                  <span className="place-label">{p.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button className="btn-main" disabled={!partnerOk||loading} onClick={run}>
+            {loading?'두 별이 만나는 중...':'✦ 시나리오 보기'}
+          </button>
+          <button className="res-btn" style={{width:'100%',marginTop:8}} onClick={onBack}>← 돌아가기</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════
 //  🏠 메인 앱
 // ═══════════════════════════════════════════════════════════
 export default function App(){
   const[isDark,setIsDark]=useState(false);
-  const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트
+  // ── 카카오 유저 ──
+  const[user,setUser]=useState(()=>{
+    try{const u=localStorage.getItem('byeolsoom_user');return u?JSON.parse(u):null;}catch{return null;}
+  });
+  // ── 결제 ──
+  const[payModal,setPayModal]=useState(null); // null | 'report' | 'chat'
+  const[paying,setPaying]=useState(false);
+  const[paidItems,setPaidItems]=useState(()=>{
+    try{const p=localStorage.getItem('byeolsoom_paid');return p?JSON.parse(p):[];}catch{return [];}
+  });
+  const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트 7궁합 8편지
   const[form,setForm]=useState(()=>{
     try{
       const saved=localStorage.getItem('byeolsoom_profile');
@@ -698,6 +1256,20 @@ export default function App(){
   const[reportLoading,setReportLoading]=useState(false);
   const chatEndRef=useRef(null);
   const today=useMemo(()=>getTodayInfo(),[]);
+
+  // ── 카카오 SDK 동적 로드 ──
+  useEffect(()=>{
+    if(window.Kakao) return;
+    const script=document.createElement('script');
+    script.src='https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
+    script.crossOrigin='anonymous';
+    script.onload=()=>{
+      if(window.Kakao&&!window.Kakao.isInitialized()){
+        window.Kakao.init(import.meta.env.VITE_KAKAO_JS_KEY||'');
+      }
+    };
+    document.head.appendChild(script);
+  },[]);
 
   useEffect(()=>{document.documentElement.setAttribute('data-theme',isDark?'dark':'light');},[isDark]);
   useEffect(()=>{
@@ -822,6 +1394,117 @@ export default function App(){
     a.click();
   },[selQs,answers,isDark,today,sun,saju]);
 
+
+  // ── 카카오 로그인 ──
+  const kakaoLogin=useCallback(()=>{
+    if(!window.Kakao){alert('카카오 SDK 로딩 중이에요. 잠시 후 다시 시도해봐요.');return;}
+    window.Kakao.Auth.login({
+      scope:'profile_nickname,profile_image',
+      success:async(authObj)=>{
+        try{
+          const res=await fetch('/api/kakao-auth',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({accessToken:authObj.access_token}),
+          });
+          const data=await res.json();
+          if(!res.ok)throw new Error(data.error);
+          const userData={id:data.id,nickname:data.nickname,profileImage:data.profileImage};
+          setUser(userData);
+          localStorage.setItem('byeolsoom_user',JSON.stringify(userData));
+        }catch(err){
+          console.error('카카오 인증 오류:',err);
+          alert('로그인 중 오류가 났어요 🌙');
+        }
+      },
+      fail:(err)=>{console.error('카카오 로그인 실패:',err);}
+    });
+  },[]);
+
+  const kakaoLogout=useCallback(()=>{
+    if(window.Kakao?.Auth) window.Kakao.Auth.logout(()=>{});
+    setUser(null);
+    localStorage.removeItem('byeolsoom_user');
+  },[]);
+
+  // ── 카카오페이 결제 ──
+  const PRODUCTS={
+    report:{name:'별숨 월간 리포트',price:1900,label:'1,900원'},
+    chat:{name:'별숨 추가 상담권 5회',price:990,label:'990원'},
+    premium:{name:'별숨 프리미엄 구독',price:4900,label:'4,900원/월'},
+  };
+
+  const startPayment=useCallback(async(itemKey)=>{
+    if(!user){kakaoLogin();return;}
+    setPaying(true);
+    const product=PRODUCTS[itemKey];
+    const orderId=`byeolsoom_${Date.now()}_${user.id}`;
+    try{
+      const res=await fetch('/api/kakao-pay-ready',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          itemName:product.name,
+          totalAmount:product.price,
+          userId:user.id,
+          orderId,
+        }),
+      });
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error);
+
+      // tid 임시 저장 (승인 시 필요)
+      sessionStorage.setItem('kakao_pay_tid',data.tid);
+      sessionStorage.setItem('kakao_pay_order',orderId);
+      sessionStorage.setItem('kakao_pay_item',itemKey);
+
+      // 모바일/PC 분기
+      const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
+      const redirectUrl=isMobile?data.next_redirect_mobile_url:data.next_redirect_pc_url;
+      window.location.href=redirectUrl;
+    }catch(err){
+      console.error('결제 오류:',err);
+      alert('결제 준비 중 오류가 났어요 🌙
+잠시 후 다시 시도해봐요.');
+    }finally{setPaying(false);setPayModal(null);}
+  },[user,kakaoLogin]);
+
+  // ── 결제 승인 (pg_token URL 파라미터로 돌아왔을 때) ──
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const pgToken=params.get('pg_token');
+    const orderId=sessionStorage.getItem('kakao_pay_order');
+    const tid=sessionStorage.getItem('kakao_pay_tid');
+    const itemKey=sessionStorage.getItem('kakao_pay_item');
+    if(!pgToken||!tid||!orderId)return;
+
+    (async()=>{
+      try{
+        const storedUser=JSON.parse(localStorage.getItem('byeolsoom_user')||'null');
+        if(!storedUser)return;
+        const res=await fetch('/api/kakao-pay-approve',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({tid,pgToken,orderId,userId:storedUser.id}),
+        });
+        const data=await res.json();
+        if(res.ok&&data.success){
+          const newPaid=[...paidItems,{itemKey,orderId,approvedAt:data.approved_at}];
+          setPaidItems(newPaid);
+          localStorage.setItem('byeolsoom_paid',JSON.stringify(newPaid));
+          sessionStorage.removeItem('kakao_pay_tid');
+          sessionStorage.removeItem('kakao_pay_order');
+          sessionStorage.removeItem('kakao_pay_item');
+          // URL 파라미터 제거
+          window.history.replaceState({},'',window.location.pathname);
+          // 구매 아이템에 따라 액션
+          if(itemKey==='report')genReport();
+        }
+      }catch(err){console.error('결제 승인 오류:',err);}
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
   // 메인 API 호출 — 병렬 처리 (순차 타임아웃 방지)
   const askClaude=async()=>{
     if(!selQs.length)return;
@@ -892,14 +1575,25 @@ export default function App(){
       <style>{CSS}</style>
       <StarCanvas isDark={isDark}/>
       <button className="theme-btn" onClick={()=>setIsDark(p=>!p)}>{isDark?'☀':'◑'}</button>
+      {/* 유저 칩 */}
+      {user?(
+        <div className="user-chip" onClick={kakaoLogout} title="로그아웃">
+          {user.profileImage?<img src={user.profileImage} alt="프로필"/>:<span style={{fontSize:'1rem'}}>🌙</span>}
+          <span>{user.nickname}</span>
+        </div>
+      ):(
+        step>=4&&<button className="user-chip" onClick={kakaoLogin} style={{border:'1px solid #FEE500',background:'rgba(254,229,0,.1)'}}>
+          <span style={{fontSize:'.75rem',color:'var(--t2)'}}>카카오 로그인</span>
+        </button>
+      )}
       {step>0&&step<5&&<button className="back-btn" onClick={()=>setStep(p=>Math.max(0,p-1))}>←</button>}
-      {(step===5||step===6)&&<button className="back-btn" onClick={()=>setStep(4)}>←</button>}
+      {(step===5||step===6||step===7||step===8)&&<button className="back-btn" onClick={()=>setStep(4)}>←</button>}
 
       <div className="app">
 
         {/* ══ 0 랜딩 ══ */}
         {step===0&&(
-          <div className="page">
+          <div className="page step-fade">
             <div className="inner land">
               <div className="land-wordmark">byeolsoom</div>
               <div className="land-orb">
@@ -913,6 +1607,7 @@ export default function App(){
                 <span>32,841명</span><span>·</span>
                 <span>무료 체험 가능</span>
               </div>
+              <SamplePreview/>
               <div className="daily-word">
                 <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
                 <div className="daily-text">"{getDailyWord(today.day)}"</div>
@@ -934,7 +1629,7 @@ export default function App(){
 
         {/* ══ 1 정보 입력 ══ */}
         {step===1&&(
-          <div className="page">
+          <div className="page step-fade">
             <div className="inner">
               <div className="step-dots">
                 {[0,1,2].map(i=><div key={i} className={`dot ${i===0?'active':'todo'}`}/>)}
@@ -1089,7 +1784,7 @@ export default function App(){
         )}
 
         {/* ══ 3 로딩 ══ */}
-        {step===3&&<div className="page"><SkeletonLoader qCount={selQs.length}/></div>}
+        {step===3&&<div className="page"><SkeletonLoader qCount={selQs.length} saju={saju}/></div>}
 
         {/* ══ 4 결과 ══ */}
         {step===4&&(
@@ -1110,6 +1805,20 @@ export default function App(){
                     </div>
                   </div>
                 </div>
+
+                {/* 무드 배너 */}
+                {sun&&(()=>{
+                  const mood=SIGN_MOOD[sun.n]||{color:'var(--gold)',bg:'var(--goldf)',word:'신비로운',emoji:'✦'};
+                  return(
+                    <div className="mood-banner" style={{background:mood.bg,borderColor:mood.color+'33'}}>
+                      <div className="mood-orb" style={{background:mood.color+'22',border:`1px solid ${mood.color}44`}}>{mood.emoji}</div>
+                      <div>
+                        <div className="mood-label">오늘의 에너지</div>
+                        <div className="mood-word" style={{color:mood.color}}>{mood.word} 하루예요</div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* 별의 한 줄 요약 */}
                 {answers[0]&&(()=>{
@@ -1151,15 +1860,43 @@ export default function App(){
 
                 {/* 액션 */}
                 <div className="res-actions">
+                  {/* 액션 그리드 — 궁합 / 편지 */}
+                  <div className="action-grid" style={{marginBottom:'var(--sp2)'}}>
+                    <div className="action-card compat" onClick={()=>setStep(7)}>
+                      <div className="action-card-icon">💞</div>
+                      <div className="action-card-title">우리가 만나면</div>
+                      <div className="action-card-sub">두 사람의 별이 만나는 시나리오</div>
+                    </div>
+                    <div className="action-card letter" onClick={()=>setStep(8)}>
+                      <div className="action-card-icon">💌</div>
+                      <div className="action-card-title">별의 편지</div>
+                      <div className="action-card-sub">3개월 후 나에게 전하는 이야기</div>
+                    </div>
+                  </div>
+
+                  {/* 로그인 넛지 */}
+                  {!user&&(
+                    <div className="kakao-nudge">
+                      <span style={{fontSize:'1.1rem'}}>🌙</span>
+                      <span className="kakao-nudge-text">카카오 로그인하면 리포트와 추가 상담을 이용할 수 있어요</span>
+                      <button className="kakao-btn" style={{width:'auto',padding:'6px 14px',fontSize:'var(--xs)'}} onClick={kakaoLogin}>로그인</button>
+                    </div>
+                  )}
+
                   <div className="upsell">
                     <div className="up-t">✦ 이번 달 전체 운세가 궁금해요</div>
                     <div className="up-d">연애 · 재물 · 건강 · 직업 종합 분석<br/>사주와 별자리가 함께 쓴 월간 에세이</div>
-                    <button className="up-btn" onClick={genReport}>월간 리포트 받기</button>
+                    <button className="up-btn" onClick={()=>user?setPayModal('report'):kakaoLogin()}>
+                      {user?'월간 리포트 받기 · 1,900원':'카카오 로그인 후 이용하기'}
+                    </button>
                   </div>
                   {maxChat>0&&(
-                    <button className="chat-cta" onClick={()=>setStep(5)} disabled={chatLeft<=0}>
-                      💬 더 물어보기
-                      <span style={{fontSize:'var(--xs)',color:'var(--t4)'}}>남은 횟수 {chatLeft}회</span>
+                    <button className="chat-cta" onClick={()=>{
+                      if(!user){kakaoLogin();return;}
+                      if(chatLeft>0){setStep(5);}else{setPayModal('chat');}
+                    }} disabled={false}>
+                      💬 {chatLeft>0?`더 물어보기 · 남은 ${chatLeft}회`:'추가 상담권 · 990원'}
+                      <span style={{fontSize:'var(--xs)',color:'var(--t4)'}}>{chatLeft>0?'무료':'5회 추가 이용권'}</span>
                     </button>
                   )}
                   <div className="res-btns">
@@ -1247,6 +1984,74 @@ export default function App(){
               ):(
                 <ReportBody text={reportText}/>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ══ 7 시나리오 궁합 ══ */}
+        {step===7&&(
+          <CompatPage
+            myForm={form}
+            mySaju={saju}
+            mySun={sun}
+            callApi={callApi}
+            buildCtx={buildCtx}
+            onBack={()=>setStep(4)}
+          />
+        )}
+
+        {/* ══ 8 별의 편지 ══ */}
+        {step===8&&(
+          <LetterPage
+            form={form}
+            saju={saju}
+            sun={sun}
+            moon={moon}
+            today={today}
+            callApi={callApi}
+            buildCtx={buildCtx}
+            onBack={()=>setStep(4)}
+          />
+        )}
+
+        {/* ══ 결제 모달 ══ */}
+        {payModal&&(
+          <div className="pay-overlay" onClick={(e)=>{if(e.target.className==='pay-overlay')setPayModal(null);}}>
+            <div className="pay-sheet">
+              <div className="pay-handle"/>
+              {payModal==='report'&&(
+                <>
+                  <div className="pay-title">✦ 별숨 월간 리포트</div>
+                  <div className="pay-desc">{today.month}월 한 달 전체의 흐름을 에세이로 읽어드려요</div>
+                  <div className="pay-preview">
+                    {['연애운 — 관계의 흐름과 새로운 인연','직업운 — 이달의 기회와 주의할 순간','재물운 — 지출과 수입의 에너지','건강운 — 몸이 보내는 신호','행운의 날짜와 색깔'].map((item,i)=>(
+                      <div key={i} className="pay-preview-item">{item}</div>
+                    ))}
+                  </div>
+                  <div className="pay-price">1,900원</div>
+                  <button className="pay-kakao-btn" onClick={()=>startPayment('report')} disabled={paying}>
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/></svg>
+                    {paying?'처리 중...':'카카오페이로 결제하기'}
+                  </button>
+                </>
+              )}
+              {payModal==='chat'&&(
+                <>
+                  <div className="pay-title">💬 추가 상담권</div>
+                  <div className="pay-desc">별숨에게 5번 더 물어볼 수 있어요</div>
+                  <div className="pay-preview">
+                    {['무제한 주제로 추가 질문 5회','이전 상담 맥락 기억','즉시 사용 가능'].map((item,i)=>(
+                      <div key={i} className="pay-preview-item">{item}</div>
+                    ))}
+                  </div>
+                  <div className="pay-price">990원</div>
+                  <button className="pay-kakao-btn" onClick={()=>startPayment('chat')} disabled={paying}>
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/></svg>
+                    {paying?'처리 중...':'카카오페이로 결제하기'}
+                  </button>
+                </>
+              )}
+              <button className="pay-cancel" onClick={()=>setPayModal(null)}>취소</button>
             </div>
           </div>
         )}
