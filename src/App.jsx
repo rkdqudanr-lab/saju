@@ -432,7 +432,7 @@ const TIME_CONFIG={
     ctaText:'오늘의 별숨에게 물어보기 ✦',
     ctaBg:'var(--gold)',ctaColor:'#0D0B14',
     greeting:(name)=>`${name||'당신'}의 오늘이 시작되고 있어요.`,
-    prompt:'[오전 운세] 오늘 하루를 어떻게 시작하면 좋을지, 오늘의 기운과 방향을 따뜻하게 전해줘요.',
+    prompt:'[오전·100자] 오늘 하루를 시작하는 사람에게 가장 필요한 한 가지 방향을 100자 내외로 가볍게 전해줘요. 따뜻하고 짧게, 일상어로.',
     inputPlaceholder:'오늘 하루 어떤 게 궁금해요?',
   },
   afternoon:{
@@ -444,7 +444,7 @@ const TIME_CONFIG={
     ctaText:'별숨에게 물어보기 ✦',
     ctaBg:'var(--gold)',ctaColor:'#0D0B14',
     greeting:(name)=>`${name||'당신'}의 오후, 별이 함께하고 있어요.`,
-    prompt:'[오후 운세] 오늘 오후의 기운과 지금 이 순간 필요한 것을 전해줘요.',
+    prompt:'[오후·100자] 지금 이 순간 가장 필요한 한 가지를 100자 내외로 가볍게 전해줘요. 짧고 명확하게.',
     inputPlaceholder:'지금 마음속에 있는 것을 물어봐요',
   },
   evening:{
@@ -456,7 +456,7 @@ const TIME_CONFIG={
     ctaText:'오늘을 별숨의 언어로 읽어보기 ✦',
     ctaBg:'var(--lav)',ctaColor:'#fff',
     greeting:(name)=>`${name||'당신'}의 오늘 하루, 수고했어요.`,
-    prompt:'[저녁 회고] 오늘 하루를 돌아보며 별의 언어로 다시 읽어주는 이야기를 써줘요. 오늘 있었던 일들을 의미있게 재해석해요.',
+    prompt:'[저녁·100자] 오늘 하루를 한 문장으로 다시 읽어줘요. 100자 내외, 따뜻하고 짧게.',
     inputPlaceholder:'오늘 있었던 일을 별숨에게 털어놔요',
   },
   dawn:{
@@ -468,7 +468,7 @@ const TIME_CONFIG={
     ctaText:'새벽의 별숨에게 물어보기 ✦',
     ctaBg:'var(--teal)',ctaColor:'#fff',
     greeting:(name)=>`별이 가장 선명한 새벽, ${name||'당신'}에게 전할 이야기가 있어요.`,
-    prompt:'[새벽 운세] 잠 못 드는 새벽, 이 시간에 필요한 위로와 내일을 향한 이야기를 전해줘요.',
+    prompt:'[새벽·100자] 잠 못 드는 이 새벽에 필요한 위로 한 마디를 100자 내외로 전해줘요.',
     inputPlaceholder:'새벽에 떠오른 생각을 적어봐요',
   },
 };
@@ -542,457 +542,88 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:
 .dot.done{width:14px;background:var(--t4)}.dot.active{width:28px;background:var(--gold)}.dot.todo{width:4px;background:var(--t4);opacity:.4}
 
 /* ══ LANDING ══ */
-.land{text-align:center}
-.land-wordmark{font-size:var(--xs);font-weight:300;letter-spacing:.35em;color:var(--t4);text-transform:lowercase;margin-bottom:52px;animation:fadeUp .8s .1s both}
-.land-orb{width:148px;height:148px;border-radius:50%;margin:0 auto var(--sp4);position:relative;animation:fadeUp .8s .2s both}
-.orb-core{position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(232,176,72,.75),rgba(190,110,170,.5),rgba(50,30,90,.9),transparent);animation:orbPulse 5s infinite}
-.orb-r1{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(232,176,72,.18);animation:orbSpin 14s linear infinite}
-.orb-r1::after{content:'';position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;background:var(--gold);transform:translateX(-50%);box-shadow:0 0 12px var(--gold),0 0 24px rgba(232,176,72,.4)}
-.orb-r2{position:absolute;inset:-16px;border-radius:50%;border:1px solid rgba(232,176,72,.06);animation:orbSpin 22s linear infinite reverse}
-.orb-r2::after{content:'';position:absolute;bottom:-3px;right:20%;width:4px;height:4px;border-radius:50%;background:rgba(200,160,255,.7);box-shadow:0 0 8px rgba(200,160,255,.5)}
-@keyframes orbPulse{0%,100%{opacity:.88;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
-@keyframes orbSpin{to{transform:rotate(360deg)}}
-.land-copy{font-size:var(--lg);font-weight:300;color:var(--t1);line-height:1.75;letter-spacing:-.015em;margin-bottom:6px;animation:fadeUp .8s .35s both}
+/* ─ 히어로 존: 전체 뷰포트 높이, 중앙 정렬, 스크롤 없음 ─ */
+.land-hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px 32px;text-align:center;box-sizing:border-box}
+.land-wordmark{font-size:.58rem;font-weight:300;letter-spacing:.5em;color:var(--t4);text-transform:lowercase;margin-bottom:52px;animation:fadeUp .9s .05s both}
+/* 오브 */
+.land-orb{width:156px;height:156px;border-radius:50%;margin:0 auto 36px;position:relative;animation:fadeUp .9s .15s both;flex-shrink:0}
+.orb-core{position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(232,176,72,.8),rgba(190,110,170,.55),rgba(50,30,90,.95),transparent);animation:orbPulse 5s infinite}
+.orb-r1{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(232,176,72,.2);animation:orbSpin 14s linear infinite}
+.orb-r1::after{content:'';position:absolute;top:-3px;left:50%;width:5px;height:5px;border-radius:50%;background:var(--gold);transform:translateX(-50%);box-shadow:0 0 10px var(--gold),0 0 22px rgba(232,176,72,.4)}
+.orb-r2{position:absolute;inset:-18px;border-radius:50%;border:1px solid rgba(232,176,72,.06);animation:orbSpin 22s linear infinite reverse}
+.orb-r2::after{content:'';position:absolute;bottom:-3px;right:20%;width:4px;height:4px;border-radius:50%;background:rgba(200,160,255,.65)}
+/* 카피 */
+.land-copy{font-size:1.2rem;font-weight:300;color:var(--t1);line-height:1.85;letter-spacing:-.018em;margin-bottom:8px;animation:fadeUp .9s .28s both}
 .land-copy em{font-style:normal;color:var(--gold);font-weight:400}
-.land-sub{font-size:var(--sm);color:var(--t3);margin-bottom:var(--sp4);animation:fadeUp .8s .45s both;line-height:1.85}
-.cta-main{display:inline-flex;align-items:center;gap:.5rem;padding:15px 40px;border:none;border-radius:50px;background:var(--gold);color:#0D0B14;font-size:var(--sm);font-weight:700;font-family:var(--ff);cursor:pointer;letter-spacing:.02em;transition:transform .15s,opacity .15s;animation:fadeUp .8s .55s both}
-.cta-main:hover{opacity:.88}
-.cta-main:active{transform:scale(.97)}
-.land-trust{display:flex;align-items:center;gap:var(--sp2);justify-content:center;margin-top:var(--sp3);font-size:var(--xs);color:var(--t4);animation:fadeUp .8s .65s both}
-.rev-wrap{margin-top:var(--sp3);overflow:hidden;animation:fadeUp .8s .75s both}
-.rev-track{display:flex;gap:var(--sp2);overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory}
-.rev-card{flex-shrink:0;width:210px;scroll-snap-align:start;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp2)}
-.rev-stars{font-size:var(--xs);color:var(--gold);margin-bottom:5px;letter-spacing:2px}
-.rev-text{font-size:var(--xs);color:var(--t2);line-height:1.75}
-.rev-nick{font-size:var(--xs);color:var(--t4);margin-top:5px}
+.land-sub{font-size:.8rem;color:var(--t4);margin-bottom:32px;animation:fadeUp .9s .38s both;line-height:1.9;letter-spacing:.005em}
+/* 로그인 카드 (히어로 안) */
+.land-login-section{width:100%;max-width:360px;animation:fadeUp .9s .5s both}
+.land-login-card{background:var(--bg1);border:1px solid var(--line);border-radius:20px;padding:20px;text-align:left}
+.land-login-card.logged{border-color:rgba(232,176,72,.28);background:linear-gradient(160deg,rgba(232,176,72,.07),transparent 60%)}
+.land-login-why{font-size:.68rem;color:var(--t4);text-align:center;margin-top:10px;letter-spacing:.02em}
+/* 스크롤 힌트 */
+.land-scroll-hint{margin-top:24px;animation:fadeUp .9s .7s both,scrollBob 2.4s 1.5s ease-in-out infinite}
+.land-scroll-hint span{font-size:.7rem;color:var(--t4);display:block;transform:rotate(90deg)}
+@keyframes scrollBob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+/* 고스트 링크 */
+.land-ghost-link{background:none;border:none;color:var(--t4);font-size:.7rem;font-family:var(--ff);cursor:pointer;display:block;width:100%;text-align:center;margin-top:10px;padding:4px;letter-spacing:.02em;transition:color .2s}
+.land-ghost-link:hover{color:var(--t3)}
 
-/* ══ CARD (입력) ══ */
-.card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r3);padding:var(--sp4) var(--sp3);animation:fadeUp .5s cubic-bezier(.34,1.56,.64,1)}
-.card-title{font-size:var(--lg);font-weight:600;color:var(--t1);margin-bottom:5px}
-.card-sub{font-size:var(--sm);color:var(--t3);margin-bottom:var(--sp4);line-height:1.75}
-.lbl{display:block;font-size:var(--xs);font-weight:600;color:var(--t3);letter-spacing:.06em;margin-bottom:8px}
-.inp{width:100%;padding:13px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s,background .2s;margin-bottom:var(--sp3);-webkit-appearance:none}
-.inp:focus{outline:none;border-color:var(--gold);background:var(--bg3)}
-.inp::placeholder{color:var(--t4)}
-select.inp option{background:var(--bg2)}
-.row{display:flex;gap:8px}.row .inp{margin-bottom:0}.col{flex:1;min-width:0}
-.gender-group{display:flex;gap:8px;margin-bottom:var(--sp3)}
-.gbtn{flex:1;padding:11px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t3);font-size:var(--sm);font-family:var(--ff);cursor:pointer;transition:all .2s}
-.gbtn.on{background:var(--goldf);border-color:var(--gold);color:var(--gold);font-weight:600}
-.gbtn:active{transform:scale(.97)}
-.toggle-row{display:flex;align-items:center;gap:var(--sp2);padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);cursor:pointer;margin-bottom:var(--sp3)}
-.toggle{width:40px;height:22px;border-radius:11px;position:relative;flex-shrink:0;transition:background .25s;border:none;cursor:pointer;padding:0}
-.toggle.on{background:var(--gold)}.toggle.off{background:var(--bg3)}
-.toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:white;top:3px;transition:left .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 3px rgba(0,0,0,.3)}
-.toggle.on::after{left:21px}.toggle.off::after{left:3px}
-.toggle-label{font-size:var(--sm);color:var(--t2)}
-.pillars-wrap{margin:var(--sp2) 0}
-.pillars-hint{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.pillars{display:flex;gap:5px}
-.pillar{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 3px;text-align:center}
-.p-lbl{font-size:var(--xs);color:var(--t4);margin-bottom:3px}.p-hj{font-size:1.05rem;color:var(--gold);font-weight:600;line-height:1.2}.p-kr{font-size:var(--xs);color:var(--t3);margin-top:2px}
-.oh-bar{display:flex;height:3px;border-radius:2px;gap:2px;margin:8px 0 6px;overflow:hidden}
-.oh-seg{border-radius:1px;transition:flex .6s}
-.oh-tags{display:flex;gap:4px;flex-wrap:wrap}
-.oh-tag{padding:3px 8px;border-radius:6px;font-size:var(--xs);font-weight:600}
-.il-preview{margin-top:var(--sp2);font-size:var(--xs);color:var(--t3);line-height:1.85;padding:10px 12px;background:var(--bg2);border-radius:var(--r1);border-left:2px solid var(--gold)}
-.astro-preview{margin-top:8px;display:flex;gap:5px;flex-wrap:wrap}
-.a-chip{padding:4px 10px;background:var(--goldf);border:1px solid var(--acc);border-radius:50px;font-size:var(--xs);color:var(--gold)}
-.btn-main{width:100%;padding:14px;border:none;border-radius:var(--r1);background:var(--gold);color:#0D0B14;font-size:var(--sm);font-weight:700;font-family:var(--ff);cursor:pointer;transition:transform .15s,opacity .15s;margin-top:var(--sp2)}
-.btn-main:hover{opacity:.88}.btn-main:active{transform:scale(.98)}.btn-main:disabled{opacity:.3;cursor:not-allowed;transform:none}
+/* ─ 스크롤 존: 기능 영역 ─ */
+.land-scroll-zone{padding-top:64px;padding-bottom:64px}
 
-/* ══ 질문 선택 ══ */
-.q-shell{animation:fadeUp .5s cubic-bezier(.34,1.56,.64,1)}
-.combo-banner{background:var(--goldf);border:1px solid var(--acc);border-radius:var(--r2);padding:12px var(--sp2);margin-bottom:var(--sp3);text-align:center}
-.combo-title{font-size:var(--sm);font-weight:600;color:var(--gold);margin-bottom:3px}
-.combo-sub{font-size:var(--xs);color:var(--t3);line-height:1.6}
-.cat-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:var(--sp2)}
-.cat-tab{padding:6px 12px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:all .2s}
-.cat-tab.on{background:var(--goldf);border-color:var(--acc);color:var(--gold);font-weight:600}
-.q-list{display:flex;flex-direction:column;gap:4px;margin-bottom:var(--sp3)}
-.q-item{width:100%;text-align:left;padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t2);font-size:var(--sm);font-family:var(--ff);cursor:pointer;line-height:1.55;transition:all .2s}
-.q-item:hover{border-color:var(--t4);color:var(--t1);transform:translateX(3px)}.q-item.on{background:var(--goldf);border-color:var(--acc);color:var(--gold);font-weight:500}.q-item.on::before{content:'✓  '}.q-item:disabled{opacity:.28;cursor:not-allowed;transform:none}
-.diy-wrap{margin-bottom:var(--sp3)}
-.diy-inp{width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);resize:none;height:68px;transition:border-color .2s}
-.diy-inp:focus{outline:none;border-color:var(--gold)}.diy-inp::placeholder{color:var(--t4)}
-.diy-row{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
-.diy-add{padding:5px 12px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--gold);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:background .2s}
-.diy-add:hover{background:var(--goldf)}
-.sel-qs{margin-bottom:var(--sp3)}
-.sel-lbl{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:8px}
-.sel-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;margin-bottom:4px;background:var(--goldf);border:1px solid var(--acc);border-radius:var(--r1);animation:fadeUp .2s ease}
-.sel-n{width:18px;height:18px;border-radius:50%;background:var(--gold);color:#0D0B14;font-size:var(--xs);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.sel-t{flex:1;font-size:var(--sm);color:var(--t1);line-height:1.5}.sel-del{background:none;border:none;color:var(--t4);cursor:pointer;font-size:.85rem;padding:0;flex-shrink:0;transition:color .2s}.sel-del:hover{color:var(--t2)}
-.pkg-sec{margin-bottom:var(--sp2)}.pkg-lbl{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:8px}
-.pkgs{display:flex;gap:5px}
-.pkg{flex:1;padding:10px 4px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);text-align:center;cursor:pointer;transition:all .2s;position:relative}
-.pkg:hover{border-color:var(--t4)}.pkg.chosen{background:var(--goldf);border-color:var(--gold)}
-.pkg-e{font-size:1rem;margin-bottom:2px}.pkg-n{font-size:var(--xs);font-weight:600;color:var(--t2)}.pkg-p{font-size:var(--xs);color:var(--gold);font-weight:700;margin-top:1px}
-.pkg-hot{position:absolute;top:-7px;right:-3px;background:var(--gold);color:#0D0B14;font-size:.5rem;font-weight:800;padding:2px 5px;border-radius:4px}
-.q-stat{font-size:var(--xs);color:var(--t4);text-align:center;margin:8px 0 var(--sp2)}.q-stat strong{color:var(--gold)}
-.free-note{font-size:var(--xs);color:var(--t4);text-align:center;margin-bottom:var(--sp2)}.free-note span{color:var(--gold)}
+/* 시간대별 카드 — 접히는 방식 */
+.land-slot-wrap{margin-bottom:24px;animation:fadeUp .8s .1s both}
+.land-slot-card{display:flex;align-items:center;gap:12px;width:100%;padding:15px 18px;background:var(--bg1);border:1px solid var(--line);border-radius:16px;cursor:pointer;text-align:left;box-sizing:border-box;font-family:var(--ff);transition:border-color .2s}
+.land-slot-card:hover{border-color:var(--acc)}
+.land-slot-card.open{border-color:var(--acc);border-bottom-left-radius:0;border-bottom-right-radius:0}
+.land-slot-emoji{font-size:1rem;flex-shrink:0}
+.land-slot-label{flex:1;overflow:hidden}
+.land-slot-title{display:block;font-size:.75rem;font-weight:600;color:var(--t1);margin-bottom:2px}
+.land-slot-hint{display:block;font-size:.65rem;color:var(--t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.land-slot-arr{font-size:.85rem;color:var(--t4);transition:transform .25s cubic-bezier(.4,0,.2,1);flex-shrink:0;line-height:1}
+.land-slot-card.open .land-slot-arr{transform:rotate(90deg)}
+.land-slot-body{padding:16px 18px;background:var(--bg1);border:1px solid var(--acc);border-top:none;border-bottom-left-radius:16px;border-bottom-right-radius:16px;animation:fadeUp .2s both}
+.land-slot-body-btn{width:100%;padding:11px;border-radius:50px;border:none;background:var(--gold);color:#0D0B14;font-family:var(--ff);font-size:.75rem;font-weight:600;cursor:pointer;transition:opacity .2s}
+.land-slot-body-btn:hover{opacity:.85}
 
-/* ══ LOADING ══ */
-.loading-page{padding:var(--sp4) var(--sp3);width:100%;max-width:460px}
-.skel-header{display:flex;align-items:center;gap:var(--sp2);padding:var(--sp3);background:var(--bg1);border:1px solid var(--line);border-radius:var(--r3) var(--r3) 0 0;margin-bottom:2px}
-.skel-av{width:48px;height:48px;border-radius:50%;background:var(--bg2)}
-.skel-lines{flex:1}
-.skel-line{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
-.skel-line.w60{width:60%;margin-bottom:8px}.skel-line.w40{width:40%}.skel-line.full{width:100%}.skel-line.w80{width:80%}.skel-line.w55{width:55%}
-.skel-body{background:var(--bg1);border:1px solid var(--line);border-top:none;padding:var(--sp3);border-radius:0 0 var(--r3) var(--r3)}
-.skel-para{display:flex;flex-direction:column;gap:8px;padding:var(--sp2) 0;border-bottom:1px solid var(--line)}.skel-para:last-child{border-bottom:none}
-.skel-status{text-align:center;margin-top:var(--sp3);font-size:var(--sm);color:var(--t3);animation:statusFade .5s ease}
-.skel-status-sub{font-size:var(--xs);color:var(--t4);margin-top:5px}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes statusFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* 퀵질문 */
+.land-quick-section{margin-bottom:32px;animation:fadeUp .8s .2s both}
+.land-quick-label{font-size:.6rem;letter-spacing:.16em;color:var(--t4);text-align:center;margin-bottom:16px;text-transform:uppercase}
+.land-quick-inp-row{display:flex;gap:8px;margin-bottom:8px}
+.land-quick-inp{flex:1;padding:13px 18px;background:var(--bg1);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:.82rem;font-family:var(--ff);transition:border-color .2s}
+.land-quick-inp:focus{outline:none;border-color:var(--gold)}.land-quick-inp::placeholder{color:var(--t4)}
+.land-quick-send{width:46px;height:46px;border-radius:50%;border:none;background:var(--gold);color:#0D0B14;font-size:.85rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .15s}
+.land-quick-send:hover{opacity:.85}.land-quick-send:active{transform:scale(.93)}.land-quick-send:disabled{opacity:.3;cursor:not-allowed}
+.land-cat-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;justify-content:center}
+.land-cat-chip{padding:5px 13px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t4);font-size:.68rem;font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:all .2s}
+.land-cat-chip:hover{border-color:var(--acc);color:var(--gold)}
+.land-cat-chip.on{background:var(--goldf);border-color:var(--acc);color:var(--gold);font-weight:600}
+.land-sugg-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.land-sugg-chip{padding:6px 12px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:.68rem;font-family:var(--ff);cursor:pointer;line-height:1.5;transition:all .2s;text-align:left}
+.land-sugg-chip:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
 
-/* ══ RESULT ══ */
-.res-wrap{animation:fadeUp .6s cubic-bezier(.34,1.56,.64,1);width:100%;max-width:460px}
-.res-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden}
-.res-header{display:flex;align-items:flex-start;gap:var(--sp2);padding:var(--sp3);border-bottom:1px solid var(--line)}
-.res-av{width:44px;height:44px;border-radius:50%;background:var(--goldf);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
-.res-name{font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:4px}
-.res-chips{display:flex;gap:5px;flex-wrap:wrap}
-.res-chip{padding:3px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;font-size:var(--xs);color:var(--t3)}
-
-/* 아코디언 */
-.acc-item{border-bottom:1px solid var(--line)}.acc-item:last-of-type{border-bottom:none}
-.acc-trigger{width:100%;text-align:left;padding:var(--sp2) var(--sp3);background:transparent;border:none;cursor:pointer;color:var(--t2);display:flex;justify-content:space-between;align-items:center;transition:color .2s;gap:var(--sp2)}
-.acc-trigger:hover{color:var(--t1)}.acc-trigger.open{color:var(--gold)}
-.acc-q-wrap{flex:1;text-align:left}
-.acc-q-num{font-size:var(--xs);color:var(--gold);font-weight:700;margin-bottom:2px}
-.acc-q-text{font-size:var(--sm);color:inherit;line-height:1.55}
-.acc-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.skip-btn{padding:4px 10px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--gold);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:background .2s;animation:fadeUp .2s ease}
-.skip-btn:hover{background:var(--goldf)}
-.acc-chevron{font-size:.6rem;color:var(--t4);transition:transform .3s,color .3s}
-.acc-chevron.open{transform:rotate(180deg);color:var(--gold)}
-.acc-body{overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
-.acc-body.closed{max-height:0!important;opacity:0!important;overflow:hidden!important}
-.acc-body.open{max-height:3000px;opacity:1}
-.acc-content{padding:0 var(--sp3) var(--sp4);font-size:var(--sm);color:var(--t2);line-height:2.2;letter-spacing:-.005em;white-space:pre-wrap}
-.acc-content p:first-child::first-letter{font-size:2.4em;font-weight:700;color:var(--gold);float:left;line-height:.82;margin:.06em .1em 0 0}
-.typing-cursor{display:inline-block;width:2px;height:.9em;background:var(--gold);margin-left:2px;vertical-align:text-bottom;animation:blink .7s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-
-/* ══ 추가질문 STEP 5 ══ */
-.chat-page{width:100%;max-width:500px;display:flex;flex-direction:column;min-height:100vh;animation:fadeUp .5s ease}
-.chat-page-header{padding:var(--sp3) var(--sp3) var(--sp2);border-bottom:1px solid var(--line);background:var(--bg1)}
-.chat-page-title{font-size:var(--lg);font-weight:600;color:var(--t1);margin-bottom:4px}
-.chat-page-sub{font-size:var(--xs);color:var(--t3)}
-.chat-limit-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--goldf);border:1px solid var(--acc);border-radius:50px;font-size:var(--xs);color:var(--gold);margin-top:8px}
-.chat-history{flex:1;padding:var(--sp2) var(--sp3);display:flex;flex-direction:column;gap:var(--sp3);overflow-y:auto}
-.chat-msg{display:flex;flex-direction:column;gap:6px;animation:fadeUp .3s ease}
-.chat-msg.user{align-items:flex-end}
-.chat-msg.ai{align-items:flex-start}
-.chat-role{font-size:var(--xs);color:var(--t4);padding:0 4px}
-.chat-bubble{max-width:88%;padding:var(--sp2) var(--sp3);border-radius:var(--r2);font-size:var(--sm);line-height:2.1;letter-spacing:-.005em}
-.chat-msg.ai .chat-bubble{background:var(--bg2);border:1px solid var(--line);border-bottom-left-radius:4px;color:var(--t1);white-space:pre-wrap}
-.chat-msg.user .chat-bubble{background:var(--bg3);border:1px solid var(--line);border-bottom-right-radius:4px;color:var(--t1)}
-.chat-bubble-actions{display:flex;justify-content:flex-end;margin-top:4px}
-.typing-dots{display:flex;gap:4px;padding:10px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2) var(--r2) var(--r2) 4px;width:fit-content}
-.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--t4);animation:dot 1.2s infinite}
-.typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
-@keyframes dot{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}
-.chat-sugg-wrap{padding:var(--sp1) var(--sp3);display:flex;gap:5px;flex-wrap:wrap;border-top:1px solid var(--line)}
-.sugg-btn{padding:6px 12px;background:transparent;border:1px solid var(--line);border-radius:50px;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:all .2s}
-.sugg-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
-.chat-input-area{padding:var(--sp2) var(--sp3);border-top:1px solid var(--line);background:var(--bg1)}
-.chat-inp-row{display:flex;gap:8px}
-.chat-inp{flex:1;padding:11px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}
-.chat-inp:focus{outline:none;border-color:var(--acc)}.chat-inp::placeholder{color:var(--t4)}.chat-inp:disabled{opacity:.4}
-.chat-send{width:40px;height:40px;border-radius:50%;border:none;background:var(--gold);color:#0D0B14;font-size:.85rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .15s}
-.chat-send:hover{opacity:.85}.chat-send:active{transform:scale(.93)}.chat-send:disabled{opacity:.3;cursor:not-allowed}
-
-/* ══ 결과 액션 ══ */
-.res-actions{padding:var(--sp3);border-top:1px solid var(--line)}
-.upsell{padding:var(--sp2) var(--sp3);background:var(--golds);border:1px solid var(--acc);border-radius:var(--r2);text-align:center;margin-bottom:var(--sp2)}
-.up-t{font-size:var(--sm);font-weight:600;color:var(--gold);margin-bottom:4px}
-.up-d{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp2);line-height:1.75}
-.up-btn{width:100%;padding:11px;border:1px solid var(--gold);border-radius:var(--r1);background:transparent;color:var(--gold);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:pointer;transition:all .2s}
-.up-btn:hover{background:var(--goldf)}.up-btn:disabled{opacity:.4;cursor:not-allowed}
-.chat-cta{width:100%;padding:13px;border:none;border-radius:var(--r1);background:linear-gradient(135deg,rgba(232,176,72,.15),rgba(232,176,72,.05));border:1px solid var(--acc);color:var(--gold);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:pointer;transition:all .2s;margin-bottom:var(--sp2);display:flex;align-items:center;justify-content:center;gap:8px}
-.chat-cta:hover{background:var(--goldf)}.chat-cta:disabled{opacity:.4;cursor:not-allowed}
-.res-btns{display:flex;gap:6px;flex-wrap:wrap}
-.res-btn{flex:1;min-width:70px;padding:9px 6px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
-.res-btn:hover{border-color:var(--acc);color:var(--gold)}.res-btn:active{transform:scale(.96)}
-
-/* ══ REPORT STEP 6 ══ */
-.report-page{width:100%;max-width:500px;animation:fadeUp .5s ease}
-.report-header{text-align:center;padding:var(--sp4) var(--sp3) var(--sp3)}
-.report-date{font-size:var(--xs);color:var(--t4);letter-spacing:.12em;margin-bottom:8px}
-.report-title{font-size:var(--xl);font-weight:700;color:var(--gold);margin-bottom:6px;line-height:1.2}
-.report-name{font-size:var(--sm);color:var(--t3)}
-.report-content{padding:0 var(--sp3) var(--sp5)}
-.report-text{font-size:var(--sm);color:var(--t2);line-height:2.2;letter-spacing:-.005em;white-space:pre-wrap}
-.report-text p:first-child::first-letter{font-size:2.4em;font-weight:700;color:var(--gold);float:left;line-height:.82;margin:.06em .1em 0 0}
-.report-skip{display:flex;justify-content:center;margin:var(--sp3) 0}
-.report-skip-btn{padding:8px 20px;border-radius:50px;border:1px solid var(--acc);background:transparent;color:var(--gold);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:background .2s}
-.report-skip-btn:hover{background:var(--goldf)}
-
-
-/* ══ 피드백 ══ */
-.fb-wrap{display:flex;align-items:center;gap:8px;justify-content:center;padding:var(--sp2) 0;border-top:1px solid var(--line);margin-top:var(--sp1)}
-.fb-label{font-size:var(--xs);color:var(--t4)}
-.fb-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
-.fb-btn:hover{border-color:var(--gold);transform:scale(1.1)}
-.fb-btn.selected{background:var(--goldf);border-color:var(--gold)}
-.fb-done{font-size:var(--xs);color:var(--gold);animation:fadeUp .3s ease}
-
-/* ══ 공유 카드 ══ */
-
-/* ══ 오늘의 한마디 ══ */
-
-/* ══ 별의 한 줄 요약 ══ */
-.star-summary{padding:var(--sp2) var(--sp3);background:var(--goldf);border-bottom:1px solid var(--acc);display:flex;align-items:flex-start;gap:8px}
-.star-summary-icon{color:var(--gold);flex-shrink:0;font-size:.9rem;margin-top:2px}
-.star-summary-text{font-size:var(--sm);color:var(--gold);font-weight:500;line-height:1.65;font-style:italic}
-.daily-word{margin:var(--sp3) 0 var(--sp2);padding:var(--sp2) var(--sp3);background:var(--goldf);border:1px solid var(--acc);border-radius:var(--r2);text-align:center;animation:fadeUp .8s .85s both}
-.daily-label{font-size:var(--xs);color:var(--gold);letter-spacing:.1em;margin-bottom:5px}
-.daily-text{font-size:var(--sm);color:var(--t1);line-height:1.75;font-weight:300}
-.daily-date{font-size:var(--xs);color:var(--t4);margin-top:4px}
-
-
-/* ══ 무드 배너 ══ */
-.mood-banner{padding:12px var(--sp3);display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);animation:fadeUp .5s ease}
-.mood-orb{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-.mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
-.mood-word{font-size:var(--sm);font-weight:600}
-
-/* ══ 시나리오 궁합 ══ */
-.compat-page{width:100%;max-width:480px;animation:fadeUp .5s ease}
-.compat-header{text-align:center;padding:var(--sp4) var(--sp3) var(--sp3)}
-.compat-title{font-size:var(--xl);font-weight:700;color:var(--t1);margin-bottom:6px}
-.compat-sub{font-size:var(--sm);color:var(--t3);line-height:1.75}
-.compat-section{margin-bottom:var(--sp3)}
-.compat-label{font-size:var(--xs);font-weight:700;color:var(--t4);letter-spacing:.08em;margin-bottom:10px}
-.person-cards{display:flex;gap:10px}
-.person-card{flex:1;background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp2);position:relative}
-.person-card.a-card{border-color:var(--lavacc)}
-.person-card.b-card{border-color:var(--tealacc)}
-.person-badge{font-size:var(--xs);font-weight:700;padding:2px 8px;border-radius:50px;margin-bottom:8px;display:inline-block}
-.person-badge.a{background:var(--lavf);color:var(--lav)}
-.person-badge.b{background:var(--tealf);color:var(--teal)}
-.place-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.place-btn{padding:10px 4px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);text-align:center;cursor:pointer;transition:all var(--trans);font-family:var(--ff)}
-.place-btn:hover{border-color:var(--t4);transform:translateY(-2px)}
-.place-btn.on{background:var(--goldf);border-color:var(--gold)}
-.place-emoji{font-size:1.4rem;display:block;margin-bottom:3px}
-.place-label{font-size:var(--xs);color:var(--t3);display:block}
-.place-btn.on .place-label{color:var(--gold)}
-.scenario-wrap{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;margin-bottom:var(--sp3)}
-.scenario-header{padding:var(--sp2) var(--sp3);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
-.scenario-place-icon{font-size:1.3rem}
-.scenario-place-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
-.scenario-sub{font-size:var(--xs);color:var(--t4)}
-.bubble-list{padding:var(--sp3);display:flex;flex-direction:column;gap:10px}
-.bubble-row{display:flex;gap:8px;animation:fadeUp .3s ease}
-.bubble-row.b-row{flex-direction:row-reverse}
-.bubble-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;margin-top:2px}
-.bubble-avatar.a-av{background:var(--lavf);border:1px solid var(--lavacc);color:var(--lav)}
-.bubble-avatar.b-av{background:var(--tealf);border:1px solid var(--tealacc);color:var(--teal)}
-.bubble-name{font-size:var(--xs);color:var(--t4);margin-bottom:3px}
-.bubble-row.b-row .bubble-name{text-align:right}
-.bubble-text{padding:10px 14px;border-radius:18px;font-size:var(--sm);line-height:1.65;max-width:78%}
-.bubble-row.a-row .bubble-text{background:var(--bg2);border:1px solid var(--line);border-bottom-left-radius:4px;color:var(--t1)}
-.bubble-row.b-row .bubble-text{background:var(--tealf);border:1px solid var(--tealacc);border-bottom-right-radius:4px;color:var(--t1)}
-.scenario-summary{padding:var(--sp2) var(--sp3);background:var(--goldf);border-top:1px solid var(--acc);font-size:var(--xs);color:var(--gold);line-height:1.75;font-style:italic;text-align:center}
-.scenario-loading{padding:var(--sp4);text-align:center;color:var(--t3);font-size:var(--sm)}
-.scenario-typing-dots{display:flex;gap:5px;justify-content:center;margin:var(--sp2) 0}
-.scenario-typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--t4);animation:dot 1.2s infinite}
-.scenario-typing-dots span:nth-child(2){animation-delay:.2s}
-.scenario-typing-dots span:nth-child(3){animation-delay:.4s}
-.compat-total{padding:var(--sp3);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);margin-bottom:var(--sp3);text-align:center}
-.compat-total-label{font-size:var(--xs);color:var(--t4);margin-bottom:6px;letter-spacing:.08em}
-.compat-total-text{font-size:var(--sm);color:var(--t1);line-height:1.75}
-.kizmet-bar{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;margin:10px 0}
-.kizmet-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--lav),var(--gold));transition:width 1.2s cubic-bezier(.34,1.56,.64,1)}
-.kizmet-score{font-size:var(--xl);font-weight:700;color:var(--gold)}
-.compat-btns{display:flex;gap:8px}
-
-/* ══ 별의 편지 ══ */
-.letter-page{width:100%;max-width:480px;animation:fadeUp .5s ease}
-.letter-envelope{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;margin-bottom:var(--sp3)}
-.letter-env-top{height:80px;background:linear-gradient(135deg,var(--goldf),var(--lavf));display:flex;align-items:center;justify-content:center;font-size:2rem;border-bottom:1px solid var(--line)}
-.letter-body{padding:var(--sp4) var(--sp3)}
-.letter-date-to{font-size:var(--xs);color:var(--t4);margin-bottom:var(--sp2);letter-spacing:.06em}
-.letter-date-to strong{color:var(--gold)}
-.letter-content{font-size:var(--sm);color:var(--t2);line-height:2.2;white-space:pre-wrap;letter-spacing:-.005em}
-.letter-content p:first-child::first-letter{font-size:2.4em;font-weight:700;color:var(--gold);float:left;line-height:.82;margin:.06em .1em 0 0}
-.letter-seal{display:flex;flex-direction:column;align-items:center;gap:6px;padding:var(--sp3);border-top:1px solid var(--line)}
-.seal-icon{font-size:1.5rem;animation:orbPulse 3s infinite}
-.seal-text{font-size:var(--xs);color:var(--t4);letter-spacing:.08em}
-.letter-actions{display:flex;gap:8px}
-
-/* ══ 랜딩 샘플 미리보기 ══ */
-.sample-preview{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);margin:var(--sp3) 0;text-align:left;position:relative;overflow:hidden;animation:fadeUp .8s .7s both}
-.sample-preview::before{content:'미리보기 ✦';position:absolute;top:10px;right:14px;font-size:var(--xs);color:var(--t4);letter-spacing:.07em}
-.sample-name{font-size:var(--xs);color:var(--gold);margin-bottom:8px;letter-spacing:.06em}
-.sample-text{font-size:var(--xs);color:var(--t2);line-height:1.9;min-height:60px}
+/* 샘플 프리뷰 */
+.sample-preview{background:transparent;border:1px solid var(--line);border-radius:16px;padding:20px;margin:0 0 32px;text-align:left;position:relative;overflow:hidden;animation:fadeUp .8s .3s both}
+.sample-preview::after{content:'미리보기 ✦';position:absolute;top:12px;right:14px;font-size:.58rem;color:var(--t4);letter-spacing:.08em}
+.sample-name{font-size:.62rem;color:var(--gold);margin-bottom:10px;letter-spacing:.1em}
+.sample-text{font-size:.75rem;color:var(--t3);line-height:1.95;min-height:52px}
 .sample-cursor{display:inline-block;width:1.5px;height:.85em;background:var(--gold);margin-left:1px;vertical-align:text-bottom;animation:blink .7s infinite}
 
-/* ══ 결과 액션 메뉴 확장 ══ */
-.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--sp2)}
-.action-card{padding:var(--sp2);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:all var(--trans);text-align:left}
-.action-card:hover{border-color:var(--acc);background:var(--goldf);transform:translateY(-2px)}
-.action-card-icon{font-size:1.3rem;margin-bottom:5px}
-.action-card-title{font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:2px}
-.action-card-sub{font-size:var(--xs);color:var(--t3);line-height:1.5}
-.action-card.compat{border-color:var(--lavacc)}
-.action-card.compat:hover{background:var(--lavf);border-color:var(--lav)}
-.action-card.letter{border-color:var(--roseacc)}
-.action-card.letter:hover{background:var(--rosef);border-color:var(--rose)}
+/* 오늘의 한마디 */
+.daily-word{margin:0 0 32px;padding:18px 20px;background:transparent;border:1px solid var(--line);border-radius:14px;text-align:left;animation:fadeUp .8s .4s both;position:relative;overflow:hidden}
+.daily-word::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,176,72,.3),transparent)}
+.daily-label{font-size:.6rem;letter-spacing:.12em;color:var(--t4);margin-bottom:8px;text-transform:uppercase}
+.daily-text{font-size:.8rem;color:var(--t2);line-height:1.85;font-weight:300;font-style:italic}
 
-/* ══ 로딩 고도화 ══ */
-.load-orb-wrap{display:flex;justify-content:center;margin:var(--sp4) 0}
-.load-orb{width:80px;height:80px;border-radius:50%;position:relative;margin:0 auto}
-.load-orb-core{position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(232,176,72,.6),rgba(155,142,196,.4),rgba(50,30,90,.9));animation:orbPulse 2s infinite}
-.load-orb-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(232,176,72,.3);animation:orbSpin 3s linear infinite}
-.load-orb-ring2{position:absolute;inset:-8px;border-radius:50%;border:1px dashed rgba(155,142,196,.2);animation:orbSpin 7s linear infinite reverse}
-.load-pillars{display:flex;gap:6px;justify-content:center;margin:var(--sp2) 0}
-.load-pillar{width:36px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center;animation:fadeUp .4s ease both}
-.load-pillar:nth-child(1){animation-delay:.0s}
-.load-pillar:nth-child(2){animation-delay:.1s}
-.load-pillar:nth-child(3){animation-delay:.2s}
-.load-pillar:nth-child(4){animation-delay:.3s}
-.load-p-hj{font-size:.9rem;color:var(--gold);font-weight:600;line-height:1.2}
-.load-p-lbl{font-size:.5rem;color:var(--t4);margin-top:2px}
-
-/* ══ step 전환 fade ══ */
-.step-fade{animation:stepFadeIn .45s cubic-bezier(.4,0,.2,1)}
-@keyframes stepFadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-
-
-/* ══ 결제 Toast 알림 ══ */
-.pay-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;padding:12px 24px;border-radius:50px;font-size:var(--sm);font-weight:600;white-space:nowrap;animation:toastUp .35s cubic-bezier(.34,1.56,.64,1)}
-.pay-toast.success{background:var(--gold);color:#0D0B14;box-shadow:0 4px 20px rgba(232,176,72,.4)}
-.pay-toast.error{background:var(--rose,#E87B8A);color:#fff}
-@keyframes toastUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-
-/* ══ 랜딩 — 로그인/개인화 섹션 ══ */
-.land-login-section{margin:var(--sp3) 0;animation:fadeUp .8s .6s both}
-.land-login-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);text-align:left}
-.land-login-card.logged{border-color:var(--acc);background:var(--goldf)}
-.llc-top{display:flex;align-items:center;gap:var(--sp2);margin-bottom:var(--sp2)}
-.llc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acc);flex-shrink:0}
-.llc-avatar-placeholder{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.llc-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
-.llc-sub{font-size:var(--xs);color:var(--t3);margin-top:2px}
-.llc-greeting{font-size:var(--sm);color:var(--gold);font-weight:500;margin-bottom:var(--sp2);line-height:1.65}
-.llc-profile-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:var(--sp2)}
-.llc-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;font-size:var(--xs);color:var(--t2);cursor:pointer;transition:all .2s}
-.llc-chip:hover{border-color:var(--acc);color:var(--gold)}
-.llc-chip.filled{background:var(--goldf);border-color:var(--acc);color:var(--gold)}
-.llc-actions{display:flex;gap:6px}
-.kakao-login-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--r1);background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:700;color:#191919;transition:all .2s}
-.kakao-login-full:hover{background:#F0D800;transform:translateY(-1px)}
-.kakao-login-full:active{transform:scale(.97)}
-.land-login-why{font-size:var(--xs);color:var(--t4);text-align:center;margin-top:8px;line-height:1.6}
-
-/* ══ 프로필 모달 ══ */
-.profile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
-.profile-sheet{width:100%;max-width:480px;background:var(--bg);border-radius:24px 24px 0 0;padding:var(--sp4) var(--sp3) 40px;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);max-height:85vh;overflow-y:auto}
-.profile-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto var(--sp3)}
-.profile-title{font-size:var(--lg);font-weight:700;color:var(--t1);margin-bottom:4px}
-.profile-sub{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp3);line-height:1.65}
-.profile-section{margin-bottom:var(--sp3)}
-.profile-section-title{font-size:var(--xs);font-weight:700;color:var(--t3);letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.profile-save-btn{width:100%;padding:14px;border:none;border-radius:var(--r1);background:var(--gold);color:#0D0B14;font-size:var(--sm);font-weight:700;font-family:var(--ff);cursor:pointer;transition:transform .15s,opacity .15s;margin-top:var(--sp2)}
-.profile-save-btn:hover{opacity:.88}.profile-save-btn:active{transform:scale(.98)}
-.profile-close-btn{width:100%;padding:11px;border:none;background:transparent;color:var(--t4);font-family:var(--ff);font-size:var(--xs);cursor:pointer;margin-top:6px}
-
-/* ══ 카카오 로그인 ══ */
-.kakao-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:600;color:#191919;transition:all .2s}
-.kakao-btn:hover{background:#F0D800;transform:translateY(-1px)}
-.kakao-btn svg{flex-shrink:0}
-.kakao-nudge{padding:var(--sp2) var(--sp3);background:rgba(254,229,0,.1);border:1px solid rgba(254,229,0,.3);border-radius:var(--r2);margin-bottom:var(--sp2);display:flex;align-items:center;gap:10px}
-.kakao-nudge-text{font-size:var(--xs);color:var(--t3);flex:1}
-.user-chip{display:flex;align-items:center;gap:6px;padding:5px 10px 5px 5px;border-radius:50px;background:var(--goldf);border:1px solid var(--acc);cursor:pointer}
-.user-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover}
-.user-chip span{font-size:var(--xs);color:var(--t2)}
-
-/* ══ 결제 모달 ══ */
-.pay-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
-.pay-sheet{width:100%;max-width:480px;background:var(--bg);border-radius:24px 24px 0 0;padding:var(--sp4);animation:slideUp .3s ease}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.pay-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto var(--sp3)}
-.pay-title{font-size:1.1rem;font-weight:600;color:var(--t1);margin-bottom:4px}
-.pay-desc{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp3)}
-.pay-preview{background:var(--card);border-radius:var(--r2);padding:var(--sp2) var(--sp3);margin-bottom:var(--sp3)}
-.pay-preview-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:var(--xs);color:var(--t2)}
-.pay-preview-item::before{content:'✦';color:var(--gold);flex-shrink:0}
-.pay-price{font-size:1.4rem;font-weight:700;color:var(--gold);text-align:center;margin-bottom:var(--sp3)}
-.pay-kakao-btn{width:100%;padding:16px;border-radius:12px;background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:1rem;font-weight:700;color:#191919;display:flex;align-items:center;justify-content:center;gap:8px}
-.pay-kakao-btn:disabled{opacity:.6;cursor:not-allowed}
-.pay-cancel{width:100%;padding:12px;border:none;background:transparent;color:var(--t4);font-family:var(--ff);font-size:var(--xs);cursor:pointer;margin-top:8px}
-.share-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
-.share-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.hint{font-size:var(--xs);color:var(--t4)}
-
-/* ══ 사이드바 ══ */
-.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:100;animation:fadeIn .25s ease}
-.sidebar{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:var(--bg);border-right:1px solid var(--line);z-index:101;display:flex;flex-direction:column;animation:sideIn .3s cubic-bezier(.34,1.56,.64,1)}
-@keyframes sideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
-.sidebar-head{padding:var(--sp4) var(--sp3) var(--sp3);border-bottom:1px solid var(--line)}
-.sidebar-logo{font-size:var(--xs);letter-spacing:.3em;color:var(--gold);margin-bottom:var(--sp2)}
-.sidebar-user{display:flex;align-items:center;gap:10px}
-.sidebar-av{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--acc)}
-.sidebar-av-ph{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:.85rem}
-.sidebar-uname{font-size:var(--sm);font-weight:600;color:var(--t1)}
-.sidebar-usub{font-size:var(--xs);color:var(--t4);margin-top:2px}
-.sidebar-body{flex:1;overflow-y:auto;padding:var(--sp2) 0}
-.sidebar-section{margin-bottom:var(--sp2)}
-.sidebar-section-lbl{font-size:var(--xs);font-weight:700;color:var(--t4);letter-spacing:.1em;padding:6px var(--sp3) 4px}
-.sidebar-menu-item{display:flex;align-items:center;gap:12px;padding:11px var(--sp3);cursor:pointer;transition:background .2s;border:none;background:transparent;width:100%;text-align:left;font-family:var(--ff)}
-.sidebar-menu-item:hover{background:var(--bg2)}
-.sidebar-menu-item.active{background:var(--goldf)}
-.smi-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
-.smi-text{font-size:var(--sm);color:var(--t2)}
-.sidebar-menu-item.active .smi-text{color:var(--gold);font-weight:600}
-.sidebar-hist-item{padding:10px var(--sp3);cursor:pointer;border-bottom:1px solid var(--line2);transition:background .2s}
-.sidebar-hist-item:hover{background:var(--bg2)}
-.shi-date{font-size:var(--xs);color:var(--t4);margin-bottom:3px}
-.shi-q{font-size:var(--xs);color:var(--t2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.sidebar-empty{padding:var(--sp3);text-align:center;color:var(--t4);font-size:var(--xs);line-height:2}
-.sidebar-foot{padding:var(--sp2) var(--sp3);border-top:1px solid var(--line)}
-.sidebar-foot-btn{width:100%;padding:9px;border:1px solid var(--line);border-radius:var(--r1);background:transparent;color:var(--t4);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
-.sidebar-foot-btn:hover{border-color:var(--acc);color:var(--gold)}
-.menu-btn{position:fixed;top:18px;left:18px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.9rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
-.menu-btn:hover{color:var(--gold);border-color:var(--gold)}
-
-/* ══ 시간대별 배경 오버레이 ══ */
-.time-overlay{position:fixed;inset:0;pointer-events:none;z-index:0;transition:opacity 1s ease}
-
-/* ══ 오늘의 별숨 (시간대별) ══ */
-.todaybyeol{margin:var(--sp3) 0;border-radius:var(--r2);overflow:hidden;animation:fadeUp .8s .5s both;border:1px solid var(--line)}
-.todaybyeol-top{padding:var(--sp2) var(--sp3);display:flex;align-items:center;gap:10px}
-.tbt-orb{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.9rem}
-.tbt-label{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:2px}
-.tbt-title{font-size:var(--sm);font-weight:600}
-.todaybyeol-body{padding:var(--sp2) var(--sp3) var(--sp3);border-top:1px solid var(--line)}
-.tbt-text{font-size:var(--sm);color:var(--t2);line-height:1.85;margin-bottom:var(--sp2)}
-.tbt-cta{width:100%;padding:11px;border:none;border-radius:var(--r1);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:pointer;transition:all .2s}
-.tbt-cta:active{transform:scale(.97)}
-
-/* ══ 저녁 회고 입력 ══ */
-.review-inp{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);resize:none;height:72px;margin-bottom:10px;transition:border-color .2s}
-.review-inp:focus{outline:none;border-color:var(--gold)}.review-inp::placeholder{color:var(--t4)}
-
-/* ══ 랜딩 퀵 질문 ══ */
-.land-quick{margin:var(--sp3) 0;animation:fadeUp .8s .5s both}
-.land-quick-title{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:8px;text-align:left}
-.land-quick-inp-row{display:flex;gap:8px;margin-bottom:10px}
-.land-quick-inp{flex:1;padding:13px 16px;background:var(--bg1);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}
-.land-quick-inp:focus{outline:none;border-color:var(--gold)}.land-quick-inp::placeholder{color:var(--t4)}
-.land-quick-send{width:44px;height:44px;border-radius:50%;border:none;background:var(--gold);color:#0D0B14;font-size:.9rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .15s}
-.land-quick-send:hover{opacity:.85}.land-quick-send:active{transform:scale(.93)}.land-quick-send:disabled{opacity:.3;cursor:not-allowed}
-.land-cat-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
-.land-cat-chip{padding:6px 13px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:all .2s}
-.land-cat-chip:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
-.land-cat-chip.on{background:var(--goldf);border-color:var(--acc);color:var(--gold);font-weight:600}
-
+/* 리뷰 */
+.rev-wrap{overflow:hidden;animation:fadeUp .8s .5s both;margin-bottom:0}
+.rev-track{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.rev-track::-webkit-scrollbar{display:none}
+.rev-card{flex-shrink:0;width:190px;scroll-snap-align:start;background:var(--bg1);border:1px solid var(--line);border-radius:14px;padding:14px}
+.rev-stars{font-size:.58rem;color:var(--gold);margin-bottom:6px;letter-spacing:3px}
+.rev-text{font-size:.7rem;color:var(--t2);line-height:1.8}
+.rev-nick{font-size:.6rem;color:var(--t4);margin-top:6px}
 /* ══ 히스토리 뷰어 (step 9) ══ */
 .hist-page{width:100%;max-width:480px;animation:fadeUp .5s ease}
 .hist-header{padding:var(--sp4) var(--sp3) var(--sp2);border-bottom:1px solid var(--line)}
@@ -1046,6 +677,41 @@ select.inp option{background:var(--bg2)}
 .other-modal{background:var(--bg);border-radius:var(--r3);padding:var(--sp4) var(--sp3);width:100%;max-width:420px;animation:fadeUp .3s ease}
 .other-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:4px}
 .other-modal-sub{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp3);line-height:1.6}
+
+/* ══ AccItem 요약 줄 ══ */
+.acc-summary-line{display:flex;align-items:flex-start;gap:8px;padding:12px var(--sp3) 10px;background:var(--goldf);border-bottom:1px solid var(--acc)}
+.acc-summary-icon{color:var(--gold);font-size:.85rem;flex-shrink:0;margin-top:1px}
+.acc-summary-text{font-size:var(--sm);font-weight:600;color:var(--t1);line-height:1.5;letter-spacing:-.01em;flex:1}
+.acc-summary-empty{display:none}
+.acc-read-more{display:block;text-align:right;padding:6px var(--sp3) 10px;font-size:var(--xs);color:var(--gold);cursor:pointer;text-decoration:none;background:none;border:none;font-family:var(--ff);width:100%}
+.acc-read-more:hover{opacity:.75}
+
+/* ══ 결과 상단 공유/복사 바 ══ */
+.res-top-bar{display:flex;justify-content:flex-end;gap:8px;padding:10px var(--sp3) 0;margin-bottom:-4px}
+.res-top-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1px solid var(--line);background:var(--bg2);color:var(--t3);font-size:var(--xs);font-family:var(--ff);font-weight:500;cursor:pointer;transition:all .2s}
+.res-top-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
+.res-top-btn.primary{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
+
+/* ══ 기능 소개 카드 ══ */
+.feature-guide{margin:var(--sp2) 0 0;padding:var(--sp2) var(--sp3);border-top:1px solid var(--line)}
+.feature-guide-title{font-size:var(--xs);color:var(--t4);font-weight:600;letter-spacing:.06em;margin-bottom:12px;text-transform:uppercase}
+.feature-guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fg-card{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:var(--r1);border:1px solid var(--line);background:var(--bg2);cursor:pointer;transition:all .2s;text-align:left}
+.fg-card:hover{border-color:var(--acc);background:var(--goldf)}
+.fg-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.fg-info{}
+.fg-name{font-size:var(--xs);font-weight:700;color:var(--t1);margin-bottom:2px}
+.fg-desc{font-size:.6rem;color:var(--t3);line-height:1.4}
+
+/* ══ star-summary 강화 ══ */
+.star-summary{display:flex;align-items:center;gap:10px;margin:12px 0;padding:12px 16px;background:linear-gradient(135deg,var(--goldf),var(--bg2));border:1px solid var(--acc);border-radius:var(--r1)}
+.star-summary-icon{color:var(--gold);font-size:1rem;flex-shrink:0}
+.star-summary-text{font-size:var(--sm);font-weight:600;color:var(--t1);line-height:1.5;letter-spacing:-.01em}
+
+/* ══ 추천 질문 칩 (step2 강화) ══ */
+.suggest-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 var(--sp2)}
+.suggest-chip{padding:6px 12px;border-radius:20px;border:1px solid var(--acc);background:var(--goldf);color:var(--gold);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s;font-weight:500}
+.suggest-chip:hover{background:var(--gold);color:#0D0B14}
 `;
 
 
@@ -1188,12 +854,42 @@ function FeedbackBtn({qIdx}){
 // ═══════════════════════════════════════════════════════════
 //  아코디언 아이템 (typedSet으로 재오픈 방지)
 // ═══════════════════════════════════════════════════════════
+// [요약] 태그 파싱 유틸
+function parseAccSummary(text){
+  if(!text) return {summary:'', body:text||''};
+  const m = text.match(/^\[요약\]\s*(.+?)(\n|$)/);
+  if(m){
+    const summary = m[1].trim();
+    const body = text.slice(m[0].length).trimStart();
+    return {summary, body};
+  }
+  // [요약] 없으면 첫 문장을 summary로 추출
+  const sents = text.split(/(?<=[.!?。])\s+/).filter(s=>s.length>10);
+  const summary = sents[0]||'';
+  const body = text;
+  return {summary, body};
+}
+
 function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
   const isTyping = shouldType && isOpen;
   const{shown,done,skipToEnd}=useWordTyping(text, isTyping, 130);
 
   const display = !shouldType ? text : isOpen ? shown : '';
   const isDone = !shouldType || done;
+
+  // [요약] 파싱 — 완성된 텍스트에서만
+  const {summary, body} = parseAccSummary(isDone ? text : '');
+  // 타이핑 중 요약 미리 보기 (첫 줄이 [요약]이면 즉시 노출)
+  const liveSum = useMemo(()=>{
+    if(!shouldType) return parseAccSummary(text).summary;
+    if(shown){
+      const m = shown.match(/^\[요약\]\s*(.+?)(\n|$)/);
+      if(m) return m[1].trim();
+    }
+    return '';
+  },[shown, shouldType, text]);
+
+  const summaryText = isDone ? summary : liveSum;
 
   // 타이핑 완료 콜백 — 닫지 않고 완료 표시만
   useEffect(()=>{
@@ -1202,18 +898,33 @@ function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
 
   return(
     <div className="acc-item">
+      {/* ── 요약 줄 — 항상 노출 (답변 있을 때) ── */}
+      {summaryText&&(
+        <div className="acc-summary-line">
+          <span className="acc-summary-icon">✦</span>
+          <span className="acc-summary-text">{summaryText}</span>
+        </div>
+      )}
+
+      {/* ── 아코디언 헤더 ── */}
       <button className={`acc-trigger${isOpen?' open':''}`} onClick={onToggle}>
         <div className="acc-q-wrap">
           <div className="acc-q-num">Q{idx+1}</div>
           <div className="acc-q-text">{q}</div>
-          {!isOpen&&!display&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
-          {!isOpen&&display&&isDone&&<div style={{fontSize:'var(--xs)',color:'var(--gold)',marginTop:3}}>✦ 답변 완료 — 눌러서 다시 보기</div>}
+          {!isOpen&&!summaryText&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
+          {!isOpen&&summaryText&&isDone&&(
+            <button className="acc-read-more" onClick={e=>{e.stopPropagation();onToggle();}}>
+              전체 보기 ↓
+            </button>
+          )}
         </div>
         <div className="acc-right">
           {isOpen&&!isDone&&<button className="skip-btn" onClick={e=>{e.stopPropagation();skipToEnd();}}>바로 보기</button>}
           <span className={`acc-chevron${isOpen?' open':''}`}>▼</span>
         </div>
       </button>
+
+      {/* ── 펼쳐지는 본문 ── */}
       <div className={`acc-body${isOpen?' open':' closed'}`} style={isOpen?{maxHeight:'3000px',opacity:1}:{maxHeight:0,opacity:0}}>
         <div className="acc-content">
           <p>{display}{isOpen&&!isDone&&<span className="typing-cursor"/>}</p>
@@ -1504,39 +1215,41 @@ function HistoryPage({item,onBack,onDelete}){
 // ═══════════════════════════════════════════════════════════
 function TodayByeolsoom({slot,name,saju,sun,onAsk,onReview}){
   const cfg=TIME_CONFIG[slot];
+  const[open,setOpen]=useState(false);
   const[reviewText,setReviewText]=useState('');
   const isEvening=slot==='evening'||slot==='dawn';
 
   return(
-    <div className="todaybyeol" style={{background:cfg.bg,borderColor:cfg.border}}>
-      <div className="todaybyeol-top">
-        <div className="tbt-orb" style={{background:cfg.bg,border:`1px solid ${cfg.border}`}}>{cfg.emoji}</div>
-        <div>
-          <div className="tbt-label" style={{color:cfg.color}}>{cfg.label}</div>
-          <div className="tbt-title" style={{color:'var(--t1)'}}>{cfg.greeting(name)}</div>
-        </div>
-      </div>
-      <div className="todaybyeol-body" style={{background:'var(--bg1)'}}>
-        {isEvening&&(
-          <>
-            <div style={{fontSize:'var(--xs)',color:'var(--t3)',marginBottom:6,lineHeight:1.7}}>
-              {slot==='evening'?'오늘 있었던 일을 적으면 별숨이 다시 읽어드릴게요':'잠 못 드는 이 새벽, 뭔가 마음에 걸리는 게 있나요?'}
-            </div>
+    <div className="land-slot-wrap">
+      {/* 한 줄 탭 */}
+      <button className={`land-slot-card ${open?'open':''}`} onClick={()=>setOpen(v=>!v)}>
+        <span className="land-slot-emoji">{cfg.emoji}</span>
+        <span className="land-slot-label">
+          <span className="land-slot-title">{cfg.label}</span>
+          <span className="land-slot-hint">{cfg.greeting(name)}</span>
+        </span>
+        <span className="land-slot-arr">›</span>
+      </button>
+      {/* 펼쳐지는 바디 */}
+      {open&&(
+        <div className="land-slot-body">
+          {isEvening&&(
             <textarea className="review-inp"
               placeholder={cfg.inputPlaceholder}
               value={reviewText}
-              onChange={e=>setReviewText(e.target.value)}/>
-          </>
-        )}
-        <button className="tbt-cta"
-          style={{background:cfg.ctaBg,color:cfg.ctaColor}}
-          onClick={()=>{
-            if(isEvening&&reviewText.trim()){onReview(reviewText,cfg.prompt);}
-            else{onAsk(cfg.prompt);}
-          }}>
-          {cfg.ctaText}
-        </button>
-      </div>
+              onChange={e=>setReviewText(e.target.value)}
+              style={{marginBottom:10}}/>
+          )}
+          <button className="land-slot-body-btn"
+            onClick={()=>{
+              setOpen(false);
+              if(isEvening&&reviewText.trim()){onReview(reviewText,cfg.prompt);}
+              else{onAsk(cfg.prompt);}
+            }}>
+            {cfg.ctaText}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -2394,7 +2107,8 @@ export default function App(){
         {/* ══ 0 랜딩 ══ */}
         {step===0&&(
           <div className="page step-fade">
-            <div className="inner land">
+            {/* ═══ HERO ZONE — 첫 화면에서 보이는 전부 ═══ */}
+            <div className="land-hero">
               <div className="land-wordmark">byeolsoom</div>
               <div className="land-orb">
                 <div className="orb-core"/><div className="orb-r1"/><div className="orb-r2"/>
@@ -2402,7 +2116,73 @@ export default function App(){
               <p className="land-copy">오늘 밤,<br/><em>당신의 별이 기다리고 있어요.</em></p>
               <p className="land-sub">동양의 별과 서양의 별이 함께<br/>당신의 이야기를 읽어드릴게요</p>
 
-              {/* ── 오늘의 별숨 (시간대별) ── */}
+              {/* 로그인 카드 — 히어로에 포함 */}
+              <div className="land-login-section">
+                {user ? (
+                  <div className="land-login-card logged">
+                    <div className="llc-top">
+                      {user.profileImage
+                        ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/>
+                        : <div className="llc-avatar-placeholder">🌙</div>}
+                      <div>
+                        <div className="llc-name">{user.nickname}님 ✦</div>
+                        <div className="llc-sub">
+                          {form.by && saju
+                            ? `${ON[saju.dom]} 기운, 오늘의 별이 기다려요`
+                            : '별숨이 당신을 기억하고 있어요'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="llc-profile-chips">
+                      {form.by && <span className="llc-chip filled">🀄 사주</span>}
+                      {profile.partner && <span className="llc-chip filled">💕 {profile.partner}</span>}
+                      {profile.workplace && <span className="llc-chip filled">💼 {profile.workplace.slice(0,10)}{profile.workplace.length>10?'…':''}</span>}
+                      {histItems.length>0&&<span className="llc-chip filled" onClick={()=>setShowSidebar(true)}>📖 {histItems.length}개</span>}
+                      <span className="llc-chip" onClick={()=>setShowProfileModal(true)}>+ 추가</span>
+                    </div>
+                    <div className="llc-actions">
+                      <button className="cta-main" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep(formOk?2:1)}>
+                        {form.by ? '별숨에게 물어보기 ✦' : '지금 시작하기 ✦'}
+                      </button>
+                      <button className="res-btn" style={{padding:'13px 14px',borderRadius:'var(--r1)'}} onClick={kakaoLogout} title="로그아웃">↩</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="land-login-card">
+                    <button className="kakao-login-full" onClick={kakaoLogin}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/>
+                      </svg>
+                      카카오로 1초 로그인
+                    </button>
+                    <div className="land-login-why">
+                      연인 운세 · 직장 조언 · 기록 저장
+                    </div>
+                    {import.meta.env.DEV&&(
+                      <div style={{marginTop:8,padding:'8px 10px',background:'rgba(255,100,100,.08)',border:'1px solid rgba(255,100,100,.2)',borderRadius:8,fontSize:'var(--xs)',color:'#ff8080',lineHeight:1.7}}>
+                        🔧 개발 환경 체크<br/>
+                        키 설정: {import.meta.env.VITE_KAKAO_JS_KEY?'✅ 있음':'❌ 없음'}<br/>
+                        SDK: {typeof window!=='undefined'&&window.Kakao?'✅ 로드됨':'⏳ 로딩 중'}<br/>
+                        초기화: {typeof window!=='undefined'&&window.Kakao?.isInitialized?.()===true?'✅ 완료':'⏳ 대기'}
+                      </div>
+                    )}
+                    <button className="land-ghost-link" onClick={()=>setStep(1)}>
+                      로그인 없이 체험하기 →
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* 스크롤 힌트 */}
+              <div className="land-scroll-hint">
+                <span>✦</span>
+              </div>
+            </div>
+
+            {/* ═══ SCROLL ZONE — 스크롤해야 보이는 부가 콘텐츠 ═══ */}
+            <div className="inner land-scroll-zone">
+
+              {/* 오늘의 별숨 — 시간대별 접힌 카드 */}
               <TodayByeolsoom
                 slot={timeSlot}
                 name={form.name||user?.nickname||''}
@@ -2412,9 +2192,9 @@ export default function App(){
                 onReview={askReview}
               />
 
-              {/* ── 퀵질문 입력창 ── */}
-              <div className="land-quick">
-                <div className="land-quick-title">✦ 별숨에게 바로 물어봐요</div>
+              {/* 퀵질문 입력창 */}
+              <div className="land-quick-section">
+                <div className="land-quick-label">✦ &nbsp; 별숨에게 바로 물어봐요</div>
                 <div className="land-cat-chips">
                   {CATS.map((c,i)=>(
                     <button key={c.id} className={`land-cat-chip ${quickCat===i?'on':''}`} onClick={()=>setQuickCat(i)}>
@@ -2422,13 +2202,10 @@ export default function App(){
                     </button>
                   ))}
                 </div>
-                {/* 카테고리별 추천 질문 */}
-                <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:10}}>
+                <div className="land-sugg-chips">
                   {CATS[quickCat].qs.slice(0,3).map((q,i)=>(
-                    <button key={i}
-                      style={{padding:'5px 11px',borderRadius:50,border:'1px solid var(--line)',background:'var(--bg2)',color:'var(--t3)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',transition:'all .2s',textAlign:'left',lineHeight:1.5}}
-                      onClick={()=>setQuickQ(q)}>
-                      {q.length>22?q.slice(0,22)+'…':q}
+                    <button key={i} className="land-sugg-chip" onClick={()=>setQuickQ(q)}>
+                      {q.length>24?q.slice(0,24)+'…':q}
                     </button>
                   ))}
                 </div>
@@ -2440,87 +2217,21 @@ export default function App(){
                     onKeyDown={e=>{if(e.key==='Enter'&&quickQ.trim())askQuick(quickQ);}}/>
                   <button className="land-quick-send" disabled={!quickQ.trim()} onClick={()=>askQuick(quickQ)}>✦</button>
                 </div>
-                <div style={{textAlign:'center',marginTop:4}}>
-                  <button style={{background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer'}}
-                    onClick={()=>setStep(formOk?2:1)}>
-                    질문 여러 개 한꺼번에 하기 →
-                  </button>
-                </div>
+                <button className="land-ghost-link" onClick={()=>setStep(formOk?2:1)}>
+                  질문 여러 개 한꺼번에 하기 →
+                </button>
               </div>
 
-              {/* ── 로그인·개인화 카드 ── */}
-              <div className="land-login-section">
-                {user ? (
-                  <div className="land-login-card logged">
-                    <div className="llc-top">
-                      {user.profileImage
-                        ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/>
-                        : <div className="llc-avatar-placeholder">🌙</div>}
-                      <div>
-                        <div className="llc-name">{user.nickname}님 ✦</div>
-                        <div className="llc-sub">별숨이 당신을 기억하고 있어요</div>
-                      </div>
-                    </div>
-                    {/* 오늘의 개인 메시지 */}
-                    <div className="llc-greeting">
-                      {form.by && saju
-                        ? `${ON[saju.dom]} 기운의 ${user.nickname}님, 오늘의 별이 기다리고 있어요.`
-                        : `${user.nickname}님, 오늘도 별이 당신 편이에요.`}
-                    </div>
-                    {/* 저장된 정보 칩 */}
-                    <div className="llc-profile-chips">
-                      {form.by && <span className="llc-chip filled">🀄 사주 저장됨</span>}
-                      {profile.partner && <span className="llc-chip filled">💕 {profile.partner}</span>}
-                      {profile.workplace && <span className="llc-chip filled">💼 {profile.workplace.slice(0,12)}{profile.workplace.length>12?'…':''}</span>}
-                      {histItems.length>0&&<span className="llc-chip filled" onClick={()=>setShowSidebar(true)}>📖 지난 이야기 {histItems.length}개</span>}
-                      <span className="llc-chip" onClick={()=>setShowProfileModal(true)}>+ 정보 추가</span>
-                    </div>
-                    <div className="llc-actions">
-                      <button className="cta-main" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep(formOk?2:1)}>
-                        {form.by ? '별숨에게 물어보기 ✦' : '지금 시작하기 ✦'}
-                      </button>
-                      <button className="res-btn" style={{padding:'13px 14px',borderRadius:'var(--r1)'}} onClick={kakaoLogout} title="로그아웃">↩</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="land-login-card">
-                    <div className="llc-top">
-                      <div className="llc-avatar-placeholder">✦</div>
-                      <div>
-                        <div className="llc-name">오늘 밤, 당신의 별이 기다려요</div>
-                        <div className="llc-sub">로그인하면 모든 기록이 저장돼요</div>
-                      </div>
-                    </div>
-                    <button className="kakao-login-full" onClick={kakaoLogin}>
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/>
-                      </svg>
-                      카카오로 1초 로그인
-                    </button>
-                    <div className="land-login-why">
-                      연인 운세 공유 · 직장 맞춤 조언 · 내 기록 저장<br/>가입 없이 카카오 계정으로 바로 시작
-                    </div>
-                    {import.meta.env.DEV&&(
-                      <div style={{marginTop:8,padding:'8px 10px',background:'rgba(255,100,100,.08)',border:'1px solid rgba(255,100,100,.2)',borderRadius:8,fontSize:'var(--xs)',color:'#ff8080',lineHeight:1.7}}>
-                        🔧 개발 환경 체크<br/>
-                        키 설정: {import.meta.env.VITE_KAKAO_JS_KEY?'✅ 있음':'❌ 없음 — .env.local 확인'}<br/>
-                        SDK: {typeof window!=='undefined'&&window.Kakao?'✅ 로드됨':'⏳ 로딩 중'}<br/>
-                        초기화: {typeof window!=='undefined'&&window.Kakao?.isInitialized?.()===true?'✅ 완료':'⏳ 대기'}
-                      </div>
-                    )}
-                    <div style={{marginTop:'var(--sp2)',display:'flex',justifyContent:'center'}}>
-                      <button style={{background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',padding:'4px'}} onClick={()=>setStep(1)}>
-                        로그인 없이 체험하기 →
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* 샘플 미리보기 */}
               <SamplePreview/>
+
+              {/* 오늘의 한마디 */}
               <div className="daily-word">
                 <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
                 <div className="daily-text">{'"'+getDailyWord(today.day)+'"'}</div>
               </div>
+
+              {/* 리뷰 */}
               <div className="rev-wrap">
                 <div className="rev-track">
                   {REVIEWS.map((r,i)=>(
@@ -2532,6 +2243,7 @@ export default function App(){
                   ))}
                 </div>
               </div>
+
             </div>
           </div>
         )}
@@ -2729,6 +2441,20 @@ export default function App(){
                   {CATS.map((c,i)=><button key={c.id} className={`cat-tab ${cat===i?'on':''}`} onClick={()=>setCat(i)}>{c.icon} {c.label}</button>)}
                 </div>
 
+                {/* ── 빠른 추천 칩 (상위 3개) ── */}
+                {selQs.length<maxQ&&(
+                  <div>
+                    <div style={{fontSize:'var(--xs)',color:'var(--gold)',fontWeight:600,margin:'10px 0 6px',letterSpacing:'.04em'}}>✦ 이런 질문 어때요?</div>
+                    <div className="suggest-row">
+                      {CATS[cat].qs.slice(0,3).filter(q=>!selQs.includes(q)).map((q,i)=>(
+                        <button key={i} className="suggest-chip" onClick={()=>addQ(q)}>
+                          {q.length>22?q.slice(0,22)+'…':q}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="q-list">
                   {CATS[cat].qs.map((q,i)=>{
                     const on=selQs.includes(q);
@@ -2797,6 +2523,18 @@ export default function App(){
           <div className="page">
             <div className="res-wrap">
               <div className="res-card">
+                {/* ── 상단 공유/복사 바 ── */}
+                <div className="res-top-bar">
+                  <button className="res-top-btn" onClick={()=>{navigator.clipboard?.writeText(answers.join('\n\n'));alert('복사됐어요 📋');}}>
+                    📋 복사
+                  </button>
+                  {answers[0]&&(
+                    <button className="res-top-btn primary" onClick={()=>shareCard(0)}>
+                      ↗ 이미지 저장
+                    </button>
+                  )}
+                </div>
+
                 {/* 헤더 */}
                 <div className="res-header">
                   <div className="res-av">✦</div>
@@ -2819,23 +2557,21 @@ export default function App(){
                     <div className="mood-banner" style={{background:mood.bg,borderColor:mood.color+'33'}}>
                       <div className="mood-orb" style={{background:mood.color+'22',border:`1px solid ${mood.color}44`}}>{mood.emoji}</div>
                       <div>
-                        <div className="mood-label">오늘의 에너지</div>
+                        <div className="mood-label">오늘의 별자리 기운</div>
                         <div className="mood-word" style={{color:mood.color}}>{mood.word} 하루예요</div>
                       </div>
                     </div>
                   );
                 })()}
 
-                {/* 별의 한 줄 요약 */}
+                {/* ── 별의 한 줄 요약 — [요약] 태그 파싱 ── */}
                 {answers[0]&&(()=>{
-                  // 첫 답변의 두 번째 문장 추출
-                  const sents=answers[0].split(/(?<=[.!?])\s+/).filter(s=>s.length>15);
-                  const pick=sents[1]||sents[0]||'';
-                  const short=pick.length>60?pick.slice(0,60)+'…':pick;
-                  return short?(
+                  const parsed = parseAccSummary(answers[0]);
+                  const summaryStr = parsed.summary;
+                  return summaryStr?(
                     <div className="star-summary">
                       <span className="star-summary-icon">✦</span>
-                      <span className="star-summary-text">{short}</span>
+                      <span className="star-summary-text">{summaryStr}</span>
                     </div>
                   ):null;
                 })()}
@@ -2855,8 +2591,8 @@ export default function App(){
                       <div style={{padding:'0 var(--sp3) var(--sp2)',borderBottom:'1px solid var(--line)'}}>
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                           <FeedbackBtn qIdx={i}/>
-                          <button className="share-btn" onClick={()=>shareCard(i)}>
-                            ↗ 이미지 저장
+                          <button className="res-top-btn" style={{fontSize:'var(--xs)'}} onClick={()=>shareCard(i)}>
+                            ↗ Q{i+1} 이미지 저장
                           </button>
                         </div>
                       </div>
@@ -2908,9 +2644,57 @@ export default function App(){
                   )}
                   <div className="res-btns">
                     <button className="res-btn" onClick={()=>{setSelQs([]);setDiy('');setChatHistory([]);setChatUsed(0);setStep(formOk?2:1);}}>다른 질문</button>
-                    <button className="res-btn" onClick={()=>{navigator.clipboard?.writeText(answers.join('\n\n'));alert('복사됐어요 📋');}}>복사하기</button>
                     <button className="res-btn" onClick={()=>setShowSidebar(true)}>지난 이야기</button>
                     <button className="res-btn" onClick={()=>setStep(0)}>홈으로</button>
+                  </div>
+
+                  {/* ── 기능 소개 카드 ── */}
+                  <div className="feature-guide">
+                    <div className="feature-guide-title">✦ 별숨의 다른 기능들</div>
+                    <div className="feature-guide-grid">
+                      <button className="fg-card" onClick={()=>setStep(7)}>
+                        <span className="fg-icon">💞</span>
+                        <div className="fg-info">
+                          <div className="fg-name">사이 별점</div>
+                          <div className="fg-desc">두 사람의 사주+별자리로 관계 시나리오 읽기</div>
+                        </div>
+                      </button>
+                      <button className="fg-card" onClick={()=>setStep(8)}>
+                        <span className="fg-icon">💌</span>
+                        <div className="fg-info">
+                          <div className="fg-name">3개월 후 편지</div>
+                          <div className="fg-desc">미래의 내가 지금 나에게 쓴 편지</div>
+                        </div>
+                      </button>
+                      <button className="fg-card" onClick={()=>{genReport();}}>
+                        <span className="fg-icon">📜</span>
+                        <div className="fg-info">
+                          <div className="fg-name">월간 리포트</div>
+                          <div className="fg-desc">이달의 연애·재물·직업·건강 에세이</div>
+                        </div>
+                      </button>
+                      <button className="fg-card" onClick={()=>{setStep(5);}}>
+                        <span className="fg-icon">💬</span>
+                        <div className="fg-info">
+                          <div className="fg-name">더 물어보기</div>
+                          <div className="fg-desc">답변 기반 후속 상담 채팅</div>
+                        </div>
+                      </button>
+                      <button className="fg-card" onClick={()=>setShowSidebar(true)}>
+                        <span className="fg-icon">🗂️</span>
+                        <div className="fg-info">
+                          <div className="fg-name">지난 이야기</div>
+                          <div className="fg-desc">내가 별숨에 물었던 모든 질문 기록</div>
+                        </div>
+                      </button>
+                      <button className="fg-card" onClick={()=>{navigator.clipboard?.writeText(answers.join('\n\n'));alert('복사됐어요 📋');}}>
+                        <span className="fg-icon">📋</span>
+                        <div className="fg-info">
+                          <div className="fg-name">전체 복사</div>
+                          <div className="fg-desc">오늘 받은 모든 답변 클립보드 복사</div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
