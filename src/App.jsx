@@ -1322,7 +1322,7 @@ function ProfileModal({profile,setProfile,onClose}){
           )}
         </div>
 
-        {/* 직장/상황 */}
+        {/* 직장·상황 */}
         <div className="profile-section">
           <div className="profile-section-title">💼 직장 / 현재 상황</div>
           <input className="inp" placeholder="예: 스타트업 마케터, 공무원 준비 중, 프리랜서 디자이너..."
@@ -2448,7 +2448,7 @@ export default function App(){
                 </div>
               </div>
 
-              {/* ── 로그인/개인화 카드 ── */}
+              {/* ── 로그인·개인화 카드 ── */}
               <div className="land-login-section">
                 {user ? (
                   <div className="land-login-card logged">
@@ -2519,7 +2519,7 @@ export default function App(){
               <SamplePreview/>
               <div className="daily-word">
                 <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
-                <div className="daily-text">"{getDailyWord(today.day)}"</div>
+                <div className="daily-text">{'"'+getDailyWord(today.day)+'"'}</div>
               </div>
               <div className="rev-wrap">
                 <div className="rev-track">
@@ -2603,14 +2603,14 @@ export default function App(){
               <SamplePreview/>
               <div className="daily-word">
                 <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
-                <div className="daily-text">"{getDailyWord(today.day)}"</div>
+                <div className="daily-text">{'"'+getDailyWord(today.day)+'"'}</div>
               </div>
               <div className="rev-wrap">
                 <div className="rev-track">
                   {REVIEWS.map((r,i)=>(
                     <div key={i} className="rev-card">
                       <div className="rev-stars">{r.star}</div>
-                      <div className="rev-text">"{r.text}"</div>
+                      <div className="rev-text">{'"'+r.text+'"'}</div>
                       <div className="rev-nick">{r.nick}</div>
                     </div>
                   ))}
@@ -2951,7 +2951,7 @@ export default function App(){
 
                 {/* 액션 */}
                 <div className="res-actions">
-                  {/* 액션 그리드 — 궁합 / 편지 */}
+                  {/* 액션 그리드 — 궁합 · 편지 */}
                   <div className="action-grid" style={{marginBottom:'var(--sp2)'}}>
                     <div className="action-card compat" onClick={()=>setStep(7)}>
                       <div className="action-card-icon">💞</div>
