@@ -216,9 +216,9 @@ const SIGN_MOOD = {
 
 // ══ 랜딩 샘플 에세이 (20초 미리보기) ══
 const SAMPLE_ESSAYS = [
-  "지수는 태어날 때부터 남들이 못 보는 것을 보는 눈을 가지고 있었어요. 물고기자리의 감성과 계수의 섬세함이 만나서, 마음 속 깊은 곳에서 세상을 느끼는 사람이에요. 오늘 하루 당신이 느끼는 막막함은 사실 변화의 전조예요...",
-  "민준의 사주에는 화(火) 기운이 강하게 흐르고 있어요. 사자자리의 태양과 만나 더욱 선명해진 이 에너지는 당신을 어딜 가나 빛나게 만들죠. 지금 고민하는 그 선택, 결국 당신 것이에요...",
-  "서연에게 오늘은 조용히 자신을 돌아보기 좋은 날이에요. 천칭자리의 균형 감각과 기토의 조화로운 기질이 함께 속삭이고 있어요. 너무 많은 것을 혼자 짊어지지 않아도 괜찮아요...",
+  "물고기자리의 감성과 계수의 섬세함이 만나면, 마음 깊은 곳에서 세상을 느끼는 사람이 돼요. 오늘 느끼는 그 막막함은 사실 변화의 전조예요. 별이 방향을 바꾸는 중이라 잠깐 흔들리는 거예요. 그 흔들림 안에 오히려 답이 있어요...",
+  "사주에 화(火) 기운이 강하게 흐를 때, 사자자리의 태양과 만나면 에너지가 선명해져요. 지금 고민하는 그 선택은 — 사실 이미 마음이 정해진 것 같아요. 두려움이 아닌 설렘으로 읽어봐요. 별이 등을 밀고 있거든요...",
+  "천칭자리의 균형 감각과 기토의 조화로운 기질이 함께 속삭여요. 오늘은 조용히 자신을 돌아보기 좋은 날이에요. 너무 많은 것을 혼자 짊어지지 않아도 괜찮아요. 가볍게 내려놓는 것도 용기예요...",
 ];
 const CATS=[
   {id:"love",icon:"💕",label:"연애",qs:["요즘 좋아하는 사람이 생겼는데 이 감정이 맞는 건지 모르겠어요","언제쯤 새로운 인연이 찾아올까요?","지금 사귀는 사람이랑 미래가 있을까요?","짝사랑하는 사람이 나를 어떻게 생각할까요?","내가 먼저 고백해도 될까요?","연애를 시작하기 좋은 시기인가요?"]},
@@ -237,14 +237,17 @@ const PKGS=[
 const REVIEWS=[
   {star:"★★★★★",text:"사주랑 별자리를 같이 봐줘서 너무 좋아요. 글이 진짜 내 얘기 같아서 읽다가 소름 돋았어요",nick:"가을고양이 · 28세"},
   {star:"★★★★★",text:"베프한테 상담받는 느낌! 전문용어 없이 쉽게 말해줘서 공감이 돼요",nick:"핑크라떼 · 25세"},
-  {star:"★★★★★",text:"추가 질문도 계속할 수 있어서 더 깊이 파고들 수 있었어요. 진짜 대화하는 느낌",nick:"달밤산책 · 31세"},
+  {star:"★★★★☆",text:"추가 질문도 계속할 수 있어서 더 깊이 파고들 수 있었어요. 진짜 대화하는 느낌",nick:"달밤산책 · 31세"},
   {star:"★★★★★",text:"글쓰는 방식이 달라요. AI 같지 않고 진짜 누가 써준 것 같은 느낌",nick:"별빛소나기 · 26세"},
+  {star:"★★★★☆",text:"월간 리포트가 생각보다 구체적이에요. 매달 챙겨볼 것 같아요",nick:"새벽세시 · 29세"},
+  {star:"★★★★★",text:"사이 별점 기능이 제일 좋아요. 친구랑 같이 봤는데 둘 다 공감했어요",nick:"달콩이 · 23세"},
 ];
 const CHAT_SUGG=["좀 더 자세히 알고 싶어요","언제쯤 변화가 올까요?","어떻게 행동하면 좋을까요?","지금 당장 할 수 있는 게 뭔가요?","불안한 마음이 커요","긍정적인 부분도 알고 싶어요"];
 const LOAD_STATES=[
-  {t:"동양과 서양의 별이 함께 당신을 읽고 있어요",s:"잠깐만요 ✦"},
-  {t:"태어난 순간의 기운을 불러오는 중이에요",s:"조금만 기다려줘요 🌙"},
-  {t:"당신에게 전할 이야기를 고르고 있어요",s:"거의 다 왔어요 ✨"},
+  {t:"동양의 별과 서양의 별이 함께 당신을 읽고 있어요",s:"잠깐만요 ✦"},
+  {t:"태어난 순간의 기운을 조용히 불러오는 중이에요",s:"조금만 기다려줘요 🌙"},
+  {t:"당신에게 꼭 맞는 이야기를 고르고 있어요",s:"거의 다 왔어요 ✨"},
+  {t:"오늘 당신의 별이 어떤 말을 건네는지 듣고 있어요",s:"잠깐만요 ✦"},
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -379,7 +382,7 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:
 /* ══ LANDING ══ */
 .land{text-align:center}
 .land-wordmark{font-size:var(--xs);font-weight:300;letter-spacing:.35em;color:var(--t4);text-transform:lowercase;margin-bottom:52px;animation:fadeUp .8s .1s both}
-.land-orb{width:148px;height:148px;border-radius:50%;margin:0 auto var(--sp4);position:relative;animation:fadeUp .8s .2s both}
+.land-orb{width:120px;height:120px;border-radius:50%;margin:0 auto var(--sp2);position:relative;animation:fadeUp .8s .2s both}
 .orb-core{position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(232,176,72,.75),rgba(190,110,170,.5),rgba(50,30,90,.9),transparent);animation:orbPulse 5s infinite}
 .orb-r1{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(232,176,72,.18);animation:orbSpin 14s linear infinite}
 .orb-r1::after{content:'';position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;background:var(--gold);transform:translateX(-50%);box-shadow:0 0 12px var(--gold),0 0 24px rgba(232,176,72,.4)}
@@ -660,11 +663,11 @@ select.inp option{background:var(--bg2)}
 .letter-actions{display:flex;gap:8px}
 
 /* ══ 랜딩 샘플 미리보기 ══ */
-.sample-preview{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);margin:var(--sp3) 0;text-align:left;position:relative;overflow:hidden;animation:fadeUp .8s .7s both}
-.sample-preview::before{content:'미리보기 ✦';position:absolute;top:10px;right:14px;font-size:var(--xs);color:var(--t4);letter-spacing:.07em}
-.sample-name{font-size:var(--xs);color:var(--gold);margin-bottom:8px;letter-spacing:.06em}
+.sample-preview{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);margin:var(--sp2) 0;position:relative;overflow:hidden;}
+.sample-badge{display:inline-block;font-size:10px;color:var(--t4);letter-spacing:.08em;margin-bottom:8px;padding:3px 8px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);}
+.sample-name{font-size:var(--xs);color:var(--gold);margin-bottom:8px;letter-spacing:.06em;font-weight:600;}
 .sample-text{font-size:var(--xs);color:var(--t2);line-height:1.9;min-height:60px}
-.sample-cursor{display:inline-block;width:1.5px;height:.85em;background:var(--gold);margin-left:1px;vertical-align:text-bottom;animation:blink .7s infinite}
+.sample-cursor{display:inline-block;width:1.5px;height:.85em;background:var(--gold);margin-left:1px;vertical-align:text-(--sp3) 0;text-align:left;position:relative;overflow:hidden;animation:fadeUp .8s .7s both}
 
 /* ══ 결과 액션 메뉴 확장 ══ */
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--sp2)}
@@ -706,7 +709,7 @@ select.inp option{background:var(--bg2)}
 
 /* ══ 랜딩 — 로그인/개인화 섹션 ══ */
 .land-login-section{margin:var(--sp3) 0;animation:fadeUp .8s .6s both}
-.land-login-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);text-align:left}
+.land-login-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);text-align:left;display:flex;flex-direction:column;gap:10px}
 .land-login-card.logged{border-color:var(--acc);background:var(--goldf)}
 .llc-top{display:flex;align-items:center;gap:var(--sp2);margin-bottom:var(--sp2)}
 .llc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acc);flex-shrink:0}
@@ -722,7 +725,7 @@ select.inp option{background:var(--bg2)}
 .kakao-login-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--r1);background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:700;color:#191919;transition:all .2s}
 .kakao-login-full:hover{background:#F0D800;transform:translateY(-1px)}
 .kakao-login-full:active{transform:scale(.97)}
-.land-login-why{font-size:var(--xs);color:var(--t4);text-align:center;margin-top:8px;line-height:1.6}
+.land-login-why{font-size:10px;color:var(--t4);text-align:center;line-height:1.6;margin-top:-4px}
 
 /* ══ 프로필 모달 ══ */
 .profile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
@@ -856,8 +859,10 @@ select.inp option{background:var(--bg2)}
 ═══════════════════════════════════════════════ */
 
 /* ── 랜딩 히어로존 ── */
-.land-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100svh;padding:var(--sp4) var(--sp3);gap:var(--sp2);position:relative;}
-.land-scroll-hint{text-align:center;color:var(--t4);font-size:var(--xs);padding:var(--sp2) 0;animation:fadein 1.2s ease;}
+.land-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100svh;padding:var(--sp3) var(--sp3);gap:var(--sp1);position:relative;}
+.land-scroll-hint{text-align:center;color:var(--t4);font-size:var(--xs);padding:var(--sp2) 0;animation:fadein 1.2s ease 0.8s both;}
+.land-scroll-hint span{display:inline-block;animation:bounce-y 1.8s ease-in-out infinite;}
+@keyframes bounce-y{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
 .land-scroll-zone{padding:var(--sp4) 0;}
 
 /* ── 랜딩 CTA 버튼 ── */
@@ -923,6 +928,10 @@ select.inp option{background:var(--bg2)}
 .ppc-av img{width:100%;height:100%;object-fit:cover;}
 .ppc-name{font-size:var(--xs);font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ppc-sub{font-size:10px;color:var(--t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.profile-pick-card{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--r1);cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:8px;}
+.profile-pick-card:hover{border-color:var(--gold);background:var(--goldf);}
+.profile-pick-card.active{border-color:var(--gold);background:var(--goldf);}
+
 `;
 
 
@@ -1452,10 +1461,12 @@ function SamplePreview(){
     return()=>clearTimeout(timerRef.current);
   },[essayIdx]);
 
-  const names=['지수님','민준님','서연님'];
+  // 익명 감성 이름 — 실제 이름처럼 보이지 않는 별자리 기반
+  const signs=['물고기자리','사자자리','천칭자리'];
   return(
     <div className="sample-preview">
-      <div className="sample-name">✦ {names[essayIdx]}께 전하는 오늘의 이야기</div>
+      <div className="sample-badge">✦ 별숨이 만든 예시 이야기예요</div>
+      <div className="sample-name">{signs[essayIdx]}인 당신에게</div>
       <div className="sample-text">{text}<span className="sample-cursor"/></div>
     </div>
   );
@@ -2353,7 +2364,7 @@ export default function App(){
 
               {/* 스크롤 힌트 */}
               <div className="land-scroll-hint">
-                <span>✦</span>
+                <span>↓</span>
               </div>
             </div>
 
@@ -2445,7 +2456,7 @@ export default function App(){
                       <div className="ppc-av">{user?.profileImage?<img src={user.profileImage} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/>:'🌙'}</div>
                       <div>
                         <div className="ppc-name">{form.name||user?.nickname||'나'}</div>
-                        <div className="ppc-sub">{form.by&&sun?`${sun.s} ${sun.n} · ${ON[saju?.dom||'금']} 기운`:'내 정보'}</div>
+                        <div className="ppc-sub">{form.by&&sun?`${sun.s} ${sun.n} · ${ON[saju?.dom||'금']} 기운`:'정보를 입력해줘요'}</div>
                       </div>
                     </div>
                     {activeProfileIdx===0&&<span style={{color:'var(--gold)'}}>✦</span>}
@@ -2461,8 +2472,8 @@ export default function App(){
                         <div className="ppc-left">
                           <div className="ppc-av" style={{background:'var(--bg3)'}}>✦</div>
                           <div>
-                            <div className="ppc-name">{p.name||'이름 없음'}</div>
-                            <div className="ppc-sub">{pSun?`${pSun.s} ${pSun.n}`:'생년월일 있음'}</div>
+                            <div className="ppc-name">{p.name||'이름 없이 저장됨'}</div>
+                            <div className="ppc-sub">{pSun?`${pSun.s} ${pSun.n}`:'별자리 계산 가능해요'}</div>
                           </div>
                         </div>
                         <div style={{display:'flex',alignItems:'center',gap:8}}>
