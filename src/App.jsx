@@ -850,6 +850,79 @@ select.inp option{background:var(--bg2)}
 .hist-del-btn{padding:3px 8px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--t4);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s;flex-shrink:0}
 .hist-del-btn:hover{border-color:#e05a3a;color:#e05a3a}
 .hist-empty{padding:var(--sp5) var(--sp3);text-align:center;color:var(--t4);font-size:var(--sm);line-height:2.2}
+
+/* ═══════════════════════════════════════════════
+   PATCH: 44 missing classes (2026-03-11)
+═══════════════════════════════════════════════ */
+
+/* ── 랜딩 히어로존 ── */
+.land-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100svh;padding:var(--sp4) var(--sp3);gap:var(--sp2);position:relative;}
+.land-scroll-hint{text-align:center;color:var(--t4);font-size:var(--xs);padding:var(--sp2) 0;animation:fadein 1.2s ease;}
+.land-scroll-zone{padding:var(--sp4) 0;}
+
+/* ── 랜딩 CTA 버튼 ── */
+.land-start-primary{width:100%;padding:16px;background:var(--gold);color:#1A1420;font-size:var(--sm);font-weight:700;border:none;border-radius:var(--r2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 20px rgba(232,176,72,0.4);transition:transform .15s,box-shadow .15s;}
+.land-start-primary:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(232,176,72,0.5);}
+.land-start-primary:active{transform:translateY(0);}
+.land-kakao-secondary{width:100%;padding:12px;background:transparent;color:var(--t3);font-size:var(--xs);font-weight:400;border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color .15s,color .15s;}
+.land-kakao-secondary:hover{border-color:var(--gold);color:var(--gold);}
+.land-ghost-link{background:none;border:none;color:var(--t4);font-size:var(--xs);cursor:pointer;text-decoration:underline;padding:8px 0;}
+.land-ghost-link:hover{color:var(--gold);}
+.kakao-icon-wrap{display:flex;align-items:center;justify-content:center;width:18px;height:18px;}
+
+/* ── 랜딩 퀵질문 섹션 ── */
+.land-quick-section{width:100%;max-width:480px;margin:0 auto;}
+.land-quick-label{font-size:var(--sm);font-weight:600;color:var(--t2);margin-bottom:var(--sp1);padding:0 2px;}
+.land-sugg-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.land-sugg-chip{padding:5px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;color:var(--t3);font-size:var(--xs);cursor:pointer;transition:border-color .15s,color .15s,background .15s;}
+.land-sugg-chip:hover{border-color:var(--gold);color:var(--gold);background:var(--goldf);}
+
+/* ── step2 추천 칩 ── */
+.suggest-row{display:flex;flex-wrap:wrap;gap:7px;margin:var(--sp1) 0 var(--sp2);}
+.suggest-chip{padding:6px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;color:var(--t3);font-size:var(--xs);cursor:pointer;transition:border-color .15s,color .15s,background .15s;}
+.suggest-chip:hover{border-color:var(--gold);color:var(--gold);background:var(--goldf);}
+
+/* ── 결과 상단 공유바 ── */
+.res-top-bar{display:flex;gap:8px;justify-content:flex-end;padding:0 0 var(--sp2);margin-bottom:var(--sp1);}
+.res-top-btn{padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r1);color:var(--t3);font-size:var(--xs);cursor:pointer;display:flex;align-items:center;gap:5px;transition:border-color .15s,color .15s;}
+.res-top-btn:hover{border-color:var(--gold);color:var(--gold);}
+.res-top-btn.primary{background:var(--goldf);border-color:var(--gold);color:var(--gold);font-weight:600;}
+
+/* ── 기능 소개 카드 그리드 ── */
+.feature-guide{margin:var(--sp3) 0;padding:var(--sp3);background:var(--bg2);border-radius:var(--r2);border:1px solid var(--border);}
+.feature-guide-title{font-size:var(--sm);font-weight:600;color:var(--t2);margin-bottom:var(--sp2);}
+.feature-guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--r1);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
+.fg-card:hover{border-color:var(--gold);background:var(--goldf);}
+.fg-icon{font-size:22px;flex-shrink:0;}
+.fg-info{display:flex;flex-direction:column;gap:2px;}
+.fg-name{font-size:var(--xs);font-weight:600;color:var(--t2);}
+.fg-desc{font-size:10px;color:var(--t4);line-height:1.4;}
+
+/* ── 업그레이드 모달 ── */
+.upgrade-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.upgrade-modal{width:100%;max-width:480px;background:var(--bg2);border-radius:var(--r2) var(--r2) 0 0;padding:var(--sp3);max-height:90svh;overflow-y:auto;}
+.upgrade-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:6px;}
+.upgrade-modal-sub{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp2);line-height:1.5;}
+.upgrade-pkgs{display:flex;flex-direction:column;gap:10px;}
+.upgrade-pkg-hot{display:inline-block;background:var(--rose,#E87B8A);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-bottom:4px;}
+.upgrade-pkg-e{font-size:22px;margin-bottom:2px;}
+.upgrade-pkg-n{font-size:var(--sm);font-weight:700;color:var(--t1);}
+.upgrade-pkg-p{font-size:var(--md);font-weight:800;color:var(--gold);margin:2px 0;}
+.upgrade-pkg-q{font-size:var(--xs);color:var(--t3);}
+
+/* ── 다른 사람 추가 모달 ── */
+.other-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.other-modal{width:100%;max-width:480px;background:var(--bg2);border-radius:var(--r2) var(--r2) 0 0;padding:var(--sp3);max-height:90svh;overflow-y:auto;}
+.other-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:6px;}
+.other-modal-sub{font-size:var(--xs);color:var(--t3);line-height:1.5;margin-bottom:var(--sp2);}
+
+/* ── 프로필 피커 카드 ── */
+.ppc-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.ppc-av{width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.ppc-av img{width:100%;height:100%;object-fit:cover;}
+.ppc-name{font-size:var(--xs);font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ppc-sub{font-size:10px;color:var(--t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 `;
 
 
