@@ -619,6 +619,39 @@ select.inp option{background:var(--bg2)}
 .pay-toast.success{background:var(--gold);color:#0D0B14;box-shadow:0 4px 20px rgba(232,176,72,.4)}
 .pay-toast.error{background:var(--rose,#E87B8A);color:#fff}
 @keyframes toastUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ══ 랜딩 — 로그인/개인화 섹션 ══ */
+.land-login-section{margin:var(--sp3) 0;animation:fadeUp .8s .6s both}
+.land-login-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);text-align:left}
+.land-login-card.logged{border-color:var(--acc);background:var(--goldf)}
+.llc-top{display:flex;align-items:center;gap:var(--sp2);margin-bottom:var(--sp2)}
+.llc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acc);flex-shrink:0}
+.llc-avatar-placeholder{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.llc-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
+.llc-sub{font-size:var(--xs);color:var(--t3);margin-top:2px}
+.llc-greeting{font-size:var(--sm);color:var(--gold);font-weight:500;margin-bottom:var(--sp2);line-height:1.65}
+.llc-profile-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:var(--sp2)}
+.llc-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;font-size:var(--xs);color:var(--t2);cursor:pointer;transition:all .2s}
+.llc-chip:hover{border-color:var(--acc);color:var(--gold)}
+.llc-chip.filled{background:var(--goldf);border-color:var(--acc);color:var(--gold)}
+.llc-actions{display:flex;gap:6px}
+.kakao-login-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--r1);background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:700;color:#191919;transition:all .2s}
+.kakao-login-full:hover{background:#F0D800;transform:translateY(-1px)}
+.kakao-login-full:active{transform:scale(.97)}
+.land-login-why{font-size:var(--xs);color:var(--t4);text-align:center;margin-top:8px;line-height:1.6}
+
+/* ══ 프로필 모달 ══ */
+.profile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
+.profile-sheet{width:100%;max-width:480px;background:var(--bg);border-radius:24px 24px 0 0;padding:var(--sp4) var(--sp3) 40px;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);max-height:85vh;overflow-y:auto}
+.profile-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto var(--sp3)}
+.profile-title{font-size:var(--lg);font-weight:700;color:var(--t1);margin-bottom:4px}
+.profile-sub{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp3);line-height:1.65}
+.profile-section{margin-bottom:var(--sp3)}
+.profile-section-title{font-size:var(--xs);font-weight:700;color:var(--t3);letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.profile-save-btn{width:100%;padding:14px;border:none;border-radius:var(--r1);background:var(--gold);color:#0D0B14;font-size:var(--sm);font-weight:700;font-family:var(--ff);cursor:pointer;transition:transform .15s,opacity .15s;margin-top:var(--sp2)}
+.profile-save-btn:hover{opacity:.88}.profile-save-btn:active{transform:scale(.98)}
+.profile-close-btn{width:100%;padding:11px;border:none;background:transparent;color:var(--t4);font-family:var(--ff);font-size:var(--xs);cursor:pointer;margin-top:6px}
+
 /* ══ 카카오 로그인 ══ */
 .kakao-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:600;color:#191919;transition:all .2s}
 .kakao-btn:hover{background:#F0D800;transform:translateY(-1px)}
@@ -865,6 +898,89 @@ function ReportBody({text}){
   );
 }
 
+
+
+// ═══════════════════════════════════════════════════════════
+//  👤 개인화 프로필 모달 (연인 / 직장 / 고민)
+// ═══════════════════════════════════════════════════════════
+function ProfileModal({profile,setProfile,onClose}){
+  const[local,setLocal]=useState({...profile});
+  const partnerSaju=useMemo(()=>{
+    if(local.partnerBy&&local.partnerBm&&local.partnerBd)
+      return getSaju(+local.partnerBy,+local.partnerBm,+local.partnerBd,12);
+    return null;
+  },[local.partnerBy,local.partnerBm,local.partnerBd]);
+  const partnerSun=useMemo(()=>{
+    if(local.partnerBm&&local.partnerBd) return getSun(+local.partnerBm,+local.partnerBd);
+    return null;
+  },[local.partnerBm,local.partnerBd]);
+
+  const save=()=>{setProfile(local);onClose();};
+  const upd=(k,v)=>setLocal(p=>({...p,[k]:v}));
+
+  return(
+    <div className="profile-overlay" onClick={e=>{if(e.target.className==='profile-overlay')onClose();}}>
+      <div className="profile-sheet">
+        <div className="profile-handle"/>
+        <div className="profile-title">✦ 나의 별자리 지도</div>
+        <div className="profile-sub">저장하면 모든 운세에 자동으로 반영돼요.<br/>입력할수록 더 깊이 읽어드릴게요.</div>
+
+        {/* 연인 */}
+        <div className="profile-section">
+          <div className="profile-section-title">💕 연인 정보</div>
+          <input className="inp" placeholder="연인 이름 (선택)"
+            value={local.partner} onChange={e=>upd('partner',e.target.value)}/>
+          <div style={{fontSize:'var(--xs)',color:'var(--t4)',marginBottom:8,marginTop:-8}}>생년월일을 알면 더 깊이 볼 수 있어요</div>
+          <div className="row" style={{marginBottom:'var(--sp2)'}}>
+            <div className="col">
+              <input className="inp" placeholder="출생년도" maxLength={4} inputMode="numeric"
+                value={local.partnerBy} onChange={e=>upd('partnerBy',e.target.value.replace(/\D/,''))}
+                style={{marginBottom:0}}/>
+            </div>
+            <div className="col">
+              <select className="inp" value={local.partnerBm} onChange={e=>upd('partnerBm',e.target.value)} style={{marginBottom:0}}>
+                <option value="">월</option>
+                {[...Array(12)].map((_,i)=><option key={i+1} value={i+1}>{i+1}월</option>)}
+              </select>
+            </div>
+            <div className="col">
+              <select className="inp" value={local.partnerBd} onChange={e=>upd('partnerBd',e.target.value)} style={{marginBottom:0}}>
+                <option value="">일</option>
+                {[...Array(31)].map((_,i)=><option key={i+1} value={i+1}>{i+1}일</option>)}
+              </select>
+            </div>
+          </div>
+          {/* 연인 사주 미리보기 */}
+          {partnerSaju&&(
+            <div style={{padding:'10px 12px',background:'var(--bg2)',borderRadius:'var(--r1)',border:'1px solid var(--line)',marginBottom:'var(--sp2)'}}>
+              <div style={{fontSize:'var(--xs)',color:'var(--gold)',marginBottom:4}}>✦ {local.partner||'연인'}의 기질</div>
+              <div style={{fontSize:'var(--xs)',color:'var(--t2)',lineHeight:1.75}}>{partnerSaju.ilganDesc}</div>
+              {partnerSun&&<div style={{fontSize:'var(--xs)',color:'var(--t3)',marginTop:3}}>{partnerSun.s} {partnerSun.n} · {ON[partnerSaju.dom]} 기운</div>}
+            </div>
+          )}
+        </div>
+
+        {/* 직장/상황 */}
+        <div className="profile-section">
+          <div className="profile-section-title">💼 직장 / 현재 상황</div>
+          <input className="inp" placeholder="예: 스타트업 마케터, 공무원 준비 중, 프리랜서 디자이너..."
+            value={local.workplace} onChange={e=>upd('workplace',e.target.value)}/>
+        </div>
+
+        {/* 요즘 고민 */}
+        <div className="profile-section">
+          <div className="profile-section-title">🌙 요즘 가장 큰 고민</div>
+          <textarea className="diy-inp" placeholder="예: 이직을 할지 말지 고민 중이에요 / 연인이랑 자꾸 다퉈요 / 돈이 자꾸 나가요..."
+            value={local.worryText} onChange={e=>upd('worryText',e.target.value)}
+            style={{height:72,marginBottom:0}}/>
+        </div>
+
+        <button className="profile-save-btn" onClick={save}>저장하고 반영하기 ✦</button>
+        <button className="profile-close-btn" onClick={onClose}>나중에 할게요</button>
+      </div>
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════
 //  📖 랜딩 샘플 에세이 미리보기
@@ -1230,6 +1346,11 @@ export default function App(){
   const[user,setUser]=useState(()=>{
     try{const u=localStorage.getItem('byeolsoom_user');return u?JSON.parse(u):null;}catch{return null;}
   });
+  // ── 개인화 프로필 (연인/직장) ──
+  const[profile,setProfile]=useState(()=>{
+    try{const p=localStorage.getItem('byeolsoom_extra');return p?JSON.parse(p):{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:''};}catch{return{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:''};}
+  });
+  const[showProfileModal,setShowProfileModal]=useState(false);
   // ── 결제 ──
   const[payToast,setPayToast]=useState(null);
   const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트 7궁합 8편지
@@ -1287,6 +1408,9 @@ export default function App(){
       try{localStorage.setItem('byeolsoom_profile',JSON.stringify(form));}catch(e){}
     }
   },[form]);
+  useEffect(()=>{
+    try{localStorage.setItem('byeolsoom_extra',JSON.stringify(profile));}catch(e){}
+  },[profile]);
   useEffect(()=>{window.scrollTo({top:0,behavior:'smooth'});},[step]);
   useEffect(()=>{chatEndRef.current?.scrollIntoView({behavior:'smooth'});},[chatHistory,chatLoading]);
 
@@ -1318,8 +1442,24 @@ export default function App(){
       if(moon)c+=`달: ${moon.n}(${moon.s}) — ${moon.desc}\n`;
       if(asc)c+=`상승: ${asc.n}(${asc.s}) — ${asc.desc}\n`;
     }
+    // 연인 정보
+    if(profile.partner){
+      c+=`[연인 정보]\n이름: ${profile.partner}\n`;
+      if(profile.partnerBy&&profile.partnerBm&&profile.partnerBd){
+        try{
+          const ps=getSaju(+profile.partnerBy,+profile.partnerBm,+profile.partnerBd,12);
+          const psun=getSun(+profile.partnerBm,+profile.partnerBd);
+          c+=`연인 사주: 연${ps.yeon.g}${ps.yeon.j} 월${ps.wol.g}${ps.wol.j} 일${ps.il.g}${ps.il.j}\n`;
+          c+=`연인 기질: ${ps.ilganDesc} / 강한 기운: ${ON[ps.dom]}\n`;
+          c+=`연인 별자리: ${psun.n}(${psun.s})\n\n`;
+        }catch(e){}
+      }
+    }
+    // 직장/고민 정보
+    if(profile.workplace) c+=`[직장/상황] ${profile.workplace}\n`;
+    if(profile.worryText) c+=`[지금 고민] ${profile.worryText}\n`;
     return c;
-  },[form,saju,sun,moon,asc,age]);
+  },[form,saju,sun,moon,asc,age,profile]);
 
   // API 공통 헬퍼 (프롬프트는 서버 ask.js에서 관리)
   const callApi=useCallback(async(userMessage,opts={})=>{
@@ -1510,13 +1650,15 @@ export default function App(){
       <StarCanvas isDark={isDark}/>
       <button className="theme-btn" onClick={()=>setIsDark(p=>!p)}>{isDark?'☀':'◑'}</button>
       {/* 유저 칩 */}
-      {user?(
-        <div className="user-chip" onClick={kakaoLogout} title="로그아웃">
+      {/* step>=1 일 때만 상단 칩 표시 (랜딩은 카드로 처리) */}
+      {step>=1&&user&&(
+        <div className="user-chip" onClick={()=>setShowProfileModal(true)} title="내 정보 수정" style={{cursor:'pointer'}}>
           {user.profileImage?<img src={user.profileImage} alt="프로필"/>:<span style={{fontSize:'1rem'}}>🌙</span>}
           <span>{user.nickname}</span>
         </div>
-      ):(
-        step>=4&&<button className="user-chip" onClick={kakaoLogin} style={{border:'1px solid #FEE500',background:'rgba(254,229,0,.1)'}}>
+      )}
+      {step>=1&&!user&&(
+        <button className="user-chip" onClick={kakaoLogin} style={{border:'1px solid #FEE500',background:'rgba(254,229,0,.1)'}}>
           <span style={{fontSize:'.75rem',color:'var(--t2)'}}>카카오 로그인</span>
         </button>
       )}
@@ -1535,11 +1677,64 @@ export default function App(){
               </div>
               <p className="land-copy">오늘 밤,<br/><em>당신의 별이 기다리고 있어요.</em></p>
               <p className="land-sub">동양의 별과 서양의 별이 함께<br/>당신의 이야기를 읽어드릴게요</p>
-              <button className="cta-main" onClick={()=>setStep(1)}>지금 시작하기 ✦</button>
-              <div className="land-trust">
-                <span>★★★★★ 4.9</span><span>·</span>
-                <span>32,841명</span><span>·</span>
-                <span>무료 체험 가능</span>
+              {/* ── 로그인/개인화 카드 ── */}
+              <div className="land-login-section">
+                {user ? (
+                  <div className="land-login-card logged">
+                    <div className="llc-top">
+                      {user.profileImage
+                        ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/>
+                        : <div className="llc-avatar-placeholder">🌙</div>}
+                      <div>
+                        <div className="llc-name">{user.nickname}님 ✦</div>
+                        <div className="llc-sub">별숨이 당신을 기억하고 있어요</div>
+                      </div>
+                    </div>
+                    {/* 오늘의 개인 메시지 */}
+                    <div className="llc-greeting">
+                      {form.by && saju
+                        ? `${ON[saju.dom]} 기운의 ${user.nickname}님, 오늘의 별이 기다리고 있어요.`
+                        : `${user.nickname}님, 오늘도 별이 당신 편이에요.`}
+                    </div>
+                    {/* 저장된 정보 칩 */}
+                    <div className="llc-profile-chips">
+                      {form.by && <span className="llc-chip filled">🀄 사주 저장됨</span>}
+                      {profile.partner && <span className="llc-chip filled">💕 {profile.partner}</span>}
+                      {profile.workplace && <span className="llc-chip filled">💼 {profile.workplace.slice(0,12)}{profile.workplace.length>12?'…':''}</span>}
+                      <span className="llc-chip" onClick={()=>setShowProfileModal(true)}>+ 정보 추가</span>
+                    </div>
+                    <div className="llc-actions">
+                      <button className="cta-main" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep(1)}>
+                        {form.by ? '오늘의 별 보기 ✦' : '지금 시작하기 ✦'}
+                      </button>
+                      <button className="res-btn" style={{padding:'13px 14px',borderRadius:'var(--r1)'}} onClick={kakaoLogout} title="로그아웃">↩</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="land-login-card">
+                    <div className="llc-top">
+                      <div className="llc-avatar-placeholder">✦</div>
+                      <div>
+                        <div className="llc-name">오늘 밤, 당신의 별이 기다려요</div>
+                        <div className="llc-sub">로그인하면 모든 기록이 저장돼요</div>
+                      </div>
+                    </div>
+                    <button className="kakao-login-full" onClick={kakaoLogin}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/>
+                      </svg>
+                      카카오로 1초 로그인
+                    </button>
+                    <div className="land-login-why">
+                      연인 운세 공유 · 직장 맞춤 조언 · 내 기록 저장<br/>가입 없이 카카오 계정으로 바로 시작
+                    </div>
+                    <div style={{marginTop:'var(--sp2)',display:'flex',justifyContent:'center'}}>
+                      <button style={{background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',padding:'4px'}} onClick={()=>setStep(1)}>
+                        로그인 없이 체험하기 →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <SamplePreview/>
               <div className="daily-word">
@@ -1812,8 +2007,8 @@ export default function App(){
                   {!user&&(
                     <div className="kakao-nudge">
                       <span style={{fontSize:'1.1rem'}}>🌙</span>
-                      <span className="kakao-nudge-text">카카오 로그인하면 내 기록이 저장돼요 🌙</span>
-                      <button className="kakao-btn" style={{width:'auto',padding:'6px 14px',fontSize:'var(--xs)'}} onClick={kakaoLogin}>로그인</button>
+                      <span className="kakao-nudge-text">로그인하면 연인 운세 · 직장 맞춤 · 내 기록이 모두 저장돼요</span>
+                      <button className="kakao-btn" style={{width:'auto',padding:'6px 14px',fontSize:'var(--xs)'}} onClick={kakaoLogin}>카카오 로그인</button>
                     </div>
                   )}
 
@@ -1951,6 +2146,14 @@ export default function App(){
 
 
       </div>
+      {/* ══ 프로필 모달 ══ */}
+      {showProfileModal&&(
+        <ProfileModal
+          profile={profile}
+          setProfile={setProfile}
+          onClose={()=>setShowProfileModal(false)}
+        />
+      )}
       {/* ══ 결제 Toast ══ */}
       {payToast&&<div className={`pay-toast ${payToast.type}`}>{payToast.msg}</div>}
     </>
