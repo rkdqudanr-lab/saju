@@ -1561,8 +1561,7 @@ function SamplePreview(){
       idxRef.current++;
       setText(essay.slice(0,idxRef.current));
       const ch=essay[idxRef.current-1];
-      const delay=ch==='.'||ch==='!'||ch==='?'?280:ch===','?120:ch==='
-'?200:28;
+      const delay=ch==='.'||ch==='!'||ch==='?'?280:ch===','?120:ch==='\n'?200:28;
       timerRef.current=setTimeout(tick,delay);
     };
     timerRef.current=setTimeout(tick,500);
@@ -2323,20 +2322,9 @@ export default function App(){
     setChatHistory(p=>[...p,{role:'user',text:userMsg}]);
     setChatLoading(true);
     setChatUsed(p=>p+1);
-    const prevQAs=selQs.map((q,i)=>`[질문 ${i+1}] ${q}
-[답변] ${answers[i]||''}`).join('
-
-');
-    const prevChat=chatHistory.map(m=>`[${m.role==='ai'?'별숨':'나'}] ${m.text}`).join('
-');
-    const fullMsg=`[이전 상담]
-${prevQAs}
-
-[이전 대화]
-${prevChat}
-
-[새 질문]
-${userMsg}`;
+    const prevQAs=selQs.map((q,i)=>`[질문 ${i+1}] ${q}\n[답변] ${answers[i]||''}`).join('\n\n');
+    const prevChat=chatHistory.map(m=>`[${m.role==='ai'?'별숨':'나'}] ${m.text}`).join('\n');
+    const fullMsg=`[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
     try{
       const aiText=await callApi(fullMsg,{isChat:true});
       setChatHistory(p=>{
