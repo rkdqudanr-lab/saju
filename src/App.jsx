@@ -393,7 +393,6 @@ const CATS=[
     "오늘 하루를 잘 마무리하려면 어떻게 해야 할까요?",
   ]},
 ];
-];
 const PKGS=[
   {id:"free",  e:"🌙",n:"첫 번째 별",  p:"무료",      q:1, chat:3,  isFree:true },
   {id:"moon",  e:"✦", n:"달빛",        p:"5,900원",   q:3, chat:5,  isFree:false},
