@@ -1384,22 +1384,60 @@ export default function App(){
 
   // ── 카카오 SDK 동적 로드 ──
   useEffect(()=>{
-    if(window.Kakao&&window.Kakao.isInitialized()) return;
-    const existing=document.getElementById('kakao-sdk');
-    if(existing){ // 이미 태그 있으면 초기화만
-      if(window.Kakao&&!window.Kakao.isInitialized())
-        window.Kakao.init(import.meta.env.VITE_KAKAO_JS_KEY||'');
+    const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
+    if(!JS_KEY){
+      console.warn('[별숨] VITE_KAKAO_JS_KEY 환경변수가 없어요. .env.local 확인해주세요.');
       return;
     }
-    const script=document.createElement('script');
-    script.id='kakao-sdk';
-    script.src='https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
-    script.crossOrigin='anonymous';
-    script.onload=()=>{
-      if(window.Kakao&&!window.Kakao.isInitialized())
-        window.Kakao.init(import.meta.env.VITE_KAKAO_JS_KEY||'');
+    const initKakao = () => {
+      if(window.Kakao && !window.Kakao.isInitialized()){
+        window.Kakao.init(JS_KEY);
+        console.log('[별숨] 카카오 SDK 초기화 완료');
+      }
     };
+    if(window.Kakao){
+      initKakao();
+      return;
+    }
+    if(document.getElementById('kakao-sdk')){
+      // 스크립트 태그는 있지만 아직 로드 중 — onload 대기
+      const existing = document.getElementById('kakao-sdk');
+      const prev = existing.onload;
+      existing.onload = () => { if(prev) prev(); initKakao(); };
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'kakao-sdk';
+    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
+    script.crossOrigin = 'anonymous';
+    script.onload = initKakao;
+    script.onerror = () => console.error('[별숨] 카카오 SDK 로드 실패. 네트워크 확인해주세요.');
     document.head.appendChild(script);
+  },[]);
+
+  // ── 카카오 로그인 리다이렉트 처리 (code 파라미터) ──
+  useEffect(()=>{
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if(!code) return;
+    // URL에서 code 제거
+    window.history.replaceState({}, '', window.location.pathname);
+    (async()=>{
+      try{
+        const res = await fetch('/api/kakao-auth', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({code, redirectUri: window.location.origin}),
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.error||'인증 실패');
+        const userData = {id:String(data.id), nickname:data.nickname||'별님', profileImage:data.profileImage||null};
+        setUser(userData);
+        localStorage.setItem('byeolsoom_user', JSON.stringify(userData));
+      }catch(err){
+        console.error('[별숨] 카카오 code 처리 오류:', err);
+      }
+    })();
   },[]);
 
   useEffect(()=>{document.documentElement.setAttribute('data-theme',isDark?'dark':'light');},[isDark]);
@@ -1547,27 +1585,35 @@ export default function App(){
 
   // ── 카카오 로그인 ──
   const kakaoLogin=useCallback(()=>{
-    if(!window.Kakao){alert('카카오 SDK 로딩 중이에요. 잠시 후 다시 시도해봐요.');return;}
-    window.Kakao.Auth.login({
-      scope:'profile_nickname,profile_image',
-      success:async(authObj)=>{
-        try{
-          const res=await fetch('/api/kakao-auth',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({accessToken:authObj.access_token}),
-          });
-          const data=await res.json();
-          if(!res.ok)throw new Error(data.error);
-          const userData={id:data.id,nickname:data.nickname,profileImage:data.profileImage};
-          setUser(userData);
-          localStorage.setItem('byeolsoom_user',JSON.stringify(userData));
-        }catch(err){
-          console.error('카카오 인증 오류:',err);
-          alert('로그인 중 오류가 났어요 🌙');
-        }
-      },
-      fail:(err)=>{console.error('카카오 로그인 실패:',err);}
+    const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
+
+    // ① 환경변수 없음
+    if(!JS_KEY){
+      alert('카카오 앱 키가 설정되지 않았어요.\n.env.local 에 VITE_KAKAO_JS_KEY 를 입력해주세요.');
+      return;
+    }
+
+    // ② SDK 자체가 없음 (네트워크 오류 등)
+    if(!window.Kakao){
+      alert('카카오 SDK를 불러오지 못했어요 🌙\n잠시 후 다시 시도해봐요.');
+      return;
+    }
+
+    // ③ 초기화 안 됨 → 재시도
+    if(!window.Kakao.isInitialized()){
+      try{
+        window.Kakao.init(JS_KEY);
+      }catch(e){
+        console.error('[별숨] Kakao.init 실패:', e);
+        alert('카카오 초기화에 실패했어요 🌙\n페이지를 새로고침 후 시도해봐요.');
+        return;
+      }
+    }
+
+    // ④ 로그인 실행 — SDK 2.x 방식 (Kakao.Auth.login 삭제됨)
+    // getUserInfo로 액세스토큰 직접 획득
+    window.Kakao.Auth.authorize({
+      redirectUri: window.location.origin,
     });
   },[]);
 
@@ -1728,6 +1774,14 @@ export default function App(){
                     <div className="land-login-why">
                       연인 운세 공유 · 직장 맞춤 조언 · 내 기록 저장<br/>가입 없이 카카오 계정으로 바로 시작
                     </div>
+                    {import.meta.env.DEV&&(
+                      <div style={{marginTop:8,padding:'8px 10px',background:'rgba(255,100,100,.08)',border:'1px solid rgba(255,100,100,.2)',borderRadius:8,fontSize:'var(--xs)',color:'#ff8080',lineHeight:1.7}}>
+                        🔧 개발 환경 체크<br/>
+                        키 설정: {import.meta.env.VITE_KAKAO_JS_KEY?'✅ 있음':'❌ 없음 — .env.local 확인'}<br/>
+                        SDK: {typeof window!=='undefined'&&window.Kakao?'✅ 로드됨':'⏳ 로딩 중'}<br/>
+                        초기화: {typeof window!=='undefined'&&window.Kakao?.isInitialized?.()===true?'✅ 완료':'⏳ 대기'}
+                      </div>
+                    )}
                     <div style={{marginTop:'var(--sp2)',display:'flex',justifyContent:'center'}}>
                       <button style={{background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',padding:'4px'}} onClick={()=>setStep(1)}>
                         로그인 없이 체험하기 →
