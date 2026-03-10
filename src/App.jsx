@@ -248,6 +248,90 @@ const LOAD_STATES=[
 ];
 
 // ═══════════════════════════════════════════════════════════
+//  ⏰ 시간대 유틸
+// ═══════════════════════════════════════════════════════════
+function getTimeSlot(){
+  const h=new Date().getHours();
+  if(h>=5&&h<12) return 'morning';   // 오전 5~12
+  if(h>=12&&h<19) return 'afternoon'; // 오후 12~19
+  if(h>=19&&h<24) return 'evening';  // 저녁 19~24
+  return 'dawn';                      // 새벽 0~5
+}
+const TIME_CONFIG={
+  morning:{
+    label:'오늘을 여는 별숨',
+    emoji:'🌅',
+    color:'#E8B048',
+    bg:'rgba(232,176,72,.08)',
+    border:'rgba(232,176,72,.2)',
+    ctaText:'오늘의 별숨에게 물어보기 ✦',
+    ctaBg:'var(--gold)',ctaColor:'#0D0B14',
+    greeting:(name)=>`${name||'당신'}의 오늘이 시작되고 있어요.`,
+    prompt:'[오전 운세] 오늘 하루를 어떻게 시작하면 좋을지, 오늘의 기운과 방향을 따뜻하게 전해줘요.',
+    inputPlaceholder:'오늘 하루 어떤 게 궁금해요?',
+  },
+  afternoon:{
+    label:'오늘의 별숨',
+    emoji:'✦',
+    color:'var(--gold)',
+    bg:'var(--goldf)',
+    border:'var(--acc)',
+    ctaText:'별숨에게 물어보기 ✦',
+    ctaBg:'var(--gold)',ctaColor:'#0D0B14',
+    greeting:(name)=>`${name||'당신'}의 오후, 별이 함께하고 있어요.`,
+    prompt:'[오후 운세] 오늘 오후의 기운과 지금 이 순간 필요한 것을 전해줘요.',
+    inputPlaceholder:'지금 마음속에 있는 것을 물어봐요',
+  },
+  evening:{
+    label:'오늘을 마무리하는 별숨',
+    emoji:'🌙',
+    color:'#9B8EC4',
+    bg:'rgba(155,142,196,.08)',
+    border:'rgba(155,142,196,.2)',
+    ctaText:'오늘을 별숨의 언어로 읽어보기 ✦',
+    ctaBg:'var(--lav)',ctaColor:'#fff',
+    greeting:(name)=>`${name||'당신'}의 오늘 하루, 수고했어요.`,
+    prompt:'[저녁 회고] 오늘 하루를 돌아보며 별의 언어로 다시 읽어주는 이야기를 써줘요. 오늘 있었던 일들을 의미있게 재해석해요.',
+    inputPlaceholder:'오늘 있었던 일을 별숨에게 털어놔요',
+  },
+  dawn:{
+    label:'별이 가장 선명한 시간',
+    emoji:'🌌',
+    color:'#6BBFB5',
+    bg:'rgba(107,191,181,.06)',
+    border:'rgba(107,191,181,.15)',
+    ctaText:'새벽의 별숨에게 물어보기 ✦',
+    ctaBg:'var(--teal)',ctaColor:'#fff',
+    greeting:(name)=>`별이 가장 선명한 새벽, ${name||'당신'}에게 전할 이야기가 있어요.`,
+    prompt:'[새벽 운세] 잠 못 드는 새벽, 이 시간에 필요한 위로와 내일을 향한 이야기를 전해줘요.',
+    inputPlaceholder:'새벽에 떠오른 생각을 적어봐요',
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+//  📚 히스토리 유틸
+// ═══════════════════════════════════════════════════════════
+const HIST_KEY='byeolsoom_history';
+const MAX_HIST=30;
+function loadHistory(){
+  try{const h=localStorage.getItem(HIST_KEY);return h?JSON.parse(h):[];}catch{return[];}
+}
+function saveHistory(items){
+  try{localStorage.setItem(HIST_KEY,JSON.stringify(items.slice(0,MAX_HIST)));}catch{}
+}
+function addHistory(questions,answers){
+  const items=loadHistory();
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const newItem={id:Date.now(),date:dateStr,slot:getTimeSlot(),questions,answers};
+  saveHistory([newItem,...items]);
+}
+function deleteHistory(id){
+  const items=loadHistory().filter(i=>i.id!==id);
+  saveHistory(items);
+}
+
+// ═══════════════════════════════════════════════════════════
 //  🎨 CSS
 // ═══════════════════════════════════════════════════════════
 const CSS=`
@@ -286,7 +370,7 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:
 /* 공통 UI */
 .theme-btn{position:fixed;top:18px;right:18px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.9rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
 .theme-btn:hover{color:var(--gold);border-color:var(--gold)}
-.back-btn{position:fixed;top:18px;left:18px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.8rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.back-btn{position:fixed;top:18px;left:62px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.8rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
 .back-btn:hover{color:var(--gold)}
 .step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:var(--sp3)}
 .dot{height:4px;border-radius:2px;transition:all .4s cubic-bezier(.34,1.56,.64,1)}
@@ -681,7 +765,93 @@ select.inp option{background:var(--bg2)}
 .share-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .hint{font-size:var(--xs);color:var(--t4)}
+
+/* ══ 사이드바 ══ */
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:100;animation:fadeIn .25s ease}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:min(320px,88vw);background:var(--bg);border-right:1px solid var(--line);z-index:101;display:flex;flex-direction:column;animation:sideIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes sideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+.sidebar-head{padding:var(--sp4) var(--sp3) var(--sp3);border-bottom:1px solid var(--line)}
+.sidebar-logo{font-size:var(--xs);letter-spacing:.3em;color:var(--gold);margin-bottom:var(--sp2)}
+.sidebar-user{display:flex;align-items:center;gap:10px}
+.sidebar-av{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--acc)}
+.sidebar-av-ph{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:.85rem}
+.sidebar-uname{font-size:var(--sm);font-weight:600;color:var(--t1)}
+.sidebar-usub{font-size:var(--xs);color:var(--t4);margin-top:2px}
+.sidebar-body{flex:1;overflow-y:auto;padding:var(--sp2) 0}
+.sidebar-section{margin-bottom:var(--sp2)}
+.sidebar-section-lbl{font-size:var(--xs);font-weight:700;color:var(--t4);letter-spacing:.1em;padding:6px var(--sp3) 4px}
+.sidebar-menu-item{display:flex;align-items:center;gap:12px;padding:11px var(--sp3);cursor:pointer;transition:background .2s;border:none;background:transparent;width:100%;text-align:left;font-family:var(--ff)}
+.sidebar-menu-item:hover{background:var(--bg2)}
+.sidebar-menu-item.active{background:var(--goldf)}
+.smi-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+.smi-text{font-size:var(--sm);color:var(--t2)}
+.sidebar-menu-item.active .smi-text{color:var(--gold);font-weight:600}
+.sidebar-hist-item{padding:10px var(--sp3);cursor:pointer;border-bottom:1px solid var(--line2);transition:background .2s}
+.sidebar-hist-item:hover{background:var(--bg2)}
+.shi-date{font-size:var(--xs);color:var(--t4);margin-bottom:3px}
+.shi-q{font-size:var(--xs);color:var(--t2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sidebar-empty{padding:var(--sp3);text-align:center;color:var(--t4);font-size:var(--xs);line-height:2}
+.sidebar-foot{padding:var(--sp2) var(--sp3);border-top:1px solid var(--line)}
+.sidebar-foot-btn{width:100%;padding:9px;border:1px solid var(--line);border-radius:var(--r1);background:transparent;color:var(--t4);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
+.sidebar-foot-btn:hover{border-color:var(--acc);color:var(--gold)}
+.menu-btn{position:fixed;top:18px;left:18px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.9rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.menu-btn:hover{color:var(--gold);border-color:var(--gold)}
+
+/* ══ 시간대별 배경 오버레이 ══ */
+.time-overlay{position:fixed;inset:0;pointer-events:none;z-index:0;transition:opacity 1s ease}
+
+/* ══ 오늘의 별숨 (시간대별) ══ */
+.todaybyeol{margin:var(--sp3) 0;border-radius:var(--r2);overflow:hidden;animation:fadeUp .8s .5s both;border:1px solid var(--line)}
+.todaybyeol-top{padding:var(--sp2) var(--sp3);display:flex;align-items:center;gap:10px}
+.tbt-orb{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.tbt-label{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:2px}
+.tbt-title{font-size:var(--sm);font-weight:600}
+.todaybyeol-body{padding:var(--sp2) var(--sp3) var(--sp3);border-top:1px solid var(--line)}
+.tbt-text{font-size:var(--sm);color:var(--t2);line-height:1.85;margin-bottom:var(--sp2)}
+.tbt-cta{width:100%;padding:11px;border:none;border-radius:var(--r1);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:pointer;transition:all .2s}
+.tbt-cta:active{transform:scale(.97)}
+
+/* ══ 저녁 회고 입력 ══ */
+.review-inp{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);resize:none;height:72px;margin-bottom:10px;transition:border-color .2s}
+.review-inp:focus{outline:none;border-color:var(--gold)}.review-inp::placeholder{color:var(--t4)}
+
+/* ══ 랜딩 퀵 질문 ══ */
+.land-quick{margin:var(--sp3) 0;animation:fadeUp .8s .5s both}
+.land-quick-title{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:8px;text-align:left}
+.land-quick-inp-row{display:flex;gap:8px;margin-bottom:10px}
+.land-quick-inp{flex:1;padding:13px 16px;background:var(--bg1);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}
+.land-quick-inp:focus{outline:none;border-color:var(--gold)}.land-quick-inp::placeholder{color:var(--t4)}
+.land-quick-send{width:44px;height:44px;border-radius:50%;border:none;background:var(--gold);color:#0D0B14;font-size:.9rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .15s}
+.land-quick-send:hover{opacity:.85}.land-quick-send:active{transform:scale(.93)}.land-quick-send:disabled{opacity:.3;cursor:not-allowed}
+.land-cat-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.land-cat-chip{padding:6px 13px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:all .2s}
+.land-cat-chip:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
+.land-cat-chip.on{background:var(--goldf);border-color:var(--acc);color:var(--gold);font-weight:600}
+
+/* ══ 히스토리 뷰어 (step 9) ══ */
+.hist-page{width:100%;max-width:480px;animation:fadeUp .5s ease}
+.hist-header{padding:var(--sp4) var(--sp3) var(--sp2);border-bottom:1px solid var(--line)}
+.hist-title{font-size:var(--lg);font-weight:700;color:var(--t1);margin-bottom:4px}
+.hist-sub{font-size:var(--xs);color:var(--t3)}
+.hist-search{padding:var(--sp2) var(--sp3);border-bottom:1px solid var(--line)}
+.hist-search-inp{width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}
+.hist-search-inp:focus{outline:none;border-color:var(--gold)}.hist-search-inp::placeholder{color:var(--t4)}
+.hist-list{padding:var(--sp2) 0}
+.hist-card{margin:0 var(--sp3) var(--sp2);background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;animation:fadeUp .3s ease}
+.hist-card-head{padding:var(--sp2) var(--sp3);display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid var(--line2)}
+.hist-card-head:hover{background:var(--bg2)}
+.hch-left{flex:1}
+.hch-date{font-size:var(--xs);color:var(--t4);margin-bottom:3px}
+.hch-q{font-size:var(--sm);color:var(--t1);font-weight:500;line-height:1.45}
+.hch-right{display:flex;align-items:center;gap:8px}
+.hch-chevron{font-size:.55rem;color:var(--t4);transition:transform .3s}
+.hch-chevron.open{transform:rotate(180deg);color:var(--gold)}
+.hist-card-body{padding:var(--sp2) var(--sp3) var(--sp3);font-size:var(--sm);color:var(--t2);line-height:2.1;white-space:pre-wrap;border-top:1px solid var(--line)}
+.hist-del-btn{padding:3px 8px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--t4);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s;flex-shrink:0}
+.hist-del-btn:hover{border-color:#e05a3a;color:#e05a3a}
+.hist-empty{padding:var(--sp5) var(--sp3);text-align:center;color:var(--t4);font-size:var(--sm);line-height:2.2}
 `;
+
 
 // ═══════════════════════════════════════════════════════════
 //  🌌 별 캔버스
@@ -977,6 +1147,203 @@ function ProfileModal({profile,setProfile,onClose}){
 
         <button className="profile-save-btn" onClick={save}>저장하고 반영하기 ✦</button>
         <button className="profile-close-btn" onClick={onClose}>나중에 할게요</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  🗂️ 사이드바
+// ═══════════════════════════════════════════════════════════
+function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLogout,onProfileOpen}){
+  const[histItems,setHistItems]=useState(()=>loadHistory());
+  const[search,setSearch]=useState('');
+
+  const filtered=histItems.filter(h=>
+    h.questions.some(q=>q.includes(search))||
+    h.answers.some(a=>a.includes(search))
+  );
+
+  const del=(id,e)=>{
+    e.stopPropagation();
+    deleteHistory(id);
+    setHistItems(loadHistory());
+  };
+
+  const SLOT_EMOJI={morning:'🌅',afternoon:'✦',evening:'🌙',dawn:'🌌'};
+
+  return(
+    <>
+      <div className="sidebar-overlay" onClick={onClose}/>
+      <div className="sidebar">
+        {/* 헤더 */}
+        <div className="sidebar-head">
+          <div className="sidebar-logo">✦ byeolsoom</div>
+          {user?(
+            <div className="sidebar-user">
+              {user.profileImage
+                ?<img className="sidebar-av" src={user.profileImage} alt="프로필"/>
+                :<div className="sidebar-av-ph">🌙</div>}
+              <div>
+                <div className="sidebar-uname">{user.nickname}님</div>
+                <div className="sidebar-usub">별숨과 함께하는 중</div>
+              </div>
+            </div>
+          ):(
+            <div className="sidebar-user">
+              <div className="sidebar-av-ph">✦</div>
+              <div>
+                <div className="sidebar-uname">게스트</div>
+                <div className="sidebar-usub" style={{cursor:'pointer',color:'var(--gold)'}} onClick={onKakaoLogin}>카카오 로그인 →</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 본문 */}
+        <div className="sidebar-body">
+          {/* 메뉴 */}
+          <div className="sidebar-section">
+            <div className="sidebar-section-lbl">메뉴</div>
+            {[
+              {icon:'🏠',label:'홈',s:0},
+              {icon:'✦',label:'별숨에게 물어보기',s:1},
+              {icon:'📅',label:'월간 리포트',s:6},
+              {icon:'💞',label:'우리가 만나면',s:7},
+              {icon:'💌',label:'별의 편지',s:8},
+            ].map(m=>(
+              <button key={m.s} className={`sidebar-menu-item ${step===m.s?'active':''}`}
+                onClick={()=>{onNav(m.s);onClose();}}>
+                <span className="smi-icon">{m.icon}</span>
+                <span className="smi-text">{m.label}</span>
+              </button>
+            ))}
+            {user&&(
+              <button className="sidebar-menu-item" onClick={()=>{onProfileOpen();onClose();}}>
+                <span className="smi-icon">⚙️</span>
+                <span className="smi-text">나의 별자리 지도</span>
+              </button>
+            )}
+          </div>
+
+          {/* 히스토리 */}
+          <div className="sidebar-section">
+            <div className="sidebar-section-lbl">지난 이야기 ({histItems.length})</div>
+            {histItems.length>0&&(
+              <div style={{padding:'0 var(--sp3) 8px'}}>
+                <input className="hist-search-inp" placeholder="🔍  지난 이야기 검색..." value={search} onChange={e=>setSearch(e.target.value)}/>
+              </div>
+            )}
+            {filtered.length===0?(
+              <div className="sidebar-empty">
+                아직 별숨과 나눈 이야기가 없어요 🌙<br/>
+                첫 질문을 던져봐요
+              </div>
+            ):(
+              filtered.slice(0,15).map(h=>(
+                <div key={h.id} className="sidebar-hist-item" onClick={()=>{onNav('history',h);onClose();}}>
+                  <div className="shi-date">{SLOT_EMOJI[h.slot]||'✦'} {h.date}</div>
+                  <div className="shi-q">{h.questions[0]}</div>
+                  {h.questions.length>1&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:2}}>+{h.questions.length-1}개 더</div>}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* 푸터 */}
+        <div className="sidebar-foot">
+          {user&&<button className="sidebar-foot-btn" onClick={()=>{onKakaoLogout();onClose();}}>로그아웃</button>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  📖 히스토리 상세 페이지 (step 9)
+// ═══════════════════════════════════════════════════════════
+function HistoryPage({item,onBack,onDelete}){
+  const[openIdx,setOpenIdx]=useState(0);
+  const[deleted,setDeleted]=useState(false);
+  const SLOT_LABEL={morning:'오전 운세',afternoon:'오후 운세',evening:'저녁 회고',dawn:'새벽 별숨'};
+
+  if(deleted) return null;
+
+  return(
+    <div className="page-top">
+      <div className="hist-page">
+        <div className="hist-header">
+          <div style={{fontSize:'var(--xs)',color:'var(--t4)',marginBottom:6}}>
+            {SLOT_LABEL[item.slot]||'별숨 이야기'} · {item.date}
+          </div>
+          <div className="hist-title">지난 이야기</div>
+          <div className="hist-sub">{item.questions.length}개의 질문과 답변</div>
+        </div>
+        <div className="hist-list">
+          {item.questions.map((q,i)=>(
+            <div key={i} className="hist-card">
+              <div className="hist-card-head" onClick={()=>setOpenIdx(openIdx===i?-1:i)}>
+                <div className="hch-left">
+                  <div className="hch-date">Q{i+1}</div>
+                  <div className="hch-q">{q}</div>
+                </div>
+                <div className="hch-right">
+                  <span className={`hch-chevron ${openIdx===i?'open':''}`}>▼</span>
+                </div>
+              </div>
+              {openIdx===i&&(
+                <div className="hist-card-body">{item.answers[i]||'답변을 불러올 수 없어요'}</div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div style={{padding:'0 var(--sp3) var(--sp5)',display:'flex',gap:8}}>
+          <button className="res-btn" style={{flex:1}} onClick={onBack}>← 돌아가기</button>
+          <button className="hist-del-btn" onClick={()=>{onDelete(item.id);setDeleted(true);onBack();}}>삭제</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  🌅 오늘의 별숨 컴포넌트 (시간대별)
+// ═══════════════════════════════════════════════════════════
+function TodayByeolsoom({slot,name,saju,sun,onAsk,onReview}){
+  const cfg=TIME_CONFIG[slot];
+  const[reviewText,setReviewText]=useState('');
+  const isEvening=slot==='evening'||slot==='dawn';
+
+  return(
+    <div className="todaybyeol" style={{background:cfg.bg,borderColor:cfg.border}}>
+      <div className="todaybyeol-top">
+        <div className="tbt-orb" style={{background:cfg.bg,border:`1px solid ${cfg.border}`}}>{cfg.emoji}</div>
+        <div>
+          <div className="tbt-label" style={{color:cfg.color}}>{cfg.label}</div>
+          <div className="tbt-title" style={{color:'var(--t1)'}}>{cfg.greeting(name)}</div>
+        </div>
+      </div>
+      <div className="todaybyeol-body" style={{background:'var(--bg1)'}}>
+        {isEvening&&(
+          <>
+            <div style={{fontSize:'var(--xs)',color:'var(--t3)',marginBottom:6,lineHeight:1.7}}>
+              {slot==='evening'?'오늘 있었던 일을 적으면 별숨이 다시 읽어드릴게요':'잠 못 드는 이 새벽, 뭔가 마음에 걸리는 게 있나요?'}
+            </div>
+            <textarea className="review-inp"
+              placeholder={cfg.inputPlaceholder}
+              value={reviewText}
+              onChange={e=>setReviewText(e.target.value)}/>
+          </>
+        )}
+        <button className="tbt-cta"
+          style={{background:cfg.ctaBg,color:cfg.ctaColor}}
+          onClick={()=>{
+            if(isEvening&&reviewText.trim()){onReview(reviewText,cfg.prompt);}
+            else{onAsk(cfg.prompt);}
+          }}>
+          {cfg.ctaText}
+        </button>
       </div>
     </div>
   );
@@ -1342,6 +1709,11 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
 // ═══════════════════════════════════════════════════════════
 export default function App(){
   const[isDark,setIsDark]=useState(false);
+  // ── 사이드바 / 히스토리 ──
+  const[showSidebar,setShowSidebar]=useState(false);
+  const[histItem,setHistItem]=useState(null); // 히스토리 상세 보기
+  const[histItems,setHistItems]=useState(()=>loadHistory());
+  const timeSlot=useMemo(()=>getTimeSlot(),[]);
   // ── 카카오 유저 ──
   const[user,setUser]=useState(()=>{
     try{const u=localStorage.getItem('byeolsoom_user');return u?JSON.parse(u):null;}catch{return null;}
@@ -1353,7 +1725,10 @@ export default function App(){
   const[showProfileModal,setShowProfileModal]=useState(false);
   // ── 결제 ──
   const[payToast,setPayToast]=useState(null);
-  const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트 7궁합 8편지
+  const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트 7궁합 8편지 9히스토리
+  // ── 랜딩 퀵질문 ──
+  const[quickQ,setQuickQ]=useState('');
+  const[quickCat,setQuickCat]=useState(0);
   const[form,setForm]=useState(()=>{
     try{
       const saved=localStorage.getItem('byeolsoom_profile');
@@ -1642,7 +2017,66 @@ export default function App(){
     );
 
     setAnswers(newAnswers);
+    // 히스토리 저장
+    addHistory(selQs,newAnswers);
+    setHistItems(loadHistory());
     setLatestChatIdx(-1);
+    setStep(4);setOpenAcc(0);
+  };
+
+  // 퀵질문 (랜딩에서 바로 질문)
+  const askQuick=async(q)=>{
+    if(!q.trim())return;
+    if(!formOk){
+      // 프로필 없으면 입력 먼저
+      setSelQs([q.trim()]);
+      setStep(1);
+      return;
+    }
+    setSelQs([q.trim()]);
+    setStep(3);setAnswers([]);setTypedSet(new Set());setOpenAcc(0);
+    try{
+      const ans=await callApi(`[질문]\n${q.trim()}`);
+      setAnswers([ans]);
+      addHistory([q.trim()],[ans]);
+      setHistItems(loadHistory());
+    }catch{
+      setAnswers(['별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.']);
+    }
+    setStep(4);setOpenAcc(0);
+  };
+
+  // 시간대별 오늘의 별숨 ask
+  const askTimeSlot=async(prompt)=>{
+    if(!formOk){setStep(1);return;}
+    const q=TIME_CONFIG[timeSlot].label;
+    setSelQs([q]);
+    setStep(3);setAnswers([]);setTypedSet(new Set());setOpenAcc(0);
+    try{
+      const ans=await callApi(`[질문]\n${prompt}`);
+      setAnswers([ans]);
+      addHistory([q],[ans]);
+      setHistItems(loadHistory());
+    }catch{
+      setAnswers(['별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.']);
+    }
+    setStep(4);setOpenAcc(0);
+  };
+
+  // 저녁 회고
+  const askReview=async(text,prompt)=>{
+    if(!formOk){setStep(1);return;}
+    const q=`오늘 하루 회고: ${text.slice(0,30)}${text.length>30?'…':''}`;
+    setSelQs([q]);
+    setStep(3);setAnswers([]);setTypedSet(new Set());setOpenAcc(0);
+    try{
+      const ans=await callApi(`[질문]\n${prompt}\n\n[오늘 있었던 일]\n${text}`);
+      setAnswers([ans]);
+      addHistory([q],[ans]);
+      setHistItems(loadHistory());
+    }catch{
+      setAnswers(['별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.']);
+    }
     setStep(4);setOpenAcc(0);
   };
 
@@ -1694,6 +2128,25 @@ export default function App(){
     <>
       <style>{CSS}</style>
       <StarCanvas isDark={isDark}/>
+
+      {/* 왼쪽 상단 메뉴 버튼 (항상 표시) */}
+      <button className="menu-btn" onClick={()=>setShowSidebar(true)}>☰</button>
+
+      {/* 사이드바 */}
+      {showSidebar&&(
+        <Sidebar
+          user={user} step={step}
+          onClose={()=>setShowSidebar(false)}
+          onNav={(s,item)=>{
+            if(s==='history'&&item){setHistItem(item);setStep(9);}
+            else{setStep(s);}
+          }}
+          onKakaoLogin={kakaoLogin}
+          onKakaoLogout={kakaoLogout}
+          onProfileOpen={()=>setShowProfileModal(true)}
+        />
+      )}
+
       <button className="theme-btn" onClick={()=>setIsDark(p=>!p)}>{isDark?'☀':'◑'}</button>
       {/* 유저 칩 */}
       {/* step>=1 일 때만 상단 칩 표시 (랜딩은 카드로 처리) */}
@@ -1708,8 +2161,9 @@ export default function App(){
           <span style={{fontSize:'.75rem',color:'var(--t2)'}}>카카오 로그인</span>
         </button>
       )}
-      {step>0&&step<5&&<button className="back-btn" onClick={()=>setStep(p=>Math.max(0,p-1))}>←</button>}
+      {step>0&&step<5&&step!==9&&<button className="back-btn" onClick={()=>setStep(p=>Math.max(0,p-1))}>←</button>}
       {(step===5||step===6||step===7||step===8)&&<button className="back-btn" onClick={()=>setStep(4)}>←</button>}
+      {step===9&&<button className="back-btn" onClick={()=>{setHistItem(null);setStep(0);}}>←</button>}
 
       <div className="app">
 
@@ -1723,8 +2177,140 @@ export default function App(){
               </div>
               <p className="land-copy">오늘 밤,<br/><em>당신의 별이 기다리고 있어요.</em></p>
               <p className="land-sub">동양의 별과 서양의 별이 함께<br/>당신의 이야기를 읽어드릴게요</p>
+
+              {/* ── 오늘의 별숨 (시간대별) ── */}
+              <TodayByeolsoom
+                slot={timeSlot}
+                name={form.name||user?.nickname||''}
+                saju={saju}
+                sun={sun}
+                onAsk={askTimeSlot}
+                onReview={askReview}
+              />
+
+              {/* ── 퀵질문 입력창 ── */}
+              <div className="land-quick">
+                <div className="land-quick-title">✦ 별숨에게 바로 물어봐요</div>
+                <div className="land-cat-chips">
+                  {CATS.map((c,i)=>(
+                    <button key={c.id} className={`land-cat-chip ${quickCat===i?'on':''}`} onClick={()=>setQuickCat(i)}>
+                      {c.icon} {c.label}
+                    </button>
+                  ))}
+                </div>
+                {/* 카테고리별 추천 질문 */}
+                <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:10}}>
+                  {CATS[quickCat].qs.slice(0,3).map((q,i)=>(
+                    <button key={i}
+                      style={{padding:'5px 11px',borderRadius:50,border:'1px solid var(--line)',background:'var(--bg2)',color:'var(--t3)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',transition:'all .2s',textAlign:'left',lineHeight:1.5}}
+                      onClick={()=>setQuickQ(q)}>
+                      {q.length>22?q.slice(0,22)+'…':q}
+                    </button>
+                  ))}
+                </div>
+                <div className="land-quick-inp-row">
+                  <input className="land-quick-inp"
+                    placeholder={TIME_CONFIG[timeSlot].inputPlaceholder}
+                    value={quickQ}
+                    onChange={e=>setQuickQ(e.target.value)}
+                    onKeyDown={e=>{if(e.key==='Enter'&&quickQ.trim())askQuick(quickQ);}}/>
+                  <button className="land-quick-send" disabled={!quickQ.trim()} onClick={()=>askQuick(quickQ)}>✦</button>
+                </div>
+                <div style={{textAlign:'center',marginTop:4}}>
+                  <button style={{background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer'}}
+                    onClick={()=>setStep(formOk?2:1)}>
+                    질문 여러 개 한꺼번에 하기 →
+                  </button>
+                </div>
+              </div>
+
               {/* ── 로그인/개인화 카드 ── */}
               <div className="land-login-section">
+                {user ? (
+                  <div className="land-login-card logged">
+                    <div className="llc-top">
+                      {user.profileImage
+                        ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/>
+                        : <div className="llc-avatar-placeholder">🌙</div>}
+                      <div>
+                        <div className="llc-name">{user.nickname}님 ✦</div>
+                        <div className="llc-sub">별숨이 당신을 기억하고 있어요</div>
+                      </div>
+                    </div>
+                    {/* 오늘의 개인 메시지 */}
+                    <div className="llc-greeting">
+                      {form.by && saju
+                        ? `${ON[saju.dom]} 기운의 ${user.nickname}님, 오늘의 별이 기다리고 있어요.`
+                        : `${user.nickname}님, 오늘도 별이 당신 편이에요.`}
+                    </div>
+                    {/* 저장된 정보 칩 */}
+                    <div className="llc-profile-chips">
+                      {form.by && <span className="llc-chip filled">🀄 사주 저장됨</span>}
+                      {profile.partner && <span className="llc-chip filled">💕 {profile.partner}</span>}
+                      {profile.workplace && <span className="llc-chip filled">💼 {profile.workplace.slice(0,12)}{profile.workplace.length>12?'…':''}</span>}
+                      {histItems.length>0&&<span className="llc-chip filled" onClick={()=>setShowSidebar(true)}>📖 지난 이야기 {histItems.length}개</span>}
+                      <span className="llc-chip" onClick={()=>setShowProfileModal(true)}>+ 정보 추가</span>
+                    </div>
+                    <div className="llc-actions">
+                      <button className="cta-main" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep(formOk?2:1)}>
+                        {form.by ? '별숨에게 물어보기 ✦' : '지금 시작하기 ✦'}
+                      </button>
+                      <button className="res-btn" style={{padding:'13px 14px',borderRadius:'var(--r1)'}} onClick={kakaoLogout} title="로그아웃">↩</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="land-login-card">
+                    <div className="llc-top">
+                      <div className="llc-avatar-placeholder">✦</div>
+                      <div>
+                        <div className="llc-name">오늘 밤, 당신의 별이 기다려요</div>
+                        <div className="llc-sub">로그인하면 모든 기록이 저장돼요</div>
+                      </div>
+                    </div>
+                    <button className="kakao-login-full" onClick={kakaoLogin}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/>
+                      </svg>
+                      카카오로 1초 로그인
+                    </button>
+                    <div className="land-login-why">
+                      연인 운세 공유 · 직장 맞춤 조언 · 내 기록 저장<br/>가입 없이 카카오 계정으로 바로 시작
+                    </div>
+                    {import.meta.env.DEV&&(
+                      <div style={{marginTop:8,padding:'8px 10px',background:'rgba(255,100,100,.08)',border:'1px solid rgba(255,100,100,.2)',borderRadius:8,fontSize:'var(--xs)',color:'#ff8080',lineHeight:1.7}}>
+                        🔧 개발 환경 체크<br/>
+                        키 설정: {import.meta.env.VITE_KAKAO_JS_KEY?'✅ 있음':'❌ 없음 — .env.local 확인'}<br/>
+                        SDK: {typeof window!=='undefined'&&window.Kakao?'✅ 로드됨':'⏳ 로딩 중'}<br/>
+                        초기화: {typeof window!=='undefined'&&window.Kakao?.isInitialized?.()===true?'✅ 완료':'⏳ 대기'}
+                      </div>
+                    )}
+                    <div style={{marginTop:'var(--sp2)',display:'flex',justifyContent:'center'}}>
+                      <button style={{background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',padding:'4px'}} onClick={()=>setStep(1)}>
+                        로그인 없이 체험하기 →
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <SamplePreview/>
+              <div className="daily-word">
+                <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
+                <div className="daily-text">"{getDailyWord(today.day)}"</div>
+              </div>
+              <div className="rev-wrap">
+                <div className="rev-track">
+                  {REVIEWS.map((r,i)=>(
+                    <div key={i} className="rev-card">
+                      <div className="rev-stars">{r.star}</div>
+                      <div className="rev-text">"{r.text}"</div>
+                      <div className="rev-nick">{r.nick}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
                 {user ? (
                   <div className="land-login-card logged">
                     <div className="llc-top">
@@ -2084,9 +2670,10 @@ export default function App(){
                     </button>
                   )}
                   <div className="res-btns">
-                    <button className="res-btn" onClick={()=>{setSelQs([]);setDiy('');setChatHistory([]);setChatUsed(0);setStep(2);}}>다른 질문</button>
+                    <button className="res-btn" onClick={()=>{setSelQs([]);setDiy('');setChatHistory([]);setChatUsed(0);setStep(formOk?2:1);}}>다른 질문</button>
                     <button className="res-btn" onClick={()=>{navigator.clipboard?.writeText(answers.join('\n\n'));alert('복사됐어요 📋');}}>복사하기</button>
-                    <button className="res-btn" onClick={()=>{setStep(0);setForm({name:'',by:'',bm:'',bd:'',bh:'',gender:'',noTime:false});setSelQs([]);setAnswers([]);setChatHistory([]);setChatUsed(0);setTypedSet(new Set());}}>처음으로</button>
+                    <button className="res-btn" onClick={()=>setShowSidebar(true)}>지난 이야기</button>
+                    <button className="res-btn" onClick={()=>setStep(0)}>홈으로</button>
                   </div>
                 </div>
               </div>
@@ -2195,6 +2782,15 @@ export default function App(){
             callApi={callApi}
             buildCtx={buildCtx}
             onBack={()=>setStep(4)}
+          />
+        )}
+
+        {/* ══ 9 히스토리 상세 ══ */}
+        {step===9&&histItem&&(
+          <HistoryPage
+            item={histItem}
+            onBack={()=>{setHistItem(null);setStep(0);}}
+            onDelete={(id)=>{deleteHistory(id);setHistItems(loadHistory());}}
           />
         )}
 
