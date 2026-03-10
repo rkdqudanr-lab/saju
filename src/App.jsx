@@ -613,6 +613,12 @@ select.inp option{background:var(--bg2)}
 .step-fade{animation:stepFadeIn .45s cubic-bezier(.4,0,.2,1)}
 @keyframes stepFadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 
+
+/* ══ 결제 Toast 알림 ══ */
+.pay-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;padding:12px 24px;border-radius:50px;font-size:var(--sm);font-weight:600;white-space:nowrap;animation:toastUp .35s cubic-bezier(.34,1.56,.64,1)}
+.pay-toast.success{background:var(--gold);color:#0D0B14;box-shadow:0 4px 20px rgba(232,176,72,.4)}
+.pay-toast.error{background:var(--rose,#E87B8A);color:#fff}
+@keyframes toastUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 /* ══ 카카오 로그인 ══ */
 .kakao-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:600;color:#191919;transition:all .2s}
 .kakao-btn:hover{background:#F0D800;transform:translateY(-1px)}
@@ -1225,11 +1231,7 @@ export default function App(){
     try{const u=localStorage.getItem('byeolsoom_user');return u?JSON.parse(u):null;}catch{return null;}
   });
   // ── 결제 ──
-  const[payModal,setPayModal]=useState(null); // null | 'report' | 'chat'
-  const[paying,setPaying]=useState(false);
-  const[paidItems,setPaidItems]=useState(()=>{
-    try{const p=localStorage.getItem('byeolsoom_paid');return p?JSON.parse(p):[];}catch{return [];}
-  });
+  const[payToast,setPayToast]=useState(null);
   const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트 7궁합 8편지
   const[form,setForm]=useState(()=>{
     try{
@@ -1257,19 +1259,7 @@ export default function App(){
   const chatEndRef=useRef(null);
   const today=useMemo(()=>getTodayInfo(),[]);
 
-  // ── 카카오 SDK 동적 로드 ──
-  useEffect(()=>{
-    if(window.Kakao) return;
-    const script=document.createElement('script');
-    script.src='https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
-    script.crossOrigin='anonymous';
-    script.onload=()=>{
-      if(window.Kakao&&!window.Kakao.isInitialized()){
-        window.Kakao.init(import.meta.env.VITE_KAKAO_JS_KEY||'');
-      }
-    };
-    document.head.appendChild(script);
-  },[]);
+
 
   useEffect(()=>{document.documentElement.setAttribute('data-theme',isDark?'dark':'light');},[isDark]);
   useEffect(()=>{
@@ -1427,83 +1417,7 @@ export default function App(){
     localStorage.removeItem('byeolsoom_user');
   },[]);
 
-  // ── 카카오페이 결제 ──
-  const PRODUCTS={
-    report:{name:'별숨 월간 리포트',price:1900,label:'1,900원'},
-    chat:{name:'별숨 추가 상담권 5회',price:990,label:'990원'},
-    premium:{name:'별숨 프리미엄 구독',price:4900,label:'4,900원/월'},
-  };
 
-  const startPayment=useCallback(async(itemKey)=>{
-    if(!user){kakaoLogin();return;}
-    setPaying(true);
-    const product=PRODUCTS[itemKey];
-    const orderId=`byeolsoom_${Date.now()}_${user.id}`;
-    try{
-      const res=await fetch('/api/kakao-pay-ready',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          itemName:product.name,
-          totalAmount:product.price,
-          userId:user.id,
-          orderId,
-        }),
-      });
-      const data=await res.json();
-      if(!res.ok)throw new Error(data.error);
-
-      // tid 임시 저장 (승인 시 필요)
-      sessionStorage.setItem('kakao_pay_tid',data.tid);
-      sessionStorage.setItem('kakao_pay_order',orderId);
-      sessionStorage.setItem('kakao_pay_item',itemKey);
-
-      // 모바일/PC 분기
-      const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
-      const redirectUrl=isMobile?data.next_redirect_mobile_url:data.next_redirect_pc_url;
-      window.location.href=redirectUrl;
-    }catch(err){
-      console.error('결제 오류:',err);
-      alert('결제 준비 중 오류가 났어요 🌙
-잠시 후 다시 시도해봐요.');
-    }finally{setPaying(false);setPayModal(null);}
-  },[user,kakaoLogin]);
-
-  // ── 결제 승인 (pg_token URL 파라미터로 돌아왔을 때) ──
-  useEffect(()=>{
-    const params=new URLSearchParams(window.location.search);
-    const pgToken=params.get('pg_token');
-    const orderId=sessionStorage.getItem('kakao_pay_order');
-    const tid=sessionStorage.getItem('kakao_pay_tid');
-    const itemKey=sessionStorage.getItem('kakao_pay_item');
-    if(!pgToken||!tid||!orderId)return;
-
-    (async()=>{
-      try{
-        const storedUser=JSON.parse(localStorage.getItem('byeolsoom_user')||'null');
-        if(!storedUser)return;
-        const res=await fetch('/api/kakao-pay-approve',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({tid,pgToken,orderId,userId:storedUser.id}),
-        });
-        const data=await res.json();
-        if(res.ok&&data.success){
-          const newPaid=[...paidItems,{itemKey,orderId,approvedAt:data.approved_at}];
-          setPaidItems(newPaid);
-          localStorage.setItem('byeolsoom_paid',JSON.stringify(newPaid));
-          sessionStorage.removeItem('kakao_pay_tid');
-          sessionStorage.removeItem('kakao_pay_order');
-          sessionStorage.removeItem('kakao_pay_item');
-          // URL 파라미터 제거
-          window.history.replaceState({},'',window.location.pathname);
-          // 구매 아이템에 따라 액션
-          if(itemKey==='report')genReport();
-        }
-      }catch(err){console.error('결제 승인 오류:',err);}
-    })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
 
   // 메인 API 호출 — 병렬 처리 (순차 타임아웃 방지)
   const askClaude=async()=>{
@@ -1878,7 +1792,7 @@ export default function App(){
                   {!user&&(
                     <div className="kakao-nudge">
                       <span style={{fontSize:'1.1rem'}}>🌙</span>
-                      <span className="kakao-nudge-text">카카오 로그인하면 리포트와 추가 상담을 이용할 수 있어요</span>
+                      <span className="kakao-nudge-text">카카오 로그인하면 내 기록이 저장돼요 🌙</span>
                       <button className="kakao-btn" style={{width:'auto',padding:'6px 14px',fontSize:'var(--xs)'}} onClick={kakaoLogin}>로그인</button>
                     </div>
                   )}
@@ -1886,17 +1800,18 @@ export default function App(){
                   <div className="upsell">
                     <div className="up-t">✦ 이번 달 전체 운세가 궁금해요</div>
                     <div className="up-d">연애 · 재물 · 건강 · 직업 종합 분석<br/>사주와 별자리가 함께 쓴 월간 에세이</div>
-                    <button className="up-btn" onClick={()=>user?setPayModal('report'):kakaoLogin()}>
-                      {user?'월간 리포트 받기 · 1,900원':'카카오 로그인 후 이용하기'}
+                    <button className="up-btn" onClick={()=>{
+                      genReport();
+                    }}>
+                      '이달의 운세 리포트 보기 ✦'
                     </button>
                   </div>
                   {maxChat>0&&(
                     <button className="chat-cta" onClick={()=>{
-                      if(!user){kakaoLogin();return;}
-                      if(chatLeft>0){setStep(5);}else{setPayModal('chat');}
+                      if(chatLeft>0){setStep(5);}else{setStep(5);}
                     }} disabled={false}>
-                      💬 {chatLeft>0?`더 물어보기 · 남은 ${chatLeft}회`:'추가 상담권 · 990원'}
-                      <span style={{fontSize:'var(--xs)',color:'var(--t4)'}}>{chatLeft>0?'무료':'5회 추가 이용권'}</span>
+                      💬 {chatLeft>0?`더 물어보기 · 남은 ${chatLeft}회`:'더 물어보기 ✦'}
+                      <span style={{fontSize:'var(--xs)',color:'var(--t4)'}}>{chatLeft>0?'무료':'무료 이용 중'}</span>
                     </button>
                   )}
                   <div className="res-btns">
@@ -2014,49 +1929,10 @@ export default function App(){
           />
         )}
 
-        {/* ══ 결제 모달 ══ */}
-        {payModal&&(
-          <div className="pay-overlay" onClick={(e)=>{if(e.target.className==='pay-overlay')setPayModal(null);}}>
-            <div className="pay-sheet">
-              <div className="pay-handle"/>
-              {payModal==='report'&&(
-                <>
-                  <div className="pay-title">✦ 별숨 월간 리포트</div>
-                  <div className="pay-desc">{today.month}월 한 달 전체의 흐름을 에세이로 읽어드려요</div>
-                  <div className="pay-preview">
-                    {['연애운 — 관계의 흐름과 새로운 인연','직업운 — 이달의 기회와 주의할 순간','재물운 — 지출과 수입의 에너지','건강운 — 몸이 보내는 신호','행운의 날짜와 색깔'].map((item,i)=>(
-                      <div key={i} className="pay-preview-item">{item}</div>
-                    ))}
-                  </div>
-                  <div className="pay-price">1,900원</div>
-                  <button className="pay-kakao-btn" onClick={()=>startPayment('report')} disabled={paying}>
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/></svg>
-                    {paying?'처리 중...':'카카오페이로 결제하기'}
-                  </button>
-                </>
-              )}
-              {payModal==='chat'&&(
-                <>
-                  <div className="pay-title">💬 추가 상담권</div>
-                  <div className="pay-desc">별숨에게 5번 더 물어볼 수 있어요</div>
-                  <div className="pay-preview">
-                    {['무제한 주제로 추가 질문 5회','이전 상담 맥락 기억','즉시 사용 가능'].map((item,i)=>(
-                      <div key={i} className="pay-preview-item">{item}</div>
-                    ))}
-                  </div>
-                  <div className="pay-price">990원</div>
-                  <button className="pay-kakao-btn" onClick={()=>startPayment('chat')} disabled={paying}>
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/></svg>
-                    {paying?'처리 중...':'카카오페이로 결제하기'}
-                  </button>
-                </>
-              )}
-              <button className="pay-cancel" onClick={()=>setPayModal(null)}>취소</button>
-            </div>
-          </div>
-        )}
 
       </div>
+      {/* ══ 결제 Toast ══ */}
+      {payToast&&<div className={`pay-toast ${payToast.type}`}>{payToast.msg}</div>}
     </>
   );
 }
