@@ -13,15 +13,13 @@ export default async function handler(req, res) {
 
   try {
     // ── STEP 1: code → 액세스토큰 교환 ──
+    // redirect_uri는 URLSearchParams 쓰면 자동 인코딩되어 KOE303 오류 발생
+    // 직접 문자열로 조합해야 함
+    const body = `grant_type=authorization_code&client_id=${restKey}&redirect_uri=${redirectUri}&code=${code}`;
     const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: restKey,
-        redirect_uri: redirectUri || '',
-        code,
-      }).toString(),
+      body,
     });
     const tokenData = await tokenRes.json();
     if (!tokenRes.ok || tokenData.error) {
