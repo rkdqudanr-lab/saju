@@ -52,12 +52,14 @@ function getTodayStr() {
   const jeolgi = JEOLGI[((m - 1) * 2 + (d > 20 ? 1 : 0)) % 24];
   const { lm, ld, isLeap } = solarToLunar(y, m, d);
   const lunarStr = `음력 ${isLeap ? '윤' : ''}${lm}월 ${ld}일`;
+  
   // 시간대 분류
   let timeSlot = 'afternoon';
   if (h >= 5 && h < 11) timeSlot = 'morning';
   else if (h >= 11 && h < 18) timeSlot = 'afternoon';
   else if (h >= 18 && h < 24) timeSlot = 'evening';
   else timeSlot = 'dawn';
+  
   return { solar: `${y}년 ${m}월 ${d}일 (${week}요일)`, lunar: lunarStr, jeolgi, y, m, d, h, timeSlot };
 }
 
@@ -79,22 +81,17 @@ function getSeasonDesc(m) {
 // ── 카테고리 톤 힌트 ──
 function getCategoryHint(userMessage) {
   if (/연애|사랑|좋아하|고백|사귀|설레|짝사랑|이별/.test(userMessage))
-    return `설렘과 불안이 공존하는 감각을 먼저 포착해요. 판단보다 공감이 먼저예요. 온도는 따뜻하고 두근두근하게.
-예시 첫 문장: "자꾸 생각나는 사람이 생겼을 때, 그 감정이 진짜인지 스스로 확인하게 되죠."`;
+    return `설렘과 불안이 공존하는 감각을 먼저 포착해요. 판단보다 공감이 먼저예요. 온도는 따뜻하고 두근두근하게.\n예시 첫 문장: "자꾸 생각나는 사람이 생겼을 때, 그 감정이 진짜인지 스스로 확인하게 되죠."`;
   if (/이직|직장|커리어|일|승진|창업|취업|사직|퇴사/.test(userMessage))
-    return `현실적인 무게감을 인정하면서도 가능성의 언어로 마무리해요.
-예시 첫 문장: "이직을 고민할 때는 이 두 가지 감정이 함께 와요. '지금 가도 될까'와 '지금 안 가면 후회할까'."`;
+    return `현실적인 무게감을 인정하면서도 가능성의 언어로 마무리해요.\n예시 첫 문장: "이직을 고민할 때는 이 두 가지 감정이 함께 와요. '지금 가도 될까'와 '지금 안 가면 후회할까'."`;
   if (/돈|재물|투자|부업|월급|빚|재정|집/.test(userMessage))
-    return `담담하고 현실적으로 시작해요. 희망은 마지막에 단단하게.
-예시 첫 문장: "돈에 대해 묻는다는 건, 지금 실제로 뭔가 필요하거나 오래 미루어온 결정 앞에 서 있다는 신호예요."`;
+    return `담담하고 현실적으로 시작해요. 희망은 마지막에 단단하게.\n예시 첫 문장: "돈에 대해 묻는다는 건, 지금 실제로 뭔가 필요하거나 오래 미루어온 결정 앞에 서 있다는 신호예요."`;
   if (/건강|피곤|아프|스트레스|수면|몸|운동/.test(userMessage))
-    return `몸의 신호를 감정의 언어로 번역해요. 조용하고 부드러운 톤.
-예시 첫 문장: "몸이 보내는 신호는 마음이 못 다 한 말을 대신해요."`;
+    return `몸의 신호를 감정의 언어로 번역해요. 조용하고 부드러운 톤.\n예시 첫 문장: "몸이 보내는 신호는 마음이 못 다 한 말을 대신해요."`;
   if (/인간관계|친구|가족|갈등|외로|사람|동료/.test(userMessage))
-    return `관계의 입체감을 보여줘요. 따뜻하고 포근한 톤.
-예시 첫 문장: "당신 곁에 모여드는 사람들을 보면 패턴이 보여요."`;
-  return `불확실함을 여정의 일부로 포용하는 톤.
-예시 첫 문장: "지금 이 막막함은, 새로운 방향을 찾고 있다는 신호일 수 있어요."`;
+    return `관계의 입체감을 보여줘요. 따뜻하고 포근한 톤.\n예시 첫 문장: "당신 곁에 모여드는 사람들을 보면 패턴이 보여요."`;
+  
+  return `불확실함을 여정의 일부로 포용하는 톤.\n예시 첫 문장: "지금 이 막막함은, 새로운 방향을 찾고 있다는 신호일 수 있어요."`;
 }
 
 // ── 마무리 다양성 풀 ──
@@ -117,7 +114,8 @@ function getTimeHorizon(userMessage) {
 }
 
 // ── 메인 시스템 프롬프트 빌더 V11 ──
-function buildSystem(today, season, categoryHint, endingHint, timeHorizon, isChat=false, isReport=false, isLetter=false, isScenario=false) {
+// 🔥 버그 수정: userMessage 파라미터를 추가해서 isSlotMode에서 참조할 수 있게 수정
+function buildSystem(today, season, categoryHint, endingHint, timeHorizon, userMessage, isChat=false, isReport=false, isLetter=false, isScenario=false) {
 
   // ── 편지 모드 ──
   if (isLetter) {
@@ -288,7 +286,8 @@ export default async function handler(req, res) {
   const endingHint = ENDING_HINTS[Math.floor(Math.random() * ENDING_HINTS.length)];
   const timeHorizon = getTimeHorizon(userMessage);
 
-  const systemWithContext = buildSystem(today, season, categoryHint, endingHint, timeHorizon, !!isChat, !!isReport, !!isLetter, !!isScenario)
+  // 🔥 버그 수정: buildSystem 호출 시 userMessage 파라미터를 추가하여 전달
+  const systemWithContext = buildSystem(today, season, categoryHint, endingHint, timeHorizon, userMessage, !!isChat, !!isReport, !!isLetter, !!isScenario)
     + (context ? `\n\n━━━ 오늘 상담하는 분의 기운 데이터 ━━━\n${context}\n(위 데이터는 취재 노트예요. 이걸 그대로 보여주는 게 아니라, 에세이의 재료로 자연스럽게 녹여요.)` : '');
 
   try {
@@ -300,7 +299,7 @@ export default async function handler(req, res) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "claude-haiku-4-5-20251001", // 원래 사용하시던 모델명으로 다시 복구했습니다!
         max_tokens: 4000,
         system: systemWithContext,
         messages: [{ role: "user", content: userMessage }],
