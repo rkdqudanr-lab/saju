@@ -2526,7 +2526,7 @@ export default function App(){
                   {REVIEWS.map((r,i)=>(
                     <div key={i} className="rev-card">
                       <div className="rev-stars">{r.star}</div>
-                      <div className="rev-text">"{r.text}"</div>
+                      <div className="rev-text">{'"'+r.text+'"'}</div>
                       <div className="rev-nick">{r.nick}</div>
                     </div>
                   ))}
