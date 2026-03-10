@@ -216,23 +216,189 @@ const SIGN_MOOD = {
 
 // ══ 랜딩 샘플 에세이 (20초 미리보기) ══
 const SAMPLE_ESSAYS = [
-  "지수는 태어날 때부터 남들이 못 보는 것을 보는 눈을 가지고 있었어요. 물고기자리의 감성과 계수의 섬세함이 만나서, 마음 속 깊은 곳에서 세상을 느끼는 사람이에요. 오늘 하루 당신이 느끼는 막막함은 사실 변화의 전조예요...",
-  "민준의 사주에는 화(火) 기운이 강하게 흐르고 있어요. 사자자리의 태양과 만나 더욱 선명해진 이 에너지는 당신을 어딜 가나 빛나게 만들죠. 지금 고민하는 그 선택, 결국 당신 것이에요...",
-  "서연에게 오늘은 조용히 자신을 돌아보기 좋은 날이에요. 천칭자리의 균형 감각과 기토의 조화로운 기질이 함께 속삭이고 있어요. 너무 많은 것을 혼자 짊어지지 않아도 괜찮아요...",
+  "하루별에게는 수(水) 기운이 깊게 흘러요. 물처럼 유연하지만 끝내 자신의 길을 찾아가는 사람. 지금 고민하는 그 선택, 사실 마음은 이미 알고 있어요. 오늘의 별은 하루별 편이에요.",
+  "소울빛의 달이 오늘 쌍둥이자리에서 흔들리고 있어요. 괜찮아요, 흔들린다는 건 살아있다는 뜻이니까. 충분히 느끼고 나서 내려놓아봐요. 별은 소울빛이 충분히 쉬기를 바라고 있어요.",
+  "나비잠은 임수(壬水) 일주를 타고났어요. 깊은 강처럼 속을 잘 드러내지 않는 사람. 오늘은 그 깊은 곳에 있는 말을, 딱 한 사람에게만 꺼내봐요.",
 ];
+const SAMPLE_LABELS = ["먼 별에서 온 이야기", "어느 밤의 별숨", "다른 별이 건넨 말"];
 const CATS=[
-  {id:"love",icon:"💕",label:"연애",qs:["요즘 좋아하는 사람이 생겼는데 이 감정이 맞는 건지 모르겠어요","언제쯤 새로운 인연이 찾아올까요?","지금 사귀는 사람이랑 미래가 있을까요?","짝사랑하는 사람이 나를 어떻게 생각할까요?","내가 먼저 고백해도 될까요?","연애를 시작하기 좋은 시기인가요?"]},
-  {id:"work",icon:"💼",label:"일·커리어",qs:["이직을 고민 중인데 지금 타이밍이 맞을까요?","직장 상사 때문에 너무 힘들어요","나에게 진짜 잘 맞는 일이 뭔지 알고 싶어요","승진할 수 있는 운이 있을까요?","창업을 해도 될까요?","지금 하는 일이 나한테 맞는지 모르겠어요"]},
-  {id:"money",icon:"✦",label:"돈·재물",qs:["올해 돈 들어오는 운이 있을까요?","투자를 시작하기 좋은 시기인가요?","내 집 마련 언제쯤 가능할까요?","부업이나 사이드잡 시작해도 될까요?","돈이 계속 나가는데 언제 안정될까요?"]},
-  {id:"health",icon:"🌿",label:"건강",qs:["요즘 너무 피곤한데 기운이 없는 이유가 있을까요?","특히 조심해야 할 건강 부위가 있나요?","스트레스가 너무 심해요","수면의 질을 높이려면 어떻게 해야 할까요?","운동을 시작하기 좋은 시기인가요?"]},
-  {id:"relation",icon:"🫧",label:"인간관계",qs:["주변에 나한테 안 좋은 사람이 있는 것 같아요","친한 친구랑 사이가 멀어진 것 같아요","새로운 환경에서 잘 적응할 수 있을까요?","직장 동료와의 갈등을 어떻게 풀어야 할까요?","나는 어떤 사람들과 잘 맞나요?"]},
-  {id:"future",icon:"🔮",label:"미래·운명",qs:["올해 내 인생에서 가장 중요한 것이 뭔가요?","지금 걷고 있는 방향이 맞는지 불안해요","내가 진짜 잘할 수 있는 게 뭔지 모르겠어요","내 인생의 전환점이 언제쯤 올까요?","요즘 모든 게 막막한데 어떻게 해야 할까요?"]},
+  {id:"love",icon:"💕",label:"연애",qs:[
+    "요즘 좋아하는 사람이 생겼는데 이 감정이 맞는 건지 모르겠어요",
+    "언제쯤 새로운 인연이 찾아올까요?",
+    "지금 사귀는 사람이랑 미래가 있을까요?",
+    "짝사랑하는 사람이 나를 어떻게 생각할까요?",
+    "내가 먼저 고백해도 될까요?",
+    "연애를 시작하기 좋은 시기인가요?",
+    "전 연인이 자꾸 생각나요",
+    "이별 후 얼마나 지나야 괜찮아질까요?",
+    "좋아하는 사람과 자꾸 어긋나는 느낌이 들어요",
+    "나는 어떤 사람을 만나야 잘 맞을까요?",
+    "연인과의 권태기를 어떻게 넘길 수 있을까요?",
+    "상대방이 나를 좋아하는 건지 헷갈려요",
+    "오랜 짝사랑, 계속해도 될까요?",
+    "재회할 가능성이 있을까요?",
+    "결혼을 생각하는 사람인데 정말 맞는 사람일까요?",
+  ]},
+  {id:"work",icon:"💼",label:"일·커리어",qs:[
+    "이직을 고민 중인데 지금 타이밍이 맞을까요?",
+    "직장 상사 때문에 너무 힘들어요",
+    "나에게 진짜 잘 맞는 일이 뭔지 알고 싶어요",
+    "승진할 수 있는 운이 있을까요?",
+    "창업을 해도 될까요?",
+    "지금 하는 일이 나한테 맞는지 모르겠어요",
+    "취업 준비 중인데 언제쯤 좋은 소식이 올까요?",
+    "직장을 그만두고 싶은데 너무 두려워요",
+    "나의 가장 큰 직업적 재능이 뭔가요?",
+    "지금 프로젝트가 잘 마무리될 수 있을까요?",
+    "동료와의 갈등이 해결될 수 있을까요?",
+    "프리랜서로 전향해도 괜찮을까요?",
+    "공무원 시험, 계속 도전해야 할까요?",
+    "유학이나 해외취업을 고민하고 있어요",
+    "새 직장 첫 달, 잘 적응할 수 있을까요?",
+  ]},
+  {id:"money",icon:"✦",label:"돈·재물",qs:[
+    "올해 돈 들어오는 운이 있을까요?",
+    "투자를 시작하기 좋은 시기인가요?",
+    "내 집 마련 언제쯤 가능할까요?",
+    "부업이나 사이드잡 시작해도 될까요?",
+    "돈이 계속 나가는데 언제 안정될까요?",
+    "지금 빚 상황이 나아질 수 있을까요?",
+    "이번 달 재물운이 어떤가요?",
+    "큰 지출이 예상되는데 괜찮을까요?",
+    "재테크를 시작하고 싶은데 어떤 방향이 좋을까요?",
+    "사업 자금 마련이 될까요?",
+    "돈에 대한 불안이 너무 커요",
+    "올해 전반적인 재물 흐름이 궁금해요",
+    "금전적으로 믿었던 사람에게 배신당했어요",
+    "계획한 저축이 잘 이뤄질 수 있을까요?",
+    "수입이 불안정한 상태가 언제 바뀔까요?",
+  ]},
+  {id:"health",icon:"🌿",label:"건강",qs:[
+    "요즘 너무 피곤한데 기운이 없는 이유가 있을까요?",
+    "특히 조심해야 할 건강 부위가 있나요?",
+    "스트레스가 너무 심해요",
+    "수면의 질을 높이려면 어떻게 해야 할까요?",
+    "운동을 시작하기 좋은 시기인가요?",
+    "만성 피로, 언제쯤 나아질까요?",
+    "마음의 에너지가 바닥난 느낌이에요",
+    "식습관을 바꾸고 싶은데 의지가 안 생겨요",
+    "몸이 보내는 신호를 어떻게 읽어야 할까요?",
+    "감정 기복이 너무 심해요",
+    "나에게 맞는 회복 방법이 있을까요?",
+    "번아웃이 온 것 같아요",
+    "소화 문제가 자꾸 반복돼요",
+    "몸과 마음이 함께 지쳐있어요",
+    "올해 건강 관리에서 가장 중요한 게 뭘까요?",
+  ]},
+  {id:"relation",icon:"🫧",label:"인간관계",qs:[
+    "주변에 나한테 안 좋은 사람이 있는 것 같아요",
+    "친한 친구랑 사이가 멀어진 것 같아요",
+    "새로운 환경에서 잘 적응할 수 있을까요?",
+    "직장 동료와의 갈등을 어떻게 풀어야 할까요?",
+    "나는 어떤 사람들과 잘 맞나요?",
+    "가족과의 갈등이 너무 힘들어요",
+    "친구에게 상처를 받았어요",
+    "혼자 있는 시간이 너무 많아요",
+    "새로운 사람을 사귀는 게 어려워요",
+    "오래된 관계가 변해가는 게 느껴져요",
+    "나를 이용하는 사람을 어떻게 대해야 할까요?",
+    "나는 관계에서 왜 항상 더 많이 주는 것 같을까요?",
+    "다시 연락하고 싶은 사람이 있어요",
+    "누군가에게 먼저 다가가는 게 두렵습니다",
+    "소중한 사람을 잃는 게 두려워요",
+  ]},
+  {id:"future",icon:"🔮",label:"미래·운명",qs:[
+    "올해 내 인생에서 가장 중요한 것이 뭔가요?",
+    "지금 걷고 있는 방향이 맞는지 불안해요",
+    "내가 진짜 잘할 수 있는 게 뭔지 모르겠어요",
+    "내 인생의 전환점이 언제쯤 올까요?",
+    "요즘 모든 게 막막한데 어떻게 해야 할까요?",
+    "내 삶의 방향이 맞는 걸까요?",
+    "10년 후 나는 어떤 모습일까요?",
+    "이 시기가 나에게 어떤 의미인가요?",
+    "지금 포기하면 안 되는 게 있을까요?",
+    "운명적인 만남이 있을까요?",
+    "내 삶에서 반복되는 패턴이 있나요?",
+    "지금 이 선택이 맞는 건지 확신이 없어요",
+    "새로운 시작을 해도 될 시기인가요?",
+    "나는 결국 어떤 사람이 될까요?",
+    "내 운명의 전환점은 어디에 있을까요?",
+  ]},
+  {id:"family",icon:"🏠",label:"가족·집",qs:[
+    "부모님과의 갈등이 반복돼요",
+    "독립을 해야 할까요, 지금 집에 있어야 할까요?",
+    "이사하기 좋은 시기인가요?",
+    "형제자매와의 사이가 불편해요",
+    "집 구매를 고민 중이에요",
+    "부모님 건강이 걱정돼요",
+    "가족 중 아픈 사람이 있어요",
+    "명절마다 집에 가는 게 힘들어요",
+    "가족에게 솔직한 말을 하지 못하고 있어요",
+    "내 어린 시절이 지금 나에게 어떤 영향을 주고 있나요?",
+    "배우자와 가치관이 달라 힘들어요",
+    "아이를 낳을 준비가 된 건지 모르겠어요",
+    "가족 중 누군가와 화해하고 싶어요",
+    "지금 사는 환경이 나에게 맞는 걸까요?",
+    "결혼 후 가족관계가 달라질 것 같아 두려워요",
+  ]},
+  {id:"mind",icon:"🧘",label:"마음·자기이해",qs:[
+    "내 진짜 감정이 뭔지 모르겠어요",
+    "자존감이 너무 낮은 것 같아요",
+    "항상 남들과 비교하게 돼요",
+    "내가 원하는 게 뭔지 모르겠어요",
+    "완벽주의 때문에 힘들어요",
+    "나는 왜 항상 이런 선택을 할까요?",
+    "감정을 표현하는 게 너무 어려워요",
+    "불안이 일상이 된 것 같아요",
+    "나를 더 사랑하고 싶어요",
+    "과거에서 벗어나지 못하고 있어요",
+    "나의 타고난 성격이 궁금해요",
+    "내가 왜 이렇게 예민한 건지 알고 싶어요",
+    "스스로에게 너무 가혹한 것 같아요",
+    "지금 내가 성장하고 있는 건지 모르겠어요",
+    "나에게 맞는 삶의 속도가 있을까요?",
+  ]},
+  {id:"dream",icon:"🌙",label:"꿈·창작",qs:[
+    "오래 꿈꿔온 일을 시작해도 될까요?",
+    "창작 활동을 직업으로 삼아도 괜찮을까요?",
+    "내 안에 있는 재능을 어떻게 발견할 수 있을까요?",
+    "글을 쓰고 싶은데 자꾸 막혀요",
+    "예술적 감각이 나에게 있을까요?",
+    "좋아하는 것과 잘하는 것이 달라요",
+    "취미가 일이 되면 더 이상 즐겁지 않을까 두려워요",
+    "새로운 것을 배우기 시작하기 좋은 시기인가요?",
+    "포기했던 꿈을 다시 꿔도 될까요?",
+    "내 삶에 더 많은 아름다움을 만들고 싶어요",
+    "나만의 이야기를 세상에 내놓고 싶어요",
+    "악기나 운동을 늦게 시작해도 될까요?",
+    "영감이 전혀 오지 않아요",
+    "내가 만든 것을 남에게 보여주는 게 두려워요",
+    "창작에서 나만의 색깔을 찾고 싶어요",
+  ]},
+  {id:"today",icon:"📅",label:"오늘·지금",qs:[
+    "오늘 하루를 어떻게 시작하면 좋을까요?",
+    "지금 이 순간 내가 느끼는 감정의 의미가 뭘까요?",
+    "오늘 중요한 대화가 있는데 어떻게 임해야 할까요?",
+    "오늘 만날 사람과의 시간이 잘 될까요?",
+    "지금 바로 할 수 있는 가장 좋은 선택이 뭘까요?",
+    "오늘 컨디션이 너무 안 좋아요",
+    "지금 내가 있는 곳이 맞는 자리인가요?",
+    "오늘 있었던 일이 계속 마음에 걸려요",
+    "이 결정을 오늘 해도 될까요?",
+    "지금 내가 쉬어야 하는지 계속 가야 하는지 모르겠어요",
+    "오늘 유독 외로운 이유가 있을까요?",
+    "오늘 누군가에게 연락해도 될까요?",
+    "지금 느끼는 불안이 왜 생긴 걸까요?",
+    "오늘 밤을 어떻게 보내면 가장 좋을까요?",
+    "오늘 하루를 잘 마무리하려면 어떻게 해야 할까요?",
+  ]},
+];
 ];
 const PKGS=[
-  {id:"seed",e:"✦",n:"씨앗",p:"990원",q:1,chat:0},
-  {id:"moon",e:"🌙",n:"달빛",p:"5,900원",q:3,chat:5},
-  {id:"star",e:"⭐",n:"별빛",p:"9,900원",q:5,chat:10,hot:true},
-  {id:"cosmos",e:"🌌",n:"우주",p:"19,900원",q:10,chat:20},
+  {id:"free",  e:"🌙",n:"첫 번째 별",  p:"무료",      q:1, chat:3,  isFree:true },
+  {id:"moon",  e:"✦", n:"달빛",        p:"5,900원",   q:3, chat:5,  isFree:false},
+  {id:"star",  e:"⭐",n:"별빛",        p:"9,900원",   q:5, chat:10, isFree:false, hot:true},
+  {id:"cosmos",e:"🌌",n:"우주",        p:"19,900원",  q:10,chat:20, isFree:false},
 ];
 const REVIEWS=[
   {star:"★★★★★",text:"사주랑 별자리를 같이 봐줘서 너무 좋아요. 글이 진짜 내 얘기 같아서 읽다가 소름 돋았어요",nick:"가을고양이 · 28세"},
@@ -850,6 +1016,37 @@ select.inp option{background:var(--bg2)}
 .hist-del-btn{padding:3px 8px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--t4);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s;flex-shrink:0}
 .hist-del-btn:hover{border-color:#e05a3a;color:#e05a3a}
 .hist-empty{padding:var(--sp5) var(--sp3);text-align:center;color:var(--t4);font-size:var(--sm);line-height:2.2}
+
+/* ══ 프로필 선택 카드 ══ */
+.profile-pick-card{display:flex;align-items:center;justify-content:space-between;padding:12px var(--sp2);border:1px solid var(--line);border-radius:var(--r1);margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--bg2)}
+.profile-pick-card:hover{border-color:var(--acc);background:var(--goldf)}
+.profile-pick-card.active{border-color:var(--gold);background:var(--goldf)}
+.ppc-left{display:flex;align-items:center;gap:10px}
+.ppc-av{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;overflow:hidden}
+.ppc-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
+.ppc-sub{font-size:var(--xs);color:var(--t3);margin-top:2px}
+
+/* ══ 업그레이드 모달 ══ */
+.upgrade-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
+.upgrade-modal{background:var(--bg);border-radius:var(--r3) var(--r3) 0 0;padding:var(--sp4) var(--sp3) var(--sp5);width:100%;max-width:480px;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.upgrade-modal-title{font-size:var(--lg);font-weight:700;color:var(--t1);margin-bottom:6px;text-align:center}
+.upgrade-modal-sub{font-size:var(--sm);color:var(--t3);text-align:center;margin-bottom:var(--sp3);line-height:1.7}
+.upgrade-pkgs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--sp3)}
+.upgrade-pkg{padding:var(--sp2);border:1px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:all .2s;text-align:center;background:var(--bg2);position:relative}
+.upgrade-pkg:hover{border-color:var(--acc);background:var(--goldf)}
+.upgrade-pkg.chosen{border-color:var(--gold);background:var(--goldf)}
+.upgrade-pkg-e{font-size:1.4rem;margin-bottom:4px}
+.upgrade-pkg-n{font-size:var(--xs);font-weight:700;color:var(--t1);margin-bottom:2px}
+.upgrade-pkg-p{font-size:var(--xs);color:var(--gold);font-weight:700}
+.upgrade-pkg-q{font-size:var(--xs);color:var(--t4);margin-top:2px}
+.upgrade-pkg-hot{position:absolute;top:-6px;right:-3px;background:var(--gold);color:#0D0B14;font-size:.45rem;font-weight:800;padding:2px 5px;border-radius:4px}
+
+/* ══ 다른 사람 프로필 모달 ══ */
+.other-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:var(--sp3)}
+.other-modal{background:var(--bg);border-radius:var(--r3);padding:var(--sp4) var(--sp3);width:100%;max-width:420px;animation:fadeUp .3s ease}
+.other-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:4px}
+.other-modal-sub{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp3);line-height:1.6}
 `;
 
 
@@ -993,20 +1190,16 @@ function FeedbackBtn({qIdx}){
 //  아코디언 아이템 (typedSet으로 재오픈 방지)
 // ═══════════════════════════════════════════════════════════
 function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
-  // shouldType=false → 이미 완료된 항목, text 바로 표시
-  // shouldType=true + isOpen=false → 아직 열리지 않은 항목, 빈 상태 유지 (즉시 세팅 금지)
-  // shouldType=true + isOpen=true  → 타이핑 시작
   const isTyping = shouldType && isOpen;
   const{shown,done,skipToEnd}=useWordTyping(text, isTyping, 130);
 
-  // 표시할 텍스트 결정
-  const display = !shouldType ? text   // 이미 완료 → 전체
-                : isOpen      ? shown  // 열려있음 → 타이핑 진행 중
-                :               '';   // 아직 안 열림 → 비워둠
-
+  const display = !shouldType ? text : isOpen ? shown : '';
   const isDone = !shouldType || done;
 
-  useEffect(()=>{if(done&&shouldType)onTypingDone(idx);},[done,shouldType,idx,onTypingDone]);
+  // 타이핑 완료 콜백 — 닫지 않고 완료 표시만
+  useEffect(()=>{
+    if(done && shouldType) onTypingDone(idx);
+  },[done,shouldType,idx,onTypingDone]);
 
   return(
     <div className="acc-item">
@@ -1015,13 +1208,14 @@ function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
           <div className="acc-q-num">Q{idx+1}</div>
           <div className="acc-q-text">{q}</div>
           {!isOpen&&!display&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
+          {!isOpen&&display&&isDone&&<div style={{fontSize:'var(--xs)',color:'var(--gold)',marginTop:3}}>✦ 답변 완료 — 눌러서 다시 보기</div>}
         </div>
         <div className="acc-right">
           {isOpen&&!isDone&&<button className="skip-btn" onClick={e=>{e.stopPropagation();skipToEnd();}}>바로 보기</button>}
           <span className={`acc-chevron${isOpen?' open':''}`}>▼</span>
         </div>
       </button>
-      <div className={`acc-body${isOpen?' open':' closed'}`}>
+      <div className={`acc-body${isOpen?' open':' closed'}`} style={isOpen?{maxHeight:'3000px',opacity:1}:{maxHeight:0,opacity:0}}>
         <div className="acc-content">
           <p>{display}{isOpen&&!isDone&&<span className="typing-cursor"/>}</p>
         </div>
@@ -1029,7 +1223,6 @@ function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
     </div>
   );
 }
-
 // ═══════════════════════════════════════════════════════════
 //  채팅 AI 버블 (타이핑 + 바로보기)
 // ═══════════════════════════════════════════════════════════
@@ -1363,31 +1556,30 @@ function SamplePreview(){
     setText('');idxRef.current=0;
     const tick=()=>{
       if(idxRef.current>=essay.length){
-        // 2초 후 다음 에세이
-        timerRef.current=setTimeout(()=>{
-          setEssayIdx(p=>(p+1)%SAMPLE_ESSAYS.length);
-        },2000);
+        timerRef.current=setTimeout(()=>setEssayIdx(p=>(p+1)%SAMPLE_ESSAYS.length),2500);
         return;
       }
       idxRef.current++;
       setText(essay.slice(0,idxRef.current));
       const ch=essay[idxRef.current-1];
-      const delay=ch==='.'||ch==='!'||ch==='?'?280:ch===','?120:ch==='\n'?200:28;
+      const delay=ch==='.'||ch==='!'||ch==='?'?280:ch===','?120:ch==='
+'?200:28;
       timerRef.current=setTimeout(tick,delay);
     };
-    timerRef.current=setTimeout(tick,400);
+    timerRef.current=setTimeout(tick,500);
     return()=>clearTimeout(timerRef.current);
   },[essayIdx]);
 
-  const names=['지수님','민준님','서연님'];
   return(
     <div className="sample-preview">
-      <div className="sample-name">✦ {names[essayIdx]}께 전하는 오늘의 이야기</div>
+      <div className="sample-name">✦ {SAMPLE_LABELS[essayIdx]}</div>
       <div className="sample-text">{text}<span className="sample-cursor"/></div>
+      <div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:6,textAlign:'right',fontStyle:'italic'}}>
+        — 다른 별에게 전해진 이야기예요
+      </div>
     </div>
   );
 }
-
 // ═══════════════════════════════════════════════════════════
 //  💌 별의 편지 페이지
 // ═══════════════════════════════════════════════════════════
@@ -1711,9 +1903,17 @@ export default function App(){
   const[isDark,setIsDark]=useState(false);
   // ── 사이드바 / 히스토리 ──
   const[showSidebar,setShowSidebar]=useState(false);
-  const[histItem,setHistItem]=useState(null); // 히스토리 상세 보기
+  const[histItem,setHistItem]=useState(null);
   const[histItems,setHistItems]=useState(()=>loadHistory());
   const timeSlot=useMemo(()=>getTimeSlot(),[]);
+  const[showUpgradeModal,setShowUpgradeModal]=useState(false);
+  const[showOtherProfileModal,setShowOtherProfileModal]=useState(false);
+  // 다른 사람 프로필 (최대 3개) — {name,by,bm,bd,bh,gender,noTime}[]
+  const[otherProfiles,setOtherProfiles]=useState(()=>{
+    try{const s=localStorage.getItem('byeolsoom_others');return s?JSON.parse(s):[];}catch{return[];}
+  });
+  const[activeProfileIdx,setActiveProfileIdx]=useState(0); // 0=나, 1~3=다른 사람
+  const[otherForm,setOtherForm]=useState({name:'',by:'',bm:'',bd:'',bh:'',gender:'',noTime:false});
   // ── 카카오 유저 ──
   const[user,setUser]=useState(()=>{
     try{const u=localStorage.getItem('byeolsoom_user');return u?JSON.parse(u):null;}catch{return null;}
@@ -1739,7 +1939,7 @@ export default function App(){
   const[cat,setCat]=useState(0);
   const[selQs,setSelQs]=useState([]);
   const[diy,setDiy]=useState('');
-  const[pkg,setPkg]=useState('star');
+  const[pkg,setPkg]=useState('free'); // 기본값: 무료 첫 번째 이야기
   const[answers,setAnswers]=useState([]);
   const[openAcc,setOpenAcc]=useState(0);
   const[typedSet,setTypedSet]=useState(new Set()); // 타이핑 완료된 idx 추적
@@ -1825,6 +2025,9 @@ export default function App(){
     try{localStorage.setItem('byeolsoom_extra',JSON.stringify(profile));}catch(e){}
   },[profile]);
   useEffect(()=>{window.scrollTo({top:0,behavior:'smooth'});},[step]);
+  useEffect(()=>{
+    try{localStorage.setItem('byeolsoom_others',JSON.stringify(otherProfiles));}catch{}
+  },[otherProfiles]);
   useEffect(()=>{chatEndRef.current?.scrollIntoView({behavior:'smooth'});},[chatHistory,chatLoading]);
 
   const saju=useMemo(()=>(form.by&&form.bm&&form.bd)?getSaju(+form.by,+form.bm,+form.bd,form.noTime?12:+(form.bh||12)):null,[form]);
@@ -1841,19 +2044,30 @@ export default function App(){
 
   // 통합 컨텍스트 빌더
   // 사용자 컨텍스트 (서버로 전달)
+  // activeProfileIdx에 따라 올바른 프로필로 컨텍스트 생성
+  const activeForm = activeProfileIdx===0 ? form : (otherProfiles[activeProfileIdx-1]||form);
+  const activeSaju = useMemo(()=>{
+    const f=activeForm;
+    return (f.by&&f.bm&&f.bd)?getSaju(+f.by,+f.bm,+f.bd,f.noTime?12:+(f.bh||12)):null;
+  },[activeForm]);
+  const activeSun = useMemo(()=>(activeForm.bm&&activeForm.bd)?getSun(+activeForm.bm,+activeForm.bd):null,[activeForm]);
+  const activeAge = activeForm.by?today.year-+activeForm.by:0;
+
   const buildCtx=useCallback(()=>{
-    let c=`[${form.name||'고객님'} · ${age}세 · ${form.gender}]\n\n`;
-    if(saju){
+    const af=activeForm;
+    const as_=activeSaju;
+    const asSun=activeSun;
+    let c=`[${af.name||'고객님'} · ${activeAge}세 · ${af.gender||''}]\n\n`;
+    if(activeProfileIdx>0) c=`[${af.name||'이 사람'}의 별숨 — 대신 물어봐주는 질문]\n` + c;
+    if(as_){
       c+=`[사주 기운]\n`;
-      c+=`연주: ${saju.yeon.g}${saju.yeon.j} / 월주: ${saju.wol.g}${saju.wol.j} / 일주: ${saju.il.g}${saju.il.j} / 시주: ${saju.si.g}${saju.si.j}\n`;
-      c+=`타고난 기질: ${saju.ilganDesc}\n`;
-      c+=`강한 기운: ${ON[saju.dom]} / 약한 기운: ${ON[saju.lac]}\n\n`;
+      c+=`연주: ${as_.yeon.g}${as_.yeon.j} / 월주: ${as_.wol.g}${as_.wol.j} / 일주: ${as_.il.g}${as_.il.j} / 시주: ${as_.si.g}${as_.si.j}\n`;
+      c+=`타고난 기질: ${as_.ilganDesc}\n`;
+      c+=`강한 기운: ${ON[as_.dom]} / 약한 기운: ${ON[as_.lac]}\n\n`;
     }
-    if(sun){
+    if(asSun){
       c+=`[별자리 기운]\n`;
-      c+=`태양: ${sun.n}(${sun.s}) — ${sun.desc}\n`;
-      if(moon)c+=`달: ${moon.n}(${moon.s}) — ${moon.desc}\n`;
-      if(asc)c+=`상승: ${asc.n}(${asc.s}) — ${asc.desc}\n`;
+      c+=`태양: ${asSun.n}(${asSun.s}) — ${asSun.desc}\n`;
     }
     // 연인 정보
     if(profile.partner){
@@ -1872,7 +2086,7 @@ export default function App(){
     if(profile.workplace) c+=`[직장/상황] ${profile.workplace}\n`;
     if(profile.worryText) c+=`[지금 고민] ${profile.worryText}\n`;
     return c;
-  },[form,saju,sun,moon,asc,age,profile]);
+  },[activeForm,activeSaju,activeSun,activeAge,profile,activeProfileIdx]);
 
   // API 공통 헬퍼 (프롬프트는 서버 ask.js에서 관리)
   const callApi=useCallback(async(userMessage,opts={})=>{
@@ -2082,25 +2296,48 @@ export default function App(){
 
   const handleTypingDone=useCallback((idx)=>{
     setTypedSet(p=>{const n=new Set(p);n.add(idx);return n;});
-    // Q 완료 후 다음 질문 자동 오픈 (있을 경우)
-    setOpenAcc(p=>{
-      const next=idx+1;
-      if(p===idx) return next; // 현재 열린 게 방금 완료된 것이면 다음으로
-      return p;
-    });
-  },[]);
+    // ✅ 타이핑 완료: 현재 답변 유지 (닫지 않음)
+    // 다음 질문이 있으면 살짝 열었다가(500ms) 다시 닫기 — peek 효과
+    const next=idx+1;
+    if(next < selQs.length){
+      setTimeout(()=>{
+        setOpenAcc(next); // 다음 질문 살짝 열기
+        setTimeout(()=>{
+          setOpenAcc(p=>p===next?-1:p); // 0.8초 후 닫기 (이미 사용자가 바꿨으면 유지)
+        },800);
+      },400);
+    }
+  },[selQs.length]);
 
   const handleAccToggle=i=>{setOpenAcc(p=>p===i?-1:i);};
 
-  // 후속 채팅
+  // ✅ 더 물어보기 — 제대로 구현 (chatLeft 기반, 이용권 선택 넛지)
   const sendChat=async()=>{
-    if(!chatInput.trim()||chatLoading||chatLeft<=0)return;
-    const userMsg=chatInput.trim();setChatInput('');
+    if(!chatInput.trim()||chatLoading)return;
+    // 무료 플랜 채팅 소진 시 업그레이드 안내
+    if(chatLeft<=0){
+      setShowUpgradeModal(true);
+      return;
+    }
+    const userMsg=chatInput.trim();
+    setChatInput('');
     setChatHistory(p=>[...p,{role:'user',text:userMsg}]);
-    setChatLoading(true);setChatUsed(p=>p+1);
-    const prevQAs=selQs.map((q,i)=>`[질문 ${i+1}] ${q}\n[답변] ${answers[i]||''}`).join('\n\n');
-    const prevChat=chatHistory.map(m=>`[${m.role==='ai'?'별숨':'나'}] ${m.text}`).join('\n');
-    const fullMsg=`[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
+    setChatLoading(true);
+    setChatUsed(p=>p+1);
+    const prevQAs=selQs.map((q,i)=>`[질문 ${i+1}] ${q}
+[답변] ${answers[i]||''}`).join('
+
+');
+    const prevChat=chatHistory.map(m=>`[${m.role==='ai'?'별숨':'나'}] ${m.text}`).join('
+');
+    const fullMsg=`[이전 상담]
+${prevQAs}
+
+[이전 대화]
+${prevChat}
+
+[새 질문]
+${userMsg}`;
     try{
       const aiText=await callApi(fullMsg,{isChat:true});
       setChatHistory(p=>{
@@ -2113,7 +2350,7 @@ export default function App(){
     }finally{setChatLoading(false);}
   };
 
-  // 리포트 생성
+    // 리포트 생성
   const genReport=async()=>{
     setStep(6);setReportText('');setReportLoading(true);
     try{
@@ -2403,6 +2640,65 @@ export default function App(){
               <div className="step-dots">
                 {[0,1,2].map(i=><div key={i} className={`dot ${i===0?'active':'todo'}`}/>)}
               </div>
+
+              {/* ── 이미 프로필 있으면: 프로필 선택 카드 ── */}
+              {formOk&&(
+                <div className="card" style={{marginBottom:'var(--sp2)'}}>
+                  <div className="card-title" style={{fontSize:'var(--md)'}}>누구의 별숨을 볼까요?</div>
+
+                  {/* 나 */}
+                  <div className={`profile-pick-card ${activeProfileIdx===0?'active':''}`}
+                    onClick={()=>setActiveProfileIdx(0)}>
+                    <div className="ppc-left">
+                      <div className="ppc-av">{user?.profileImage?<img src={user.profileImage} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/>:'🌙'}</div>
+                      <div>
+                        <div className="ppc-name">{form.name||user?.nickname||'나'}</div>
+                        <div className="ppc-sub">{form.by&&sun?`${sun.s} ${sun.n} · ${ON[saju?.dom||'금']} 기운`:'내 정보'}</div>
+                      </div>
+                    </div>
+                    {activeProfileIdx===0&&<span style={{color:'var(--gold)'}}>✦</span>}
+                  </div>
+
+                  {/* 다른 사람 프로필들 */}
+                  {otherProfiles.map((p,i)=>{
+                    const pSaju=p.by&&p.bm&&p.bd?getSaju(+p.by,+p.bm,+p.bd,p.noTime?12:+(p.bh||12)):null;
+                    const pSun=p.bm&&p.bd?getSun(+p.bm,+p.bd):null;
+                    return(
+                      <div key={i} className={`profile-pick-card ${activeProfileIdx===i+1?'active':''}`}
+                        onClick={()=>setActiveProfileIdx(i+1)}>
+                        <div className="ppc-left">
+                          <div className="ppc-av" style={{background:'var(--bg3)'}}>✦</div>
+                          <div>
+                            <div className="ppc-name">{p.name||'이름 없음'}</div>
+                            <div className="ppc-sub">{pSun?`${pSun.s} ${pSun.n}`:'생년월일 있음'}</div>
+                          </div>
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',gap:8}}>
+                          {activeProfileIdx===i+1&&<span style={{color:'var(--gold)'}}>✦</span>}
+                          <button style={{padding:'3px 8px',borderRadius:6,border:'1px solid var(--line)',background:'transparent',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer'}}
+                            onClick={e=>{e.stopPropagation();setOtherProfiles(p=>p.filter((_,j)=>j!==i));if(activeProfileIdx===i+1)setActiveProfileIdx(0);}}>삭제</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* 다른 사람 추가 버튼 (최대 3명) */}
+                  {otherProfiles.length<3&&(
+                    <button className="res-btn" style={{width:'100%',marginTop:8,padding:12}}
+                      onClick={()=>setShowOtherProfileModal(true)}>
+                      + 다른 사람의 별숨 추가 (최대 3명)
+                    </button>
+                  )}
+
+                  <button className="btn-main" style={{marginTop:'var(--sp3)'}}
+                    onClick={()=>{setSelQs([]);setStep(2);}}>
+                    {activeProfileIdx===0?`${form.name||'나'}의 별숨 보기 ✦`:`${otherProfiles[activeProfileIdx-1]?.name||'이 사람'}의 별숨 보기 ✦`}
+                  </button>
+                </div>
+              )}
+
+              {/* ── 정보 없으면: 기본 입력 폼 ── */}
+              {!formOk&&(
               <div className="card">
                 <div className="card-title">반가워요 🌙</div>
                 <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
@@ -2430,7 +2726,6 @@ export default function App(){
                     </select>
                   </>
                 )}
-
                 <label className="lbl">성별</label>
                 <div className="gender-group">
                   {['여성','남성','기타'].map(g=>(
@@ -2438,7 +2733,6 @@ export default function App(){
                   ))}
                 </div>
 
-                {/* 사주+점성술 통합 미리보기 */}
                 {saju&&(
                   <div className="pillars-wrap">
                     <div className="pillars-hint"><span style={{color:'var(--gold)'}}>✦</span> 사주 원국</div>
@@ -2470,13 +2764,12 @@ export default function App(){
                     {asc&&<div className="a-chip">↑ 상승 {asc.n}</div>}
                   </div>
                 )}
-
                 <button className="btn-main" disabled={!formOk} onClick={()=>{setSelQs([]);setStep(2);}}>다음 단계 →</button>
               </div>
+              )}
             </div>
           </div>
         )}
-
         {/* ══ 2 질문 선택 ══ */}
         {step===2&&(
           <div className="page">
@@ -2485,13 +2778,51 @@ export default function App(){
                 {[0,1,2].map(i=><div key={i} className={`dot ${i<1?'done':i===1?'active':'todo'}`}/>)}
               </div>
               <div className="q-shell">
+
+                {/* ── 사주×별자리 통합 배너 + 시간대별 오늘의 별숨 ── */}
                 <div className="combo-banner">
                   <div className="combo-title">✦ 사주 × 별자리 통합 분석</div>
-                  <div className="combo-sub">동양과 서양의 별이 함께 당신의 이야기를 읽어요<br/>
-                    {saju&&sun&&`${ON[saju.dom]} 기운의 ${sun.n} · 달 ${moon?.n||''}`}
+                  <div className="combo-sub">
+                    {activeProfileIdx===0
+                      ? (saju&&sun?`${ON[saju.dom]} 기운의 ${sun.n} · 달 ${moon?.n||''}`:'동양과 서양의 별이 함께 읽어드려요')
+                      : (()=>{
+                          const op=otherProfiles[activeProfileIdx-1];
+                          if(!op) return '동양과 서양의 별이 함께 읽어드려요';
+                          const os=op.by&&op.bm&&op.bd?getSaju(+op.by,+op.bm,+op.bd,op.noTime?12:+(op.bh||12)):null;
+                          const osun=op.bm&&op.bd?getSun(+op.bm,+op.bd):null;
+                          return os&&osun?`${op.name||'이 사람'} · ${ON[os.dom]} 기운의 ${osun.n}`:`${op.name||'이 사람'}의 별숨`;
+                        })()
+                    }
+                  </div>
+                  {/* 시간대별 오늘의 별숨 인라인 표시 */}
+                  <div style={{marginTop:10,padding:'10px 14px',background:TIME_CONFIG[timeSlot].bg,borderRadius:'var(--r1)',border:`1px solid ${TIME_CONFIG[timeSlot].border}`,display:'flex',alignItems:'center',gap:10}}>
+                    <span style={{fontSize:'1.1rem'}}>{TIME_CONFIG[timeSlot].emoji}</span>
+                    <div>
+                      <div style={{fontSize:'var(--xs)',color:TIME_CONFIG[timeSlot].color,fontWeight:600,marginBottom:2}}>{TIME_CONFIG[timeSlot].label}</div>
+                      <div style={{fontSize:'var(--xs)',color:'var(--t3)',lineHeight:1.5}}>{TIME_CONFIG[timeSlot].greeting(activeProfileIdx===0?form.name:otherProfiles[activeProfileIdx-1]?.name||'')}</div>
+                    </div>
                   </div>
                 </div>
 
+                {/* ── ① 직접 입력 (맨 위) ── */}
+                <div className="diy-wrap" style={{marginBottom:'var(--sp2)'}}>
+                  <div style={{fontSize:'var(--xs)',color:'var(--gold)',fontWeight:600,marginBottom:6,letterSpacing:'.06em'}}>✦ 직접 물어보기</div>
+                  <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
+                    <textarea className="diy-inp" style={{flex:1,marginBottom:0}}
+                      placeholder="직접 묻고 싶은 게 있어요? 자유롭게 써봐요 🌙"
+                      maxLength={200} value={diy} onChange={e=>setDiy(e.target.value)}/>
+                    <button
+                      style={{padding:'11px 16px',borderRadius:'var(--r1)',border:'1px solid var(--acc)',background:diy.trim()&&selQs.length<maxQ?'var(--goldf)':'var(--bg2)',color:diy.trim()&&selQs.length<maxQ?'var(--gold)':'var(--t4)',fontFamily:'var(--ff)',fontSize:'var(--sm)',fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',transition:'all .2s',flexShrink:0,height:80}}
+                      disabled={!diy.trim()||selQs.length>=maxQ}
+                      onClick={()=>{if(diy.trim()&&selQs.length<maxQ){addQ(diy.trim());setDiy('');}}}>
+                      추가
+                    </button>
+                  </div>
+                  <div className="diy-row"><span className="hint">{diy.length}/200</span></div>
+                </div>
+
+                {/* ── ② 카테고리 탭 ── */}
+                <div style={{fontSize:'var(--xs)',color:'var(--t4)',marginBottom:6,letterSpacing:'.06em'}}>또는 고민 카테고리에서 골라봐요</div>
                 <div className="cat-tabs">
                   {CATS.map((c,i)=><button key={c.id} className={`cat-tab ${cat===i?'on':''}`} onClick={()=>setCat(i)}>{c.icon} {c.label}</button>)}
                 </div>
@@ -2499,18 +2830,13 @@ export default function App(){
                 <div className="q-list">
                   {CATS[cat].qs.map((q,i)=>{
                     const on=selQs.includes(q);
-                    return<button key={i} className={`q-item ${on?'on':''}`} disabled={!on&&selQs.length>=maxQ} onClick={()=>on?rmQ(selQs.indexOf(q)):addQ(q)}>{q}</button>;
+                    return<button key={i} className={`q-item ${on?'on':''}`}
+                      disabled={!on&&selQs.length>=maxQ}
+                      onClick={()=>on?rmQ(selQs.indexOf(q)):addQ(q)}>{q}</button>;
                   })}
                 </div>
 
-                <div className="diy-wrap">
-                  <textarea className="diy-inp" placeholder="직접 물어보고 싶은 게 있어요? 자유롭게 써봐요 🌙" maxLength={200} value={diy} onChange={e=>setDiy(e.target.value)}/>
-                  <div className="diy-row">
-                    <span className="hint">{diy.length}/200</span>
-                    {diy.trim()&&selQs.length<maxQ&&<button className="diy-add" onClick={()=>addQ(diy.trim())}>+ 추가</button>}
-                  </div>
-                </div>
-
+                {/* ── ③ 선택된 질문 목록 ── */}
                 {selQs.length>0&&(
                   <div className="sel-qs">
                     <div className="sel-lbl">선택한 질문 ({selQs.length}/{maxQ})</div>
@@ -2524,26 +2850,36 @@ export default function App(){
                   </div>
                 )}
 
-                <div className="pkg-sec">
-                  <div className="pkg-lbl">이용권 선택</div>
-                  <div className="pkgs">
-                    {PKGS.map(p=>(
-                      <div key={p.id} className={`pkg ${pkg===p.id?'chosen':''}`} onClick={()=>{setPkg(p.id);if(selQs.length>p.q)setSelQs(s=>s.slice(0,p.q));}}>
-                        {p.hot&&<div className="pkg-hot">BEST</div>}
-                        <div className="pkg-e">{p.e}</div>
-                        <div className="pkg-n">{p.n}</div>
-                        <div className="pkg-p">{p.p}</div>
-                      </div>
-                    ))}
+                {/* ── ④ 이용권: 무료 첫 질문 체계 ── */}
+                {pkg==='free'?(
+                  <div style={{padding:'var(--sp2) var(--sp3)',background:'var(--goldf)',border:'1px solid var(--acc)',borderRadius:'var(--r2)',margin:'var(--sp2) 0',textAlign:'center'}}>
+                    <div style={{fontSize:'var(--sm)',fontWeight:700,color:'var(--gold)',marginBottom:4}}>🌙 첫 번째 이야기는 무료예요</div>
+                    <div style={{fontSize:'var(--xs)',color:'var(--t3)',lineHeight:1.7}}>답변을 보고 나서 더 궁금하면 그때 이용권을 선택해요<br/>지금은 부담없이 시작해봐요</div>
                   </div>
-                </div>
+                ):(
+                  <div className="pkg-sec">
+                    <div className="pkg-lbl">이용권</div>
+                    <div className="pkgs">
+                      {PKGS.map(p=>p.isFree?null:(
+                        <div key={p.id} className={`pkg ${pkg===p.id?'chosen':''}`}
+                          onClick={()=>{setPkg(p.id);if(selQs.length>p.q)setSelQs(s=>s.slice(0,p.q));}}>
+                          {p.hot&&<div className="pkg-hot">BEST</div>}
+                          <div className="pkg-e">{p.e}</div>
+                          <div className="pkg-n">{p.n}</div>
+                          <div className="pkg-p">{p.p}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <button style={{background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',textDecoration:'underline',marginTop:6}}
+                      onClick={()=>setPkg('free')}>↩ 무료로 먼저 시작하기</button>
+                  </div>
+                )}
 
                 <div className="q-stat">
                   {selQs.length===0&&'질문을 하나 이상 골라봐요'}
                   {selQs.length>0&&selQs.length<maxQ&&<><strong>{maxQ-selQs.length}개</strong> 더 고를 수 있어요</>}
                   {selQs.length===maxQ&&<><strong>준비 완료!</strong> 두 별이 읽어드릴게요 🌟</>}
                 </div>
-                <div className="free-note">지금은 <span>무료로 체험</span>할 수 있어요</div>
                 <button className="btn-main" disabled={!selQs.length} onClick={askClaude}>
                   {selQs.length===0?'질문을 먼저 골라봐요':`✦ 두 별에게 물어보기 (${selQs.length}개)`}
                 </button>
@@ -2551,7 +2887,6 @@ export default function App(){
             </div>
           </div>
         )}
-
         {/* ══ 3 로딩 ══ */}
         {step===3&&<div className="page"><SkeletonLoader qCount={selQs.length} saju={saju}/></div>}
 
@@ -2806,6 +3141,90 @@ export default function App(){
       )}
       {/* ══ 결제 Toast ══ */}
       {payToast&&<div className={`pay-toast ${payToast.type}`}>{payToast.msg}</div>}
+
+      {/* ══ 업그레이드 모달 (채팅 소진 후) ══ */}
+      {showUpgradeModal&&(
+        <div className="upgrade-modal-bg" onClick={()=>setShowUpgradeModal(false)}>
+          <div className="upgrade-modal" onClick={e=>e.stopPropagation()}>
+            <div style={{textAlign:'center',fontSize:'2rem',marginBottom:8}}>✦</div>
+            <div className="upgrade-modal-title">더 많이 물어보고 싶어요?</div>
+            <div className="upgrade-modal-sub">
+              첫 번째 이야기가 마음에 들었다면<br/>더 깊이 대화할 수 있어요
+            </div>
+            <div className="upgrade-pkgs">
+              {PKGS.filter(p=>!p.isFree).map(p=>(
+                <div key={p.id} className={`upgrade-pkg ${pkg===p.id?'chosen':''}`}
+                  onClick={()=>setPkg(p.id)}>
+                  {p.hot&&<div className="upgrade-pkg-hot">BEST</div>}
+                  <div className="upgrade-pkg-e">{p.e}</div>
+                  <div className="upgrade-pkg-n">{p.n}</div>
+                  <div className="upgrade-pkg-p">{p.p}</div>
+                  <div className="upgrade-pkg-q">질문 {p.q}개 · 채팅 {p.chat}회</div>
+                </div>
+              ))}
+            </div>
+            <button className="btn-main" onClick={()=>{setShowUpgradeModal(false);setStep(5);}}>
+              이 이용권으로 계속 대화하기 ✦
+            </button>
+            <button style={{width:'100%',padding:10,background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',marginTop:8}}
+              onClick={()=>setShowUpgradeModal(false)}>
+              괜찮아요, 나중에 할게요
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══ 다른 사람 프로필 추가 모달 ══ */}
+      {showOtherProfileModal&&(
+        <div className="other-modal-bg" onClick={()=>setShowOtherProfileModal(false)}>
+          <div className="other-modal" onClick={e=>e.stopPropagation()}>
+            <div className="other-modal-title">다른 사람의 별숨 추가</div>
+            <div className="other-modal-sub">가족, 친구, 연인의 생년월일을 입력하면<br/>그 사람의 별숨을 대신 물어볼 수 있어요</div>
+
+            <label className="lbl">이름</label>
+            <input className="inp" placeholder="누구의 별숨인가요?" value={otherForm.name}
+              onChange={e=>setOtherForm(f=>({...f,name:e.target.value}))}/>
+
+            <label className="lbl">생년월일</label>
+            <div className="row" style={{marginBottom:'var(--sp2)'}}>
+              <div className="col"><input className="inp" placeholder="1998" maxLength={4} inputMode="numeric"
+                value={otherForm.by} onChange={e=>setOtherForm(f=>({...f,by:e.target.value.replace(/\D/,'')}))} style={{marginBottom:0}}/></div>
+              <div className="col"><select className="inp" value={otherForm.bm} onChange={e=>setOtherForm(f=>({...f,bm:e.target.value}))} style={{marginBottom:0}}>
+                <option value="">월</option>{[...Array(12)].map((_,i)=><option key={i+1} value={i+1}>{i+1}월</option>)}</select></div>
+              <div className="col"><select className="inp" value={otherForm.bd} onChange={e=>setOtherForm(f=>({...f,bd:e.target.value}))} style={{marginBottom:0}}>
+                <option value="">일</option>{[...Array(31)].map((_,i)=><option key={i+1} value={i+1}>{i+1}일</option>)}</select></div>
+            </div>
+            <div className="toggle-row" onClick={()=>setOtherForm(f=>({...f,noTime:!f.noTime,bh:''}))}>
+              <button className={`toggle ${otherForm.noTime?'on':'off'}`} onClick={e=>e.stopPropagation()}/>
+              <span className="toggle-label">태어난 시간을 몰라요</span>
+            </div>
+            {!otherForm.noTime&&(
+              <select className="inp" value={otherForm.bh} onChange={e=>setOtherForm(f=>({...f,bh:e.target.value}))}>
+                <option value="">태어난 시각 (선택)</option>
+                {[...Array(24)].map((_,i)=><option key={i} value={i}>{String(i).padStart(2,'0')}:00</option>)}
+              </select>
+            )}
+            <label className="lbl">성별</label>
+            <div className="gender-group">
+              {['여성','남성','기타'].map(g=>(
+                <button key={g} className={`gbtn ${otherForm.gender===g?'on':''}`} onClick={()=>setOtherForm(f=>({...f,gender:g}))}>{g}</button>
+              ))}
+            </div>
+            <button className="btn-main"
+              disabled={!otherForm.by||!otherForm.bm||!otherForm.bd||!otherForm.gender}
+              onClick={()=>{
+                if(otherProfiles.length>=3)return;
+                setOtherProfiles(p=>[...p,{...otherForm}]);
+                setOtherForm({name:'',by:'',bm:'',bd:'',bh:'',gender:'',noTime:false});
+                setShowOtherProfileModal(false);
+              }}>
+              추가하기 ✦
+            </button>
+            <button style={{width:'100%',padding:10,background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',marginTop:6}}
+              onClick={()=>setShowOtherProfileModal(false)}>취소</button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
