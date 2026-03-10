@@ -1261,6 +1261,26 @@ export default function App(){
 
 
 
+  // ── 카카오 SDK 동적 로드 ──
+  useEffect(()=>{
+    if(window.Kakao&&window.Kakao.isInitialized()) return;
+    const existing=document.getElementById('kakao-sdk');
+    if(existing){ // 이미 태그 있으면 초기화만
+      if(window.Kakao&&!window.Kakao.isInitialized())
+        window.Kakao.init(import.meta.env.VITE_KAKAO_JS_KEY||'');
+      return;
+    }
+    const script=document.createElement('script');
+    script.id='kakao-sdk';
+    script.src='https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
+    script.crossOrigin='anonymous';
+    script.onload=()=>{
+      if(window.Kakao&&!window.Kakao.isInitialized())
+        window.Kakao.init(import.meta.env.VITE_KAKAO_JS_KEY||'');
+    };
+    document.head.appendChild(script);
+  },[]);
+
   useEffect(()=>{document.documentElement.setAttribute('data-theme',isDark?'dark':'light');},[isDark]);
   useEffect(()=>{
     if(form.by&&form.bm&&form.bd){
