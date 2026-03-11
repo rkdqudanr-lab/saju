@@ -433,8 +433,8 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:
 .cta-main:active{transform:scale(.97)}
 .land-trust{display:flex;align-items:center;gap:var(--sp2);justify-content:center;margin-top:var(--sp3);font-size:var(--xs);color:var(--t4);animation:fadeUp .8s .65s both}
 
-.land-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100svh;padding:var(--sp3) var(--sp3);gap:var(--sp1);position:relative}
-.land-scroll-hint{text-align:center;color:var(--t4);font-size:var(--xs);padding:var(--sp2) 0;animation:fadeUp 1.2s ease 0.8s both}
+.land-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100svh;padding:var(--sp3) var(--sp3);gap:4px;position:relative}
+.land-scroll-hint{text-align:center;color:var(--t4);font-size:var(--xs);padding:4px 0;animation:fadeUp 1.2s ease 0.8s both}
 .land-scroll-hint span{display:inline-block;animation:bounce-y 1.8s ease-in-out infinite}
 @keyframes bounce-y{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
 .land-scroll-zone{padding:var(--sp4) 0}
