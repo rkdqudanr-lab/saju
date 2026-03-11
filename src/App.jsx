@@ -1489,97 +1489,74 @@ function SamplePreview(){
 }
 
 // ═══════════════════════════════════════════════════════════
-//  💌 별의 편지 페이지
+//  🔮 미래의 별숨 (예언 페이지)
 // ═══════════════════════════════════════════════════════════
-function LetterPage({form,saju,sun,moon,today,callApi,buildCtx,onBack}){
-  const[letterText,setLetterText]=useState('');
-  const[loading,setLoading]=useState(true);
-  const futureDate=useMemo(()=>{
-    const d=new Date();d.setDate(d.getDate()+92);
-    return`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
-  },[]);
-  const{shown,done,skipToEnd}=useWordTyping(letterText,!!letterText&&!loading,35);
+function FutureProphecyPage({form, buildCtx, callApi, onBack}){
+  const periods = ['1개월 후', '3개월 후', '1년 후', '10년 후', '30년 후'];
+  const [selectedPeriod, setPeriod] = useState(periods[0]);
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const {shown, done, skipToEnd} = useWordTyping(text, !!text && !loading, 60);
 
-  useEffect(()=>{
-    (async()=>{
-      try{
-        const res=await fetch('/api/ask',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            userMessage:`[요청] 3개월 후(${futureDate})의 나에게 보내는 별의 편지를 써줘요. "미래의 나에게"로 시작하는 편지 형식으로, 지금의 나에게 3개월 뒤가 어떤 모습일지, 어떤 변화가 있을지, 무엇을 기억하면 좋을지를 따뜻하게 담아줘요.`,
-            context:buildCtx(),
-            isChat:false,isReport:false,isLetter:true,
-          }),
-        });
-        const data=await res.json();
-        if(!res.ok)throw new Error(data.error);
-        setLetterText(data.text||'');
-      }catch{
-        setLetterText('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!');
-      }finally{setLoading(false);}
-    })();
-  },[]);
+  const fetchProphecy = useCallback(async (period) => {
+    setLoading(true); setText('');
+    try {
+      const pText = await callApi(`[요청] ${period} 시점의 미래에 대해 사주와 점성술을 기반으로 한 통찰력 있는 예언 편지를 작성해줘. "미래의 별숨이 전하는 이야기"라는 느낌으로 구체적이고 몽환적으로 써줘.`);
+      setText(pText);
+    } catch {
+      setText('별의 궤도를 읽는 데 실패했어요 🌙\n잠시 후 다시 시도해주세요.');
+    } finally { setLoading(false); }
+  }, [callApi]);
 
-  const saveImage=()=>{
-    const canvas=document.createElement('canvas');
-    canvas.width=900;canvas.height=600;
-    const ctx=canvas.getContext('2d');
-    ctx.fillStyle='#0D0B14';ctx.fillRect(0,0,900,600);
-    ctx.fillStyle='#E8B048';ctx.fillRect(0,0,900,3);
-    ctx.font='500 18px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle='#E8B048';ctx.fillText('byeolsoom ✦ 별의 편지',48,50);
-    ctx.font='400 15px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle='#8A7FA0';ctx.fillText(`${futureDate}에 열어봐요`,48,80);
-    ctx.font='300 16px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle='#C8BEDE';
-    const lines=letterText.slice(0,300).split('\n');
-    let y=130;
-    lines.forEach(line=>{
-      if(y>520)return;
-      const chunks=[];let tmp='';
-      for(const ch of line){
-        if(ctx.measureText(tmp+ch).width>800){chunks.push(tmp);tmp=ch;}else tmp+=ch;
-      }
-      if(tmp)chunks.push(tmp);
-      chunks.forEach(chunk=>{ctx.fillText(chunk,48,y);y+=28;});
-      y+=8;
-    });
-    ctx.font='400 13px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle='#4A4260';ctx.fillText('✦ 별숨이 당신에게 보낸 편지',48,570);
-    const a=document.createElement('a');
-    a.download=`byeolsoom_letter.png`;a.href=canvas.toDataURL('image/png');a.click();
-  };
+  useEffect(() => { fetchProphecy(selectedPeriod); }, [selectedPeriod, fetchProphecy]);
 
   return(
     <div className="page-top">
-      <div className="letter-page">
+      <div className="inner" style={{animation:'fadeUp .5s ease'}}>
+        <div style={{textAlign:'center', marginBottom:'var(--sp3)'}}>
+          <div style={{fontSize:'var(--xl)', fontWeight:700, color:'var(--gold)'}}>미래의 별숨</div>
+          <div style={{fontSize:'var(--xs)', color:'var(--t3)', marginTop:6}}>시간의 흐름에 따라 변화하는 당신의 운명을 읽어드려요</div>
+        </div>
+
+        {/* 기간 선택 탭 */}
+        <div style={{display:'flex', gap:6, flexWrap:'wrap', justifyContent:'center', marginBottom:'var(--sp3)'}}>
+          {periods.map(p => (
+            <button key={p}
+              style={{
+                padding:'8px 16px', borderRadius:'50px', border:'1px solid var(--line)',
+                background: selectedPeriod===p ? 'var(--gold)' : 'var(--bg2)',
+                color: selectedPeriod===p ? '#000' : 'var(--t3)',
+                fontSize:'var(--sm)', fontWeight: selectedPeriod===p ? 700 : 400,
+                cursor:'pointer', transition:'all .2s'
+              }}
+              onClick={()=>setPeriod(p)}
+            >{p}</button>
+          ))}
+        </div>
+
+        {/* 예언 편지 본문 */}
         <div className="letter-envelope">
-          <div className="letter-env-top">💌</div>
+          <div className="letter-env-top" style={{background:'linear-gradient(135deg,var(--goldf),rgba(200,160,255,0.1))'}}>🔮</div>
           <div className="letter-body">
-            <div className="letter-date-to">
-              <strong>{futureDate}</strong>의 {form.name||'당신'}에게 전하는 편지
-            </div>
-            {loading?(
-              <div style={{textAlign:'center',padding:'var(--sp4)',color:'var(--t3)'}}>
-                <div style={{fontSize:'1.5rem',marginBottom:'var(--sp2)',animation:'orbPulse 2s infinite'}}>✦</div>
-                별이 당신의 3개월 뒤를 읽고 있어요...
+            <div style={{fontSize:'var(--xs)', color:'var(--gold)', marginBottom:16, fontWeight:600}}>✦ {selectedPeriod}의 예언</div>
+            {loading ? (
+              <div style={{textAlign:'center', padding:'var(--sp4) 0', color:'var(--t3)', fontSize:'var(--sm)'}}>
+                <div className="load-orb-wrap" style={{marginTop:0, marginBottom:'var(--sp2)', transform:'scale(0.8)'}}>
+                  <div className="load-orb"><div className="load-orb-core"/><div className="load-orb-ring"/></div>
+                </div>
+                시간의 장막을 걷어내는 중...
               </div>
-            ):(
-              <div className="letter-content">
+            ) : (
+              <div className="letter-content" style={{padding:0}}>
                 <p>{shown}{!done&&<span className="typing-cursor"/>}</p>
               </div>
             )}
           </div>
-          <div className="letter-seal">
-            <span className="seal-icon">✦</span>
-            <span className="seal-text">byeolsoom · 별숨이 씀</span>
-          </div>
         </div>
-        <div className="letter-actions">
-          {done&&<button className="res-btn" onClick={saveImage} style={{flex:1}}>↗ 이미지 저장</button>}
-          {!done&&letterText&&<button className="res-btn" onClick={skipToEnd} style={{flex:1}}>바로 보기 ✦</button>}
-          <button className="res-btn" onClick={onBack} style={{flex:1}}>← 돌아가기</button>
+
+        <div style={{display:'flex', gap:8}}>
+          {!done&&text&&<button className="btn-main" style={{marginTop:0}} onClick={skipToEnd}>결과 바로 보기 ✦</button>}
+          {done&&<button className="res-btn" style={{flex:1, padding:14, borderRadius:'var(--r1)'}} onClick={onBack}>← 결과로 돌아가기</button>}
         </div>
       </div>
     </div>
@@ -2288,18 +2265,6 @@ export default function App(){
 
       <div className="app">
 
-        {/* ══ 0 랜딩 ══ */}
-        {step===0&&(
-          <div className="page step-fade">
-            {/* ═══ HERO ZONE — 첫 화면에서 보이는 전부 ═══ */}
-            <div className="land-hero">
-              <div className="land-wordmark">byeolsoom</div>
-              <div className="land-orb">
-                <div className="orb-core"/><div className="orb-r1"/><div className="orb-r2"/>
-              </div>
-              <p className="land-copy">오늘 밤,<br/><em>당신의 별이 기다리고 있어요.</em></p>
-              <p className="land-sub">동양의 별과 서양의 별이 함께<br/>당신의 이야기를 읽어드릴게요</p>
-
 {/* ═══ HERO ZONE ═══ */}
             <div className="land-hero">
               <div className="land-wordmark">byeolsoom</div>
@@ -2936,16 +2901,12 @@ export default function App(){
           />
         )}
 
-        {/* ══ 8 별의 편지 ══ */}
+     {/* ══ 8 미래의 별숨 (예언) ══ */}
         {step===8&&(
-          <LetterPage
+          <FutureProphecyPage
             form={form}
-            saju={saju}
-            sun={sun}
-            moon={moon}
-            today={today}
-            callApi={callApi}
             buildCtx={buildCtx}
+            callApi={callApi}
             onBack={()=>setStep(4)}
           />
         )}
