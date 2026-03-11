@@ -187,13 +187,13 @@ function parseAccSummary(text) {
   if (!text) return { summary: '', text: '' };
   const match = text.match(/\[요약\](.*?)(?:\n|$)/);
   if (match) {
-    const summary = match[1].trim();
+    // '요약:' 이나 '핵심:' 같은 단어가 있으면 같이 날려버림
+    let summary = match[1].replace(/^(요약|핵심)[\s:]*/i, '').trim(); 
     const restText = text.replace(/\[요약\].*?(?:\n|$)/, '').trim();
     return { summary, text: restText };
   }
   return { summary: '', text };
 }
-
 // ═══════════════════════════════════════════════════════════
 //  데이터
 // ═══════════════════════════════════════════════════════════
@@ -232,12 +232,21 @@ const SAMPLE_ESSAYS = [
   "천칭자리의 균형 감각과 기토의 조화로운 기질이 함께 속삭여요. 오늘은 조용히 자신을 돌아보기 좋은 날이에요. 너무 많은 것을 혼자 짊어지지 않아도 괜찮아요. 가볍게 내려놓는 것도 용기예요...",
 ];
 const CATS=[
-  {id:"love",icon:"💕",label:"연애",qs:["요즘 좋아하는 사람이 생겼는데 이 감정이 맞는 건지 모르겠어요","언제쯤 새로운 인연이 찾아올까요?","지금 사귀는 사람이랑 미래가 있을까요?","짝사랑하는 사람이 나를 어떻게 생각할까요?","내가 먼저 고백해도 될까요?","연애를 시작하기 좋은 시기인가요?"]},
-  {id:"work",icon:"💼",label:"일·커리어",qs:["이직을 고민 중인데 지금 타이밍이 맞을까요?","직장 상사 때문에 너무 힘들어요","나에게 진짜 잘 맞는 일이 뭔지 알고 싶어요","승진할 수 있는 운이 있을까요?","창업을 해도 될까요?","지금 하는 일이 나한테 맞는지 모르겠어요"]},
-  {id:"money",icon:"✦",label:"돈·재물",qs:["올해 돈 들어오는 운이 있을까요?","투자를 시작하기 좋은 시기인가요?","내 집 마련 언제쯤 가능할까요?","부업이나 사이드잡 시작해도 될까요?","돈이 계속 나가는데 언제 안정될까요?"]},
-  {id:"health",icon:"🌿",label:"건강",qs:["요즘 너무 피곤한데 기운이 없는 이유가 있을까요?","특히 조심해야 할 건강 부위가 있나요?","스트레스가 너무 심해요","수면의 질을 높이려면 어떻게 해야 할까요?","운동을 시작하기 좋은 시기인가요?"]},
-  {id:"relation",icon:"🫧",label:"인간관계",qs:["주변에 나한테 안 좋은 사람이 있는 것 같아요","친한 친구랑 사이가 멀어진 것 같아요","새로운 환경에서 잘 적응할 수 있을까요?","직장 동료와의 갈등을 어떻게 풀어야 할까요?","나는 어떤 사람들과 잘 맞나요?"]},
-  {id:"future",icon:"🔮",label:"미래·운명",qs:["올해 내 인생에서 가장 중요한 것이 뭔가요?","지금 걷고 있는 방향이 맞는지 불안해요","내가 진짜 잘할 수 있는 게 뭔지 모르겠어요","내 인생의 전환점이 언제쯤 올까요?","요즘 모든 게 막막한데 어떻게 해야 할까요?"]},
+{id:"love",icon:"💕",label:"연애·결혼",qs:["요즘 좋아하는 사람이 생겼는데 먼저 고백해도 될까요?","올해 결혼운이 들어와 있나요?","지금 사귀는 사람과 궁합이 어떤지 궁금해요.","이별 후 너무 힘든데, 새로운 인연이 언제 올까요?"]},
+  {id:"work",icon:"💼",label:"일·커리어",qs:["이직을 고민 중인데 올해 타이밍이 맞을까요?","지금 하는 직무가 제 적성과 잘 맞는지 궁금해요.","직장 상사와의 관계가 힘든데 어떻게 대처해야 할까요?","올해 승진이나 연봉 인상운이 있을까요?"]},
+  {id:"money",icon:"💰",label:"돈·재물",qs:["올해 재물운이 언제 가장 크게 들어오나요?","주식이나 부동산 투자를 시작해도 좋은 시기일까요?","자꾸 돈이 새어나가는데 어떻게 막아야 할까요?","부업을 시작하려고 하는데 수익이 날까요?"]},
+  {id:"health",icon:"🌿",label:"건강",qs:["올해 특별히 조심해야 할 신체 부위가 있나요?","요즘 너무 피곤한데 에너지를 채워줄 방향이나 색깔이 있을까요?","수면의 질을 높이려면 어떻게 해야 할까요?"]},
+  {id:"relation",icon:"🫧",label:"인간관계",qs:["주변에 저를 시기하는 사람이 있는 것 같아요. 조심해야 할까요?","오래된 친구와 멀어졌는데 다시 회복될 수 있을까요?","새로운 모임에 나가면 좋은 인연을 맺을 수 있을까요?"]},
+  {id:"future",icon:"🔮",label:"미래·운명",qs:["제 인생에서 가장 큰 전환점은 언제 찾아오나요?","10년 뒤의 저는 어떤 모습으로 살고 있을까요?","올해 제가 가장 집중해야 할 한 가지는 무엇인가요?"]},
+  {id:"study",icon:"📚",label:"학업·시험",qs:["올해 준비 중인 중요한 시험에 합격할 수 있을까요?","어떤 분야를 깊이 공부하는 게 제 사주와 맞을까요?","공부 집중이 안 되는데, 책상 방향을 어떻게 두면 좋을까요?"]},
+  {id:"move",icon:"🏠",label:"이사·이동",qs:["올해 이사하기 좋은 달이 언제인가요?","제 기운과 잘 맞는 동네나 집의 방향이 있을까요?","직장을 먼 지역으로 옮겨도 잘 적응할 수 있을까요?"]},
+  {id:"business",icon:"📈",label:"사업·창업",qs:["지금 창업을 시작해도 괜찮은 대운인가요?","어떤 업종이 제 재물운을 가장 잘 끌어올릴까요?","동업을 제안받았는데 함께해도 괜찮을까요?"]},
+  {id:"family",icon:"🏡",label:"가족·부부",qs:["요즘 가족 간의 갈등이 잦은데 언제쯤 평화로워질까요?","자녀와의 관계를 부드럽게 풀려면 제가 어떻게 해야 할까요?","부부 관계를 개선할 수 있는 풍수나 조언이 있을까요?"]},
+  {id:"contract",icon:"📝",label:"매매·계약",qs:["지금 집이나 부동산을 팔아도 좋은 시기인가요?","곧 큰 계약을 앞두고 있는데 유리하게 성사될까요?","제 인생에 문서운이 들어오는 시기가 언제인가요?"]},
+  {id:"mind",icon:"🧠",label:"자아·심리",qs:["요즘 너무 무기력한데, 제 사주에 우울한 기운이 있나요?","남들이 모르는 저만의 진짜 강력한 장점은 무엇인가요?","자존감이 많이 떨어졌는데, 저를 위한 힐링 방법이 있을까요?"]},
+  {id:"pet",icon:"🐾",label:"반려동물",qs:["우리 집에 새로 온 반려동물과 저의 기운이 잘 맞나요?","반려동물을 입양하려고 하는데 올해 좋은 묘연/견연이 있을까요?"]},
+  {id:"legal",icon:"⚖️",label:"소송·관재",qs:["현재 진행 중인 일이나 소송이 저에게 유리하게 끝날까요?","올해 조심해야 할 구설수나 관재수가 있나요?"]},
+  {id:"hobby",icon:"🎨",label:"취미·적성",qs:["사주에 나타난 저만의 숨겨진 예술적 재능이 있나요?","어떤 취미를 가지면 제 운이 크게 좋아질까요?"]}
 ];
 const PKGS=[
   {id:"seed",e:"✦",n:"씨앗",p:"990원",q:1,chat:0},
@@ -593,13 +602,9 @@ select.inp option{background:var(--bg2)}
 /* ══ 오늘의 한마디 ══ */
 
 /* ══ 별의 한 줄 요약 ══ */
-.star-summary{padding:var(--sp2) var(--sp3);background:var(--goldf);border-bottom:1px solid var(--acc);display:flex;align-items:flex-start;gap:8px}
-.star-summary-icon{color:var(--gold);flex-shrink:0;font-size:.9rem;margin-top:2px}
-.star-summary-text{font-size:var(--sm);color:var(--gold);font-weight:500;line-height:1.65;font-style:italic}
-.daily-word{margin:var(--sp3) 0 var(--sp2);padding:var(--sp2) var(--sp3);background:var(--goldf);border:1px solid var(--acc);border-radius:var(--r2);text-align:center;animation:fadeUp .8s .85s both}
-.daily-label{font-size:var(--xs);color:var(--gold);letter-spacing:.1em;margin-bottom:5px}
-.daily-text{font-size:var(--sm);color:var(--t1);line-height:1.75;font-weight:300}
-.daily-date{font-size:var(--xs);color:var(--t4);margin-top:4px}
+.star-summary{padding:20px 24px; background:linear-gradient(145deg, var(--goldf), rgba(232,176,72,0.02)); border:1.5px solid rgba(232,176,72,0.4); border-radius:var(--r2); margin-bottom: var(--sp3); display:flex; align-items:flex-start; gap:12px; box-shadow: 0 4px 20px rgba(232,176,72,0.1); animation: fadeUp .6s ease both;}
+.star-summary-icon{color:var(--gold); font-size:1.3rem; line-height:1; flex-shrink:0; margin-top:2px;}
+.star-summary-text{font-size:1.05rem; color:var(--gold); font-weight:600; line-height:1.6; letter-spacing:-0.01em;}
 
 
 /* ══ 무드 배너 ══ */
@@ -2300,31 +2305,30 @@ export default function App(){
               <p className="land-copy">오늘 밤,<br/><em>당신의 별이 기다리고 있어요.</em></p>
               <p className="land-sub">동양의 별과 서양의 별이 함께<br/>당신의 이야기를 읽어드릴게요</p>
 
-              {/* 로그인 카드 — 히어로에 포함 */}
+{/* ═══ HERO ZONE ═══ */}
+            <div className="land-hero">
+              <div className="land-wordmark">byeolsoom</div>
+              <div className="land-orb">
+                <div className="orb-core"/><div className="orb-r1"/><div className="orb-r2"/>
+              </div>
+              <p className="land-copy" style={{fontSize: '1.05rem', lineHeight: 1.8}}>
+                사주와 점성술로 당신의 질문에 답해드려요.<br/>
+                <em style={{fontWeight: 500}}>당신의 별숨은 당신을 바라보고 있어요.</em>
+              </p>
+
+              {/* 로그인 카드 */}
               <div className="land-login-section">
                 {user ? (
                   <div className="land-login-card logged">
+                    {/* ... (이 안의 기존 로그인된 유저 UI 코드는 그대로 둡니다) ... */}
                     <div className="llc-top">
-                      {user.profileImage
-                        ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/>
-                        : <div className="llc-avatar-placeholder">🌙</div>}
+                      {user.profileImage ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/> : <div className="llc-avatar-placeholder">🌙</div>}
                       <div>
                         <div className="llc-name">{user.nickname}님 ✦</div>
-                        <div className="llc-sub">
-                          {form.by && saju
-                            ? `${ON[saju.dom]} 기운, 오늘의 별이 기다려요`
-                            : '별숨이 당신을 기억하고 있어요'}
-                        </div>
+                        <div className="llc-sub">{form.by && saju ? `${ON[saju.dom]} 기운, 오늘의 별이 기다려요` : '별숨이 당신을 기억하고 있어요'}</div>
                       </div>
                     </div>
-                    <div className="llc-profile-chips">
-                      {form.by && <span className="llc-chip filled">🀄 사주</span>}
-                      {profile.partner && <span className="llc-chip filled">💕 {profile.partner}</span>}
-                      {profile.workplace && <span className="llc-chip filled">💼 {profile.workplace.slice(0,10)}{profile.workplace.length>10?'…':''}</span>}
-                      {histItems.length>0&&<span className="llc-chip filled" onClick={()=>setShowSidebar(true)}>📖 {histItems.length}개</span>}
-                      <span className="llc-chip" onClick={()=>setShowProfileModal(true)}>+ 추가</span>
-                    </div>
-                    <div className="llc-actions">
+                    <div className="llc-actions" style={{marginTop: 10}}>
                       <button className="cta-main" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep(formOk?2:1)}>
                         {form.by ? '별숨에게 물어보기 ✦' : '지금 시작하기 ✦'}
                       </button>
@@ -2332,87 +2336,26 @@ export default function App(){
                     </div>
                   </div>
                 ) : (
-                  <div className="land-login-card">
-                    {/* ── PRIMARY: 바로 시작 ── */}
-                    <button className="land-start-primary" onClick={()=>setStep(1)}>
-                      ✦ 지금 바로 물어보기
-                    </button>
-
-                    {/* ── 로그인 혜택 안내 ── */}
-                    <div className="land-login-why">
-                      연인 운세 · 직장 조언 · 기록 저장
-                    </div>
-
-                    {/* ── SECONDARY: 카카오 로그인 ── */}
-                    <button className="land-kakao-secondary" onClick={kakaoLogin}>
+                  <div className="land-login-card" style={{padding: '24px 20px', gap: '16px'}}>
+                    <button className="kakao-login-full" onClick={kakaoLogin} style={{fontSize: '1rem', padding: '16px'}}>
                       <span className="kakao-icon-wrap">
-                        <svg width="12" height="11" viewBox="0 0 18 18" fill="none">
+                        <svg width="18" height="17" viewBox="0 0 18 18" fill="none">
                           <path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919"/>
                         </svg>
                       </span>
-                      카카오로 로그인하면 기록이 저장돼요
+                      카카오로 3초 만에 시작하기
                     </button>
 
-                    {import.meta.env.DEV&&(
-                      <div style={{marginTop:8,padding:'8px 10px',background:'rgba(255,100,100,.08)',border:'1px solid rgba(255,100,100,.2)',borderRadius:8,fontSize:'var(--xs)',color:'#ff8080',lineHeight:1.7}}>
-                        🔧 개발 환경 체크<br/>
-                        키 설정: {import.meta.env.VITE_KAKAO_JS_KEY?'✅ 있음':'❌ 없음'}<br/>
-                        SDK: {typeof window!=='undefined'&&window.Kakao?'✅ 로드됨':'⏳ 로딩 중'}<br/>
-                        초기화: {typeof window!=='undefined'&&window.Kakao?.isInitialized?.()===true?'✅ 완료':'⏳ 대기'}
-                      </div>
-                    )}
+                    <button className="land-ghost-link" onClick={()=>setStep(1)} style={{fontSize: '0.9rem'}}>
+                      로그인 없이 물어보기 →
+                    </button>
                   </div>
                 )}
               </div>
 
               {/* 스크롤 힌트 */}
-              <div className="land-scroll-hint">
-                <span>↓</span>
-              </div>
+              <div className="land-scroll-hint"><span>↓</span></div>
             </div>
-
-            {/* ═══ SCROLL ZONE — 스크롤해야 보이는 부가 콘텐츠 ═══ */}
-            <div className="inner land-scroll-zone">
-
-              {/* 오늘의 별숨 — 시간대별 접힌 카드 */}
-              <TodayByeolsoom
-                slot={timeSlot}
-                name={form.name||user?.nickname||''}
-                saju={saju}
-                sun={sun}
-                onAsk={askTimeSlot}
-                onReview={askReview}
-              />
-
-              {/* 퀵질문 입력창 */}
-              <div className="land-quick-section">
-                <div className="land-quick-label">✦ &nbsp; 별숨에게 바로 물어봐요</div>
-                <div className="land-cat-chips">
-                  {CATS.map((c,i)=>(
-                    <button key={c.id} className={`land-cat-chip ${quickCat===i?'on':''}`} onClick={()=>setQuickCat(i)}>
-                      {c.icon} {c.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="land-sugg-chips">
-                  {CATS[quickCat].qs.slice(0,3).map((q,i)=>(
-                    <button key={i} className="land-sugg-chip" onClick={()=>setQuickQ(q)}>
-                      {q.length>24?q.slice(0,24)+'…':q}
-                    </button>
-                  ))}
-                </div>
-                <div className="land-quick-inp-row">
-                  <input className="land-quick-inp"
-                    placeholder={TIME_CONFIG[timeSlot].inputPlaceholder}
-                    value={quickQ}
-                    onChange={e=>setQuickQ(e.target.value)}
-                    onKeyDown={e=>{if(e.key==='Enter'&&quickQ.trim())askQuick(quickQ);}}/>
-                  <button className="land-quick-send" disabled={!quickQ.trim()} onClick={()=>askQuick(quickQ)}>✦</button>
-                </div>
-                <button className="land-ghost-link" onClick={()=>setStep(formOk?2:1)}>
-                  질문 여러 개 한꺼번에 하기 →
-                </button>
-              </div>
 
               {/* 샘플 미리보기 */}
               <SamplePreview/>
