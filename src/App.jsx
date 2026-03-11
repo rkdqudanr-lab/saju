@@ -2265,7 +2265,10 @@ export default function App(){
 
       <div className="app">
 
-{/* ═══ HERO ZONE ═══ */}
+{/* ══ 0 랜딩 ══ */}
+        {step===0&&(
+          <div className="page step-fade">
+            {/* ═══ HERO ZONE ═══ */}
             <div className="land-hero">
               <div className="land-wordmark">byeolsoom</div>
               <div className="land-orb">
@@ -2280,7 +2283,6 @@ export default function App(){
               <div className="land-login-section">
                 {user ? (
                   <div className="land-login-card logged">
-                    {/* ... (이 안의 기존 로그인된 유저 UI 코드는 그대로 둡니다) ... */}
                     <div className="llc-top">
                       {user.profileImage ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/> : <div className="llc-avatar-placeholder">🌙</div>}
                       <div>
@@ -2316,6 +2318,28 @@ export default function App(){
               {/* 스크롤 힌트 */}
               <div className="land-scroll-hint"><span>↓</span></div>
             </div>
+
+            {/* ═══ SCROLL ZONE ═══ */}
+            <div className="inner land-scroll-zone">
+              <SamplePreview/>
+              <div className="daily-word">
+                <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
+                <div className="daily-text">{'"'+getDailyWord(today.day)+'"'}</div>
+              </div>
+              <div className="rev-wrap">
+                <div className="rev-track">
+                  {REVIEWS.map((r,i)=>(
+                    <div key={i} className="rev-card">
+                      <div className="rev-stars">{r.star}</div>
+                      <div className="rev-text">{'"'+r.text+'"'}</div>
+                      <div className="rev-nick">{r.nick}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
               {/* 샘플 미리보기 */}
               <SamplePreview/>
@@ -2911,7 +2935,7 @@ export default function App(){
           />
         )}
 
-        {/* ══ 9 히스토리 상세 ══ */}
+{/* ══ 9 히스토리 상세 ══ */}
         {step===9&&histItem&&(
           <HistoryPage
             item={histItem}
@@ -2920,12 +2944,11 @@ export default function App(){
           />
         )}
 
-
-      </div>
-      {/* 하단 면책 조항 */}
+        {/* 하단 면책 조항 */}
         <div style={{fontSize:'10px', color:'var(--t4)', textAlign:'center', padding:'20px 20px 40px', letterSpacing:'0.02em'}}>
           ✦ 별숨은 점술 및 오락 목적의 서비스이며, 결과에 대해서는 법적 책임이나 효력을 지지 않습니다.
         </div>
+
       </div> {/* <-- app의 닫는 태그 */}
 
       {/* ══ 프로필 모달 ══ */}
