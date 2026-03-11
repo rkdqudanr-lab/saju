@@ -2784,21 +2784,3 @@ export default function App(){
     </>
   );
 }
-```
-
-**주요 수정 사항:**
-
-1. **중복 제거**
-   - 랜딩 섹션 중복 제거
-   - SamplePreview 중복 호출 제거
-   - daily-word 중복 제거
-
-2. **CSS 정리**
-   - 누락된 클래스 추가 (`land-hero`, `land-scroll-hint`, `land-scroll-zone`, `daily-word` 등)
-   - 중복 선언 제거
-
-3. **구조 개선**
-   - 컴포넌트 선언 순서 정리
-   - 일관된 스타일 적용
-
-이제 오류 없이 정상 작동할 것입니다!
