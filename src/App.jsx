@@ -441,13 +441,18 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:
 
 .land-login-section{margin:var(--sp3) 0;animation:fadeUp .8s .6s both;width:100%;max-width:460px}
 .land-login-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);text-align:left;display:flex;flex-direction:column;gap:10px}
-.land-login-card.logged{border-color:var(--acc);background:var(--goldf)}
-.llc-top{display:flex;align-items:center;gap:var(--sp2);margin-bottom:var(--sp2)}
-.llc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acc);flex-shrink:0}
-.llc-avatar-placeholder{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.llc-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
-.llc-sub{font-size:var(--xs);color:var(--t3);margin-top:2px}
-.llc-actions{display:flex;gap:6px}
+.land-login-card.logged{
+  border-color:var(--acc);
+  background:linear-gradient(135deg,var(--goldf),rgba(155,142,196,.06));
+  box-shadow:0 4px 24px rgba(232,176,72,.08);
+}
+.llc-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--acc)}
+.llc-avatar-placeholder{width:48px;height:48px;border-radius:50%;background:var(--bg2);border:2px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.llc-name{font-size:var(--md);font-weight:700;color:var(--t1)}
+.llc-sub{font-size:var(--xs);color:var(--t3);margin-top:3px}
+
+/* 화살표 아래 여백 제거 */
+.land-scroll-zone{padding:var(--sp2) 0}
 
 .kakao-login-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--r1);background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:700;color:#191919;transition:all .2s}
 .kakao-login-full:hover{background:#F0D800;transform:translateY(-1px)}
@@ -2084,19 +2089,23 @@ export default function App(){
               <div className="land-login-section">
                 {user ? (
                   <div className="land-login-card logged">
-                    <div className="llc-top">
-                      {user.profileImage ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/> : <div className="llc-avatar-placeholder">🌙</div>}
-                      <div>
-                        <div className="llc-name">{user.nickname}님 ✦</div>
-                        <div className="llc-sub">{form.by && saju ? `${ON[saju.dom]} 기운, 오늘의 별이 기다려요` : '별숨이 당신을 기억하고 있어요'}</div>
-                      </div>
-                    </div>
-                    <div className="llc-actions" style={{marginTop: 10}}>
-                      <button className="cta-main" style={{flex:1,justifyContent:'center'}} onClick={()=>setStep(formOk?2:1)}>
-                        {form.by ? '별숨에게 물어보기 ✦' : '지금 시작하기 ✦'}
-                      </button>
-                      <button className="res-btn" style={{padding:'13px 14px',borderRadius:'var(--r1)'}} onClick={kakaoLogout} title="로그아웃">↩</button>
-                    </div>
+  <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+    {user.profileImage
+      ? <img className="llc-avatar" src={user.profileImage} alt="프로필"/>
+      : <div className="llc-avatar-placeholder">🌙</div>}
+    <div style={{flex:1}}>
+      <div className="llc-name">{user.nickname} <span style={{color:'var(--gold)'}}>✦</span></div>
+      <div className="llc-sub">
+        {form.by && saju ? `${ON[saju.dom]} 기운 · ${sun?.n || ''}` : '별숨이 당신을 기억해요'}
+      </div>
+    </div>
+    <button onClick={kakaoLogout} style={{background:'none',border:'1px solid var(--line)',borderRadius:50,padding:'4px 10px',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer'}}>로그아웃</button>
+  </div>
+  <button className="cta-main" style={{width:'100%',justifyContent:'center',borderRadius:'var(--r1)',padding:'14px'}}
+    onClick={()=>setStep(formOk?2:1)}>
+    {form.by ? '오늘의 별숨 보기 ✦' : '지금 시작하기 ✦'}
+  </button>
+</div>
                   </div>
                 ) : (
                   <div className="land-login-card" style={{padding: '24px 20px', gap: '16px'}}>
