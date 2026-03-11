@@ -2106,7 +2106,6 @@ export default function App(){
     {form.by ? '오늘의 별숨 보기 ✦' : '지금 시작하기 ✦'}
   </button>
 </div>
-                  </div>
                 ) : (
                   <div className="land-login-card" style={{padding: '24px 20px', gap: '16px'}}>
                     <button className="kakao-login-full" onClick={kakaoLogin} style={{fontSize: '1rem', padding: '16px'}}>
