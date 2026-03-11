@@ -1969,7 +1969,7 @@ export default function App(){
       c+=`[별자리 기운]\n`;
       c+=`태양: ${asSun.n}(${asSun.s}) — ${asSun.desc}\n`;
     }
-    // 연인 정보
+// 연인 정보 (기존)
     if(profile.partner){
       c+=`[연인 정보]\n이름: ${profile.partner}\n`;
       if(profile.partnerBy&&profile.partnerBm&&profile.partnerBd){
@@ -1982,9 +1982,15 @@ export default function App(){
         }catch(e){}
       }
     }
-    // 직장/고민 정보
+    // 직장/고민 정보 (기존)
     if(profile.workplace) c+=`[직장/상황] ${profile.workplace}\n`;
     if(profile.worryText) c+=`[지금 고민] ${profile.worryText}\n`;
+
+    // 🚨 아래 3줄(특별 지침)을 추가해주세요! 🚨
+    c+=`\n[특별 지침]\n`;
+    c+=`1. 결과에 '요약'이라는 단어를 절대 노출하지 마세요.\n`;
+    c+=`2. 답변 시 모호한 표현을 피하고, 행운의 색깔, 방향, 특정 날짜, 도움되는 숫자나 초성, 피해야 할 행동 등 매우 명확하고 구체적인 점술적 요소를 1개 이상 반드시 포함하세요.\n`;
+
     return c;
   },[activeForm,activeSaju,activeSun,activeAge,profile,activeProfileIdx]);
 
@@ -2005,71 +2011,60 @@ export default function App(){
     return stripMarkdown(data.text||'');
   },[buildCtx]);
 
-  // ── 공유 이미지 생성 (canvas) ──
+// ── 공유 이미지 생성 (텍스트 길이에 맞춰 높이 자동 조절) ──
   const shareCard=useCallback((idx)=>{
     const q=selQs[idx]||'';
-    const text=answers[idx]||'';
-    const preview=text.slice(0,120)+'…';
+    // 본문에서 [요약] 텍스트가 제외된 순수 본문만 가져옵니다.
+    const parsedText=parseAccSummary(answers[idx]||'').text;
+    
     const canvas=document.createElement('canvas');
-    canvas.width=900;canvas.height=520;
     const ctx=canvas.getContext('2d');
+    canvas.width = 900;
+    
+    // 텍스트 줄바꿈 계산 로직
+    ctx.font='300 18px Pretendard,-apple-system,sans-serif';
+    const words = parsedText.split('');
+    const lines = [];
+    let currentLine = '';
+    for (let char of words) {
+      if (char === '\n') { lines.push(currentLine); currentLine = ''; continue; }
+      const test = currentLine + char;
+      if (ctx.measureText(test).width > 800) {
+        lines.push(currentLine); currentLine = char;
+      } else { currentLine = test; }
+    }
+    if (currentLine) lines.push(currentLine);
+    
+    // 전체 텍스트 길이에 비례하여 캔버스 높이 동적 계산
+    const lineHeight = 34;
+    const textHeight = lines.length * lineHeight;
+    canvas.height = 280 + textHeight + 100; // 헤더(280) + 본문높이 + 푸터여백(100)
+
     const bg=isDark?'#0D0B14':'#F7F4EF';
     const t1=isDark?'#F0EBF8':'#1A1420';
     const t3=isDark?'#8A7FA0':'#8A7FA0';
     const gold='#E8B048';
-    // 배경
-    ctx.fillStyle=bg;ctx.fillRect(0,0,900,520);
-    // 상단 골드 라인
-    ctx.fillStyle=gold;ctx.fillRect(0,0,900,3);
-    // 워터마크
-    ctx.font='500 22px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle=gold;ctx.letterSpacing='0.3em';
-    ctx.fillText('byeolsoom  ✦',48,56);
-    // 날짜
-    ctx.font='400 16px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle=t3;
-    ctx.fillText(`${today.month}월 ${today.day}일의 이야기`,48,88);
-    // 질문
-    ctx.font='600 20px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle=t1;
-    ctx.fillText(q.length>36?q.slice(0,36)+'…':q,48,148);
-    // 본문 미리보기
-    ctx.font='300 17px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle=t3;
-    const words=preview.split('');
-    let line='',y=200,lineH=32;
-    for(const ch of words){
-      const test=line+ch;
-      if(ctx.measureText(test).width>800){
-        ctx.fillText(line,48,y);y+=lineH;line=ch;
-        if(y>360){ctx.fillText(line+'…',48,y);line='';break;}
-      } else line=test;
-    }
-    if(line)ctx.fillText(line,48,y);
-    // 별자리 칩
-    const chips=[];
-    if(sun)chips.push(sun.s+' '+sun.n);
-    if(saju)chips.push('✦ '+['목','화','토','금','수'][['목','화','토','금','수'].indexOf(saju.dom[0])||0]||'✦');
-    ctx.font='500 15px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle=gold;
-    chips.slice(0,2).forEach((chip,i)=>{
-      const w=ctx.measureText(chip).width+24;
-      const x=48+i*(w+10);
-      ctx.strokeStyle='rgba(232,176,72,0.3)';
-      ctx.lineWidth=1;
-      ctx.beginPath();ctx.roundRect(x,400,w,30,15);ctx.stroke();
-      ctx.fillText(chip,x+12,420);
-    });
-    // 하단 카피
-    ctx.font='400 14px Pretendard,-apple-system,sans-serif';
-    ctx.fillStyle=t3;
-    ctx.fillText('✦ 별숨이 전하는 오늘의 이야기',48,480);
-    // 다운로드
+    
+    ctx.fillStyle=bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle=gold; ctx.fillRect(0,0,canvas.width,4);
+    
+    ctx.font='600 24px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=gold; ctx.letterSpacing='0.2em';
+    ctx.fillText('byeolsoom  ✦',48,60);
+    ctx.font='400 16px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=t3;
+    ctx.fillText(`${today.month}월 ${today.day}일의 이야기`,48,94);
+    ctx.font='700 22px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=t1;
+    ctx.fillText(q,48,160);
+    
+    ctx.font='300 18px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=t3;
+    let y = 220;
+    lines.forEach(line => { ctx.fillText(line, 48, y); y += lineHeight; });
+    
+    ctx.font='400 14px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=t3;
+    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', 48, canvas.height - 40);
+    
     const a=document.createElement('a');
-    a.download=`byeolsoom_${today.month}${today.day}.png`;
-    a.href=canvas.toDataURL('image/png');
-    a.click();
-  },[selQs,answers,isDark,today,sun,saju]);
+    a.download=`byeolsoom_Q${idx+1}.png`; a.href=canvas.toDataURL('image/png'); a.click();
+  },[selQs, answers, isDark, today]);
 
 
   // ── 카카오 로그인 ──
@@ -2737,17 +2732,27 @@ export default function App(){
 
                 {/* 액션 */}
                 <div className="res-actions">
-                  {/* 액션 그리드 — 궁합 · 편지 */}
+               {/* 액션 그리드 — 카테고리별 스마트 버튼 */}
                   <div className="action-grid" style={{marginBottom:'var(--sp2)'}}>
-                    <div className="action-card compat" onClick={()=>setStep(7)}>
-                      <div className="action-card-icon">💞</div>
-                      <div className="action-card-title">우리가 만나면</div>
-                      <div className="action-card-sub">두 사람의 별이 만나는 시나리오</div>
-                    </div>
+                    {/* 연애, 가족, 인간관계일 때만 '우리가 만나면' 표시 */}
+                    {['love', 'family', 'relation'].includes(CATS[cat].id) ? (
+                      <div className="action-card compat" onClick={()=>setStep(7)}>
+                        <div className="action-card-icon">💞</div>
+                        <div className="action-card-title">우리가 만나면</div>
+                        <div className="action-card-sub">두 사람의 별이 만나는 시나리오</div>
+                      </div>
+                    ) : (
+                      <div className="action-card" style={{borderColor:'var(--tealacc)'}} onClick={genReport}>
+                        <div className="action-card-icon">📜</div>
+                        <div className="action-card-title">{CATS[cat].label} 심층 분석</div>
+                        <div className="action-card-sub">이 분야만 깊게 파고들기</div>
+                      </div>
+                    )}
+                    
                     <div className="action-card letter" onClick={()=>setStep(8)}>
-                      <div className="action-card-icon">💌</div>
-                      <div className="action-card-title">별의 편지</div>
-                      <div className="action-card-sub">3개월 후 나에게 전하는 이야기</div>
+                      <div className="action-card-icon">🔮</div>
+                      <div className="action-card-title">미래의 별숨</div>
+                      <div className="action-card-sub">시간이 흐른 뒤의 나의 예언</div>
                     </div>
                   </div>
 
@@ -2894,19 +2899,23 @@ export default function App(){
           </div>
         )}
 
-        {/* ══ 6 월간 리포트 (전체화면) ══ */}
+   {/* ══ 6 월간 리포트 (전체화면) ══ */}
         {step===6&&(
           <div className="page-top">
             <div className="inner report-page">
               <div className="report-header">
                 <div className="report-date">{today.year}년 {today.month}월 · {today.lunar}</div>
-                <div className="report-title">{form.name||'당신'}님의<br/>이달의 이야기</div>
+                <div className="report-title">{form.name||'당신'}님의<br/>심층 리포트</div>
                 <div className="report-name">사주 × 별자리 통합 운세</div>
               </div>
               {reportLoading?(
                 <div style={{textAlign:'center',padding:'var(--sp5)',color:'var(--t3)',fontSize:'var(--sm)'}}>
-                  <div style={{fontSize:'2rem',marginBottom:'var(--sp2)'}}>✦</div>
-                  두 별이 이달의 이야기를 쓰고 있어요 🌙
+                  <div className="load-orb-wrap">
+                    <div className="load-orb">
+                      <div className="load-orb-core"/><div className="load-orb-ring"/><div className="load-orb-ring2"/>
+                    </div>
+                  </div>
+                  별의 움직임을 분석하여<br/>심층 리포트를 작성하고 있습니다...
                 </div>
               ):(
                 <ReportBody text={reportText}/>
@@ -2952,6 +2961,12 @@ export default function App(){
 
 
       </div>
+      {/* 하단 면책 조항 */}
+        <div style={{fontSize:'10px', color:'var(--t4)', textAlign:'center', padding:'20px 20px 40px', letterSpacing:'0.02em'}}>
+          ✦ 별숨은 점술 및 오락 목적의 서비스이며, 결과에 대해서는 법적 책임이나 효력을 지지 않습니다.
+        </div>
+      </div> {/* <-- app의 닫는 태그 */}
+
       {/* ══ 프로필 모달 ══ */}
       {showProfileModal&&(
         <ProfileModal
