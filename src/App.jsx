@@ -602,7 +602,7 @@ select.inp option{background:var(--bg2)}
 .mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
 .mood-word{font-size:var(--sm);font-weight:600}
 
-.star-summary{padding:20px 24px;background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin-bottom:var(--sp3);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
+.star-summary{padding:20px 24px;background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin-bottom:var(--sp4);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
 .star-summary-icon{color:var(--gold);font-size:1.3rem;line-height:1;flex-shrink:0;margin-top:2px}
 .star-summary-text{font-size:1.05rem;color:var(--gold);font-weight:600;line-height:1.6;letter-spacing:-0.01em}
 
@@ -621,7 +621,7 @@ select.inp option{background:var(--bg2)}
 .acc-body{overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
 .acc-body.closed{max-height:0!important;opacity:0!important;overflow:hidden!important}
 .acc-body.open{max-height:3000px;opacity:1}
-.acc-content{padding:0 var(--sp3) var(--sp4);font-size:var(--sm);color:var(--t2);line-height:2.2;letter-spacing:-.005em;white-space:pre-wrap}
+.acc-content{padding:var(--sp2) var(--sp3) var(--sp4);font-size:var(--sm);color:var(--t2);line-height:2.4;letter-spacing:-.005em;white-space:pre-wrap}
 .acc-content p:first-child::first-letter{font-size:2.4em;font-weight:700;color:var(--gold);float:left;line-height:.82;margin:.06em .1em 0 0}
 .typing-cursor{display:inline-block;width:2px;height:.9em;background:var(--gold);margin-left:2px;vertical-align:text-bottom;animation:blink .7s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
@@ -1831,56 +1831,115 @@ export default function App(){
     return stripMarkdown(data.text||'');
   },[buildCtx]);
 
-  const shareCard=useCallback((idx)=>{
-    const q=selQs[idx]||'';
-    const parsedText=parseAccSummary(answers[idx]||'').text;
-    
-    const canvas=document.createElement('canvas');
-    const ctx=canvas.getContext('2d');
-    canvas.width = 900;
-    
-    ctx.font='300 18px Pretendard,-apple-system,sans-serif';
-    const words = parsedText.split('');
-    const lines = [];
-    let currentLine = '';
-    for (let char of words) {
-      if (char === '\n') { lines.push(currentLine); currentLine = ''; continue; }
-      const test = currentLine + char;
-      if (ctx.measureText(test).width > 800) {
-        lines.push(currentLine); currentLine = char;
-      } else { currentLine = test; }
-    }
-    if (currentLine) lines.push(currentLine);
-    
-    const lineHeight = 34;
-    const textHeight = lines.length * lineHeight;
-    canvas.height = 280 + textHeight + 100;
+const shareCard = useCallback((idx) => {
+  const q = selQs[idx] || '';
+  const parsedText = parseAccSummary(answers[idx] || '').text;
 
-    const bg=isDark?'#0D0B14':'#F7F4EF';
-    const t1=isDark?'#F0EBF8':'#1A1420';
-    const t3=isDark?'#8A7FA0':'#8A7FA0';
-    const gold='#E8B048';
-    
-    ctx.fillStyle=bg; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle=gold; ctx.fillRect(0,0,canvas.width,4);
-    
-    ctx.font='600 24px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=gold; ctx.letterSpacing='0.2em';
-    ctx.fillText('byeolsoom  ✦',48,60);
-    ctx.font='400 16px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=t3;
-    ctx.fillText(`${today.month}월 ${today.day}일의 이야기`,48,94);
-    ctx.font='700 22px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=t1;
-    ctx.fillText(q,48,160);
-    
-    ctx.font='300 18px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=t3;
-    let y = 220;
-    lines.forEach(line => { ctx.fillText(line, 48, y); y += lineHeight; });
-    
-    ctx.font='400 14px Pretendard,-apple-system,sans-serif'; ctx.fillStyle=t3;
-    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', 48, canvas.height - 40);
-    
-    const a=document.createElement('a');
-    a.download=`byeolsoom_Q${idx+1}.png`; a.href=canvas.toDataURL('image/png'); a.click();
-  },[selQs, answers, isDark, today]);
+  const SCALE = 2;
+  const W = 900;
+  const PADDING = 56;
+  const FONT = 'Pretendard,-apple-system,sans-serif';
+  const gold = '#C89030';
+  const bg = isDark ? '#0D0B14' : '#F7F4EF';
+  const t1 = isDark ? '#F0EBF8' : '#1A1420';
+  const t3 = isDark ? '#8A7FA0' : '#8A7FA0';
+
+  // 1. 텍스트 줄 계산 (실제 렌더 전에 측정)
+  const measure = document.createElement('canvas');
+  const mctx = measure.getContext('2d');
+  const MAX_W = W - PADDING * 2;
+
+  const wrapText = (ctx, text, maxW, fontSize, weight = '400') => {
+    ctx.font = `${weight} ${fontSize}px ${FONT}`;
+    const paras = text.split('\n');
+    const lines = [];
+    for (const para of paras) {
+      if (!para.trim()) { lines.push(''); continue; }
+      const words = para.split('');
+      let line = '';
+      for (const ch of words) {
+        const test = line + ch;
+        if (ctx.measureText(test).width > maxW && line) {
+          lines.push(line); line = ch;
+        } else { line = test; }
+      }
+      if (line) lines.push(line);
+    }
+    return lines;
+  };
+
+  const qLines = wrapText(mctx, q, MAX_W, 22, '700');
+  const bodyLines = wrapText(mctx, parsedText, MAX_W, 17);
+
+  const LINE_H_Q = 36;
+  const LINE_H_BODY = 30;
+  const GAP_SECTION = 32;
+
+  const totalH =
+    80 +               // 상단바 + 로고 영역
+    GAP_SECTION +
+    qLines.length * LINE_H_Q +
+    GAP_SECTION +
+    bodyLines.length * LINE_H_BODY +
+    GAP_SECTION * 2 +  // 하단 여백
+    48;                // 푸터
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * SCALE;
+  canvas.height = totalH * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  // 배경
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, totalH);
+
+  // 상단 금색 바
+  ctx.fillStyle = gold;
+  ctx.fillRect(0, 0, W, 4);
+
+  // 로고
+  ctx.font = `600 20px ${FONT}`;
+  ctx.fillStyle = gold;
+  ctx.fillText('byeolsoom  ✦', PADDING, 48);
+
+  // 날짜
+  ctx.font = `400 14px ${FONT}`;
+  ctx.fillStyle = t3;
+  ctx.fillText(`${today.month}월 ${today.day}일의 이야기`, PADDING, 70);
+
+  // 질문
+  let y = 70 + GAP_SECTION;
+  ctx.font = `700 22px ${FONT}`;
+  ctx.fillStyle = t1;
+  qLines.forEach(line => { ctx.fillText(line, PADDING, y); y += LINE_H_Q; });
+
+  // 구분선
+  y += 12;
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(W - PADDING, y); ctx.stroke();
+  y += GAP_SECTION;
+
+  // 본문
+  ctx.font = `400 17px ${FONT}`;
+  ctx.fillStyle = t3;
+  bodyLines.forEach(line => {
+    ctx.fillText(line, PADDING, y);
+    y += line === '' ? LINE_H_BODY * 0.6 : LINE_H_BODY;
+  });
+
+  // 푸터
+  y += GAP_SECTION;
+  ctx.font = `400 13px ${FONT}`;
+  ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+  ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, y);
+
+  const a = document.createElement('a');
+  a.download = `byeolsoom_Q${idx + 1}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}, [selQs, answers, isDark, today]);
 
   const kakaoLogin=useCallback(()=>{
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
