@@ -169,7 +169,7 @@ const DAILY_WORDS = [
 ];
 function getDailyWord(d){ return DAILY_WORDS[(d-1)%DAILY_WORDS.length]; }
 // ═══════════════════════════════════════════════════════════
-//  🧹 마크다운 전처리기
+//  🧹 마크다운 전처리기 및 요약 파서
 // ═══════════════════════════════════════════════════════════
 function stripMarkdown(text){
   return text
@@ -181,6 +181,17 @@ function stripMarkdown(text){
     .replace(/^\d+\.\s+/gm,'')
     .replace(/\n{3,}/g,'\n\n')
     .trim();
+}
+
+function parseAccSummary(text) {
+  if (!text) return { summary: '', text: '' };
+  const match = text.match(/\[요약\](.*?)(?:\n|$)/);
+  if (match) {
+    const summary = match[1].trim();
+    const restText = text.replace(/\[요약\].*?(?:\n|$)/, '').trim();
+    return { summary, text: restText };
+  }
+  return { summary: '', text };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -855,7 +866,7 @@ select.inp option{background:var(--bg2)}
 .hist-empty{padding:var(--sp5) var(--sp3);text-align:center;color:var(--t4);font-size:var(--sm);line-height:2.2}
 
 /* ═══════════════════════════════════════════════
-   PATCH: 44 missing classes (2026-03-11)
+  PATCH: 44 missing classes (2026-03-11)
 ═══════════════════════════════════════════════ */
 
 /* ── 랜딩 히어로존 ── */
@@ -1596,22 +1607,14 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
   },[mySaju,partnerSaju]);
 
   const buildPartnerCtx=()=>{
-    let c=`[나 — ${myForm.name||'A'}]
-`;
-    c+=`${buildCtx()}
-`;
-    c+=`[상대방 — ${partner.name||'B'} · ${+new Date().getFullYear()-+partner.by}세 · ${partner.gender}]
-`;
+    let c=`[나 — ${myForm.name||'A'}]\n`;
+    c+=`${buildCtx()}\n`;
+    c+=`[상대방 — ${partner.name||'B'} · ${+new Date().getFullYear()-+partner.by}세 · ${partner.gender}]\n`;
     if(partnerSaju){
-      c+=`연주: ${partnerSaju.yeon.g}${partnerSaju.yeon.j} / 월주: ${partnerSaju.wol.g}${partnerSaju.wol.j} / 일주: ${partnerSaju.il.g}${partnerSaju.il.j}
-`;
-      c+=`기질: ${partnerSaju.ilganDesc}
-강한 기운: ${ON[partnerSaju.dom]}
-
-`;
+      c+=`연주: ${partnerSaju.yeon.g}${partnerSaju.yeon.j} / 월주: ${partnerSaju.wol.g}${partnerSaju.wol.j} / 일주: ${partnerSaju.il.g}${partnerSaju.il.j}\n`;
+      c+=`기질: ${partnerSaju.ilganDesc}\n강한 기운: ${ON[partnerSaju.dom]}\n\n`;
     }
-    if(partnerSun)c+=`별자리: ${partnerSun.n}(${partnerSun.s}) — ${partnerSun.desc}
-`;
+    if(partnerSun)c+=`별자리: ${partnerSun.n}(${partnerSun.s}) — ${partnerSun.desc}\n`;
     return c;
   };
 
@@ -2769,7 +2772,7 @@ export default function App(){
                 {selQs.map((q,i)=>(
                   <div key={i}>
                     <AccItem
-                      q={q} text={answers[i]||''} idx={i}
+                      q={q} text={parseAccSummary(answers[i] || '').text} idx={i}
                       isOpen={openAcc===i}
                       onToggle={()=>handleAccToggle(i)}
                       shouldType={!typedSet.has(i)}
