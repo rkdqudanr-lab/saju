@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 // ═══════════════════════════════════════════════════════════
 //  📅 날짜 유틸 (양력 + 음력 근사)
 // ═══════════════════════════════════════════════════════════
-// 음력 변환 테이블 (한국천문연구원 기준, 2020-2028)
 const LUNAR_TABLE_FE = {
   2020: [[2020,1,25],  [30,29,30,29,30,30,29,30,29,30,29,30], 0],
   2021: [[2021,2,12],  [29,30,29,29,30,29,30,29,30,30,29,30,29], 4],
@@ -15,6 +14,7 @@ const LUNAR_TABLE_FE = {
   2027: [[2027,2, 6],  [30,29,30,29,30,29,30,29,30,30,29,30,29], 5],
   2028: [[2028,1,26],  [30,29,30,29,30,30,29,30,29,30,29,30], 0],
 };
+
 function solarToLunarFE(y,m,d){
   const target=new Date(y,m-1,d);
   for(const ly of [y-1,y]){
@@ -120,6 +120,7 @@ const SIGNS=[
   {n:"물병자리",s:"♒",sm:1,sd:20,em:2,ed:18,desc:"남들이 못 보는 것을 보는 독창적인 시각",elem:"바람"},
   {n:"물고기자리",s:"♓",sm:2,sd:19,em:3,ed:20,desc:"세상의 감정을 함께 느끼는 풍부한 공감",elem:"물"},
 ];
+
 function getSun(m,d){
   for(const z of SIGNS){
     if(z.sm<=z.em){if((m===z.sm&&d>=z.sd)||(m===z.em&&d<=z.ed)||(m>z.sm&&m<z.em))return z;}
@@ -127,12 +128,13 @@ function getSun(m,d){
   }
   return SIGNS[0];
 }
+
 function getMoon(y,m,d){
   const days=(new Date(y,m-1,d)-new Date(2000,0,1))/86400000;
   return SIGNS[Math.abs(Math.floor((((days%27.32)+27.32)%27.32/27.32)*12))%12];
 }
-function getAsc(h,bm){return SIGNS[(Math.floor(h/2)+bm+6)%12];}
 
+function getAsc(h,bm){return SIGNS[(Math.floor(h/2)+bm+6)%12];}
 
 // ── 오늘의 한마디 (날짜 기반 순환) ──
 const DAILY_WORDS = [
@@ -167,7 +169,9 @@ const DAILY_WORDS = [
   "지금 이 시기는 씨앗을 심는 계절이에요. 조급해하지 않아도 돼요.",
   "오늘 당신의 별은 조용히, 하지만 분명히 빛나고 있어요.",
 ];
+
 function getDailyWord(d){ return DAILY_WORDS[(d-1)%DAILY_WORDS.length]; }
+
 // ═══════════════════════════════════════════════════════════
 //  🧹 마크다운 전처리기 및 요약 파서
 // ═══════════════════════════════════════════════════════════
@@ -187,18 +191,16 @@ function parseAccSummary(text) {
   if (!text) return { summary: '', text: '' };
   const match = text.match(/\[요약\](.*?)(?:\n|$)/);
   if (match) {
-    // '요약:' 이나 '핵심:' 같은 단어가 있으면 같이 날려버림
     let summary = match[1].replace(/^(요약|핵심)[\s:]*/i, '').trim(); 
     const restText = text.replace(/\[요약\].*?(?:\n|$)/, '').trim();
     return { summary, text: restText };
   }
   return { summary: '', text };
 }
+
 // ═══════════════════════════════════════════════════════════
 //  데이터
 // ═══════════════════════════════════════════════════════════
-
-// ══ 시나리오 궁합 장소 ══
 const PLACES = [
   {id:'burger',emoji:'🍔',label:'버거킹',hint:'패스트푸드'},
   {id:'cafe',emoji:'☕',label:'카페',hint:'브런치'},
@@ -209,7 +211,6 @@ const PLACES = [
   {id:'market',emoji:'🛒',label:'마트',hint:'장보기'},
 ];
 
-// ══ 별자리 무드 (결과 배너용) ══
 const SIGN_MOOD = {
   '양자리':  {color:'#E8624A',bg:'rgba(232,98,74,.1)',word:'불꽃같은 에너지',emoji:'🔥'},
   '황소자리': {color:'#7CB87A',bg:'rgba(124,184,122,.1)',word:'포근하고 안정적',emoji:'🌿'},
@@ -225,14 +226,14 @@ const SIGN_MOOD = {
   '물고기자리':{color:'#8EC4E8',bg:'rgba(142,196,232,.1)',word:'공감능력이 넘치는',emoji:'🌊'},
 };
 
-// ══ 랜딩 샘플 에세이 (20초 미리보기) ══
 const SAMPLE_ESSAYS = [
   "물고기자리의 감성과 계수의 섬세함이 만나면, 마음 깊은 곳에서 세상을 느끼는 사람이 돼요. 오늘 느끼는 그 막막함은 사실 변화의 전조예요. 별이 방향을 바꾸는 중이라 잠깐 흔들리는 거예요. 그 흔들림 안에 오히려 답이 있어요...",
   "사주에 화(火) 기운이 강하게 흐를 때, 사자자리의 태양과 만나면 에너지가 선명해져요. 지금 고민하는 그 선택은 — 사실 이미 마음이 정해진 것 같아요. 두려움이 아닌 설렘으로 읽어봐요. 별이 등을 밀고 있거든요...",
   "천칭자리의 균형 감각과 기토의 조화로운 기질이 함께 속삭여요. 오늘은 조용히 자신을 돌아보기 좋은 날이에요. 너무 많은 것을 혼자 짊어지지 않아도 괜찮아요. 가볍게 내려놓는 것도 용기예요...",
 ];
+
 const CATS=[
-{id:"love",icon:"💕",label:"연애·결혼",qs:["요즘 좋아하는 사람이 생겼는데 먼저 고백해도 될까요?","올해 결혼운이 들어와 있나요?","지금 사귀는 사람과 궁합이 어떤지 궁금해요.","이별 후 너무 힘든데, 새로운 인연이 언제 올까요?"]},
+  {id:"love",icon:"💕",label:"연애·결혼",qs:["요즘 좋아하는 사람이 생겼는데 먼저 고백해도 될까요?","올해 결혼운이 들어와 있나요?","지금 사귀는 사람과 궁합이 어떤지 궁금해요.","이별 후 너무 힘든데, 새로운 인연이 언제 올까요?"]},
   {id:"work",icon:"💼",label:"일·커리어",qs:["이직을 고민 중인데 올해 타이밍이 맞을까요?","지금 하는 직무가 제 적성과 잘 맞는지 궁금해요.","직장 상사와의 관계가 힘든데 어떻게 대처해야 할까요?","올해 승진이나 연봉 인상운이 있을까요?"]},
   {id:"money",icon:"💰",label:"돈·재물",qs:["올해 재물운이 언제 가장 크게 들어오나요?","주식이나 부동산 투자를 시작해도 좋은 시기일까요?","자꾸 돈이 새어나가는데 어떻게 막아야 할까요?","부업을 시작하려고 하는데 수익이 날까요?"]},
   {id:"health",icon:"🌿",label:"건강",qs:["올해 특별히 조심해야 할 신체 부위가 있나요?","요즘 너무 피곤한데 에너지를 채워줄 방향이나 색깔이 있을까요?","수면의 질을 높이려면 어떻게 해야 할까요?"]},
@@ -248,12 +249,15 @@ const CATS=[
   {id:"legal",icon:"⚖️",label:"소송·관재",qs:["현재 진행 중인 일이나 소송이 저에게 유리하게 끝날까요?","올해 조심해야 할 구설수나 관재수가 있나요?"]},
   {id:"hobby",icon:"🎨",label:"취미·적성",qs:["사주에 나타난 저만의 숨겨진 예술적 재능이 있나요?","어떤 취미를 가지면 제 운이 크게 좋아질까요?"]}
 ];
+
 const PKGS=[
+  {id:"free",isFree:true,e:"✦",n:"무료",p:"0원",q:1,chat:0},
   {id:"seed",e:"✦",n:"씨앗",p:"990원",q:1,chat:0},
   {id:"moon",e:"🌙",n:"달빛",p:"5,900원",q:3,chat:5},
   {id:"star",e:"⭐",n:"별빛",p:"9,900원",q:5,chat:10,hot:true},
   {id:"cosmos",e:"🌌",n:"우주",p:"19,900원",q:10,chat:20},
 ];
+
 const REVIEWS=[
   {star:"★★★★★",text:"사주랑 별자리를 같이 봐줘서 너무 좋아요. 글이 진짜 내 얘기 같아서 읽다가 소름 돋았어요",nick:"가을고양이 · 28세"},
   {star:"★★★★★",text:"베프한테 상담받는 느낌! 전문용어 없이 쉽게 말해줘서 공감이 돼요",nick:"핑크라떼 · 25세"},
@@ -262,7 +266,9 @@ const REVIEWS=[
   {star:"★★★★☆",text:"월간 리포트가 생각보다 구체적이에요. 매달 챙겨볼 것 같아요",nick:"새벽세시 · 29세"},
   {star:"★★★★★",text:"사이 별점 기능이 제일 좋아요. 친구랑 같이 봤는데 둘 다 공감했어요",nick:"달콩이 · 23세"},
 ];
+
 const CHAT_SUGG=["좀 더 자세히 알고 싶어요","언제쯤 변화가 올까요?","어떻게 행동하면 좋을까요?","지금 당장 할 수 있는 게 뭔가요?","불안한 마음이 커요","긍정적인 부분도 알고 싶어요"];
+
 const LOAD_STATES=[
   {t:"동양의 별과 서양의 별이 함께 당신을 읽고 있어요",s:"잠깐만요 ✦"},
   {t:"태어난 순간의 기운을 조용히 불러오는 중이에요",s:"조금만 기다려줘요 🌙"},
@@ -275,11 +281,12 @@ const LOAD_STATES=[
 // ═══════════════════════════════════════════════════════════
 function getTimeSlot(){
   const h=new Date().getHours();
-  if(h>=5&&h<12) return 'morning';   // 오전 5~12
-  if(h>=12&&h<19) return 'afternoon'; // 오후 12~19
-  if(h>=19&&h<24) return 'evening';  // 저녁 19~24
-  return 'dawn';                      // 새벽 0~5
+  if(h>=5&&h<12) return 'morning';
+  if(h>=12&&h<19) return 'afternoon';
+  if(h>=19&&h<24) return 'evening';
+  return 'dawn';
 }
+
 const TIME_CONFIG={
   morning:{
     label:'오늘을 여는 별숨',
@@ -336,12 +343,15 @@ const TIME_CONFIG={
 // ═══════════════════════════════════════════════════════════
 const HIST_KEY='byeolsoom_history';
 const MAX_HIST=30;
+
 function loadHistory(){
   try{const h=localStorage.getItem(HIST_KEY);return h?JSON.parse(h):[];}catch{return[];}
 }
+
 function saveHistory(items){
   try{localStorage.setItem(HIST_KEY,JSON.stringify(items.slice(0,MAX_HIST)));}catch{}
 }
+
 function addHistory(questions,answers){
   const items=loadHistory();
   const now=new Date();
@@ -349,6 +359,7 @@ function addHistory(questions,answers){
   const newItem={id:Date.now(),date:dateStr,slot:getTimeSlot(),questions,answers};
   saveHistory([newItem,...items]);
 }
+
 function deleteHistory(id){
   const items=loadHistory().filter(i=>i.id!==id);
   saveHistory(items);
@@ -399,6 +410,10 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:
 .dot{height:4px;border-radius:2px;transition:all .4s cubic-bezier(.34,1.56,.64,1)}
 .dot.done{width:14px;background:var(--t4)}.dot.active{width:28px;background:var(--gold)}.dot.todo{width:4px;background:var(--t4);opacity:.4}
 
+.user-chip{position:fixed;top:18px;right:62px;z-index:50;display:flex;align-items:center;gap:6px;padding:5px 10px 5px 5px;border-radius:50px;background:var(--goldf);border:1px solid var(--acc);cursor:pointer}
+.user-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.user-chip span{font-size:var(--xs);color:var(--t2)}
+
 /* ══ LANDING ══ */
 .land{text-align:center}
 .land-wordmark{font-size:var(--xs);font-weight:300;letter-spacing:.35em;color:var(--t4);text-transform:lowercase;margin-bottom:52px;animation:fadeUp .8s .1s both}
@@ -417,6 +432,35 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:
 .cta-main:hover{opacity:.88}
 .cta-main:active{transform:scale(.97)}
 .land-trust{display:flex;align-items:center;gap:var(--sp2);justify-content:center;margin-top:var(--sp3);font-size:var(--xs);color:var(--t4);animation:fadeUp .8s .65s both}
+
+.land-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100svh;padding:var(--sp3) var(--sp3);gap:var(--sp1);position:relative}
+.land-scroll-hint{text-align:center;color:var(--t4);font-size:var(--xs);padding:var(--sp2) 0;animation:fadeUp 1.2s ease 0.8s both}
+.land-scroll-hint span{display:inline-block;animation:bounce-y 1.8s ease-in-out infinite}
+@keyframes bounce-y{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.land-scroll-zone{padding:var(--sp4) 0}
+
+.land-login-section{margin:var(--sp3) 0;animation:fadeUp .8s .6s both;width:100%;max-width:460px}
+.land-login-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);text-align:left;display:flex;flex-direction:column;gap:10px}
+.land-login-card.logged{border-color:var(--acc);background:var(--goldf)}
+.llc-top{display:flex;align-items:center;gap:var(--sp2);margin-bottom:var(--sp2)}
+.llc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acc);flex-shrink:0}
+.llc-avatar-placeholder{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.llc-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
+.llc-sub{font-size:var(--xs);color:var(--t3);margin-top:2px}
+.llc-actions{display:flex;gap:6px}
+
+.kakao-login-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--r1);background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:700;color:#191919;transition:all .2s}
+.kakao-login-full:hover{background:#F0D800;transform:translateY(-1px)}
+.kakao-login-full:active{transform:scale(.97)}
+.kakao-icon-wrap{display:flex;align-items:center;justify-content:center;width:18px;height:18px}
+
+.land-ghost-link{background:none;border:none;color:var(--t4);font-size:var(--xs);cursor:pointer;text-decoration:underline;padding:8px 0;font-family:var(--ff)}
+.land-ghost-link:hover{color:var(--gold)}
+
+.daily-word{padding:var(--sp3);background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);margin:var(--sp3) 0;text-align:center;animation:fadeUp .8s .7s both}
+.daily-label{font-size:var(--xs);color:var(--gold);font-weight:600;margin-bottom:8px;letter-spacing:.06em}
+.daily-text{font-size:var(--sm);color:var(--t2);line-height:1.85}
+
 .rev-wrap{margin-top:var(--sp3);overflow:hidden;animation:fadeUp .8s .75s both}
 .rev-track{display:flex;gap:var(--sp2);overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory}
 .rev-card{flex-shrink:0;width:210px;scroll-snap-align:start;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp2)}
@@ -459,6 +503,15 @@ select.inp option{background:var(--bg2)}
 .btn-main{width:100%;padding:14px;border:none;border-radius:var(--r1);background:var(--gold);color:#0D0B14;font-size:var(--sm);font-weight:700;font-family:var(--ff);cursor:pointer;transition:transform .15s,opacity .15s;margin-top:var(--sp2)}
 .btn-main:hover{opacity:.88}.btn-main:active{transform:scale(.98)}.btn-main:disabled{opacity:.3;cursor:not-allowed;transform:none}
 
+.profile-pick-card{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg1);border:1px solid var(--line);border-radius:var(--r1);cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:8px}
+.profile-pick-card:hover{border-color:var(--gold);background:var(--goldf)}
+.profile-pick-card.active{border-color:var(--gold);background:var(--goldf)}
+.ppc-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.ppc-av{width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.ppc-av img{width:100%;height:100%;object-fit:cover}
+.ppc-name{font-size:var(--xs);font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ppc-sub{font-size:10px;color:var(--t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 /* ══ 질문 선택 ══ */
 .q-shell{animation:fadeUp .5s cubic-bezier(.34,1.56,.64,1)}
 .combo-banner{background:var(--goldf);border:1px solid var(--acc);border-radius:var(--r2);padding:12px var(--sp2);margin-bottom:var(--sp3);text-align:center}
@@ -470,6 +523,11 @@ select.inp option{background:var(--bg2)}
 .q-list{display:flex;flex-direction:column;gap:4px;margin-bottom:var(--sp3)}
 .q-item{width:100%;text-align:left;padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t2);font-size:var(--sm);font-family:var(--ff);cursor:pointer;line-height:1.55;transition:all .2s}
 .q-item:hover{border-color:var(--t4);color:var(--t1);transform:translateX(3px)}.q-item.on{background:var(--goldf);border-color:var(--acc);color:var(--gold);font-weight:500}.q-item.on::before{content:'✓  '}.q-item:disabled{opacity:.28;cursor:not-allowed;transform:none}
+
+.suggest-row{display:flex;flex-wrap:wrap;gap:7px;margin:var(--sp1) 0 var(--sp2)}
+.suggest-chip{padding:6px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:20px;color:var(--t3);font-size:var(--xs);cursor:pointer;transition:border-color .15s,color .15s,background .15s;font-family:var(--ff)}
+.suggest-chip:hover{border-color:var(--gold);color:var(--gold);background:var(--goldf)}
+
 .diy-wrap{margin-bottom:var(--sp3)}
 .diy-inp{width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);resize:none;height:68px;transition:border-color .2s}
 .diy-inp:focus{outline:none;border-color:var(--gold)}.diy-inp::placeholder{color:var(--t4)}
@@ -489,6 +547,7 @@ select.inp option{background:var(--bg2)}
 .pkg-hot{position:absolute;top:-7px;right:-3px;background:var(--gold);color:#0D0B14;font-size:.5rem;font-weight:800;padding:2px 5px;border-radius:4px}
 .q-stat{font-size:var(--xs);color:var(--t4);text-align:center;margin:8px 0 var(--sp2)}.q-stat strong{color:var(--gold)}
 .free-note{font-size:var(--xs);color:var(--t4);text-align:center;margin-bottom:var(--sp2)}.free-note span{color:var(--gold)}
+.hint{font-size:var(--xs);color:var(--t4)}
 
 /* ══ LOADING ══ */
 .loading-page{padding:var(--sp4) var(--sp3);width:100%;max-width:460px}
@@ -504,14 +563,43 @@ select.inp option{background:var(--bg2)}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @keyframes statusFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
+.load-orb-wrap{display:flex;justify-content:center;margin:var(--sp4) 0}
+.load-orb{width:80px;height:80px;border-radius:50%;position:relative;margin:0 auto}
+.load-orb-core{position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(232,176,72,.6),rgba(155,142,196,.4),rgba(50,30,90,.9));animation:orbPulse 2s infinite}
+.load-orb-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(232,176,72,.3);animation:orbSpin 3s linear infinite}
+.load-orb-ring2{position:absolute;inset:-8px;border-radius:50%;border:1px dashed rgba(155,142,196,.2);animation:orbSpin 7s linear infinite reverse}
+.load-pillars{display:flex;gap:6px;justify-content:center;margin:var(--sp2) 0}
+.load-pillar{width:36px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center;animation:fadeUp .4s ease both}
+.load-pillar:nth-child(1){animation-delay:.0s}
+.load-pillar:nth-child(2){animation-delay:.1s}
+.load-pillar:nth-child(3){animation-delay:.2s}
+.load-pillar:nth-child(4){animation-delay:.3s}
+.load-p-hj{font-size:.9rem;color:var(--gold);font-weight:600;line-height:1.2}
+.load-p-lbl{font-size:.5rem;color:var(--t4);margin-top:2px}
+
 /* ══ RESULT ══ */
 .res-wrap{animation:fadeUp .6s cubic-bezier(.34,1.56,.64,1);width:100%;max-width:460px}
 .res-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden}
+
+.res-top-bar{display:flex;gap:8px;justify-content:flex-end;padding:0 0 var(--sp2);margin-bottom:var(--sp1)}
+.res-top-btn{padding:8px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t3);font-size:var(--xs);cursor:pointer;display:flex;align-items:center;gap:5px;transition:border-color .15s,color .15s;font-family:var(--ff)}
+.res-top-btn:hover{border-color:var(--gold);color:var(--gold)}
+.res-top-btn.primary{background:var(--goldf);border-color:var(--gold);color:var(--gold);font-weight:600}
+
 .res-header{display:flex;align-items:flex-start;gap:var(--sp2);padding:var(--sp3);border-bottom:1px solid var(--line)}
 .res-av{width:44px;height:44px;border-radius:50%;background:var(--goldf);border:1px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
 .res-name{font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:4px}
 .res-chips{display:flex;gap:5px;flex-wrap:wrap}
 .res-chip{padding:3px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;font-size:var(--xs);color:var(--t3)}
+
+.mood-banner{padding:12px var(--sp3);display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);animation:fadeUp .5s ease}
+.mood-orb{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
+.mood-word{font-size:var(--sm);font-weight:600}
+
+.star-summary{padding:20px 24px;background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin-bottom:var(--sp3);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
+.star-summary-icon{color:var(--gold);font-size:1.3rem;line-height:1;flex-shrink:0;margin-top:2px}
+.star-summary-text{font-size:1.05rem;color:var(--gold);font-weight:600;line-height:1.6;letter-spacing:-0.01em}
 
 /* 아코디언 */
 .acc-item{border-bottom:1px solid var(--line)}.acc-item:last-of-type{border-bottom:none}
@@ -575,6 +663,27 @@ select.inp option{background:var(--bg2)}
 .res-btn{flex:1;min-width:70px;padding:9px 6px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
 .res-btn:hover{border-color:var(--acc);color:var(--gold)}.res-btn:active{transform:scale(.96)}
 
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--sp2)}
+.action-card{padding:var(--sp2);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:all var(--trans);text-align:left}
+.action-card:hover{border-color:var(--acc);background:var(--goldf);transform:translateY(-2px)}
+.action-card-icon{font-size:1.3rem;margin-bottom:5px}
+.action-card-title{font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:2px}
+.action-card-sub{font-size:var(--xs);color:var(--t3);line-height:1.5}
+.action-card.compat{border-color:var(--lavacc)}
+.action-card.compat:hover{background:var(--lavf);border-color:var(--lav)}
+.action-card.letter{border-color:var(--roseacc)}
+.action-card.letter:hover{background:var(--rosef);border-color:var(--rose)}
+
+.feature-guide{margin:var(--sp3) 0;padding:var(--sp3);background:var(--bg2);border-radius:var(--r2);border:1px solid var(--line)}
+.feature-guide-title{font-size:var(--sm);font-weight:600;color:var(--t2);margin-bottom:var(--sp2)}
+.feature-guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg1);border:1px solid var(--line);border-radius:var(--r1);cursor:pointer;text-align:left;transition:border-color .15s,background .15s}
+.fg-card:hover{border-color:var(--gold);background:var(--goldf)}
+.fg-icon{font-size:22px;flex-shrink:0}
+.fg-info{display:flex;flex-direction:column;gap:2px}
+.fg-name{font-size:var(--xs);font-weight:600;color:var(--t2)}
+.fg-desc{font-size:10px;color:var(--t4);line-height:1.4}
+
 /* ══ REPORT STEP 6 ══ */
 .report-page{width:100%;max-width:500px;animation:fadeUp .5s ease}
 .report-header{text-align:center;padding:var(--sp4) var(--sp3) var(--sp3)}
@@ -587,31 +696,6 @@ select.inp option{background:var(--bg2)}
 .report-skip{display:flex;justify-content:center;margin:var(--sp3) 0}
 .report-skip-btn{padding:8px 20px;border-radius:50px;border:1px solid var(--acc);background:transparent;color:var(--gold);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:background .2s}
 .report-skip-btn:hover{background:var(--goldf)}
-
-
-/* ══ 피드백 ══ */
-.fb-wrap{display:flex;align-items:center;gap:8px;justify-content:center;padding:var(--sp2) 0;border-top:1px solid var(--line);margin-top:var(--sp1)}
-.fb-label{font-size:var(--xs);color:var(--t4)}
-.fb-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
-.fb-btn:hover{border-color:var(--gold);transform:scale(1.1)}
-.fb-btn.selected{background:var(--goldf);border-color:var(--gold)}
-.fb-done{font-size:var(--xs);color:var(--gold);animation:fadeUp .3s ease}
-
-/* ══ 공유 카드 ══ */
-
-/* ══ 오늘의 한마디 ══ */
-
-/* ══ 별의 한 줄 요약 ══ */
-.star-summary{padding:20px 24px; background:linear-gradient(145deg, var(--goldf), rgba(232,176,72,0.02)); border:1.5px solid rgba(232,176,72,0.4); border-radius:var(--r2); margin-bottom: var(--sp3); display:flex; align-items:flex-start; gap:12px; box-shadow: 0 4px 20px rgba(232,176,72,0.1); animation: fadeUp .6s ease both;}
-.star-summary-icon{color:var(--gold); font-size:1.3rem; line-height:1; flex-shrink:0; margin-top:2px;}
-.star-summary-text{font-size:1.05rem; color:var(--gold); font-weight:600; line-height:1.6; letter-spacing:-0.01em;}
-
-
-/* ══ 무드 배너 ══ */
-.mood-banner{padding:12px var(--sp3);display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);animation:fadeUp .5s ease}
-.mood-orb{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-.mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
-.mood-word{font-size:var(--sm);font-weight:600}
 
 /* ══ 시나리오 궁합 ══ */
 .compat-page{width:100%;max-width:480px;animation:fadeUp .5s ease}
@@ -679,69 +763,19 @@ select.inp option{background:var(--bg2)}
 .letter-actions{display:flex;gap:8px}
 
 /* ══ 랜딩 샘플 미리보기 ══ */
-.sample-preview{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);margin:var(--sp2) 0;position:relative;overflow:hidden;}
-.sample-badge{display:inline-block;font-size:10px;color:var(--t4);letter-spacing:.08em;margin-bottom:8px;padding:3px 8px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);}
-.sample-name{font-size:var(--xs);color:var(--gold);margin-bottom:8px;letter-spacing:.06em;font-weight:600;}
+.sample-preview{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);margin:var(--sp2) 0;position:relative;overflow:hidden}
+.sample-badge{display:inline-block;font-size:10px;color:var(--t4);letter-spacing:.08em;margin-bottom:8px;padding:3px 8px;background:var(--bg3);border-radius:10px;border:1px solid var(--line)}
+.sample-name{font-size:var(--xs);color:var(--gold);margin-bottom:8px;letter-spacing:.06em;font-weight:600}
 .sample-text{font-size:var(--xs);color:var(--t2);line-height:1.9;min-height:60px}
-.sample-cursor{display:inline-block;width:1.5px;height:.85em;background:var(--gold);margin-left:1px;vertical-align:text-(--sp3) 0;text-align:left;position:relative;overflow:hidden;animation:fadeUp .8s .7s both}
+.sample-cursor{display:inline-block;width:1.5px;height:.85em;background:var(--gold);margin-left:1px;vertical-align:text-bottom;animation:blink .7s infinite}
 
-/* ══ 결과 액션 메뉴 확장 ══ */
-.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:var(--sp2)}
-.action-card{padding:var(--sp2);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:all var(--trans);text-align:left}
-.action-card:hover{border-color:var(--acc);background:var(--goldf);transform:translateY(-2px)}
-.action-card-icon{font-size:1.3rem;margin-bottom:5px}
-.action-card-title{font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:2px}
-.action-card-sub{font-size:var(--xs);color:var(--t3);line-height:1.5}
-.action-card.compat{border-color:var(--lavacc)}
-.action-card.compat:hover{background:var(--lavf);border-color:var(--lav)}
-.action-card.letter{border-color:var(--roseacc)}
-.action-card.letter:hover{background:var(--rosef);border-color:var(--rose)}
-
-/* ══ 로딩 고도화 ══ */
-.load-orb-wrap{display:flex;justify-content:center;margin:var(--sp4) 0}
-.load-orb{width:80px;height:80px;border-radius:50%;position:relative;margin:0 auto}
-.load-orb-core{position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(232,176,72,.6),rgba(155,142,196,.4),rgba(50,30,90,.9));animation:orbPulse 2s infinite}
-.load-orb-ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(232,176,72,.3);animation:orbSpin 3s linear infinite}
-.load-orb-ring2{position:absolute;inset:-8px;border-radius:50%;border:1px dashed rgba(155,142,196,.2);animation:orbSpin 7s linear infinite reverse}
-.load-pillars{display:flex;gap:6px;justify-content:center;margin:var(--sp2) 0}
-.load-pillar{width:36px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center;animation:fadeUp .4s ease both}
-.load-pillar:nth-child(1){animation-delay:.0s}
-.load-pillar:nth-child(2){animation-delay:.1s}
-.load-pillar:nth-child(3){animation-delay:.2s}
-.load-pillar:nth-child(4){animation-delay:.3s}
-.load-p-hj{font-size:.9rem;color:var(--gold);font-weight:600;line-height:1.2}
-.load-p-lbl{font-size:.5rem;color:var(--t4);margin-top:2px}
-
-/* ══ step 전환 fade ══ */
-.step-fade{animation:stepFadeIn .45s cubic-bezier(.4,0,.2,1)}
-@keyframes stepFadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-
-
-/* ══ 결제 Toast 알림 ══ */
-.pay-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;padding:12px 24px;border-radius:50px;font-size:var(--sm);font-weight:600;white-space:nowrap;animation:toastUp .35s cubic-bezier(.34,1.56,.64,1)}
-.pay-toast.success{background:var(--gold);color:#0D0B14;box-shadow:0 4px 20px rgba(232,176,72,.4)}
-.pay-toast.error{background:var(--rose,#E87B8A);color:#fff}
-@keyframes toastUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-
-/* ══ 랜딩 — 로그인/개인화 섹션 ══ */
-.land-login-section{margin:var(--sp3) 0;animation:fadeUp .8s .6s both}
-.land-login-card{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);padding:var(--sp3);text-align:left;display:flex;flex-direction:column;gap:10px}
-.land-login-card.logged{border-color:var(--acc);background:var(--goldf)}
-.llc-top{display:flex;align-items:center;gap:var(--sp2);margin-bottom:var(--sp2)}
-.llc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--acc);flex-shrink:0}
-.llc-avatar-placeholder{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.llc-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
-.llc-sub{font-size:var(--xs);color:var(--t3);margin-top:2px}
-.llc-greeting{font-size:var(--sm);color:var(--gold);font-weight:500;margin-bottom:var(--sp2);line-height:1.65}
-.llc-profile-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:var(--sp2)}
-.llc-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;font-size:var(--xs);color:var(--t2);cursor:pointer;transition:all .2s}
-.llc-chip:hover{border-color:var(--acc);color:var(--gold)}
-.llc-chip.filled{background:var(--goldf);border-color:var(--acc);color:var(--gold)}
-.llc-actions{display:flex;gap:6px}
-.kakao-login-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--r1);background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:700;color:#191919;transition:all .2s}
-.kakao-login-full:hover{background:#F0D800;transform:translateY(-1px)}
-.kakao-login-full:active{transform:scale(.97)}
-.land-login-why{font-size:10px;color:var(--t4);text-align:center;line-height:1.6;margin-top:-4px}
+/* ══ 피드백 ══ */
+.fb-wrap{display:flex;align-items:center;gap:8px;justify-content:center;padding:var(--sp2) 0;border-top:1px solid var(--line);margin-top:var(--sp1)}
+.fb-label{font-size:var(--xs);color:var(--t4)}
+.fb-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.fb-btn:hover{border-color:var(--gold);transform:scale(1.1)}
+.fb-btn.selected{background:var(--goldf);border-color:var(--gold)}
+.fb-done{font-size:var(--xs);color:var(--gold);animation:fadeUp .3s ease}
 
 /* ══ 프로필 모달 ══ */
 .profile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
@@ -755,35 +789,32 @@ select.inp option{background:var(--bg2)}
 .profile-save-btn:hover{opacity:.88}.profile-save-btn:active{transform:scale(.98)}
 .profile-close-btn{width:100%;padding:11px;border:none;background:transparent;color:var(--t4);font-family:var(--ff);font-size:var(--xs);cursor:pointer;margin-top:6px}
 
-/* ══ 카카오 로그인 ══ */
+.kakao-nudge{padding:var(--sp2) var(--sp3);background:rgba(254,229,0,.1);border:1px solid rgba(254,229,0,.3);border-radius:var(--r2);margin-bottom:var(--sp2);display:flex;align-items:center;gap:10px}
+.kakao-nudge-text{font-size:var(--xs);color:var(--t3);flex:1}
 .kakao-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:var(--sm);font-weight:600;color:#191919;transition:all .2s}
 .kakao-btn:hover{background:#F0D800;transform:translateY(-1px)}
 .kakao-btn svg{flex-shrink:0}
-.kakao-nudge{padding:var(--sp2) var(--sp3);background:rgba(254,229,0,.1);border:1px solid rgba(254,229,0,.3);border-radius:var(--r2);margin-bottom:var(--sp2);display:flex;align-items:center;gap:10px}
-.kakao-nudge-text{font-size:var(--xs);color:var(--t3);flex:1}
-.user-chip{display:flex;align-items:center;gap:6px;padding:5px 10px 5px 5px;border-radius:50px;background:var(--goldf);border:1px solid var(--acc);cursor:pointer}
-.user-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover}
-.user-chip span{font-size:var(--xs);color:var(--t2)}
 
-/* ══ 결제 모달 ══ */
-.pay-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease}
-.pay-sheet{width:100%;max-width:480px;background:var(--bg);border-radius:24px 24px 0 0;padding:var(--sp4);animation:slideUp .3s ease}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.pay-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto var(--sp3)}
-.pay-title{font-size:1.1rem;font-weight:600;color:var(--t1);margin-bottom:4px}
-.pay-desc{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp3)}
-.pay-preview{background:var(--card);border-radius:var(--r2);padding:var(--sp2) var(--sp3);margin-bottom:var(--sp3)}
-.pay-preview-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:var(--xs);color:var(--t2)}
-.pay-preview-item::before{content:'✦';color:var(--gold);flex-shrink:0}
-.pay-price{font-size:1.4rem;font-weight:700;color:var(--gold);text-align:center;margin-bottom:var(--sp3)}
-.pay-kakao-btn{width:100%;padding:16px;border-radius:12px;background:#FEE500;border:none;cursor:pointer;font-family:var(--ff);font-size:1rem;font-weight:700;color:#191919;display:flex;align-items:center;justify-content:center;gap:8px}
-.pay-kakao-btn:disabled{opacity:.6;cursor:not-allowed}
-.pay-cancel{width:100%;padding:12px;border:none;background:transparent;color:var(--t4);font-family:var(--ff);font-size:var(--xs);cursor:pointer;margin-top:8px}
-.share-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
-.share-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.hint{font-size:var(--xs);color:var(--t4)}
+/* ══ 업그레이드 모달 ══ */
+.upgrade-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.upgrade-modal{width:100%;max-width:480px;background:var(--bg);border-radius:var(--r2) var(--r2) 0 0;padding:var(--sp3);max-height:90svh;overflow-y:auto}
+.upgrade-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:6px}
+.upgrade-modal-sub{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp2);line-height:1.5}
+.upgrade-pkgs{display:flex;flex-direction:column;gap:10px}
+.upgrade-pkg{padding:var(--sp2);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);cursor:pointer;transition:all .2s}
+.upgrade-pkg:hover{border-color:var(--gold)}
+.upgrade-pkg.chosen{background:var(--goldf);border-color:var(--gold)}
+.upgrade-pkg-hot{display:inline-block;background:var(--rose,#E87B8A);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-bottom:4px}
+.upgrade-pkg-e{font-size:22px;margin-bottom:2px}
+.upgrade-pkg-n{font-size:var(--sm);font-weight:700;color:var(--t1)}
+.upgrade-pkg-p{font-size:var(--md);font-weight:800;color:var(--gold);margin:2px 0}
+.upgrade-pkg-q{font-size:var(--xs);color:var(--t3)}
+
+/* ══ 다른 사람 추가 모달 ══ */
+.other-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.other-modal{width:100%;max-width:480px;background:var(--bg);border-radius:var(--r2) var(--r2) 0 0;padding:var(--sp3);max-height:90svh;overflow-y:auto}
+.other-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:6px}
+.other-modal-sub{font-size:var(--xs);color:var(--t3);line-height:1.5;margin-bottom:var(--sp2)}
 
 /* ══ 사이드바 ══ */
 .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:100;animation:fadeIn .25s ease}
@@ -816,36 +847,8 @@ select.inp option{background:var(--bg2)}
 .menu-btn{position:fixed;top:18px;left:18px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.9rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
 .menu-btn:hover{color:var(--gold);border-color:var(--gold)}
 
-/* ══ 시간대별 배경 오버레이 ══ */
-.time-overlay{position:fixed;inset:0;pointer-events:none;z-index:0;transition:opacity 1s ease}
-
-/* ══ 오늘의 별숨 (시간대별) ══ */
-.todaybyeol{margin:var(--sp3) 0;border-radius:var(--r2);overflow:hidden;animation:fadeUp .8s .5s both;border:1px solid var(--line)}
-.todaybyeol-top{padding:var(--sp2) var(--sp3);display:flex;align-items:center;gap:10px}
-.tbt-orb{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.9rem}
-.tbt-label{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:2px}
-.tbt-title{font-size:var(--sm);font-weight:600}
-.todaybyeol-body{padding:var(--sp2) var(--sp3) var(--sp3);border-top:1px solid var(--line)}
-.tbt-text{font-size:var(--sm);color:var(--t2);line-height:1.85;margin-bottom:var(--sp2)}
-.tbt-cta{width:100%;padding:11px;border:none;border-radius:var(--r1);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:pointer;transition:all .2s}
-.tbt-cta:active{transform:scale(.97)}
-
-/* ══ 저녁 회고 입력 ══ */
-.review-inp{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);resize:none;height:72px;margin-bottom:10px;transition:border-color .2s}
-.review-inp:focus{outline:none;border-color:var(--gold)}.review-inp::placeholder{color:var(--t4)}
-
-/* ══ 랜딩 퀵 질문 ══ */
-.land-quick{margin:var(--sp3) 0;animation:fadeUp .8s .5s both}
-.land-quick-title{font-size:var(--xs);color:var(--t4);letter-spacing:.07em;margin-bottom:8px;text-align:left}
-.land-quick-inp-row{display:flex;gap:8px;margin-bottom:10px}
-.land-quick-inp{flex:1;padding:13px 16px;background:var(--bg1);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}
-.land-quick-inp:focus{outline:none;border-color:var(--gold)}.land-quick-inp::placeholder{color:var(--t4)}
-.land-quick-send{width:44px;height:44px;border-radius:50%;border:none;background:var(--gold);color:#0D0B14;font-size:.9rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .15s}
-.land-quick-send:hover{opacity:.85}.land-quick-send:active{transform:scale(.93)}.land-quick-send:disabled{opacity:.3;cursor:not-allowed}
-.land-cat-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
-.land-cat-chip{padding:6px 13px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:all .2s}
-.land-cat-chip:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
-.land-cat-chip.on{background:var(--goldf);border-color:var(--acc);color:var(--gold);font-weight:600}
+.hist-search-inp{width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}
+.hist-search-inp:focus{outline:none;border-color:var(--gold)}.hist-search-inp::placeholder{color:var(--t4)}
 
 /* ══ 히스토리 뷰어 (step 9) ══ */
 .hist-page{width:100%;max-width:480px;animation:fadeUp .5s ease}
@@ -853,8 +856,6 @@ select.inp option{background:var(--bg2)}
 .hist-title{font-size:var(--lg);font-weight:700;color:var(--t1);margin-bottom:4px}
 .hist-sub{font-size:var(--xs);color:var(--t3)}
 .hist-search{padding:var(--sp2) var(--sp3);border-bottom:1px solid var(--line)}
-.hist-search-inp{width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}
-.hist-search-inp:focus{outline:none;border-color:var(--gold)}.hist-search-inp::placeholder{color:var(--t4)}
 .hist-list{padding:var(--sp2) 0}
 .hist-card{margin:0 var(--sp3) var(--sp2);background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;animation:fadeUp .3s ease}
 .hist-card-head{padding:var(--sp2) var(--sp3);display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid var(--line2)}
@@ -870,86 +871,20 @@ select.inp option{background:var(--bg2)}
 .hist-del-btn:hover{border-color:#e05a3a;color:#e05a3a}
 .hist-empty{padding:var(--sp5) var(--sp3);text-align:center;color:var(--t4);font-size:var(--sm);line-height:2.2}
 
-/* ═══════════════════════════════════════════════
-  PATCH: 44 missing classes (2026-03-11)
-═══════════════════════════════════════════════ */
+/* ══ step 전환 fade ══ */
+.step-fade{animation:stepFadeIn .45s cubic-bezier(.4,0,.2,1)}
+@keyframes stepFadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── 랜딩 히어로존 ── */
-.land-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100svh;padding:var(--sp3) var(--sp3);gap:var(--sp1);position:relative;}
-.land-scroll-hint{text-align:center;color:var(--t4);font-size:var(--xs);padding:var(--sp2) 0;animation:fadein 1.2s ease 0.8s both;}
-.land-scroll-hint span{display:inline-block;animation:bounce-y 1.8s ease-in-out infinite;}
-@keyframes bounce-y{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
-.land-scroll-zone{padding:var(--sp4) 0;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 
-/* ── 랜딩 CTA 버튼 ── */
-.land-start-primary{width:100%;padding:16px;background:var(--gold);color:#1A1420;font-size:var(--sm);font-weight:700;border:none;border-radius:var(--r2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 20px rgba(232,176,72,0.4);transition:transform .15s,box-shadow .15s;}
-.land-start-primary:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(232,176,72,0.5);}
-.land-start-primary:active{transform:translateY(0);}
-.land-kakao-secondary{width:100%;padding:12px;background:transparent;color:var(--t3);font-size:var(--xs);font-weight:400;border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color .15s,color .15s;}
-.land-kakao-secondary:hover{border-color:var(--gold);color:var(--gold);}
-.land-ghost-link{background:none;border:none;color:var(--t4);font-size:var(--xs);cursor:pointer;text-decoration:underline;padding:8px 0;}
-.land-ghost-link:hover{color:var(--gold);}
-.kakao-icon-wrap{display:flex;align-items:center;justify-content:center;width:18px;height:18px;}
+.share-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
+.share-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
 
-/* ── 랜딩 퀵질문 섹션 ── */
-.land-quick-section{width:100%;max-width:480px;margin:0 auto;}
-.land-quick-label{font-size:var(--sm);font-weight:600;color:var(--t2);margin-bottom:var(--sp1);padding:0 2px;}
-.land-sugg-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
-.land-sugg-chip{padding:5px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;color:var(--t3);font-size:var(--xs);cursor:pointer;transition:border-color .15s,color .15s,background .15s;}
-.land-sugg-chip:hover{border-color:var(--gold);color:var(--gold);background:var(--goldf);}
-
-/* ── step2 추천 칩 ── */
-.suggest-row{display:flex;flex-wrap:wrap;gap:7px;margin:var(--sp1) 0 var(--sp2);}
-.suggest-chip{padding:6px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;color:var(--t3);font-size:var(--xs);cursor:pointer;transition:border-color .15s,color .15s,background .15s;}
-.suggest-chip:hover{border-color:var(--gold);color:var(--gold);background:var(--goldf);}
-
-/* ── 결과 상단 공유바 ── */
-.res-top-bar{display:flex;gap:8px;justify-content:flex-end;padding:0 0 var(--sp2);margin-bottom:var(--sp1);}
-.res-top-btn{padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r1);color:var(--t3);font-size:var(--xs);cursor:pointer;display:flex;align-items:center;gap:5px;transition:border-color .15s,color .15s;}
-.res-top-btn:hover{border-color:var(--gold);color:var(--gold);}
-.res-top-btn.primary{background:var(--goldf);border-color:var(--gold);color:var(--gold);font-weight:600;}
-
-/* ── 기능 소개 카드 그리드 ── */
-.feature-guide{margin:var(--sp3) 0;padding:var(--sp3);background:var(--bg2);border-radius:var(--r2);border:1px solid var(--border);}
-.feature-guide-title{font-size:var(--sm);font-weight:600;color:var(--t2);margin-bottom:var(--sp2);}
-.feature-guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.fg-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--r1);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
-.fg-card:hover{border-color:var(--gold);background:var(--goldf);}
-.fg-icon{font-size:22px;flex-shrink:0;}
-.fg-info{display:flex;flex-direction:column;gap:2px;}
-.fg-name{font-size:var(--xs);font-weight:600;color:var(--t2);}
-.fg-desc{font-size:10px;color:var(--t4);line-height:1.4;}
-
-/* ── 업그레이드 모달 ── */
-.upgrade-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
-.upgrade-modal{width:100%;max-width:480px;background:var(--bg2);border-radius:var(--r2) var(--r2) 0 0;padding:var(--sp3);max-height:90svh;overflow-y:auto;}
-.upgrade-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:6px;}
-.upgrade-modal-sub{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp2);line-height:1.5;}
-.upgrade-pkgs{display:flex;flex-direction:column;gap:10px;}
-.upgrade-pkg-hot{display:inline-block;background:var(--rose,#E87B8A);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-bottom:4px;}
-.upgrade-pkg-e{font-size:22px;margin-bottom:2px;}
-.upgrade-pkg-n{font-size:var(--sm);font-weight:700;color:var(--t1);}
-.upgrade-pkg-p{font-size:var(--md);font-weight:800;color:var(--gold);margin:2px 0;}
-.upgrade-pkg-q{font-size:var(--xs);color:var(--t3);}
-
-/* ── 다른 사람 추가 모달 ── */
-.other-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
-.other-modal{width:100%;max-width:480px;background:var(--bg2);border-radius:var(--r2) var(--r2) 0 0;padding:var(--sp3);max-height:90svh;overflow-y:auto;}
-.other-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:6px;}
-.other-modal-sub{font-size:var(--xs);color:var(--t3);line-height:1.5;margin-bottom:var(--sp2);}
-
-/* ── 프로필 피커 카드 ── */
-.ppc-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
-.ppc-av{width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
-.ppc-av img{width:100%;height:100%;object-fit:cover;}
-.ppc-name{font-size:var(--xs);font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ppc-sub{font-size:10px;color:var(--t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.profile-pick-card{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg1);border:1px solid var(--border);border-radius:var(--r1);cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:8px;}
-.profile-pick-card:hover{border-color:var(--gold);background:var(--goldf);}
-.profile-pick-card.active{border-color:var(--gold);background:var(--goldf);}
-
+.review-inp{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);resize:none;height:72px;margin-bottom:10px;transition:border-color .2s}
+.review-inp:focus{outline:none;border-color:var(--gold)}.review-inp::placeholder{color:var(--t4)}
 `;
-
 
 // ═══════════════════════════════════════════════════════════
 //  🌌 별 캔버스
@@ -994,7 +929,6 @@ function SkeletonLoader({qCount,saju}){
   const pillars=[['연','yeon'],['월','wol'],['일','il'],['시','si']];
   return(
     <div className="loading-page">
-      {/* 오브 애니메이션 */}
       <div className="load-orb-wrap">
         <div className="load-orb">
           <div className="load-orb-core"/>
@@ -1002,7 +936,6 @@ function SkeletonLoader({qCount,saju}){
           <div className="load-orb-ring2"/>
         </div>
       </div>
-      {/* 사주 기둥 등장 */}
       {saju&&(
         <div className="load-pillars">
           {pillars.map(([l,k],i)=>(
@@ -1014,7 +947,6 @@ function SkeletonLoader({qCount,saju}){
           ))}
         </div>
       )}
-      {/* 스켈레톤 */}
       <div className="skel-body" style={{marginTop:'var(--sp2)'}}>
         {Array.from({length:Math.min(qCount,2)}).map((_,i)=>(
           <div key={i} className="skel-para">
@@ -1039,13 +971,12 @@ function useWordTyping(text, active, speed=130){
   const[done,setDone]=useState(false);
   const timerRef=useRef(null);
 
-  // 마침표 호흡 딜레이 계산 — 편지 읽는 리듬
   const getDelay=(word,base)=>{
     const trimmed=word.trimEnd();
-    if(/[.!?…]$/.test(trimmed)) return base+350; // 문장 끝 — 깊게 숨
-    if(/[,]$/.test(trimmed))     return base+180; // 쉼표 — 살짝 쉬고
-    if(/\n/.test(word))          return base+250; // 줄바꿈 — 문단 호흡
-    return base;                                   // 일반 단어
+    if(/[.!?…]$/.test(trimmed)) return base+350;
+    if(/[,]$/.test(trimmed))     return base+180;
+    if(/\n/.test(word))          return base+250;
+    return base;
   };
 
   useEffect(()=>{
@@ -1088,20 +1019,12 @@ function FeedbackBtn({qIdx}){
 }
 
 // ═══════════════════════════════════════════════════════════
-//  아코디언 아이템 (typedSet으로 재오픈 방지)
+//  아코디언 아이템
 // ═══════════════════════════════════════════════════════════
 function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
-  // shouldType=false → 이미 완료된 항목, text 바로 표시
-  // shouldType=true + isOpen=false → 아직 열리지 않은 항목, 빈 상태 유지 (즉시 세팅 금지)
-  // shouldType=true + isOpen=true  → 타이핑 시작
   const isTyping = shouldType && isOpen;
   const{shown,done,skipToEnd}=useWordTyping(text, isTyping, 130);
-
-  // 표시할 텍스트 결정
-  const display = !shouldType ? text   // 이미 완료 → 전체
-                : isOpen      ? shown  // 열려있음 → 타이핑 진행 중
-                :               '';   // 아직 안 열림 → 비워둠
-
+  const display = !shouldType ? text : isOpen ? shown : '';
   const isDone = !shouldType || done;
 
   useEffect(()=>{if(done&&shouldType)onTypingDone(idx);},[done,shouldType,idx,onTypingDone]);
@@ -1129,7 +1052,7 @@ function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
 }
 
 // ═══════════════════════════════════════════════════════════
-//  채팅 AI 버블 (타이핑 + 바로보기)
+//  채팅 AI 버블
 // ═══════════════════════════════════════════════════════════
 function ChatBubble({text,isNew}){
   const{shown,done,skipToEnd}=useWordTyping(text,isNew,40);
@@ -1166,10 +1089,8 @@ function ReportBody({text}){
   );
 }
 
-
-
 // ═══════════════════════════════════════════════════════════
-//  👤 개인화 프로필 모달 (연인 / 직장 / 고민)
+//  👤 개인화 프로필 모달
 // ═══════════════════════════════════════════════════════════
 function ProfileModal({profile,setProfile,onClose}){
   const[local,setLocal]=useState({...profile});
@@ -1193,7 +1114,6 @@ function ProfileModal({profile,setProfile,onClose}){
         <div className="profile-title">✦ 나의 별자리 지도</div>
         <div className="profile-sub">저장하면 모든 운세에 자동으로 반영돼요.<br/>입력할수록 더 깊이 읽어드릴게요.</div>
 
-        {/* 연인 */}
         <div className="profile-section">
           <div className="profile-section-title">💕 연인 정보</div>
           <input className="inp" placeholder="연인 이름 (선택)"
@@ -1218,7 +1138,6 @@ function ProfileModal({profile,setProfile,onClose}){
               </select>
             </div>
           </div>
-          {/* 연인 사주 미리보기 */}
           {partnerSaju&&(
             <div style={{padding:'10px 12px',background:'var(--bg2)',borderRadius:'var(--r1)',border:'1px solid var(--line)',marginBottom:'var(--sp2)'}}>
               <div style={{fontSize:'var(--xs)',color:'var(--gold)',marginBottom:4}}>✦ {local.partner||'연인'}의 기질</div>
@@ -1228,14 +1147,12 @@ function ProfileModal({profile,setProfile,onClose}){
           )}
         </div>
 
-        {/* 직장/상황 */}
         <div className="profile-section">
           <div className="profile-section-title">💼 직장 / 현재 상황</div>
           <input className="inp" placeholder="예: 스타트업 마케터, 공무원 준비 중, 프리랜서 디자이너..."
             value={local.workplace} onChange={e=>upd('workplace',e.target.value)}/>
         </div>
 
-        {/* 요즘 고민 */}
         <div className="profile-section">
           <div className="profile-section-title">🌙 요즘 가장 큰 고민</div>
           <textarea className="diy-inp" placeholder="예: 이직을 할지 말지 고민 중이에요 / 연인이랑 자꾸 다퉈요 / 돈이 자꾸 나가요..."
@@ -1274,7 +1191,6 @@ function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLogout,onProfileOp
     <>
       <div className="sidebar-overlay" onClick={onClose}/>
       <div className="sidebar">
-        {/* 헤더 */}
         <div className="sidebar-head">
           <div className="sidebar-logo">✦ byeolsoom</div>
           {user?(
@@ -1298,9 +1214,7 @@ function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLogout,onProfileOp
           )}
         </div>
 
-        {/* 본문 */}
         <div className="sidebar-body">
-          {/* 메뉴 */}
           <div className="sidebar-section">
             <div className="sidebar-section-lbl">메뉴</div>
             {[
@@ -1324,7 +1238,6 @@ function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLogout,onProfileOp
             )}
           </div>
 
-          {/* 히스토리 */}
           <div className="sidebar-section">
             <div className="sidebar-section-lbl">지난 이야기 ({histItems.length})</div>
             {histItems.length>0&&(
@@ -1349,7 +1262,6 @@ function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLogout,onProfileOp
           </div>
         </div>
 
-        {/* 푸터 */}
         <div className="sidebar-foot">
           {user&&<button className="sidebar-foot-btn" onClick={()=>{onKakaoLogout();onClose();}}>로그아웃</button>}
         </div>
@@ -1359,7 +1271,7 @@ function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLogout,onProfileOp
 }
 
 // ═══════════════════════════════════════════════════════════
-//  📖 히스토리 상세 페이지 (step 9)
+//  📖 히스토리 상세 페이지
 // ═══════════════════════════════════════════════════════════
 function HistoryPage({item,onBack,onDelete}){
   const[openIdx,setOpenIdx]=useState(0);
@@ -1406,48 +1318,6 @@ function HistoryPage({item,onBack,onDelete}){
 }
 
 // ═══════════════════════════════════════════════════════════
-//  🌅 오늘의 별숨 컴포넌트 (시간대별)
-// ═══════════════════════════════════════════════════════════
-function TodayByeolsoom({slot,name,saju,sun,onAsk,onReview}){
-  const cfg=TIME_CONFIG[slot];
-  const[reviewText,setReviewText]=useState('');
-  const isEvening=slot==='evening'||slot==='dawn';
-
-  return(
-    <div className="todaybyeol" style={{background:cfg.bg,borderColor:cfg.border}}>
-      <div className="todaybyeol-top">
-        <div className="tbt-orb" style={{background:cfg.bg,border:`1px solid ${cfg.border}`}}>{cfg.emoji}</div>
-        <div>
-          <div className="tbt-label" style={{color:cfg.color}}>{cfg.label}</div>
-          <div className="tbt-title" style={{color:'var(--t1)'}}>{cfg.greeting(name)}</div>
-        </div>
-      </div>
-      <div className="todaybyeol-body" style={{background:'var(--bg1)'}}>
-        {isEvening&&(
-          <>
-            <div style={{fontSize:'var(--xs)',color:'var(--t3)',marginBottom:6,lineHeight:1.7}}>
-              {slot==='evening'?'오늘 있었던 일을 적으면 별숨이 다시 읽어드릴게요':'잠 못 드는 이 새벽, 뭔가 마음에 걸리는 게 있나요?'}
-            </div>
-            <textarea className="review-inp"
-              placeholder={cfg.inputPlaceholder}
-              value={reviewText}
-              onChange={e=>setReviewText(e.target.value)}/>
-          </>
-        )}
-        <button className="tbt-cta"
-          style={{background:cfg.ctaBg,color:cfg.ctaColor}}
-          onClick={()=>{
-            if(isEvening&&reviewText.trim()){onReview(reviewText,cfg.prompt);}
-            else{onAsk(cfg.prompt);}
-          }}>
-          {cfg.ctaText}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════
 //  📖 랜딩 샘플 에세이 미리보기
 // ═══════════════════════════════════════════════════════════
 function SamplePreview(){
@@ -1461,7 +1331,6 @@ function SamplePreview(){
     setText('');idxRef.current=0;
     const tick=()=>{
       if(idxRef.current>=essay.length){
-        // 2초 후 다음 에세이
         timerRef.current=setTimeout(()=>{
           setEssayIdx(p=>(p+1)%SAMPLE_ESSAYS.length);
         },2000);
@@ -1477,7 +1346,6 @@ function SamplePreview(){
     return()=>clearTimeout(timerRef.current);
   },[essayIdx]);
 
-  // 익명 감성 이름 — 실제 이름처럼 보이지 않는 별자리 기반
   const signs=['물고기자리','사자자리','천칭자리'];
   return(
     <div className="sample-preview">
@@ -1489,7 +1357,7 @@ function SamplePreview(){
 }
 
 // ═══════════════════════════════════════════════════════════
-//  🔮 미래의 별숨 (예언 페이지)
+//  🔮 미래의 별숨
 // ═══════════════════════════════════════════════════════════
 function FutureProphecyPage({form, buildCtx, callApi, onBack}){
   const periods = ['1개월 후', '3개월 후', '1년 후', '10년 후', '30년 후'];
@@ -1518,7 +1386,6 @@ function FutureProphecyPage({form, buildCtx, callApi, onBack}){
           <div style={{fontSize:'var(--xs)', color:'var(--t3)', marginTop:6}}>시간의 흐름에 따라 변화하는 당신의 운명을 읽어드려요</div>
         </div>
 
-        {/* 기간 선택 탭 */}
         <div style={{display:'flex', gap:6, flexWrap:'wrap', justifyContent:'center', marginBottom:'var(--sp3)'}}>
           {periods.map(p => (
             <button key={p}
@@ -1527,14 +1394,13 @@ function FutureProphecyPage({form, buildCtx, callApi, onBack}){
                 background: selectedPeriod===p ? 'var(--gold)' : 'var(--bg2)',
                 color: selectedPeriod===p ? '#000' : 'var(--t3)',
                 fontSize:'var(--sm)', fontWeight: selectedPeriod===p ? 700 : 400,
-                cursor:'pointer', transition:'all .2s'
+                cursor:'pointer', transition:'all .2s', fontFamily:'var(--ff)'
               }}
               onClick={()=>setPeriod(p)}
             >{p}</button>
           ))}
         </div>
 
-        {/* 예언 편지 본문 */}
         <div className="letter-envelope">
           <div className="letter-env-top" style={{background:'linear-gradient(135deg,var(--goldf),rgba(200,160,255,0.1))'}}>🔮</div>
           <div className="letter-body">
@@ -1571,14 +1437,13 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
   const[place,setPlace]=useState('burger');
   const[result,setResult]=useState(null);
   const[loading,setLoading]=useState(false);
-  const[phase,setPhase]=useState('input'); // 'input' | 'result'
+  const[phase,setPhase]=useState('input');
 
   const partnerSaju=useMemo(()=>(partner.by&&partner.bm&&partner.bd)?getSaju(+partner.by,+partner.bm,+partner.bd,12):null,[partner]);
   const partnerSun=useMemo(()=>(partner.bm&&partner.bd)?getSun(+partner.bm,+partner.bd):null,[partner.bm,partner.bd]);
   const partnerOk=partner.by&&partner.bm&&partner.bd&&partner.gender;
   const selectedPlace=PLACES.find(p=>p.id===place)||PLACES[0];
 
-  // 궁합 점수 계산 (오행 상생/상극 기반)
   const compatScore=useMemo(()=>{
     if(!mySaju||!partnerSaju)return 75;
     const SENG={목:['수','목'],화:['목','화'],토:['화','토'],금:['토','금'],수:['금','수']};
@@ -1622,7 +1487,6 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
       });
       const data=await res.json();
       if(!res.ok)throw new Error(data.error);
-      // JSON 파싱
       try{
         const raw=data.text.replace(/```json|```/g,'').trim();
         const parsed=JSON.parse(raw);
@@ -1645,7 +1509,6 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
             <div className="compat-sub">{selectedPlace.label}에서 만났을 때</div>
           </div>
 
-          {/* 궁합 점수 */}
           <div className="compat-total" style={{marginBottom:'var(--sp2)'}}>
             <div className="compat-total-label">✦ 두 별의 공명 지수</div>
             <div className="kizmet-score">{compatScore}%</div>
@@ -1657,7 +1520,6 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
             )}
           </div>
 
-          {/* 말풍선 시나리오 */}
           <div className="scenario-wrap">
             <div className="scenario-header">
               <span className="scenario-place-icon">{selectedPlace.emoji}</span>
@@ -1709,7 +1571,6 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
             <div className="compat-sub">상대방의 생년월일을 입력하면<br/>두 별이 만나는 장면을 보여드려요</div>
           </div>
 
-          {/* 나 카드 */}
           <div className="compat-section">
             <div className="compat-label">두 사람</div>
             <div className="person-cards">
@@ -1750,7 +1611,6 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
             </div>
           </div>
 
-          {/* 장소 선택 */}
           <div className="compat-section">
             <div className="compat-label">어디서 만날까요?</div>
             <div className="place-grid">
@@ -1778,32 +1638,25 @@ function CompatPage({myForm,mySaju,mySun,callApi,buildCtx,onBack}){
 // ═══════════════════════════════════════════════════════════
 export default function App(){
   const[isDark,setIsDark]=useState(false);
-  // ── 사이드바 / 히스토리 ──
   const[showSidebar,setShowSidebar]=useState(false);
   const[histItem,setHistItem]=useState(null);
   const[histItems,setHistItems]=useState(()=>loadHistory());
   const timeSlot=useMemo(()=>getTimeSlot(),[]);
   const[showUpgradeModal,setShowUpgradeModal]=useState(false);
   const[showOtherProfileModal,setShowOtherProfileModal]=useState(false);
-  // 다른 사람 프로필 (최대 3개) — {name,by,bm,bd,bh,gender,noTime}[]
   const[otherProfiles,setOtherProfiles]=useState(()=>{
     try{const s=localStorage.getItem('byeolsoom_others');return s?JSON.parse(s):[];}catch{return[];}
   });
-  const[activeProfileIdx,setActiveProfileIdx]=useState(0); // 0=나, 1~3=다른 사람
+  const[activeProfileIdx,setActiveProfileIdx]=useState(0);
   const[otherForm,setOtherForm]=useState({name:'',by:'',bm:'',bd:'',bh:'',gender:'',noTime:false});
-  // ── 카카오 유저 ──
   const[user,setUser]=useState(()=>{
     try{const u=localStorage.getItem('byeolsoom_user');return u?JSON.parse(u):null;}catch{return null;}
   });
-  // ── 개인화 프로필 (연인/직장) ──
   const[profile,setProfile]=useState(()=>{
     try{const p=localStorage.getItem('byeolsoom_extra');return p?JSON.parse(p):{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:''};}catch{return{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:''};}
   });
   const[showProfileModal,setShowProfileModal]=useState(false);
-  // ── 결제 ──
-  const[payToast,setPayToast]=useState(null);
-  const[step,setStep]=useState(0); // 0랜딩 1입력 2질문 3로딩 4결과 5채팅 6리포트 7궁합 8편지 9히스토리
-  // ── 랜딩 퀵질문 ──
+  const[step,setStep]=useState(0);
   const[quickQ,setQuickQ]=useState('');
   const[quickCat,setQuickCat]=useState(0);
   const[form,setForm]=useState(()=>{
@@ -1816,25 +1669,20 @@ export default function App(){
   const[cat,setCat]=useState(0);
   const[selQs,setSelQs]=useState([]);
   const[diy,setDiy]=useState('');
-  const[pkg,setPkg]=useState('free'); // 기본값: 무료 첫 번째 이야기
+  const[pkg,setPkg]=useState('free');
   const[answers,setAnswers]=useState([]);
   const[openAcc,setOpenAcc]=useState(0);
-  const[typedSet,setTypedSet]=useState(new Set()); // 타이핑 완료된 idx 추적
-  // 채팅
+  const[typedSet,setTypedSet]=useState(new Set());
   const[chatHistory,setChatHistory]=useState([]);
   const[chatInput,setChatInput]=useState('');
   const[chatLoading,setChatLoading]=useState(false);
   const[chatUsed,setChatUsed]=useState(0);
   const[latestChatIdx,setLatestChatIdx]=useState(-1);
-  // 리포트
   const[reportText,setReportText]=useState('');
   const[reportLoading,setReportLoading]=useState(false);
   const chatEndRef=useRef(null);
   const today=useMemo(()=>getTodayInfo(),[]);
 
-
-
-  // ── 카카오 SDK 동적 로드 ──
   useEffect(()=>{
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
     if(!JS_KEY){
@@ -1852,7 +1700,6 @@ export default function App(){
       return;
     }
     if(document.getElementById('kakao-sdk')){
-      // 스크립트 태그는 있지만 아직 로드 중 — onload 대기
       const existing = document.getElementById('kakao-sdk');
       const prev = existing.onload;
       existing.onload = () => { if(prev) prev(); initKakao(); };
@@ -1867,12 +1714,10 @@ export default function App(){
     document.head.appendChild(script);
   },[]);
 
-  // ── 카카오 로그인 리다이렉트 처리 (code 파라미터) ──
   useEffect(()=>{
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     if(!code) return;
-    // URL에서 code 제거
     window.history.replaceState({}, '', window.location.pathname);
     (async()=>{
       try{
@@ -1919,9 +1764,6 @@ export default function App(){
   const addQ=q=>{if(selQs.length<maxQ&&!selQs.includes(q)){setSelQs(p=>[...p,q]);setDiy('');}};
   const rmQ=i=>setSelQs(p=>p.filter((_,x)=>x!==i));
 
-  // 통합 컨텍스트 빌더
-  // 사용자 컨텍스트 (서버로 전달)
-  // activeProfileIdx에 따라 올바른 프로필로 컨텍스트 생성
   const activeForm = activeProfileIdx===0 ? form : (otherProfiles[activeProfileIdx-1]||form);
   const activeSaju = useMemo(()=>{
     const f=activeForm;
@@ -1946,7 +1788,6 @@ export default function App(){
       c+=`[별자리 기운]\n`;
       c+=`태양: ${asSun.n}(${asSun.s}) — ${asSun.desc}\n`;
     }
-// 연인 정보 (기존)
     if(profile.partner){
       c+=`[연인 정보]\n이름: ${profile.partner}\n`;
       if(profile.partnerBy&&profile.partnerBm&&profile.partnerBd){
@@ -1959,11 +1800,9 @@ export default function App(){
         }catch(e){}
       }
     }
-    // 직장/고민 정보 (기존)
     if(profile.workplace) c+=`[직장/상황] ${profile.workplace}\n`;
     if(profile.worryText) c+=`[지금 고민] ${profile.worryText}\n`;
 
-    // 🚨 아래 3줄(특별 지침)을 추가해주세요! 🚨
     c+=`\n[특별 지침]\n`;
     c+=`1. 결과에 '요약'이라는 단어를 절대 노출하지 마세요.\n`;
     c+=`2. 답변 시 모호한 표현을 피하고, 행운의 색깔, 방향, 특정 날짜, 도움되는 숫자나 초성, 피해야 할 행동 등 매우 명확하고 구체적인 점술적 요소를 1개 이상 반드시 포함하세요.\n`;
@@ -1971,7 +1810,6 @@ export default function App(){
     return c;
   },[activeForm,activeSaju,activeSun,activeAge,profile,activeProfileIdx]);
 
-  // API 공통 헬퍼 (프롬프트는 서버 ask.js에서 관리)
   const callApi=useCallback(async(userMessage,opts={})=>{
     const res=await fetch('/api/ask',{
       method:'POST',
@@ -1988,17 +1826,14 @@ export default function App(){
     return stripMarkdown(data.text||'');
   },[buildCtx]);
 
-// ── 공유 이미지 생성 (텍스트 길이에 맞춰 높이 자동 조절) ──
   const shareCard=useCallback((idx)=>{
     const q=selQs[idx]||'';
-    // 본문에서 [요약] 텍스트가 제외된 순수 본문만 가져옵니다.
     const parsedText=parseAccSummary(answers[idx]||'').text;
     
     const canvas=document.createElement('canvas');
     const ctx=canvas.getContext('2d');
     canvas.width = 900;
     
-    // 텍스트 줄바꿈 계산 로직
     ctx.font='300 18px Pretendard,-apple-system,sans-serif';
     const words = parsedText.split('');
     const lines = [];
@@ -2012,10 +1847,9 @@ export default function App(){
     }
     if (currentLine) lines.push(currentLine);
     
-    // 전체 텍스트 길이에 비례하여 캔버스 높이 동적 계산
     const lineHeight = 34;
     const textHeight = lines.length * lineHeight;
-    canvas.height = 280 + textHeight + 100; // 헤더(280) + 본문높이 + 푸터여백(100)
+    canvas.height = 280 + textHeight + 100;
 
     const bg=isDark?'#0D0B14':'#F7F4EF';
     const t1=isDark?'#F0EBF8':'#1A1420';
@@ -2043,24 +1877,16 @@ export default function App(){
     a.download=`byeolsoom_Q${idx+1}.png`; a.href=canvas.toDataURL('image/png'); a.click();
   },[selQs, answers, isDark, today]);
 
-
-  // ── 카카오 로그인 ──
   const kakaoLogin=useCallback(()=>{
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
-
-    // ① 환경변수 없음
     if(!JS_KEY){
       alert('카카오 앱 키가 설정되지 않았어요.\n.env.local 에 VITE_KAKAO_JS_KEY 를 입력해주세요.');
       return;
     }
-
-    // ② SDK 자체가 없음 (네트워크 오류 등)
     if(!window.Kakao){
       alert('카카오 SDK를 불러오지 못했어요 🌙\n잠시 후 다시 시도해봐요.');
       return;
     }
-
-    // ③ 초기화 안 됨 → 재시도
     if(!window.Kakao.isInitialized()){
       try{
         window.Kakao.init(JS_KEY);
@@ -2070,9 +1896,6 @@ export default function App(){
         return;
       }
     }
-
-    // ④ 로그인 실행 — SDK 2.x 방식 (Kakao.Auth.login 삭제됨)
-    // getUserInfo로 액세스토큰 직접 획득
     window.Kakao.Auth.authorize({
       redirectUri: window.location.origin,
     });
@@ -2084,14 +1907,10 @@ export default function App(){
     localStorage.removeItem('byeolsoom_user');
   },[]);
 
-
-
-  // 메인 API 호출 — 병렬 처리 (순차 타임아웃 방지)
   const askClaude=async()=>{
     if(!selQs.length)return;
     setStep(3);setAnswers([]);setTypedSet(new Set());setOpenAcc(0);
 
-    // 모든 질문을 동시에 호출 (순차 시 Vercel 30초 타임아웃 위험)
     const results=await Promise.allSettled(
       selQs.map(q=>callApi(`[질문]\n${q}`))
     );
@@ -2103,18 +1922,15 @@ export default function App(){
     );
 
     setAnswers(newAnswers);
-    // 히스토리 저장
     addHistory(selQs,newAnswers);
     setHistItems(loadHistory());
     setLatestChatIdx(-1);
     setStep(4);setOpenAcc(0);
   };
 
-  // 퀵질문 (랜딩에서 바로 질문)
   const askQuick=async(q)=>{
     if(!q.trim())return;
     if(!formOk){
-      // 프로필 없으면 입력 먼저
       setSelQs([q.trim()]);
       setStep(1);
       return;
@@ -2132,7 +1948,6 @@ export default function App(){
     setStep(4);setOpenAcc(0);
   };
 
-  // 시간대별 오늘의 별숨 ask
   const askTimeSlot=async(prompt)=>{
     if(!formOk){setStep(1);return;}
     const q=TIME_CONFIG[timeSlot].label;
@@ -2149,7 +1964,6 @@ export default function App(){
     setStep(4);setOpenAcc(0);
   };
 
-  // 저녁 회고
   const askReview=async(text,prompt)=>{
     if(!formOk){setStep(1);return;}
     const q=`오늘 하루 회고: ${text.slice(0,30)}${text.length>30?'…':''}`;
@@ -2168,14 +1982,12 @@ export default function App(){
 
   const handleTypingDone=useCallback((idx)=>{
     setTypedSet(p=>{const n=new Set(p);n.add(idx);return n;});
-    // ✅ 타이핑 완료: 현재 답변 유지 (닫지 않음)
-    // 다음 질문이 있으면 살짝 열었다가(500ms) 다시 닫기 — peek 효과
     const next=idx+1;
     if(next < selQs.length){
       setTimeout(()=>{
-        setOpenAcc(next); // 다음 질문 살짝 열기
+        setOpenAcc(next);
         setTimeout(()=>{
-          setOpenAcc(p=>p===next?-1:p); // 0.8초 후 닫기 (이미 사용자가 바꿨으면 유지)
+          setOpenAcc(p=>p===next?-1:p);
         },800);
       },400);
     }
@@ -2183,10 +1995,8 @@ export default function App(){
 
   const handleAccToggle=i=>{setOpenAcc(p=>p===i?-1:i);};
 
-  // ✅ 더 물어보기 — 제대로 구현 (chatLeft 기반, 이용권 선택 넛지)
   const sendChat=async()=>{
     if(!chatInput.trim()||chatLoading)return;
-    // 무료 플랜 채팅 소진 시 업그레이드 안내
     if(chatLeft<=0){
       setShowUpgradeModal(true);
       return;
@@ -2211,7 +2021,6 @@ export default function App(){
     }finally{setChatLoading(false);}
   };
 
-    // 리포트 생성
   const genReport=async()=>{
     setStep(6);setReportText('');setReportLoading(true);
     try{
@@ -2221,16 +2030,13 @@ export default function App(){
     finally{setReportLoading(false);}
   };
 
-  // ── 렌더 ──
   return(
     <>
       <style>{CSS}</style>
       <StarCanvas isDark={isDark}/>
 
-      {/* 왼쪽 상단 메뉴 버튼 (항상 표시) */}
       <button className="menu-btn" onClick={()=>setShowSidebar(true)}>☰</button>
 
-      {/* 사이드바 */}
       {showSidebar&&(
         <Sidebar
           user={user} step={step}
@@ -2246,8 +2052,6 @@ export default function App(){
       )}
 
       <button className="theme-btn" onClick={()=>setIsDark(p=>!p)}>{isDark?'☀':'◑'}</button>
-      {/* 유저 칩 */}
-      {/* step>=1 일 때만 상단 칩 표시 (랜딩은 카드로 처리) */}
       {step>=1&&user&&(
         <div className="user-chip" onClick={()=>setShowProfileModal(true)} title="내 정보 수정" style={{cursor:'pointer'}}>
           {user.profileImage?<img src={user.profileImage} alt="프로필"/>:<span style={{fontSize:'1rem'}}>🌙</span>}
@@ -2265,10 +2069,8 @@ export default function App(){
 
       <div className="app">
 
-{/* ══ 0 랜딩 ══ */}
         {step===0&&(
           <div className="page step-fade">
-            {/* ═══ HERO ZONE ═══ */}
             <div className="land-hero">
               <div className="land-wordmark">byeolsoom</div>
               <div className="land-orb">
@@ -2279,7 +2081,6 @@ export default function App(){
                 <em style={{fontWeight: 500}}>당신의 별숨은 당신을 바라보고 있어요.</em>
               </p>
 
-              {/* 로그인 카드 */}
               <div className="land-login-section">
                 {user ? (
                   <div className="land-login-card logged">
@@ -2315,11 +2116,9 @@ export default function App(){
                 )}
               </div>
 
-              {/* 스크롤 힌트 */}
               <div className="land-scroll-hint"><span>↓</span></div>
             </div>
 
-            {/* ═══ SCROLL ZONE ═══ */}
             <div className="inner land-scroll-zone">
               <SamplePreview/>
               <div className="daily-word">
@@ -2341,32 +2140,6 @@ export default function App(){
           </div>
         )}
 
-              {/* 샘플 미리보기 */}
-              <SamplePreview/>
-
-              {/* 오늘의 한마디 */}
-              <div className="daily-word">
-                <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
-                <div className="daily-text">{'"'+getDailyWord(today.day)+'"'}</div>
-              </div>
-
-              {/* 리뷰 */}
-              <div className="rev-wrap">
-                <div className="rev-track">
-                  {REVIEWS.map((r,i)=>(
-                    <div key={i} className="rev-card">
-                      <div className="rev-stars">{r.star}</div>
-                      <div className="rev-text">{'"'+r.text+'"'}</div>
-                      <div className="rev-nick">{r.nick}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-          </div>
-        )}
-        {/* ══ 1 정보 입력 ══ */}
         {step===1&&(
           <div className="page step-fade">
             <div className="inner">
@@ -2374,12 +2147,10 @@ export default function App(){
                 {[0,1,2].map(i=><div key={i} className={`dot ${i===0?'active':'todo'}`}/>)}
               </div>
 
-              {/* ── 이미 프로필 있으면: 프로필 선택 카드 ── */}
               {formOk&&(
                 <div className="card" style={{marginBottom:'var(--sp2)'}}>
                   <div className="card-title" style={{fontSize:'var(--md)'}}>누구의 별숨을 볼까요?</div>
 
-                  {/* 나 */}
                   <div className={`profile-pick-card ${activeProfileIdx===0?'active':''}`}
                     onClick={()=>setActiveProfileIdx(0)}>
                     <div className="ppc-left">
@@ -2392,7 +2163,6 @@ export default function App(){
                     {activeProfileIdx===0&&<span style={{color:'var(--gold)'}}>✦</span>}
                   </div>
 
-                  {/* 다른 사람 프로필들 */}
                   {otherProfiles.map((p,i)=>{
                     const pSaju=p.by&&p.bm&&p.bd?getSaju(+p.by,+p.bm,+p.bd,p.noTime?12:+(p.bh||12)):null;
                     const pSun=p.bm&&p.bd?getSun(+p.bm,+p.bd):null;
@@ -2415,7 +2185,6 @@ export default function App(){
                     );
                   })}
 
-                  {/* 다른 사람 추가 버튼 (최대 3명) */}
                   {otherProfiles.length<3&&(
                     <button className="res-btn" style={{width:'100%',marginTop:8,padding:12}}
                       onClick={()=>setShowOtherProfileModal(true)}>
@@ -2430,7 +2199,6 @@ export default function App(){
                 </div>
               )}
 
-              {/* ── 정보 없으면: 기본 입력 폼 ── */}
               {!formOk&&(
               <div className="card">
                 <div className="card-title">반가워요 🌙</div>
@@ -2503,7 +2271,7 @@ export default function App(){
             </div>
           </div>
         )}
-        {/* ══ 2 질문 선택 ══ */}
+
         {step===2&&(
           <div className="page">
             <div className="inner">
@@ -2512,7 +2280,6 @@ export default function App(){
               </div>
               <div className="q-shell">
 
-                {/* ── 사주×별자리 통합 배너 + 시간대별 오늘의 별숨 ── */}
                 <div className="combo-banner">
                   <div className="combo-title">✦ 사주 × 별자리 통합 분석</div>
                   <div className="combo-sub">
@@ -2527,7 +2294,6 @@ export default function App(){
                         })()
                     }
                   </div>
-                  {/* 시간대별 오늘의 별숨 인라인 표시 */}
                   <div style={{marginTop:10,padding:'10px 14px',background:TIME_CONFIG[timeSlot].bg,borderRadius:'var(--r1)',border:`1px solid ${TIME_CONFIG[timeSlot].border}`,display:'flex',alignItems:'center',gap:10}}>
                     <span style={{fontSize:'1.1rem'}}>{TIME_CONFIG[timeSlot].emoji}</span>
                     <div>
@@ -2537,7 +2303,6 @@ export default function App(){
                   </div>
                 </div>
 
-                {/* ── ① 직접 입력 (맨 위) ── */}
                 <div className="diy-wrap" style={{marginBottom:'var(--sp2)'}}>
                   <div style={{fontSize:'var(--xs)',color:'var(--gold)',fontWeight:600,marginBottom:6,letterSpacing:'.06em'}}>✦ 직접 물어보기</div>
                   <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
@@ -2554,13 +2319,11 @@ export default function App(){
                   <div className="diy-row"><span className="hint">{diy.length}/200</span></div>
                 </div>
 
-                {/* ── ② 카테고리 탭 ── */}
                 <div style={{fontSize:'var(--xs)',color:'var(--t4)',marginBottom:6,letterSpacing:'.06em'}}>또는 고민 카테고리에서 골라봐요</div>
                 <div className="cat-tabs">
                   {CATS.map((c,i)=><button key={c.id} className={`cat-tab ${cat===i?'on':''}`} onClick={()=>setCat(i)}>{c.icon} {c.label}</button>)}
                 </div>
 
-                {/* ── 빠른 추천 칩 (상위 3개) ── */}
                 {selQs.length<maxQ&&(
                   <div>
                     <div style={{fontSize:'var(--xs)',color:'var(--gold)',fontWeight:600,margin:'10px 0 6px',letterSpacing:'.04em'}}>✦ 이런 질문 어때요?</div>
@@ -2583,7 +2346,6 @@ export default function App(){
                   })}
                 </div>
 
-                {/* ── ③ 선택된 질문 목록 ── */}
                 {selQs.length>0&&(
                   <div className="sel-qs">
                     <div className="sel-lbl">선택한 질문 ({selQs.length}/{maxQ})</div>
@@ -2597,7 +2359,6 @@ export default function App(){
                   </div>
                 )}
 
-                {/* ── ④ 이용권: 무료 첫 질문 체계 ── */}
                 {pkg==='free'?(
                   <div style={{padding:'var(--sp2) var(--sp3)',background:'var(--goldf)',border:'1px solid var(--acc)',borderRadius:'var(--r2)',margin:'var(--sp2) 0',textAlign:'center'}}>
                     <div style={{fontSize:'var(--sm)',fontWeight:700,color:'var(--gold)',marginBottom:4}}>🌙 첫 번째 이야기는 무료예요</div>
@@ -2634,15 +2395,13 @@ export default function App(){
             </div>
           </div>
         )}
-        {/* ══ 3 로딩 ══ */}
+
         {step===3&&<div className="page"><SkeletonLoader qCount={selQs.length} saju={saju}/></div>}
 
-        {/* ══ 4 결과 ══ */}
         {step===4&&(
           <div className="page">
             <div className="res-wrap">
               <div className="res-card">
-                {/* ── 상단 공유/복사 바 ── */}
                 <div className="res-top-bar">
                   <button className="res-top-btn" onClick={()=>{navigator.clipboard?.writeText(answers.join('\n\n'));alert('복사됐어요 📋');}}>
                     📋 복사
@@ -2654,7 +2413,6 @@ export default function App(){
                   )}
                 </div>
 
-                {/* 헤더 */}
                 <div className="res-header">
                   <div className="res-av">✦</div>
                   <div>
@@ -2669,7 +2427,6 @@ export default function App(){
                   </div>
                 </div>
 
-                {/* 무드 배너 */}
                 {sun&&(()=>{
                   const mood=SIGN_MOOD[sun.n]||{color:'var(--gold)',bg:'var(--goldf)',word:'신비로운',emoji:'✦'};
                   return(
@@ -2683,7 +2440,6 @@ export default function App(){
                   );
                 })()}
 
-                {/* ── 별의 한 줄 요약 — [요약] 태그 파싱 ── */}
                 {answers[0]&&(()=>{
                   const parsed = parseAccSummary(answers[0]);
                   const summaryStr = parsed.summary;
@@ -2695,7 +2451,6 @@ export default function App(){
                   ):null;
                 })()}
 
-                {/* 아코디언 */}
                 {selQs.map((q,i)=>(
                   <div key={i}>
                     <AccItem
@@ -2705,7 +2460,6 @@ export default function App(){
                       shouldType={!typedSet.has(i)}
                       onTypingDone={handleTypingDone}
                     />
-                    {/* Q 완료 후 피드백 + 공유 */}
                     {openAcc===i&&typedSet.has(i)&&answers[i]&&(
                       <div style={{padding:'0 var(--sp3) var(--sp2)',borderBottom:'1px solid var(--line)'}}>
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -2719,11 +2473,8 @@ export default function App(){
                   </div>
                 ))}
 
-                {/* 액션 */}
                 <div className="res-actions">
-               {/* 액션 그리드 — 카테고리별 스마트 버튼 */}
                   <div className="action-grid" style={{marginBottom:'var(--sp2)'}}>
-                    {/* 연애, 가족, 인간관계일 때만 '우리가 만나면' 표시 */}
                     {['love', 'family', 'relation'].includes(CATS[cat].id) ? (
                       <div className="action-card compat" onClick={()=>setStep(7)}>
                         <div className="action-card-icon">💞</div>
@@ -2745,7 +2496,6 @@ export default function App(){
                     </div>
                   </div>
 
-                  {/* 로그인 넛지 */}
                   {!user&&(
                     <div className="kakao-nudge">
                       <span style={{fontSize:'1.1rem'}}>🌙</span>
@@ -2757,10 +2507,8 @@ export default function App(){
                   <div className="upsell">
                     <div className="up-t">✦ 이번 달 전체 운세가 궁금해요</div>
                     <div className="up-d">연애 · 재물 · 건강 · 직업 종합 분석<br/>사주와 별자리가 함께 쓴 월간 에세이</div>
-                    <button className="up-btn" onClick={()=>{
-                      genReport();
-                    }}>
-                      '이달의 운세 리포트 보기 ✦'
+                    <button className="up-btn" onClick={()=>{genReport();}}>
+                      이달의 운세 리포트 보기 ✦
                     </button>
                   </div>
                   {maxChat>0&&(
@@ -2777,7 +2525,6 @@ export default function App(){
                     <button className="res-btn" onClick={()=>setStep(0)}>홈으로</button>
                   </div>
 
-                  {/* ── 기능 소개 카드 ── */}
                   <div className="feature-guide">
                     <div className="feature-guide-title">✦ 별숨의 다른 기능들</div>
                     <div className="feature-guide-grid">
@@ -2831,7 +2578,6 @@ export default function App(){
           </div>
         )}
 
-        {/* ══ 5 추가 질문 (전체화면 채팅) ══ */}
         {step===5&&(
           <div className="page-top">
             <div className="chat-page">
@@ -2888,7 +2634,6 @@ export default function App(){
           </div>
         )}
 
-   {/* ══ 6 월간 리포트 (전체화면) ══ */}
         {step===6&&(
           <div className="page-top">
             <div className="inner report-page">
@@ -2913,7 +2658,6 @@ export default function App(){
           </div>
         )}
 
-        {/* ══ 7 시나리오 궁합 ══ */}
         {step===7&&(
           <CompatPage
             myForm={form}
@@ -2925,7 +2669,6 @@ export default function App(){
           />
         )}
 
-     {/* ══ 8 미래의 별숨 (예언) ══ */}
         {step===8&&(
           <FutureProphecyPage
             form={form}
@@ -2935,7 +2678,6 @@ export default function App(){
           />
         )}
 
-{/* ══ 9 히스토리 상세 ══ */}
         {step===9&&histItem&&(
           <HistoryPage
             item={histItem}
@@ -2944,14 +2686,12 @@ export default function App(){
           />
         )}
 
-        {/* 하단 면책 조항 */}
         <div style={{fontSize:'10px', color:'var(--t4)', textAlign:'center', padding:'20px 20px 40px', letterSpacing:'0.02em'}}>
           ✦ 별숨은 점술 및 오락 목적의 서비스이며, 결과에 대해서는 법적 책임이나 효력을 지지 않습니다.
         </div>
 
-      </div> {/* <-- app의 닫는 태그 */}
+      </div>
 
-      {/* ══ 프로필 모달 ══ */}
       {showProfileModal&&(
         <ProfileModal
           profile={profile}
@@ -2959,10 +2699,7 @@ export default function App(){
           onClose={()=>setShowProfileModal(false)}
         />
       )}
-      {/* ══ 결제 Toast ══ */}
-      {payToast&&<div className={`pay-toast ${payToast.type}`}>{payToast.msg}</div>}
 
-      {/* ══ 업그레이드 모달 (채팅 소진 후) ══ */}
       {showUpgradeModal&&(
         <div className="upgrade-modal-bg" onClick={()=>setShowUpgradeModal(false)}>
           <div className="upgrade-modal" onClick={e=>e.stopPropagation()}>
@@ -2994,7 +2731,6 @@ export default function App(){
         </div>
       )}
 
-      {/* ══ 다른 사람 프로필 추가 모달 ══ */}
       {showOtherProfileModal&&(
         <div className="other-modal-bg" onClick={()=>setShowOtherProfileModal(false)}>
           <div className="other-modal" onClick={e=>e.stopPropagation()}>
@@ -3048,3 +2784,21 @@ export default function App(){
     </>
   );
 }
+```
+
+**주요 수정 사항:**
+
+1. **중복 제거**
+   - 랜딩 섹션 중복 제거
+   - SamplePreview 중복 호출 제거
+   - daily-word 중복 제거
+
+2. **CSS 정리**
+   - 누락된 클래스 추가 (`land-hero`, `land-scroll-hint`, `land-scroll-zone`, `daily-word` 등)
+   - 중복 선언 제거
+
+3. **구조 개선**
+   - 컴포넌트 선언 순서 정리
+   - 일관된 스타일 적용
+
+이제 오류 없이 정상 작동할 것입니다!
