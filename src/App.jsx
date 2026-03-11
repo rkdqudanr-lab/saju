@@ -324,6 +324,165 @@ const shareCard = useCallback((idx) => {
   a.click();
 }, [selQs, answers, isDark, today]);
 
+  // ── 공유하기 (Web Share API + 폴백 모달) ──
+  const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
+
+  const shareResult = useCallback((type, text, label = '') => {
+    const appUrl = window.location.origin;
+    const shareTitle = '별숨 ✦';
+    let shareText = '';
+    if (type === 'prophecy') {
+      shareText = `✦ 별숨의 예언 — ${label}\n\n${(text || '').slice(0, 100)}...\n\n나만의 사주+별자리 운세 → ${appUrl}`;
+    } else if (type === 'compat') {
+      shareText = `✦ 우리가 만나면 — ${label}\n\n${(text || '').slice(0, 100)}\n\n별숨에서 나의 궁합을 봐요 → ${appUrl}`;
+    } else {
+      const ans = answers[0] ? parseAccSummary(answers[0]).text.slice(0, 100) : '';
+      shareText = `✦ 오늘의 별숨\n\n${ans}...\n\n나만의 사주+별자리 운세 → ${appUrl}`;
+    }
+    if (navigator.share) {
+      navigator.share({ title: shareTitle, text: shareText, url: appUrl }).catch(() => {});
+    } else {
+      setShareModal({ open: true, title: shareTitle, text: shareText });
+    }
+  }, [answers]);
+
+  // ── 별숨의 예언 이미지 저장 ──
+  const saveProphecyImage = useCallback((type, text, period) => {
+    const SCALE = 2;
+    const W = 900;
+    const PADDING = 56;
+    const FONT = 'Pretendard,-apple-system,sans-serif';
+    const gold = '#C89030';
+    const bg = isDark ? '#0D0B14' : '#F7F4EF';
+    const t1 = isDark ? '#F0EBF8' : '#1A1420';
+    const t3 = isDark ? '#8A7FA0' : '#8A7FA0';
+
+    const measure = document.createElement('canvas');
+    const mctx = measure.getContext('2d');
+    const MAX_W = W - PADDING * 2;
+
+    const wrapText = (ctx, txt, maxW, fontSize, weight = '400') => {
+      ctx.font = `${weight} ${fontSize}px ${FONT}`;
+      const lines = [];
+      for (const para of (txt || '').split('\n')) {
+        if (!para.trim()) { lines.push(''); continue; }
+        let line = '';
+        for (const ch of para.split('')) {
+          const test = line + ch;
+          if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = ch; }
+          else { line = test; }
+        }
+        if (line) lines.push(line);
+      }
+      return lines;
+    };
+
+    const titleLines = wrapText(mctx, `${period}의 예언`, MAX_W, 22, '700');
+    const bodyLines = wrapText(mctx, text, MAX_W, 17);
+    const LINE_H = 30;
+    const totalH = 80 + 32 + titleLines.length * 36 + 32 + bodyLines.length * LINE_H + 64 + 48;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W * SCALE;
+    canvas.height = totalH * SCALE;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(SCALE, SCALE);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, totalH);
+    ctx.fillStyle = gold;
+    ctx.fillRect(0, 0, W, 4);
+    ctx.font = `600 20px ${FONT}`;
+    ctx.fillStyle = gold;
+    ctx.fillText('byeolsoom  ✦', PADDING, 48);
+    ctx.font = `400 14px ${FONT}`;
+    ctx.fillStyle = t3;
+    ctx.fillText(`별숨의 예언 · ${today.month}월 ${today.day}일`, PADDING, 70);
+
+    let y = 70 + 32;
+    ctx.font = `700 22px ${FONT}`;
+    ctx.fillStyle = t1;
+    titleLines.forEach(line => { ctx.fillText(line, PADDING, y); y += 36; });
+    y += 12;
+    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(W - PADDING, y); ctx.stroke();
+    y += 32;
+    ctx.font = `400 17px ${FONT}`;
+    ctx.fillStyle = t3;
+    bodyLines.forEach(line => {
+      ctx.fillText(line, PADDING, y);
+      y += line === '' ? LINE_H * 0.6 : LINE_H;
+    });
+    y += 32;
+    ctx.font = `400 13px ${FONT}`;
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, y);
+
+    const a = document.createElement('a');
+    a.download = `byeolsoom_prophecy.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }, [isDark, today]);
+
+  // ── 우리가 만나면 이미지 저장 ──
+  const saveCompatImage = useCallback((result, myF, partnerF, placeObj, score) => {
+    const SCALE = 2;
+    const W = 900;
+    const PADDING = 56;
+    const FONT = 'Pretendard,-apple-system,sans-serif';
+    const gold = '#C89030';
+    const bg = isDark ? '#0D0B14' : '#F7F4EF';
+    const t1 = isDark ? '#F0EBF8' : '#1A1420';
+    const t3 = isDark ? '#8A7FA0' : '#8A7FA0';
+
+    const bubbles = result?.bubbles || [];
+    const lineH = 52;
+    const totalH = 80 + 32 + 60 + 32 + bubbles.length * lineH + 40 + 48;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W * SCALE;
+    canvas.height = totalH * SCALE;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(SCALE, SCALE);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, totalH);
+    ctx.fillStyle = gold;
+    ctx.fillRect(0, 0, W, 4);
+    ctx.font = `600 20px ${FONT}`;
+    ctx.fillStyle = gold;
+    ctx.fillText('byeolsoom  ✦', PADDING, 48);
+    ctx.font = `400 14px ${FONT}`;
+    ctx.fillStyle = t3;
+    ctx.fillText(`우리가 만나면 · ${placeObj.label}`, PADDING, 70);
+
+    let y = 70 + 32;
+    ctx.font = `700 26px ${FONT}`;
+    ctx.fillStyle = t1;
+    ctx.fillText(`${myF.name || 'A'} × ${partnerF.name || 'B'} — ${score}%`, PADDING, y);
+    y += 60;
+
+    ctx.font = `400 17px ${FONT}`;
+    bubbles.forEach(b => {
+      const isA = b.who === 'A';
+      ctx.fillStyle = isA ? gold : '#9B8EC4';
+      const nameW = ctx.measureText((isA ? myF.name || 'A' : partnerF.name || 'B') + ': ').width;
+      ctx.fillText((isA ? myF.name || 'A' : partnerF.name || 'B') + ': ', isA ? PADDING : W - PADDING - nameW - ctx.measureText(b.text).width, y);
+      ctx.fillStyle = t3;
+      ctx.fillText(b.text, isA ? PADDING + nameW : W - PADDING - ctx.measureText(b.text).width, y);
+      y += lineH;
+    });
+
+    y += 8;
+    ctx.font = `400 13px ${FONT}`;
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, y);
+
+    const a = document.createElement('a');
+    a.download = `byeolsoom_compat.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }, [isDark]);
+
   const kakaoLogin=useCallback(()=>{
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
     if(!JS_KEY){
@@ -857,8 +1016,13 @@ const shareCard = useCallback((idx) => {
                     📋 복사
                   </button>
                   {answers[0]&&(
-                    <button className="res-top-btn primary" onClick={()=>shareCard(0)}>
-                      ↗ 이미지 저장
+                    <button className="res-top-btn" onClick={()=>shareCard(0)}>
+                      🖼 저장
+                    </button>
+                  )}
+                  {answers[0]&&(
+                    <button className="res-top-btn primary" onClick={()=>shareResult('result')}>
+                      ↗ 공유
                     </button>
                   )}
                 </div>
@@ -941,7 +1105,7 @@ const shareCard = useCallback((idx) => {
                     
                     <div className="action-card letter" onClick={()=>setStep(8)}>
                       <div className="action-card-icon">🔮</div>
-                      <div className="action-card-title">미래의 별숨</div>
+                      <div className="action-card-title">별숨의 예언</div>
                       <div className="action-card-sub">시간이 흐른 뒤의 나의 예언</div>
                     </div>
                   </div>
@@ -986,10 +1150,10 @@ const shareCard = useCallback((idx) => {
                         </div>
                       </button>
                       <button className="fg-card" onClick={()=>setStep(8)}>
-                        <span className="fg-icon">💌</span>
+                        <span className="fg-icon">🔮</span>
                         <div className="fg-info">
-                          <div className="fg-name">3개월 후 편지</div>
-                          <div className="fg-desc">미래의 내가 지금 나에게 쓴 편지</div>
+                          <div className="fg-name">별숨의 예언</div>
+                          <div className="fg-desc">1개월~30년 후의 나에게 전하는 예언</div>
                         </div>
                       </button>
                       <button className="fg-card" onClick={()=>{genReport();}}>
@@ -1102,7 +1266,19 @@ const shareCard = useCallback((idx) => {
                   별의 움직임을 분석하여<br/>심층 리포트를 작성하고 있습니다...
                 </div>
               ):(
-                <ReportBody text={reportText}/>
+                <>
+                  <ReportBody text={reportText}/>
+                  {reportText&&(
+                    <div style={{display:'flex',gap:8,marginTop:'var(--sp3)'}}>
+                      <button className="res-top-btn" style={{flex:1,padding:12,borderRadius:'var(--r1)'}} onClick={()=>shareCard(0)}>
+                        🖼 이미지 저장
+                      </button>
+                      <button className="res-top-btn primary" style={{flex:1,padding:12,borderRadius:'var(--r1)'}} onClick={()=>shareResult('report',reportText,'월간 리포트')}>
+                        ↗ 공유하기
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -1116,6 +1292,8 @@ const shareCard = useCallback((idx) => {
             callApi={callApi}
             buildCtx={buildCtx}
             onBack={()=>setStep(4)}
+            shareResult={shareResult}
+            saveCompatImage={saveCompatImage}
           />
         )}
 
@@ -1125,6 +1303,8 @@ const shareCard = useCallback((idx) => {
             buildCtx={buildCtx}
             callApi={callApi}
             onBack={()=>setStep(4)}
+            shareResult={shareResult}
+            saveImage={saveProphecyImage}
           />
         )}
 
@@ -1228,6 +1408,50 @@ const shareCard = useCallback((idx) => {
             </button>
             <button style={{width:'100%',padding:10,background:'none',border:'none',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer',marginTop:6}}
               onClick={()=>setShowOtherProfileModal(false)}>취소</button>
+          </div>
+        </div>
+      )}
+
+      {shareModal.open&&(
+        <div className="upgrade-modal-bg" onClick={()=>setShareModal(s=>({...s,open:false}))}>
+          <div className="upgrade-modal" onClick={e=>e.stopPropagation()}>
+            <div style={{textAlign:'center',fontSize:'2rem',marginBottom:8}}>✦</div>
+            <div className="upgrade-modal-title">공유하기</div>
+            <div style={{fontSize:'var(--sm)',color:'var(--t3)',textAlign:'center',marginBottom:'var(--sp3)',lineHeight:1.8}}>
+              별숨의 결과를 친구들에게 공유해보세요
+            </div>
+            <div style={{
+              background:'var(--bg2)',borderRadius:'var(--r1)',padding:'var(--sp2)',
+              fontSize:'var(--xs)',color:'var(--t2)',lineHeight:1.75,
+              marginBottom:'var(--sp3)',whiteSpace:'pre-wrap',wordBreak:'break-word'
+            }}>
+              {shareModal.text}
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              <button className="btn-main" onClick={()=>{
+                navigator.clipboard?.writeText(shareModal.text).then(()=>{
+                  alert('복사됐어요! 친구에게 붙여넣기 해주세요 💌');
+                });
+                setShareModal(s=>({...s,open:false}));
+              }}>
+                📋 텍스트 복사하기
+              </button>
+              <button className="btn-main" style={{background:'var(--bg3)',color:'var(--t1)'}} onClick={()=>{
+                const url = window.location.origin;
+                navigator.clipboard?.writeText(url).then(()=>{
+                  alert('별숨 링크가 복사됐어요! 친구에게 공유해주세요 ✦');
+                });
+                setShareModal(s=>({...s,open:false}));
+              }}>
+                🔗 별숨 링크 공유하기
+              </button>
+              <button style={{
+                width:'100%',padding:10,background:'none',border:'none',
+                color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer'
+              }} onClick={()=>setShareModal(s=>({...s,open:false}))}>
+                닫기
+              </button>
+            </div>
           </div>
         </div>
       )}

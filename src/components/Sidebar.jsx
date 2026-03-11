@@ -56,7 +56,7 @@ export default function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLog
               {icon:'✦',label:'별숨에게 물어보기',s:1},
               {icon:'📅',label:'월간 리포트',s:6},
               {icon:'💞',label:'우리가 만나면',s:7},
-              {icon:'💌',label:'별의 편지',s:8},
+              {icon:'🔮',label:'별숨의 예언',s:8},
             ].map(m=>(
               <button key={m.s} className={`sidebar-menu-item ${step===m.s?'active':''}`}
                 onClick={()=>{onNav(m.s);onClose();}}>
