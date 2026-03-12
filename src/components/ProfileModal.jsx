@@ -3,11 +3,19 @@ import { getSaju } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { ON } from "../utils/saju.js";
 
+const MBTI_TYPES = [
+  'INTJ','INTP','ENTJ','ENTP',
+  'INFJ','INFP','ENFJ','ENFP',
+  'ISTJ','ISFJ','ESTJ','ESFJ',
+  'ISTP','ISFP','ESTP','ESFP',
+];
+
 // ═══════════════════════════════════════════════════════════
 //  👤 개인화 프로필 모달
 // ═══════════════════════════════════════════════════════════
 export default function ProfileModal({profile,setProfile,onClose}){
-  const[local,setLocal]=useState({...profile});
+  const[local,setLocal]=useState({mbti:'',selfDesc:'',...profile});
+  const[showNaturalInput,setShowNaturalInput]=useState(false);
   const partnerSaju=useMemo(()=>{
     if(local.partnerBy&&local.partnerBm&&local.partnerBd)
       return getSaju(+local.partnerBy,+local.partnerBm,+local.partnerBd,12);
@@ -27,6 +35,69 @@ export default function ProfileModal({profile,setProfile,onClose}){
         <div className="profile-handle"/>
         <div className="profile-title">✦ 나의 별자리 지도</div>
         <div className="profile-sub">저장하면 모든 운세에 자동으로 반영돼요.<br/>입력할수록 더 깊이 읽어드릴게요.</div>
+
+        {/* MBTI */}
+        <div className="profile-section">
+          <div className="profile-section-title">🧠 MBTI</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+            {MBTI_TYPES.map(t=>(
+              <button key={t}
+                onClick={()=>upd('mbti',local.mbti===t?'':t)}
+                style={{
+                  padding:'6px 10px',borderRadius:8,border:`1px solid ${local.mbti===t?'var(--gold)':'var(--line)'}`,
+                  background:local.mbti===t?'var(--goldf)':'transparent',
+                  color:local.mbti===t?'var(--gold)':'var(--t3)',
+                  fontSize:'var(--xs)',fontFamily:'var(--ff)',fontWeight:local.mbti===t?700:400,
+                  cursor:'pointer',transition:'all .15s'
+                }}>
+                {t}
+              </button>
+            ))}
+          </div>
+          {local.mbti&&(
+            <div style={{fontSize:'var(--xs)',color:'var(--t4)',marginBottom:4}}>
+              선택됨: <span style={{color:'var(--gold)',fontWeight:700}}>{local.mbti}</span>
+              <button onClick={()=>upd('mbti','')}
+                style={{marginLeft:8,background:'none',border:'none',color:'var(--t4)',cursor:'pointer',fontSize:'var(--xs)',fontFamily:'var(--ff)'}}>
+                ✕ 지우기
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 자연어 입력 */}
+        <div className="profile-section">
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+            <div className="profile-section-title" style={{marginBottom:0}}>✏️ 나에 대해 자유롭게 써줘요</div>
+            <button
+              onClick={()=>setShowNaturalInput(p=>!p)}
+              style={{
+                padding:'5px 12px',borderRadius:20,border:'1px solid var(--acc)',
+                background:showNaturalInput?'var(--goldf)':'transparent',
+                color:'var(--gold)',fontSize:'var(--xs)',fontFamily:'var(--ff)',
+                fontWeight:600,cursor:'pointer',transition:'all .15s',flexShrink:0
+              }}>
+              {showNaturalInput?'접기 ▲':'입력하기 ▼'}
+            </button>
+          </div>
+          {showNaturalInput&&(
+            <>
+              <div style={{fontSize:'var(--xs)',color:'var(--t4)',marginBottom:6,lineHeight:1.6}}>
+                직업, 관계, 현재 상황 등 자유롭게 써주세요.<br/>
+                예: "30대 직장인이고 최근 이직을 고민 중이에요. 연애는 3년째 같은 분과 만나고 있어요."
+              </div>
+              <textarea className="diy-inp"
+                placeholder="나에 대해 자유롭게 써주세요 🌙"
+                value={local.selfDesc} onChange={e=>upd('selfDesc',e.target.value)}
+                style={{height:96,marginBottom:0}}/>
+            </>
+          )}
+          {!showNaturalInput&&local.selfDesc&&(
+            <div style={{fontSize:'var(--xs)',color:'var(--t3)',background:'var(--bg2)',borderRadius:'var(--r1)',padding:'8px 10px',lineHeight:1.6}}>
+              {local.selfDesc.length>60?local.selfDesc.slice(0,60)+'…':local.selfDesc}
+            </div>
+          )}
+        </div>
 
         <div className="profile-section">
           <div className="profile-section-title">💕 연인 정보</div>
