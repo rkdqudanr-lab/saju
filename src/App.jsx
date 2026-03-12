@@ -41,7 +41,7 @@ export default function App(){
     try{const u=localStorage.getItem('byeolsoom_user');return u?JSON.parse(u):null;}catch{return null;}
   });
   const[profile,setProfile]=useState(()=>{
-    try{const p=localStorage.getItem('byeolsoom_extra');return p?JSON.parse(p):{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:''};}catch{return{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:''};}
+    try{const p=localStorage.getItem('byeolsoom_extra');return p?JSON.parse(p):{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:'',mbti:'',selfDesc:''};}catch{return{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:'',mbti:'',selfDesc:''};}
   });
   const[showProfileModal,setShowProfileModal]=useState(false);
   const[step,setStep]=useState(0);
@@ -188,8 +188,10 @@ export default function App(){
         }catch(e){}
       }
     }
+    if(profile.mbti) c+=`[MBTI] ${profile.mbti}\n`;
     if(profile.workplace) c+=`[직장/상황] ${profile.workplace}\n`;
     if(profile.worryText) c+=`[지금 고민] ${profile.worryText}\n`;
+    if(profile.selfDesc) c+=`[자기 소개] ${profile.selfDesc}\n`;
 
     c+=`\n[특별 지침]\n`;
     c+=`1. 결과에 '요약'이라는 단어를 절대 노출하지 마세요.\n`;
@@ -824,7 +826,7 @@ const shareCard = useCallback((idx) => {
                 </div>
 
                 <div className="toggle-row" onClick={()=>setForm(f=>({...f,noTime:!f.noTime,bh:''}))}>
-                  <button className={`toggle ${form.noTime?'on':'off'}`} onClick={e=>e.stopPropagation()}/>
+                  <button className={`toggle ${form.noTime?'on':'off'}`} onClick={e=>{e.stopPropagation();setForm(f=>({...f,noTime:!f.noTime,bh:''}));}}/>
                   <span className="toggle-label">태어난 시간을 몰라요</span>
                 </div>
                 {!form.noTime&&(
@@ -832,7 +834,7 @@ const shareCard = useCallback((idx) => {
                     <label className="lbl">태어난 시각</label>
                     <select className="inp" value={form.bh} onChange={e=>setForm(f=>({...f,bh:e.target.value}))}>
                       <option value="">시각 선택</option>
-                      {[...Array(24)].map((_,i)=><option key={i} value={i}>{String(i).padStart(2,'0')}:00 ~ {String(i+1).padStart(2,'0')}:00</option>)}
+                      {Array.from({length:144},(_,i)=>{const h=Math.floor(i/6);const m=(i%6)*10;const val=(h+m/60).toFixed(4);return<option key={i} value={val}>{String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}</option>;})}
                     </select>
                   </>
                 )}
@@ -1381,13 +1383,13 @@ const shareCard = useCallback((idx) => {
                 <option value="">일</option>{[...Array(31)].map((_,i)=><option key={i+1} value={i+1}>{i+1}일</option>)}</select></div>
             </div>
             <div className="toggle-row" onClick={()=>setOtherForm(f=>({...f,noTime:!f.noTime,bh:''}))}>
-              <button className={`toggle ${otherForm.noTime?'on':'off'}`} onClick={e=>e.stopPropagation()}/>
+              <button className={`toggle ${otherForm.noTime?'on':'off'}`} onClick={e=>{e.stopPropagation();setOtherForm(f=>({...f,noTime:!f.noTime,bh:''}));}}/>
               <span className="toggle-label">태어난 시간을 몰라요</span>
             </div>
             {!otherForm.noTime&&(
               <select className="inp" value={otherForm.bh} onChange={e=>setOtherForm(f=>({...f,bh:e.target.value}))}>
                 <option value="">태어난 시각 (선택)</option>
-                {[...Array(24)].map((_,i)=><option key={i} value={i}>{String(i).padStart(2,'0')}:00</option>)}
+                {Array.from({length:144},(_,i)=>{const h=Math.floor(i/6);const m=(i%6)*10;const val=(h+m/60).toFixed(4);return<option key={i} value={val}>{String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}</option>;})}
               </select>
             )}
             <label className="lbl">성별</label>
