@@ -70,6 +70,8 @@ export default function App(){
   const[reportLoading,setReportLoading]=useState(false);
   const chatEndRef=useRef(null);
   const today=useMemo(()=>getTodayInfo(),[]);
+  const[dailyFortune,setDailyFortune]=useState(null);
+  const[dailyFortuneLoading,setDailyFortuneLoading]=useState(false);
 
   useEffect(()=>{
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
@@ -139,6 +141,36 @@ export default function App(){
     try{localStorage.setItem('byeolsoom_others',JSON.stringify(otherProfiles));}catch{}
   },[otherProfiles]);
   useEffect(()=>{chatEndRef.current?.scrollIntoView({behavior:'smooth'});},[chatHistory,chatLoading]);
+
+  // ── 오늘의 별숨 (로그인 + 생년월일 있을 때, 하루 한 번 캐시) ──
+  useEffect(()=>{
+    if(!user?.id||!formOk) return;
+    const d=getTodayInfo();
+    const cacheKey=`byeolsoom_daily_${user.id}_${d.year}${String(d.month).padStart(2,'0')}${String(d.day).padStart(2,'0')}`;
+    try{
+      const cached=localStorage.getItem(cacheKey);
+      if(cached){setDailyFortune(cached);return;}
+    }catch{}
+    setDailyFortuneLoading(true);
+    (async()=>{
+      try{
+        const slotTag={morning:'[오전·100자]',afternoon:'[오후·100자]',evening:'[저녁·100자]',dawn:'[새벽·100자]'}[timeSlot]||'[오후·100자]';
+        const res=await fetch('/api/ask',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({userMessage:`${slotTag} 오늘 하루 짧은 운세`,context:buildCtx(),isChat:false,isReport:false}),
+        });
+        const data=await res.json();
+        if(res.ok&&data.text){
+          const txt=stripMarkdown(data.text||'');
+          setDailyFortune(txt);
+          try{localStorage.setItem(cacheKey,txt);}catch{}
+        }
+      }catch{}
+      finally{setDailyFortuneLoading(false);}
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[user?.id,formOk]);
 
   const saju=useMemo(()=>(form.by&&form.bm&&form.bd)?getSaju(+form.by,+form.bm,+form.bd,form.noTime?12:+(form.bh||12)):null,[form]);
   const sun=useMemo(()=>(form.bm&&form.bd)?getSun(+form.bm,+form.bd):null,[form.bm,form.bd]);
@@ -702,13 +734,54 @@ const shareCard = useCallback((idx) => {
     </div>
     <button onClick={kakaoLogout} style={{background:'none',border:'1px solid var(--line)',borderRadius:50,padding:'4px 10px',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer'}}>로그아웃</button>
   </div>
+  {formOk&&(
+    <div style={{
+      margin:'10px 0 14px',padding:'14px 16px',
+      background:'var(--bg2)',borderRadius:'var(--r1)',
+      border:'1px solid var(--line)',
+    }}>
+      <div style={{fontSize:'var(--xs)',color:'var(--gold)',fontWeight:600,marginBottom:8,display:'flex',alignItems:'center',gap:6}}>
+        <span>✦</span> 오늘의 별숨
+        <span style={{fontSize:'10px',color:'var(--t4)',fontWeight:400,marginLeft:'auto'}}>매일 자동 업데이트</span>
+      </div>
+      {dailyFortuneLoading?(
+        <div style={{display:'flex',alignItems:'center',gap:8,color:'var(--t3)',fontSize:'var(--xs)'}}>
+          <span style={{display:'inline-block',width:8,height:8,borderRadius:'50%',background:'var(--gold)',animation:'orbPulse 1.5s infinite'}}/>
+          오늘의 별을 읽는 중...
+        </div>
+      ):dailyFortune?(
+        <div style={{fontSize:'var(--sm)',color:'var(--t2)',lineHeight:1.75}}>{dailyFortune}</div>
+      ):(
+        <div style={{fontSize:'var(--xs)',color:'var(--t3)'}}>잠시 후 오늘의 운세가 나타나요 🌙</div>
+      )}
+    </div>
+  )}
   <button className="cta-main" style={{width:'100%',justifyContent:'center',borderRadius:'var(--r1)',padding:'14px'}}
     onClick={()=>setStep(formOk?2:1)}>
-    {form.by ? '오늘의 별숨 보기 ✦' : '지금 시작하기 ✦'}
+    {form.by ? '더 자세히 물어보기 ✦' : '지금 시작하기 ✦'}
   </button>
 </div>
                 ) : (
                   <div className="land-login-card" style={{padding: '24px 20px', gap: '16px'}}>
+                    <div style={{
+                      padding:'14px 16px',marginBottom:4,
+                      background:'var(--goldf)',borderRadius:'var(--r1)',
+                      border:'1px solid rgba(200,144,48,.2)',
+                    }}>
+                      <div style={{fontSize:'var(--xs)',color:'var(--gold)',fontWeight:600,marginBottom:6}}>
+                        🌙 오늘의 별숨 미리보기
+                      </div>
+                      <div style={{
+                        fontSize:'var(--sm)',color:'var(--t2)',lineHeight:1.7,
+                        filter:'blur(4px)',userSelect:'none',pointerEvents:'none',
+                        marginBottom:8,
+                      }}>
+                        오늘은 마음속에 품어온 결정을 꺼낼 수 있는 날이에요. 두 별이 모두 같은 방향을 가리키고 있어요.
+                      </div>
+                      <div style={{fontSize:'var(--xs)',color:'var(--gold)',fontWeight:600,textAlign:'center'}}>
+                        로그인하면 매일 운세를 무료로 볼 수 있어요 ✦
+                      </div>
+                    </div>
                     <button className="kakao-login-full" onClick={kakaoLogin} style={{fontSize: '1rem', padding: '16px'}}>
                       <span className="kakao-icon-wrap">
                         <svg width="18" height="17" viewBox="0 0 18 18" fill="none">
