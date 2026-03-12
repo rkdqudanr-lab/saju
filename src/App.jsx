@@ -572,6 +572,25 @@ const shareCard = useCallback((idx) => {
     setStep(4);setOpenAcc(0);
   };
 
+  const SLOT_TAG_MAP={morning:'[오전·100자]',afternoon:'[오후·100자]',evening:'[저녁·100자]',dawn:'[새벽·100자]'};
+
+  const askDailyHoroscope=async()=>{
+    if(!formOk){setStep(1);return;}
+    const tag=SLOT_TAG_MAP[timeSlot];
+    const q='오늘 하루 나의 별숨은?';
+    setSelQs([q]);
+    setStep(3);setAnswers([]);setTypedSet(new Set());setOpenAcc(0);
+    try{
+      const ans=await callApi(`${tag} ${TIME_CONFIG[timeSlot].prompt}`);
+      setAnswers([ans]);
+      addHistory([q],[ans]);
+      setHistItems(loadHistory());
+    }catch{
+      setAnswers(['별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.']);
+    }
+    setStep(4);setOpenAcc(0);
+  };
+
   const askReview=async(text,prompt)=>{
     if(!formOk){setStep(1);return;}
     const q=`오늘 하루 회고: ${text.slice(0,30)}${text.length>30?'…':''}`;
@@ -704,10 +723,23 @@ const shareCard = useCallback((idx) => {
     </div>
     <button onClick={kakaoLogout} style={{background:'none',border:'1px solid var(--line)',borderRadius:50,padding:'4px 10px',color:'var(--t4)',fontSize:'var(--xs)',fontFamily:'var(--ff)',cursor:'pointer'}}>로그아웃</button>
   </div>
-  <button className="cta-main" style={{width:'100%',justifyContent:'center',borderRadius:'var(--r1)',padding:'14px'}}
-    onClick={()=>setStep(formOk?2:1)}>
-    {form.by ? '오늘의 별숨 보기 ✦' : '지금 시작하기 ✦'}
-  </button>
+  {form.by ? (
+    <>
+      <button className="cta-main" style={{width:'100%',justifyContent:'center',borderRadius:'var(--r1)',padding:'14px'}}
+        onClick={askDailyHoroscope}>
+        오늘 하루 나의 별숨은? ✦
+      </button>
+      <button style={{background:'none',border:'none',color:'var(--t3)',fontSize:'var(--sm)',fontFamily:'var(--ff)',cursor:'pointer',marginTop:10,padding:'4px 0',textDecoration:'underline',display:'block',width:'100%',textAlign:'center'}}
+        onClick={()=>setStep(formOk?2:1)}>
+        오늘 하루의 별숨은? →
+      </button>
+    </>
+  ) : (
+    <button className="cta-main" style={{width:'100%',justifyContent:'center',borderRadius:'var(--r1)',padding:'14px'}}
+      onClick={()=>setStep(1)}>
+      지금 시작하기 ✦
+    </button>
+  )}
 </div>
                 ) : (
                   <div className="land-login-card" style={{padding: '24px 20px', gap: '16px'}}>
@@ -1131,7 +1163,7 @@ const shareCard = useCallback((idx) => {
                     <button className="chat-cta" onClick={()=>{
                       if(chatLeft>0){setStep(5);}else{setStep(5);}
                     }} disabled={false}>
-                      💬 {chatLeft>0?`더 물어보기 · 남은 ${chatLeft}회`:'더 물어보기 ✦'}
+                      💬 {chatLeft>0?`별숨에게 더 물어보기 · 남은 ${chatLeft}회`:'별숨에게 더 물어보기 ✦'}
                       <span style={{fontSize:'var(--xs)',color:'var(--t4)'}}>{chatLeft>0?'무료':'무료 이용 중'}</span>
                     </button>
                   )}
@@ -1168,7 +1200,7 @@ const shareCard = useCallback((idx) => {
                       <button className="fg-card" onClick={()=>{setStep(5);}}>
                         <span className="fg-icon">💬</span>
                         <div className="fg-info">
-                          <div className="fg-name">더 물어보기</div>
+                          <div className="fg-name">별숨에게 더 물어보기</div>
                           <div className="fg-desc">답변 기반 후속 상담 채팅</div>
                         </div>
                       </button>
