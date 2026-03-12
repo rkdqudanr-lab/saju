@@ -729,9 +729,9 @@ const shareCard = useCallback((idx) => {
         onClick={askDailyHoroscope}>
         오늘 하루 나의 별숨은? ✦
       </button>
-      <button style={{background:'none',border:'none',color:'var(--t3)',fontSize:'var(--sm)',fontFamily:'var(--ff)',cursor:'pointer',marginTop:10,padding:'4px 0',textDecoration:'underline',display:'block',width:'100%',textAlign:'center'}}
+      <button className="cta-main" style={{width:'100%',justifyContent:'center',borderRadius:'var(--r1)',padding:'14px',marginTop:10,background:'none',border:'1px solid var(--gold)',color:'var(--gold)'}}
         onClick={()=>setStep(formOk?2:1)}>
-        오늘 하루의 별숨은? →
+        별숨에게 질문하기 ✦
       </button>
     </>
   ) : (
