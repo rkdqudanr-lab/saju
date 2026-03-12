@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { PLACES } from "../utils/constants.js";
 
 // ═══════════════════════════════════════════════════════════
-//  💞 시나리오 궁합 페이지
+//  💞 오늘 우리가 만나면 — 시나리오 궁합 페이지
 // ═══════════════════════════════════════════════════════════
 export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, onBack, shareResult, saveCompatImage }) {
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
@@ -44,18 +44,23 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
     setPhase('result');
     setResult(null);
     const placeObj = PLACES.find(p => p.id === place) || PLACES[0];
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
+
     try {
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userMessage: `[요청] 두 사람이 ${placeObj.label}에 갔을 때의 짧은 대화 시나리오를 써주세요.
+          userMessage: `[오늘 우리가 만나면] 두 사람이 오늘 ${placeObj.label}에서 만났을 때의 시나리오를 써주세요.
+
+오늘: ${todayStr}
 
 규칙:
 - A(${myForm.name || '나'})와 B(${partner.name || '상대'})가 번갈아가며 자연스럽게 대화
 - 반드시 A→B→A→B 순으로 번갈아 말함 (한 사람이 연속으로 말하면 안 됨)
-- JSON 객체로만 응답: {"bubbles":[{"who":"A","text":"..."},{"who":"B","text":"..."},...],"summary":"총평","reason":"설명"}
-- 두 사람의 기질 차이가 자연스럽게 드러남
+- JSON 객체로만 응답: {"topic":"오늘 두 사람 대화의 핵심 장면 (구체적 상황, 20자 이내)","bubbles":[{"who":"A","text":"..."},{"who":"B","text":"..."},...],"todayEvents":["오늘 두 사람이 함께 겪을 구체적 상황 1","상황 2","상황 3"],"recommendedFood":"추천 음식 이름 + 한 줄 이유","recommendedPlace":"추천 데이트 장소 이름 + 한 줄 이유","summary":"총평","reason":"설명"}
+- 두 사람의 성격 차이를 설명하지 말고 말 한마디와 반응으로 직접 보여줄 것
 - 웃음 포인트 1개, 공감 포인트 1개
 - reason에는 왜 이런 대화가 일어났는지 사주와 별자리를 바탕으로 쉽게 설명 (존댓말)`,
           context: buildPartnerCtx(),
@@ -67,25 +72,32 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
       try {
         const raw = data.text.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(raw);
-        // 새 형식 (객체) 또는 구 형식 (배열) 모두 지원
         if (Array.isArray(parsed)) {
           setResult({
             bubbles: parsed.filter(b => b.who),
             summary: parsed.find(b => b.summary)?.summary || '',
             reason: '',
+            topic: '',
+            todayEvents: [],
+            recommendedFood: '',
+            recommendedPlace: '',
           });
         } else {
           setResult({
             bubbles: (parsed.bubbles || []).filter(b => b.who),
             summary: parsed.summary || '',
             reason: parsed.reason || '',
+            topic: parsed.topic || '',
+            todayEvents: parsed.todayEvents || [],
+            recommendedFood: parsed.recommendedFood || '',
+            recommendedPlace: parsed.recommendedPlace || '',
           });
         }
       } catch {
-        setResult({ bubbles: [{ who: 'A', text: data.text }], summary: '', reason: '' });
+        setResult({ bubbles: [{ who: 'A', text: data.text }], summary: '', reason: '', topic: '', todayEvents: [], recommendedFood: '', recommendedPlace: '' });
       }
     } catch {
-      setResult({ bubbles: [{ who: 'A', text: '별이 잠시 쉬고 있어요 🌙 다시 시도해봐요!' }], summary: '', reason: '' });
+      setResult({ bubbles: [{ who: 'A', text: '별이 잠시 쉬고 있어요 🌙 다시 시도해봐요!' }], summary: '', reason: '', topic: '', todayEvents: [], recommendedFood: '', recommendedPlace: '' });
     } finally {
       setLoading(false);
     }
@@ -98,7 +110,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           <div className="compat-header">
             <div style={{ fontSize: '2rem', marginBottom: 8 }}>{selectedPlace.emoji}</div>
             <div className="compat-title">{myForm.name || '나'} × {partner.name || '상대'}</div>
-            <div className="compat-sub">{selectedPlace.label}에서 만났을 때</div>
+            <div className="compat-sub">{selectedPlace.label}에서 만난다면</div>
           </div>
 
           <div className="compat-total" style={{ marginBottom: 'var(--sp2)' }}>
@@ -120,10 +132,28 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                 <div className="scenario-sub">{myForm.name || 'A'} × {partner.name || 'B'}</div>
               </div>
             </div>
+
+            {/* 오늘의 대화 주제 */}
+            {result?.topic && !loading && (
+              <div style={{
+                padding: '10px 14px',
+                background: 'rgba(180,140,50,0.08)',
+                borderRadius: 'var(--r1)',
+                marginBottom: 'var(--sp2)',
+                fontSize: 'var(--sm)',
+                color: 'var(--t2)',
+                borderLeft: '3px solid var(--gold)',
+                lineHeight: 1.6,
+              }}>
+                <span style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, display: 'block', marginBottom: 4 }}>오늘의 장면</span>
+                {result.topic}
+              </div>
+            )}
+
             {loading ? (
               <div className="scenario-loading">
                 <div className="scenario-typing-dots"><span /><span /><span /></div>
-                두 별의 이야기를 쓰고 있어요...
+                오늘의 이야기를 쓰고 있어요...
               </div>
             ) : (
               <>
@@ -145,11 +175,80 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                   <div className="scenario-summary">✦ {result.summary}</div>
                 )}
 
-                {/* 설명 섹션 (타이핑 애니메이션 없이 바로 표시) */}
-                {result?.reason && !loading && (
+                {/* 오늘 두 사람에게 일어날 일 */}
+                {result?.todayEvents?.length > 0 && (
                   <div style={{
                     marginTop: 'var(--sp2)',
-                    padding: 'var(--sp2) var(--sp2)',
+                    padding: 'var(--sp2)',
+                    background: 'var(--bg2)',
+                    borderRadius: 'var(--r1)',
+                  }}>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 10 }}>
+                      ✦ 오늘 두 사람에게 일어날 일
+                    </div>
+                    {result.todayEvents.map((event, i) => (
+                      <div key={i} style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 8,
+                        marginBottom: i < result.todayEvents.length - 1 ? 10 : 0,
+                        fontSize: 'var(--sm)',
+                        color: 'var(--t2)',
+                        lineHeight: 1.65,
+                      }}>
+                        <span style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }}>✦</span>
+                        <span>{event}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 오늘 가까이 하면 좋은 것 */}
+                {(result?.recommendedFood || result?.recommendedPlace) && (
+                  <div style={{
+                    marginTop: 'var(--sp2)',
+                    padding: 'var(--sp2)',
+                    background: 'var(--bg2)',
+                    borderRadius: 'var(--r1)',
+                  }}>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 10 }}>
+                      ✦ 오늘 가까이 하면 좋은 것
+                    </div>
+                    {result.recommendedFood && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 10,
+                        marginBottom: result.recommendedPlace ? 10 : 0,
+                        fontSize: 'var(--sm)',
+                        color: 'var(--t2)',
+                        lineHeight: 1.65,
+                      }}>
+                        <span style={{ flexShrink: 0 }}>🍽</span>
+                        <span>{result.recommendedFood}</span>
+                      </div>
+                    )}
+                    {result.recommendedPlace && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 10,
+                        fontSize: 'var(--sm)',
+                        color: 'var(--t2)',
+                        lineHeight: 1.65,
+                      }}>
+                        <span style={{ flexShrink: 0 }}>📍</span>
+                        <span>{result.recommendedPlace}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 왜 이런 대화가 이뤄졌을까요 */}
+                {result?.reason && (
+                  <div style={{
+                    marginTop: 'var(--sp2)',
+                    padding: 'var(--sp2)',
                     background: 'var(--bg2)',
                     borderRadius: 'var(--r1)',
                     borderLeft: '3px solid var(--gold)',
@@ -204,8 +303,8 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
       <div className="inner">
         <div className="compat-page">
           <div className="compat-header">
-            <div className="compat-title">우리가 만나면 💞</div>
-            <div className="compat-sub">상대방의 생년월일을 입력하면<br />두 별이 만나는 장면을 보여드려요</div>
+            <div className="compat-title">오늘 우리가 만나면 💞</div>
+            <div className="compat-sub">오늘의 사주와 별자리 기운으로<br />두 사람이 만나면 어떤 일이 펼쳐질지 보여드려요</div>
           </div>
 
           <div className="compat-section">
@@ -249,7 +348,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           </div>
 
           <div className="compat-section">
-            <div className="compat-label">어디서 만날까요?</div>
+            <div className="compat-label">오늘 여기서 만난다면?</div>
             <div className="place-grid">
               {PLACES.map(p => (
                 <button key={p.id} className={`place-btn ${place === p.id ? 'on' : ''}`} onClick={() => setPlace(p.id)}>
@@ -261,7 +360,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           </div>
 
           <button className="btn-main" disabled={!partnerOk || loading} onClick={run}>
-            {loading ? '두 별이 만나는 중...' : '✦ 시나리오 보기'}
+            {loading ? '오늘의 이야기를 쓰고 있어요...' : '✦ 오늘의 만남 보기'}
           </button>
           <button className="res-btn" style={{ width: '100%', marginTop: 8 }} onClick={onBack}>← 돌아가기</button>
         </div>
