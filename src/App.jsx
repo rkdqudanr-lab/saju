@@ -41,7 +41,7 @@ export default function App(){
     try{const u=localStorage.getItem('byeolsoom_user');return u?JSON.parse(u):null;}catch{return null;}
   });
   const[profile,setProfile]=useState(()=>{
-    try{const p=localStorage.getItem('byeolsoom_extra');return p?JSON.parse(p):{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:''};}catch{return{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:''};}
+    try{const p=localStorage.getItem('byeolsoom_extra');return p?{mbti:'',naturalDesc:'',...JSON.parse(p)}:{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:'',mbti:'',naturalDesc:''};}catch{return{partner:'',partnerBy:'',partnerBm:'',partnerBd:'',workplace:'',worryText:'',mbti:'',naturalDesc:''};}
   });
   const[showProfileModal,setShowProfileModal]=useState(false);
   const[step,setStep]=useState(0);
@@ -172,10 +172,10 @@ export default function App(){
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[user?.id,formOk]);
 
-  const saju=useMemo(()=>(form.by&&form.bm&&form.bd)?getSaju(+form.by,+form.bm,+form.bd,form.noTime?12:+(form.bh||12)):null,[form]);
+  const saju=useMemo(()=>(form.by&&form.bm&&form.bd)?getSaju(+form.by,+form.bm,+form.bd,form.noTime?12:(form.bh?parseInt(form.bh):12)):null,[form]);
   const sun=useMemo(()=>(form.bm&&form.bd)?getSun(+form.bm,+form.bd):null,[form.bm,form.bd]);
   const moon=useMemo(()=>(form.by&&form.bm&&form.bd)?getMoon(+form.by,+form.bm,+form.bd):null,[form.by,form.bm,form.bd]);
-  const asc=useMemo(()=>(!form.noTime&&form.bh&&form.bm)?getAsc(+form.bh,+form.bm):null,[form]);
+  const asc=useMemo(()=>(!form.noTime&&form.bh&&form.bm)?getAsc(parseInt(form.bh),+form.bm):null,[form]);
   const age=form.by?today.year-+form.by:0;
   const formOk=form.by&&form.bm&&form.bd&&form.gender&&(form.noTime||form.bh);
   const curPkg=PKGS.find(p=>p.id===pkg)||PKGS[2];
@@ -187,7 +187,7 @@ export default function App(){
   const activeForm = activeProfileIdx===0 ? form : (otherProfiles[activeProfileIdx-1]||form);
   const activeSaju = useMemo(()=>{
     const f=activeForm;
-    return (f.by&&f.bm&&f.bd)?getSaju(+f.by,+f.bm,+f.bd,f.noTime?12:+(f.bh||12)):null;
+    return (f.by&&f.bm&&f.bd)?getSaju(+f.by,+f.bm,+f.bd,f.noTime?12:(f.bh?parseInt(f.bh):12)):null;
   },[activeForm]);
   const activeSun = useMemo(()=>(activeForm.bm&&activeForm.bd)?getSun(+activeForm.bm,+activeForm.bd):null,[activeForm]);
   const activeAge = activeForm.by?today.year-+activeForm.by:0;
@@ -220,8 +220,10 @@ export default function App(){
         }catch(e){}
       }
     }
+    if(profile.mbti) c+=`[MBTI] ${profile.mbti}\n`;
     if(profile.workplace) c+=`[직장/상황] ${profile.workplace}\n`;
     if(profile.worryText) c+=`[지금 고민] ${profile.worryText}\n`;
+    if(profile.naturalDesc) c+=`[본인이 직접 쓴 자기소개] ${profile.naturalDesc}\n`;
 
     c+=`\n[특별 지침]\n`;
     c+=`1. 결과에 '요약'이라는 단어를 절대 노출하지 마세요.\n`;
@@ -846,7 +848,7 @@ const shareCard = useCallback((idx) => {
                   </div>
 
                   {otherProfiles.map((p,i)=>{
-                    const pSaju=p.by&&p.bm&&p.bd?getSaju(+p.by,+p.bm,+p.bd,p.noTime?12:+(p.bh||12)):null;
+                    const pSaju=p.by&&p.bm&&p.bd?getSaju(+p.by,+p.bm,+p.bd,p.noTime?12:(p.bh?parseInt(p.bh):12)):null;
                     const pSun=p.bm&&p.bd?getSun(+p.bm,+p.bd):null;
                     return(
                       <div key={i} className={`profile-pick-card ${activeProfileIdx===i+1?'active':''}`}
@@ -897,15 +899,20 @@ const shareCard = useCallback((idx) => {
                 </div>
 
                 <div className="toggle-row" onClick={()=>setForm(f=>({...f,noTime:!f.noTime,bh:''}))}>
-                  <button className={`toggle ${form.noTime?'on':'off'}`} onClick={e=>e.stopPropagation()}/>
+                  <button className={`toggle ${form.noTime?'on':'off'}`} onClick={e=>{e.stopPropagation();setForm(f=>({...f,noTime:!f.noTime,bh:''}));}}/>
                   <span className="toggle-label">태어난 시간을 몰라요</span>
                 </div>
                 {!form.noTime&&(
                   <>
-                    <label className="lbl">태어난 시각</label>
+                    <label className="lbl">태어난 시각 <span style={{fontSize:'var(--xs)',color:'var(--t4)',fontWeight:400}}>10분 단위</span></label>
                     <select className="inp" value={form.bh} onChange={e=>setForm(f=>({...f,bh:e.target.value}))}>
                       <option value="">시각 선택</option>
-                      {[...Array(24)].map((_,i)=><option key={i} value={i}>{String(i).padStart(2,'0')}:00 ~ {String(i+1).padStart(2,'0')}:00</option>)}
+                      {Array.from({length:144},(_,i)=>{
+                        const h=Math.floor(i/6);
+                        const m=(i%6)*10;
+                        const val=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                        return <option key={i} value={val}>{val}</option>;
+                      })}
                     </select>
                   </>
                 )}
@@ -970,7 +977,7 @@ const shareCard = useCallback((idx) => {
                       : (()=>{
                           const op=otherProfiles[activeProfileIdx-1];
                           if(!op) return '동양과 서양의 별이 함께 읽어드려요';
-                          const os=op.by&&op.bm&&op.bd?getSaju(+op.by,+op.bm,+op.bd,op.noTime?12:+(op.bh||12)):null;
+                          const os=op.by&&op.bm&&op.bd?getSaju(+op.by,+op.bm,+op.bd,op.noTime?12:(op.bh?parseInt(op.bh):12)):null;
                           const osun=op.bm&&op.bd?getSun(+op.bm,+op.bd):null;
                           return os&&osun?`${op.name||'이 사람'} · ${ON[os.dom]} 기운의 ${osun.n}`:`${op.name||'이 사람'}의 별숨`;
                         })()
@@ -1454,13 +1461,17 @@ const shareCard = useCallback((idx) => {
                 <option value="">일</option>{[...Array(31)].map((_,i)=><option key={i+1} value={i+1}>{i+1}일</option>)}</select></div>
             </div>
             <div className="toggle-row" onClick={()=>setOtherForm(f=>({...f,noTime:!f.noTime,bh:''}))}>
-              <button className={`toggle ${otherForm.noTime?'on':'off'}`} onClick={e=>e.stopPropagation()}/>
+              <button className={`toggle ${otherForm.noTime?'on':'off'}`} onClick={e=>{e.stopPropagation();setOtherForm(f=>({...f,noTime:!f.noTime,bh:''}));}}/>
               <span className="toggle-label">태어난 시간을 몰라요</span>
             </div>
             {!otherForm.noTime&&(
               <select className="inp" value={otherForm.bh} onChange={e=>setOtherForm(f=>({...f,bh:e.target.value}))}>
-                <option value="">태어난 시각 (선택)</option>
-                {[...Array(24)].map((_,i)=><option key={i} value={i}>{String(i).padStart(2,'0')}:00</option>)}
+                <option value="">태어난 시각 선택 (10분 단위)</option>
+                {Array.from({length:144},(_,i)=>{
+                  const h=Math.floor(i/6);const m=(i%6)*10;
+                  const val=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                  return <option key={i} value={val}>{val}</option>;
+                })}
               </select>
             )}
             <label className="lbl">성별</label>
