@@ -9,6 +9,7 @@ import { PLACES } from "../utils/constants.js";
 export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, onBack, shareResult, saveCompatImage }) {
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
   const [place, setPlace] = useState('burger');
+  const [customPlace, setCustomPlace] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState('input');
@@ -16,7 +17,9 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
   const partnerSaju = useMemo(() => (partner.by && partner.bm && partner.bd) ? getSaju(+partner.by, +partner.bm, +partner.bd, 12) : null, [partner]);
   const partnerSun = useMemo(() => (partner.bm && partner.bd) ? getSun(+partner.bm, +partner.bd) : null, [partner.bm, partner.bd]);
   const partnerOk = partner.by && partner.bm && partner.bd && partner.gender;
-  const selectedPlace = PLACES.find(p => p.id === place) || PLACES[0];
+  const selectedPlace = place === 'custom'
+    ? { id: 'custom', emoji: '📍', label: customPlace || '직접 입력한 장소', hint: '직접 입력' }
+    : (PLACES.find(p => p.id === place) || PLACES[0]);
 
   const compatScore = useMemo(() => {
     if (!mySaju || !partnerSaju) return 75;
@@ -43,7 +46,9 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
     setLoading(true);
     setPhase('result');
     setResult(null);
-    const placeObj = PLACES.find(p => p.id === place) || PLACES[0];
+    const placeObj = place === 'custom'
+      ? { emoji: '📍', label: customPlace || '직접 입력한 장소' }
+      : (PLACES.find(p => p.id === place) || PLACES[0]);
     const now = new Date();
     const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
 
@@ -356,11 +361,29 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                   <span className="place-label">{p.label}</span>
                 </button>
               ))}
+              <button
+                className={`place-btn ${place === 'custom' ? 'on' : ''}`}
+                onClick={() => setPlace('custom')}
+                style={{ position: 'relative' }}
+              >
+                <span className="place-emoji">✏️</span>
+                <span className="place-label">만날 곳 직접 입력</span>
+              </button>
             </div>
+            {place === 'custom' && (
+              <input
+                className="inp"
+                placeholder="만날 장소를 입력해주세요"
+                value={customPlace}
+                onChange={e => setCustomPlace(e.target.value)}
+                style={{ marginTop: 8, padding: '8px 12px', fontSize: 'var(--sm)' }}
+                autoFocus
+              />
+            )}
           </div>
 
-          <button className="btn-main" disabled={!partnerOk || loading} onClick={run}>
-            {loading ? '오늘의 이야기를 쓰고 있어요...' : '✦ 오늘의 만남 보기'}
+          <button className="btn-main" disabled={!partnerOk || loading || (place === 'custom' && !customPlace.trim())} onClick={run}>
+            {loading ? '오늘의 이야기를 쓰고 있어요...' : '별숨에게 오늘의 우리 물어보기'}
           </button>
           <button className="res-btn" style={{ width: '100%', marginTop: 8 }} onClick={onBack}>← 돌아가기</button>
         </div>
