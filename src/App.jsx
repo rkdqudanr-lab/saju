@@ -498,7 +498,7 @@ export default function App() {
 
         {/* ── Step 4: 결과 ── */}
         {step === 4 && (
-          <div className="page">
+          <div className="page-top">
             <div className="res-wrap">
               <div className="res-card">
                 <div className="res-top-bar">
