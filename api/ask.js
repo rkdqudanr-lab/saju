@@ -6,7 +6,7 @@ import { buildSystem } from "./prompts/buildSystem.js";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { userMessage, context, isChat, isReport, isLetter = false, isScenario = false } = req.body;
+  const { userMessage, context, isChat, isReport, isLetter = false, isScenario = false, isStory = false } = req.body;
   if (!userMessage) return res.status(400).json({ error: "userMessage가 없어요" });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   const timeHorizon  = getTimeHorizon(userMessage);
 
   const systemWithContext =
-    buildSystem(today, season, categoryHint, endingHint, timeHorizon, userMessage, !!isChat, !!isReport, !!isLetter, !!isScenario)
+    buildSystem(today, season, categoryHint, endingHint, timeHorizon, userMessage, !!isChat, !!isReport, !!isLetter, !!isScenario, !!isStory)
     + (context
       ? `\n\n━━━ 오늘 상담하는 분의 기운 데이터 ━━━\n${context}\n(위 데이터는 취재 노트예요. 이걸 그대로 보여주는 게 아니라, 에세이의 재료로 자연스럽게 녹여요.)`
       : '');

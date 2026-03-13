@@ -13,6 +13,9 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState('input');
+  const [storyResult, setStoryResult] = useState(null);
+  const [storyLoading, setStoryLoading] = useState(false);
+  const [showStory, setShowStory] = useState(false);
 
   const partnerSaju = useMemo(() => (partner.by && partner.bm && partner.bd) ? getSaju(+partner.by, +partner.bm, +partner.bd, 12) : null, [partner]);
   const partnerSun = useMemo(() => (partner.bm && partner.bd) ? getSun(+partner.bm, +partner.bd) : null, [partner.bm, partner.bd]);
@@ -40,6 +43,44 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
     }
     if (partnerSun) c += `별자리: ${partnerSun.n}(${partnerSun.s}) — ${partnerSun.desc}\n`;
     return c;
+  };
+
+  const runStory = async () => {
+    setStoryLoading(true);
+    setStoryResult(null);
+    setShowStory(true);
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: `[오늘 우리의 이야기] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 오늘 하루 어떤 이야기가 펼쳐질지 소설처럼 이야기해줘요.`,
+          context: buildPartnerCtx(),
+          isChat: false, isReport: false, isScenario: false, isStory: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      try {
+        const raw = data.text.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(raw);
+        setStoryResult({
+          todayVibe: parsed.todayVibe || '',
+          story: parsed.story || '',
+          moments: parsed.moments || [],
+          tip: parsed.tip || '',
+          chemistry: parsed.chemistry || '',
+        });
+      } catch {
+        setStoryResult({ todayVibe: '', story: data.text, moments: [], tip: '', chemistry: '' });
+      }
+    } catch {
+      setStoryResult({ todayVibe: '', story: '별이 잠시 쉬고 있어요 🌙 다시 시도해봐요!', moments: [], tip: '', chemistry: '' });
+    } finally {
+      setStoryLoading(false);
+    }
   };
 
   const run = async () => {
@@ -352,6 +393,103 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
             </div>
           </div>
 
+          {/* 오늘의 우리 이야기 버튼 */}
+          <button
+            className="btn-main"
+            disabled={!partnerOk || storyLoading}
+            onClick={runStory}
+            style={{ marginBottom: 8 }}
+          >
+            {storyLoading ? '오늘의 이야기를 쓰고 있어요...' : '별숨에게 오늘의 우리 이야기 물어보기 ✦'}
+          </button>
+
+          {/* 이야기 결과 */}
+          {showStory && (
+            <div style={{
+              background: 'var(--bg2)',
+              borderRadius: 'var(--r1)',
+              padding: 'var(--sp2)',
+              marginBottom: 'var(--sp2)',
+              border: '1px solid rgba(180,140,50,0.18)',
+            }}>
+              {storyLoading ? (
+                <div className="scenario-loading">
+                  <div className="scenario-typing-dots"><span /><span /><span /></div>
+                  오늘 두 사람의 이야기를 쓰고 있어요...
+                </div>
+              ) : storyResult && (
+                <>
+                  {storyResult.todayVibe && (
+                    <div style={{
+                      fontSize: 'var(--sm)',
+                      fontWeight: 700,
+                      color: 'var(--gold)',
+                      marginBottom: 12,
+                      paddingBottom: 10,
+                      borderBottom: '1px solid rgba(180,140,50,0.15)',
+                    }}>
+                      ✦ {storyResult.todayVibe}
+                    </div>
+                  )}
+                  {storyResult.story && (
+                    <div style={{
+                      fontSize: 'var(--sm)',
+                      color: 'var(--t2)',
+                      lineHeight: 1.85,
+                      marginBottom: 14,
+                      whiteSpace: 'pre-line',
+                    }}>
+                      {storyResult.story}
+                    </div>
+                  )}
+                  {storyResult.moments?.length > 0 && (
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 8 }}>
+                        ✦ 오늘 두 사람에게 일어날 장면
+                      </div>
+                      {storyResult.moments.map((m, i) => (
+                        <div key={i} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: 8,
+                          marginBottom: i < storyResult.moments.length - 1 ? 8 : 0,
+                          fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.65,
+                        }}>
+                          <span style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }}>✦</span>
+                          <span>{m}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {storyResult.chemistry && (
+                    <div style={{
+                      fontSize: 'var(--xs)',
+                      color: 'var(--t3)',
+                      fontStyle: 'italic',
+                      marginBottom: storyResult.tip ? 10 : 0,
+                      paddingTop: 8,
+                      borderTop: '1px solid rgba(180,140,50,0.12)',
+                    }}>
+                      {storyResult.chemistry}
+                    </div>
+                  )}
+                  {storyResult.tip && (
+                    <div style={{
+                      background: 'rgba(180,140,50,0.08)',
+                      borderRadius: 'var(--r1)',
+                      padding: '10px 14px',
+                      fontSize: 'var(--sm)',
+                      color: 'var(--t2)',
+                      lineHeight: 1.65,
+                      borderLeft: '3px solid var(--gold)',
+                      marginTop: 4,
+                    }}>
+                      💡 {storyResult.tip}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           <div className="compat-section">
             <div className="compat-label">오늘 여기서 만난다면?</div>
             <div className="place-grid">
@@ -383,7 +521,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           </div>
 
           <button className="btn-main" disabled={!partnerOk || loading || (place === 'custom' && !customPlace.trim())} onClick={run}>
-            {loading ? '오늘의 이야기를 쓰고 있어요...' : '별숨에게 오늘의 우리 물어보기'}
+            {loading ? '시나리오를 쓰고 있어요...' : '별숨에게 오늘의 우리 물어보기'}
           </button>
           <button className="res-btn" style={{ width: '100%', marginTop: 8 }} onClick={onBack}>← 돌아가기</button>
         </div>
