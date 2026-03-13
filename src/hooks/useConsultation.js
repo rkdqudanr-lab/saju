@@ -152,7 +152,7 @@ export function useConsultation(buildCtx, formOk) {
 
   // ── 월간 리포트 ──
   const genReport = useCallback(async () => {
-    setStep(6); setReportText(''); setReportLoading(true);
+    setReportText(''); setReportLoading(true);
     try {
       const text = await callApi('[요청] 이번 달 종합 운세 리포트', { isReport: true });
       setReportText(text);
