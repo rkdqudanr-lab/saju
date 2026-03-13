@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 // utils
 import { OC, OE, ON } from "./utils/saju.js";
@@ -54,6 +54,30 @@ export default function App() {
           sendChat, genReport, callApi, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[2];
+
+  // ── 브라우저 히스토리 동기화 (뒤로가기 UX 개선) ──
+  const isPopState = useRef(false);
+
+  // step이 바뀔 때마다 브라우저 히스토리에 push (로딩 step 3은 제외)
+  useEffect(() => {
+    if (step === 3) return; // 로딩 페이지는 히스토리에 쌓지 않음
+    if (isPopState.current) {
+      isPopState.current = false;
+      return;
+    }
+    window.history.pushState({ step }, '', window.location.pathname);
+  }, [step]);
+
+  // 브라우저 뒤로가기/앞으로가기 이벤트 처리
+  useEffect(() => {
+    const handlePopState = (e) => {
+      const prevStep = e.state?.step ?? 0;
+      isPopState.current = true;
+      setStep(prevStep);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [setStep]);
 
   // ── 테마 ──
   useState(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); });
@@ -130,7 +154,7 @@ export default function App() {
         </button>
       )}
 
-      {step > 0 && step < 5 && step !== 9 && <button className="back-btn" onClick={() => setStep(p => Math.max(0, p - 1))}>←</button>}
+      {step > 0 && step < 5 && step !== 9 && <button className="back-btn" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
 
