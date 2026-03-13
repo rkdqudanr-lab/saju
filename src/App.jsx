@@ -549,7 +549,7 @@ export default function App() {
                         <div className="action-card-sub">두 사람의 별이 만나는 시나리오</div>
                       </div>
                     ) : (
-                      <div className="action-card" style={{ borderColor: 'var(--tealacc)' }} onClick={genReport}>
+                      <div className="action-card" style={{ borderColor: 'var(--tealacc)' }} onClick={() => setStep(6)}>
                         <div className="action-card-icon">📜</div>
                         <div className="action-card-title">{CATS[cat].label} 심층 분석</div>
                         <div className="action-card-sub">이 분야만 깊게 파고들기</div>
@@ -573,7 +573,7 @@ export default function App() {
                   <div className="upsell">
                     <div className="up-t">✦ 이번 달 전체 운세가 궁금해요</div>
                     <div className="up-d">연애 · 재물 · 건강 · 직업 종합 분석<br />사주와 별자리가 함께 쓴 월간 에세이</div>
-                    <button className="up-btn" onClick={genReport}>이달의 운세 리포트 보기 ✦</button>
+                    <button className="up-btn" onClick={() => setStep(6)}>이달의 운세 리포트 보기 ✦</button>
                   </div>
 
                   {curPkg.chat > 0 && (
@@ -594,7 +594,7 @@ export default function App() {
                     <div className="feature-guide-grid">
                       <button className="fg-card" onClick={() => setStep(7)}><span className="fg-icon">💞</span><div className="fg-info"><div className="fg-name">사이 별점</div><div className="fg-desc">두 사람의 사주+별자리로 관계 시나리오 읽기</div></div></button>
                       <button className="fg-card" onClick={() => setStep(8)}><span className="fg-icon">🔮</span><div className="fg-info"><div className="fg-name">별숨의 예언</div><div className="fg-desc">1개월~30년 후의 나에게 전하는 예언</div></div></button>
-                      <button className="fg-card" onClick={genReport}><span className="fg-icon">📜</span><div className="fg-info"><div className="fg-name">월간 리포트</div><div className="fg-desc">이달의 연애·재물·직업·건강 에세이</div></div></button>
+                      <button className="fg-card" onClick={() => setStep(6)}><span className="fg-icon">📜</span><div className="fg-info"><div className="fg-name">월간 리포트</div><div className="fg-desc">이달의 연애·재물·직업·건강 에세이</div></div></button>
                       <button className="fg-card" onClick={() => setStep(5)}><span className="fg-icon">💬</span><div className="fg-info"><div className="fg-name">별숨에게 더 물어보기</div><div className="fg-desc">답변 기반 후속 상담 채팅</div></div></button>
                       <button className="fg-card" onClick={() => setShowSidebar(true)}><span className="fg-icon">🗂️</span><div className="fg-info"><div className="fg-name">지난 이야기</div><div className="fg-desc">내가 별숨에 물었던 모든 질문 기록</div></div></button>
                       <button className="fg-card" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')); alert('복사됐어요 📋'); }}><span className="fg-icon">📋</span><div className="fg-info"><div className="fg-name">전체 복사</div><div className="fg-desc">오늘 받은 모든 답변 클립보드 복사</div></div></button>
@@ -672,7 +672,16 @@ export default function App() {
                 <div className="report-title">{form.name || '당신'}님의<br />심층 리포트</div>
                 <div className="report-name">사주 × 별자리 통합 운세</div>
               </div>
-              {reportLoading ? (
+              {!reportLoading && !reportText ? (
+                <div style={{ textAlign: 'center', padding: 'var(--sp4) var(--sp3) var(--sp5)' }}>
+                  <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.8, marginBottom: 'var(--sp4)' }}>
+                    이번 달 별과 사주가 전하는<br />연애 · 재물 · 건강 · 직업 종합 에세이
+                  </div>
+                  <button className="up-btn" style={{ maxWidth: 320, margin: '0 auto' }} onClick={genReport}>
+                    당신의 이번달 별숨은? ✦
+                  </button>
+                </div>
+              ) : reportLoading ? (
                 <div style={{ textAlign: 'center', padding: 'var(--sp5)', color: 'var(--t3)', fontSize: 'var(--sm)' }}>
                   <div className="load-orb-wrap">
                     <div className="load-orb">
