@@ -65,7 +65,7 @@ export function useConsultation(buildCtx, formOk) {
     addHistory(selQs, newAnswers);
     setHistItems(loadHistory());
     setLatestChatIdx(-1);
-    setStep(4); setOpenAcc(0);
+    setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
   }, [selQs, callApi]);
 
   const askQuick = useCallback(async (q) => {
@@ -77,7 +77,7 @@ export function useConsultation(buildCtx, formOk) {
       const ans = await callApi(`[질문]\n${q.trim()}`);
       setAnswers([ans]); addHistory([q.trim()], [ans]); setHistItems(loadHistory());
     } catch { setAnswers([ERR_MSG]); }
-    setStep(4); setOpenAcc(0);
+    setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
   }, [formOk, callApi]);
 
   const askTimeSlot = useCallback(async (prompt) => {
@@ -89,7 +89,7 @@ export function useConsultation(buildCtx, formOk) {
       const ans = await callApi(`[질문]\n${prompt}`);
       setAnswers([ans]); addHistory([q], [ans]); setHistItems(loadHistory());
     } catch { setAnswers([ERR_MSG]); }
-    setStep(4); setOpenAcc(0);
+    setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
   }, [formOk, timeSlot, callApi]);
 
   const askDailyHoroscope = useCallback(async () => {
@@ -102,7 +102,7 @@ export function useConsultation(buildCtx, formOk) {
       const ans = await callApi(`${tag} ${TIME_CONFIG[timeSlot].prompt}`);
       setAnswers([ans]); addHistory([q], [ans]); setHistItems(loadHistory());
     } catch { setAnswers([ERR_MSG]); }
-    setStep(4); setOpenAcc(0);
+    setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
   }, [formOk, timeSlot, callApi]);
 
   const askReview = useCallback(async (text, prompt) => {
@@ -114,7 +114,7 @@ export function useConsultation(buildCtx, formOk) {
       const ans = await callApi(`[질문]\n${prompt}\n\n[오늘 있었던 일]\n${text}`);
       setAnswers([ans]); addHistory([q], [ans]); setHistItems(loadHistory());
     } catch { setAnswers([ERR_MSG]); }
-    setStep(4); setOpenAcc(0);
+    setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
   }, [formOk, callApi]);
 
   // ── 아코디언 ──
