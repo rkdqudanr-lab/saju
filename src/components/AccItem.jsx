@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import useWordTyping from "../hooks/useWordTyping.js";
+import { TIMING } from "../utils/constants.js";
 
 // ═══════════════════════════════════════════════════════════
 //  👍👎 피드백 버튼
@@ -8,10 +9,10 @@ export function FeedbackBtn({qIdx}){
   const[sel,setSel]=useState(null);
   if(sel!==null) return <div className="fb-wrap"><span className="fb-done">✦ 고마워요!</span></div>;
   return(
-    <div className="fb-wrap">
+    <div className="fb-wrap" role="group" aria-label="피드백">
       <span className="fb-label">이 이야기가 도움이 됐나요?</span>
-      <button className="fb-btn" onClick={()=>setSel('up')}>👍</button>
-      <button className="fb-btn" onClick={()=>setSel('down')}>👎</button>
+      <button className="fb-btn" aria-label="도움이 됐어요" onClick={()=>setSel('up')}>👍</button>
+      <button className="fb-btn" aria-label="아쉬워요" onClick={()=>setSel('down')}>👎</button>
     </div>
   );
 }
@@ -21,28 +22,39 @@ export function FeedbackBtn({qIdx}){
 // ═══════════════════════════════════════════════════════════
 export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
   const isTyping = shouldType && isOpen;
-  const{shown,done,skipToEnd}=useWordTyping(text, isTyping, 130);
+  const{shown,done,skipToEnd}=useWordTyping(text, isTyping, TIMING.typingWord);
   const display = !shouldType ? text : isOpen ? shown : '';
   const isDone = !shouldType || done;
+  const bodyId = `acc-body-${idx}`;
 
   useEffect(()=>{if(done&&shouldType)onTypingDone(idx);},[done,shouldType,idx,onTypingDone]);
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); }
+  };
+
   return(
     <div className="acc-item">
-      <button className={`acc-trigger${isOpen?' open':''}`} onClick={onToggle}>
+      <button
+        className={`acc-trigger${isOpen?' open':''}`}
+        onClick={onToggle}
+        onKeyDown={handleKeyDown}
+        aria-expanded={isOpen}
+        aria-controls={bodyId}
+      >
         <div className="acc-q-wrap">
           <div className="acc-q-num">Q{idx+1}</div>
           <div className="acc-q-text">{q}</div>
           {!isOpen&&!display&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
         </div>
         <div className="acc-right">
-          {isOpen&&!isDone&&<button className="skip-btn" onClick={e=>{e.stopPropagation();skipToEnd();}}>바로 보기</button>}
-          <span className={`acc-chevron${isOpen?' open':''}`}>▼</span>
+          {isOpen&&!isDone&&<button className="skip-btn" aria-label="타이핑 건너뛰기" onClick={e=>{e.stopPropagation();skipToEnd();}}>바로 보기</button>}
+          <span className={`acc-chevron${isOpen?' open':''}`} aria-hidden="true">▼</span>
         </div>
       </button>
-      <div className={`acc-body${isOpen?' open':' closed'}`}>
+      <div id={bodyId} className={`acc-body${isOpen?' open':' closed'}`} role="region" aria-label={`Q${idx+1} 답변`}>
         <div className="acc-content">
-          <p>{display}{isOpen&&!isDone&&<span className="typing-cursor"/>}</p>
+          <p>{display}{isOpen&&!isDone&&<span className="typing-cursor" aria-hidden="true"/>}</p>
         </div>
       </div>
     </div>
@@ -53,7 +65,7 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
 //  채팅 AI 버블
 // ═══════════════════════════════════════════════════════════
 export function ChatBubble({text,isNew}){
-  const{shown,done,skipToEnd}=useWordTyping(text,isNew,40);
+  const{shown,done,skipToEnd}=useWordTyping(text,isNew,TIMING.typingChat);
   const display=isNew?shown:text;
   const isDone=!isNew||done;
   return(
@@ -72,7 +84,7 @@ export function ChatBubble({text,isNew}){
 //  리포트 타이핑
 // ═══════════════════════════════════════════════════════════
 export function ReportBody({text}){
-  const{shown,done,skipToEnd}=useWordTyping(text,true,35);
+  const{shown,done,skipToEnd}=useWordTyping(text,true,TIMING.typingReport);
   return(
     <div className="report-content">
       {!done&&(

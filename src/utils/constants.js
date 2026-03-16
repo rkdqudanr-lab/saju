@@ -61,6 +61,21 @@ export function parseAccSummary(text) {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  타이밍 상수 (애니메이션/타이핑 딜레이)
+// ═══════════════════════════════════════════════════════════
+export const TIMING = {
+  typingWord: 130,     // AccItem 기본 타이핑 (단어 간격 ms)
+  typingChat: 40,      // 채팅 버블 타이핑
+  typingReport: 35,    // 리포트 타이핑
+  sampleChar: 28,      // SamplePreview 기본 문자 딜레이
+  samplePunct: 280,    // 문장부호 딜레이 (. ! ?)
+  sampleComma: 120,    // 쉼표 딜레이
+  sampleNewline: 200,  // 개행 딜레이
+  skeletonCycle: 2000, // 스켈레톤 애니메이션 주기
+  toastDuration: 3500, // 토스트 자동 사라짐 (ms)
+};
+
+// ═══════════════════════════════════════════════════════════
 //  데이터
 // ═══════════════════════════════════════════════════════════
 export const PLACES = [

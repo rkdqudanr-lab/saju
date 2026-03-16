@@ -1,13 +1,11 @@
-import { useState, useEffect } from "react";
 import { CGO } from "../utils/saju.js";
 import { LOAD_STATES } from "../utils/constants.js";
 
 // ═══════════════════════════════════════════════════════════
 //  Skeleton 로더
 // ═══════════════════════════════════════════════════════════
-export default function SkeletonLoader({qCount,saju}){
-  const[si,setSi]=useState(0);
-  useEffect(()=>{const id=setInterval(()=>setSi(p=>(p+1)%LOAD_STATES.length),2000);return()=>clearInterval(id);},[]);
+export default function SkeletonLoader({qCount,saju,loadingMsgIdx}){
+  const si = loadingMsgIdx !== undefined ? loadingMsgIdx % LOAD_STATES.length : 0;
   const pillars=[['연','yeon'],['월','wol'],['일','il'],['시','si']];
   return(
     <div className="loading-page">

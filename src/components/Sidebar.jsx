@@ -21,10 +21,13 @@ export default function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLog
 
   const SLOT_EMOJI={morning:'🌅',afternoon:'✦',evening:'🌙',dawn:'🌌'};
 
+  const histCount = histItems.length;
+  const histNearLimit = histCount >= 25;
+
   return(
     <>
-      <div className="sidebar-overlay" onClick={onClose}/>
-      <div className="sidebar">
+      <div className="sidebar-overlay" onClick={onClose} aria-hidden="true"/>
+      <nav className="sidebar" aria-label="주 네비게이션" role="navigation">
         <div className="sidebar-head">
           <div className="sidebar-logo">✦ byeolsoom</div>
           {user?(
@@ -51,29 +54,45 @@ export default function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLog
         <div className="sidebar-body">
           <div className="sidebar-section">
             <div className="sidebar-section-lbl">메뉴</div>
-            {[
-              {icon:'🏠',label:'홈',s:0},
-              {icon:'✦',label:'별숨에게 물어보기',s:1},
-              {icon:'📅',label:'월간 리포트',s:6},
-              {icon:'💞',label:'오늘 우리가 만나면',s:7},
-              {icon:'🔮',label:'별숨의 예언',s:8},
-            ].map(m=>(
-              <button key={m.s} className={`sidebar-menu-item ${step===m.s?'active':''}`}
-                onClick={()=>{onNav(m.s);onClose();}}>
-                <span className="smi-icon">{m.icon}</span>
-                <span className="smi-text">{m.label}</span>
-              </button>
-            ))}
-            {user&&(
-              <button className="sidebar-menu-item" onClick={()=>{onProfileOpen();onClose();}}>
-                <span className="smi-icon">⚙️</span>
-                <span className="smi-text">나의 별자리 지도</span>
-              </button>
-            )}
+            <ul style={{listStyle:'none',padding:0,margin:0}}>
+              {[
+                {icon:'🏠',label:'홈',s:0},
+                {icon:'✦',label:'별숨에게 물어보기',s:1},
+                {icon:'📅',label:'월간 리포트',s:6},
+                {icon:'💞',label:'오늘 우리가 만나면',s:7},
+                {icon:'🔮',label:'별숨의 예언',s:8},
+              ].map(m=>(
+                <li key={m.s}>
+                  <button
+                    className={`sidebar-menu-item ${step===m.s?'active':''}`}
+                    onClick={()=>{onNav(m.s);onClose();}}
+                    aria-current={step===m.s?'page':undefined}
+                    onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onNav(m.s);onClose();}}}
+                  >
+                    <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                    <span className="smi-text">{m.label}</span>
+                  </button>
+                </li>
+              ))}
+              {user&&(
+                <li>
+                  <button className="sidebar-menu-item" onClick={()=>{onProfileOpen();onClose();}}
+                    onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onProfileOpen();onClose();}}}>
+                    <span className="smi-icon" aria-hidden="true">⚙️</span>
+                    <span className="smi-text">나의 별자리 지도</span>
+                  </button>
+                </li>
+              )}
+            </ul>
           </div>
 
           <div className="sidebar-section">
-            <div className="sidebar-section-lbl">지난 이야기 ({histItems.length})</div>
+            <div className="sidebar-section-lbl">지난 이야기 ({histCount})</div>
+            {histNearLimit&&(
+              <div role="status" aria-live="polite" style={{margin:'0 var(--sp3) 8px',padding:'8px 12px',background:'var(--rosef)',border:'1px solid var(--roseacc)',borderRadius:'var(--r1)',fontSize:'var(--xs)',color:'var(--rose)'}}>
+                기록이 거의 가득 찼어요 ({histCount}/{30}). 오래된 기록을 삭제해봐요.
+              </div>
+            )}
             {histItems.length>0&&(
               <div style={{padding:'0 var(--sp3) 8px'}}>
                 <input className="hist-search-inp" placeholder="🔍  지난 이야기 검색..." value={search} onChange={e=>setSearch(e.target.value)}/>
@@ -99,7 +118,7 @@ export default function Sidebar({user,step,onClose,onNav,onKakaoLogin,onKakaoLog
         <div className="sidebar-foot">
           {user&&<button className="sidebar-foot-btn" onClick={()=>{onKakaoLogout();onClose();}}>로그아웃</button>}
         </div>
-      </div>
+      </nav>
     </>
   );
 }

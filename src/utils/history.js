@@ -26,3 +26,20 @@ export function deleteHistory(id){
   const items=loadHistory().filter(i=>i.id!==id);
   saveHistory(items);
 }
+
+export function getHistoryCount(){
+  return loadHistory().length;
+}
+
+export function exportHistory(){
+  const items=loadHistory();
+  const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`byeolsoom_history_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

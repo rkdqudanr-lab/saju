@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useMemo } from "react";
-import { stripMarkdown, PKGS } from "../utils/constants.js";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { stripMarkdown, PKGS, TIMING, LOAD_STATES } from "../utils/constants.js";
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { loadHistory, addHistory } from "../utils/history.js";
 
@@ -8,7 +8,17 @@ const SLOT_TAG_MAP = { morning: '[오전·100자]', afternoon: '[오후·100자]
 const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.';
 
 export function useConsultation(buildCtx, formOk) {
-  const timeSlot = useMemo(() => getTimeSlot(), []);
+  const [timeSlot, setTimeSlot] = useState(() => getTimeSlot());
+  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+  const loadMsgRef = useRef(null);
+
+  // timeSlot 반응성: 앱 복귀 시 + 1분마다 재계산
+  useEffect(() => {
+    const update = () => setTimeSlot(getTimeSlot());
+    const interval = setInterval(update, 60000);
+    document.addEventListener('visibilitychange', update);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', update); };
+  }, []);
 
   const [step, setStep]                   = useState(0);
   const [cat, setCat]                     = useState(0);
@@ -35,16 +45,27 @@ export function useConsultation(buildCtx, formOk) {
   const maxChat  = curPkg.chat;
   const chatLeft = maxChat - chatUsed;
 
-  // ── API 호출 ──
+  // ── API 호출 (최대 3회 재시도) ──
   const callApi = useCallback(async (userMessage, opts = {}) => {
-    const res  = await fetch('/api/ask', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userMessage, context: buildCtx(), isChat: opts.isChat || false, isReport: opts.isReport || false }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'API 오류');
-    return stripMarkdown(data.text || '');
+    const maxRetries = 3;
+    let lastErr;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+        const res  = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userMessage, context: buildCtx(), isChat: opts.isChat || false, isReport: opts.isReport || false }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'API 오류');
+        return stripMarkdown(data.text || '');
+      } catch (e) {
+        lastErr = e;
+        if (attempt < maxRetries - 1) continue;
+      }
+    }
+    throw lastErr;
   }, [buildCtx]);
 
   // ── 질문 추가/삭제 ──
@@ -53,11 +74,24 @@ export function useConsultation(buildCtx, formOk) {
   }, [selQs, maxQ]);
   const rmQ = useCallback(i => setSelQs(p => p.filter((_, x) => x !== i)), []);
 
+  // ── 로딩 메시지 순환 ──
+  const startLoadingMsg = useCallback(() => {
+    setLoadingMsgIdx(0);
+    loadMsgRef.current = setInterval(() => {
+      setLoadingMsgIdx(p => (p + 1) % LOAD_STATES.length);
+    }, TIMING.skeletonCycle);
+  }, []);
+  const stopLoadingMsg = useCallback(() => {
+    if (loadMsgRef.current) { clearInterval(loadMsgRef.current); loadMsgRef.current = null; }
+  }, []);
+
   // ── 질문 전송 ──
   const askClaude = useCallback(async () => {
     if (!selQs.length) return;
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
+    startLoadingMsg();
     const results = await Promise.allSettled(selQs.map(q => callApi(`[질문]\n${q}`)));
+    stopLoadingMsg();
     const newAnswers = results.map((r, i) =>
       r.status === 'fulfilled' ? r.value : `Q${i + 1} 답변을 불러오지 못했어요 🌙\n잠시 후 다시 시도해봐요.`
     );
@@ -66,7 +100,7 @@ export function useConsultation(buildCtx, formOk) {
     setHistItems(loadHistory());
     setLatestChatIdx(-1);
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [selQs, callApi]);
+  }, [selQs, callApi, startLoadingMsg, stopLoadingMsg]);
 
   const askQuick = useCallback(async (q) => {
     if (!q.trim()) return;
@@ -162,6 +196,7 @@ export function useConsultation(buildCtx, formOk) {
 
   return {
     timeSlot,
+    loadingMsgIdx,
     step, setStep,
     cat, setCat,
     selQs, setSelQs,
