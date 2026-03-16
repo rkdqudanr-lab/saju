@@ -573,6 +573,11 @@ select.inp option{background:var(--bg2)}
 .hdf-tab{flex:1;padding:5px 0;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:10px;font-family:var(--ff);cursor:pointer;transition:all .15s}
 .hdf-tab.active{background:var(--goldf);border-color:var(--acc);color:var(--gold)}
 .hdf-tab:hover:not(.active){border-color:var(--line2);color:var(--t2)}
+
+/* ══ 별숨 일기 모달 ══ */
+.diary-textarea{width:100%;box-sizing:border-box;padding:14px;border-radius:var(--r1);border:1px solid var(--line);background:var(--bg2);color:var(--t1);font-family:var(--ff);font-size:var(--sm);line-height:1.7;resize:vertical;min-height:120px;outline:none;transition:border-color .2s;margin-bottom:4px}
+.diary-textarea:focus{border-color:var(--gold)}
+.diary-textarea::placeholder{color:var(--t4)}
 `;
 
 export default CSS;
