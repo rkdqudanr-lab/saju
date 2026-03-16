@@ -102,7 +102,7 @@ export default function App() {
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
           qLoadStatus,
-          addQ, rmQ, askClaude, askDailyHoroscope, askReview, handleTypingDone, handleAccToggle,
+          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[2];
@@ -342,10 +342,9 @@ export default function App() {
 
               {/* ── 오늘의 12별자리 미니 운세 슬롯 ── */}
               <ZodiacSlot today={today} onQuickAsk={(sign) => {
-                setDiy(`${sign} 자리인 나, 오늘의 운세는 어때?`);
-                setSelQs([`${sign} 자리인 나, 오늘의 운세는 어때?`]);
-                setStep(formOk ? 3 : 1);
-                if (formOk) askClaude();
+                const q = `${sign} 자리인 나, 오늘의 운세는 어때?`;
+                setDiy(q);
+                askQuick(q);
               }} />
             </div>
           </div>
