@@ -18,6 +18,7 @@ import CSS from "./styles/theme.js";
 
 // components
 import StarCanvas         from "./components/StarCanvas.jsx";
+import DailyStarCard     from "./components/DailyStarCard.jsx";
 import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import AccItem, { FeedbackBtn, ChatBubble, ReportBody } from "./components/AccItem.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
@@ -102,6 +103,7 @@ export default function App() {
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
           qLoadStatus,
+          dailyResult, dailyLoading,
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
@@ -286,9 +288,20 @@ export default function App() {
                     </div>
                     {form.by ? (
                       <>
-                        <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>
-                          오늘 하루 나의 별숨은? ✦
-                        </button>
+                        {dailyResult ? (
+                          <DailyStarCard result={dailyResult} />
+                        ) : dailyLoading ? (
+                          <div className="dsc-loading-btn">
+                            <span>별숨이 오늘을 읽고 있어요</span>
+                            <span className="dsc-loading-dot" />
+                            <span className="dsc-loading-dot" />
+                            <span className="dsc-loading-dot" />
+                          </div>
+                        ) : (
+                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>
+                            오늘 하루 나의 별숨은? ✦
+                          </button>
+                        )}
                         <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
                           별숨에게 질문하기 ✦
                         </button>
