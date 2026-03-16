@@ -535,6 +535,44 @@ select.inp option{background:var(--bg2)}
 
 .review-inp{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);resize:none;height:72px;margin-bottom:10px;transition:border-color .2s}
 .review-inp:focus{outline:none;border-color:var(--gold)}.review-inp::placeholder{color:var(--t4)}
+
+/* ══ PWA 설치 배너 ══ */
+.pwa-banner{position:fixed;bottom:0;left:0;right:0;z-index:9999;display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg2);border-top:1px solid var(--line);animation:slideUp .3s ease}
+.pwa-banner-icon{font-size:1.5rem;flex-shrink:0}
+.pwa-banner-body{flex:1;min-width:0}
+.pwa-banner-title{font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:2px}
+.pwa-banner-desc{font-size:var(--xs);color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pwa-banner-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.pwa-banner-install{padding:7px 14px;border-radius:50px;border:none;background:var(--gold);color:#0D0B14;font-size:var(--xs);font-family:var(--ff);font-weight:700;cursor:pointer}
+.pwa-banner-later{padding:7px 10px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer}
+.pwa-banner-close{padding:4px 8px;border:none;background:none;color:var(--t4);font-size:var(--sm);cursor:pointer;line-height:1}
+
+/* ══ 카카오 채널 리마인더 ══ */
+.kakao-channel-remind{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);margin:var(--sp2) 0}
+.kcr-icon{font-size:1.5rem;flex-shrink:0}
+.kcr-body{flex:1;min-width:0}
+.kcr-title{font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:3px}
+.kcr-desc{font-size:var(--xs);color:var(--t3)}
+.kcr-btn{padding:8px 14px;border-radius:50px;border:none;background:#FEE500;color:#191919;font-size:var(--xs);font-family:var(--ff);font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0}
+
+/* ══ 별자리 슬롯 ══ */
+.zodiac-slot{margin-top:var(--sp4);padding:0 0 var(--sp4)}
+.zodiac-slot-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:4px;padding:0 var(--sp3)}
+.zodiac-slot-sub{font-size:var(--xs);color:var(--t4);margin-bottom:var(--sp2);padding:0 var(--sp3)}
+.zodiac-slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 var(--sp3)}
+@media(min-width:480px){.zodiac-slot-grid{grid-template-columns:repeat(4,1fr)}}
+.zs-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:var(--r2);border:1px solid var(--line);background:var(--bg2);cursor:pointer;transition:all .2s;font-family:var(--ff);text-align:center}
+.zs-card:hover,.zs-card:focus{border-color:var(--acc);background:var(--goldf);outline:none}
+.zs-card.zs-luck-high{border-color:var(--acc)}
+.zs-symbol{font-size:1.3rem;line-height:1}
+.zs-name{font-size:var(--xs);color:var(--t2);font-weight:600;margin-top:2px}
+.zs-phrase{font-size:10px;color:var(--t4);line-height:1.4;word-break:keep-all}
+
+/* ══ 사이드바 날짜 필터 ══ */
+.hist-date-filter{display:flex;gap:4px;margin-top:8px}
+.hdf-tab{flex:1;padding:5px 0;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:10px;font-family:var(--ff);cursor:pointer;transition:all .15s}
+.hdf-tab.active{background:var(--goldf);border-color:var(--acc);color:var(--gold)}
+.hdf-tab:hover:not(.active){border-color:var(--line2);color:var(--t2)}
 `;
 
 export default CSS;

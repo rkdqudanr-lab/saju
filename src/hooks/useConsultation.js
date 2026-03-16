@@ -38,6 +38,8 @@ export function useConsultation(buildCtx, formOk) {
   const [histItem, setHistItem]           = useState(null);
   const [histItems, setHistItems]         = useState(() => loadHistory());
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  // 질문별 개별 로딩 상태: 'pending' | 'loading' | 'done' | 'error'
+  const [qLoadStatus, setQLoadStatus]     = useState([]);
   const chatEndRef = useRef(null);
 
   const curPkg   = PKGS.find(p => p.id === pkg) || PKGS[2];
@@ -90,8 +92,21 @@ export function useConsultation(buildCtx, formOk) {
     if (!selQs.length) return;
     if (typeof window.gtag === 'function') window.gtag('event', 'ask_claude', { question_count: selQs.length });
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
+    // 질문별 초기 로딩 상태 설정
+    setQLoadStatus(selQs.map(() => 'loading'));
     startLoadingMsg();
-    const results = await Promise.allSettled(selQs.map(q => callApi(`[질문]\n${q}`)));
+    // 각 질문을 개별 추적하며 병렬 처리
+    const results = await Promise.allSettled(
+      selQs.map((q, i) =>
+        callApi(`[질문]\n${q}`).then(ans => {
+          setQLoadStatus(prev => { const s = [...prev]; s[i] = 'done'; return s; });
+          return ans;
+        }).catch(err => {
+          setQLoadStatus(prev => { const s = [...prev]; s[i] = 'error'; return s; });
+          throw err;
+        })
+      )
+    );
     stopLoadingMsg();
     const newAnswers = results.map((r, i) =>
       r.status === 'fulfilled' ? r.value : `Q${i + 1} 답변을 불러오지 못했어요 🌙\n잠시 후 다시 시도해봐요.`
@@ -227,6 +242,7 @@ export function useConsultation(buildCtx, formOk) {
     histItem, setHistItem, histItems, setHistItems,
     showUpgradeModal, setShowUpgradeModal,
     chatEndRef,
+    qLoadStatus,
     callApi,
     addQ, rmQ,
     askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview,

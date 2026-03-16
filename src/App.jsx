@@ -22,6 +22,8 @@ import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import AccItem, { FeedbackBtn, ChatBubble, ReportBody } from "./components/AccItem.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
 import SamplePreview      from "./components/SamplePreview.jsx";
+import PWAInstallBanner   from "./components/PWAInstallBanner.jsx";
+import ZodiacSlot         from "./components/ZodiacSlot.jsx";
 
 const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
 const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
@@ -48,7 +50,9 @@ export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
+  const [copyDone, setCopyDone] = useState(false);
   const toastTimer = useRef(null);
+  const copyTimer = useRef(null);
   const resultsRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
@@ -56,6 +60,18 @@ export default function App() {
     setToast({ message, type });
     toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
   }, []);
+
+  /** 클립보드 복사 + toast + 체크마크 아이콘 피드백 (1.5초) */
+  const handleCopyAll = useCallback(() => {
+    const text = answers.join('\n\n');
+    if (!text) return;
+    navigator.clipboard?.writeText(text).then(() => {
+      showToast('복사됐어요 📋', 'success');
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      setCopyDone(true);
+      copyTimer.current = setTimeout(() => setCopyDone(false), 1500);
+    }).catch(() => showToast('복사에 실패했어요', 'error'));
+  }, [answers, showToast]);
 
   // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
@@ -73,6 +89,7 @@ export default function App() {
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
+          qLoadStatus,
           addQ, rmQ, askClaude, askDailyHoroscope, handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
@@ -175,6 +192,7 @@ export default function App() {
     <>
       <style>{CSS}</style>
       <StarCanvas isDark={isDark} />
+      <PWAInstallBanner />
 
       {/* ── 토스트 알림 ── */}
       {toast && (
@@ -299,6 +317,14 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+              {/* ── 오늘의 12별자리 미니 운세 슬롯 ── */}
+              <ZodiacSlot today={today} onQuickAsk={(sign) => {
+                setDiy(`${sign} 자리인 나, 오늘의 운세는 어때?`);
+                setSelQs([`${sign} 자리인 나, 오늘의 운세는 어때?`]);
+                setStep(formOk ? 3 : 1);
+                if (formOk) askClaude();
+              }} />
             </div>
           </div>
         )}
@@ -557,7 +583,7 @@ export default function App() {
         )}
 
         {/* ── Step 3: 로딩 ── */}
-        {step === 3 && <div className="page" role="status" aria-live="polite" aria-busy="true"><SkeletonLoader qCount={selQs.length} saju={saju} loadingMsgIdx={loadingMsgIdx} /></div>}
+        {step === 3 && <div className="page" role="status" aria-live="polite" aria-busy="true"><SkeletonLoader qCount={selQs.length} saju={saju} loadingMsgIdx={loadingMsgIdx} selQs={selQs} qLoadStatus={qLoadStatus} /></div>}
 
         {/* ── Step 4: 결과 ── */}
         {step === 4 && (
@@ -677,6 +703,22 @@ export default function App() {
                     <button className="res-btn" onClick={() => setStep(0)}>홈으로</button>
                   </div>
 
+                  {/* ── 카카오 채널 리마인더 ── */}
+                  <div className="kakao-channel-remind">
+                    <div className="kcr-icon">💌</div>
+                    <div className="kcr-body">
+                      <div className="kcr-title">내일 별숨 받기</div>
+                      <div className="kcr-desc">카카오 채널을 추가하면 매주 나만의 운세를 받을 수 있어요</div>
+                    </div>
+                    <a
+                      className="kcr-btn"
+                      href="https://pf.kakao.com/_byeolsoom/friend"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="카카오 채널 친구 추가"
+                    >채널 추가</a>
+                  </div>
+
                   <div className="feature-guide">
                     <div className="feature-guide-title">✦ 별숨의 다른 기능들</div>
                     <div className="feature-guide-grid">
@@ -685,7 +727,13 @@ export default function App() {
                       <button className="fg-card" onClick={() => setStep(6)}><span className="fg-icon">📜</span><div className="fg-info"><div className="fg-name">월간 리포트</div><div className="fg-desc">이달의 연애·재물·직업·건강 에세이</div></div></button>
                       <button className="fg-card" onClick={() => setStep(5)}><span className="fg-icon">💬</span><div className="fg-info"><div className="fg-name">별숨에게 더 물어보기</div><div className="fg-desc">답변 기반 후속 상담 채팅</div></div></button>
                       <button className="fg-card" onClick={() => setShowSidebar(true)}><span className="fg-icon">🗂️</span><div className="fg-info"><div className="fg-name">지난 이야기</div><div className="fg-desc">내가 별숨에 물었던 모든 질문 기록</div></div></button>
-                      <button className="fg-card" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')); alert('복사됐어요 📋'); }}><span className="fg-icon">📋</span><div className="fg-info"><div className="fg-name">전체 복사</div><div className="fg-desc">오늘 받은 모든 답변 클립보드 복사</div></div></button>
+                      <button className="fg-card" onClick={handleCopyAll}>
+                        <span className="fg-icon">{copyDone ? '✅' : '📋'}</span>
+                        <div className="fg-info">
+                          <div className="fg-name">전체 복사</div>
+                          <div className="fg-desc">{copyDone ? '복사됐어요!' : '오늘 받은 모든 답변 클립보드 복사'}</div>
+                        </div>
+                      </button>
                     </div>
                   </div>
                 </div>

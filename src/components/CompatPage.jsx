@@ -73,10 +73,13 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           tip: parsed.tip || '',
           chemistry: parsed.chemistry || '',
         });
-      } catch {
+      } catch (parseErr) {
+        // JSON 파싱 실패 시 상세 로깅
+        console.error('[CompatPage] JSON parse error (story):', parseErr?.message, '\nRaw text:', data.text?.slice(0, 300));
         setStoryResult({ todayVibe: '', story: data.text, moments: [], tip: '', chemistry: '' });
       }
-    } catch {
+    } catch (fetchErr) {
+      console.error('[CompatPage] fetch error (story):', fetchErr?.message);
       setStoryResult({ todayVibe: '', story: '별이 잠시 쉬고 있어요 🌙 다시 시도해봐요!', moments: [], tip: '', chemistry: '' });
     } finally {
       setStoryLoading(false);
@@ -139,10 +142,13 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
             recommendedPlace: parsed.recommendedPlace || '',
           });
         }
-      } catch {
+      } catch (parseErr) {
+        // JSON 파싱 실패 시 상세 로깅
+        console.error('[CompatPage] JSON parse error (run):', parseErr?.message, '\nRaw text:', data.text?.slice(0, 300));
         setResult({ bubbles: [{ who: 'A', text: data.text }], summary: '', reason: '', topic: '', todayEvents: [], recommendedFood: '', recommendedPlace: '' });
       }
-    } catch {
+    } catch (fetchErr) {
+      console.error('[CompatPage] fetch error (run):', fetchErr?.message);
       setResult({ bubbles: [{ who: 'A', text: '별이 잠시 쉬고 있어요 🌙 다시 시도해봐요!' }], summary: '', reason: '', topic: '', todayEvents: [], recommendedFood: '', recommendedPlace: '' });
     } finally {
       setLoading(false);
