@@ -196,6 +196,8 @@ select.inp option{background:var(--bg2)}
 .pkg:hover{border-color:var(--t4)}.pkg.chosen{background:var(--goldf);border-color:var(--gold)}
 .pkg-e{font-size:1rem;margin-bottom:2px}.pkg-n{font-size:var(--xs);font-weight:600;color:var(--t2)}.pkg-p{font-size:var(--xs);color:var(--gold);font-weight:700;margin-top:1px}
 .pkg-hot{position:absolute;top:-7px;right:-3px;background:var(--gold);color:#0D0B14;font-size:.5rem;font-weight:800;padding:2px 5px;border-radius:4px}
+.pkg-coming{opacity:.6;cursor:default!important}
+.pkg-coming-badge{position:absolute;top:-7px;left:-3px;background:var(--bg3);color:var(--t3);font-size:.5rem;font-weight:700;padding:2px 5px;border-radius:4px;border:1px solid var(--line)}
 .q-stat{font-size:var(--xs);color:var(--t4);text-align:center;margin:8px 0 var(--sp2)}.q-stat strong{color:var(--gold)}
 .free-note{font-size:var(--xs);color:var(--t4);text-align:center;margin-bottom:var(--sp2)}.free-note span{color:var(--gold)}
 .hint{font-size:var(--xs);color:var(--t4)}

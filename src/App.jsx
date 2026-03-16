@@ -529,9 +529,14 @@ export default function App() {
                     <div className="pkg-lbl">이용권</div>
                     <div className="pkgs">
                       {PKGS.map(p => p.isFree ? null : (
-                        <div key={p.id} className={`pkg ${pkg === p.id ? 'chosen' : ''}`}
-                          onClick={() => { setPkg(p.id); if (selQs.length > p.q) setSelQs(s => s.slice(0, p.q)); }}>
+                        <div key={p.id}
+                          className={`pkg ${pkg === p.id ? 'chosen' : ''} ${p.isComing ? 'pkg-coming' : ''}`}
+                          onClick={() => {
+                            if (p.isComing) { showToast('결제 기능을 준비 중이에요 🌙 곧 만나요!', 'info'); return; }
+                            setPkg(p.id); if (selQs.length > p.q) setSelQs(s => s.slice(0, p.q));
+                          }}>
                           {p.hot && <div className="pkg-hot">BEST</div>}
+                          {p.isComing && <div className="pkg-coming-badge">준비 중</div>}
                           <div className="pkg-e">{p.e}</div>
                           <div className="pkg-n">{p.n}</div>
                           <div className="pkg-p">{p.p}</div>
@@ -851,8 +856,14 @@ export default function App() {
             <div className="upgrade-modal-sub">첫 번째 이야기가 마음에 들었다면<br />더 깊이 대화할 수 있어요</div>
             <div className="upgrade-pkgs">
               {PKGS.filter(p => !p.isFree).map(p => (
-                <div key={p.id} className={`upgrade-pkg ${pkg === p.id ? 'chosen' : ''}`} onClick={() => setPkg(p.id)}>
+                <div key={p.id}
+                  className={`upgrade-pkg ${pkg === p.id ? 'chosen' : ''} ${p.isComing ? 'pkg-coming' : ''}`}
+                  onClick={() => {
+                    if (p.isComing) { showToast('결제 기능을 준비 중이에요 🌙 곧 만나요!', 'info'); return; }
+                    setPkg(p.id);
+                  }}>
                   {p.hot && <div className="upgrade-pkg-hot">BEST</div>}
+                  {p.isComing && <div className="pkg-coming-badge">준비 중</div>}
                   <div className="upgrade-pkg-e">{p.e}</div>
                   <div className="upgrade-pkg-n">{p.n}</div>
                   <div className="upgrade-pkg-p">{p.p}</div>

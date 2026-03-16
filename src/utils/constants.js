@@ -129,10 +129,10 @@ export const CATS=[
 
 export const PKGS=[
   {id:"free",isFree:true,e:"✦",n:"무료",p:"0원",q:1,chat:0},
-  {id:"seed",e:"✦",n:"씨앗",p:"990원",q:1,chat:0},
-  {id:"moon",e:"🌙",n:"달빛",p:"5,900원",q:3,chat:5},
-  {id:"star",e:"⭐",n:"별빛",p:"9,900원",q:5,chat:10,hot:true},
-  {id:"cosmos",e:"🌌",n:"우주",p:"19,900원",q:10,chat:20},
+  {id:"seed",e:"✦",n:"씨앗",p:"990원",q:1,chat:0,isComing:true},
+  {id:"moon",e:"🌙",n:"달빛",p:"5,900원",q:3,chat:5,isComing:true},
+  {id:"star",e:"⭐",n:"별빛",p:"9,900원",q:5,chat:10,hot:true,isComing:true},
+  {id:"cosmos",e:"🌌",n:"우주",p:"19,900원",q:10,chat:20,isComing:true},
 ];
 
 export const REVIEWS=[

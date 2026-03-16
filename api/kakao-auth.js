@@ -1,21 +1,30 @@
 // api/kakao-auth.js
 // 카카오 인가코드(code)로 액세스토큰 받고 유저정보 조회
-// 환경변수: KAKAO_REST_API_KEY (REST API 키), KAKAO_ADMIN_KEY (Admin 키)
+// 환경변수: KAKAO_REST_API_KEY, KAKAO_REDIRECT_URI
+// ⚠️ redirectUri는 반드시 서버 환경변수에서만 읽음 (클라이언트 전달 금지 — CSRF 방어)
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { code, redirectUri } = req.body;
-  if (!code) return res.status(400).json({ error: 'code가 없어요' });
+  const { code, state } = req.body;
+  if (!code)  return res.status(400).json({ error: 'code가 없어요' });
+  if (!state) return res.status(400).json({ error: 'state가 없어요' });
 
-  const restKey = process.env.KAKAO_REST_API_KEY;
-  if (!restKey) return res.status(500).json({ error: 'KAKAO_REST_API_KEY 환경변수를 설정해주세요' });
+  // ── state 형식 검증 (32자리 hex) ──
+  if (!/^[0-9a-f]{32,}$/i.test(state)) {
+    return res.status(400).json({ error: '유효하지 않은 요청이에요 🌙' });
+  }
+
+  const restKey     = process.env.KAKAO_REST_API_KEY;
+  const redirectUri = process.env.KAKAO_REDIRECT_URI;
+  if (!restKey)     return res.status(500).json({ error: 'KAKAO_REST_API_KEY 환경변수를 설정해주세요' });
+  if (!redirectUri) return res.status(500).json({ error: 'KAKAO_REDIRECT_URI 환경변수를 설정해주세요' });
 
   try {
     // ── STEP 1: code → 액세스토큰 교환 ──
     // redirect_uri는 URLSearchParams 쓰면 자동 인코딩되어 KOE303 오류 발생
     // 직접 문자열로 조합해야 함
-    const body = `grant_type=authorization_code&client_id=${restKey}&redirect_uri=${redirectUri}&code=${code}`;
+    const body = `grant_type=authorization_code&client_id=${restKey}&redirect_uri=${redirectUri}&code=${code}&state=${state}`;
     const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

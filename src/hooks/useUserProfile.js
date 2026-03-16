@@ -4,6 +4,12 @@ const DEFAULT_PROFILE = { partner: '', partnerBy: '', partnerBm: '', partnerBd: 
 const DEFAULT_FORM    = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_OTHER   = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 
+// ── CSRF state 생성 (crypto.randomUUID 또는 Math.random 폴백) ──
+function genCsrfState() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID().replace(/-/g, '');
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+}
+
 export function useUserProfile() {
   const [user, setUser] = useState(() => {
     try { const u = localStorage.getItem('byeolsoom_user'); return u ? JSON.parse(u) : null; } catch { return null; }
@@ -51,15 +57,31 @@ export function useUserProfile() {
     document.head.appendChild(script);
   }, []);
 
-  // ── 카카오 OAuth code 처리 ──
+  // ── 카카오 OAuth code 처리 (CSRF state 검증 포함) ──
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
+    const code  = params.get('code');
+    const state = params.get('state');
     if (!code) return;
     window.history.replaceState({}, '', window.location.pathname);
+
+    // state 검증
+    const savedState = sessionStorage.getItem('byeolsoom_oauth_state');
+    sessionStorage.removeItem('byeolsoom_oauth_state');
+    if (!savedState || state !== savedState) {
+      console.error('[별숨] OAuth CSRF state 불일치');
+      setLoginError('보안 검증에 실패했어요. 다시 로그인해봐요 🌙');
+      return;
+    }
+
     (async () => {
       try {
-        const res  = await fetch('/api/kakao-auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, redirectUri: window.location.origin }) });
+        // redirectUri는 서버 환경변수(KAKAO_REDIRECT_URI)에서만 읽음 — 클라이언트 전달 제거
+        const res  = await fetch('/api/kakao-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, state }),
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || '인증 실패');
         const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: data.profileImage || null };
@@ -81,8 +103,11 @@ export function useUserProfile() {
     if (!window.Kakao.isInitialized()) {
       try { window.Kakao.init(JS_KEY); } catch (e) { setLoginError('카카오 초기화에 실패했어요 🌙 페이지를 새로고침 후 시도해봐요.'); return; }
     }
+    // CSRF state 생성 후 sessionStorage에 저장
+    const state = genCsrfState();
+    sessionStorage.setItem('byeolsoom_oauth_state', state);
     setLoginError('');
-    window.Kakao.Auth.authorize({ redirectUri: window.location.origin });
+    window.Kakao.Auth.authorize({ redirectUri: window.location.origin, state });
   }, []);
 
   const kakaoLogout = useCallback(() => {
