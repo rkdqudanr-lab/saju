@@ -15,7 +15,7 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
   const moon = useMemo(() => (form.by && form.bm && form.bd) ? getMoon(+form.by, +form.bm, +form.bd) : null, [form.by, form.bm, form.bd]);
   const asc  = useMemo(() => (!form.noTime && form.bh && form.bm) ? getAsc(+form.bh, +form.bm) : null, [form]);
   const age  = form.by ? today.year - +form.by : 0;
-  const formOk = !!(form.by && form.bm && form.bd && form.gender && (form.noTime || form.bh));
+  const formOk = !!(form.by && form.bm && form.bd);
 
   const activeForm   = activeProfileIdx === 0 ? form : (otherProfiles[activeProfileIdx - 1] || form);
   const activeSaju   = useMemo(() => {
@@ -29,7 +29,8 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     const af   = activeForm;
     const as_  = activeSaju;
     const asSun = activeSun;
-    let c = `[${af.name || '고객님'} · ${activeAge}세 · ${af.gender || ''}]\n\n`;
+    const genderPart = af.gender ? ` · ${af.gender}` : '';
+    let c = `[${af.name || '고객님'} · ${activeAge}세${genderPart}]\n\n`;
     if (activeProfileIdx > 0) c = `[${af.name || '이 사람'}의 별숨 — 대신 물어봐주는 질문]\n` + c;
 
     if (as_) {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { getSaju } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { ON } from "../utils/saju.js";
@@ -16,6 +16,29 @@ const MBTI_TYPES = [
 export default function ProfileModal({profile,setProfile,onClose}){
   const[local,setLocal]=useState({mbti:'',selfDesc:'',...profile});
   const[showNaturalInput,setShowNaturalInput]=useState(false);
+  const sheetRef=useRef(null);
+
+  // ── 포커스 트랩 ──
+  useEffect(()=>{
+    const el=sheetRef.current;
+    if(!el) return;
+    const focusable=()=>[...el.querySelectorAll('button,input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(n=>!n.disabled);
+    const first=focusable()[0];
+    first?.focus();
+    const handleKeyDown=(e)=>{
+      if(e.key!=='Tab') return;
+      const items=focusable();
+      if(!items.length) return;
+      const last=items[items.length-1];
+      if(e.shiftKey){
+        if(document.activeElement===items[0]){e.preventDefault();last.focus();}
+      } else {
+        if(document.activeElement===last){e.preventDefault();items[0].focus();}
+      }
+    };
+    document.addEventListener('keydown',handleKeyDown);
+    return()=>document.removeEventListener('keydown',handleKeyDown);
+  },[]);
   const partnerSaju=useMemo(()=>{
     if(local.partnerBy&&local.partnerBm&&local.partnerBd)
       return getSaju(+local.partnerBy,+local.partnerBm,+local.partnerBd,12);
@@ -30,8 +53,8 @@ export default function ProfileModal({profile,setProfile,onClose}){
   const upd=(k,v)=>setLocal(p=>({...p,[k]:v}));
 
   return(
-    <div className="profile-overlay" onClick={e=>{if(e.target.className==='profile-overlay')onClose();}}>
-      <div className="profile-sheet">
+    <div className="profile-overlay" role="dialog" aria-modal="true" aria-label="나의 별자리 지도" onClick={e=>{if(e.target.className==='profile-overlay')onClose();}}>
+      <div className="profile-sheet" ref={sheetRef}>
         <div className="profile-handle"/>
         <div className="profile-title">✦ 나의 별자리 지도</div>
         <div className="profile-sub">저장하면 모든 운세에 자동으로 반영돼요.<br/>입력할수록 더 깊이 읽어드릴게요.</div>

@@ -88,6 +88,7 @@ export function useConsultation(buildCtx, formOk) {
   // ── 질문 전송 ──
   const askClaude = useCallback(async () => {
     if (!selQs.length) return;
+    if (typeof window.gtag === 'function') window.gtag('event', 'ask_claude', { question_count: selQs.length });
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     startLoadingMsg();
     const results = await Promise.allSettled(selQs.map(q => callApi(`[질문]\n${q}`)));
@@ -151,6 +152,19 @@ export function useConsultation(buildCtx, formOk) {
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
   }, [formOk, callApi]);
 
+  // ── 단일 답변 재시도 ──
+  const retryAnswer = useCallback(async (idx) => {
+    const q = selQs[idx];
+    if (!q) return;
+    setAnswers(prev => { const a = [...prev]; a[idx] = ''; return a; });
+    try {
+      const ans = await callApi(`[질문]\n${q}`);
+      setAnswers(prev => { const a = [...prev]; a[idx] = ans; return a; });
+    } catch {
+      setAnswers(prev => { const a = [...prev]; a[idx] = ERR_MSG; return a; });
+    }
+  }, [selQs, callApi]);
+
   // ── 아코디언 ──
   const handleTypingDone = useCallback((idx) => {
     setTypedSet(p => { const n = new Set(p); n.add(idx); return n; });
@@ -169,6 +183,7 @@ export function useConsultation(buildCtx, formOk) {
   const sendChat = useCallback(async () => {
     if (!chatInput.trim() || chatLoading) return;
     if (chatLeft <= 0) { setShowUpgradeModal(true); return; }
+    if (typeof window.gtag === 'function') window.gtag('event', 'send_chat');
     const userMsg = chatInput.trim();
     setChatInput('');
     setChatHistory(p => [...p, { role: 'user', text: userMsg }]);
@@ -186,6 +201,7 @@ export function useConsultation(buildCtx, formOk) {
 
   // ── 월간 리포트 ──
   const genReport = useCallback(async () => {
+    if (typeof window.gtag === 'function') window.gtag('event', 'gen_report');
     setReportText(''); setReportLoading(true);
     try {
       const text = await callApi('[요청] 이번 달 종합 운세 리포트', { isReport: true });
@@ -214,6 +230,7 @@ export function useConsultation(buildCtx, formOk) {
     callApi,
     addQ, rmQ,
     askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview,
+    retryAnswer,
     handleTypingDone, handleAccToggle,
     sendChat, genReport,
     // reset

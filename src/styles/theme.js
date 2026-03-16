@@ -6,7 +6,7 @@ const CSS = `
   --ff:'Pretendard',-apple-system,sans-serif;
   --bg:#0D0B14;--bg1:#13101E;--bg2:#1A1628;--bg3:#221E33;--bg4:#2A2340;
   --line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.04);
-  --t1:#F0EBF8;--t2:#C8BEDE;--t3:#8A7FA0;--t4:#4A4260;
+  --t1:#F0EBF8;--t2:#C8BEDE;--t3:#8A7FA0;--t4:#6B6090;
   --gold:#E8B048;--gold2:#C89030;
   --goldf:rgba(232,176,72,.1);--golds:rgba(232,176,72,.05);--acc:rgba(232,176,72,.2);
   --lav:#9B8EC4;--lavf:rgba(155,142,196,.1);--lavacc:rgba(155,142,196,.25);
