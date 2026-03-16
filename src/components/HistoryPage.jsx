@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { exportHistory } from "../utils/history.js";
 
 // ═══════════════════════════════════════════════════════════
 //  📖 히스토리 상세 페이지
@@ -38,9 +39,10 @@ export default function HistoryPage({item,onBack,onDelete}){
             </div>
           ))}
         </div>
-        <div style={{padding:'0 var(--sp3) var(--sp5)',display:'flex',gap:8}}>
-          <button className="res-btn" style={{flex:1}} onClick={onBack}>← 돌아가기</button>
-          <button className="hist-del-btn" onClick={()=>{onDelete(item.id);setDeleted(true);onBack();}}>삭제</button>
+        <div style={{padding:'0 var(--sp3) var(--sp5)',display:'flex',gap:8,flexWrap:'wrap'}}>
+          <button className="res-btn" style={{flex:1}} onClick={onBack} aria-label="목록으로 돌아가기">← 돌아가기</button>
+          <button className="res-btn" onClick={exportHistory} aria-label="전체 히스토리 내보내기">⬇ 내보내기</button>
+          <button className="hist-del-btn" onClick={()=>{onDelete(item.id);setDeleted(true);onBack();}} aria-label="이 기록 삭제">삭제</button>
         </div>
       </div>
     </div>

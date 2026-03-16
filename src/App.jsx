@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 
 // utils
 import { OC, OE, ON } from "./utils/saju.js";
 import { getSun } from "./utils/astrology.js";
-import { getDailyWord, parseAccSummary, CATS, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD } from "./utils/constants.js";
+import { getDailyWord, parseAccSummary, CATS, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
 import { loadHistory, deleteHistory } from "./utils/history.js";
 import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/imageExport.js";
@@ -34,19 +34,29 @@ export default function App() {
   const [isDark, setIsDark] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+  const resultsRef = useRef(null);
+
+  const showToast = useCallback((message, type = 'info') => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
+  }, []);
 
   // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
   const { user, profile, form, setForm, otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
           otherForm, setOtherForm, showProfileModal, setShowProfileModal,
           showOtherProfileModal, setShowOtherProfileModal,
+          loginError, setLoginError,
           kakaoLogin, kakaoLogout, saveOtherProfile } = userProfile;
 
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
 
   const consultation = useConsultation(buildCtx, formOk);
-  const { timeSlot, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
+  const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
@@ -54,6 +64,18 @@ export default function App() {
           sendChat, genReport, callApi, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[2];
+
+  // ── loginError 토스트 표시 ──
+  useEffect(() => {
+    if (loginError) { showToast(loginError, 'error'); setLoginError(''); }
+  }, [loginError, showToast, setLoginError]);
+
+  // ── 결과 자동 스크롤 ──
+  useEffect(() => {
+    if (step === 4 && resultsRef.current) {
+      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    }
+  }, [step]);
 
   // ── 브라우저 히스토리 동기화 (뒤로가기 UX 개선) ──
   const isPopState = useRef(false);
@@ -124,7 +146,14 @@ export default function App() {
       <style>{CSS}</style>
       <StarCanvas isDark={isDark} />
 
-      <button className="menu-btn" onClick={() => setShowSidebar(true)}>☰</button>
+      {/* ── 토스트 알림 ── */}
+      {toast && (
+        <div role="alert" aria-live="assertive" className={`toast toast-${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
+
+      <button className="menu-btn" onClick={() => setShowSidebar(true)} aria-label="메뉴 열기" aria-expanded={showSidebar}>☰</button>
 
       {showSidebar && (
         <Sidebar
@@ -140,7 +169,7 @@ export default function App() {
         />
       )}
 
-      <button className="theme-btn" onClick={toggleDark}>{isDark ? '☀' : '◑'}</button>
+      <button className="theme-btn" onClick={toggleDark} aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}>{isDark ? '☀' : '◑'}</button>
 
       {step >= 1 && user && (
         <div className="user-chip" onClick={() => setShowProfileModal(true)} title="내 정보 수정" style={{ cursor: 'pointer' }}>
@@ -154,11 +183,11 @@ export default function App() {
         </button>
       )}
 
-      {step > 0 && step < 5 && step !== 9 && <button className="back-btn" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
-      {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" onClick={() => setStep(4)}>←</button>}
-      {step === 9 && <button className="back-btn" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
+      {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
+      {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
+      {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
 
-      <div className="app">
+      <div className="app" id="main-content">
 
         {/* ── Step 0: 랜딩 ── */}
         {step === 0 && (
@@ -304,35 +333,39 @@ export default function App() {
                   <div className="card-title">반가워요 🌙</div>
                   <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
 
-                  <label className="lbl">이름 (선택)</label>
-                  <input className="inp" placeholder="뭐라고 불러드릴까요?" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                  <label className="lbl" htmlFor="inp-name">이름 (선택)</label>
+                  <input id="inp-name" className="inp" placeholder="뭐라고 불러드릴까요?" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
 
-                  <label className="lbl">생년월일</label>
-                  <div className="row" style={{ marginBottom: 'var(--sp3)' }}>
-                    <div className="col"><input className="inp" placeholder="1998" maxLength={4} inputMode="numeric" pattern="[0-9]*" value={form.by} onChange={e => setForm(f => ({ ...f, by: e.target.value.replace(/\D/, '') }))} style={{ marginBottom: 0 }} /></div>
-                    <div className="col"><select className="inp" value={form.bm} onChange={e => setForm(f => ({ ...f, bm: e.target.value }))} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
-                    <div className="col"><select className="inp" value={form.bd} onChange={e => setForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
-                  </div>
+                  <fieldset style={{border:'none',padding:0,margin:0}}>
+                    <legend className="lbl">생년월일</legend>
+                    <div className="row" style={{ marginBottom: 'var(--sp3)' }}>
+                      <div className="col"><input id="inp-by" className="inp" placeholder="1998" maxLength={4} inputMode="numeric" pattern="[0-9]*" aria-label="출생 연도" value={form.by} onChange={e => setForm(f => ({ ...f, by: e.target.value.replace(/\D/, '') }))} style={{ marginBottom: 0 }} /></div>
+                      <div className="col"><select id="inp-bm" className="inp" aria-label="출생 월" value={form.bm} onChange={e => setForm(f => ({ ...f, bm: e.target.value }))} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
+                      <div className="col"><select id="inp-bd" className="inp" aria-label="출생 일" value={form.bd} onChange={e => setForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
+                    </div>
+                  </fieldset>
 
                   <div className="toggle-row" onClick={() => setForm(f => ({ ...f, noTime: !f.noTime, bh: '' }))}>
-                    <button className={`toggle ${form.noTime ? 'on' : 'off'}`} onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, noTime: !f.noTime, bh: '' })); }} />
+                    <button className={`toggle ${form.noTime ? 'on' : 'off'}`} role="switch" aria-checked={form.noTime} aria-label="태어난 시간 모름" onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, noTime: !f.noTime, bh: '' })); }} />
                     <span className="toggle-label">태어난 시간을 몰라요</span>
                   </div>
                   {!form.noTime && (
                     <>
-                      <label className="lbl">태어난 시각</label>
-                      <select className="inp" value={form.bh} onChange={e => setForm(f => ({ ...f, bh: e.target.value }))}>
+                      <label className="lbl" htmlFor="inp-bh">태어난 시각</label>
+                      <select id="inp-bh" className="inp" value={form.bh} onChange={e => setForm(f => ({ ...f, bh: e.target.value }))}>
                         <option value="">시각 선택</option>
                         {Array.from({ length: 144 }, (_, i) => { const h = Math.floor(i / 6); const m = (i % 6) * 10; const val = (h + m / 60).toFixed(4); return <option key={i} value={val}>{String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}</option>; })}
                       </select>
                     </>
                   )}
-                  <label className="lbl">성별</label>
-                  <div className="gender-group">
-                    {['여성', '남성', '기타'].map(g => (
-                      <button key={g} className={`gbtn ${form.gender === g ? 'on' : ''}`} onClick={() => setForm(f => ({ ...f, gender: g }))}>{g}</button>
-                    ))}
-                  </div>
+                  <fieldset style={{border:'none',padding:0,margin:0}}>
+                    <legend className="lbl">성별</legend>
+                    <div className="gender-group" role="group" aria-label="성별 선택">
+                      {['여성', '남성', '기타'].map(g => (
+                        <button key={g} className={`gbtn ${form.gender === g ? 'on' : ''}`} aria-pressed={form.gender === g} onClick={() => setForm(f => ({ ...f, gender: g }))}>{g}</button>
+                      ))}
+                    </div>
+                  </fieldset>
 
                   {saju && (
                     <div className="pillars-wrap">
@@ -494,12 +527,12 @@ export default function App() {
         )}
 
         {/* ── Step 3: 로딩 ── */}
-        {step === 3 && <div className="page"><SkeletonLoader qCount={selQs.length} saju={saju} /></div>}
+        {step === 3 && <div className="page" role="status" aria-live="polite" aria-busy="true"><SkeletonLoader qCount={selQs.length} saju={saju} loadingMsgIdx={loadingMsgIdx} /></div>}
 
         {/* ── Step 4: 결과 ── */}
         {step === 4 && (
           <div className="page-top">
-            <div className="res-wrap">
+            <div className="res-wrap" ref={resultsRef}>
               <div className="res-card">
                 <div className="res-top-bar">
                   <button className="res-top-btn" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')); alert('복사됐어요 📋'); }}>📋 복사</button>
@@ -639,7 +672,9 @@ export default function App() {
                 <div className="chat-page-sub">
                   {selQs.slice(0, 2).map((q, i) => <div key={i} style={{ marginTop: 3 }}>Q{i + 1}. {q.length > 24 ? q.slice(0, 24) + '…' : q}</div>)}
                 </div>
-                <div className="chat-limit-badge">✦ 남은 횟수 {chatLeft}회</div>
+                <div className="chat-limit-badge" role="status" aria-live="polite" style={chatLeft <= 2 ? {background:'var(--rosef)',borderColor:'var(--roseacc)',color:'var(--rose)'} : {}}>
+                  ✦ 남은 횟수 {chatLeft}회{chatLeft <= 2 && chatLeft > 0 ? ' · 곧 소진돼요!' : ''}
+                </div>
               </div>
 
               <div className="chat-history">
@@ -798,31 +833,35 @@ export default function App() {
             <div className="other-modal-title">다른 사람의 별숨 추가</div>
             <div className="other-modal-sub">가족, 친구, 연인의 생년월일을 입력하면<br />그 사람의 별숨을 대신 물어볼 수 있어요</div>
 
-            <label className="lbl">이름</label>
-            <input className="inp" placeholder="누구의 별숨인가요?" value={otherForm.name} onChange={e => setOtherForm(f => ({ ...f, name: e.target.value }))} />
+            <label className="lbl" htmlFor="other-name">이름</label>
+            <input id="other-name" className="inp" placeholder="누구의 별숨인가요?" value={otherForm.name} onChange={e => setOtherForm(f => ({ ...f, name: e.target.value }))} />
 
-            <label className="lbl">생년월일</label>
-            <div className="row" style={{ marginBottom: 'var(--sp2)' }}>
-              <div className="col"><input className="inp" placeholder="1998" maxLength={4} inputMode="numeric" value={otherForm.by} onChange={e => setOtherForm(f => ({ ...f, by: e.target.value.replace(/\D/, '') }))} style={{ marginBottom: 0 }} /></div>
-              <div className="col"><select className="inp" value={otherForm.bm} onChange={e => setOtherForm(f => ({ ...f, bm: e.target.value }))} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
-              <div className="col"><select className="inp" value={otherForm.bd} onChange={e => setOtherForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
-            </div>
+            <fieldset style={{border:'none',padding:0,margin:0}}>
+              <legend className="lbl">생년월일</legend>
+              <div className="row" style={{ marginBottom: 'var(--sp2)' }}>
+                <div className="col"><input className="inp" placeholder="1998" maxLength={4} inputMode="numeric" aria-label="출생 연도" value={otherForm.by} onChange={e => setOtherForm(f => ({ ...f, by: e.target.value.replace(/\D/, '') }))} style={{ marginBottom: 0 }} /></div>
+                <div className="col"><select className="inp" aria-label="출생 월" value={otherForm.bm} onChange={e => setOtherForm(f => ({ ...f, bm: e.target.value }))} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
+                <div className="col"><select className="inp" aria-label="출생 일" value={otherForm.bd} onChange={e => setOtherForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
+              </div>
+            </fieldset>
             <div className="toggle-row" onClick={() => setOtherForm(f => ({ ...f, noTime: !f.noTime, bh: '' }))}>
-              <button className={`toggle ${otherForm.noTime ? 'on' : 'off'}`} onClick={e => { e.stopPropagation(); setOtherForm(f => ({ ...f, noTime: !f.noTime, bh: '' })); }} />
+              <button className={`toggle ${otherForm.noTime ? 'on' : 'off'}`} role="switch" aria-checked={otherForm.noTime} aria-label="태어난 시간 모름" onClick={e => { e.stopPropagation(); setOtherForm(f => ({ ...f, noTime: !f.noTime, bh: '' })); }} />
               <span className="toggle-label">태어난 시간을 몰라요</span>
             </div>
             {!otherForm.noTime && (
-              <select className="inp" value={otherForm.bh} onChange={e => setOtherForm(f => ({ ...f, bh: e.target.value }))}>
+              <select className="inp" aria-label="태어난 시각" value={otherForm.bh} onChange={e => setOtherForm(f => ({ ...f, bh: e.target.value }))}>
                 <option value="">태어난 시각 (선택)</option>
                 {Array.from({ length: 144 }, (_, i) => { const h = Math.floor(i / 6); const m = (i % 6) * 10; const val = (h + m / 60).toFixed(4); return <option key={i} value={val}>{String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}</option>; })}
               </select>
             )}
-            <label className="lbl">성별</label>
-            <div className="gender-group">
-              {['여성', '남성', '기타'].map(g => (
-                <button key={g} className={`gbtn ${otherForm.gender === g ? 'on' : ''}`} onClick={() => setOtherForm(f => ({ ...f, gender: g }))}>{g}</button>
-              ))}
-            </div>
+            <fieldset style={{border:'none',padding:0,margin:0}}>
+              <legend className="lbl">성별</legend>
+              <div className="gender-group" role="group" aria-label="성별 선택">
+                {['여성', '남성', '기타'].map(g => (
+                  <button key={g} className={`gbtn ${otherForm.gender === g ? 'on' : ''}`} aria-pressed={otherForm.gender === g} onClick={() => setOtherForm(f => ({ ...f, gender: g }))}>{g}</button>
+                ))}
+              </div>
+            </fieldset>
             <button className="btn-main"
               disabled={!otherForm.by || !otherForm.bm || !otherForm.bd || !otherForm.gender}
               onClick={saveOtherProfile}>

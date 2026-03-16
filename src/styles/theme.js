@@ -26,6 +26,21 @@ const CSS = `
 }
 html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s}
 ::-webkit-scrollbar{width:0;height:0}
+
+/* ══ 접근성 (AX) ══ */
+.skip-link{position:absolute;top:-100%;left:16px;z-index:9999;padding:8px 16px;background:var(--gold);color:#0D0B14;font-size:var(--sm);font-weight:700;border-radius:0 0 var(--r1) var(--r1);text-decoration:none;transition:top .2s}
+.skip-link:focus{top:0}
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:0}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* ══ 토스트 알림 ══ */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:999;max-width:340px;width:90%;padding:12px 20px;border-radius:var(--r1);font-size:var(--sm);text-align:center;animation:fadeUp .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.toast-error{background:#e05a3a;color:#fff}
+.toast-success{background:var(--gold);color:#0D0B14}
+.toast-warn{background:var(--rose);color:#fff}
+.toast-info{background:var(--bg3);border:1px solid var(--line);color:var(--t1)}
+
 .app{min-height:100vh;position:relative;overflow-x:hidden}
 .page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--sp3) var(--sp2) var(--sp5);position:relative;z-index:1}
 .page-top{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:72px var(--sp2) var(--sp5);position:relative;z-index:1}
@@ -33,9 +48,9 @@ html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:
 .bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
 
 /* 공통 UI */
-.theme-btn{position:fixed;top:18px;right:18px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.9rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.theme-btn{position:fixed;top:14px;right:18px;z-index:50;width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.9rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
 .theme-btn:hover{color:var(--gold);border-color:var(--gold)}
-.back-btn{position:fixed;top:18px;left:62px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.8rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.back-btn{position:fixed;top:14px;left:66px;z-index:50;width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.8rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
 .back-btn:hover{color:var(--gold)}
 .step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:var(--sp3)}
 .dot{height:4px;border-radius:2px;transition:all .4s cubic-bezier(.34,1.56,.64,1)}
@@ -245,7 +260,7 @@ select.inp option{background:var(--bg2)}
 .acc-q-num{font-size:var(--xs);color:var(--gold);font-weight:700;margin-bottom:2px}
 .acc-q-text{font-size:var(--sm);color:inherit;line-height:1.55}
 .acc-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.skip-btn{padding:4px 10px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--gold);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:background .2s;animation:fadeUp .2s ease}
+.skip-btn{padding:10px 16px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--gold);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:background .2s;animation:fadeUp .2s ease;min-height:44px;display:inline-flex;align-items:center}
 .skip-btn:hover{background:var(--goldf)}
 .acc-chevron{font-size:.6rem;color:var(--t4);transition:transform .3s,color .3s}
 .acc-chevron.open{transform:rotate(180deg);color:var(--gold)}
@@ -408,7 +423,7 @@ select.inp option{background:var(--bg2)}
 /* ══ 피드백 ══ */
 .fb-wrap{display:flex;align-items:center;gap:8px;justify-content:center;padding:var(--sp2) 0;border-top:1px solid var(--line);margin-top:var(--sp1)}
 .fb-label{font-size:var(--xs);color:var(--t4)}
-.fb-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.fb-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:.85rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
 .fb-btn:hover{border-color:var(--gold);transform:scale(1.1)}
 .fb-btn.selected{background:var(--goldf);border-color:var(--gold)}
 .fb-done{font-size:var(--xs);color:var(--gold);animation:fadeUp .3s ease}
@@ -480,7 +495,7 @@ select.inp option{background:var(--bg2)}
 .sidebar-foot{padding:var(--sp2) var(--sp3);border-top:1px solid var(--line)}
 .sidebar-foot-btn{width:100%;padding:9px;border:1px solid var(--line);border-radius:var(--r1);background:transparent;color:var(--t4);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
 .sidebar-foot-btn:hover{border-color:var(--acc);color:var(--gold)}
-.menu-btn{position:fixed;top:18px;left:18px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.9rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.menu-btn{position:fixed;top:14px;left:18px;z-index:50;width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.9rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
 .menu-btn:hover{color:var(--gold);border-color:var(--gold)}
 
 .hist-search-inp{width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}

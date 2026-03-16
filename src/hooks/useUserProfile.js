@@ -28,6 +28,7 @@ export function useUserProfile() {
   const [otherForm, setOtherForm]                     = useState(DEFAULT_OTHER);
   const [showProfileModal, setShowProfileModal]       = useState(false);
   const [showOtherProfileModal, setShowOtherProfileModal] = useState(false);
+  const [loginError, setLoginError]                   = useState('');
 
   // ── 카카오 SDK 초기화 ──
   useEffect(() => {
@@ -64,7 +65,7 @@ export function useUserProfile() {
         const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: data.profileImage || null };
         setUser(userData);
         localStorage.setItem('byeolsoom_user', JSON.stringify(userData));
-      } catch (err) { console.error('[별숨] 카카오 code 오류:', err); }
+      } catch (err) { console.error('[별숨] 카카오 code 오류:', err); setLoginError('카카오 로그인에 실패했어요. 다시 시도해봐요 🌙'); }
     })();
   }, []);
 
@@ -75,11 +76,12 @@ export function useUserProfile() {
 
   const kakaoLogin = useCallback(() => {
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
-    if (!JS_KEY) { alert('카카오 앱 키가 설정되지 않았어요.\n.env.local 에 VITE_KAKAO_JS_KEY 를 입력해주세요.'); return; }
-    if (!window.Kakao) { alert('카카오 SDK를 불러오지 못했어요 🌙\n잠시 후 다시 시도해봐요.'); return; }
+    if (!JS_KEY) { setLoginError('카카오 앱 키가 설정되지 않았어요. 관리자에게 문의해봐요.'); return; }
+    if (!window.Kakao) { setLoginError('카카오 SDK를 불러오지 못했어요 🌙 잠시 후 다시 시도해봐요.'); return; }
     if (!window.Kakao.isInitialized()) {
-      try { window.Kakao.init(JS_KEY); } catch (e) { alert('카카오 초기화에 실패했어요 🌙\n페이지를 새로고침 후 시도해봐요.'); return; }
+      try { window.Kakao.init(JS_KEY); } catch (e) { setLoginError('카카오 초기화에 실패했어요 🌙 페이지를 새로고침 후 시도해봐요.'); return; }
     }
+    setLoginError('');
     window.Kakao.Auth.authorize({ redirectUri: window.location.origin });
   }, []);
 
@@ -105,6 +107,7 @@ export function useUserProfile() {
     otherForm, setOtherForm,
     showProfileModal, setShowProfileModal,
     showOtherProfileModal, setShowOtherProfileModal,
+    loginError, setLoginError,
     kakaoLogin, kakaoLogout, saveOtherProfile,
   };
 }
