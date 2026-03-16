@@ -70,6 +70,13 @@ export default function App() {
     if (loginError) { showToast(loginError, 'error'); setLoginError(''); }
   }, [loginError, showToast, setLoginError]);
 
+  // ── 화면 전환 시 스크롤 맨 위로 ──
+  useEffect(() => {
+    if (step !== 3) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [step]);
+
   // ── 결과 자동 스크롤 ──
   useEffect(() => {
     if (step === 4 && resultsRef.current) {
