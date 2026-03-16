@@ -1,8 +1,42 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'icons/*.png'],
+      manifest: false, // public/manifest.json 직접 사용
+      workbox: {
+        // App Shell 캐싱 전략
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        runtimeCaching: [
+          {
+            // API 호출은 네트워크 우선, 실패 시 캐시
+            urlPattern: /^\/api\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
+              expiration: { maxEntries: 20, maxAgeSeconds: 3600 },
+            },
+          },
+          {
+            // 폰트/CDN 리소스 캐시
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'cdn-cache',
+              expiration: { maxEntries: 30, maxAgeSeconds: 86400 * 30 },
+            },
+          },
+        ],
+      },
+      devOptions: { enabled: false },
+    }),
+  ],
   server: {
     proxy: {
       // 로컬 개발 시 /api/ask → 직접 Anthropic API로 프록시
