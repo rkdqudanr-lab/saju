@@ -20,7 +20,11 @@ const SLOT_RE = /\[오전·100자\]|\[오후·100자\]|\[저녁·100자\]|\[새�
  * @param {boolean} isStory
  * @returns {Promise<string>}
  */
-export async function buildSystem(today, season, categoryHint, endingHint, timeHorizon, userMessage, isChat, isReport, isLetter, isScenario, isStory) {
+export async function buildSystem(today, season, categoryHint, endingHint, timeHorizon, userMessage, isChat, isReport, isLetter, isScenario, isStory, isDailyCard) {
+  if (isDailyCard) {
+    const { dailyPrompt } = await import('./daily.js');
+    return dailyPrompt(today, season);
+  }
   if (isLetter) {
     const { letterPrompt } = await import('./letter.js');
     return letterPrompt(today);
