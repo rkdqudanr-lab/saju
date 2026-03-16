@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } fro
 // utils
 import { OC, OE, ON } from "./utils/saju.js";
 import { getSun } from "./utils/astrology.js";
-import { getDailyWord, parseAccSummary, CATS, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING } from "./utils/constants.js";
+import { getDailyWord, parseAccSummary, CATS, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
 import { loadHistory, deleteHistory } from "./utils/history.js";
 import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/imageExport.js";
@@ -29,6 +29,9 @@ const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
 const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
 const FutureProphecyPage = lazy(() => import("./components/FutureProphecyPage.jsx"));
 const CompatPage         = lazy(() => import("./components/CompatPage.jsx"));
+const SajuCalendar       = lazy(() => import("./components/SajuCalendar.jsx"));
+const RadarChart         = lazy(() => import("./components/RadarChart.jsx"));
+const AnniversaryPage    = lazy(() => import("./components/AnniversaryPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -51,6 +54,15 @@ export default function App() {
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
   const [copyDone, setCopyDone] = useState(false);
+  const [showDiary, setShowDiary] = useState(false);
+  const [diaryText, setDiaryText] = useState('');
+  const [anniversaryDate, setAnniversaryDate] = useState('');
+  const [anniversaryType, setAnniversaryType] = useState('');
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [refCode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('ref') || null;
+  });
   const toastTimer = useRef(null);
   const copyTimer = useRef(null);
   const resultsRef = useRef(null);
@@ -90,7 +102,7 @@ export default function App() {
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
           qLoadStatus,
-          addQ, rmQ, askClaude, askDailyHoroscope, handleTypingDone, handleAccToggle,
+          addQ, rmQ, askClaude, askDailyHoroscope, askReview, handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[2];
@@ -99,6 +111,11 @@ export default function App() {
   useEffect(() => {
     if (loginError) { showToast(loginError, 'error'); setLoginError(''); }
   }, [loginError, showToast, setLoginError]);
+
+  // ── 초대 코드 저장 ──
+  useEffect(() => {
+    if (refCode) localStorage.setItem('byeolsoom_ref', refCode);
+  }, [refCode]);
 
   // ── 화면 전환 시 스크롤 맨 위로 ──
   useEffect(() => {
@@ -214,6 +231,7 @@ export default function App() {
           onKakaoLogin={kakaoLogin}
           onKakaoLogout={kakaoLogout}
           onProfileOpen={() => setShowProfileModal(true)}
+          onInvite={() => setShowInviteModal(true)}
         />
       )}
 
@@ -234,6 +252,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
+      {(step === 10 || step === 11 || step === 12) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
 
       <div className="app" id="main-content">
 
@@ -272,6 +291,9 @@ export default function App() {
                         </button>
                         <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
                           별숨에게 질문하기 ✦
+                        </button>
+                        <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setShowDiary(true)}>
+                          오늘 있었던 일 적기 ✦
                         </button>
                       </>
                     ) : (
@@ -879,6 +901,36 @@ export default function App() {
           </Suspense>
         )}
 
+        {/* ── Step 10: 사주 달력 ── */}
+        {step === 10 && (
+          <Suspense fallback={<PageSpinner />}>
+            <SajuCalendar form={form} setStep={setStep} />
+          </Suspense>
+        )}
+
+        {/* ── Step 11: 궁합 레이더 ── */}
+        {step === 11 && (
+          <Suspense fallback={<PageSpinner />}>
+            <RadarChart form={form} otherProfiles={otherProfiles} setStep={setStep} onAddOther={() => setShowOtherProfileModal(true)} />
+          </Suspense>
+        )}
+
+        {/* ── Step 12: 기념일 운세 ── */}
+        {step === 12 && (
+          <Suspense fallback={<PageSpinner />}>
+            <AnniversaryPage
+              form={form}
+              callApi={callApi}
+              anniversaryDate={anniversaryDate}
+              setAnniversaryDate={setAnniversaryDate}
+              anniversaryType={anniversaryType}
+              setAnniversaryType={setAnniversaryType}
+              ANNIVERSARY_PROMPT={ANNIVERSARY_PROMPT}
+              buildCtx={buildCtx}
+            />
+          </Suspense>
+        )}
+
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>
           ✦ 별숨은 점술 및 오락 목적의 서비스이며, 결과에 대해서는 법적 책임이나 효력을 지지 않습니다.
         </div>
@@ -955,6 +1007,78 @@ export default function App() {
               추가하기 ✦
             </button>
             <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }} onClick={() => setShowOtherProfileModal(false)}>취소</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 친구 초대 모달 ── */}
+      {showInviteModal && (
+        <div className="upgrade-modal-bg" onClick={() => setShowInviteModal(false)}>
+          <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: 6 }}>🔗</div>
+            <div className="upgrade-modal-title">친구 초대하기</div>
+            <div className="upgrade-modal-sub">친구가 첫 상담을 완료하면<br />무료 채팅 1회를 드려요 ✦</div>
+            {user ? (
+              <>
+                <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '12px 14px', fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.75, marginBottom: 'var(--sp3)', wordBreak: 'break-all', textAlign: 'center' }}>
+                  {`${window.location.origin}?ref=${user.id}`}
+                </div>
+                <button className="btn-main" onClick={() => {
+                  const inviteUrl = `${window.location.origin}?ref=${user.id}`;
+                  navigator.clipboard?.writeText(inviteUrl).then(() => {
+                    showToast('초대 링크가 복사됐어요! 친구에게 공유해보세요 ✦', 'success');
+                    setShowInviteModal(false);
+                  });
+                }}>📋 초대 링크 복사하기</button>
+                {navigator.share && (
+                  <button className="btn-main" style={{ background: 'var(--bg3)', color: 'var(--t1)', marginTop: 8 }} onClick={() => {
+                    navigator.share({
+                      title: '별숨 — 사주+별자리 운세',
+                      text: '사주와 별자리로 당신의 질문에 답해드려요. 저의 초대 링크로 시작해봐요 ✦',
+                      url: `${window.location.origin}?ref=${user.id}`
+                    }).catch(() => {});
+                    setShowInviteModal(false);
+                  }}>✦ 공유하기</button>
+                )}
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--t3)', fontSize: 'var(--sm)', padding: 'var(--sp3) 0' }}>
+                카카오 로그인 후 초대 링크를 만들 수 있어요
+              </div>
+            )}
+            <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }} onClick={() => setShowInviteModal(false)}>닫기</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 별숨 일기 모달 ── */}
+      {showDiary && (
+        <div className="upgrade-modal-bg" onClick={() => setShowDiary(false)}>
+          <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: 6 }}>📓</div>
+            <div className="upgrade-modal-title">오늘 있었던 일</div>
+            <div className="upgrade-modal-sub" style={{ marginBottom: 'var(--sp3)' }}>별숨이 사주와 별자리 관점으로 재해석해드려요</div>
+            <textarea
+              className="diary-textarea"
+              rows={5}
+              placeholder="오늘 어떤 일이 있었나요? 기뻤던 일, 속상했던 일, 작은 설렘까지 — 모두 괜찮아요."
+              value={diaryText}
+              onChange={e => setDiaryText(e.target.value)}
+              maxLength={500}
+            />
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'right', marginBottom: 'var(--sp3)' }}>{diaryText.length}/500</div>
+            <button
+              className="btn-main"
+              disabled={diaryText.trim().length < 5}
+              onClick={() => {
+                setShowDiary(false);
+                askReview(diaryText.trim(), DIARY_PROMPT);
+                setDiaryText('');
+              }}
+            >
+              별숨의 해석 듣기 ✦
+            </button>
+            <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }} onClick={() => setShowDiary(false)}>취소</button>
           </div>
         </div>
       )}

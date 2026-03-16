@@ -36,7 +36,7 @@ function getDateRange(filter) {
   return null;
 }
 
-export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen }) {
+export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite }) {
   const [histItems, setHistItems] = useState(() => loadHistory());
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');
@@ -115,6 +115,9 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 { icon: '📅', label: '월간 리포트', s: 6 },
                 { icon: '💞', label: '오늘 우리가 만나면', s: 7 },
                 { icon: '🔮', label: '별숨의 예언', s: 8 },
+                { icon: '🗓️', label: '사주 달력', s: 10 },
+                { icon: '🕸️', label: '나의 궁합 레이더', s: 11 },
+                { icon: '🎂', label: '기념일 운세', s: 12 },
               ].map(m => (
                 <li key={m.s}>
                   <button
@@ -206,6 +209,11 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
         </div>
 
         <div className="sidebar-foot">
+          {user && onInvite && (
+            <button className="sidebar-foot-btn" style={{ background: 'rgba(255,215,0,.08)', border: '1px solid var(--gold)', color: 'var(--gold)', marginBottom: 8 }} onClick={() => { onInvite(); onClose(); }}>
+              🔗 친구 초대하기
+            </button>
+          )}
           {user && <button className="sidebar-foot-btn" onClick={() => { onKakaoLogout(); onClose(); }}>로그아웃</button>}
         </div>
       </nav>
