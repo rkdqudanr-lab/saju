@@ -578,6 +578,74 @@ select.inp option{background:var(--bg2)}
 .diary-textarea{width:100%;box-sizing:border-box;padding:14px;border-radius:var(--r1);border:1px solid var(--line);background:var(--bg2);color:var(--t1);font-family:var(--ff);font-size:var(--sm);line-height:1.7;resize:vertical;min-height:120px;outline:none;transition:border-color .2s;margin-bottom:4px}
 .diary-textarea:focus{border-color:var(--gold)}
 .diary-textarea::placeholder{color:var(--t4)}
+
+/* ══ DAILY STAR CARD ══ */
+@keyframes dsc-breathe{
+  0%,100%{box-shadow:0 0 20px rgba(232,176,72,.12),0 0 50px rgba(155,142,196,.06),0 8px 32px rgba(0,0,0,.25)}
+  50%{box-shadow:0 0 40px rgba(232,176,72,.26),0 0 90px rgba(155,142,196,.12),0 12px 48px rgba(0,0,0,.3)}
+}
+@keyframes dsc-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes dsc-item-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes dsc-spark{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.7;transform:scale(1.2)}}
+@keyframes dsc-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+
+.dsc-wrap{position:relative;margin:var(--sp3) 0;animation:fadeUp .6s .2s both}
+.dsc-spark{position:absolute;font-size:.55rem;color:var(--gold);pointer-events:none;animation:dsc-spark 3s ease-in-out infinite}
+.dsc-spark-1{top:-6px;left:18%;animation-delay:0s}
+.dsc-spark-2{top:30%;right:-4px;font-size:.8rem;color:var(--lav);animation-delay:.7s}
+.dsc-spark-3{bottom:-4px;right:25%;animation-delay:1.4s}
+.dsc-spark-4{bottom:20%;left:-4px;font-size:.8rem;color:var(--lav);animation-delay:2.1s}
+
+.dsc-card{
+  position:relative;overflow:hidden;
+  background:linear-gradient(145deg,var(--bg1) 0%,rgba(26,22,40,.97) 60%,rgba(18,15,30,.98) 100%);
+  border:1px solid rgba(232,176,72,.22);
+  border-radius:var(--r3);
+  padding:var(--sp3) var(--sp3) var(--sp2);
+  animation:dsc-breathe 5s ease-in-out infinite, dsc-float 7s ease-in-out infinite;
+}
+.dsc-top-shimmer{
+  position:absolute;top:0;left:0;right:0;height:1px;overflow:hidden;
+  background:linear-gradient(90deg,transparent 0%,rgba(232,176,72,.5) 50%,transparent 100%);
+}
+.dsc-top-shimmer::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+  animation:dsc-shimmer 4s ease-in-out infinite 1.5s;
+}
+.dsc-header{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
+.dsc-header-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.5;animation:dsc-spark 2.5s ease-in-out infinite}
+.dsc-header-dot:last-child{animation-delay:1.25s}
+.dsc-title{font-size:var(--xs);font-weight:600;letter-spacing:.14em;color:var(--t3);text-transform:uppercase}
+.dsc-summary{
+  text-align:center;font-size:var(--md);font-weight:600;color:var(--t1);
+  line-height:1.65;margin-bottom:var(--sp3);padding:0 4px;
+}
+.dsc-items{display:flex;flex-direction:column;gap:14px}
+.dsc-item{
+  display:flex;align-items:flex-start;gap:12px;
+  animation:dsc-item-in .45s ease both;
+  animation-delay:var(--dsc-delay,0s);
+}
+.dsc-item-icon-wrap{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;margin-top:1px;
+  background:var(--bg3);border:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  box-shadow:0 0 0 0 var(--dsc-color,var(--gold));
+  animation:dsc-breathe 5s ease-in-out infinite;
+}
+.dsc-item:nth-child(1) .dsc-item-icon-wrap{background:var(--lavf);border-color:var(--lavacc)}
+.dsc-item:nth-child(2) .dsc-item-icon-wrap{background:var(--tealf);border-color:var(--tealacc)}
+.dsc-item:nth-child(3) .dsc-item-icon-wrap{background:var(--goldf);border-color:var(--acc)}
+.dsc-item:nth-child(4) .dsc-item-icon-wrap{background:var(--goldf);border-color:var(--acc)}
+.dsc-item:nth-child(5) .dsc-item-icon-wrap{background:var(--rosef);border-color:var(--roseacc)}
+.dsc-item-text{font-size:var(--sm);color:var(--t2);line-height:1.72;flex:1}
+
+/* 로딩 상태 버튼 */
+.dsc-loading-btn{width:100%;padding:14px;border:none;border-radius:var(--r1);background:var(--goldf);border:1px solid var(--acc);color:var(--gold);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;animation:fadeUp .4s both}
+.dsc-loading-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:dsc-spark 1s ease-in-out infinite}
+.dsc-loading-dot:nth-child(2){animation-delay:.2s}
+.dsc-loading-dot:nth-child(3){animation-delay:.4s}
 `;
 
 export default CSS;

@@ -7,6 +7,11 @@ const SLOT_TAG_MAP = { morning: '[오전·100자]', afternoon: '[오후·100자]
 
 const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.';
 
+function getDailyKey() {
+  const d = new Date();
+  return `byeolsoom_daily_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
 export function useConsultation(buildCtx, formOk) {
   const [timeSlot, setTimeSlot] = useState(() => getTimeSlot());
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
@@ -40,6 +45,11 @@ export function useConsultation(buildCtx, formOk) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   // 질문별 개별 로딩 상태: 'pending' | 'loading' | 'done' | 'error'
   const [qLoadStatus, setQLoadStatus]     = useState([]);
+  // 오늘 별숨 카드 (하루 1회 캐싱)
+  const [dailyResult, setDailyResult]     = useState(() => {
+    try { return JSON.parse(localStorage.getItem(getDailyKey()) || 'null'); } catch { return null; }
+  });
+  const [dailyLoading, setDailyLoading]   = useState(false);
   const chatEndRef = useRef(null);
 
   const curPkg   = PKGS.find(p => p.id === pkg) || PKGS[2];
@@ -144,16 +154,21 @@ export function useConsultation(buildCtx, formOk) {
 
   const askDailyHoroscope = useCallback(async () => {
     if (!formOk) { setStep(1); return; }
-    const tag = SLOT_TAG_MAP[timeSlot];
-    const q   = '오늘 하루 나의 별숨은?';
-    setSelQs([q]);
-    setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
+    // 이미 오늘 결과가 있으면 바로 보여줌 (API 호출 없음)
+    const cached = (() => { try { return JSON.parse(localStorage.getItem(getDailyKey()) || 'null'); } catch { return null; } })();
+    if (cached) { setDailyResult(cached); return; }
+    // 없으면 메인 프롬프트로 새로 불러오기
+    setDailyLoading(true);
     try {
-      const ans = await callApi(`${tag} ${TIME_CONFIG[timeSlot].prompt}`);
-      setAnswers([ans]); addHistory([q], [ans]); setHistItems(loadHistory());
-    } catch { setAnswers([ERR_MSG]); }
-    setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [formOk, timeSlot, callApi]);
+      const ans = await callApi('오늘 하루 나의 별숨은?');
+      const result = { text: ans };
+      localStorage.setItem(getDailyKey(), JSON.stringify(result));
+      setDailyResult(result);
+      addHistory(['오늘 하루 나의 별숨은?'], [ans]);
+      setHistItems(loadHistory());
+    } catch { /* 에러는 버튼 상태로만 처리 */ }
+    finally { setDailyLoading(false); }
+  }, [formOk, callApi]);
 
   const askReview = useCallback(async (text, prompt) => {
     if (!formOk) { setStep(1); return; }
@@ -245,6 +260,7 @@ export function useConsultation(buildCtx, formOk) {
     qLoadStatus,
     callApi,
     addQ, rmQ,
+    dailyResult, dailyLoading,
     askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview,
     retryAnswer,
     handleTypingDone, handleAccToggle,
