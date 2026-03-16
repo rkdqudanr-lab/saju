@@ -20,11 +20,14 @@ export function FeedbackBtn({qIdx}){
 // ═══════════════════════════════════════════════════════════
 //  아코디언 아이템
 // ═══════════════════════════════════════════════════════════
-export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone}){
-  const isTyping = shouldType && isOpen;
+const ERR_PATTERN = /다시 시도해봐요/;
+
+export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone,onRetry}){
+  const isError = ERR_PATTERN.test(text || '');
+  const isTyping = shouldType && isOpen && !isError;
   const{shown,done,skipToEnd}=useWordTyping(text, isTyping, TIMING.typingWord);
-  const display = !shouldType ? text : isOpen ? shown : '';
-  const isDone = !shouldType || done;
+  const display = isError ? text : !shouldType ? text : isOpen ? shown : '';
+  const isDone = isError || !shouldType || done;
   const bodyId = `acc-body-${idx}`;
 
   useEffect(()=>{if(done&&shouldType)onTypingDone(idx);},[done,shouldType,idx,onTypingDone]);
@@ -55,6 +58,13 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
       <div id={bodyId} className={`acc-body${isOpen?' open':' closed'}`} role="region" aria-label={`Q${idx+1} 답변`}>
         <div className="acc-content">
           <p>{display}{isOpen&&!isDone&&<span className="typing-cursor" aria-hidden="true"/>}</p>
+          {isOpen&&isError&&onRetry&&(
+            <button
+              className="skip-btn"
+              style={{marginTop:8,color:'var(--gold)',borderColor:'var(--acc)'}}
+              onClick={e=>{e.stopPropagation();onRetry();}}
+            >다시 불러오기 ↺</button>
+          )}
         </div>
       </div>
     </div>

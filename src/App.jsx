@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 
 // utils
 import { OC, OE, ON } from "./utils/saju.js";
@@ -20,18 +20,31 @@ import CSS from "./styles/theme.js";
 import StarCanvas         from "./components/StarCanvas.jsx";
 import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import AccItem, { FeedbackBtn, ChatBubble, ReportBody } from "./components/AccItem.jsx";
-import ProfileModal       from "./components/ProfileModal.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
-import HistoryPage        from "./components/HistoryPage.jsx";
 import SamplePreview      from "./components/SamplePreview.jsx";
-import FutureProphecyPage from "./components/FutureProphecyPage.jsx";
-import CompatPage         from "./components/CompatPage.jsx";
+
+const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
+const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
+const FutureProphecyPage = lazy(() => import("./components/FutureProphecyPage.jsx"));
+const CompatPage         = lazy(() => import("./components/CompatPage.jsx"));
+
+function PageSpinner() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+      <div style={{ width: 36, height: 36, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite' }} />
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════
 //  🏠 메인 앱
 // ═══════════════════════════════════════════════════════════
 export default function App() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('byeolsoom_theme');
+    if (saved !== null) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
   const [showSidebar, setShowSidebar] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
@@ -61,7 +74,7 @@ export default function App() {
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
           addQ, rmQ, askClaude, askDailyHoroscope, handleTypingDone, handleAccToggle,
-          sendChat, genReport, callApi, resetSession } = consultation;
+          retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[2];
 
@@ -82,6 +95,12 @@ export default function App() {
     if (step === 4 && resultsRef.current) {
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
     }
+  }, [step]);
+
+  // ── GA4 step 변경 추적 ──
+  useEffect(() => {
+    if (step === 3) return;
+    if (typeof window.gtag === 'function') window.gtag('event', 'step_change', { step });
   }, [step]);
 
   // ── 브라우저 히스토리 동기화 (뒤로가기 UX 개선) ──
@@ -109,9 +128,13 @@ export default function App() {
   }, [setStep]);
 
   // ── 테마 ──
-  useState(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); });
+  useEffect(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }, [isDark]);
   const toggleDark = () => {
-    setIsDark(p => { const next = !p; document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light'); return next; });
+    setIsDark(p => {
+      const next = !p;
+      localStorage.setItem('byeolsoom_theme', next ? 'dark' : 'light');
+      return next;
+    });
   };
 
   // ── 이미지 저장 ──
@@ -592,6 +615,7 @@ export default function App() {
                       onToggle={() => handleAccToggle(i)}
                       shouldType={!typedSet.has(i)}
                       onTypingDone={handleTypingDone}
+                      onRetry={() => retryAnswer(i)}
                     />
                     {openAcc === i && typedSet.has(i) && answers[i] && (
                       <div style={{ padding: '0 var(--sp3) var(--sp2)', borderBottom: '1px solid var(--line)' }}>
@@ -773,32 +797,38 @@ export default function App() {
 
         {/* ── Step 7: 궁합 ── */}
         {step === 7 && (
-          <CompatPage
-            myForm={form} mySaju={saju} mySun={sun}
-            callApi={callApi} buildCtx={buildCtx}
-            onBack={() => setStep(4)}
-            shareResult={shareResult}
-            saveCompatImage={handleSaveCompatImage}
-          />
+          <Suspense fallback={<PageSpinner />}>
+            <CompatPage
+              myForm={form} mySaju={saju} mySun={sun}
+              callApi={callApi} buildCtx={buildCtx}
+              onBack={() => setStep(4)}
+              shareResult={shareResult}
+              saveCompatImage={handleSaveCompatImage}
+            />
+          </Suspense>
         )}
 
         {/* ── Step 8: 미래 예언 ── */}
         {step === 8 && (
-          <FutureProphecyPage
-            form={form} buildCtx={buildCtx} callApi={callApi}
-            onBack={() => setStep(4)}
-            shareResult={shareResult}
-            saveImage={handleSaveProphecyImage}
-          />
+          <Suspense fallback={<PageSpinner />}>
+            <FutureProphecyPage
+              form={form} buildCtx={buildCtx} callApi={callApi}
+              onBack={() => setStep(4)}
+              shareResult={shareResult}
+              saveImage={handleSaveProphecyImage}
+            />
+          </Suspense>
         )}
 
         {/* ── Step 9: 히스토리 ── */}
         {step === 9 && histItem && (
-          <HistoryPage
-            item={histItem}
-            onBack={() => { setHistItem(null); setStep(0); }}
-            onDelete={(id) => { deleteHistory(id); setHistItems(loadHistory()); }}
-          />
+          <Suspense fallback={<PageSpinner />}>
+            <HistoryPage
+              item={histItem}
+              onBack={() => { setHistItem(null); setStep(0); }}
+              onDelete={(id) => { deleteHistory(id); setHistItems(loadHistory()); }}
+            />
+          </Suspense>
         )}
 
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>
@@ -808,7 +838,9 @@ export default function App() {
 
       {/* ── 모달들 ── */}
       {showProfileModal && (
-        <ProfileModal profile={profile} setProfile={userProfile.setProfile} onClose={() => setShowProfileModal(false)} />
+        <Suspense fallback={<PageSpinner />}>
+          <ProfileModal profile={profile} setProfile={userProfile.setProfile} onClose={() => setShowProfileModal(false)} />
+        </Suspense>
       )}
 
       {showUpgradeModal && (
