@@ -61,8 +61,8 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
                 ✦ {period.label}의 예언
               </div>
               {loading ? (
-                <div style={{ textAlign: 'center', padding: 'var(--sp4) 0', color: 'var(--t3)', fontSize: 'var(--sm)' }}>
-                  <div className="load-orb-wrap" style={{ marginTop: 0, marginBottom: 'var(--sp2)', transform: 'scale(0.8)' }}>
+                <div className="prophecy-loading" role="status" aria-live="polite">
+                  <div className="load-orb-wrap">
                     <div className="load-orb">
                       <div className="load-orb-core" />
                       <div className="load-orb-ring" />

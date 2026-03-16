@@ -12,6 +12,7 @@ import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/image
 import { useUserProfile }   from "./hooks/useUserProfile.js";
 import { useSajuContext }   from "./hooks/useSajuContext.js";
 import { useConsultation }  from "./hooks/useConsultation.js";
+import { useFocusTrap }     from "./hooks/useFocusTrap.js";
 
 // styles
 import CSS from "./styles/theme.js";
@@ -37,6 +38,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const resultsRef = useRef(null);
+  const shareTrapRef = useFocusTrap(shareModal.open, () => setShareModal(s => ({ ...s, open: false })));
 
   const showToast = useCallback((message, type = 'info') => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -59,7 +61,7 @@ export default function App() {
   const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
-          histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
+          histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, dupWarning, chatEndRef,
           addQ, rmQ, askClaude, askDailyHoroscope, handleTypingDone, handleAccToggle,
           sendChat, genReport, callApi, resetSession } = consultation;
 
@@ -448,6 +450,7 @@ export default function App() {
                   </div>
                   <div className="diy-row"><span className="hint">{diy.length}/200</span></div>
                 </div>
+                {dupWarning && <div className="dup-warning" role="alert">이미 선택한 질문이에요 🌙</div>}
 
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.06em' }}>또는 고민 카테고리에서 골라봐요</div>
                 <div className="cat-tabs">
@@ -806,7 +809,7 @@ export default function App() {
 
       {showUpgradeModal && (
         <div className="upgrade-modal-bg" onClick={() => setShowUpgradeModal(false)}>
-          <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
+          <div className="upgrade-modal" role="dialog" aria-modal="true" aria-label="이용권 선택" onClick={e => e.stopPropagation()}>
             <div style={{ textAlign: 'center', fontSize: '2rem', marginBottom: 8 }}>✦</div>
             <div className="upgrade-modal-title">더 많이 물어보고 싶어요?</div>
             <div className="upgrade-modal-sub">첫 번째 이야기가 마음에 들었다면<br />더 깊이 대화할 수 있어요</div>
@@ -874,7 +877,7 @@ export default function App() {
 
       {shareModal.open && (
         <div className="upgrade-modal-bg" onClick={() => setShareModal(s => ({ ...s, open: false }))}>
-          <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
+          <div className="upgrade-modal" ref={shareTrapRef} role="dialog" aria-modal="true" aria-label="결과 공유" onClick={e => e.stopPropagation()}>
             <div style={{ textAlign: 'center', fontSize: '2rem', marginBottom: 8 }}>✦</div>
             <div className="upgrade-modal-title">공유하기</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', textAlign: 'center', marginBottom: 'var(--sp3)', lineHeight: 1.8 }}>별숨의 결과를 친구들에게 공유해보세요</div>

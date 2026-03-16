@@ -38,6 +38,7 @@ export function useConsultation(buildCtx, formOk) {
   const [histItem, setHistItem]           = useState(null);
   const [histItems, setHistItems]         = useState(() => loadHistory());
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [dupWarning, setDupWarning]             = useState(false);
   const chatEndRef = useRef(null);
 
   const curPkg   = PKGS.find(p => p.id === pkg) || PKGS[2];
@@ -70,7 +71,12 @@ export function useConsultation(buildCtx, formOk) {
 
   // ── 질문 추가/삭제 ──
   const addQ = useCallback(q => {
-    if (selQs.length < maxQ && !selQs.includes(q)) { setSelQs(p => [...p, q]); setDiy(''); }
+    if (selQs.includes(q)) {
+      setDupWarning(true);
+      setTimeout(() => setDupWarning(false), 2500);
+      return;
+    }
+    if (selQs.length < maxQ) { setSelQs(p => [...p, q]); setDiy(''); }
   }, [selQs, maxQ]);
   const rmQ = useCallback(i => setSelQs(p => p.filter((_, x) => x !== i)), []);
 
@@ -210,6 +216,7 @@ export function useConsultation(buildCtx, formOk) {
     reportText, reportLoading,
     histItem, setHistItem, histItems, setHistItems,
     showUpgradeModal, setShowUpgradeModal,
+    dupWarning,
     chatEndRef,
     callApi,
     addQ, rmQ,

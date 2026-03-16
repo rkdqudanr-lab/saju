@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { getSaju } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { ON } from "../utils/saju.js";
+import { useFocusTrap } from "../hooks/useFocusTrap.js";
 
 const MBTI_TYPES = [
   'INTJ','INTP','ENTJ','ENTP',
@@ -16,6 +17,7 @@ const MBTI_TYPES = [
 export default function ProfileModal({profile,setProfile,onClose}){
   const[local,setLocal]=useState({mbti:'',selfDesc:'',...profile});
   const[showNaturalInput,setShowNaturalInput]=useState(false);
+  const trapRef = useFocusTrap(true, onClose);
   const partnerSaju=useMemo(()=>{
     if(local.partnerBy&&local.partnerBm&&local.partnerBd)
       return getSaju(+local.partnerBy,+local.partnerBm,+local.partnerBd,12);
@@ -31,25 +33,20 @@ export default function ProfileModal({profile,setProfile,onClose}){
 
   return(
     <div className="profile-overlay" onClick={e=>{if(e.target.className==='profile-overlay')onClose();}}>
-      <div className="profile-sheet">
+      <div className="profile-sheet" ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
         <div className="profile-handle"/>
-        <div className="profile-title">✦ 나의 별자리 지도</div>
+        <div className="profile-title" id="profile-modal-title">✦ 나의 별자리 지도</div>
         <div className="profile-sub">저장하면 모든 운세에 자동으로 반영돼요.<br/>입력할수록 더 깊이 읽어드릴게요.</div>
 
         {/* MBTI */}
         <div className="profile-section">
           <div className="profile-section-title">🧠 MBTI</div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+          <div className="mbti-grid">
             {MBTI_TYPES.map(t=>(
               <button key={t}
-                onClick={()=>upd('mbti',local.mbti===t?'':t)}
-                style={{
-                  padding:'6px 10px',borderRadius:8,border:`1px solid ${local.mbti===t?'var(--gold)':'var(--line)'}`,
-                  background:local.mbti===t?'var(--goldf)':'transparent',
-                  color:local.mbti===t?'var(--gold)':'var(--t3)',
-                  fontSize:'var(--xs)',fontFamily:'var(--ff)',fontWeight:local.mbti===t?700:400,
-                  cursor:'pointer',transition:'all .15s'
-                }}>
+                className="mbti-btn"
+                aria-pressed={local.mbti===t}
+                onClick={()=>upd('mbti',local.mbti===t?'':t)}>
                 {t}
               </button>
             ))}

@@ -70,9 +70,20 @@ export function useUserProfile() {
   }, []);
 
   // ── localStorage 동기화 ──
-  useEffect(() => { if (form.by && form.bm && form.bd) { try { localStorage.setItem('byeolsoom_profile', JSON.stringify(form)); } catch (e) {} } }, [form]);
-  useEffect(() => { try { localStorage.setItem('byeolsoom_extra', JSON.stringify(profile)); } catch (e) {} }, [profile]);
-  useEffect(() => { try { localStorage.setItem('byeolsoom_others', JSON.stringify(otherProfiles)); } catch {} }, [otherProfiles]);
+  useEffect(() => {
+    if (form.by && form.bm && form.bd) {
+      try { localStorage.setItem('byeolsoom_profile', JSON.stringify(form)); }
+      catch (e) { if (e.name === 'QuotaExceededError') setLoginError('저장 공간이 부족해요. 오래된 기록을 삭제해봐요.'); }
+    }
+  }, [form]);
+  useEffect(() => {
+    try { localStorage.setItem('byeolsoom_extra', JSON.stringify(profile)); }
+    catch (e) { if (e.name === 'QuotaExceededError') setLoginError('저장 공간이 부족해요. 오래된 기록을 삭제해봐요.'); }
+  }, [profile]);
+  useEffect(() => {
+    try { localStorage.setItem('byeolsoom_others', JSON.stringify(otherProfiles)); }
+    catch (e) { if (e.name === 'QuotaExceededError') setLoginError('저장 공간이 부족해요. 오래된 기록을 삭제해봐요.'); }
+  }, [otherProfiles]);
 
   const kakaoLogin = useCallback(() => {
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;

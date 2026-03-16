@@ -356,7 +356,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           <div className="compat-section">
             <div className="compat-label">두 사람</div>
             <div className="person-cards">
-              <div className="person-card a-card">
+              <div className="person-card a-card" aria-label="나의 사주 정보">
                 <span className="person-badge a">나 (A)</span>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>
                   <div>{myForm.name || '나'} · {+new Date().getFullYear() - +myForm.by}세</div>
@@ -364,7 +364,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                   {mySaju && <div>{ON[mySaju.dom]} 기운</div>}
                 </div>
               </div>
-              <div className="person-card b-card">
+              <div className="person-card b-card" aria-label="상대방 정보 입력">
                 <span className="person-badge b">상대 (B)</span>
                 <input className="inp" placeholder="이름(선택)" value={partner.name}
                   onChange={e => setPartner(p => ({ ...p, name: e.target.value }))}
@@ -382,9 +382,10 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                     <option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
                   </select>
                 </div>
-                <div className="gender-group" style={{ marginTop: 6, marginBottom: 0 }}>
+                <div className="gender-group" role="group" aria-label="상대방 성별 선택" style={{ marginTop: 6, marginBottom: 0 }}>
                   {['여성', '남성', '기타'].map(g => (
                     <button key={g} className={`gbtn ${partner.gender === g ? 'on' : ''}`}
+                      aria-pressed={partner.gender === g}
                       onClick={() => setPartner(p => ({ ...p, gender: g }))}
                       style={{ padding: '6px 4px', fontSize: 'var(--xs)' }}>{g}</button>
                   ))}
@@ -405,42 +406,19 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
 
           {/* 이야기 결과 */}
           {showStory && (
-            <div style={{
-              background: 'var(--bg2)',
-              borderRadius: 'var(--r1)',
-              padding: 'var(--sp2)',
-              marginBottom: 'var(--sp2)',
-              border: '1px solid rgba(180,140,50,0.18)',
-            }}>
+            <div className="compat-story-box">
               {storyLoading ? (
-                <div className="scenario-loading">
+                <div className="scenario-loading" role="status" aria-live="polite">
                   <div className="scenario-typing-dots"><span /><span /><span /></div>
                   오늘 두 사람의 이야기를 쓰고 있어요...
                 </div>
               ) : storyResult && (
                 <>
                   {storyResult.todayVibe && (
-                    <div style={{
-                      fontSize: 'var(--sm)',
-                      fontWeight: 700,
-                      color: 'var(--gold)',
-                      marginBottom: 12,
-                      paddingBottom: 10,
-                      borderBottom: '1px solid rgba(180,140,50,0.15)',
-                    }}>
-                      ✦ {storyResult.todayVibe}
-                    </div>
+                    <div className="compat-story-vibe">✦ {storyResult.todayVibe}</div>
                   )}
                   {storyResult.story && (
-                    <div style={{
-                      fontSize: 'var(--sm)',
-                      color: 'var(--t2)',
-                      lineHeight: 1.85,
-                      marginBottom: 14,
-                      whiteSpace: 'pre-line',
-                    }}>
-                      {storyResult.story}
-                    </div>
+                    <div className="compat-story-body">{storyResult.story}</div>
                   )}
                   {storyResult.moments?.length > 0 && (
                     <div style={{ marginBottom: 14 }}>
@@ -448,11 +426,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                         ✦ 오늘 두 사람에게 일어날 장면
                       </div>
                       {storyResult.moments.map((m, i) => (
-                        <div key={i} style={{
-                          display: 'flex', alignItems: 'flex-start', gap: 8,
-                          marginBottom: i < storyResult.moments.length - 1 ? 8 : 0,
-                          fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.65,
-                        }}>
+                        <div key={i} className="compat-story-moment" style={{ marginBottom: i < storyResult.moments.length - 1 ? 8 : 0 }}>
                           <span style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }}>✦</span>
                           <span>{m}</span>
                         </div>
@@ -460,30 +434,12 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                     </div>
                   )}
                   {storyResult.chemistry && (
-                    <div style={{
-                      fontSize: 'var(--xs)',
-                      color: 'var(--t3)',
-                      fontStyle: 'italic',
-                      marginBottom: storyResult.tip ? 10 : 0,
-                      paddingTop: 8,
-                      borderTop: '1px solid rgba(180,140,50,0.12)',
-                    }}>
+                    <div className="compat-story-chem" style={{ marginBottom: storyResult.tip ? 10 : 0 }}>
                       {storyResult.chemistry}
                     </div>
                   )}
                   {storyResult.tip && (
-                    <div style={{
-                      background: 'rgba(180,140,50,0.08)',
-                      borderRadius: 'var(--r1)',
-                      padding: '10px 14px',
-                      fontSize: 'var(--sm)',
-                      color: 'var(--t2)',
-                      lineHeight: 1.65,
-                      borderLeft: '3px solid var(--gold)',
-                      marginTop: 4,
-                    }}>
-                      💡 {storyResult.tip}
-                    </div>
+                    <div className="compat-story-tip">💡 {storyResult.tip}</div>
                   )}
                 </>
               )}

@@ -9,7 +9,9 @@ const CSS = `
   --t1:#F0EBF8;--t2:#C8BEDE;--t3:#8A7FA0;--t4:#4A4260;
   --gold:#E8B048;--gold2:#C89030;
   --goldf:rgba(232,176,72,.1);--golds:rgba(232,176,72,.05);--acc:rgba(232,176,72,.2);
+  --gold-glow:rgba(232,176,72,.15);--gold-border:rgba(180,140,50,.18);--gold-border2:rgba(180,140,50,.15);
   --lav:#9B8EC4;--lavf:rgba(155,142,196,.1);--lavacc:rgba(155,142,196,.25);
+  --purple-soft:rgba(200,160,255,.1);
   --teal:#6BBFB5;--tealf:rgba(107,191,181,.1);--tealacc:rgba(107,191,181,.25);
   --rose:#E87B8A;--rosef:rgba(232,123,138,.1);--roseacc:rgba(232,123,138,.25);
   --sp1:8px;--sp2:16px;--sp3:24px;--sp4:32px;--sp5:48px;--sp6:64px;
@@ -535,6 +537,43 @@ select.inp option{background:var(--bg2)}
 
 .review-inp{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);resize:none;height:72px;margin-bottom:10px;transition:border-color .2s}
 .review-inp:focus{outline:none;border-color:var(--gold)}.review-inp::placeholder{color:var(--t4)}
+
+/* ══ MBTI 선택 버튼 (ProfileModal) ══ */
+.mbti-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.mbti-btn{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);font-weight:400;cursor:pointer;transition:all .15s}
+.mbti-btn[aria-pressed="true"]{border-color:var(--gold);background:var(--goldf);color:var(--gold);font-weight:700}
+
+/* ══ 예언 로딩 (FutureProphecyPage) ══ */
+.prophecy-loading{text-align:center;padding:var(--sp4) 0;color:var(--t3);font-size:var(--sm)}
+.prophecy-loading .load-orb-wrap{margin-top:0;margin-bottom:var(--sp2);transform:scale(.8)}
+
+/* ══ 상성 스토리 로딩 (CompatPage) ══ */
+.compat-story-box{background:var(--bg2);border-radius:var(--r1);padding:var(--sp2);margin-bottom:var(--sp2);border:1px solid var(--gold-border)}
+.compat-story-vibe{font-size:var(--sm);font-weight:700;color:var(--gold);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--gold-border2)}
+.compat-story-body{font-size:var(--sm);color:var(--t2);line-height:1.85;margin-bottom:14px;white-space:pre-line}
+.compat-story-moment{display:flex;align-items:flex-start;gap:8px;font-size:var(--sm);color:var(--t2);line-height:1.65}
+.compat-story-chem{font-size:var(--xs);color:var(--t3);font-style:italic;padding-top:8px;border-top:1px solid var(--gold-border2)}
+.compat-story-tip{background:var(--gold-glow);border-radius:var(--r1);padding:10px 14px;font-size:var(--sm);color:var(--t2);line-height:1.65;border-left:3px solid var(--gold);margin-top:4px}
+
+/* ══ 중복 질문 경고 ══ */
+.dup-warning{font-size:var(--xs);color:var(--rose);text-align:center;padding:6px 0;animation:fadeUp .3s ease}
+
+/* ══ 모바일 반응형 ══ */
+@media(max-width:380px){
+  .place-grid{grid-template-columns:repeat(3,1fr)!important}
+  .step-dots{gap:4px}
+  .card{padding:var(--sp2) var(--sp2)}
+  .q-shell{padding:var(--sp2) var(--sp2) var(--sp3)}
+}
+@media(min-width:480px){
+  .inner{max-width:480px}
+  .page{padding-left:var(--sp3);padding-right:var(--sp3)}
+  .page-top{padding-left:var(--sp3);padding-right:var(--sp3)}
+}
+@media(min-width:768px){
+  .inner{max-width:520px}
+  .land-copy{font-size:1.25rem}
+}
 `;
 
 export default CSS;
