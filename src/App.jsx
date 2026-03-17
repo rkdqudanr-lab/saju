@@ -60,6 +60,7 @@ export default function App() {
   const [anniversaryDate, setAnniversaryDate] = useState('');
   const [anniversaryType, setAnniversaryType] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [editingMainForm, setEditingMainForm] = useState(false);
   const [refCode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('ref') || null;
@@ -285,7 +286,10 @@ export default function App() {
                           {form.by && saju ? `${ON[saju.dom]} 기운 · ${sun?.n || ''}` : '별숨이 당신을 기억해요'}
                         </div>
                       </div>
-                      <button onClick={kakaoLogout} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>로그아웃</button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => { setStep(1); setEditingMainForm(true); }} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }} title="이름·생년월일 수정" aria-label="기본 정보 수정">수정</button>
+                        <button onClick={kakaoLogout} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>로그아웃</button>
+                      </div>
                     </div>
                     {form.by ? (
                       <>
@@ -372,7 +376,7 @@ export default function App() {
                 {[0, 1, 2].map(i => <div key={i} className={`dot ${i === 0 ? 'active' : 'todo'}`} />)}
               </div>
 
-              {formOk && (
+              {formOk && !editingMainForm && (
                 <div className="card" style={{ marginBottom: 'var(--sp2)' }}>
                   <div className="card-title" style={{ fontSize: 'var(--md)' }}>누구의 별숨을 볼까요?</div>
 
@@ -416,13 +420,27 @@ export default function App() {
                   <button className="btn-main" style={{ marginTop: 'var(--sp3)' }} onClick={() => { setSelQs([]); setStep(2); }}>
                     {activeProfileIdx === 0 ? `${form.name || '나'}의 별숨 보기 ✦` : `${otherProfiles[activeProfileIdx - 1]?.name || '이 사람'}의 별숨 보기 ✦`}
                   </button>
+                  {activeProfileIdx === 0 && (
+                    <button style={{ background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', textDecoration: 'underline', marginTop: 10, display: 'block', margin: '10px auto 0' }}
+                      onClick={() => setEditingMainForm(true)}>이름·생년월일 수정</button>
+                  )}
                 </div>
               )}
 
-              {!formOk && (
+              {(!formOk || editingMainForm) && (
                 <div className="card">
-                  <div className="card-title">반가워요 🌙</div>
-                  <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
+                  {editingMainForm ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp2)' }}>
+                      <div className="card-title" style={{ margin: 0 }}>정보 수정</div>
+                      <button style={{ background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+                        onClick={() => setEditingMainForm(false)}>취소</button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="card-title">반가워요 🌙</div>
+                      <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
+                    </>
+                  )}
 
                   <label className="lbl" htmlFor="inp-name">이름 (선택)</label>
                   <input id="inp-name" className="inp" placeholder="뭐라고 불러드릴까요?" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
@@ -489,7 +507,9 @@ export default function App() {
                       {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
                     </div>
                   )}
-                  <button className="btn-main" disabled={!formOk} onClick={() => { setSelQs([]); setStep(2); }}>다음 단계 →</button>
+                  <button className="btn-main" disabled={!formOk} onClick={() => { setSelQs([]); setEditingMainForm(false); setStep(editingMainForm ? 1 : 2); }}>
+                    {editingMainForm ? '저장 완료' : '다음 단계 →'}
+                  </button>
                 </div>
               )}
             </div>
