@@ -248,6 +248,11 @@ export function useConsultation(buildCtx, formOk) {
     finally { setReportLoading(false); }
   }, [callApi]);
 
+  const resetSession = useCallback(() => {
+    setChatHistory([]);
+    setChatUsed(0);
+  }, []);
+
   return {
     timeSlot,
     loadingMsgIdx,
@@ -273,10 +278,6 @@ export function useConsultation(buildCtx, formOk) {
     retryAnswer,
     handleTypingDone, handleAccToggle,
     sendChat, genReport,
-    // reset
-    resetSession: useCallback(() => {
-      setChatHistory([]);
-      setChatUsed(0);
-    }, []),
+    resetSession,
   };
 }
