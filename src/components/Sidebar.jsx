@@ -115,9 +115,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 { icon: '📅', label: '월간 리포트', s: 6 },
                 { icon: '💞', label: '오늘 우리가 만나면', s: 7 },
                 { icon: '🔮', label: '별숨의 예언', s: 8 },
-                { icon: '🗓️', label: '사주 달력', s: 10 },
-                { icon: '🕸️', label: '나의 궁합 레이더', s: 11 },
-                { icon: '🎂', label: '기념일 운세', s: 12 },
+                { icon: '🔭', label: '도구 모음', s: 10 },
               ].map(m => (
                 <li key={m.s}>
                   <button
