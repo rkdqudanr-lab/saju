@@ -12,6 +12,25 @@ const UNLUCKY_CLASH = {
   신: "인", 유: "묘", 술: "진", 해: "사",
 };
 
+// 일지 합(合) 쌍 - 결혼에 유리
+const LIUZHI_HE = {
+  자: "축", 축: "자", 인: "해", 해: "인",
+  묘: "술", 술: "묘", 진: "유", 유: "진",
+  사: "신", 신: "사", 오: "미", 미: "오",
+};
+
+// 오행 매핑
+const STEM_ELEMENT = {
+  갑: "목", 을: "목", 병: "화", 정: "화",
+  무: "토", 기: "토", 경: "금", 신: "금",
+  임: "수", 계: "수",
+};
+const BRANCH_ELEMENT = {
+  자: "수", 축: "토", 인: "목", 묘: "목",
+  진: "토", 사: "화", 오: "화", 미: "토",
+  신: "금", 유: "금", 술: "토", 해: "수",
+};
+
 function getDayScore(saju) {
   if (!saju) return 50;
   const { ilgan, ilji, or } = saju;
@@ -26,15 +45,122 @@ function getDayScore(saju) {
   return Math.max(0, Math.min(100, score));
 }
 
+// 카테고리별 추가 보정 점수
+function getCategoryBonus(saju, categoryKey, userIlji) {
+  if (!saju) return 0;
+  const { ilgan, ilji, or } = saju;
+  let bonus = 0;
+
+  if (categoryKey === "결혼") {
+    // 합(合) 관계 - 결혼에 가장 유리
+    if (userIlji && LIUZHI_HE[userIlji] === ilji) bonus += 18;
+    // 토 기운 일지 - 안정과 가정
+    if (BRANCH_ELEMENT[ilji] === "토") bonus += 8;
+    // 화 기운 일지 - 감정, 열정
+    if (BRANCH_ELEMENT[ilji] === "화") bonus += 5;
+    // 수 일지 - 지혜, 자녀
+    if (BRANCH_ELEMENT[ilji] === "수") bonus += 4;
+    // 목 일간 - 새로운 시작
+    if (STEM_ELEMENT[ilgan] === "목") bonus += 3;
+  } else if (categoryKey === "이사") {
+    // 목 기운 - 새 출발, 성장
+    if (STEM_ELEMENT[ilgan] === "목") bonus += 14;
+    if (BRANCH_ELEMENT[ilji] === "목") bonus += 12;
+    // 수 기운 - 변화, 흐름
+    if (STEM_ELEMENT[ilgan] === "수") bonus += 8;
+    if (BRANCH_ELEMENT[ilji] === "수") bonus += 6;
+    // 토 과다면 이사에 불리 (고착)
+    if (or.토 >= 3) bonus -= 10;
+  } else if (categoryKey === "계약") {
+    // 금 기운 - 명확한 결정, 집행력
+    if (STEM_ELEMENT[ilgan] === "금") bonus += 14;
+    if (BRANCH_ELEMENT[ilji] === "금") bonus += 12;
+    // 양 일간 - 적극적 행동
+    if (YANG_STEMS.has(ilgan)) bonus += 6;
+    // 수 기운 - 지혜로운 판단
+    if (STEM_ELEMENT[ilgan] === "수") bonus += 7;
+    // 화 일지 - 과열로 인한 실수 위험
+    if (BRANCH_ELEMENT[ilji] === "화") bonus -= 5;
+  }
+
+  return bonus;
+}
+
 const RECOMMEND_TYPES = [
-  { key: "결혼", emoji: "💍", threshold: 68 },
-  { key: "이사", emoji: "🏡", threshold: 62 },
-  { key: "계약", emoji: "📝", threshold: 65 },
+  { key: "결혼", emoji: "💍", threshold: 60 },
+  { key: "이사", emoji: "🏡", threshold: 55 },
+  { key: "계약", emoji: "📝", threshold: 58 },
 ];
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MONTHS = ["1월", "2월", "3월", "4월", "5월", "6월",
                 "7월", "8월", "9월", "10월", "11월", "12월"];
+
+function DateCheckInput({ label, userIlji }) {
+  const [inputDate, setInputDate] = useState("");
+  const result = useMemo(() => {
+    if (!inputDate) return null;
+    const [y, m, d] = inputDate.split("-").map(Number);
+    if (!y || !m || !d) return null;
+    try {
+      const s = getSaju(y, m, d, 12);
+      let score = getDayScore(s);
+      if (userIlji && UNLUCKY_CLASH[userIlji] === s.ilji) score -= 15;
+      score = Math.max(0, Math.min(100, score));
+      const catScores = RECOMMEND_TYPES.map(t => {
+        const bonus = getCategoryBonus(s, t.key, userIlji);
+        return { ...t, catScore: Math.max(0, Math.min(100, score + bonus)) };
+      });
+      return { saju: s, score, catScores, y, m, d };
+    } catch { return null; }
+  }, [inputDate, userIlji]);
+
+  return (
+    <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '14px 16px', border: '1px solid var(--line)' }}>
+      <div style={{ fontWeight: 600, color: 'var(--t2)', fontSize: 'var(--sm)', marginBottom: 8 }}>{label}</div>
+      <input
+        type="date"
+        value={inputDate}
+        onChange={e => setInputDate(e.target.value)}
+        style={{
+          width: '100%', boxSizing: 'border-box',
+          background: 'var(--bg1)', border: '1px solid var(--line)',
+          borderRadius: 8, padding: '8px 12px',
+          color: 'var(--t1)', fontFamily: 'var(--ff)',
+          fontSize: 'var(--sm)', cursor: 'pointer',
+        }}
+      />
+      {result && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>
+            <div>
+              간지: <strong style={{ color: 'var(--gold)' }}>
+                {result.saju.il.gh}{result.saju.il.jh} ({result.saju.il.g}{result.saju.il.j})
+              </strong>
+            </div>
+            <div>
+              일진: <strong style={{
+                color: result.score >= 68 ? '#5FAD7A' : result.score < 38 ? 'var(--rose)' : 'var(--t1)'
+              }}>{result.score}점</strong>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            {result.catScores.map(c => (
+              <span key={c.key} style={{
+                fontSize: 'var(--xs)', padding: '3px 8px',
+                borderRadius: 20, border: '1px solid var(--line)',
+                background: c.catScore >= c.threshold ? 'rgba(95,173,122,0.15)' : 'var(--bg1)',
+                color: c.catScore >= c.threshold ? '#5FAD7A' : 'var(--t4)',
+              }}>
+                {c.emoji} {c.key} {c.catScore >= c.threshold ? '✦' : '△'}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SajuCalendar({ form, setStep }) {
   const now = new Date();
@@ -67,15 +193,19 @@ export default function SajuCalendar({ form, setStep }) {
     });
   }, [viewYear, viewMonth, userIlji]);
 
-  // 목적별 추천일 (이달 상위 3개)
+  // 목적별 추천일 — 카테고리별 오행 보정 점수 적용
   const recommendations = useMemo(() => {
     return RECOMMEND_TYPES.map(type => {
       const candidates = daysData
-        .filter(d => d.score >= type.threshold)
-        .sort((a, b) => b.score - a.score);
+        .map(d => {
+          const bonus = getCategoryBonus(d.saju, type.key, userIlji);
+          return { ...d, catScore: Math.max(0, Math.min(100, d.score + bonus)) };
+        })
+        .filter(d => d.catScore >= type.threshold)
+        .sort((a, b) => b.catScore - a.catScore);
       return { ...type, days: candidates.slice(0, 3).map(d => d.d) };
     });
-  }, [daysData]);
+  }, [daysData, userIlji]);
 
   const firstWeekday = new Date(viewYear, viewMonth - 1, 1).getDay();
   const selectedData = selected ? daysData.find(d => d.d === selected) : null;
@@ -200,6 +330,18 @@ export default function SajuCalendar({ form, setStep }) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* 날짜 직접 확인 */}
+        <div style={{ marginTop: 'var(--sp3)' }}>
+          <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>📅 날짜 직접 확인</div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 'var(--sp2)' }}>
+            날짜를 입력하면 그 날의 일진을 바로 확인할 수 있어요
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <DateCheckInput label="첫 번째 날짜" userIlji={userIlji} />
+            <DateCheckInput label="두 번째 날짜" userIlji={userIlji} />
           </div>
         </div>
 
