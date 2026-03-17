@@ -42,3 +42,8 @@ export function getTimeHorizon(userMessage) {
   if (/올해|이번 년/.test(userMessage))                 return "올해 범위로";
   return "가장 가까운 시일 (1~2주) 범위로";
 }
+
+// 결정형(YES/NO) 질문 감지: "~갈까?", "~할까?", "~해도 될까?" 등
+export function isDecisionQuestion(userMessage) {
+  return /갈까|할까|해도\s*(될까|괜찮을까|좋을까)|말할까|연락할까|시작할까|어떨까|어때[요?]|해야\s*(할까|하나)|가야\s*(할까|하나)|사도\s*(될까|괜찮을까)|만날까|헤어질까|바꿀까|그만할까|참을까|말해야|해도\s*돼|가도\s*돼/.test(userMessage);
+}
