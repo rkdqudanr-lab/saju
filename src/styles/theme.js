@@ -639,6 +639,7 @@ select.inp option{background:var(--bg2)}
 .dsc-item:nth-child(3) .dsc-item-icon-wrap{background:var(--goldf);border-color:var(--acc)}
 .dsc-item:nth-child(4) .dsc-item-icon-wrap{background:var(--goldf);border-color:var(--acc)}
 .dsc-item:nth-child(5) .dsc-item-icon-wrap{background:var(--rosef);border-color:var(--roseacc)}
+.dsc-item-icon{font-size:1rem;line-height:1;display:flex;align-items:center;justify-content:center}
 .dsc-item-text{font-size:var(--sm);color:var(--t2);line-height:1.72;flex:1}
 
 /* 로딩 상태 버튼 */
