@@ -1,5 +1,5 @@
 // api/ask.js — 별숨 Vercel Serverless Function
-import { getTodayStr, getSeasonDesc, getTimeHorizon } from "./prompts/utils.js";
+import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "./prompts/utils.js";
 import { getCategoryHint, pickEndingHint } from "./prompts/hints.js";
 import { buildSystem } from "./prompts/buildSystem/index.js";
 
@@ -60,11 +60,12 @@ export default async function handler(req, res) {
   const categoryHint = getCategoryHint(userMessage);
   const endingHint   = pickEndingHint();
   const timeHorizon  = getTimeHorizon(userMessage);
+  const isDecision   = isDecisionQuestion(userMessage);
 
   // 모드별 동적 로드
   const systemBase = await buildSystem(
     today, season, categoryHint, endingHint, timeHorizon,
-    userMessage, isChat, isReport, isLetter, isScenario, isStory
+    userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision
   );
 
   const systemWithContext = systemBase

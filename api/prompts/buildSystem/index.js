@@ -18,9 +18,10 @@ const SLOT_RE = /\[오전·100자\]|\[오후·100자\]|\[저녁·100자\]|\[새�
  * @param {boolean} isLetter
  * @param {boolean} isScenario
  * @param {boolean} isStory
+ * @param {boolean} isDecision
  * @returns {Promise<string>}
  */
-export async function buildSystem(today, season, categoryHint, endingHint, timeHorizon, userMessage, isChat, isReport, isLetter, isScenario, isStory) {
+export async function buildSystem(today, season, categoryHint, endingHint, timeHorizon, userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision) {
   if (isLetter) {
     const { letterPrompt } = await import('./letter.js');
     return letterPrompt(today);
@@ -36,6 +37,11 @@ export async function buildSystem(today, season, categoryHint, endingHint, timeH
   if (SLOT_RE.test(userMessage || '')) {
     const { slotPrompt } = await import('./slot.js');
     return slotPrompt(today);
+  }
+  // 결정형 질문 (갈까? 할까? 해도 될까? 등) — 일반 운세 템플릿 대신 직접 답변
+  if (isDecision && !isChat && !isReport) {
+    const { decisionPrompt } = await import('./decision.js');
+    return decisionPrompt(today, season);
   }
   const { mainPrompt } = await import('./main.js');
   return mainPrompt(today, season, categoryHint, endingHint, timeHorizon, isReport, isChat);
