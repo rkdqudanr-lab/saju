@@ -52,19 +52,12 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
     const now = new Date();
     const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
     try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: `[오늘 우리의 이야기] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 오늘 하루 어떤 이야기가 펼쳐질지 소설처럼 이야기해줘요.`,
-          context: buildPartnerCtx(),
-          isChat: false, isReport: false, isScenario: false, isStory: true,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const aiText = await callApi(
+        `[오늘 우리의 이야기] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 오늘 하루 어떤 이야기가 펼쳐질지 소설처럼 이야기해줘요.`,
+        { context: buildPartnerCtx(), isStory: true }
+      );
       try {
-        const raw = data.text.replace(/```json|```/g, '').trim();
+        const raw = aiText.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(raw);
         setStoryResult({
           todayVibe: parsed.todayVibe || '',
@@ -75,8 +68,8 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
         });
       } catch (parseErr) {
         // JSON 파싱 실패 시 상세 로깅
-        console.error('[CompatPage] JSON parse error (story):', parseErr?.message, '\nRaw text:', data.text?.slice(0, 300));
-        setStoryResult({ todayVibe: '', story: data.text, moments: [], tip: '', chemistry: '' });
+        console.error('[CompatPage] JSON parse error (story):', parseErr?.message, '\nRaw text:', aiText?.slice(0, 300));
+        setStoryResult({ todayVibe: '', story: aiText, moments: [], tip: '', chemistry: '' });
       }
     } catch (fetchErr) {
       console.error('[CompatPage] fetch error (story):', fetchErr?.message);
@@ -97,11 +90,8 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
     const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
 
     try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: `[오늘 우리가 만나면] 두 사람이 오늘 ${placeObj.label}에서 만났을 때의 시나리오를 써주세요.
+      const aiText = await callApi(
+        `[오늘 우리가 만나면] 두 사람이 오늘 ${placeObj.label}에서 만났을 때의 시나리오를 써주세요.
 
 오늘: ${todayStr}
 
@@ -112,14 +102,10 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
 - 두 사람의 성격 차이를 설명하지 말고 말 한마디와 반응으로 직접 보여줄 것
 - 웃음 포인트 1개, 공감 포인트 1개
 - reason에는 왜 이런 대화가 일어났는지 사주와 별자리를 바탕으로 쉽게 설명 (존댓말)`,
-          context: buildPartnerCtx(),
-          isChat: false, isReport: false, isScenario: true,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+        { context: buildPartnerCtx(), isScenario: true }
+      );
       try {
-        const raw = data.text.replace(/```json|```/g, '').trim();
+        const raw = aiText.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
           setResult({
@@ -144,8 +130,8 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
         }
       } catch (parseErr) {
         // JSON 파싱 실패 시 상세 로깅
-        console.error('[CompatPage] JSON parse error (run):', parseErr?.message, '\nRaw text:', data.text?.slice(0, 300));
-        setResult({ bubbles: [{ who: 'A', text: data.text }], summary: '', reason: '', topic: '', todayEvents: [], recommendedFood: '', recommendedPlace: '' });
+        console.error('[CompatPage] JSON parse error (run):', parseErr?.message, '\nRaw text:', aiText?.slice(0, 300));
+        setResult({ bubbles: [{ who: 'A', text: aiText }], summary: '', reason: '', topic: '', todayEvents: [], recommendedFood: '', recommendedPlace: '' });
       }
     } catch (fetchErr) {
       console.error('[CompatPage] fetch error (run):', fetchErr?.message);

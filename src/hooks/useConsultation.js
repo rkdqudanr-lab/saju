@@ -70,7 +70,15 @@ export function useConsultation(buildCtx, formOk) {
         const res  = await fetch('/api/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userMessage, context: buildCtx(), isChat: opts.isChat || false, isReport: opts.isReport || false }),
+          body: JSON.stringify({
+            userMessage,
+            context: opts.context !== undefined ? opts.context : buildCtx(),
+            isChat: opts.isChat || false,
+            isReport: opts.isReport || false,
+            isLetter: opts.isLetter || false,
+            isScenario: opts.isScenario || false,
+            isStory: opts.isStory || false,
+          }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'API 오류');
