@@ -30,9 +30,7 @@ const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
 const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
 const FutureProphecyPage = lazy(() => import("./components/FutureProphecyPage.jsx"));
 const CompatPage         = lazy(() => import("./components/CompatPage.jsx"));
-const SajuCalendar       = lazy(() => import("./components/SajuCalendar.jsx"));
-const RadarChart         = lazy(() => import("./components/RadarChart.jsx"));
-const AnniversaryPage    = lazy(() => import("./components/AnniversaryPage.jsx"));
+const ToolsPage          = lazy(() => import("./components/ToolsPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -254,7 +252,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {step === 10 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
 
       <div className="app" id="main-content">
 
@@ -914,31 +912,22 @@ export default function App() {
         )}
 
         {/* ── Step 10: 사주 달력 ── */}
+        {/* ── Step 10: 도구 모음 (사주 달력 · 궁합 레이더 · 기념일 운세) ── */}
         {step === 10 && (
           <Suspense fallback={<PageSpinner />}>
-            <SajuCalendar form={form} setStep={setStep} />
-          </Suspense>
-        )}
-
-        {/* ── Step 11: 궁합 레이더 ── */}
-        {step === 11 && (
-          <Suspense fallback={<PageSpinner />}>
-            <RadarChart form={form} otherProfiles={otherProfiles} setStep={setStep} onAddOther={() => setShowOtherProfileModal(true)} />
-          </Suspense>
-        )}
-
-        {/* ── Step 12: 기념일 운세 ── */}
-        {step === 12 && (
-          <Suspense fallback={<PageSpinner />}>
-            <AnniversaryPage
+            <ToolsPage
               form={form}
+              otherProfiles={otherProfiles}
+              setStep={setStep}
+              onAddOther={() => setShowOtherProfileModal(true)}
               callApi={callApi}
+              buildCtx={buildCtx}
               anniversaryDate={anniversaryDate}
               setAnniversaryDate={setAnniversaryDate}
               anniversaryType={anniversaryType}
               setAnniversaryType={setAnniversaryType}
               ANNIVERSARY_PROMPT={ANNIVERSARY_PROMPT}
-              buildCtx={buildCtx}
+              initialTab={step === 10 ? undefined : undefined}
             />
           </Suspense>
         )}
