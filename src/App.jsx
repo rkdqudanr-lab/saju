@@ -951,7 +951,7 @@ export default function App() {
       {/* ── 모달들 ── */}
       {showProfileModal && (
         <Suspense fallback={<PageSpinner />}>
-          <ProfileModal profile={profile} setProfile={userProfile.setProfile} onClose={() => setShowProfileModal(false)} />
+          <ProfileModal profile={profile} setProfile={userProfile.setProfile} form={form} setForm={setForm} onClose={() => setShowProfileModal(false)} />
         </Suspense>
       )}
 
