@@ -47,7 +47,10 @@ export function useConsultation(buildCtx, formOk) {
   const [qLoadStatus, setQLoadStatus]     = useState([]);
   // 오늘 별숨 카드 (하루 1회 캐싱)
   const [dailyResult, setDailyResult]     = useState(() => {
-    try { return JSON.parse(localStorage.getItem(getDailyKey()) || 'null'); } catch { return null; }
+    try {
+      const v = JSON.parse(localStorage.getItem(getDailyKey()) || 'null');
+      return (v && typeof v === 'object' && typeof v.text === 'string') ? v : null;
+    } catch { return null; }
   });
   const [dailyLoading, setDailyLoading]   = useState(false);
   const chatEndRef = useRef(null);
