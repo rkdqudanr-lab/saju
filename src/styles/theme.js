@@ -581,10 +581,9 @@ select.inp option{background:var(--bg2)}
 
 /* ══ DAILY STAR CARD ══ */
 @keyframes dsc-breathe{
-  0%,100%{box-shadow:0 0 20px rgba(232,176,72,.12),0 0 50px rgba(155,142,196,.06),0 8px 32px rgba(0,0,0,.25)}
-  50%{box-shadow:0 0 40px rgba(232,176,72,.26),0 0 90px rgba(155,142,196,.12),0 12px 48px rgba(0,0,0,.3)}
+  0%,100%{box-shadow:0 2px 16px rgba(232,176,72,.10),0 1px 4px rgba(0,0,0,.06)}
+  50%{box-shadow:0 4px 28px rgba(232,176,72,.22),0 2px 8px rgba(155,142,196,.10)}
 }
-@keyframes dsc-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @keyframes dsc-item-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
 @keyframes dsc-spark{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.7;transform:scale(1.2)}}
 @keyframes dsc-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
@@ -598,11 +597,11 @@ select.inp option{background:var(--bg2)}
 
 .dsc-card{
   position:relative;overflow:hidden;
-  background:linear-gradient(145deg,var(--bg1) 0%,rgba(26,22,40,.97) 60%,rgba(18,15,30,.98) 100%);
-  border:1px solid rgba(232,176,72,.22);
+  background:linear-gradient(150deg,var(--bg1) 0%,var(--bg2) 55%,var(--bg3) 100%);
+  border:1px solid var(--acc);
   border-radius:var(--r3);
   padding:var(--sp3) var(--sp3) var(--sp2);
-  animation:dsc-breathe 5s ease-in-out infinite, dsc-float 7s ease-in-out infinite;
+  animation:dsc-breathe 5s ease-in-out infinite;
 }
 .dsc-top-shimmer{
   position:absolute;top:0;left:0;right:0;height:1px;overflow:hidden;
@@ -629,17 +628,15 @@ select.inp option{background:var(--bg2)}
 }
 .dsc-item-icon-wrap{
   width:34px;height:34px;border-radius:50%;flex-shrink:0;margin-top:1px;
-  background:var(--bg3);border:1px solid rgba(255,255,255,.06);
+  background:var(--bg3);border:1px solid var(--line);
   display:flex;align-items:center;justify-content:center;font-size:1rem;
-  box-shadow:0 0 0 0 var(--dsc-color,var(--gold));
-  animation:dsc-breathe 5s ease-in-out infinite;
 }
 .dsc-item:nth-child(1) .dsc-item-icon-wrap{background:var(--lavf);border-color:var(--lavacc)}
 .dsc-item:nth-child(2) .dsc-item-icon-wrap{background:var(--tealf);border-color:var(--tealacc)}
 .dsc-item:nth-child(3) .dsc-item-icon-wrap{background:var(--goldf);border-color:var(--acc)}
 .dsc-item:nth-child(4) .dsc-item-icon-wrap{background:var(--goldf);border-color:var(--acc)}
 .dsc-item:nth-child(5) .dsc-item-icon-wrap{background:var(--rosef);border-color:var(--roseacc)}
-.dsc-item-text{font-size:var(--sm);color:var(--t2);line-height:1.72;flex:1}
+.dsc-item-text{font-size:var(--sm);color:var(--t1);line-height:1.72;flex:1}
 
 /* 로딩 상태 버튼 */
 .dsc-loading-btn{width:100%;padding:14px;border:none;border-radius:var(--r1);background:var(--goldf);border:1px solid var(--acc);color:var(--gold);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;animation:fadeUp .4s both}

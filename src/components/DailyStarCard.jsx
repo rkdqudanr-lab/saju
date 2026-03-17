@@ -8,13 +8,24 @@ function parseDailyLines(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   let summary = '';
   const items = [];
-  for (const line of lines) {
-    if (line.startsWith('[요약]')) {
-      summary = line.replace('[요약]', '').trim();
-    } else if (items.length < 5) {
-      items.push(line);
-    }
+  let summaryFound = false;
+
+  // Extract [요약] summary first
+  const summaryIdx = lines.findIndex(l => l.startsWith('[요약]'));
+  if (summaryIdx !== -1) {
+    summary = lines[summaryIdx].replace('[요약]', '').trim();
+    summaryFound = true;
   }
+
+  // Find item start: first line with "오늘의 색은" (the color item).
+  // This skips any intro paragraph the AI may insert between [요약] and the items.
+  const colorStart = lines.findIndex(l => l.includes('오늘의 색은'));
+  const itemStart = colorStart !== -1 ? colorStart : (summaryFound ? summaryIdx + 1 : 0);
+
+  for (let i = itemStart; i < lines.length && items.length < 5; i++) {
+    items.push(lines[i]);
+  }
+
   return { summary, items };
 }
 
