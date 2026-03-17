@@ -47,7 +47,10 @@ export function useConsultation(buildCtx, formOk) {
   const [qLoadStatus, setQLoadStatus]     = useState([]);
   // 오늘 별숨 카드 (하루 1회 캐싱)
   const [dailyResult, setDailyResult]     = useState(() => {
-    try { return JSON.parse(localStorage.getItem(getDailyKey()) || 'null'); } catch { return null; }
+    try {
+      const parsed = JSON.parse(localStorage.getItem(getDailyKey()) || 'null');
+      return (parsed && typeof parsed.text === 'string') ? parsed : null;
+    } catch { return null; }
   });
   const [dailyLoading, setDailyLoading]   = useState(false);
   const chatEndRef = useRef(null);
@@ -155,7 +158,12 @@ export function useConsultation(buildCtx, formOk) {
   const askDailyHoroscope = useCallback(async () => {
     if (!formOk) { setStep(1); return; }
     // 이미 오늘 결과가 있으면 바로 보여줌 (API 호출 없음)
-    const cached = (() => { try { return JSON.parse(localStorage.getItem(getDailyKey()) || 'null'); } catch { return null; } })();
+    const cached = (() => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(getDailyKey()) || 'null');
+        return (parsed && typeof parsed.text === 'string') ? parsed : null;
+      } catch { return null; }
+    })();
     if (cached) { setDailyResult(cached); return; }
     // 없으면 메인 프롬프트로 새로 불러오기
     setDailyLoading(true);

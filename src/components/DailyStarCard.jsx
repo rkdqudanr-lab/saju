@@ -5,6 +5,7 @@ const ITEM_ICONS  = ['🎨', '🌿', '🧭', '✨', '🌙'];
 const ITEM_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
 
 function parseDailyLines(text) {
+  if (!text || typeof text !== 'string') return { summary: '', items: [] };
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   let summary = '';
   const items = [];
