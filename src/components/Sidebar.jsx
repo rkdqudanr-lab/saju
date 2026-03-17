@@ -36,7 +36,7 @@ function getDateRange(filter) {
   return null;
 }
 
-export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite }) {
+export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onFormEdit, onInvite }) {
   const [histItems, setHistItems] = useState(() => loadHistory());
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');
@@ -89,18 +89,38 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {user.profileImage
                 ? <img className="sidebar-av" src={user.profileImage} alt="프로필" />
                 : <div className="sidebar-av-ph">🌙</div>}
-              <div>
+              <div style={{ flex: 1 }}>
                 <div className="sidebar-uname">{user.nickname}님</div>
                 <div className="sidebar-usub">별숨과 함께하는 중</div>
               </div>
+              {onFormEdit && (
+                <button
+                  onClick={() => { onFormEdit(); onClose(); }}
+                  title="이름·생년월일 수정"
+                  aria-label="기본 정보 수정"
+                  style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', flexShrink: 0 }}
+                >
+                  ✏️
+                </button>
+              )}
             </div>
           ) : (
             <div className="sidebar-user">
               <div className="sidebar-av-ph">✦</div>
-              <div>
+              <div style={{ flex: 1 }}>
                 <div className="sidebar-uname">게스트</div>
                 <div className="sidebar-usub" style={{ cursor: 'pointer', color: 'var(--gold)' }} onClick={onKakaoLogin}>카카오 로그인 →</div>
               </div>
+              {onFormEdit && (
+                <button
+                  onClick={() => { onFormEdit(); onClose(); }}
+                  title="이름·생년월일 수정"
+                  aria-label="기본 정보 수정"
+                  style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', flexShrink: 0 }}
+                >
+                  ✏️
+                </button>
+              )}
             </div>
           )}
         </div>

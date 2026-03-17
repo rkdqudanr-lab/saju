@@ -233,6 +233,7 @@ export default function App() {
           onKakaoLogin={kakaoLogin}
           onKakaoLogout={kakaoLogout}
           onProfileOpen={() => setShowProfileModal(true)}
+          onFormEdit={() => setStep(1)}
           onInvite={() => setShowInviteModal(true)}
         />
       )}
