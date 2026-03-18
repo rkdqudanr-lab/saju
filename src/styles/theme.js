@@ -269,6 +269,9 @@ select.inp option{background:var(--bg2)}
 .acc-body.closed{max-height:0!important;opacity:0!important;overflow:hidden!important}
 .acc-body.open{max-height:3000px;opacity:1}
 .acc-content{padding:var(--sp2) var(--sp4) var(--sp4);font-size:var(--sm);color:var(--t2);line-height:2.4;letter-spacing:-.005em;white-space:pre-wrap}
+.acc-callout{display:flex;align-items:flex-start;gap:10px;background:rgba(232,176,72,.08);border-left:3px solid var(--gold);border-radius:0 var(--r1) var(--r1) 0;padding:12px 14px;margin-bottom:var(--sp2);animation:fadeUp .3s ease}
+.acc-callout-icon{color:var(--gold);font-size:.9rem;flex-shrink:0;margin-top:1px}
+.acc-callout-text{font-size:var(--sm);color:var(--t1);font-weight:600;line-height:1.6;letter-spacing:-.01em}
 .acc-content p:first-child::first-letter{font-size:2.4em;font-weight:700;color:var(--gold);float:left;line-height:.82;margin:.06em .1em 0 0}
 .typing-cursor{display:inline-block;width:2px;height:.9em;background:var(--gold);margin-left:2px;vertical-align:text-bottom;animation:blink .7s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}

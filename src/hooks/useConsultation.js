@@ -70,7 +70,7 @@ export function useConsultation(buildCtx, formOk) {
         const res  = await fetch('/api/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userMessage, context: buildCtx(), isChat: opts.isChat || false, isReport: opts.isReport || false }),
+          body: JSON.stringify({ userMessage, context: buildCtx(), isChat: opts.isChat || false, isReport: opts.isReport || false, isDaily: opts.isDaily || false }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'API 오류');
@@ -168,7 +168,7 @@ export function useConsultation(buildCtx, formOk) {
     // 없으면 메인 프롬프트로 새로 불러오기
     setDailyLoading(true);
     try {
-      const ans = await callApi('오늘 하루 나의 별숨은?');
+      const ans = await callApi('오늘 하루 나의 별숨은?', { isDaily: true });
       const result = { text: ans };
       localStorage.setItem(getDailyKey(), JSON.stringify(result));
       setDailyResult(result);

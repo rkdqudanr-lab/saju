@@ -22,7 +22,7 @@ export function FeedbackBtn({qIdx}){
 // ═══════════════════════════════════════════════════════════
 const ERR_PATTERN = /다시 시도해봐요/;
 
-export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingDone,onRetry}){
+export default function AccItem({q,text,summary,idx,isOpen,onToggle,shouldType,onTypingDone,onRetry}){
   const isError = ERR_PATTERN.test(text || '');
   const isTyping = shouldType && isOpen && !isError;
   const{shown,done,skipToEnd}=useWordTyping(text, isTyping, TIMING.typingWord);
@@ -57,6 +57,12 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
       </button>
       <div id={bodyId} className={`acc-body${isOpen?' open':' closed'}`} role="region" aria-label={`Q${idx+1} 답변`}>
         <div className="acc-content">
+          {isOpen && summary && (
+            <div className="acc-callout">
+              <span className="acc-callout-icon">✦</span>
+              <span className="acc-callout-text">{summary}</span>
+            </div>
+          )}
           <p>{display}{isOpen&&!isDone&&<span className="typing-cursor" aria-hidden="true"/>}</p>
           {isOpen&&isError&&onRetry&&(
             <button

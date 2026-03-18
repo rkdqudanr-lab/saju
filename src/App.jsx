@@ -111,6 +111,15 @@ export default function App() {
     }).catch(() => showToast('복사에 실패했어요', 'error'));
   }, [answers, showToast]);
 
+  // ── 스플래시 제거 (마운트 시) ──
+  useEffect(() => {
+    const splash = document.getElementById('splash');
+    if (splash) {
+      splash.classList.add('hidden');
+      setTimeout(() => splash.remove(), 450);
+    }
+  }, []);
+
   // ── loginError 토스트 표시 ──
   useEffect(() => {
     if (loginError) { showToast(loginError, 'error'); setLoginError(''); }
@@ -344,6 +353,20 @@ export default function App() {
             </div>
 
             <div className="inner land-scroll-zone">
+              {/* ── 별숨 달력 바로가기 ── */}
+              <button
+                className="land-cal-btn"
+                onClick={() => setStep(10)}
+                style={{ width: '100%', marginBottom: 'var(--sp3)', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', cursor: 'pointer', fontFamily: 'var(--ff)', color: 'var(--t1)', textAlign: 'left' }}
+              >
+                <span style={{ fontSize: '1.4rem' }}>🗓️</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--sm)', color: 'var(--t1)' }}>별숨 달력</div>
+                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 2 }}>이달의 길일·흉일 · 날짜별 기념일 운세</div>
+                </div>
+                <span style={{ color: 'var(--gold)', fontSize: '1rem' }}>→</span>
+              </button>
+
               <SamplePreview />
               <div className="daily-word">
                 <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
@@ -360,13 +383,6 @@ export default function App() {
                   ))}
                 </div>
               </div>
-
-              {/* ── 오늘의 12별자리 미니 운세 슬롯 ── */}
-              <ZodiacSlot today={today} onQuickAsk={(sign) => {
-                const q = `${sign} 자리인 나, 오늘의 운세는 어때?`;
-                setDiy(q);
-                askQuick(q);
-              }} />
             </div>
           </div>
         )}
@@ -400,7 +416,11 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-                    {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}>✦</span>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}>✦</span>}
+                      <button style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+                        onClick={e => { e.stopPropagation(); setShowProfileModal(true); }}>수정</button>
+                    </div>
                   </div>
 
                   {otherProfiles.map((p, i) => {
@@ -668,7 +688,7 @@ export default function App() {
                 {selQs.map((q, i) => (
                   <div key={i}>
                     <AccItem
-                      q={q} text={parseAccSummary(answers[i] || '').text} idx={i}
+                      q={q} text={parseAccSummary(answers[i] || '').text} summary={parseAccSummary(answers[i] || '').summary} idx={i}
                       isOpen={openAcc === i}
                       onToggle={() => handleAccToggle(i)}
                       shouldType={!typedSet.has(i)}
@@ -914,7 +934,7 @@ export default function App() {
         {/* ── Step 10: 사주 달력 ── */}
         {step === 10 && (
           <Suspense fallback={<PageSpinner />}>
-            <SajuCalendar form={form} setStep={setStep} />
+            <SajuCalendar form={form} setStep={setStep} callApi={callApi} />
           </Suspense>
         )}
 
