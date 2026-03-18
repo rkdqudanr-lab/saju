@@ -29,7 +29,7 @@ export function useConsultation(buildCtx, formOk) {
   const [cat, setCat]                     = useState(0);
   const [selQs, setSelQs]                 = useState([]);
   const [diy, setDiy]                     = useState('');
-  const [pkg, setPkg]                     = useState('free');
+  const [pkg, setPkg]                     = useState('premium'); // 베타 기간: 기본값 프리미엄
   const [answers, setAnswers]             = useState([]);
   const [openAcc, setOpenAcc]             = useState(0);
   const [typedSet, setTypedSet]           = useState(new Set());
@@ -55,7 +55,7 @@ export function useConsultation(buildCtx, formOk) {
   const [dailyLoading, setDailyLoading]   = useState(false);
   const chatEndRef = useRef(null);
 
-  const curPkg   = PKGS.find(p => p.id === pkg) || PKGS[2];
+  const curPkg   = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
   const maxQ     = curPkg.q;
   const maxChat  = curPkg.chat;
   const chatLeft = maxChat - chatUsed;

@@ -71,8 +71,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .orb-r2::after{content:'';position:absolute;bottom:-3px;right:20%;width:4px;height:4px;border-radius:50%;background:rgba(200,160,255,.7);box-shadow:0 0 8px rgba(200,160,255,.5)}
 @keyframes orbPulse{0%,100%{opacity:.88;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
 @keyframes orbSpin{to{transform:rotate(360deg)}}
-.land-copy{font-size:var(--lg);font-weight:300;color:var(--t1);line-height:1.75;letter-spacing:-.015em;margin-bottom:6px;animation:fadeUp .8s .35s both}
+.land-copy{font-size:var(--lg);font-weight:400;color:var(--gold);line-height:1.75;letter-spacing:-.015em;margin-bottom:4px;animation:fadeUp .8s .35s both}
 .land-copy em{font-style:normal;color:var(--gold);font-weight:400}
+.land-beta-notice{font-size:var(--xs);color:var(--t4);margin-bottom:var(--sp2);animation:fadeUp .8s .42s both;line-height:1.7}
 .land-sub{font-size:var(--sm);color:var(--t3);margin-bottom:var(--sp4);animation:fadeUp .8s .45s both;line-height:1.85}
 .cta-main{display:inline-flex;align-items:center;gap:.5rem;padding:15px 40px;border:none;border-radius:50px;background:var(--gold);color:#0D0B14;font-size:var(--sm);font-weight:700;font-family:var(--ff);cursor:pointer;letter-spacing:.02em;transition:transform .15s,opacity .15s;animation:fadeUp .8s .55s both}
 .cta-main:hover{opacity:.88}
@@ -272,13 +273,13 @@ select.inp option{background:var(--bg2)}
 .typing-cursor{display:inline-block;width:2px;height:.9em;background:var(--gold);margin-left:2px;vertical-align:text-bottom;animation:blink .7s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
-/* ══ 추가질문 STEP 5 ══ */
-.chat-page{width:100%;max-width:500px;display:flex;flex-direction:column;min-height:100vh;animation:fadeUp .5s ease}
-.chat-page-header{padding:var(--sp3) var(--sp3) var(--sp2);border-bottom:1px solid var(--line);background:var(--bg1)}
+/* ══ 추가질문 STEP 5 (고정 레이아웃) ══ */
+.chat-page{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;height:100dvh;height:100vh;display:flex;flex-direction:column;background:var(--bg);z-index:1;animation:fadeUp .5s ease}
+.chat-page-header{padding:72px var(--sp3) var(--sp2);border-bottom:1px solid var(--line);background:var(--bg1);flex-shrink:0}
 .chat-page-title{font-size:var(--lg);font-weight:600;color:var(--t1);margin-bottom:4px}
 .chat-page-sub{font-size:var(--xs);color:var(--t3)}
 .chat-limit-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--goldf);border:1px solid var(--acc);border-radius:50px;font-size:var(--xs);color:var(--gold);margin-top:8px}
-.chat-history{flex:1;padding:var(--sp2) var(--sp3);display:flex;flex-direction:column;gap:var(--sp3);overflow-y:auto}
+.chat-history{flex:1;padding:var(--sp2) var(--sp3);display:flex;flex-direction:column;gap:var(--sp3);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .chat-msg{display:flex;flex-direction:column;gap:6px;animation:fadeUp .3s ease}
 .chat-msg.user{align-items:flex-end}
 .chat-msg.ai{align-items:flex-start}
@@ -291,10 +292,10 @@ select.inp option{background:var(--bg2)}
 .typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--t4);animation:dot 1.2s infinite}
 .typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
 @keyframes dot{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}
-.chat-sugg-wrap{padding:var(--sp1) var(--sp3);display:flex;gap:5px;flex-wrap:wrap;border-top:1px solid var(--line)}
+.chat-sugg-wrap{padding:var(--sp1) 0 var(--sp1);display:flex;gap:5px;flex-wrap:wrap;margin-bottom:var(--sp1)}
 .sugg-btn{padding:6px 12px;background:transparent;border:1px solid var(--line);border-radius:50px;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;white-space:nowrap;transition:all .2s}
 .sugg-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
-.chat-input-area{padding:var(--sp2) var(--sp3);border-top:1px solid var(--line);background:var(--bg1)}
+.chat-input-area{padding:var(--sp2) var(--sp3);padding-bottom:max(var(--sp2),env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg1);flex-shrink:0}
 .chat-inp-row{display:flex;gap:8px}
 .chat-inp{flex:1;padding:11px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s}
 .chat-inp:focus{outline:none;border-color:var(--acc)}.chat-inp::placeholder{color:var(--t4)}.chat-inp:disabled{opacity:.4}
@@ -310,6 +311,14 @@ select.inp option{background:var(--bg2)}
 .up-btn:hover{background:var(--goldf)}.up-btn:disabled{opacity:.4;cursor:not-allowed}
 .chat-cta{width:100%;padding:13px;border:none;border-radius:var(--r1);background:linear-gradient(135deg,rgba(232,176,72,.15),rgba(232,176,72,.05));border:1px solid var(--acc);color:var(--gold);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:pointer;transition:all .2s;margin-bottom:var(--sp2);display:flex;align-items:center;justify-content:center;gap:8px}
 .chat-cta:hover{background:var(--goldf)}.chat-cta:disabled{opacity:.4;cursor:not-allowed}
+/* 크고 눈에 띄는 채팅 CTA */
+.chat-cta-large{width:100%;padding:var(--sp2) var(--sp3);border:none;border-radius:var(--r2);background:linear-gradient(135deg,rgba(232,176,72,.18),rgba(232,176,72,.06));border:1px solid rgba(232,176,72,.4);font-family:var(--ff);cursor:pointer;transition:all .25s;margin-bottom:var(--sp2);display:flex;align-items:center;gap:var(--sp2);text-align:left}
+.chat-cta-large:hover{background:linear-gradient(135deg,rgba(232,176,72,.28),rgba(232,176,72,.12));border-color:var(--gold);transform:translateY(-1px);box-shadow:0 4px 20px rgba(232,176,72,.15)}
+.chat-cta-large:active{transform:translateY(0)}
+.chat-cta-emoji{font-size:1.8rem;flex-shrink:0;line-height:1}
+.chat-cta-info{flex:1}
+.chat-cta-title{font-size:var(--md);font-weight:700;color:var(--gold);margin-bottom:3px}
+.chat-cta-desc{font-size:var(--xs);color:var(--t3);line-height:1.5}
 .res-btns{display:flex;gap:6px;flex-wrap:wrap}
 .res-btn{flex:1;min-width:70px;padding:9px 6px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
 .res-btn:hover{border-color:var(--acc);color:var(--gold)}.res-btn:active{transform:scale(.96)}
