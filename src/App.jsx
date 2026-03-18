@@ -353,19 +353,10 @@ export default function App() {
             </div>
 
             <div className="inner land-scroll-zone">
-              {/* ── 별숨 달력 바로가기 ── */}
-              <button
-                className="land-cal-btn"
-                onClick={() => setStep(10)}
-                style={{ width: '100%', marginBottom: 'var(--sp3)', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', cursor: 'pointer', fontFamily: 'var(--ff)', color: 'var(--t1)', textAlign: 'left' }}
-              >
-                <span style={{ fontSize: '1.4rem' }}>🗓️</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--sm)', color: 'var(--t1)' }}>별숨 달력</div>
-                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 2 }}>이달의 길일·흉일 · 날짜별 기념일 운세</div>
-                </div>
-                <span style={{ color: 'var(--gold)', fontSize: '1rem' }}>→</span>
-              </button>
+              {/* ── 별숨 달력 (인라인 임베드) ── */}
+              <Suspense fallback={<div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t4)', fontSize: 'var(--sm)' }}>달력을 불러오는 중 ✦</div>}>
+                <SajuCalendar form={form} callApi={callApi} setStep={setStep} embedded={true} />
+              </Suspense>
 
               <SamplePreview />
               <div className="daily-word">

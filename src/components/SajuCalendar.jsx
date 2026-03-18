@@ -51,7 +51,7 @@ const RECOMMEND_TYPES = [
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 
-export default function SajuCalendar({ form, callApi, setStep }) {
+export default function SajuCalendar({ form, callApi, setStep, embedded = false }) {
   const now = new Date();
   const [viewYear, setViewYear]   = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
@@ -158,9 +158,8 @@ export default function SajuCalendar({ form, callApi, setStep }) {
     }
   }, [customOccasion, viewYear, viewMonth, callApi]);
 
-  return (
-    <div className="page step-fade">
-      <div className="inner">
+  const content = (
+    <>
         <div style={{ textAlign: 'center', marginBottom: 'var(--sp3)' }}>
           <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>🗓️</div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>별숨 달력</h2>
@@ -263,27 +262,21 @@ export default function SajuCalendar({ form, callApi, setStep }) {
           </div>
         )}
 
-        {/* 이달의 추천일 (목적별) */}
-        <div style={{ marginTop: 'var(--sp3)' }}>
-          <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 'var(--sp2)' }}>✦ 이달의 추천일</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* 이달의 추천일 (목적별 — 날짜만 표시) */}
+        <div style={{ marginTop: 'var(--sp3)', background: 'var(--bg2)', borderRadius: 'var(--r2)', padding: '14px 16px', border: '1px solid var(--line)' }}>
+          <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t3)', marginBottom: 10, letterSpacing: '.05em' }}>✦ 이달의 추천일</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {recommendations.map(rec => (
-              <div key={rec.key} style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '12px 16px', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: '1.4rem' }}>{rec.emoji}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, color: 'var(--t1)', fontSize: 'var(--sm)' }}>{rec.key}</div>
-                  {rec.days.length > 0 ? (
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 2 }}>
-                      {rec.days.map(d => (
-                        <button key={d} onClick={() => handleSelectDate(d)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', padding: '0 4px' }}>
-                          {viewMonth}/{d}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 2 }}>이달은 적합한 날이 없어요</div>
-                  )}
+              <div key={rec.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: '1rem', flexShrink: 0 }}>{rec.emoji}</span>
+                <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', width: 36, flexShrink: 0 }}>{rec.key}</span>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {rec.days.length > 0 ? rec.days.map(d => (
+                    <button key={d} onClick={() => handleSelectDate(d)}
+                      style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', color: 'var(--gold)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', padding: '2px 8px' }}>
+                      {viewMonth}/{d}
+                    </button>
+                  )) : <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>없음</span>}
                 </div>
               </div>
             ))}
@@ -295,25 +288,23 @@ export default function SajuCalendar({ form, callApi, setStep }) {
           <div style={{ marginTop: 'var(--sp3)', background: 'var(--bg2)', borderRadius: 'var(--r2)', padding: 'var(--sp3)', border: '1px solid var(--line)' }}>
             <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>✦ 직접 입력하여 날짜 추천받기</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 'var(--sp2)' }}>어떤 일을 위한 날짜인지 알려주세요. 별숨이 이달 중 좋은 날을 골라드려요.</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                className="inp"
-                style={{ flex: 1, marginBottom: 0, fontSize: 'var(--sm)', padding: '10px 12px' }}
-                placeholder="예: 사업 시작, 고백, 중요한 발표..."
-                value={customOccasion}
-                onChange={e => { setCustomOccasion(e.target.value); setCustomRecs(null); }}
-                onKeyDown={e => e.key === 'Enter' && handleCustomRecs()}
-                maxLength={30}
-              />
-              <button
-                className="btn-main"
-                style={{ whiteSpace: 'nowrap', padding: '10px 14px', fontSize: 'var(--sm)', flexShrink: 0 }}
-                disabled={!customOccasion.trim() || customRecsLoading}
-                onClick={handleCustomRecs}
-              >
-                {customRecsLoading ? '별숨에게 날짜를 받아오는 중 ⋯' : '날짜 받아오기'}
-              </button>
-            </div>
+            <input
+              className="inp"
+              style={{ width: '100%', marginBottom: 'var(--sp2)', fontSize: 'var(--sm)', padding: '10px 12px' }}
+              placeholder="예: 사업 시작, 고백, 중요한 발표..."
+              value={customOccasion}
+              onChange={e => { setCustomOccasion(e.target.value); setCustomRecs(null); }}
+              onKeyDown={e => e.key === 'Enter' && handleCustomRecs()}
+              maxLength={30}
+            />
+            <button
+              className="btn-main"
+              style={{ width: '100%', padding: '12px 14px', fontSize: 'var(--sm)' }}
+              disabled={!customOccasion.trim() || customRecsLoading}
+              onClick={handleCustomRecs}
+            >
+              {customRecsLoading ? '별숨에게 날짜를 받아오는 중 ⋯' : '별숨에게 날짜 받아오기 ✦'}
+            </button>
             {customRecs && (
               <div style={{ marginTop: 'var(--sp2)' }}>
                 {customRecs.days.length > 0 ? (
@@ -334,8 +325,16 @@ export default function SajuCalendar({ form, callApi, setStep }) {
           </div>
         )}
 
-        <div style={{ height: 40 }} />
-      </div>
+        <div style={{ height: embedded ? 16 : 40 }} />
+    </>
+  );
+
+  if (embedded) {
+    return <div style={{ marginTop: 'var(--sp3)' }}>{content}</div>;
+  }
+  return (
+    <div className="page step-fade">
+      <div className="inner">{content}</div>
     </div>
   );
 }
