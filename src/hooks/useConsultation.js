@@ -1,5 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { stripMarkdown, PKGS, TIMING, LOAD_STATES } from "../utils/constants.js";
+
+// 베타 기간 종료 시 false로 변경 (또는 서버 설정으로 대체)
+const IS_BETA = true;
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { loadHistory, addHistory } from "../utils/history.js";
 
@@ -239,6 +242,10 @@ export function useConsultation(buildCtx, formOk) {
 
   // ── 월간 리포트 ──
   const genReport = useCallback(async () => {
+    if (!IS_BETA && curPkg.id === 'basic') {
+      setShowUpgradeModal(true);
+      return;
+    }
     if (typeof window.gtag === 'function') window.gtag('event', 'gen_report');
     setReportText(''); setReportLoading(true);
     try {

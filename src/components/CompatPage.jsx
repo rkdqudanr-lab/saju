@@ -80,7 +80,11 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
       }
     } catch (fetchErr) {
       console.error('[CompatPage] fetch error (story):', fetchErr?.message);
-      setStoryResult({ todayVibe: '', story: '별이 잠시 쉬고 있어요 🌙 다시 시도해봐요!', moments: [], tip: '', chemistry: '' });
+      setStoryResult({
+        todayVibe: '별이 잠시 쉬고 있어요',
+        story: '두 사람의 이야기를 불러오는 데 실패했어요. 잠시 후 다시 시도해봐요 🌙',
+        moments: [], tip: '', chemistry: ''
+      });
     } finally {
       setStoryLoading(false);
     }
@@ -149,7 +153,18 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
       }
     } catch (fetchErr) {
       console.error('[CompatPage] fetch error (run):', fetchErr?.message);
-      setResult({ bubbles: [{ who: 'A', text: '별이 잠시 쉬고 있어요 🌙 다시 시도해봐요!' }], summary: '', reason: '', topic: '', todayEvents: [], recommendedFood: '', recommendedPlace: '' });
+      setResult({
+        bubbles: [
+          { who: 'A', text: '별이 잠시 바쁜가봐요 🌙' },
+          { who: 'B', text: '다시 한번 시도해볼까요? 두 번째엔 더 좋은 이야기가 나올 거예요.' }
+        ],
+        summary: '잠시 후 다시 시도해봐요',
+        reason: '',
+        topic: '',
+        todayEvents: [],
+        recommendedFood: '',
+        recommendedPlace: '',
+      });
     } finally {
       setLoading(false);
     }

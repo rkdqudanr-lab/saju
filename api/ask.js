@@ -58,7 +58,7 @@ export default async function handler(req, res) {
   const today        = getTodayStr();
   const season       = getSeasonDesc(today.m);
   const categoryHint = getCategoryHint(userMessage);
-  const endingHint   = pickEndingHint();
+  const endingHint   = pickEndingHint(userMessage);
   const timeHorizon  = getTimeHorizon(userMessage);
   const isDecision   = isDecisionQuestion(userMessage);
 
@@ -73,6 +73,11 @@ export default async function handler(req, res) {
       ? `\n\n━━━ 오늘 상담하는 분의 기운 데이터 ━━━\n${context}\n(위 데이터는 취재 노트예요. 이걸 그대로 보여주는 게 아니라, 에세이의 재료로 자연스럽게 녹여요.)`
       : '');
 
+  // 감성 깊이가 필요한 모드는 sonnet, 나머지는 haiku (비용 최적화)
+  const model = (isLetter || isStory)
+    ? "claude-sonnet-4-20250514"
+    : "claude-haiku-4-5-20251001";
+
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -82,7 +87,7 @@ export default async function handler(req, res) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: model,
         max_tokens: 4000,
         system: systemWithContext,
         messages: [{ role: "user", content: userMessage }],
