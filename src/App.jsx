@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 
 // utils
-import { OC, OE, ON } from "./utils/saju.js";
+import { OC, OE, ON, ILGAN_POETIC, CGO } from "./utils/saju.js";
 import { getSun } from "./utils/astrology.js";
 import { getDailyWord, parseAccSummary, CATS, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
@@ -81,7 +81,8 @@ export default function App() {
           otherForm, setOtherForm, showProfileModal, setShowProfileModal,
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
-          kakaoLogin, kakaoLogout, saveOtherProfile } = userProfile;
+          kakaoLogin, kakaoLogout, saveOtherProfile,
+          editingOtherIdx, setEditingOtherIdx, startEditOtherProfile } = userProfile;
 
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
@@ -284,7 +285,11 @@ export default function App() {
                       <div style={{ flex: 1 }}>
                         <div className="llc-name">{user.nickname} <span style={{ color: 'var(--gold)' }}>✦</span></div>
                         <div className="llc-sub">
-                          {form.by && saju ? `${ON[saju.dom]} 기운 · ${sun?.n || ''}` : '별숨이 당신을 기억해요'}
+                          {form.by && saju
+                            ? saju.ilganPoetic
+                              ? `${saju.ilganPoetic} · ${ON[saju.dom]} 기운`
+                              : `${ON[saju.dom]} 기운 · ${sun?.n || ''}`
+                            : '별숨이 당신을 기억해요'}
                         </div>
                       </div>
                       <button onClick={kakaoLogout} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>로그아웃</button>
@@ -382,8 +387,17 @@ export default function App() {
                     <div className="ppc-left">
                       <div className="ppc-av">{user?.profileImage ? <img src={user.profileImage} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : '🌙'}</div>
                       <div>
-                        <div className="ppc-name">{form.name || user?.nickname || '나'}</div>
-                        <div className="ppc-sub">{form.by && sun ? `${sun.s} ${sun.n} · ${ON[saju?.dom || '금']} 기운` : '정보를 입력해줘요'}</div>
+                        <div className="ppc-name">
+                          {form.name || user?.nickname || '나'}
+                          {saju?.ilganPoetic && <span style={{ marginLeft: 6, fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 400 }}>{saju.ilganPoetic}</span>}
+                        </div>
+                        <div className="ppc-sub">
+                          {form.by && sun
+                            ? saju?.ilganEl && saju.ilganEl !== saju.dom
+                              ? `${sun.s} ${sun.n} · 원래 ${ON[saju.ilganEl]}, ${ON[saju.dom]} 기운 강`
+                              : `${sun.s} ${sun.n} · ${ON[saju?.dom || '금']} 기운`
+                            : '정보를 입력해줘요'}
+                        </div>
                       </div>
                     </div>
                     {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}>✦</span>}
@@ -402,6 +416,8 @@ export default function App() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           {activeProfileIdx === i + 1 && <span style={{ color: 'var(--gold)' }}>✦</span>}
+                          <button style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+                            onClick={e => { e.stopPropagation(); startEditOtherProfile(i); }}>수정</button>
                           <button style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
                             onClick={e => { e.stopPropagation(); setOtherProfiles(p => p.filter((_, j) => j !== i)); if (activeProfileIdx === i + 1) setActiveProfileIdx(0); }}>삭제</button>
                         </div>
@@ -963,8 +979,8 @@ export default function App() {
       {showOtherProfileModal && (
         <div className="other-modal-bg" onClick={() => setShowOtherProfileModal(false)}>
           <div className="other-modal" onClick={e => e.stopPropagation()}>
-            <div className="other-modal-title">다른 사람의 별숨 추가</div>
-            <div className="other-modal-sub">가족, 친구, 연인의 생년월일을 입력하면<br />그 사람의 별숨을 대신 물어볼 수 있어요</div>
+            <div className="other-modal-title">{editingOtherIdx !== null ? '다른 사람 정보 수정' : '다른 사람의 별숨 추가'}</div>
+            <div className="other-modal-sub">{editingOtherIdx !== null ? '저장된 정보를 수정해요' : '가족, 친구, 연인의 생년월일을 입력하면\n그 사람의 별숨을 대신 물어볼 수 있어요'}</div>
 
             <label className="lbl" htmlFor="other-name">이름</label>
             <input id="other-name" className="inp" placeholder="누구의 별숨인가요?" value={otherForm.name} onChange={e => setOtherForm(f => ({ ...f, name: e.target.value }))} />
@@ -998,9 +1014,9 @@ export default function App() {
             <button className="btn-main"
               disabled={!otherForm.by || !otherForm.bm || !otherForm.bd || !otherForm.gender}
               onClick={saveOtherProfile}>
-              추가하기 ✦
+              {editingOtherIdx !== null ? '수정하기 ✦' : '추가하기 ✦'}
             </button>
-            <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }} onClick={() => setShowOtherProfileModal(false)}>취소</button>
+            <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }} onClick={() => { setShowOtherProfileModal(false); setEditingOtherIdx(null); }}>취소</button>
           </div>
         </div>
       )}

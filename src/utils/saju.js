@@ -81,6 +81,20 @@ export const ILGAN_DESC={
   계:"남들이 못 느끼는 것을 먼저 느끼는 이슬 같은 섬세한 기질",
 };
 
+// 일간별 시적 표현 (타고난 기운을 생생하게)
+export const ILGAN_POETIC={
+  갑:"쭉 뻗은 나무",
+  을:"부드러운 넝쿨",
+  병:"타오르는 태양",
+  정:"은은한 촛불",
+  무:"드넓은 대지",
+  기:"기름진 흙",
+  경:"단단한 쇠",
+  신:"빛나는 보석",
+  임:"깊은 강물",
+  계:"촉촉한 이슬",
+};
+
 export function getSaju(y,m,d,h){
   const yg=((y-4)%10+10)%10,yj=((y-4)%12+12)%12;
   const mb=(y-1900)*12+(m-1),wg=((mb+2)%10+10)%10,wj=((m+1)%12+12)%12;
@@ -97,6 +111,6 @@ export function getSaju(y,m,d,h){
     wol:{g:CG[wg],j:JJ[wj],gh:CGH[wg],jh:JJH[wj]},
     il:{g:CG[ig],j:JJ[ij],gh:CGH[ig],jh:JJH[ij]},
     si:{g:CG[sg],j:JJ[si%12],gh:CGH[sg],jh:JJH[si%12]},
-    ilgan:CG[ig],ilji:JJ[ij],ilganDesc:ILGAN_DESC[CG[ig]],or,dom,lac
+    ilgan:CG[ig],ilji:JJ[ij],ilganDesc:ILGAN_DESC[CG[ig]],ilganEl:CGO[ig],ilganPoetic:ILGAN_POETIC[CG[ig]],or,dom,lac
   };
 }
