@@ -26,6 +26,7 @@ export function useUserProfile() {
   });
   const [activeProfileIdx, setActiveProfileIdx]       = useState(0);
   const [otherForm, setOtherForm]                     = useState(DEFAULT_OTHER);
+  const [editingOtherIdx, setEditingOtherIdx]         = useState(null); // null = 추가모드, number = 수정모드
   const [showProfileModal, setShowProfileModal]       = useState(false);
   const [showOtherProfileModal, setShowOtherProfileModal] = useState(false);
   const [loginError, setLoginError]                   = useState('');
@@ -91,12 +92,25 @@ export function useUserProfile() {
     localStorage.removeItem('byeolsoom_user');
   }, []);
 
+  const startEditOtherProfile = useCallback((idx) => {
+    setEditingOtherIdx(idx);
+    setOtherForm({ ...otherProfiles[idx] });
+    setShowOtherProfileModal(true);
+  }, [otherProfiles]);
+
   const saveOtherProfile = useCallback(() => {
-    if (otherProfiles.length >= 3) return;
-    setOtherProfiles(p => [...p, { ...otherForm }]);
+    if (editingOtherIdx !== null) {
+      // 수정 모드
+      setOtherProfiles(p => p.map((item, i) => i === editingOtherIdx ? { ...otherForm } : item));
+    } else {
+      // 추가 모드
+      if (otherProfiles.length >= 3) return;
+      setOtherProfiles(p => [...p, { ...otherForm }]);
+    }
     setOtherForm(DEFAULT_OTHER);
+    setEditingOtherIdx(null);
     setShowOtherProfileModal(false);
-  }, [otherProfiles, otherForm]);
+  }, [otherProfiles, otherForm, editingOtherIdx]);
 
   return {
     user, setUser,
@@ -105,9 +119,10 @@ export function useUserProfile() {
     otherProfiles, setOtherProfiles,
     activeProfileIdx, setActiveProfileIdx,
     otherForm, setOtherForm,
+    editingOtherIdx, setEditingOtherIdx,
     showProfileModal, setShowProfileModal,
     showOtherProfileModal, setShowOtherProfileModal,
     loginError, setLoginError,
-    kakaoLogin, kakaoLogout, saveOtherProfile,
+    kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile,
   };
 }
