@@ -62,12 +62,34 @@ export function stripMarkdown(text){
 
 export function parseAccSummary(text) {
   if (!text) return { summary: '', text: '' };
-  const match = text.match(/\[요약\](.*?)(?:\n|$)/);
-  if (match) {
-    let summary = match[1].replace(/^(요약|핵심)[\s:]*/i, '').trim();
+
+  // 1순위: [요약] 태그 명시적 파싱 (기존 방식)
+  const tagMatch = text.match(/\[요약\]\s*(.*?)(?:\n|$)/);
+  if (tagMatch) {
+    const summary = tagMatch[1].replace(/^(요약|핵심)[\s:]*/i, '').trim();
     const restText = text.replace(/\[요약\].*?(?:\n|$)/, '').trim();
     return { summary, text: restText };
   }
+
+  // 2순위: 🀄 또는 ✦ 앵커 이전 첫 문장을 요약으로 추출 (신규 구조 대응)
+  const anchorIdx = text.search(/[🀄✦]/);
+  if (anchorIdx > 10) {
+    const beforeAnchor = text.slice(0, anchorIdx).trim();
+    const firstSentence = beforeAnchor.split(/[.!?。]\s*/)[0]?.trim();
+    if (firstSentence && firstSentence.length > 5 && firstSentence.length < 60) {
+      return {
+        summary: firstSentence,
+        text: text.slice(anchorIdx).trim(),
+      };
+    }
+  }
+
+  // 3순위: 첫 줄이 짧으면 요약으로 처리
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length > 1 && lines[0].length < 50) {
+    return { summary: lines[0], text: lines.slice(1).join('\n').trim() };
+  }
+
   return { summary: '', text };
 }
 
@@ -120,7 +142,7 @@ export const SAMPLE_ESSAYS = [
   "천칭자리의 균형 감각과 기토의 조화로운 기질이 함께 속삭여요. 오늘은 조용히 자신을 돌아보기 좋은 날이에요. 너무 많은 것을 혼자 짊어지지 않아도 괜찮아요. 가볍게 내려놓는 것도 용기예요...",
 ];
 
-export const CATS=[
+export const CATS_ALL=[
   {id:"love",icon:"💕",label:"연애·결혼",qs:["요즘 좋아하는 사람이 생겼는데 먼저 고백해도 될까요?","올해 결혼운이 들어와 있나요?","지금 사귀는 사람과 궁합이 어떤지 궁금해요.","이별 후 너무 힘든데, 새로운 인연이 언제 올까요?"]},
   {id:"work",icon:"💼",label:"일·커리어",qs:["이직을 고민 중인데 올해 타이밍이 맞을까요?","지금 하는 직무가 제 적성과 잘 맞는지 궁금해요.","직장 상사와의 관계가 힘든데 어떻게 대처해야 할까요?","올해 승진이나 연봉 인상운이 있을까요?"]},
   {id:"money",icon:"💰",label:"돈·재물",qs:["올해 재물운이 언제 가장 크게 들어오나요?","주식이나 부동산 투자를 시작해도 좋은 시기일까요?","자꾸 돈이 새어나가는데 어떻게 막아야 할까요?","부업을 시작하려고 하는데 수익이 날까요?"]},
@@ -136,6 +158,16 @@ export const CATS=[
   {id:"pet",icon:"🐾",label:"반려동물",qs:["우리 집에 새로 온 반려동물과 저의 기운이 잘 맞나요?","반려동물을 입양하려고 하는데 올해 좋은 묘연/견연이 있을까요?"]},
   {id:"legal",icon:"⚖️",label:"소송·관재",qs:["현재 진행 중인 일이나 소송이 저에게 유리하게 끝날까요?","올해 조심해야 할 구설수나 관재수가 있나요?"]},
   {id:"hobby",icon:"🎨",label:"취미·적성",qs:["사주에 나타난 저만의 숨겨진 예술적 재능이 있나요?","어떤 취미를 가지면 제 운이 크게 좋아질까요?"]}
+];
+
+// 핵심 6개 카테고리
+export const CATS=[
+  CATS_ALL.find(c => c.id === 'love'),
+  CATS_ALL.find(c => c.id === 'work'),
+  CATS_ALL.find(c => c.id === 'money'),
+  CATS_ALL.find(c => c.id === 'health'),
+  CATS_ALL.find(c => c.id === 'relation'),
+  CATS_ALL.find(c => c.id === 'future'),
 ];
 
 // 구독 플랜 (2단계)

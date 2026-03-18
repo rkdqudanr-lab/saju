@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } fro
 // utils
 import { OC, OE, ON, ILGAN_POETIC, CGO } from "./utils/saju.js";
 import { getSun } from "./utils/astrology.js";
-import { getDailyWord, parseAccSummary, CATS, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT } from "./utils/constants.js";
+import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
 import { loadHistory, deleteHistory } from "./utils/history.js";
 import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/imageExport.js";
@@ -60,6 +60,8 @@ export default function App() {
   const [anniversaryDate, setAnniversaryDate] = useState('');
   const [anniversaryType, setAnniversaryType] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showAllCats, setShowAllCats] = useState(false);
+  const [showSubNudge, setShowSubNudge] = useState(false);
   const [refCode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('ref') || null;
@@ -94,10 +96,19 @@ export default function App() {
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
           qLoadStatus,
           dailyResult, dailyLoading,
-          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, handleTypingDone, handleAccToggle,
+          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, handleTypingDone: _handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
+  const IS_BETA = true; // 베타 기간 종료 시 false로 변경
+
+  // 첫 번째 답변 완료 시 구독 넛지 표시
+  const handleTypingDone = useCallback((idx) => {
+    _handleTypingDone(idx);
+    if (idx === 0 && (!user || curPkg.id === 'basic') && !IS_BETA) {
+      setTimeout(() => setShowSubNudge(true), 800);
+    }
+  }, [_handleTypingDone, user, curPkg, IS_BETA]);
 
   /** 클립보드 복사 + toast + 체크마크 아이콘 피드백 (1.5초) */
   const handleCopyAll = useCallback(() => {
@@ -164,6 +175,21 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [setStep]);
+
+  // ── 재방문 사용자 자동 오늘의 별숨 로딩 ──
+  useEffect(() => {
+    if (
+      step === 0 &&
+      user &&
+      form.by &&
+      form.bm &&
+      form.bd &&
+      !dailyResult &&
+      !dailyLoading
+    ) {
+      askDailyHoroscope();
+    }
+  }, [user?.id, form.by, form.bm, form.bd, step]); // askDailyHoroscope 레퍼런스 제외 (무한루프 방지)
 
   // ── 테마 ──
   useEffect(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }, [isDark]);
@@ -325,6 +351,9 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="land-login-card" style={{ padding: '24px 20px', gap: '16px' }}>
+                    <p style={{ fontSize: 'var(--sm)', color: 'var(--t2)', textAlign: 'center', lineHeight: 1.8, margin: 0 }}>
+                      사주와 별자리, 두 개의 언어로<br/>지금의 당신을 읽어드려요
+                    </p>
                     <button className="kakao-login-full" onClick={kakaoLogin} style={{ fontSize: '1rem', padding: '16px' }}>
                       <span className="kakao-icon-wrap">
                         <svg width="18" height="17" viewBox="0 0 18 18" fill="none">
@@ -333,8 +362,8 @@ export default function App() {
                       </span>
                       카카오로 3초 만에 시작하기
                     </button>
-                    <button className="land-ghost-link" onClick={() => setStep(1)} style={{ fontSize: '0.9rem' }}>
-                      로그인 없이 물어보기 →
+                    <button className="land-ghost-link" onClick={() => setStep(1)}>
+                      로그인 없이 먼저 체험하기 →
                     </button>
                   </div>
                 )}
@@ -559,14 +588,21 @@ export default function App() {
                 {!diy.trim() && (<>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.06em' }}>또는 고민 카테고리에서 골라봐요</div>
                 <div className="cat-tabs">
-                  {CATS.map((c, i) => <button key={c.id} className={`cat-tab ${cat === i ? 'on' : ''}`} onClick={() => setCat(i)}>{c.icon} {c.label}</button>)}
+                  {(showAllCats ? CATS_ALL : CATS).map((c, i) => <button key={c.id} className={`cat-tab ${cat === i ? 'on' : ''}`} onClick={() => setCat(i)}>{c.icon} {c.label}</button>)}
                 </div>
+                <button
+                  className="res-btn"
+                  style={{ margin: '0 0 var(--sp2)', fontSize: 'var(--xs)' }}
+                  onClick={() => setShowAllCats(p => !p)}
+                >
+                  {showAllCats ? '주요 주제만 보기 ▲' : '더 많은 주제 보기 ▼ (9개)'}
+                </button>
 
                 {selQs.length < maxQ && (
                   <div>
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, margin: '10px 0 6px', letterSpacing: '.04em' }}>✦ 이런 질문 어때요?</div>
                     <div className="suggest-row">
-                      {CATS[cat].qs.slice(0, 3).filter(q => !selQs.includes(q)).map((q, i) => (
+                      {(showAllCats ? CATS_ALL : CATS)[cat]?.qs.slice(0, 3).filter(q => !selQs.includes(q)).map((q, i) => (
                         <button key={i} className="suggest-chip" onClick={() => askQuick(q)}>
                           {q.length > 22 ? q.slice(0, 22) + '…' : q}
                         </button>
@@ -576,7 +612,7 @@ export default function App() {
                 )}
 
                 <div className="q-list">
-                  {CATS[cat].qs.map((q, i) => {
+                  {(showAllCats ? CATS_ALL : CATS)[cat]?.qs.map((q, i) => {
                     const on = selQs.includes(q);
                     return <button key={i} className={`q-item ${on ? 'on' : ''}`}
                       disabled={!on && selQs.length >= maxQ}
@@ -687,6 +723,39 @@ export default function App() {
                 ))}
 
                 <div className="res-actions">
+                  {/* ── 구독 넛지 (첫 번째 답변 타이핑 완료 후, 비로그인 또는 basic 플랜, 베타 종료 후 활성화) ── */}
+                  {showSubNudge && (
+                    <div
+                      style={{
+                        padding: 'var(--sp2) var(--sp3)',
+                        background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.08))',
+                        border: '1px solid var(--acc)',
+                        borderRadius: 'var(--r2)',
+                        marginBottom: 'var(--sp2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        animation: 'fadeUp .4s ease',
+                      }}
+                    >
+                      <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>✦</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 'var(--sm)', fontWeight: 600, color: 'var(--gold)', marginBottom: 3 }}>
+                          더 깊은 이야기가 있어요
+                        </div>
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>
+                          채팅으로 더 물어보거나, 이달 전체 리포트를 받아봐요
+                        </div>
+                      </div>
+                      <button
+                        className="up-btn"
+                        style={{ width: 'auto', padding: '8px 16px', flexShrink: 0, fontSize: 'var(--xs)' }}
+                        onClick={() => setStep(5)}
+                      >
+                        더 물어보기
+                      </button>
+                    </div>
+                  )}
                   {/* ── 별숨과 대화하기 (최상단, 가장 눈에 띄게) ── */}
                   {curPkg.chat > 0 && (
                     <button className="chat-cta-large" onClick={() => setStep(5)}>
