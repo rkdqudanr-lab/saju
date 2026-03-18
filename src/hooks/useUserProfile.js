@@ -29,6 +29,7 @@ export function useUserProfile() {
   const [editingOtherIdx, setEditingOtherIdx]         = useState(null); // null = 추가모드, number = 수정모드
   const [showProfileModal, setShowProfileModal]       = useState(false);
   const [showOtherProfileModal, setShowOtherProfileModal] = useState(false);
+  const [showEditSelfModal, setShowEditSelfModal]     = useState(false);
   const [loginError, setLoginError]                   = useState('');
 
   // ── 카카오 SDK 초기화 ──
@@ -123,6 +124,7 @@ export function useUserProfile() {
     showProfileModal, setShowProfileModal,
     showOtherProfileModal, setShowOtherProfileModal,
     loginError, setLoginError,
+    showEditSelfModal, setShowEditSelfModal,
     kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile,
   };
 }

@@ -81,8 +81,12 @@ export default function App() {
           otherForm, setOtherForm, showProfileModal, setShowProfileModal,
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
+          showEditSelfModal, setShowEditSelfModal,
           kakaoLogin, kakaoLogout, saveOtherProfile,
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile } = userProfile;
+
+  // 내 정보 수정 임시 폼 (모달 열릴 때 form에서 복사)
+  const [editSelfForm, setEditSelfForm] = useState({});
 
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
@@ -301,7 +305,10 @@ export default function App() {
                             : '별숨이 당신을 기억해요'}
                         </div>
                       </div>
-                      <button onClick={kakaoLogout} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>로그아웃</button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => { setEditSelfForm({ ...form }); setShowEditSelfModal(true); }} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>수정</button>
+                        <button onClick={kakaoLogout} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>로그아웃</button>
+                      </div>
                     </div>
                     {form.by ? (
                       <>
@@ -410,7 +417,7 @@ export default function App() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}>✦</span>}
                       <button style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
-                        onClick={e => { e.stopPropagation(); setShowProfileModal(true); }}>수정</button>
+                        onClick={e => { e.stopPropagation(); setEditSelfForm({ ...form }); setShowEditSelfModal(true); }}>수정</button>
                     </div>
                   </div>
 
@@ -1028,6 +1035,55 @@ export default function App() {
               {editingOtherIdx !== null ? '수정하기 ✦' : '추가하기 ✦'}
             </button>
             <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }} onClick={() => { setShowOtherProfileModal(false); setEditingOtherIdx(null); }}>취소</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 내 정보 수정 모달 ── */}
+      {showEditSelfModal && (
+        <div className="other-modal-bg" onClick={() => setShowEditSelfModal(false)}>
+          <div className="other-modal" onClick={e => e.stopPropagation()}>
+            <div className="other-modal-title">내 정보 수정</div>
+            <div className="other-modal-sub">이름, 생년월일, 태어난 시간을 수정해요</div>
+
+            <label className="lbl" htmlFor="self-name">이름</label>
+            <input id="self-name" className="inp" placeholder="이름을 입력해줘요" value={editSelfForm.name || ''} onChange={e => setEditSelfForm(f => ({ ...f, name: e.target.value }))} />
+
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+              <legend className="lbl">생년월일</legend>
+              <div className="row" style={{ marginBottom: 'var(--sp2)' }}>
+                <div className="col"><input className="inp" placeholder="1998" maxLength={4} inputMode="numeric" aria-label="출생 연도" value={editSelfForm.by || ''} onChange={e => setEditSelfForm(f => ({ ...f, by: e.target.value.replace(/\D/, '') }))} style={{ marginBottom: 0 }} /></div>
+                <div className="col"><select className="inp" aria-label="출생 월" value={editSelfForm.bm || ''} onChange={e => setEditSelfForm(f => ({ ...f, bm: e.target.value }))} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
+                <div className="col"><select className="inp" aria-label="출생 일" value={editSelfForm.bd || ''} onChange={e => setEditSelfForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
+              </div>
+            </fieldset>
+
+            <div className="toggle-row" onClick={() => setEditSelfForm(f => ({ ...f, noTime: !f.noTime, bh: '' }))}>
+              <button className={`toggle ${editSelfForm.noTime ? 'on' : 'off'}`} role="switch" aria-checked={editSelfForm.noTime} aria-label="태어난 시간 모름" onClick={e => { e.stopPropagation(); setEditSelfForm(f => ({ ...f, noTime: !f.noTime, bh: '' })); }} />
+              <span className="toggle-label">태어난 시간을 몰라요</span>
+            </div>
+            {!editSelfForm.noTime && (
+              <select className="inp" aria-label="태어난 시각" value={editSelfForm.bh || ''} onChange={e => setEditSelfForm(f => ({ ...f, bh: e.target.value }))}>
+                <option value="">태어난 시각 (선택)</option>
+                {Array.from({ length: 144 }, (_, i) => { const h = Math.floor(i / 6); const m = (i % 6) * 10; const val = (h + m / 60).toFixed(4); return <option key={i} value={val}>{String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}</option>; })}
+              </select>
+            )}
+
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+              <legend className="lbl">성별</legend>
+              <div className="gender-group" role="group" aria-label="성별 선택">
+                {['여성', '남성', '기타'].map(g => (
+                  <button key={g} className={`gbtn ${editSelfForm.gender === g ? 'on' : ''}`} aria-pressed={editSelfForm.gender === g} onClick={() => setEditSelfForm(f => ({ ...f, gender: g }))}>{g}</button>
+                ))}
+              </div>
+            </fieldset>
+
+            <button className="btn-main"
+              disabled={!editSelfForm.by || !editSelfForm.bm || !editSelfForm.bd || !editSelfForm.gender}
+              onClick={() => { setForm({ ...editSelfForm }); setShowEditSelfModal(false); }}>
+              저장하기 ✦
+            </button>
+            <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }} onClick={() => setShowEditSelfModal(false)}>취소</button>
           </div>
         </div>
       )}
