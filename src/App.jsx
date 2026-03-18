@@ -67,6 +67,7 @@ export default function App() {
   const toastTimer = useRef(null);
   const copyTimer = useRef(null);
   const resultsRef = useRef(null);
+  const askBtnRef = useRef(null);
 
   const showToast = useCallback((message, type = 'info') => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -107,7 +108,7 @@ export default function App() {
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
-  const curPkg = PKGS.find(p => p.id === pkg) || PKGS[2];
+  const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
 
   // ── loginError 토스트 표시 ──
   useEffect(() => {
@@ -267,8 +268,10 @@ export default function App() {
                 <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
               </div>
               <p className="land-copy" style={{ fontSize: '1.05rem', lineHeight: 1.8 }}>
-                사주와 점성술로 당신의 질문에 답해드려요.<br />
-                <em style={{ fontWeight: 500 }}>당신의 별숨은 당신을 바라보고 있어요.</em>
+                당신의 별숨은 당신을 바라보고 있어요.
+              </p>
+              <p className="land-beta-notice">
+                지금 별숨은 베타 테스트 중으로, 무료로 이용할 수 있어요.
               </p>
 
               <div className="land-login-section">
@@ -523,22 +526,21 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="diy-wrap" style={{ marginBottom: 'var(--sp2)' }}>
+                <div className="diy-wrap" style={{ marginBottom: diy.trim() ? 0 : 'var(--sp2)' }}>
                   <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 6, letterSpacing: '.06em' }}>✦ 직접 물어보기</div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <textarea className="diy-inp" style={{ flex: 1, marginBottom: 0 }}
-                      placeholder="직접 묻고 싶은 게 있어요? 자유롭게 써봐요 🌙"
-                      maxLength={200} value={diy} onChange={e => setDiy(e.target.value)} />
-                    <button
-                      style={{ padding: '11px 16px', borderRadius: 'var(--r1)', border: '1px solid var(--acc)', background: diy.trim() && selQs.length < maxQ ? 'var(--goldf)' : 'var(--bg2)', color: diy.trim() && selQs.length < maxQ ? 'var(--gold)' : 'var(--t4)', fontFamily: 'var(--ff)', fontSize: 'var(--sm)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .2s', flexShrink: 0, height: 80 }}
-                      disabled={!diy.trim() || selQs.length >= maxQ}
-                      onClick={() => { if (diy.trim() && selQs.length < maxQ) { addQ(diy.trim()); setDiy(''); } }}>
-                      추가
-                    </button>
-                  </div>
+                  <textarea className="diy-inp"
+                    placeholder="직접 묻고 싶은 게 있어요? 자유롭게 써봐요 🌙"
+                    maxLength={200} value={diy} onChange={e => setDiy(e.target.value)} />
                   <div className="diy-row"><span className="hint">{diy.length}/200</span></div>
+                  {diy.trim() && (
+                    <button className="btn-main" style={{ marginTop: 8 }}
+                      onClick={() => { const q = diy.trim(); if (q) { setDiy(''); askQuick(q); } }}>
+                      ✦ 질문하기
+                    </button>
+                  )}
                 </div>
 
+                {!diy.trim() && (<>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.06em' }}>또는 고민 카테고리에서 골라봐요</div>
                 <div className="cat-tabs">
                   {CATS.map((c, i) => <button key={c.id} className={`cat-tab ${cat === i ? 'on' : ''}`} onClick={() => setCat(i)}>{c.icon} {c.label}</button>)}
@@ -549,7 +551,7 @@ export default function App() {
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, margin: '10px 0 6px', letterSpacing: '.04em' }}>✦ 이런 질문 어때요?</div>
                     <div className="suggest-row">
                       {CATS[cat].qs.slice(0, 3).filter(q => !selQs.includes(q)).map((q, i) => (
-                        <button key={i} className="suggest-chip" onClick={() => addQ(q)}>
+                        <button key={i} className="suggest-chip" onClick={() => askQuick(q)}>
                           {q.length > 22 ? q.slice(0, 22) + '…' : q}
                         </button>
                       ))}
@@ -562,7 +564,10 @@ export default function App() {
                     const on = selQs.includes(q);
                     return <button key={i} className={`q-item ${on ? 'on' : ''}`}
                       disabled={!on && selQs.length >= maxQ}
-                      onClick={() => on ? rmQ(selQs.indexOf(q)) : addQ(q)}>{q}</button>;
+                      onClick={() => {
+                        if (on) rmQ(selQs.indexOf(q));
+                        else { addQ(q); setTimeout(() => askBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150); }
+                      }}>{q}</button>;
                   })}
                 </div>
 
@@ -579,38 +584,15 @@ export default function App() {
                   </div>
                 )}
 
-                {pkg === 'free' ? (
-                  <div style={{ padding: 'var(--sp2) var(--sp3)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r2)', margin: 'var(--sp2) 0', textAlign: 'center' }}>
-                    <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--gold)', marginBottom: 4 }}>🌙 첫 번째 이야기는 무료예요</div>
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7 }}>답변을 보고 나서 더 궁금하면 그때 이용권을 선택해요<br />지금은 부담없이 시작해봐요</div>
-                  </div>
-                ) : (
-                  <div className="pkg-sec">
-                    <div className="pkg-lbl">이용권</div>
-                    <div className="pkgs">
-                      {PKGS.map(p => p.isFree ? null : (
-                        <div key={p.id} className={`pkg ${pkg === p.id ? 'chosen' : ''}`}
-                          onClick={() => { setPkg(p.id); if (selQs.length > p.q) setSelQs(s => s.slice(0, p.q)); }}>
-                          {p.hot && <div className="pkg-hot">BEST</div>}
-                          <div className="pkg-e">{p.e}</div>
-                          <div className="pkg-n">{p.n}</div>
-                          <div className="pkg-p">{p.p}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <button style={{ background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', textDecoration: 'underline', marginTop: 6 }}
-                      onClick={() => setPkg('free')}>↩ 무료로 먼저 시작하기</button>
-                  </div>
-                )}
-
                 <div className="q-stat">
                   {selQs.length === 0 && '질문을 하나 이상 골라봐요'}
                   {selQs.length > 0 && selQs.length < maxQ && <><strong>{maxQ - selQs.length}개</strong> 더 고를 수 있어요</>}
                   {selQs.length === maxQ && <><strong>준비 완료!</strong> 두 별이 읽어드릴게요 🌟</>}
                 </div>
-                <button className="btn-main" disabled={!selQs.length} onClick={askClaude}>
+                <button ref={askBtnRef} className="btn-main" disabled={!selQs.length} onClick={askClaude}>
                   {selQs.length === 0 ? '질문을 먼저 골라봐요' : `✦ 두 별에게 물어보기 (${selQs.length}개)`}
                 </button>
+                </>)}
               </div>
             </div>
           </div>
@@ -689,6 +671,18 @@ export default function App() {
                 ))}
 
                 <div className="res-actions">
+                  {/* ── 별숨과 대화하기 (최상단, 가장 눈에 띄게) ── */}
+                  {curPkg.chat > 0 && (
+                    <button className="chat-cta-large" onClick={() => setStep(5)}>
+                      <span className="chat-cta-emoji">💬</span>
+                      <div className="chat-cta-info">
+                        <div className="chat-cta-title">별숨과 더 깊은 대화하기</div>
+                        <div className="chat-cta-desc">답변 내용으로 더 자세히 물어봐요</div>
+                      </div>
+                      <span style={{ fontSize: '1.1rem', color: 'var(--gold)', flexShrink: 0 }}>→</span>
+                    </button>
+                  )}
+
                   <div className="action-grid" style={{ marginBottom: 'var(--sp2)' }}>
                     {['love', 'family', 'relation'].includes(CATS[cat].id) ? (
                       <div className="action-card compat" onClick={() => setStep(7)}>
@@ -723,13 +717,6 @@ export default function App() {
                     <div className="up-d">연애 · 재물 · 건강 · 직업 종합 분석<br />사주와 별자리가 함께 쓴 월간 에세이</div>
                     <button className="up-btn" onClick={() => setStep(6)}>이달의 운세 리포트 보기 ✦</button>
                   </div>
-
-                  {curPkg.chat > 0 && (
-                    <button className="chat-cta" onClick={() => setStep(5)}>
-                      💬 {chatLeft > 0 ? `별숨에게 더 물어보기 · 남은 ${chatLeft}회` : '별숨에게 더 물어보기 ✦'}
-                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>{chatLeft > 0 ? '무료' : '무료 이용 중'}</span>
-                    </button>
-                  )}
 
                   <div className="res-btns">
                     <button className="res-btn" onClick={() => { setSelQs([]); setDiy(''); resetSession(); setStep(formOk ? 2 : 1); }}>다른 질문</button>
@@ -776,60 +763,55 @@ export default function App() {
           </div>
         )}
 
-        {/* ── Step 5: 채팅 ── */}
+        {/* ── Step 5: 채팅 (고정 레이아웃 — 헤더+입력창 고정, 히스토리만 스크롤) ── */}
         {step === 5 && (
-          <div className="page-top">
-            <div className="chat-page">
-              <div className="chat-page-header">
-                <div className="chat-page-title">💬 추가 상담</div>
-                <div className="chat-page-sub">
-                  {selQs.slice(0, 2).map((q, i) => <div key={i} style={{ marginTop: 3 }}>Q{i + 1}. {q.length > 24 ? q.slice(0, 24) + '…' : q}</div>)}
-                </div>
-                <div className="chat-limit-badge" role="status" aria-live="polite" style={chatLeft <= 2 ? {background:'var(--rosef)',borderColor:'var(--roseacc)',color:'var(--rose)'} : {}}>
-                  ✦ 남은 횟수 {chatLeft}회{chatLeft <= 2 && chatLeft > 0 ? ' · 곧 소진돼요!' : ''}
-                </div>
+          <div className="chat-page">
+            <div className="chat-page-header">
+              <div className="chat-page-title">💬 별숨과 대화하기</div>
+              <div className="chat-page-sub">
+                {selQs.slice(0, 2).map((q, i) => <div key={i} style={{ marginTop: 3 }}>Q{i + 1}. {q.length > 28 ? q.slice(0, 28) + '…' : q}</div>)}
               </div>
+            </div>
 
-              <div className="chat-history">
-                {chatHistory.length === 0 && (
-                  <div style={{ color: 'var(--t4)', fontSize: 'var(--xs)', textAlign: 'center', padding: 'var(--sp3)' }}>
-                    더 궁금한 게 있으면 자유롭게 물어봐요 🌙
-                  </div>
-                )}
-                {chatHistory.map((m, i) => (
-                  <div key={i} className={`chat-msg ${m.role}`}>
-                    <div className="chat-role">{m.role === 'ai' ? '✦ 별숨' : '나'}</div>
-                    {m.role === 'ai'
-                      ? <ChatBubble text={m.text} isNew={i === latestChatIdx} />
-                      : <div className="chat-bubble">{m.text}</div>
-                    }
-                  </div>
-                ))}
-                {chatLoading && (
-                  <div className="chat-msg ai">
-                    <div className="chat-role">✦ 별숨</div>
-                    <div className="typing-dots"><span /><span /><span /></div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
+            <div className="chat-history">
+              {chatHistory.length === 0 && (
+                <div style={{ color: 'var(--t4)', fontSize: 'var(--sm)', textAlign: 'center', padding: 'var(--sp4) var(--sp3)' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: 12 }}>✦</div>
+                  더 궁금한 게 있으면 자유롭게 물어봐요 🌙
+                </div>
+              )}
+              {chatHistory.map((m, i) => (
+                <div key={i} className={`chat-msg ${m.role}`}>
+                  <div className="chat-role">{m.role === 'ai' ? '✦ 별숨' : '나'}</div>
+                  {m.role === 'ai'
+                    ? <ChatBubble text={m.text} isNew={i === latestChatIdx} />
+                    : <div className="chat-bubble">{m.text}</div>
+                  }
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="chat-msg ai">
+                  <div className="chat-role">✦ 별숨</div>
+                  <div className="typing-dots"><span /><span /><span /></div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
 
+            <div className="chat-input-area">
               {chatLeft > 0 && !chatLoading && (
                 <div className="chat-sugg-wrap">
                   {CHAT_SUGG.map((s, i) => <button key={i} className="sugg-btn" onClick={() => setChatInput(s)}>{s}</button>)}
                 </div>
               )}
-
-              <div className="chat-input-area">
-                <div className="chat-inp-row">
-                  <input className="chat-inp"
-                    placeholder={chatLeft > 0 ? '더 궁금한 게 있어요? 🌙' : '채팅 횟수를 모두 사용했어요'}
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } }}
-                    disabled={chatLeft <= 0 || chatLoading} />
-                  <button className="chat-send" onClick={sendChat} disabled={!chatInput.trim() || chatLeft <= 0 || chatLoading}>✦</button>
-                </div>
+              <div className="chat-inp-row">
+                <input className="chat-inp"
+                  placeholder={chatLeft > 0 ? '더 궁금한 게 있어요? 🌙' : '채팅을 모두 사용했어요'}
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } }}
+                  disabled={chatLeft <= 0 || chatLoading} />
+                <button className="chat-send" onClick={sendChat} disabled={!chatInput.trim() || chatLeft <= 0 || chatLoading}>✦</button>
               </div>
             </div>
           </div>

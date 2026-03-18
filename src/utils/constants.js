@@ -138,13 +138,17 @@ export const CATS=[
   {id:"hobby",icon:"🎨",label:"취미·적성",qs:["사주에 나타난 저만의 숨겨진 예술적 재능이 있나요?","어떤 취미를 가지면 제 운이 크게 좋아질까요?"]}
 ];
 
-export const PKGS=[
-  {id:"free",isFree:true,e:"✦",n:"무료",p:"0원",q:1,chat:0},
-  {id:"seed",e:"✦",n:"씨앗",p:"990원",q:1,chat:0},
-  {id:"moon",e:"🌙",n:"달빛",p:"5,900원",q:3,chat:5},
-  {id:"star",e:"⭐",n:"별빛",p:"9,900원",q:5,chat:10,hot:true},
-  {id:"cosmos",e:"🌌",n:"우주",p:"19,900원",q:10,chat:20},
+// 구독 플랜 (2단계)
+// basic: 하루 1개 무료, 오늘의 별숨 불가, 추가 질문 500원
+// premium: 하루 100개, 오늘의 별숨 가능, 월 5,500원
+// 베타 기간에는 기본 설정이 premium (무료 이용)
+export const PLANS=[
+  {id:"basic",isFree:true,e:"✦",n:"기본",p:"무료",q:1,chat:0,dailyStar:false,dailyQ:1,extraQPrice:500},
+  {id:"premium",e:"🌟",n:"별숨 요금제",p:"월 5,500원",q:10,chat:999,dailyStar:true,dailyQ:100,extraQPrice:0,hot:true},
 ];
+
+// 하위 호환용 alias
+export const PKGS=PLANS;
 
 export const REVIEWS=[
   {star:"★★★★★",text:"사주랑 별자리를 같이 봐줘서 너무 좋아요. 글이 진짜 내 얘기 같아서 읽다가 소름 돋았어요",nick:"가을고양이 · 28세"},
