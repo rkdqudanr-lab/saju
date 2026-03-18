@@ -75,18 +75,6 @@ export default function App() {
     toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
   }, []);
 
-  /** 클립보드 복사 + toast + 체크마크 아이콘 피드백 (1.5초) */
-  const handleCopyAll = useCallback(() => {
-    const text = answers.join('\n\n');
-    if (!text) return;
-    navigator.clipboard?.writeText(text).then(() => {
-      showToast('복사됐어요 📋', 'success');
-      if (copyTimer.current) clearTimeout(copyTimer.current);
-      setCopyDone(true);
-      copyTimer.current = setTimeout(() => setCopyDone(false), 1500);
-    }).catch(() => showToast('복사에 실패했어요', 'error'));
-  }, [answers, showToast]);
-
   // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
   const { user, profile, form, setForm, otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
@@ -109,6 +97,18 @@ export default function App() {
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
+
+  /** 클립보드 복사 + toast + 체크마크 아이콘 피드백 (1.5초) */
+  const handleCopyAll = useCallback(() => {
+    const text = answers.join('\n\n');
+    if (!text) return;
+    navigator.clipboard?.writeText(text).then(() => {
+      showToast('복사됐어요 📋', 'success');
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      setCopyDone(true);
+      copyTimer.current = setTimeout(() => setCopyDone(false), 1500);
+    }).catch(() => showToast('복사에 실패했어요', 'error'));
+  }, [answers, showToast]);
 
   // ── loginError 토스트 표시 ──
   useEffect(() => {
