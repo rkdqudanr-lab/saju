@@ -1,7 +1,7 @@
 // api/ask.js — 별숨 Vercel Serverless Function
-import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "./prompts/utils.js";
-import { getCategoryHint, pickEndingHint } from "./prompts/hints.js";
-import { buildSystem } from "./prompts/buildSystem/index.js";
+import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "../lib/prompts/utils.js";
+import { getCategoryHint, pickEndingHint } from "../lib/prompts/hints.js";
+import { buildSystem } from "../lib/prompts/buildSystem/index.js";
 
 // ── 요청 스키마 검증 ──
 /**
