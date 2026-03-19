@@ -65,6 +65,7 @@ export function useConsultation(buildCtx, formOk) {
 
   // ── API 호출 (최대 3회 재시도) ──
   const callApi = useCallback(async (userMessage, opts = {}) => {
+    if (!navigator.onLine) throw new Error('오프라인 상태예요. 인터넷 연결을 확인해주세요.');
     const maxRetries = 3;
     let lastErr;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -80,6 +81,7 @@ export function useConsultation(buildCtx, formOk) {
         return stripMarkdown(data.text || '');
       } catch (e) {
         lastErr = e;
+        if (!navigator.onLine) throw new Error('오프라인 상태예요. 인터넷 연결을 확인해주세요.');
         if (attempt < maxRetries - 1) continue;
       }
     }

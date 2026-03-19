@@ -12,6 +12,7 @@ import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/image
 import { useUserProfile }   from "./hooks/useUserProfile.js";
 import { useSajuContext }   from "./hooks/useSajuContext.js";
 import { useConsultation }  from "./hooks/useConsultation.js";
+import { useConnectionStatus } from "./hooks/useConnectionStatus.js";
 
 // styles
 import CSS from "./styles/theme.js";
@@ -98,6 +99,8 @@ export default function App() {
           dailyResult, dailyLoading,
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, handleTypingDone: _handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
+
+  const { isOnline, wasOffline } = useConnectionStatus();
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
   const IS_BETA = true; // 베타 기간 종료 시 false로 변경
@@ -240,6 +243,31 @@ export default function App() {
       <style>{CSS}</style>
       <StarCanvas isDark={isDark} />
       <PWAInstallBanner />
+
+      {/* ── 연결 상태 배너 ── */}
+      {!isOnline && (
+        <div role="alert" aria-live="assertive" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+          background: '#333', color: '#fff',
+          fontSize: 'var(--xs)', textAlign: 'center',
+          padding: '8px 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}>
+          <span>●</span> 인터넷 연결이 끊겼어요. 연결 상태를 확인해주세요.
+        </div>
+      )}
+      {isOnline && wasOffline && (
+        <div role="status" aria-live="polite" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+          background: '#2e7d32', color: '#fff',
+          fontSize: 'var(--xs)', textAlign: 'center',
+          padding: '8px 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          animation: 'fadeUp .3s ease',
+        }}>
+          <span>●</span> 다시 연결됐어요!
+        </div>
+      )}
 
       {/* ── 토스트 알림 ── */}
       {toast && (
