@@ -125,7 +125,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .card-title{font-size:var(--lg);font-weight:600;color:var(--t1);margin-bottom:5px}
 .card-sub{font-size:var(--sm);color:var(--t3);margin-bottom:var(--sp4);line-height:1.75}
 .lbl{display:block;font-size:var(--xs);font-weight:600;color:var(--t3);letter-spacing:.06em;margin-bottom:8px}
-.inp{width:100%;padding:13px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:var(--sm);font-family:var(--ff);transition:border-color .2s,background .2s;margin-bottom:var(--sp3);-webkit-appearance:none}
+.inp{width:100%;padding:13px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);color:var(--t1);font-size:max(16px,var(--sm));font-family:var(--ff);transition:border-color .2s,background .2s;margin-bottom:var(--sp3);-webkit-appearance:none}
 .inp:focus{outline:none;border-color:var(--gold);background:var(--bg3)}
 .inp::placeholder{color:var(--t4)}
 select.inp option{background:var(--bg2)}
@@ -249,7 +249,7 @@ select.inp option{background:var(--bg2)}
 .mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
 .mood-word{font-size:var(--sm);font-weight:600}
 
-.star-summary{padding:20px 24px;background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin-bottom:var(--sp4);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
+.star-summary{padding:28px 28px;background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin-bottom:var(--sp4);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
 .star-summary-icon{color:var(--gold);font-size:1.3rem;line-height:1;flex-shrink:0;margin-top:2px}
 .star-summary-text{font-size:1.05rem;color:var(--gold);font-weight:600;line-height:1.6;letter-spacing:-0.01em}
 
@@ -584,7 +584,7 @@ select.inp option{background:var(--bg2)}
 .hdf-tab:hover:not(.active){border-color:var(--line2);color:var(--t2)}
 
 /* ══ 별숨 일기 모달 ══ */
-.diary-textarea{width:100%;box-sizing:border-box;padding:14px;border-radius:var(--r1);border:1px solid var(--line);background:var(--bg2);color:var(--t1);font-family:var(--ff);font-size:var(--sm);line-height:1.7;resize:vertical;min-height:120px;outline:none;transition:border-color .2s;margin-bottom:4px}
+.diary-textarea{width:100%;box-sizing:border-box;padding:14px;border-radius:var(--r1);border:1px solid var(--line);background:var(--bg2);color:var(--t1);font-family:var(--ff);font-size:max(16px,var(--sm));line-height:1.7;resize:vertical;min-height:120px;outline:none;transition:border-color .2s;margin-bottom:4px}
 .diary-textarea:focus{border-color:var(--gold)}
 .diary-textarea::placeholder{color:var(--t4)}
 
