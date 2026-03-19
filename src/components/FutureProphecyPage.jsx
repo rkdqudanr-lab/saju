@@ -5,6 +5,8 @@ import useWordTyping from "../hooks/useWordTyping.js";
 //  🔮 별숨의 예언 (구 미래의 별숨)
 // ═══════════════════════════════════════════════════════════
 const PERIOD_OPTIONS = [
+  { id: '1일 후', label: '1일 후', desc: '내일의 흐름', emoji: '🌙' },
+  { id: '3일 후', label: '3일 후', desc: '가까운 날들의 기운', emoji: '⭐' },
   { id: '1개월 후', label: '1개월 후', desc: '가장 가까운 미래', emoji: '🌱' },
   { id: '3개월 후', label: '3개월 후', desc: '한 계절이 지난 뒤', emoji: '🌸' },
   { id: '1년 후', label: '1년 후', desc: '일 년이 흐른 자리', emoji: '🍂' },
