@@ -95,11 +95,41 @@ export const ILGAN_POETIC={
   계:"촉촉한 이슬",
 };
 
+// 60갑자 배열 (기준: 1900-01-01 = 甲子 = index 0)
+export const GAPJA_60 = [
+  '甲子','乙丑','丙寅','丁卯','戊辰','己巳','庚午','辛未','壬申','癸酉',
+  '甲戌','乙亥','丙子','丁丑','戊寅','己卯','庚辰','辛巳','壬午','癸未',
+  '甲申','乙酉','丙戌','丁亥','戊子','己丑','庚寅','辛卯','壬辰','癸巳',
+  '甲午','乙未','丙申','丁酉','戊戌','己亥','庚子','辛丑','壬寅','癸卯',
+  '甲辰','乙巳','丙午','丁未','戊申','己酉','庚戌','辛亥','壬子','癸丑',
+  '甲寅','乙卯','丙辰','丁巳','戊午','己未','庚申','辛酉','壬戌','癸亥',
+];
+
+// 일간 오행 에너지 (양간 5→1, 음간 4→1)
+const ILGAN_ENERGY = { 갑:5,을:4,병:4,정:3,무:3,기:2,경:2,신:1,임:2,계:1 };
+
+// getDailyInfo: 특정 날짜의 일진 정보 반환
+export function getDailyInfo(date) {
+  const y = date.getFullYear(), m = date.getMonth()+1, d = date.getDate();
+  const df = Math.floor((new Date(y,m-1,d) - new Date(1900,0,1)) / 86400000);
+  const ig = (df % 10 + 10) % 10;
+  const ij = (df % 12 + 12) % 12;
+  const idx60 = ((df % 60) + 60) % 60;
+  return {
+    iljin: GAPJA_60[idx60],
+    cheongan: CG[ig],
+    jiji: JJ[ij],
+    ohaeng: CGO[ig],
+    energy: ILGAN_ENERGY[CG[ig]] || 3,
+  };
+}
+
 export function getSaju(y,m,d,h){
   const yg=((y-4)%10+10)%10,yj=((y-4)%12+12)%12;
   const mb=(y-1900)*12+(m-1),wg=((mb+2)%10+10)%10,wj=((m+1)%12+12)%12;
   const df=Math.floor((new Date(y,m-1,d)-new Date(1900,0,1))/86400000);
-  const ig=((df+6)%10+10)%10,ij=((df+2)%12+12)%12;
+  // 수정: 기준일 1900-01-01 = 甲子(인덱스 0), 오프셋 제거
+  const ig=(df%10+10)%10,ij=(df%12+12)%12;
   const si=Math.floor((h+1)/2)%12,sg=(((ig%5)*2+si)%10+10)%10;
   const all=[CGO[yg],JJO[yj],CGO[wg],JJO[wj],CGO[ig],JJO[ij],CGO[sg],JJO[si%12]];
   const or={목:0,화:0,토:0,금:0,수:0};
