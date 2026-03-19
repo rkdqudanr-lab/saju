@@ -59,6 +59,7 @@ export default function App() {
   const [anniversaryDate, setAnniversaryDate] = useState('');
   const [anniversaryType, setAnniversaryType] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [editingMyProfile, setEditingMyProfile] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
   const [showSubNudge, setShowSubNudge] = useState(false);
   const [refCode] = useState(() => {
@@ -422,7 +423,11 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-                    {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}>✦</span>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}>✦</span>}
+                      <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+                        onClick={e => { e.stopPropagation(); setEditingMyProfile(p => !p); }}>수정</button>
+                    </div>
                   </div>
 
                   {otherProfiles.map((p, i) => {
@@ -438,9 +443,9 @@ export default function App() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           {activeProfileIdx === i + 1 && <span style={{ color: 'var(--gold)' }}>✦</span>}
-                          <button style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+                          <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
                             onClick={e => { e.stopPropagation(); startEditOtherProfile(i); }}>수정</button>
-                          <button style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+                          <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
                             onClick={e => { e.stopPropagation(); setOtherProfiles(p => p.filter((_, j) => j !== i)); if (activeProfileIdx === i + 1) setActiveProfileIdx(0); }}>삭제</button>
                         </div>
                       </div>
@@ -459,9 +464,9 @@ export default function App() {
                 </div>
               )}
 
-              {!formOk && (
+              {(!formOk || editingMyProfile) && (
                 <div className="card">
-                  <div className="card-title">반가워요 🌙</div>
+                  <div className="card-title">{editingMyProfile ? '내 프로필 수정 🌙' : '반가워요 🌙'}</div>
                   <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
 
                   <label className="lbl" htmlFor="inp-name">이름 (선택)</label>
@@ -529,7 +534,7 @@ export default function App() {
                       {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
                     </div>
                   )}
-                  <button className="btn-main" disabled={!formOk} onClick={() => { setSelQs([]); setStep(2); }}>다음 단계 →</button>
+                  <button className="btn-main" disabled={!formOk} onClick={() => { if (editingMyProfile) { setEditingMyProfile(false); } else { setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
                 </div>
               )}
             </div>
