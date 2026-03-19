@@ -1,6 +1,6 @@
 // api/ask.js — 별숨 Vercel Serverless Function
 import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "../lib/prompts/utils.js";
-import { getCategoryHint, pickEndingHint } from "../lib/prompts/hints.js";
+import { getCategoryHint, pickEndingHint, getCategoryExample } from "../lib/prompts/hints.js";
 import { buildSystem } from "../lib/prompts/buildSystem/index.js";
 
 // ── 요청 스키마 검증 ──
@@ -58,14 +58,16 @@ export default async function handler(req, res) {
   const today        = getTodayStr();
   const season       = getSeasonDesc(today.m);
   const categoryHint = getCategoryHint(userMessage);
-  const endingHint   = pickEndingHint(userMessage);
-  const timeHorizon  = getTimeHorizon(userMessage);
+  const endingHint      = pickEndingHint(userMessage);
+  const categoryExample = getCategoryExample(userMessage);
+  const timeHorizon     = getTimeHorizon(userMessage);
   const isDecision   = isDecisionQuestion(userMessage);
 
   // 모드별 동적 로드
   const systemBase = await buildSystem(
     today, season, categoryHint, endingHint, timeHorizon,
-    userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision
+    userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision,
+    categoryExample
   );
 
   const systemWithContext = systemBase
@@ -78,6 +80,14 @@ export default async function handler(req, res) {
     ? "claude-sonnet-4-20250514"
     : "claude-haiku-4-5-20251001";
 
+  // 모드별 최대 토큰 분기 (불필요한 장문 생성 방지)
+  const maxTokens =
+    isReport   ? 2000 :
+    isLetter   ? 1000 :
+    isStory    ? 1500 :
+    isScenario ? 1500 :
+                 600;
+
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -85,11 +95,18 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
+        "anthropic-beta": "prompt-caching-2024-07-31",
       },
       body: JSON.stringify({
         model: model,
-        max_tokens: 4000,
-        system: systemWithContext,
+        max_tokens: maxTokens,
+        system: [
+          {
+            type: "text",
+            text: systemWithContext,
+            cache_control: { type: "ephemeral" },
+          },
+        ],
         messages: [{ role: "user", content: userMessage }],
       }),
     });
