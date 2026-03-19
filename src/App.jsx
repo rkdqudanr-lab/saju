@@ -24,7 +24,6 @@ import AccItem, { FeedbackBtn, ChatBubble, ReportBody } from "./components/AccIt
 import Sidebar            from "./components/Sidebar.jsx";
 import SamplePreview      from "./components/SamplePreview.jsx";
 import PWAInstallBanner   from "./components/PWAInstallBanner.jsx";
-import ZodiacSlot         from "./components/ZodiacSlot.jsx";
 
 const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
 const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
@@ -390,12 +389,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* ── 오늘의 12별자리 미니 운세 슬롯 ── */}
-              <ZodiacSlot today={today} onQuickAsk={(sign) => {
-                const q = `${sign} 자리인 나, 오늘의 운세는 어때?`;
-                setDiy(q);
-                askQuick(q);
-              }} />
             </div>
           </div>
         )}
@@ -980,10 +973,10 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 10: 사주 달력 ── */}
+        {/* ── Step 10: 별숨 달력 ── */}
         {step === 10 && (
           <Suspense fallback={<PageSpinner />}>
-            <SajuCalendar form={form} setStep={setStep} />
+            <SajuCalendar form={form} setStep={setStep} askQuick={askQuick} />
           </Suspense>
         )}
 
