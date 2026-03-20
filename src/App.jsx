@@ -325,6 +325,49 @@ export default function App() {
                     </div>
                     {form.by ? (
                       <>
+                        {/* ── 나의 사주 원국 (고정, 변하지 않는 기운) ── */}
+                        {saju && (
+                          <div className="pillars-wrap" style={{ marginBottom: 4 }}>
+                            <div className="pillars-hint">
+                              <span style={{ color: 'var(--gold)' }}>✦</span>
+                              나의 사주 원국 · 변하지 않는 기운
+                            </div>
+                            <div className="pillars">
+                              {[['연', 'yeon'], ['월', 'wol'], ['일', 'il'], ['시', 'si']].map(([l, k]) => (
+                                <div key={l} className="pillar">
+                                  <div className="p-lbl">{l}주</div>
+                                  <div className="p-hj">{saju[k].gh}</div>
+                                  <div className="p-hj">{saju[k].jh}</div>
+                                  <div className="p-kr">{saju[k].g}{saju[k].j}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="oh-bar">
+                              {Object.entries(saju.or).map(([k, v]) => v > 0 && <div key={k} className="oh-seg" style={{ flex: v, background: OC[k] }} />)}
+                            </div>
+                            <div className="oh-tags">
+                              {Object.entries(saju.or).map(([k, v]) => v > 0 && (
+                                <span key={k} className="oh-tag" style={{ background: `${OC[k]}18`, color: OC[k], border: `1px solid ${OC[k]}28` }}>{OE[k]} {ON[k]} {v}</span>
+                              ))}
+                            </div>
+                            {sun && (
+                              <div className="astro-preview" style={{ marginTop: 8 }}>
+                                <div className="a-chip">{sun.s} {sun.n}</div>
+                                {moon && <div className="a-chip">🌙 달 {moon.n}</div>}
+                                {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* ── 구분선 ── */}
+                        <div style={{ height: 1, background: 'var(--line)', margin: '2px 0' }} />
+
+                        {/* ── 오늘의 기운 (매일 변함) ── */}
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 2 }}>
+                          ✦ 오늘의 기운 · {today.month}월 {today.day}일
+                          <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
+                        </div>
                         {dailyResult ? (
                           <DailyStarCard result={dailyResult} />
                         ) : dailyLoading ? (
@@ -336,7 +379,7 @@ export default function App() {
                           </div>
                         ) : (
                           <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>
-                            오늘 하루 나의 별숨은? ✦
+                            오늘 기운 확인하기 ✦
                           </button>
                         )}
                         <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
