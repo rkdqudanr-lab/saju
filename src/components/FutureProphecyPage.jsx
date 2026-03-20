@@ -19,7 +19,7 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
   const [selectedPeriod, setPeriod] = useState(null);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
-  const { shown, done, skipToEnd } = useWordTyping(text, !!text && !loading, 55);
+  const { shown, done, skipToEnd } = useWordTyping(text, !!text && !loading, 37);
 
   const fetchProphecy = useCallback(async (period) => {
     setLoading(true);

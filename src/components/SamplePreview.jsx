@@ -23,10 +23,10 @@ export default function SamplePreview(){
       idxRef.current++;
       setText(essay.slice(0,idxRef.current));
       const ch=essay[idxRef.current-1];
-      const delay=ch==='.'||ch==='!'||ch==='?'?280:ch===','?120:ch==='\n'?200:28;
+      const delay=ch==='.'||ch==='!'||ch==='?'?187:ch===','?80:ch==='\n'?133:19;
       timerRef.current=setTimeout(tick,delay);
     };
-    timerRef.current=setTimeout(tick,400);
+    timerRef.current=setTimeout(tick,267);
     return()=>clearTimeout(timerRef.current);
   },[essayIdx]);
 

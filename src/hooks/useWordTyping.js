@@ -11,9 +11,9 @@ export default function useWordTyping(text, active, speed=130){
 
   const getDelay=(word,base)=>{
     const trimmed=word.trimEnd();
-    if(/[.!?…]$/.test(trimmed)) return base+350;
-    if(/[,]$/.test(trimmed))     return base+180;
-    if(/\n/.test(word))          return base+250;
+    if(/[.!?…]$/.test(trimmed)) return base+233;
+    if(/[,]$/.test(trimmed))     return base+120;
+    if(/\n/.test(word))          return base+167;
     return base;
   };
 
