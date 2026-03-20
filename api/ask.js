@@ -16,7 +16,7 @@ import { buildSystem } from "../lib/prompts/buildSystem/index.js";
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -38,6 +38,8 @@ function validateRequest(body) {
       isLetter: !!isLetter,
       isScenario: !!isScenario,
       isStory: !!isStory,
+      isNatal: !!isNatal,
+      isZodiac: !!isZodiac,
     },
   };
 }
@@ -50,7 +52,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: validation.reason });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
@@ -67,7 +69,7 @@ export default async function handler(req, res) {
   const systemBase = await buildSystem(
     today, season, categoryHint, endingHint, timeHorizon,
     userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision,
-    categoryExample
+    categoryExample, isNatal, isZodiac
   );
 
   const systemWithContext = systemBase
@@ -86,7 +88,9 @@ export default async function handler(req, res) {
     isLetter   ? 1000 :
     isStory    ? 1500 :
     isScenario ? 1500 :
-                 600;
+    isNatal    ? 1600 :
+    isZodiac   ?  900 :
+                  600;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
