@@ -455,6 +455,9 @@ export default function App() {
                           const allDone = qIdx >= DAILY_QUESTIONS.length;
                           const q = DAILY_QUESTIONS[Math.min(qIdx, DAILY_QUESTIONS.length - 1)];
                           const answeredCount = Object.keys(quiz.answers || {}).length;
+                          // 오늘 완료 시: 방금 답한 질문 (nextQIdx - 1)
+                          const lastAnsweredQ = DAILY_QUESTIONS[qIdx > 0 ? qIdx - 1 : 0];
+                          const lastAnsweredVal = lastAnsweredQ ? quiz.answers[lastAnsweredQ.id] : null;
 
                           return (
                             <div style={{ marginTop: 12, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', border: '1px solid var(--line)' }}>
@@ -469,16 +472,16 @@ export default function App() {
                                     <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>{DAILY_QUESTIONS.length}개의 이야기를 모두 들었어요</span>
                                   </div>
                                   <button onClick={() => setShowProfileModal(true)} style={{ fontSize: 'var(--xs)', color: 'var(--gold)', background: 'none', border: 'none', fontFamily: 'var(--ff)', cursor: 'pointer', padding: 0 }}>
-                                    별숨에게 나 알려주기 →
+                                    별숨에게 나를 알려주기 →
                                   </button>
                                 </>
                               ) : todayDone ? (
                                 <>
                                   <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.7, marginBottom: 6 }}>
-                                    "{q.q}"
+                                    "{lastAnsweredQ?.q}"
                                   </div>
                                   <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 8 }}>
-                                    → {quiz.answers[DAILY_QUESTIONS[qIdx > 0 ? qIdx - 1 : 0]?.id] || '저장됐어요'} ✓
+                                    → {lastAnsweredVal || '저장됐어요'} ✓
                                   </div>
                                   <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>내일 새로운 질문이 기다리고 있어요 🌙</div>
                                 </>
