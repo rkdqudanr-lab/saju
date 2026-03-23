@@ -136,7 +136,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   <button className="sidebar-menu-item" onClick={() => { onProfileOpen(); onClose(); }}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onProfileOpen(); onClose(); } }}>
                     <span className="smi-icon" aria-hidden="true">⚙️</span>
-                    <span className="smi-text">나의 별자리 지도</span>
+                    <span className="smi-text">별숨에게 나 알려주기</span>
                   </button>
                 </li>
               )}

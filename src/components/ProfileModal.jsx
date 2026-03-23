@@ -53,10 +53,10 @@ export default function ProfileModal({profile,setProfile,onClose}){
   const upd=(k,v)=>setLocal(p=>({...p,[k]:v}));
 
   return(
-    <div className="profile-overlay" role="dialog" aria-modal="true" aria-label="나의 별자리 지도" onClick={e=>{if(e.target.className==='profile-overlay')onClose();}}>
+    <div className="profile-overlay" role="dialog" aria-modal="true" aria-label="별숨에게 나 알려주기" onClick={e=>{if(e.target.className==='profile-overlay')onClose();}}>
       <div className="profile-sheet" ref={sheetRef}>
         <div className="profile-handle"/>
-        <div className="profile-title">✦ 나의 별자리 지도</div>
+        <div className="profile-title">✦ 별숨에게 나 알려주기</div>
         <div className="profile-sub">저장하면 모든 운세에 자동으로 반영돼요.<br/>입력할수록 더 깊이 읽어드릴게요.</div>
 
         {/* MBTI */}
