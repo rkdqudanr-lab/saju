@@ -3,10 +3,11 @@ import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } fro
 // utils
 import { OC, OE, ON, ILGAN_POETIC, CGO } from "./utils/saju.js";
 import { getSun } from "./utils/astrology.js";
-import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT } from "./utils/constants.js";
+import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT, DAILY_QUESTIONS } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
 import { loadHistory, deleteHistory } from "./utils/history.js";
 import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/imageExport.js";
+import { loadQuiz, saveQuiz, getTodayStr, isTodayAnswered } from "./utils/quiz.js";
 
 // hooks
 import { useUserProfile }   from "./hooks/useUserProfile.js";
@@ -63,8 +64,8 @@ export default function App() {
   const [editingMyProfile, setEditingMyProfile] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
   const [showSubNudge, setShowSubNudge] = useState(false);
-  const [showQuickInput, setShowQuickInput] = useState(false);
-  const [quickNote, setQuickNote] = useState('');
+  const [quiz, setQuiz] = useState(() => loadQuiz());
+  const [quizInput, setQuizInput] = useState('');
   const [profileNudge, setProfileNudge] = useState(null);
   const [refCode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -126,16 +127,26 @@ export default function App() {
   }, [_handleTypingDone, user, curPkg, IS_BETA]);
 
   // ── 빠른 개인화 입력 저장 ──
-  const handleQuickNoteSave = useCallback(() => {
-    if (!quickNote.trim()) return;
-    const appended = profile.selfDesc
-      ? profile.selfDesc + ' / ' + quickNote.trim()
-      : quickNote.trim();
-    setProfile(p => ({ ...p, selfDesc: appended }));
-    setQuickNote('');
-    setShowQuickInput(false);
-    showToast('반영됐어요 ✦', 'success');
-  }, [quickNote, profile.selfDesc, setProfile, showToast]);
+  const handleQuizAnswer = useCallback((question, value) => {
+    const val = (value || quizInput).trim();
+    if (!val) return;
+    if (question.field) {
+      setProfile(p => ({ ...p, [question.field]: val }));
+    } else {
+      const note = `${question.q.replace(/[?요]/g, '').trim()} → ${val}`;
+      setProfile(p => ({ ...p, selfDesc: p.selfDesc ? p.selfDesc + ' / ' + note : note }));
+    }
+    const updated = {
+      ...quiz,
+      answers: { ...quiz.answers, [question.id]: val },
+      nextQIdx: Math.min((quiz.nextQIdx || 0) + 1, DAILY_QUESTIONS.length - 1),
+      lastAnsweredDate: getTodayStr(),
+    };
+    setQuiz(updated);
+    saveQuiz(updated);
+    setQuizInput('');
+    showToast('별숨이 기억했어요 ✦', 'success');
+  }, [quiz, quizInput, setProfile, showToast]);
 
   // ── 채팅 전송 (넛지 초기화 포함) ──
   const handleSendChat = useCallback(() => {
@@ -437,39 +448,76 @@ export default function App() {
                           오늘 있었던 일 적기 ✦
                         </button>
 
-                        {/* 빠른 개인화 입력 */}
-                        {!showQuickInput ? (
-                          <button
-                            onClick={() => setShowQuickInput(true)}
-                            style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px 14px', marginTop: 10, background: 'none', border: '1px dashed var(--line)', color: 'var(--t4)', fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            + 별숨에게 나 한 줄 알려주기
-                          </button>
-                        ) : (
-                          <div style={{ marginTop: 10, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '12px 14px', border: '1px solid var(--line)' }}>
-                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                              {[['💼 직업', '직업은 '], ['💕 연인', '연인 이름은 '], ['🌙 고민', '요즘 고민은 ']].map(([label, prefix]) => (
-                                <button key={label}
-                                  onClick={() => setQuickNote(prefix)}
-                                  style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid var(--acc)', background: quickNote.startsWith(prefix) ? 'var(--goldf)' : 'transparent', color: 'var(--gold)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-                                  {label}
-                                </button>
-                              ))}
+                        {/* ── 하루 한 질문 카드 ── */}
+                        {(() => {
+                          const qIdx = quiz.nextQIdx || 0;
+                          const todayDone = isTodayAnswered(quiz);
+                          const allDone = qIdx >= DAILY_QUESTIONS.length;
+                          const q = DAILY_QUESTIONS[Math.min(qIdx, DAILY_QUESTIONS.length - 1)];
+                          const answeredCount = Object.keys(quiz.answers || {}).length;
+
+                          return (
+                            <div style={{ marginTop: 12, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', border: '1px solid var(--line)' }}>
+                              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
+                                ✦ 오늘 별숨의 질문 {answeredCount > 0 && <span style={{ fontWeight: 400, color: 'var(--t4)', marginLeft: 6 }}>{answeredCount}개 답했어요</span>}
+                              </div>
+
+                              {allDone ? (
+                                <>
+                                  <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7, marginBottom: 10 }}>
+                                    별숨이 당신을 잘 알게 됐어요 🌟<br/>
+                                    <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>{DAILY_QUESTIONS.length}개의 이야기를 모두 들었어요</span>
+                                  </div>
+                                  <button onClick={() => setShowProfileModal(true)} style={{ fontSize: 'var(--xs)', color: 'var(--gold)', background: 'none', border: 'none', fontFamily: 'var(--ff)', cursor: 'pointer', padding: 0 }}>
+                                    별숨에게 나 알려주기 →
+                                  </button>
+                                </>
+                              ) : todayDone ? (
+                                <>
+                                  <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.7, marginBottom: 6 }}>
+                                    "{q.q}"
+                                  </div>
+                                  <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 8 }}>
+                                    → {quiz.answers[DAILY_QUESTIONS[qIdx > 0 ? qIdx - 1 : 0]?.id] || '저장됐어요'} ✓
+                                  </div>
+                                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>내일 새로운 질문이 기다리고 있어요 🌙</div>
+                                </>
+                              ) : (
+                                <>
+                                  <div style={{ fontSize: 'var(--base)', color: 'var(--t1)', fontWeight: 500, lineHeight: 1.6, marginBottom: 4 }}>
+                                    "{q.q}"
+                                  </div>
+                                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.6, marginBottom: 12 }}>{q.sub}</div>
+
+                                  {(q.type === 'chips' || q.type === 'mixed') && (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                                      {q.chips.map(chip => (
+                                        <button key={chip} onClick={() => handleQuizAnswer(q, chip)}
+                                          style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t2)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', transition: 'all .15s' }}
+                                          onMouseEnter={e => { e.target.style.borderColor = 'var(--gold)'; e.target.style.color = 'var(--gold)'; }}
+                                          onMouseLeave={e => { e.target.style.borderColor = 'var(--line)'; e.target.style.color = 'var(--t2)'; }}>
+                                          {chip}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {(q.type === 'text' || q.type === 'mixed') && (
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                      <input className="chat-inp"
+                                        placeholder={q.placeholder || '직접 입력...'}
+                                        value={quizInput}
+                                        onChange={e => setQuizInput(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && handleQuizAnswer(q, quizInput)}
+                                        style={{ flex: 1, fontSize: 'var(--sm)' }} />
+                                      <button className="chat-send" onClick={() => handleQuizAnswer(q, quizInput)} disabled={!quizInput.trim()} style={{ flexShrink: 0 }}>✦</button>
+                                    </div>
+                                  )}
+                                </>
+                              )}
                             </div>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              <input
-                                className="chat-inp"
-                                placeholder="요즘 나는..."
-                                value={quickNote}
-                                onChange={e => setQuickNote(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleQuickNoteSave()}
-                                autoFocus
-                                style={{ flex: 1, fontSize: 'var(--sm)' }}
-                              />
-                              <button className="chat-send" onClick={handleQuickNoteSave} disabled={!quickNote.trim()} style={{ flexShrink: 0 }}>✦</button>
-                              <button onClick={() => { setShowQuickInput(false); setQuickNote(''); }} style={{ padding: '0 10px', background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', fontFamily: 'var(--ff)', fontSize: 'var(--sm)' }}>취소</button>
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </>
                     ) : (
                       <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={() => setStep(1)}>
