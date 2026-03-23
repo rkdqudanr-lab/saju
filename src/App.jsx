@@ -63,6 +63,9 @@ export default function App() {
   const [editingMyProfile, setEditingMyProfile] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
   const [showSubNudge, setShowSubNudge] = useState(false);
+  const [showQuickInput, setShowQuickInput] = useState(false);
+  const [quickNote, setQuickNote] = useState('');
+  const [profileNudge, setProfileNudge] = useState(null);
   const [refCode] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('ref') || null;
@@ -78,9 +81,20 @@ export default function App() {
     toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
   }, []);
 
+  // ── 개인화 감지 헬퍼 ──
+  function detectProfileHint(msg, prof) {
+    if (!prof.workplace && /직장|직업|회사|일하|취업|이직|재직|근무|스타트업|공무원|프리랜서/.test(msg))
+      return { label: '직장/직업 정보를 저장해드릴까요?' };
+    if (!prof.partner && /연인|남자친구|여자친구|남친|여친|애인|사귀|좋아하는 사람/.test(msg))
+      return { label: '연인 정보를 저장해드릴까요?' };
+    if (!prof.worryText && /고민|걱정|불안|힘들|스트레스|갈등|막막|어려/.test(msg))
+      return { label: '지금 고민을 저장해드릴까요?' };
+    return null;
+  }
+
   // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
-  const { user, profile, form, setForm, otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
+  const { user, profile, setProfile, form, setForm, otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
           otherForm, setOtherForm, showProfileModal, setShowProfileModal,
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
@@ -111,6 +125,24 @@ export default function App() {
     }
   }, [_handleTypingDone, user, curPkg, IS_BETA]);
 
+  // ── 빠른 개인화 입력 저장 ──
+  const handleQuickNoteSave = useCallback(() => {
+    if (!quickNote.trim()) return;
+    const appended = profile.selfDesc
+      ? profile.selfDesc + ' / ' + quickNote.trim()
+      : quickNote.trim();
+    setProfile(p => ({ ...p, selfDesc: appended }));
+    setQuickNote('');
+    setShowQuickInput(false);
+    showToast('반영됐어요 ✦', 'success');
+  }, [quickNote, profile.selfDesc, setProfile, showToast]);
+
+  // ── 채팅 전송 (넛지 초기화 포함) ──
+  const handleSendChat = useCallback(() => {
+    setProfileNudge(null);
+    sendChat();
+  }, [sendChat]);
+
   /** 클립보드 복사 + toast + 체크마크 아이콘 피드백 (1.5초) */
   const handleCopyAll = useCallback(() => {
     const text = answers.join('\n\n');
@@ -122,6 +154,16 @@ export default function App() {
       copyTimer.current = setTimeout(() => setCopyDone(false), 1500);
     }).catch(() => showToast('복사에 실패했어요', 'error'));
   }, [answers, showToast]);
+
+  // ── 채팅 중 프로필 감지 넛지 ──
+  useEffect(() => {
+    if (chatHistory.length < 2) return;
+    const last = chatHistory[chatHistory.length - 1];
+    const userMsg = chatHistory[chatHistory.length - 2];
+    if (last?.role !== 'ai' || userMsg?.role !== 'user') return;
+    const hint = detectProfileHint(userMsg.text, profile);
+    if (hint) setProfileNudge(hint);
+  }, [chatHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── loginError 토스트 표시 ──
   useEffect(() => {
@@ -394,6 +436,40 @@ export default function App() {
                         <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setShowDiary(true)}>
                           오늘 있었던 일 적기 ✦
                         </button>
+
+                        {/* 빠른 개인화 입력 */}
+                        {!showQuickInput ? (
+                          <button
+                            onClick={() => setShowQuickInput(true)}
+                            style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px 14px', marginTop: 10, background: 'none', border: '1px dashed var(--line)', color: 'var(--t4)', fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            + 별숨에게 나 한 줄 알려주기
+                          </button>
+                        ) : (
+                          <div style={{ marginTop: 10, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '12px 14px', border: '1px solid var(--line)' }}>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                              {[['💼 직업', '직업은 '], ['💕 연인', '연인 이름은 '], ['🌙 고민', '요즘 고민은 ']].map(([label, prefix]) => (
+                                <button key={label}
+                                  onClick={() => setQuickNote(prefix)}
+                                  style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid var(--acc)', background: quickNote.startsWith(prefix) ? 'var(--goldf)' : 'transparent', color: 'var(--gold)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <input
+                                className="chat-inp"
+                                placeholder="요즘 나는..."
+                                value={quickNote}
+                                onChange={e => setQuickNote(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleQuickNoteSave()}
+                                autoFocus
+                                style={{ flex: 1, fontSize: 'var(--sm)' }}
+                              />
+                              <button className="chat-send" onClick={handleQuickNoteSave} disabled={!quickNote.trim()} style={{ flexShrink: 0 }}>✦</button>
+                              <button onClick={() => { setShowQuickInput(false); setQuickNote(''); }} style={{ padding: '0 10px', background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', fontFamily: 'var(--ff)', fontSize: 'var(--sm)' }}>취소</button>
+                            </div>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={() => setStep(1)}>
@@ -933,6 +1009,20 @@ export default function App() {
               <div ref={chatEndRef} />
             </div>
 
+            {profileNudge && (
+              <div style={{ padding: '10px 16px', background: 'var(--bg2)', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{ flex: 1, fontSize: 'var(--sm)', color: 'var(--t2)' }}>✦ {profileNudge.label}</span>
+                <button onClick={() => { setShowProfileModal(true); setProfileNudge(null); }}
+                  style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid var(--gold)', background: 'var(--goldf)', color: 'var(--gold)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', fontWeight: 600, cursor: 'pointer' }}>
+                  저장하기
+                </button>
+                <button onClick={() => setProfileNudge(null)}
+                  style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid var(--line)', background: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+                  괜찮아요
+                </button>
+              </div>
+            )}
+
             <div className="chat-input-area">
               {chatLeft > 0 && !chatLoading && (
                 <div className="chat-sugg-wrap">
@@ -944,9 +1034,9 @@ export default function App() {
                   placeholder={chatLeft > 0 ? '더 궁금한 게 있어요? 🌙' : '채팅을 모두 사용했어요'}
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } }}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
                   disabled={chatLeft <= 0 || chatLoading} />
-                <button className="chat-send" onClick={sendChat} disabled={!chatInput.trim() || chatLeft <= 0 || chatLoading}>✦</button>
+                <button className="chat-send" onClick={handleSendChat} disabled={!chatInput.trim() || chatLeft <= 0 || chatLoading}>✦</button>
               </div>
             </div>
           </div>
