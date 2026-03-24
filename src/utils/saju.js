@@ -114,7 +114,9 @@ const ILGAN_ENERGY = { 갑:5,을:4,병:4,정:3,무:3,기:2,경:2,신:1,임:2,계
 export function getDailyInfo(date) {
   const y = date.getFullYear(), m = date.getMonth()+1, d = date.getDate();
   // 만세력 기준 에포크 보정: 1900-01-01 실제 일진 = 甲戌(index 10), +10 오프셋 적용
-  const df = Math.floor((new Date(y,m-1,d) - new Date(1900,0,1)) / 86400000) + 10;
+  // Date.UTC 사용: 브라우저 로컬 타임존(Asia/Seoul의 역사적 LMT +8:27:52)에 의한
+  // 1900년 날짜 오프셋 32분 오차를 제거. Math.round로 부동소수점 방어.
+  const df = Math.round((Date.UTC(y,m-1,d) - Date.UTC(1900,0,1)) / 86400000) + 10;
   const ig = (df % 10 + 10) % 10;
   const ij = (df % 12 + 12) % 12;
   const idx60 = ((df % 60) + 60) % 60;
@@ -134,7 +136,8 @@ export function getSaju(y,m,d,h,min=0){
   // 월간: 오호둔월법 — 인월(寅月) 천간 = (연간%5)*2+2, 이후 月마다 +1
   const wg = (((yg % 5) * 2 + 2) + (wj - 2 + 12) % 12) % 10;
   // 만세력 기준 에포크 보정: 1900-01-01 실제 일진 = 甲戌(index 10), +10 오프셋 적용
-  const df=Math.floor((new Date(y,m-1,d)-new Date(1900,0,1))/86400000)+10;
+  // Date.UTC 사용: Asia/Seoul LMT(+8:27:52) 오프셋 오차 제거, Math.round로 부동소수점 방어
+  const df=Math.round((Date.UTC(y,m-1,d)-Date.UTC(1900,0,1))/86400000)+10;
   const ig=(df%10+10)%10,ij=(df%12+12)%12;
   const si=Math.floor((h+1)/2)%12,sg=(((ig%5)*2+si)%10+10)%10;
   const all=[CGO[yg],JJO[yj],CGO[wg],JJO[wj],CGO[ig],JJO[ij],CGO[sg],JJO[si%12]];
