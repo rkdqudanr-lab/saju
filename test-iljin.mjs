@@ -23,7 +23,8 @@ const ILGAN_ENERGY = { 갑:5,을:4,병:4,정:3,무:3,기:2,경:2,신:1,임:2,계
 function getDailyInfo(date) {
   const y = date.getFullYear(), m = date.getMonth()+1, d = date.getDate();
   // 만세력 기준 에포크 보정: 1900-01-01 실제 일진 = 甲戌(index 10), +10 오프셋 적용
-  const df = Math.floor((new Date(y,m-1,d) - new Date(1900,0,1)) / 86400000) + 10;
+  // Date.UTC: Asia/Seoul LMT(+8:27:52) 역사적 오프셋 32분 오차 제거
+  const df = Math.round((Date.UTC(y,m-1,d) - Date.UTC(1900,0,1)) / 86400000) + 10;
   const ig = (df % 10 + 10) % 10;
   const ij = (df % 12 + 12) % 12;
   const idx60 = ((df % 60) + 60) % 60;
