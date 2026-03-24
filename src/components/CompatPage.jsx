@@ -421,7 +421,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
             onClick={runStory}
             style={{ marginBottom: 8 }}
           >
-            {storyLoading ? '오늘의 이야기를 쓰고 있어요...' : '별숨에게 오늘의 우리 이야기 물어보기 ✦'}
+            {storyLoading ? '두 별의 인연을 읽고 있어요...' : '별숨에게 두 별의 인연 풀어보기 ✦'}
           </button>
 
           {/* 이야기 결과 */}
@@ -436,7 +436,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
               {storyLoading ? (
                 <div className="scenario-loading">
                   <div className="scenario-typing-dots"><span /><span /><span /></div>
-                  오늘 두 사람의 이야기를 쓰고 있어요...
+                  두 별의 인연을 읽고 있어요...
                 </div>
               ) : storyResult && (
                 <>
@@ -466,7 +466,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                   {storyResult.moments?.length > 0 && (
                     <div style={{ marginBottom: 14 }}>
                       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 8 }}>
-                        ✦ 오늘 두 사람에게 일어날 장면
+                        ✦ 별숨이 본 핵심 포인트
                       </div>
                       {storyResult.moments.map((m, i) => (
                         <div key={i} style={{
