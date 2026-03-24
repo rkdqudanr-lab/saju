@@ -1,3 +1,5 @@
+import { getMonthJijiIndex } from '../../lib/jeolgi.js';
+
 // ═══════════════════════════════════════════════════════════
 //  📅 날짜 유틸 (양력 + 음력 근사)
 // ═══════════════════════════════════════════════════════════
@@ -126,7 +128,10 @@ export function getDailyInfo(date) {
 
 export function getSaju(y,m,d,h){
   const yg=((y-4)%10+10)%10,yj=((y-4)%12+12)%12;
-  const mb=(y-1900)*12+(m-1),wg=((mb+2)%10+10)%10,wj=((m+1)%12+12)%12;
+  // 월지: 절기(입절) 기준 월주 지지
+  const wj = getMonthJijiIndex(y, m, d, h, 0);
+  // 월간: 오호둔월법 — 인월(寅月) 천간 = (연간%5)*2+2, 이후 月마다 +1
+  const wg = (((yg % 5) * 2 + 2) + (wj - 2 + 12) % 12) % 10;
   const df=Math.floor((new Date(y,m-1,d)-new Date(1900,0,1))/86400000);
   // 수정: 기준일 1900-01-01 = 甲子(인덱스 0), 오프셋 제거
   const ig=(df%10+10)%10,ij=(df%12+12)%12;
