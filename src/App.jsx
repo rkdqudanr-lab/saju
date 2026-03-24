@@ -63,6 +63,12 @@ export default function App() {
   const [anniversaryType, setAnniversaryType] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [editingMyProfile, setEditingMyProfile] = useState(false);
+  const [formNeedsConfirm, setFormNeedsConfirm] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('byeolsoom_profile') || 'null');
+      return !(saved?.by && saved?.bm && saved?.bd);
+    } catch { return true; }
+  });
   const [showAllCats, setShowAllCats] = useState(false);
   const [showSubNudge, setShowSubNudge] = useState(false);
   const [quiz, setQuiz] = useState(() => loadQuiz());
@@ -587,7 +593,7 @@ export default function App() {
                 {[0, 1, 2].map(i => <div key={i} className={`dot ${i === 0 ? 'active' : 'todo'}`} />)}
               </div>
 
-              {formOk && (
+              {(formOk && !formNeedsConfirm) && (
                 <div className="card" style={{ marginBottom: 'var(--sp2)' }}>
                   <div className="card-title" style={{ fontSize: 'var(--md)' }}>누구의 별숨을 볼까요?</div>
 
@@ -649,7 +655,7 @@ export default function App() {
                 </div>
               )}
 
-              {(!formOk || editingMyProfile) && (
+              {(!formOk || formNeedsConfirm || editingMyProfile) && (
                 <div className="card">
                   <div className="card-title">{editingMyProfile ? '내 프로필 수정 🌙' : '반가워요 🌙'}</div>
                   <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
@@ -719,7 +725,7 @@ export default function App() {
                       {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
                     </div>
                   )}
-                  <button className="btn-main" disabled={!formOk} onClick={() => { if (editingMyProfile) { setEditingMyProfile(false); } else { setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
+                  <button className="btn-main" disabled={!formOk} onClick={() => { if (editingMyProfile) { setEditingMyProfile(false); } else { setFormNeedsConfirm(false); setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
                 </div>
               )}
             </div>
