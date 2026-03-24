@@ -2,15 +2,24 @@ import { useMemo, useCallback } from "react";
 import { getTodayInfo, getSaju, ON } from "../utils/saju.js";
 import { getSun, getMoon, getAsc } from "../utils/astrology.js";
 
+// 폼 bh 값(소수점 시간, 예: "9.5000")을 정수 [시, 분]으로 변환 (KST 기준)
+function parseBh(noTime, bh) {
+  if (noTime || bh === '' || bh == null) return [12, 0];
+  const dec = +bh;
+  if (isNaN(dec)) return [12, 0];
+  const h = Math.floor(dec);
+  const min = Math.round((dec - h) * 60);
+  return [h, min];
+}
+
 export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
   const today = useMemo(() => getTodayInfo(), []);
 
-  const saju = useMemo(() =>
-    (form.by && form.bm && form.bd)
-      ? getSaju(+form.by, +form.bm, +form.bd, form.noTime ? 12 : +(form.bh || 12))
-      : null,
-    [form]
-  );
+  const saju = useMemo(() => {
+    if (!(form.by && form.bm && form.bd)) return null;
+    const [h, min] = parseBh(form.noTime, form.bh);
+    return getSaju(+form.by, +form.bm, +form.bd, h, min);
+  }, [form]);
   const sun  = useMemo(() => (form.bm && form.bd) ? getSun(+form.bm, +form.bd) : null, [form.bm, form.bd]);
   const moon = useMemo(() => (form.by && form.bm && form.bd) ? getMoon(+form.by, +form.bm, +form.bd) : null, [form.by, form.bm, form.bd]);
   const asc  = useMemo(() => (!form.noTime && form.bh && form.bm) ? getAsc(+form.bh, +form.bm) : null, [form]);
@@ -20,7 +29,9 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
   const activeForm   = activeProfileIdx === 0 ? form : (otherProfiles[activeProfileIdx - 1] || form);
   const activeSaju   = useMemo(() => {
     const f = activeForm;
-    return (f.by && f.bm && f.bd) ? getSaju(+f.by, +f.bm, +f.bd, f.noTime ? 12 : +(f.bh || 12)) : null;
+    if (!(f.by && f.bm && f.bd)) return null;
+    const [h, min] = parseBh(f.noTime, f.bh);
+    return getSaju(+f.by, +f.bm, +f.bd, h, min);
   }, [activeForm]);
   const activeSun    = useMemo(() => (activeForm.bm && activeForm.bd) ? getSun(+activeForm.bm, +activeForm.bd) : null, [activeForm]);
   const activeAge    = activeForm.by ? today.year - +activeForm.by : 0;

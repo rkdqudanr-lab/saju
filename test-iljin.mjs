@@ -1,5 +1,6 @@
 // 일진 테스트: node test-iljin.mjs
 import { getMonthJijiIndex } from './lib/jeolgi.js';
+import { getSaju } from './src/utils/saju.js';
 // 2026년 3월 19일 일진 확인
 
 const CG = ["갑","을","병","정","무","기","경","신","임","계"];
@@ -100,3 +101,34 @@ for (const [label, y, m, d, h, min, expected] of wjCases) {
   if (ok) wjPass++; else wjFail++;
 }
 console.log(`\n월주 검증: ${wjPass}/10 통과${wjFail > 0 ? ` (실패 ${wjFail}개)` : ''}`);
+
+// ═══════════════════════════════════════════════════════════
+// getSaju 4기둥(사주 원국) 통합 검증
+// 기준: 1991년 8월 31일 오전 09:30 (양력, KST)
+// 정확한 원국: 辛未년 · 丙申월 · 癸酉일 · 丁巳시
+// ─────────────────────────────────────────────────────────
+// [검증 포인트]
+// 1. 월주(月柱): 입추(8/8경) 이후 · 백로(9/8경) 이전 → 반드시 丙申月
+// 2. 일주(日柱): KST 기준 1991-08-31 일진 → 반드시 癸酉日 (하루 밀림 없음)
+// 3. 시주(時柱): 일간 癸(계) + 사시(09~11시) → 오호둔시법 → 반드시 丁巳時
+// ═══════════════════════════════════════════════════════════
+console.log('\n=== 4기둥(사주 원국) 통합 검증: 1991-08-31 09:30 KST ===');
+const saju1991 = getSaju(1991, 8, 31, 9, 30);
+const expected4 = { yeon: '辛未', wol: '丙申', il: '癸酉', si: '丁巳' };
+const got4 = {
+  yeon: saju1991.yeon.gh + saju1991.yeon.jh,
+  wol:  saju1991.wol.gh  + saju1991.wol.jh,
+  il:   saju1991.il.gh   + saju1991.il.jh,
+  si:   saju1991.si.gh   + saju1991.si.jh,
+};
+const labels4 = { yeon: '연주(年柱)', wol: '월주(月柱)', il: '일주(日柱)', si: '시주(時柱)' };
+let allPass4 = true;
+for (const [k, exp] of Object.entries(expected4)) {
+  const g = got4[k];
+  const ok = g === exp;
+  if (!ok) allPass4 = false;
+  console.log(`${ok ? '✅' : '❌'} ${labels4[k]}: ${g} (기대: ${exp})`);
+}
+console.log(allPass4
+  ? '\n✅ 1991-08-31 09:30 사주 4기둥 완전 일치 — 辛未 丙申 癸酉 丁巳'
+  : '\n❌ 4기둥 불일치 발생 — 위 항목 확인 필요');
