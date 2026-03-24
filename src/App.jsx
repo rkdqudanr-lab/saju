@@ -34,6 +34,7 @@ const SajuCalendar       = lazy(() => import("./components/SajuCalendar.jsx"));
 const RadarChart         = lazy(() => import("./components/RadarChart.jsx"));
 const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
 const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
+const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
 
 function PageSpinner() {
   return (
@@ -336,7 +337,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
 
       <div className="app" id="main-content">
 
@@ -440,9 +441,14 @@ export default function App() {
                           별숨에게 질문하기 ✦
                         </button>
                         {formOk && saju && (
-                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setStep(13)}>
-                            나의 원국 해설 보기 ✦
-                          </button>
+                          <>
+                            <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setStep(13)}>
+                              나의 원국 해설 보기 ✦
+                            </button>
+                            <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid rgba(180,140,50,0.5)', color: 'var(--gold)' }} onClick={() => setStep(14)}>
+                              별숨의 종합 사주 풀어보기 ✦
+                            </button>
+                          </>
                         )}
                         <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setShowDiary(true)}>
                           오늘 있었던 일 적기 ✦
@@ -1208,6 +1214,18 @@ export default function App() {
               saju={saju}
               sun={sun}
               moon={moon}
+              form={form}
+              buildCtx={buildCtx}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 14: 별숨의 종합 사주 ── */}
+        {step === 14 && (
+          <Suspense fallback={<PageSpinner />}>
+            <ComprehensivePage
+              saju={saju}
+              sun={sun}
               form={form}
               buildCtx={buildCtx}
             />
