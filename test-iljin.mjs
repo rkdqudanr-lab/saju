@@ -20,7 +20,8 @@ const ILGAN_ENERGY = { 갑:5,을:4,병:4,정:3,무:3,기:2,경:2,신:1,임:2,계
 
 function getDailyInfo(date) {
   const y = date.getFullYear(), m = date.getMonth()+1, d = date.getDate();
-  const df = Math.floor((new Date(y,m-1,d) - new Date(1900,0,1)) / 86400000);
+  // 만세력 기준 에포크 보정: 1900-01-01 실제 일진 = 甲戌(index 10), +10 오프셋 적용
+  const df = Math.floor((new Date(y,m-1,d) - new Date(1900,0,1)) / 86400000) + 10;
   const ig = (df % 10 + 10) % 10;
   const ij = (df % 12 + 12) % 12;
   const idx60 = ((df % 60) + 60) % 60;
@@ -49,7 +50,16 @@ for (const date of testDates) {
 // 기대값 검증
 const ref = getDailyInfo(new Date(1900, 0, 1));
 console.log('\n=== 검증 ===');
-console.log(`1900-01-01 일진: ${ref.iljin} (기대: 甲子) → ${ref.iljin === '甲子' ? '✅ 정확' : '❌ 오류'}`);
+// 만세력 기준: 1900-01-01 = 甲戌 (과거 코드의 甲子 가정은 오류였음)
+console.log(`1900-01-01 일진: ${ref.iljin} (기대: 甲戌) → ${ref.iljin === '甲戌' ? '✅ 정확' : '❌ 오류'}`);
+
+// 만세력 교차 검증: 1991-08-31 = 癸酉
+const test1991 = getDailyInfo(new Date(1991, 7, 31));
+console.log(`1991-08-31 일진: ${test1991.iljin} (기대: 癸酉) → ${test1991.iljin === '癸酉' ? '✅ 정확' : '❌ 오류'}`);
+
+// 1991-09-08 (백로 당일) 일진 확인
+const test1991Sep8 = getDailyInfo(new Date(1991, 8, 8));
+console.log(`1991-09-08 일진: ${test1991Sep8.iljin} (${test1991Sep8.cheongan}${test1991Sep8.jiji})`);
 
 const mar19 = getDailyInfo(new Date(2026, 2, 19));
 console.log(`2026-03-19 일진: ${mar19.iljin} (${mar19.cheongan}${mar19.jiji}) | 오행: ${mar19.ohaeng} | 에너지: ${mar19.energy}`);
