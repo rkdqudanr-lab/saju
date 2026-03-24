@@ -127,10 +127,10 @@ export function getDailyInfo(date) {
   };
 }
 
-export function getSaju(y,m,d,h){
+export function getSaju(y,m,d,h,min=0){
   const yg=((y-4)%10+10)%10,yj=((y-4)%12+12)%12;
   // 월지: 절기(입절) 기준 월주 지지
-  const wj = getMonthJijiIndex(y, m, d, h, 0);
+  const wj = getMonthJijiIndex(y, m, d, h, min);
   // 월간: 오호둔월법 — 인월(寅月) 천간 = (연간%5)*2+2, 이후 月마다 +1
   const wg = (((yg % 5) * 2 + 2) + (wj - 2 + 12) % 12) % 10;
   // 만세력 기준 에포크 보정: 1900-01-01 실제 일진 = 甲戌(index 10), +10 오프셋 적용
