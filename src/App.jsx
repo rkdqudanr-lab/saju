@@ -35,6 +35,7 @@ const RadarChart         = lazy(() => import("./components/RadarChart.jsx"));
 const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
 const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
 const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
+const AstrologyPage            = lazy(() => import("./components/AstrologyPage.jsx"));
 const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
 const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
 
@@ -357,7 +358,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
 
       <div className="app" id="main-content">
@@ -401,53 +402,9 @@ export default function App() {
                     </div>
                     {form.by ? (
                       <>
-                        {/* ── 오늘의 한마디 ── */}
-                        <div style={{ padding: '10px 0 6px', borderBottom: '1px solid var(--line)', marginBottom: 10 }}>
-                          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 4, letterSpacing: '.06em' }}>✦ {today.month}월 {today.day}일의 별 메시지</div>
-                          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic', lineHeight: 1.75 }}>"{getDailyWord(today.day)}"</div>
-                        </div>
-
-                        {/* ── 나의 사주 원국 (고정, 변하지 않는 기운) ── */}
-                        {saju && (
-                          <div className="pillars-wrap" style={{ marginBottom: 4 }}>
-                            <div className="pillars-hint">
-                              <span style={{ color: 'var(--gold)' }}>✦</span>
-                              나의 사주 원국 · 변하지 않는 기운
-                            </div>
-                            <div className="pillars">
-                              {[['연', 'yeon'], ['월', 'wol'], ['일', 'il'], ['시', 'si']].map(([l, k]) => (
-                                <div key={l} className="pillar">
-                                  <div className="p-lbl">{l}주</div>
-                                  <div className="p-hj">{saju[k].gh}</div>
-                                  <div className="p-hj">{saju[k].jh}</div>
-                                  <div className="p-kr">{saju[k].g}{saju[k].j}</div>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="oh-bar">
-                              {Object.entries(saju.or).map(([k, v]) => v > 0 && <div key={k} className="oh-seg" style={{ flex: v, background: OC[k] }} />)}
-                            </div>
-                            <div className="oh-tags">
-                              {Object.entries(saju.or).map(([k, v]) => v > 0 && (
-                                <span key={k} className="oh-tag" style={{ background: `${OC[k]}18`, color: OC[k], border: `1px solid ${OC[k]}28` }}>{OE[k]} {ON[k]} {v}</span>
-                              ))}
-                            </div>
-                            {sun && (
-                              <div className="astro-preview" style={{ marginTop: 8 }}>
-                                <div className="a-chip">{sun.s} {sun.n}</div>
-                                {moon && <div className="a-chip">🌙 달 {moon.n}</div>}
-                                {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* ── 구분선 ── */}
-                        <div style={{ height: 1, background: 'var(--line)', margin: '2px 0' }} />
-
-                        {/* ── 오늘의 기운 (매일 변함) ── */}
-                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 2 }}>
-                          ✦ 오늘의 기운 · {today.month}월 {today.day}일
+                        {/* ── 오늘 하루 나의 별숨 ── */}
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 2, marginBottom: 4 }}>
+                          ✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일
                           <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
                         </div>
                         {dailyResult ? (
@@ -464,49 +421,24 @@ export default function App() {
                             오늘 기운 확인하기 ✦
                           </button>
                         )}
+
+                        {/* ── 별숨에게 질문하기 ── */}
                         <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
                           별숨에게 질문하기 ✦
                         </button>
-                        {/* ── 오늘의 추천 질문 ── */}
-                        {formOk && (() => {
-                          const allQs = CATS_ALL.flatMap(c => c.qs.map(q => ({ q, icon: c.icon, label: c.label })));
-                          const recQ = allQs[(today.day - 1) % allQs.length];
-                          return recQ ? (
-                            <button
-                              onClick={() => { setDiy(recQ.q); setStep(2); }}
-                              style={{ width: '100%', marginTop: 8, background: 'none', border: '1px dashed var(--line)', borderRadius: 'var(--r1)', padding: '10px 14px', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', textAlign: 'left', lineHeight: 1.6 }}
-                            >
-                              <span style={{ color: 'var(--gold)', marginRight: 4 }}>{recQ.icon} 오늘의 추천질문</span><br />"{recQ.q}"
-                            </button>
-                          ) : null;
-                        })()}
-                        {formOk && saju && (
-                          <>
-                            <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setStep(13)}>
-                              나의 원국 해설 보기 ✦
-                            </button>
-                            <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid rgba(180,140,50,0.5)', color: 'var(--gold)' }} onClick={() => setStep(14)}>
-                              별숨의 종합 사주 풀어보기 ✦
-                            </button>
-                          </>
-                        )}
-                        <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setShowDiary(true)}>
-                          오늘 있었던 일 적기 ✦
-                        </button>
 
-                        {/* ── 하루 한 질문 카드 ── */}
+                        {/* ── 오늘 별숨의 질문 ── */}
                         {(() => {
                           const qIdx = quiz.nextQIdx || 0;
                           const todayDone = isTodayAnswered(quiz);
                           const allDone = qIdx >= DAILY_QUESTIONS.length;
                           const q = DAILY_QUESTIONS[Math.min(qIdx, DAILY_QUESTIONS.length - 1)];
                           const answeredCount = Object.keys(quiz.answers || {}).length;
-                          // 오늘 완료 시: 방금 답한 질문 (nextQIdx - 1)
                           const lastAnsweredQ = DAILY_QUESTIONS[qIdx > 0 ? qIdx - 1 : 0];
                           const lastAnsweredVal = lastAnsweredQ ? quiz.answers[lastAnsweredQ.id] : null;
 
                           return (
-                            <div style={{ marginTop: 12, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', border: '1px solid var(--line)' }}>
+                            <div style={{ marginTop: 10, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', border: '1px solid var(--line)' }}>
                               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
                                 ✦ 오늘 별숨의 질문 {answeredCount > 0 && <span style={{ fontWeight: 400, color: 'var(--t4)', marginLeft: 6 }}>{answeredCount}개 답했어요</span>}
                               </div>
@@ -567,6 +499,46 @@ export default function App() {
                             </div>
                           );
                         })()}
+
+                        {/* ── 오늘의 추천질문 (버튼) ── */}
+                        {formOk && (() => {
+                          const allQs = CATS_ALL.flatMap(c => c.qs.map(q => ({ q, icon: c.icon, label: c.label })));
+                          const recQ = allQs[(today.day - 1) % allQs.length];
+                          return recQ ? (
+                            <button
+                              onClick={() => { setDiy(recQ.q); setStep(2); }}
+                              style={{ width: '100%', marginTop: 10, background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', color: 'var(--t2)', fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer', textAlign: 'left', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: 4 }}
+                            >
+                              <span style={{ color: 'var(--gold)', fontSize: 'var(--xs)' }}>{recQ.icon} 오늘의 추천질문</span>
+                              <span>"{recQ.q}"</span>
+                            </button>
+                          ) : null;
+                        })()}
+
+                        {/* ── 별숨의 종합사주 ── */}
+                        {formOk && saju && (
+                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid rgba(180,140,50,0.5)', color: 'var(--gold)' }} onClick={() => setStep(14)}>
+                            별숨의 종합사주 ✦
+                          </button>
+                        )}
+
+                        {/* ── 별숨의 종합 점성술 ── */}
+                        {formOk && sun && (
+                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setStep(16)}>
+                            별숨의 종합 점성술 ✦
+                          </button>
+                        )}
+
+                        {/* ── 오늘 있었던 일 적기 ── */}
+                        <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setShowDiary(true)}>
+                          오늘 있었던 일 적기 ✦
+                        </button>
+
+                        {/* ── 별 메시지 (맨 아래) ── */}
+                        <div style={{ padding: '14px 0 6px', borderTop: '1px solid var(--line)', marginTop: 14 }}>
+                          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 4, letterSpacing: '.06em' }}>✦ {today.month}월 {today.day}일의 별 메시지</div>
+                          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic', lineHeight: 1.75 }}>"{getDailyWord(today.day)}"</div>
+                        </div>
                       </>
                     ) : (
                       <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={() => setStep(1)}>
@@ -1280,6 +1252,19 @@ export default function App() {
               saju={saju}
               sun={sun}
               onFinish={handleOnboardingFinish}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 16: 별숨의 종합 점성술 ── */}
+        {step === 16 && (
+          <Suspense fallback={<PageSpinner />}>
+            <AstrologyPage
+              sun={sun}
+              moon={moon}
+              asc={asc}
+              form={form}
+              buildCtx={buildCtx}
             />
           </Suspense>
         )}

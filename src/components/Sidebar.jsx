@@ -118,7 +118,9 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 { icon: '🗓️', label: '별숨 달력', s: 10 },
                 { icon: '🕸️', label: '나의 궁합 레이더', s: 11 },
                 { icon: '🎂', label: '기념일 운세', s: 12 },
-                { icon: '✦', label: '별숨의 종합 사주', s: 14 },
+                { icon: '🀄', label: '나의 사주원국', s: 13 },
+                { icon: '✦', label: '별숨의 종합사주', s: 14 },
+                { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
               ].map(m => (
                 <li key={m.s}>
                   <button

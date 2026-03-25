@@ -16,7 +16,7 @@ import { buildSystem } from "../lib/prompts/buildSystem/index.js";
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -41,6 +41,7 @@ function validateRequest(body) {
       isNatal: !!isNatal,
       isZodiac: !!isZodiac,
       isComprehensive: !!isComprehensive,
+      isAstrology: !!isAstrology,
     },
   };
 }
@@ -53,7 +54,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: validation.reason });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
@@ -70,7 +71,7 @@ export default async function handler(req, res) {
   const systemBase = await buildSystem(
     today, season, categoryHint, endingHint, timeHorizon,
     userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision,
-    categoryExample, isNatal, isZodiac, isComprehensive
+    categoryExample, isNatal, isZodiac, isComprehensive, isAstrology
   );
 
   const systemWithContext = systemBase
@@ -79,13 +80,14 @@ export default async function handler(req, res) {
       : '');
 
   // 감성 깊이가 필요한 모드는 sonnet, 나머지는 haiku (비용 최적화)
-  const model = (isLetter || isStory || isComprehensive)
+  const model = (isLetter || isStory || isComprehensive || isAstrology)
     ? "claude-sonnet-4-20250514"
     : "claude-haiku-4-5-20251001";
 
   // 모드별 최대 토큰 분기 (불필요한 장문 생성 방지)
   const maxTokens =
     isComprehensive ? 3000 :
+    isAstrology     ? 3000 :
     isReport        ? 2000 :
     isLetter        ? 1000 :
     isStory         ? 2500 :
