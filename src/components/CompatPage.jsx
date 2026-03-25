@@ -391,8 +391,8 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                   onChange={e => setPartner(p => ({ ...p, name: e.target.value }))}
                   style={{ marginBottom: 6, padding: '7px 10px', fontSize: 'var(--xs)' }} />
                 <div className="row" style={{ gap: 4 }}>
-                  <input className="inp" placeholder="년도" maxLength={4} inputMode="numeric"
-                    value={partner.by} onChange={e => setPartner(p => ({ ...p, by: e.target.value.replace(/\D/, '') }))}
+                  <input className="inp" placeholder="년도" inputMode="numeric"
+                    value={partner.by} onChange={e => setPartner(p => ({ ...p, by: e.target.value.replace(/\D/, '').slice(0, 4) }))}
                     style={{ marginBottom: 0, padding: '7px 6px', fontSize: 'var(--xs)' }} />
                   <select className="inp" value={partner.bm} onChange={e => setPartner(p => ({ ...p, bm: e.target.value }))}
                     style={{ marginBottom: 0, padding: '7px 4px', fontSize: 'var(--xs)' }}>
