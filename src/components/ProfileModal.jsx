@@ -129,8 +129,8 @@ export default function ProfileModal({profile,setProfile,onClose}){
           <div style={{fontSize:'var(--xs)',color:'var(--t4)',marginBottom:8,marginTop:-8}}>생년월일을 알면 더 깊이 볼 수 있어요</div>
           <div className="row" style={{marginBottom:'var(--sp2)'}}>
             <div className="col">
-              <input className="inp" placeholder="출생년도" maxLength={4} inputMode="numeric"
-                value={local.partnerBy} onChange={e=>upd('partnerBy',e.target.value.replace(/\D/,''))}
+              <input className="inp" placeholder="출생년도" inputMode="numeric"
+                value={local.partnerBy} onChange={e=>upd('partnerBy',e.target.value.replace(/\D/,'').slice(0,4))}
                 style={{marginBottom:0}}/>
             </div>
             <div className="col">
