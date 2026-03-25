@@ -69,6 +69,7 @@ export default function App() {
       return !(saved?.by && saved?.bm && saved?.bd);
     } catch { return true; }
   });
+  const [fieldTouched, setFieldTouched] = useState({ by: false, bm: false, bd: false });
   const [showAllCats, setShowAllCats] = useState(false);
   const [showSubNudge, setShowSubNudge] = useState(false);
   const [quiz, setQuiz] = useState(() => loadQuiz());
@@ -666,9 +667,9 @@ export default function App() {
                   <fieldset style={{border:'none',padding:0,margin:0}}>
                     <legend className="lbl">생년월일</legend>
                     <div className="row" style={{ marginBottom: 'var(--sp3)' }}>
-                      <div className="col"><input id="inp-by" className="inp" placeholder="1998" maxLength={4} inputMode="numeric" pattern="[0-9]*" aria-label="출생 연도" value={form.by} onChange={e => setForm(f => ({ ...f, by: e.target.value.replace(/\D/, '') }))} style={{ marginBottom: 0 }} /></div>
-                      <div className="col"><select id="inp-bm" className="inp" aria-label="출생 월" value={form.bm} onChange={e => setForm(f => ({ ...f, bm: e.target.value }))} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
-                      <div className="col"><select id="inp-bd" className="inp" aria-label="출생 일" value={form.bd} onChange={e => setForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
+                      <div className="col"><input id="inp-by" className="inp" placeholder="1998" inputMode="numeric" pattern="[0-9]*" aria-label="출생 연도" value={form.by} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); setForm(f => ({ ...f, by: v })); setFieldTouched(t => ({ ...t, by: true })); }} style={{ marginBottom: 0 }} /></div>
+                      <div className="col"><select id="inp-bm" className="inp" aria-label="출생 월" value={form.bm} onChange={e => { setForm(f => ({ ...f, bm: e.target.value })); setFieldTouched(t => ({ ...t, bm: true })); }} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
+                      <div className="col"><select id="inp-bd" className="inp" aria-label="출생 일" value={form.bd} onChange={e => { setForm(f => ({ ...f, bd: e.target.value })); setFieldTouched(t => ({ ...t, bd: true })); }} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
                     </div>
                   </fieldset>
 
@@ -725,7 +726,7 @@ export default function App() {
                       {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
                     </div>
                   )}
-                  <button className="btn-main" disabled={!formOk} onClick={() => { if (editingMyProfile) { setEditingMyProfile(false); } else { setFormNeedsConfirm(false); setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
+                  <button className="btn-main" disabled={editingMyProfile ? !formOk : !(formOk && fieldTouched.by && fieldTouched.bm && fieldTouched.bd)} onClick={() => { if (editingMyProfile) { setEditingMyProfile(false); } else { setFormNeedsConfirm(false); setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
                 </div>
               )}
             </div>
