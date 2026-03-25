@@ -67,17 +67,19 @@ export function useUserProfile() {
         const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: data.profileImage || null };
         setUser(userData);
         localStorage.setItem('byeolsoom_user', JSON.stringify(userData));
-        const { error: sbError } = await supabase
-          .from('users')
-          .upsert({
-            kakao_id: String(data.id),
-            nickname: data.nickname || '별님',
-            updated_at: new Date().toISOString(),
-          }, {
-            onConflict: 'kakao_id',
-            ignoreDuplicates: false,
-          })
-        if (sbError) console.error('[별숨] Supabase upsert 오류:', sbError)
+        if (supabase) {
+          const { error: sbError } = await supabase
+            .from('users')
+            .upsert({
+              kakao_id: String(data.id),
+              nickname: data.nickname || '별님',
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'kakao_id',
+              ignoreDuplicates: false,
+            })
+          if (sbError) console.error('[별숨] Supabase upsert 오류:', sbError)
+        }
       } catch (err) { console.error('[별숨] 카카오 code 오류:', err); setLoginError('카카오 로그인에 실패했어요. 다시 시도해봐요 🌙'); }
     })();
   }, []);
