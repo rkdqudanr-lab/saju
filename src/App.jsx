@@ -219,6 +219,10 @@ export default function App() {
   useEffect(() => {
     if (step === 3) return;
     if (typeof window.gtag === 'function') window.gtag('event', 'step_change', { step });
+    if (step === 2 && typeof window.gtag === 'function') window.gtag('event', 'step2_enter');
+    if (step === 5 && typeof window.gtag === 'function') window.gtag('event', 'chat_page_enter');
+    if (step === 6 && typeof window.gtag === 'function') window.gtag('event', 'report_page_enter');
+    if (step === 7 && typeof window.gtag === 'function') window.gtag('event', 'compat_page_enter');
   }, [step]);
 
   // ── 브라우저 히스토리 동기화 (뒤로가기 UX 개선) ──
@@ -272,6 +276,7 @@ export default function App() {
 
   // ── 이미지 저장 ──
   const shareCard = useCallback((idx) => {
+    if (typeof window.gtag === 'function') window.gtag('event', 'image_save');
     const q = selQs[idx] || '';
     const parsedText = parseAccSummary(answers[idx] || '').text;
     saveShareCard({ idx, q, parsedText, isDark, today });
@@ -287,6 +292,7 @@ export default function App() {
 
   // ── 공유 ──
   const shareResult = useCallback((type, text, label = '') => {
+    if (typeof window.gtag === 'function') window.gtag('event', 'share', { type });
     const appUrl = window.location.origin;
     let shareText = '';
     if (type === 'prophecy') {
@@ -343,7 +349,7 @@ export default function App() {
         </div>
       )}
       {step >= 1 && !user && (
-        <button className="user-chip" onClick={kakaoLogin} style={{ border: '1px solid #FEE500', background: 'rgba(254,229,0,.1)' }}>
+        <button className="user-chip" onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }} style={{ border: '1px solid #FEE500', background: 'rgba(254,229,0,.1)' }}>
           <span style={{ fontSize: '.75rem', color: 'var(--t2)' }}>카카오 로그인</span>
         </button>
       )}
@@ -573,7 +579,7 @@ export default function App() {
                     <p style={{ fontSize: 'var(--sm)', color: 'var(--t2)', textAlign: 'center', lineHeight: 1.8, margin: 0 }}>
                       사주와 별자리, 두 개의 언어로<br/>지금의 당신을 읽어드려요
                     </p>
-                    <button className="kakao-login-full" onClick={kakaoLogin} style={{ fontSize: '1rem', padding: '16px' }}>
+                    <button className="kakao-login-full" onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }} style={{ fontSize: '1rem', padding: '16px' }}>
                       <span className="kakao-icon-wrap">
                         <svg width="18" height="17" viewBox="0 0 18 18" fill="none">
                           <path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919" />
@@ -806,7 +812,7 @@ export default function App() {
                 {!diy.trim() && (<>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.06em' }}>또는 고민 카테고리에서 골라봐요</div>
                 <div className="cat-tabs">
-                  {(showAllCats ? CATS_ALL : CATS).map((c, i) => <button key={c.id} className={`cat-tab ${cat === i ? 'on' : ''}`} onClick={() => setCat(i)}>{c.icon} {c.label}</button>)}
+                  {(showAllCats ? CATS_ALL : CATS).map((c, i) => <button key={c.id} className={`cat-tab ${cat === i ? 'on' : ''}`} onClick={() => { setCat(i); if (typeof window.gtag === 'function') window.gtag('event', 'category_select', { cat: CATS[i]?.id }); }}>{c.icon} {c.label}</button>)}
                 </div>
                 <button
                   className="res-btn"
@@ -836,7 +842,7 @@ export default function App() {
                       disabled={!on && selQs.length >= maxQ}
                       onClick={() => {
                         if (on) rmQ(selQs.indexOf(q));
-                        else { addQ(q); setTimeout(() => askBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150); }
+                        else { addQ(q); if (typeof window.gtag === 'function') window.gtag('event', 'question_add', { cat: CATS[cat]?.id }); setTimeout(() => askBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150); }
                       }}>{q}</button>;
                   })}
                 </div>
@@ -1011,7 +1017,7 @@ export default function App() {
                     <div className="kakao-nudge">
                       <span style={{ fontSize: '1.1rem' }}>🌙</span>
                       <span className="kakao-nudge-text">로그인하면 연인 운세 · 직장 맞춤 · 내 기록이 모두 저장돼요</span>
-                      <button className="kakao-btn" style={{ width: 'auto', padding: '6px 14px', fontSize: 'var(--xs)' }} onClick={kakaoLogin}>카카오 로그인</button>
+                      <button className="kakao-btn" style={{ width: 'auto', padding: '6px 14px', fontSize: 'var(--xs)' }} onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }}>카카오 로그인</button>
                     </div>
                   )}
 
