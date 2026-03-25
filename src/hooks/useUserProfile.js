@@ -30,6 +30,10 @@ export function useUserProfile() {
   const [editingOtherIdx, setEditingOtherIdx]         = useState(null); // null = 추가모드, number = 수정모드
   const [showProfileModal, setShowProfileModal]       = useState(false);
   const [showOtherProfileModal, setShowOtherProfileModal] = useState(false);
+  const [showConsentModal, setShowConsentModal]       = useState(false);
+  const [consentFlags, setConsentFlags] = useState(() => {
+    try { const c = localStorage.getItem('byeolsoom_consent'); return c ? JSON.parse(c) : { history: true, partner: false, workplace: true, worry: false }; } catch { return { history: true, partner: false, workplace: true, worry: false }; }
+  });
   const [loginError, setLoginError]                   = useState('');
 
   // ── 카카오 SDK 초기화 ──
@@ -79,7 +83,8 @@ export function useUserProfile() {
               ignoreDuplicates: false,
             })
           if (sbError) console.error('[별숨] Supabase upsert 오류:', sbError)
-        }
+          else if (!localStorage.getItem('byeolsoom_consent')) setShowConsentModal(true)
+        } else if (!localStorage.getItem('byeolsoom_consent')) setShowConsentModal(true)
       } catch (err) { console.error('[별숨] 카카오 code 오류:', err); setLoginError('카카오 로그인에 실패했어요. 다시 시도해봐요 🌙'); }
     })();
   }, []);
@@ -126,6 +131,19 @@ export function useUserProfile() {
     setShowOtherProfileModal(false);
   }, [otherProfiles, otherForm, editingOtherIdx]);
 
+  const handleConsentConfirm = useCallback(async (flags) => {
+    const saved = flags ?? consentFlags;
+    try { localStorage.setItem('byeolsoom_consent', JSON.stringify(saved)); } catch (e) {}
+    if (supabase) {
+      const kakaoId = (() => { try { const u = localStorage.getItem('byeolsoom_user'); return u ? JSON.parse(u).id : null; } catch { return null; } })();
+      if (kakaoId) {
+        const { error } = await supabase.from('users').upsert({ kakao_id: kakaoId, consent_flags: saved, updated_at: new Date().toISOString() }, { onConflict: 'kakao_id', ignoreDuplicates: false });
+        if (error) console.error('[별숨] consent_flags 저장 오류:', error);
+      }
+    }
+    setShowConsentModal(false);
+  }, [consentFlags]);
+
   return {
     user, setUser,
     profile, setProfile,
@@ -136,6 +154,9 @@ export function useUserProfile() {
     editingOtherIdx, setEditingOtherIdx,
     showProfileModal, setShowProfileModal,
     showOtherProfileModal, setShowOtherProfileModal,
+    showConsentModal, setShowConsentModal,
+    consentFlags, setConsentFlags,
+    handleConsentConfirm,
     loginError, setLoginError,
     kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile,
   };

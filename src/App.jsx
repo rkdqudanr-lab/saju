@@ -36,6 +36,7 @@ const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage
 const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
 const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
 const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
+const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
 
 function PageSpinner() {
   return (
@@ -106,7 +107,8 @@ export default function App() {
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
           kakaoLogin, kakaoLogout, saveOtherProfile,
-          editingOtherIdx, setEditingOtherIdx, startEditOtherProfile } = userProfile;
+          editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
+          showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm } = userProfile;
 
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
@@ -1444,6 +1446,17 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── 동의 팝업 ── */}
+      {showConsentModal && (
+        <Suspense fallback={<PageSpinner />}>
+          <ConsentModal
+            flags={consentFlags}
+            setFlags={setConsentFlags}
+            onConfirm={() => handleConsentConfirm(consentFlags)}
+          />
+        </Suspense>
       )}
     </>
   );
