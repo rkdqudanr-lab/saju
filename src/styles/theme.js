@@ -42,8 +42,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .toast-info{background:var(--bg3);border:1px solid var(--line);color:var(--t1)}
 
 .app{min-height:100vh;position:relative;overflow-x:hidden}
-.page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--sp3) var(--sp2) var(--sp5);position:relative;z-index:1}
-.page-top{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:72px var(--sp2) var(--sp5);position:relative;z-index:1}
+.page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--sp3) var(--sp3) var(--sp5);position:relative;z-index:1}
+.page-top{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:72px var(--sp3) var(--sp5);position:relative;z-index:1}
 .inner{width:100%;max-width:460px}
 .bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
 
