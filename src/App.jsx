@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } fro
 // utils
 import { OC, OE, ON, ILGAN_POETIC, CGO } from "./utils/saju.js";
 import { getSun } from "./utils/astrology.js";
-import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT, DAILY_QUESTIONS } from "./utils/constants.js";
+import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT, DAILY_QUESTIONS, stripMarkdown } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
 import { loadHistory, deleteHistory } from "./utils/history.js";
 import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/imageExport.js";
@@ -35,6 +35,7 @@ const RadarChart         = lazy(() => import("./components/RadarChart.jsx"));
 const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
 const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
 const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
+const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
 
 function PageSpinner() {
   return (
@@ -76,6 +77,15 @@ export default function App() {
   const copyTimer = useRef(null);
   const resultsRef = useRef(null);
   const askBtnRef = useRef(null);
+
+  // ── 온보딩 카드 상태 ──
+  const [onboardingNatal, setOnboardingNatal] = useState('');
+  const [onboardingZodiac, setOnboardingZodiac] = useState('');
+  const [onboardingNatalLoading, setOnboardingNatalLoading] = useState(false);
+  const [onboardingZodiacLoading, setOnboardingZodiacLoading] = useState(false);
+  const [onboardingDone] = useState(() => localStorage.getItem('byeolsoom_onboarded') === '1');
+  const onboardingNatalFetching = useRef(false);
+  const onboardingZodiacFetching = useRef(false);
 
   const showToast = useCallback((message, type = 'info') => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -126,6 +136,12 @@ export default function App() {
       setTimeout(() => setShowSubNudge(true), 800);
     }
   }, [_handleTypingDone, user, curPkg, IS_BETA]);
+
+  // ── 온보딩 완료 ──
+  const handleOnboardingFinish = useCallback(() => {
+    localStorage.setItem('byeolsoom_onboarded', '1');
+    setStep(0);
+  }, [setStep]);
 
   // ── 빠른 개인화 입력 저장 ──
   const handleQuizAnswer = useCallback((question, value) => {
@@ -246,6 +262,56 @@ export default function App() {
     }
   }, [user?.id, form.by, form.bm, form.bd, step]); // askDailyHoroscope 레퍼런스 제외 (무한루프 방지)
 
+  // ── 온보딩 카드: 사주/별자리 해석 미리 불러오기 ──
+  useEffect(() => {
+    if (step !== 15 || !formOk) return;
+    const natalKey  = `byeolsoom_natal_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
+    const zodiacKey = `byeolsoom_zodiac_${form.bm}${form.bd}`;
+
+    // 사주 원국 (캐시 우선)
+    const cachedN = localStorage.getItem(natalKey);
+    if (cachedN) {
+      setOnboardingNatal(cachedN);
+    } else if (saju && !onboardingNatalFetching.current) {
+      onboardingNatalFetching.current = true;
+      setOnboardingNatalLoading(true);
+      const sajuMsg = `나의 사주 원국을 해석해주세요. 연주 ${saju.yeon.g}${saju.yeon.j} / 월주 ${saju.wol.g}${saju.wol.j} / 일주 ${saju.il.g}${saju.il.j} / 시주 ${saju.si.g}${saju.si.j}.`;
+      fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userMessage: sajuMsg, context: buildCtx(), isNatal: true }),
+      }).then(r => r.json()).then(data => {
+        const cleaned = stripMarkdown(data.text || '');
+        setOnboardingNatal(cleaned);
+        localStorage.setItem(natalKey, cleaned);
+      }).catch(() => {}).finally(() => {
+        setOnboardingNatalLoading(false);
+        onboardingNatalFetching.current = false;
+      });
+    }
+
+    // 별자리 (캐시 우선)
+    const cachedZ = localStorage.getItem(zodiacKey);
+    if (cachedZ) {
+      setOnboardingZodiac(cachedZ);
+    } else if (sun && !onboardingZodiacFetching.current) {
+      onboardingZodiacFetching.current = true;
+      setOnboardingZodiacLoading(true);
+      fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userMessage: `나의 별자리(${sun.n} ${sun.s}) 해설을 해주세요.`, context: buildCtx(), isZodiac: true }),
+      }).then(r => r.json()).then(data => {
+        const cleaned = stripMarkdown(data.text || '');
+        setOnboardingZodiac(cleaned);
+        localStorage.setItem(zodiacKey, cleaned);
+      }).catch(() => {}).finally(() => {
+        setOnboardingZodiacLoading(false);
+        onboardingZodiacFetching.current = false;
+      });
+    }
+  }, [step, formOk]); // saju/sun/buildCtx 은 formOk 가 true 일 때 항상 유효
+
   // ── 테마 ──
   useEffect(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }, [isDark]);
   const toggleDark = () => {
@@ -338,6 +404,7 @@ export default function App() {
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
       {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
 
       <div className="app" id="main-content">
 
@@ -380,6 +447,12 @@ export default function App() {
                     </div>
                     {form.by ? (
                       <>
+                        {/* ── 오늘의 한마디 ── */}
+                        <div style={{ padding: '10px 0 6px', borderBottom: '1px solid var(--line)', marginBottom: 10 }}>
+                          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 4, letterSpacing: '.06em' }}>✦ {today.month}월 {today.day}일의 별 메시지</div>
+                          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic', lineHeight: 1.75 }}>"{getDailyWord(today.day)}"</div>
+                        </div>
+
                         {/* ── 나의 사주 원국 (고정, 변하지 않는 기운) ── */}
                         {saju && (
                           <div className="pillars-wrap" style={{ marginBottom: 4 }}>
@@ -440,6 +513,19 @@ export default function App() {
                         <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
                           별숨에게 질문하기 ✦
                         </button>
+                        {/* ── 오늘의 추천 질문 ── */}
+                        {formOk && (() => {
+                          const allQs = CATS_ALL.flatMap(c => c.qs.map(q => ({ q, icon: c.icon, label: c.label })));
+                          const recQ = allQs[(today.day - 1) % allQs.length];
+                          return recQ ? (
+                            <button
+                              onClick={() => { setDiy(recQ.q); setStep(2); }}
+                              style={{ width: '100%', marginTop: 8, background: 'none', border: '1px dashed var(--line)', borderRadius: 'var(--r1)', padding: '10px 14px', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', textAlign: 'left', lineHeight: 1.6 }}
+                            >
+                              <span style={{ color: 'var(--gold)', marginRight: 4 }}>{recQ.icon} 오늘의 추천질문</span><br />"{recQ.q}"
+                            </button>
+                          ) : null;
+                        })()}
                         {formOk && saju && (
                           <>
                             <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setStep(13)}>
@@ -554,28 +640,29 @@ export default function App() {
                 )}
               </div>
 
-              <div className="land-scroll-hint"><span>↓</span></div>
+              {!user && <div className="land-scroll-hint"><span>↓</span></div>}
             </div>
 
-            <div className="inner land-scroll-zone">
-              <SamplePreview />
-              <div className="daily-word">
-                <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
-                <div className="daily-text">{'"' + getDailyWord(today.day) + '"'}</div>
-              </div>
-              <div className="rev-wrap">
-                <div className="rev-track">
-                  {REVIEWS.map((r, i) => (
-                    <div key={i} className="rev-card">
-                      <div className="rev-stars">{r.star}</div>
-                      <div className="rev-text">{'"' + r.text + '"'}</div>
-                      <div className="rev-nick">{r.nick}</div>
-                    </div>
-                  ))}
+            {!user && (
+              <div className="inner land-scroll-zone">
+                <SamplePreview />
+                <div className="daily-word">
+                  <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
+                  <div className="daily-text">{'"' + getDailyWord(today.day) + '"'}</div>
+                </div>
+                <div className="rev-wrap">
+                  <div className="rev-track">
+                    {REVIEWS.map((r, i) => (
+                      <div key={i} className="rev-card">
+                        <div className="rev-stars">{r.star}</div>
+                        <div className="rev-text">{'"' + r.text + '"'}</div>
+                        <div className="rev-nick">{r.nick}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-
-            </div>
+            )}
           </div>
         )}
 
@@ -719,7 +806,7 @@ export default function App() {
                       {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
                     </div>
                   )}
-                  <button className="btn-main" disabled={!formOk} onClick={() => { if (editingMyProfile) { setEditingMyProfile(false); } else { setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
+                  <button className="btn-main" disabled={!formOk} onClick={() => { if (editingMyProfile) { setEditingMyProfile(false); } else if (!onboardingDone) { setSelQs([]); setStep(15); } else { setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
                 </div>
               )}
             </div>
@@ -1228,6 +1315,23 @@ export default function App() {
               sun={sun}
               form={form}
               buildCtx={buildCtx}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 15: 온보딩 카드 ── */}
+        {step === 15 && (
+          <Suspense fallback={<PageSpinner />}>
+            <OnboardingCards
+              natalText={onboardingNatal}
+              zodiacText={onboardingZodiac}
+              natalLoading={onboardingNatalLoading}
+              zodiacLoading={onboardingZodiacLoading}
+              user={user}
+              kakaoLogin={kakaoLogin}
+              saju={saju}
+              sun={sun}
+              onFinish={handleOnboardingFinish}
             />
           </Suspense>
         )}
