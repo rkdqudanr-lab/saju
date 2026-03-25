@@ -456,8 +456,8 @@ select.inp option{background:var(--bg2)}
 .kakao-btn svg{flex-shrink:0}
 
 /* ══ 업그레이드 모달 ══ */
-.upgrade-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-.upgrade-modal{width:100%;max-width:480px;background:var(--bg);border-radius:var(--r2) var(--r2) 0 0;padding:var(--sp3);max-height:90svh;overflow-y:auto}
+.upgrade-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.upgrade-modal{width:100%;max-width:480px;background:var(--bg);border-radius:var(--r2);padding:28px 24px;max-height:85svh;overflow-y:auto}
 .upgrade-modal-title{font-size:var(--md);font-weight:700;color:var(--t1);margin-bottom:6px}
 .upgrade-modal-sub{font-size:var(--xs);color:var(--t3);margin-bottom:var(--sp2);line-height:1.5}
 .upgrade-pkgs{display:flex;flex-direction:column;gap:10px}

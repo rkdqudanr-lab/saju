@@ -18,7 +18,7 @@ export default function ConsentModal({ flags, setFlags, onConfirm }) {
       aria-modal="true"
       aria-label="별숨 데이터 동의"
     >
-      <div className="upgrade-modal" onClick={e => e.stopPropagation()} style={{ paddingBottom: 32 }}>
+      <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
 
         {/* 헤더 */}
         <div style={{ textAlign: 'center', fontSize: '1.4rem', marginBottom: 6 }}>🌙</div>
