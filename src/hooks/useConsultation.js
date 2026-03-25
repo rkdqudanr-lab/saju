@@ -147,6 +147,7 @@ export function useConsultation(buildCtx, formOk) {
 
   const askQuick = useCallback(async (q) => {
     if (!q.trim()) return;
+    if (typeof window.gtag === 'function') window.gtag('event', 'ask_quick', { question: q.slice(0, 30) });
     if (!formOk) { setSelQs([q.trim()]); setStep(1); return; }
     setSelQs([q.trim()]);
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
@@ -171,6 +172,7 @@ export function useConsultation(buildCtx, formOk) {
 
   const askDailyHoroscope = useCallback(async () => {
     if (!formOk) { setStep(1); return; }
+    if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
     // 이미 오늘 결과가 있으면 바로 보여줌 (API 호출 없음)
     const cached = (() => {
       try {
@@ -178,7 +180,7 @@ export function useConsultation(buildCtx, formOk) {
         return (parsed && typeof parsed.text === 'string') ? parsed : null;
       } catch { return null; }
     })();
-    if (cached) { setDailyResult(cached); return; }
+    if (cached) { if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_cache_hit'); setDailyResult(cached); return; }
     // 없으면 메인 프롬프트로 새로 불러오기
     setDailyLoading(true);
     try {
@@ -208,6 +210,7 @@ export function useConsultation(buildCtx, formOk) {
   const retryAnswer = useCallback(async (idx) => {
     const q = selQs[idx];
     if (!q) return;
+    if (typeof window.gtag === 'function') window.gtag('event', 'retry_answer', { idx });
     setAnswers(prev => { const a = [...prev]; a[idx] = ''; return a; });
     try {
       const ans = await callApi(`[질문]\n${q}`);
@@ -234,7 +237,7 @@ export function useConsultation(buildCtx, formOk) {
   // ── 채팅 ──
   const sendChat = useCallback(async () => {
     if (!chatInput.trim() || chatLoading) return;
-    if (chatLeft <= 0) { setShowUpgradeModal(true); return; }
+    if (chatLeft <= 0) { if (typeof window.gtag === 'function') window.gtag('event', 'chat_limit_reached'); setShowUpgradeModal(true); return; }
     if (typeof window.gtag === 'function') window.gtag('event', 'send_chat');
     const userMsg = chatInput.trim();
     setChatInput('');
