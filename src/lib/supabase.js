@@ -8,3 +8,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// 연동 테스트 (브라우저 콘솔에서 확인용, 배포 전 삭제)
+// import { supabase } from './supabase.js'
+// const { data, error } = await supabase.from('users').select('count')
+// console.log('[별숨] Supabase 연결 확인:', data, error)
