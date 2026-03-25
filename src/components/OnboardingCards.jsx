@@ -309,29 +309,11 @@ export default function OnboardingCards({ saju, sun, onFinish }) {
           {cards[idx]}
         </div>
 
-        {/* 다음 / 시작 버튼 */}
+        {/* 다음 / 다시 보지 않기 버튼 */}
         <div style={{ marginTop: 28 }}>
           <button className="btn-main" onClick={next} style={{ width: "100%" }}>
-            {idx === TOTAL - 1 ? "별숨 시작하기 ✦" : "다음 →"}
+            {idx === 0 ? "다음 →" : "다시 보지 않기"}
           </button>
-          {idx > 0 && idx < TOTAL - 1 && (
-            <button
-              onClick={() => onFinish?.()}
-              style={{
-                width: "100%",
-                marginTop: 10,
-                background: "none",
-                border: "none",
-                color: "var(--t4)",
-                fontSize: "var(--xs)",
-                fontFamily: "var(--ff)",
-                cursor: "pointer",
-                padding: "8px",
-              }}
-            >
-              건너뛰기
-            </button>
-          )}
         </div>
       </div>
     </div>
