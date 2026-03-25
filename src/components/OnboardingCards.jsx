@@ -35,6 +35,7 @@ const FEATURES_MORE = [
 
 // ── 인트로 카드 ──
 function IntroCard({ saju, sun }) {
+  const domKey = saju?.dom || '금';
   return (
     <div style={{ textAlign: "center", padding: "8px 0 12px" }}>
       <div
@@ -67,7 +68,7 @@ function IntroCard({ saju, sun }) {
         }}
       >
         {saju && sun
-          ? `${ON[saju.dom]} 기운을 품은 ${sun.n}인 당신의\n사주와 별자리를 함께 읽어드릴게요.`
+          ? `${ON[domKey]} 기운을 품은 ${sun.n}인 당신의\n사주와 별자리를 함께 읽어드릴게요.`
           : `사주와 별자리, 두 개의 언어로\n지금의 당신을 읽어드릴게요.`}
       </p>
       {saju && (
@@ -76,13 +77,13 @@ function IntroCard({ saju, sun }) {
             style={{
               padding: "5px 14px",
               borderRadius: 20,
-              background: `${OC[saju.dom]}18`,
-              color: OC[saju.dom],
-              border: `1px solid ${OC[saju.dom]}28`,
+              background: `${OC[domKey]}18`,
+              color: OC[domKey],
+              border: `1px solid ${OC[domKey]}28`,
               fontSize: "var(--xs)",
             }}
           >
-            {ON[saju.dom]} 기운
+            {ON[domKey]} 기운
           </span>
           {sun && (
             <span
@@ -98,133 +99,6 @@ function IntroCard({ saju, sun }) {
               {sun.s} {sun.n}
             </span>
           )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── 해석 카드 (사주 / 별자리) ──
-function ReadingCard({ title, subtitle, text, loading, user, kakaoLogin }) {
-  const PREVIEW_LEN = 500;
-  const isBlurred = !user && text && text.length > PREVIEW_LEN;
-  const displayText = isBlurred ? text.slice(0, PREVIEW_LEN) : text;
-
-  return (
-    <div
-      style={{
-        background: "var(--bg1)",
-        border: "1px solid var(--line)",
-        borderRadius: 20,
-        padding: "22px 18px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "var(--sm)",
-          fontWeight: 700,
-          color: "var(--gold)",
-          marginBottom: 4,
-          letterSpacing: ".04em",
-        }}
-      >
-        {title}
-      </div>
-      {subtitle && (
-        <div style={{ fontSize: "var(--xs)", color: "var(--t4)", marginBottom: 16, lineHeight: 1.5 }}>
-          {subtitle}
-        </div>
-      )}
-
-      {loading ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 10,
-            padding: "36px 0",
-          }}
-        >
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              border: "2.5px solid var(--line)",
-              borderTopColor: "var(--gold)",
-              borderRadius: "50%",
-              animation: "orbSpin 0.8s linear infinite",
-            }}
-          />
-          <span style={{ fontSize: "var(--xs)", color: "var(--t4)" }}>별숨이 읽고 있어요…</span>
-        </div>
-      ) : text ? (
-        <div style={{ position: "relative" }}>
-          <p
-            style={{
-              margin: 0,
-              fontSize: "var(--sm)",
-              color: "var(--t2)",
-              lineHeight: 1.9,
-              whiteSpace: "pre-wrap",
-              wordBreak: "keep-all",
-            }}
-          >
-            {displayText}
-          </p>
-          {isBlurred && (
-            <>
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 90,
-                  background: "linear-gradient(to bottom, transparent, var(--bg1))",
-                  pointerEvents: "none",
-                }}
-              />
-              <div style={{ marginTop: 18, textAlign: "center" }}>
-                <div
-                  style={{
-                    fontSize: "var(--xs)",
-                    color: "var(--t4)",
-                    marginBottom: 12,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  로그인하면 별숨 전체를 읽어볼 수 있어요.
-                </div>
-                <button
-                  className="kakao-login-full"
-                  onClick={kakaoLogin}
-                  style={{ fontSize: "var(--sm)", padding: "12px 16px" }}
-                >
-                  <span className="kakao-icon-wrap">
-                    <svg width="16" height="15" viewBox="0 0 18 18" fill="none">
-                      <path
-                        d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z"
-                        fill="#191919"
-                      />
-                    </svg>
-                  </span>
-                  카카오로 로그인하기
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      ) : (
-        <div
-          style={{
-            color: "var(--t4)",
-            fontSize: "var(--sm)",
-            textAlign: "center",
-            padding: "28px 0",
-          }}
-        >
-          잠시 후 다시 시도해주세요
         </div>
       )}
     </div>
@@ -264,9 +138,7 @@ function CoreFeaturesCard() {
               <div
                 style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}
               >
-                <span
-                  style={{ fontSize: "var(--sm)", fontWeight: 700, color: "var(--t1)" }}
-                >
+                <span style={{ fontSize: "var(--sm)", fontWeight: 700, color: "var(--t1)" }}>
                   {f.title}
                 </span>
                 <span style={{ fontSize: "var(--xs)", color: f.color, fontWeight: 500 }}>
@@ -391,51 +263,19 @@ function MoreFeaturesCard() {
 }
 
 // ── 메인 컴포넌트 ──
-export default function OnboardingCards({
-  natalText,
-  zodiacText,
-  natalLoading,
-  zodiacLoading,
-  user,
-  kakaoLogin,
-  saju,
-  sun,
-  onFinish,
-}) {
+export default function OnboardingCards({ saju, sun, onFinish }) {
   const [idx, setIdx] = useState(0);
-  const TOTAL = 5;
+  const TOTAL = 3;
 
   const next = () => {
     if (idx < TOTAL - 1) setIdx((i) => i + 1);
-    else onFinish();
+    else onFinish?.();
   };
 
   const cards = [
     <IntroCard key={0} saju={saju} sun={sun} />,
-    <ReadingCard
-      key={1}
-      title="🀄 당신의 사주 이야기"
-      subtitle={
-        saju
-          ? `${ON[saju.dom]} 기운 · ${saju.ilganPoetic || saju.il?.g + saju.il?.j || ""}`
-          : "사주 원국 해설"
-      }
-      text={natalText}
-      loading={natalLoading}
-      user={user}
-      kakaoLogin={kakaoLogin}
-    />,
-    <ReadingCard
-      key={2}
-      title={`✦ ${sun?.n || "별자리"} 이야기`}
-      subtitle={sun ? `${sun.s} ${sun.n} · ${sun.desc}` : "별자리 해설"}
-      text={zodiacText}
-      loading={zodiacLoading}
-      user={user}
-      kakaoLogin={kakaoLogin}
-    />,
-    <CoreFeaturesCard key={3} />,
-    <MoreFeaturesCard key={4} />,
+    <CoreFeaturesCard key={1} />,
+    <MoreFeaturesCard key={2} />,
   ];
 
   return (
@@ -476,7 +316,7 @@ export default function OnboardingCards({
           </button>
           {idx > 0 && idx < TOTAL - 1 && (
             <button
-              onClick={onFinish}
+              onClick={() => onFinish?.()}
               style={{
                 width: "100%",
                 marginTop: 10,
