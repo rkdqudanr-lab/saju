@@ -1014,7 +1014,7 @@ export default function App() {
                     </div>
                     <a
                       className="kcr-btn"
-                      href="https://pf.kakao.com/_byeolsoom/friend"
+                      href="https://pf.kakao.com/_msCVX/friend"
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="카카오 채널 친구 추가"
