@@ -403,7 +403,7 @@ export default function App() {
                     {form.by ? (
                       <>
                         {/* ── 오늘 하루 나의 별숨 ── */}
-                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 2, marginBottom: 4 }}>
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 6, marginBottom: 6 }}>
                           ✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일
                           <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
                         </div>
@@ -535,7 +535,7 @@ export default function App() {
                         </button>
 
                         {/* ── 별 메시지 (맨 아래) ── */}
-                        <div style={{ padding: '14px 0 6px', borderTop: '1px solid var(--line)', marginTop: 14 }}>
+                        <div style={{ padding: '16px 0 8px', borderTop: '1px solid var(--line)', marginTop: 6 }}>
                           <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 4, letterSpacing: '.06em' }}>✦ {today.month}월 {today.day}일의 별 메시지</div>
                           <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic', lineHeight: 1.75 }}>"{getDailyWord(today.day)}"</div>
                         </div>
