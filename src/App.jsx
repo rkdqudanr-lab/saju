@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } fro
 // utils
 import { OC, OE, ON, ILGAN_POETIC, CGO } from "./utils/saju.js";
 import { getSun } from "./utils/astrology.js";
-import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT, DAILY_QUESTIONS, stripMarkdown } from "./utils/constants.js";
+import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT, DAILY_QUESTIONS } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
 import { loadHistory, deleteHistory } from "./utils/history.js";
 import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/imageExport.js";
@@ -79,13 +79,7 @@ export default function App() {
   const askBtnRef = useRef(null);
 
   // ── 온보딩 카드 상태 ──
-  const [onboardingNatal, setOnboardingNatal] = useState('');
-  const [onboardingZodiac, setOnboardingZodiac] = useState('');
-  const [onboardingNatalLoading, setOnboardingNatalLoading] = useState(false);
-  const [onboardingZodiacLoading, setOnboardingZodiacLoading] = useState(false);
-  const [onboardingDone] = useState(() => localStorage.getItem('byeolsoom_onboarded') === '1');
-  const onboardingNatalFetching = useRef(false);
-  const onboardingZodiacFetching = useRef(false);
+  const [onboardingDone, setOnboardingDone] = useState(() => localStorage.getItem('byeolsoom_onboarded') === '1');
 
   const showToast = useCallback((message, type = 'info') => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -140,6 +134,7 @@ export default function App() {
   // ── 온보딩 완료 ──
   const handleOnboardingFinish = useCallback(() => {
     localStorage.setItem('byeolsoom_onboarded', '1');
+    setOnboardingDone(true);
     setStep(0);
   }, [setStep]);
 
@@ -261,56 +256,6 @@ export default function App() {
       askDailyHoroscope();
     }
   }, [user?.id, form.by, form.bm, form.bd, step]); // askDailyHoroscope 레퍼런스 제외 (무한루프 방지)
-
-  // ── 온보딩 카드: 사주/별자리 해석 미리 불러오기 ──
-  useEffect(() => {
-    if (step !== 15 || !formOk) return;
-    const natalKey  = `byeolsoom_natal_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
-    const zodiacKey = `byeolsoom_zodiac_${form.bm}${form.bd}`;
-
-    // 사주 원국 (캐시 우선)
-    const cachedN = localStorage.getItem(natalKey);
-    if (cachedN) {
-      setOnboardingNatal(cachedN);
-    } else if (saju && !onboardingNatalFetching.current) {
-      onboardingNatalFetching.current = true;
-      setOnboardingNatalLoading(true);
-      const sajuMsg = `나의 사주 원국을 해석해주세요. 연주 ${saju.yeon.g}${saju.yeon.j} / 월주 ${saju.wol.g}${saju.wol.j} / 일주 ${saju.il.g}${saju.il.j} / 시주 ${saju.si.g}${saju.si.j}.`;
-      fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: sajuMsg, context: buildCtx(), isNatal: true }),
-      }).then(r => r.json()).then(data => {
-        const cleaned = stripMarkdown(data.text || '');
-        setOnboardingNatal(cleaned);
-        localStorage.setItem(natalKey, cleaned);
-      }).catch(() => {}).finally(() => {
-        setOnboardingNatalLoading(false);
-        onboardingNatalFetching.current = false;
-      });
-    }
-
-    // 별자리 (캐시 우선)
-    const cachedZ = localStorage.getItem(zodiacKey);
-    if (cachedZ) {
-      setOnboardingZodiac(cachedZ);
-    } else if (sun && !onboardingZodiacFetching.current) {
-      onboardingZodiacFetching.current = true;
-      setOnboardingZodiacLoading(true);
-      fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: `나의 별자리(${sun.n} ${sun.s}) 해설을 해주세요.`, context: buildCtx(), isZodiac: true }),
-      }).then(r => r.json()).then(data => {
-        const cleaned = stripMarkdown(data.text || '');
-        setOnboardingZodiac(cleaned);
-        localStorage.setItem(zodiacKey, cleaned);
-      }).catch(() => {}).finally(() => {
-        setOnboardingZodiacLoading(false);
-        onboardingZodiacFetching.current = false;
-      });
-    }
-  }, [step, formOk]); // saju/sun/buildCtx 은 formOk 가 true 일 때 항상 유효
 
   // ── 테마 ──
   useEffect(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }, [isDark]);
@@ -1323,12 +1268,6 @@ export default function App() {
         {step === 15 && (
           <Suspense fallback={<PageSpinner />}>
             <OnboardingCards
-              natalText={onboardingNatal}
-              zodiacText={onboardingZodiac}
-              natalLoading={onboardingNatalLoading}
-              zodiacLoading={onboardingZodiacLoading}
-              user={user}
-              kakaoLogin={kakaoLogin}
               saju={saju}
               sun={sun}
               onFinish={handleOnboardingFinish}
