@@ -349,7 +349,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user }) {
                   placeholder="예: 면접, 첫 데이트, 계약서 서명…"
                   value={inputText}
                   onChange={e => setInputText(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') addEvent(); }}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) addEvent(); }}
                   maxLength={40}
                 />
                 <button
