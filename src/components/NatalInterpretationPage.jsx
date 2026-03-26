@@ -62,8 +62,8 @@ function SectionCard({ icon, title, text, delay = 0 }) {
         background: 'var(--bg2)',
         border: '1px solid var(--line)',
         borderRadius: 20,
-        padding: '20px',
-        marginBottom: 12,
+        padding: 'var(--sp3)',
+        marginBottom: 'var(--sp2)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>

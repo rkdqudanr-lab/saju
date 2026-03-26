@@ -249,7 +249,7 @@ select.inp option{background:var(--bg2)}
 .mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
 .mood-word{font-size:var(--sm);font-weight:600}
 
-.star-summary{padding:28px 28px;background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin-bottom:var(--sp4);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
+.star-summary{padding:var(--sp3);background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin:0 var(--sp3) var(--sp3);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
 .star-summary-icon{color:var(--gold);font-size:1.3rem;line-height:1;flex-shrink:0;margin-top:2px}
 .star-summary-text{font-size:1.05rem;color:var(--gold);font-weight:600;line-height:1.6;letter-spacing:-0.01em}
 
