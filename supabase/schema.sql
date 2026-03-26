@@ -134,3 +134,51 @@ create policy "quiz_select" on daily_quiz_answers
 -- 수정: upsert 시 onConflict: kakao_id,question_id 로 자신의 행만 갱신
 create policy "quiz_update" on daily_quiz_answers
   for update to anon using (true) with check (kakao_id is not null);
+
+-- ── diary_entries ─────────────────────────────────────────
+create table if not exists diary_entries (
+  id         uuid primary key default gen_random_uuid(),
+  kakao_id   text not null,
+  date       date not null default current_date,
+  content    text not null,
+  created_at timestamptz default now()
+);
+
+alter table diary_entries enable row level security;
+
+drop policy if exists "diary_insert" on diary_entries;
+drop policy if exists "diary_select" on diary_entries;
+drop policy if exists "diary_delete" on diary_entries;
+
+create policy "diary_insert" on diary_entries
+  for insert to anon with check (kakao_id is not null);
+
+create policy "diary_select" on diary_entries
+  for select to anon using (true);
+
+create policy "diary_delete" on diary_entries
+  for delete to anon using (true);
+
+-- ── calendar_events ───────────────────────────────────────
+create table if not exists calendar_events (
+  id         uuid primary key default gen_random_uuid(),
+  kakao_id   text not null,
+  date       date not null,
+  title      text not null,
+  created_at timestamptz default now()
+);
+
+alter table calendar_events enable row level security;
+
+drop policy if exists "cal_insert" on calendar_events;
+drop policy if exists "cal_select" on calendar_events;
+drop policy if exists "cal_delete" on calendar_events;
+
+create policy "cal_insert" on calendar_events
+  for insert to anon with check (kakao_id is not null);
+
+create policy "cal_select" on calendar_events
+  for select to anon using (true);
+
+create policy "cal_delete" on calendar_events
+  for delete to anon using (true);

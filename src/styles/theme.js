@@ -52,6 +52,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 .theme-btn:hover{color:var(--gold);border-color:var(--gold)}
 .back-btn{position:fixed;top:14px;left:66px;z-index:50;width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.8rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
 .back-btn:hover{color:var(--gold)}
+.home-btn{position:fixed;top:14px;left:118px;z-index:50;width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);color:var(--t3);font-size:.85rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.home-btn:hover{color:var(--gold);border-color:var(--gold)}
 .step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:var(--sp3)}
 .dot{height:4px;border-radius:2px;transition:all .4s cubic-bezier(.34,1.56,.64,1)}
 .dot.done{width:14px;background:var(--t4)}.dot.active{width:28px;background:var(--gold)}.dot.todo{width:4px;background:var(--t4);opacity:.4}
@@ -250,7 +252,7 @@ select.inp option{background:var(--bg2)}
 .mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
 .mood-word{font-size:var(--sm);font-weight:600}
 
-.star-summary{padding:var(--sp3);background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin:0 var(--sp3) var(--sp3);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
+.star-summary{padding:var(--sp3);background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin:var(--sp3);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
 .star-summary-icon{color:var(--gold);font-size:1.3rem;line-height:1;flex-shrink:0;margin-top:2px}
 .star-summary-text{font-size:1.05rem;color:var(--gold);font-weight:600;line-height:1.6;letter-spacing:-0.01em}
 

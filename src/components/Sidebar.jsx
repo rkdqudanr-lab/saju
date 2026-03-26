@@ -36,7 +36,7 @@ function getDateRange(filter) {
   return null;
 }
 
-export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite }) {
+export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther }) {
   const [histItems, setHistItems] = useState(() => loadHistory());
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');
@@ -118,7 +118,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 { icon: '🗓️', label: '별숨 달력', s: 10 },
                 { icon: '🕸️', label: '나의 궁합 레이더', s: 11 },
                 { icon: '🎂', label: '기념일 운세', s: 12 },
-                { icon: '🀄', label: '나의 사주원국', s: 13 },
+                { icon: '🀄', label: '나의 별숨(사주원국과 별자리)', s: 13 },
                 { icon: '✦', label: '별숨의 종합사주', s: 14 },
                 { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
               ].map(m => (
@@ -134,6 +134,13 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   </button>
                 </li>
               ))}
+              <li>
+                <button className="sidebar-menu-item" onClick={() => { onAddOther && onAddOther(); onClose(); }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAddOther && onAddOther(); onClose(); } }}>
+                  <span className="smi-icon" aria-hidden="true">👥</span>
+                  <span className="smi-text">다른 사람의 별숨 추가</span>
+                </button>
+              </li>
               {user && (
                 <li>
                   <button className="sidebar-menu-item" onClick={() => { onProfileOpen(); onClose(); }}
