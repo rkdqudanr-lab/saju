@@ -206,7 +206,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                 padding: '10px 14px',
                 background: 'rgba(180,140,50,0.08)',
                 borderRadius: 'var(--r1)',
-                marginBottom: 'var(--sp2)',
+                margin: '0 var(--sp2) var(--sp2)',
                 fontSize: 'var(--sm)',
                 color: 'var(--t2)',
                 borderLeft: '3px solid var(--gold)',
@@ -245,7 +245,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                 {/* 오늘 두 사람에게 일어날 일 */}
                 {result?.todayEvents?.length > 0 && (
                   <div style={{
-                    marginTop: 'var(--sp2)',
+                    margin: 'var(--sp2) var(--sp2) 0',
                     padding: 'var(--sp2)',
                     background: 'var(--bg2)',
                     borderRadius: 'var(--r1)',
@@ -273,7 +273,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                 {/* 오늘 가까이 하면 좋은 것 */}
                 {(result?.recommendedFood || result?.recommendedPlace) && (
                   <div style={{
-                    marginTop: 'var(--sp2)',
+                    margin: 'var(--sp2) var(--sp2) 0',
                     padding: 'var(--sp2)',
                     background: 'var(--bg2)',
                     borderRadius: 'var(--r1)',
@@ -314,7 +314,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                 {/* 왜 이런 대화가 이뤄졌을까요 */}
                 {result?.reason && (
                   <div style={{
-                    marginTop: 'var(--sp2)',
+                    margin: 'var(--sp2) var(--sp2) 0',
                     padding: 'var(--sp2)',
                     background: 'var(--bg2)',
                     borderRadius: 'var(--r1)',

@@ -379,7 +379,7 @@ select.inp option{background:var(--bg2)}
 .place-emoji{font-size:1.4rem;display:block;margin-bottom:3px}
 .place-label{font-size:var(--xs);color:var(--t3);display:block}
 .place-btn.on .place-label{color:var(--gold)}
-.scenario-wrap{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;margin-bottom:var(--sp3)}
+.scenario-wrap{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;margin-bottom:var(--sp3);padding-bottom:var(--sp2)}
 .scenario-header{padding:var(--sp2) var(--sp3);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
 .scenario-place-icon{font-size:1.3rem}
 .scenario-place-name{font-size:var(--sm);font-weight:600;color:var(--t1)}
