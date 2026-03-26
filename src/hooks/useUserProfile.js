@@ -116,6 +116,31 @@ export function useUserProfile() {
     })();
   }, []);
 
+  // ── 앱 로드 시 consent_flags Supabase에서 동기화 ──
+  useEffect(() => {
+    if (!supabase || !user?.id) return;
+    // OAuth 흐름(URL code)에서는 이미 처리하므로 중복 방지
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('code')) return;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('users')
+          .select('consent_flags')
+          .eq('kakao_id', String(user.id))
+          .single();
+        if (data?.consent_flags) {
+          setConsentFlags(data.consent_flags);
+          try { localStorage.setItem('byeolsoom_consent', JSON.stringify(data.consent_flags)); } catch (e) {}
+        } else if (!localStorage.getItem('byeolsoom_consent')) {
+          setShowConsentModal(true);
+        }
+      } catch (e) {
+        console.error('[별숨] consent_flags 동기화 오류:', e);
+      }
+    })();
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── 로그인 후 user_profiles Supabase에서 불러오기 ──
   useEffect(() => {
     if (!supabase || !user?.id) return;
@@ -213,19 +238,22 @@ export function useUserProfile() {
         kakao_id:            currentUser.id,
         mbti:                profileData.mbti || null,
         self_desc:           profileData.selfDesc || null,
-        partner_name:        profileData.partner || null,
-        partner_birth_year:  profileData.partnerBy ? parseInt(profileData.partnerBy, 10) : null,
-        partner_birth_month: profileData.partnerBm ? parseInt(profileData.partnerBm, 10) : null,
-        partner_birth_day:   profileData.partnerBd ? parseInt(profileData.partnerBd, 10) : null,
-        workplace:           profileData.workplace || null,
-        worry_text:          profileData.worryText || null,
+        // partner 동의 시에만 저장, 비동의 시 null로 초기화
+        partner_name:        consentFlags.partner ? (profileData.partner || null) : null,
+        partner_birth_year:  consentFlags.partner && profileData.partnerBy ? parseInt(profileData.partnerBy, 10) : null,
+        partner_birth_month: consentFlags.partner && profileData.partnerBm ? parseInt(profileData.partnerBm, 10) : null,
+        partner_birth_day:   consentFlags.partner && profileData.partnerBd ? parseInt(profileData.partnerBd, 10) : null,
+        // workplace 동의 시에만 저장
+        workplace:           consentFlags.workplace ? (profileData.workplace || null) : null,
+        // worry 동의 시에만 저장
+        worry_text:          consentFlags.worry ? (profileData.worryText || null) : null,
         updated_at:          new Date().toISOString(),
       }, { onConflict: 'kakao_id', ignoreDuplicates: false });
       if (error) console.error('[별숨] user_profiles 저장 오류:', error);
     } catch (e) {
       console.error('[별숨] user_profiles 저장 오류:', e);
     }
-  }, []);
+  }, [consentFlags]);
 
   const saveDailyQuizAnswer = useCallback(async (currentUser, questionId, answer) => {
     if (!supabase || !currentUser?.id || !questionId) return;
