@@ -88,9 +88,15 @@ export function useUserProfile() {
             // 기존 저장 데이터 복원 (다기기 대응)
             const { data: saved } = await supabase
               .from('users')
-              .select('birth_year, birth_month, birth_day, consent_flags')
+              .select('id, birth_year, birth_month, birth_day, consent_flags')
               .eq('kakao_id', String(data.id))
               .single();
+            if (saved?.id) {
+              // Supabase UUID를 user 객체에 저장 (consultation_history INSERT에 사용)
+              const userDataWithUuid = { ...userData, supabaseId: saved.id };
+              setUser(userDataWithUuid);
+              localStorage.setItem('byeolsoom_user', JSON.stringify(userDataWithUuid));
+            }
             if (saved?.birth_year) {
               setForm(f => ({ ...f, by: String(saved.birth_year), bm: String(saved.birth_month), bd: String(saved.birth_day) }));
               try {
@@ -156,15 +162,19 @@ export function useUserProfile() {
     if (!supabase || !currentUser?.id) return;
     const { by, bm, bd, name } = currentForm;
     if (!by || !bm || !bd) return;
-    const { error } = await supabase.from('users').upsert({
-      kakao_id: currentUser.id,
-      birth_year: parseInt(by, 10),
-      birth_month: parseInt(bm, 10),
-      birth_day: parseInt(bd, 10),
-      nickname: name || currentUser.nickname || '별님',
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'kakao_id', ignoreDuplicates: false });
-    if (error) console.error('[별숨] 프로필 저장 오류:', error);
+    try {
+      const { error } = await supabase.from('users').upsert({
+        kakao_id: currentUser.id,
+        birth_year: parseInt(by, 10),
+        birth_month: parseInt(bm, 10),
+        birth_day: parseInt(bd, 10),
+        nickname: name || currentUser.nickname || '별님',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'kakao_id', ignoreDuplicates: false });
+      if (error) console.error('[별숨] 프로필 저장 오류:', error);
+    } catch (e) {
+      console.error('[별숨] 프로필 저장 오류:', e);
+    }
   }, []);
 
   const handleConsentConfirm = useCallback(async (flags) => {

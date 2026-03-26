@@ -5,6 +5,7 @@ import { stripMarkdown, PKGS, TIMING, LOAD_STATES } from "../utils/constants.js"
 const IS_BETA = true;
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { loadHistory, addHistory } from "../utils/history.js";
+import { supabase } from '../lib/supabase.js';
 
 const SLOT_TAG_MAP = { morning: '[오전·100자]', afternoon: '[오후·100자]', evening: '[저녁·100자]', dawn: '[새벽·100자]' };
 
@@ -114,6 +115,38 @@ export function useConsultation(buildCtx, formOk) {
     if (loadMsgRef.current) { clearInterval(loadMsgRef.current); loadMsgRef.current = null; }
   }, []);
 
+  // ── Supabase 상담기록 저장 ──
+  const saveHistoryToSupabase = useCallback(async (questions, answers, slot) => {
+    if (!supabase) return;
+    try {
+      const userStr = localStorage.getItem('byeolsoom_user');
+      if (!userStr) return;
+      const parsed = JSON.parse(userStr);
+      const kakaoId = parsed?.id;
+      if (!kakaoId) return;
+      // supabaseId가 있으면 바로 사용, 없으면 kakao_id로 조회
+      let supabaseUserId = parsed?.supabaseId || null;
+      if (!supabaseUserId) {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('id')
+          .eq('kakao_id', String(kakaoId))
+          .single();
+        supabaseUserId = userRow?.id || null;
+      }
+      if (!supabaseUserId) return;
+      const { error } = await supabase.from('consultation_history').insert({
+        user_id: supabaseUserId,
+        questions,
+        answers,
+        slot,
+      });
+      if (error) console.error('[별숨] 상담기록 Supabase 저장 오류:', error);
+    } catch (e) {
+      console.error('[별숨] 상담기록 Supabase 저장 오류:', e);
+    }
+  }, []);
+
   // ── 질문 전송 ──
   const askClaude = useCallback(async () => {
     if (!selQs.length) return;
@@ -141,9 +174,10 @@ export function useConsultation(buildCtx, formOk) {
     setAnswers(newAnswers);
     addHistory(selQs, newAnswers);
     setHistItems(loadHistory());
+    saveHistoryToSupabase(selQs, newAnswers, timeSlot);
     setLatestChatIdx(-1);
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [selQs, callApi, startLoadingMsg, stopLoadingMsg]);
+  }, [selQs, callApi, startLoadingMsg, stopLoadingMsg, saveHistoryToSupabase, timeSlot]);
 
   const askQuick = useCallback(async (q) => {
     if (!q.trim()) return;
@@ -154,9 +188,10 @@ export function useConsultation(buildCtx, formOk) {
     try {
       const ans = await callApi(`[질문]\n${q.trim()}`);
       setAnswers([ans]); addHistory([q.trim()], [ans]); setHistItems(loadHistory());
+      saveHistoryToSupabase([q.trim()], [ans], timeSlot);
     } catch { setAnswers([ERR_MSG]); }
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [formOk, callApi]);
+  }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
 
   const askTimeSlot = useCallback(async (prompt) => {
     if (!formOk) { setStep(1); return; }
@@ -190,9 +225,10 @@ export function useConsultation(buildCtx, formOk) {
       setDailyResult(result);
       addHistory(['오늘 하루 나의 별숨은?'], [ans]);
       setHistItems(loadHistory());
+      saveHistoryToSupabase(['오늘 하루 나의 별숨은?'], [ans], timeSlot);
     } catch { /* 에러는 버튼 상태로만 처리 */ }
     finally { setDailyLoading(false); }
-  }, [formOk, callApi]);
+  }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
 
   const askReview = useCallback(async (text, prompt) => {
     if (!formOk) { setStep(1); return; }
@@ -202,9 +238,10 @@ export function useConsultation(buildCtx, formOk) {
     try {
       const ans = await callApi(`[질문]\n${prompt}\n\n[오늘 있었던 일]\n${text}`);
       setAnswers([ans]); addHistory([q], [ans]); setHistItems(loadHistory());
+      saveHistoryToSupabase([q], [ans], timeSlot);
     } catch { setAnswers([ERR_MSG]); }
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [formOk, callApi]);
+  }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
 
   // ── 단일 답변 재시도 ──
   const retryAnswer = useCallback(async (idx) => {
