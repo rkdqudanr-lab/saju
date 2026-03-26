@@ -35,6 +35,10 @@ export function useUserProfile() {
     try { const c = localStorage.getItem('byeolsoom_consent'); return c ? JSON.parse(c) : { history: true, partner: false, workplace: true, worry: false }; } catch { return { history: true, partner: false, workplace: true, worry: false }; }
   });
   const [loginError, setLoginError]                   = useState('');
+  const [loginLoading, setLoginLoading] = useState(() => {
+    // URL에 code 파라미터가 있으면 OAuth 처리 중이므로 로딩 상태로 시작
+    return new URLSearchParams(window.location.search).has('code');
+  });
 
   // ── 카카오 SDK 초기화 ──
   useEffect(() => {
@@ -113,6 +117,7 @@ export function useUserProfile() {
           }
         } else if (!localStorage.getItem('byeolsoom_consent')) setShowConsentModal(true)
       } catch (err) { console.error('[별숨] 카카오 code 오류:', err); setLoginError('카카오 로그인에 실패했어요. 다시 시도해봐요 🌙'); }
+      finally { setLoginLoading(false); }
     })();
   }, []);
 
@@ -297,6 +302,7 @@ export function useUserProfile() {
     consentFlags, setConsentFlags,
     handleConsentConfirm,
     loginError, setLoginError,
+    loginLoading,
     kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile, saveProfileToSupabase,
     saveUserProfileExtra, saveDailyQuizAnswer,
   };
