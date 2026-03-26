@@ -73,3 +73,64 @@ create policy "history_insert" on consultation_history
 -- 조회: 클라이언트가 .eq('user_id', ...) 필터를 직접 적용
 create policy "history_select" on consultation_history
   for select to anon using (true);
+
+-- ── user_profiles ─────────────────────────────────────────────
+create table if not exists user_profiles (
+  id                   uuid primary key default gen_random_uuid(),
+  kakao_id             text unique not null,
+  mbti                 text,
+  self_desc            text,
+  partner_name         text,
+  partner_birth_year   integer,
+  partner_birth_month  integer,
+  partner_birth_day    integer,
+  workplace            text,
+  worry_text           text,
+  updated_at           timestamptz default now()
+);
+
+alter table user_profiles enable row level security;
+
+drop policy if exists "profiles_insert" on user_profiles;
+drop policy if exists "profiles_select" on user_profiles;
+drop policy if exists "profiles_update" on user_profiles;
+
+-- 삽입: kakao_id가 있으면 삽입 가능
+create policy "profiles_insert" on user_profiles
+  for insert to anon with check (kakao_id is not null);
+
+-- 조회: 클라이언트가 .eq('kakao_id', ...) 필터를 직접 적용
+create policy "profiles_select" on user_profiles
+  for select to anon using (true);
+
+-- 수정: upsert 시 onConflict: kakao_id 로 자신의 행만 갱신
+create policy "profiles_update" on user_profiles
+  for update to anon using (true) with check (kakao_id is not null);
+
+-- ── daily_quiz_answers ────────────────────────────────────────
+create table if not exists daily_quiz_answers (
+  id           uuid primary key default gen_random_uuid(),
+  kakao_id     text not null,
+  question_id  text not null,
+  answer       text,
+  answered_at  timestamptz default now(),
+  unique (kakao_id, question_id)
+);
+
+alter table daily_quiz_answers enable row level security;
+
+drop policy if exists "quiz_insert" on daily_quiz_answers;
+drop policy if exists "quiz_select" on daily_quiz_answers;
+drop policy if exists "quiz_update" on daily_quiz_answers;
+
+-- 삽입: kakao_id가 있으면 삽입 가능
+create policy "quiz_insert" on daily_quiz_answers
+  for insert to anon with check (kakao_id is not null);
+
+-- 조회: 클라이언트가 .eq('kakao_id', ...) 필터를 직접 적용
+create policy "quiz_select" on daily_quiz_answers
+  for select to anon using (true);
+
+-- 수정: upsert 시 onConflict: kakao_id,question_id 로 자신의 행만 갱신
+create policy "quiz_update" on daily_quiz_answers
+  for update to anon using (true) with check (kakao_id is not null);

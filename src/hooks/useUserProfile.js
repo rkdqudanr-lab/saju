@@ -116,6 +116,35 @@ export function useUserProfile() {
     })();
   }, []);
 
+  // ── 로그인 후 user_profiles Supabase에서 불러오기 ──
+  useEffect(() => {
+    if (!supabase || !user?.id) return;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('kakao_id', user.id)
+          .single();
+        if (data) {
+          setProfile(p => ({
+            ...p,
+            ...(data.mbti              && { mbti:      data.mbti }),
+            ...(data.self_desc         && { selfDesc:  data.self_desc }),
+            ...(data.partner_name      && { partner:   data.partner_name }),
+            ...(data.partner_birth_year  && { partnerBy: String(data.partner_birth_year) }),
+            ...(data.partner_birth_month && { partnerBm: String(data.partner_birth_month) }),
+            ...(data.partner_birth_day   && { partnerBd: String(data.partner_birth_day) }),
+            ...(data.workplace         && { workplace: data.workplace }),
+            ...(data.worry_text        && { worryText: data.worry_text }),
+          }));
+        }
+      } catch (e) {
+        console.error('[별숨] user_profiles 불러오기 오류:', e);
+      }
+    })();
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── localStorage 동기화 ──
   useEffect(() => { if (form.by && form.bm && form.bd) { try { localStorage.setItem('byeolsoom_profile', JSON.stringify(form)); } catch (e) {} } }, [form]);
   useEffect(() => { try { localStorage.setItem('byeolsoom_extra', JSON.stringify(profile)); } catch (e) {} }, [profile]);
@@ -177,6 +206,42 @@ export function useUserProfile() {
     }
   }, []);
 
+  const saveUserProfileExtra = useCallback(async (profileData, currentUser) => {
+    if (!supabase || !currentUser?.id) return;
+    try {
+      const { error } = await supabase.from('user_profiles').upsert({
+        kakao_id:            currentUser.id,
+        mbti:                profileData.mbti || null,
+        self_desc:           profileData.selfDesc || null,
+        partner_name:        profileData.partner || null,
+        partner_birth_year:  profileData.partnerBy ? parseInt(profileData.partnerBy, 10) : null,
+        partner_birth_month: profileData.partnerBm ? parseInt(profileData.partnerBm, 10) : null,
+        partner_birth_day:   profileData.partnerBd ? parseInt(profileData.partnerBd, 10) : null,
+        workplace:           profileData.workplace || null,
+        worry_text:          profileData.worryText || null,
+        updated_at:          new Date().toISOString(),
+      }, { onConflict: 'kakao_id', ignoreDuplicates: false });
+      if (error) console.error('[별숨] user_profiles 저장 오류:', error);
+    } catch (e) {
+      console.error('[별숨] user_profiles 저장 오류:', e);
+    }
+  }, []);
+
+  const saveDailyQuizAnswer = useCallback(async (currentUser, questionId, answer) => {
+    if (!supabase || !currentUser?.id || !questionId) return;
+    try {
+      const { error } = await supabase.from('daily_quiz_answers').upsert({
+        kakao_id:    currentUser.id,
+        question_id: questionId,
+        answer,
+        answered_at: new Date().toISOString(),
+      }, { onConflict: 'kakao_id,question_id', ignoreDuplicates: false });
+      if (error) console.error('[별숨] daily_quiz_answers 저장 오류:', error);
+    } catch (e) {
+      console.error('[별숨] daily_quiz_answers 저장 오류:', e);
+    }
+  }, []);
+
   const handleConsentConfirm = useCallback(async (flags) => {
     const saved = flags ?? consentFlags;
     try { localStorage.setItem('byeolsoom_consent', JSON.stringify(saved)); } catch (e) {}
@@ -205,5 +270,6 @@ export function useUserProfile() {
     handleConsentConfirm,
     loginError, setLoginError,
     kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile, saveProfileToSupabase,
+    saveUserProfileExtra, saveDailyQuizAnswer,
   };
 }

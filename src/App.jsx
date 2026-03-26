@@ -110,7 +110,7 @@ export default function App() {
           kakaoLogin, kakaoLogout, saveOtherProfile,
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
-          saveProfileToSupabase } = userProfile;
+          saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer } = userProfile;
 
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
@@ -161,9 +161,10 @@ export default function App() {
     };
     setQuiz(updated);
     saveQuiz(updated);
+    if (user) saveDailyQuizAnswer(user, question.id, val);
     setQuizInput('');
     showToast('별숨이 기억했어요 ✦', 'success');
-  }, [quiz, quizInput, setProfile, showToast]);
+  }, [quiz, quizInput, setProfile, showToast, user, saveDailyQuizAnswer]);
 
   // ── 채팅 전송 (넛지 초기화 포함) ──
   const handleSendChat = useCallback(() => {
@@ -1278,7 +1279,7 @@ export default function App() {
       {/* ── 모달들 ── */}
       {showProfileModal && (
         <Suspense fallback={<PageSpinner />}>
-          <ProfileModal profile={profile} setProfile={userProfile.setProfile} onClose={() => setShowProfileModal(false)} />
+          <ProfileModal profile={profile} setProfile={userProfile.setProfile} onClose={() => setShowProfileModal(false)} user={user} saveUserProfileExtra={saveUserProfileExtra} />
         </Suspense>
       )}
 
