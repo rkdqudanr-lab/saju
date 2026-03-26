@@ -1416,9 +1416,9 @@ export default function App() {
                 const content = diaryText.trim();
                 setShowDiary(false);
                 // Supabase 저장 (로그인 시)
-                if (user?.kakaoId) {
+                if (user?.id) {
                   const today_str = new Date().toISOString().slice(0, 10);
-                  supabase.from('diary_entries').insert({ kakao_id: user.kakaoId, date: today_str, content });
+                  supabase.from('diary_entries').insert({ kakao_id: user.id, date: today_str, content });
                 }
                 askReview(content, DIARY_PROMPT);
                 setDiaryText('');

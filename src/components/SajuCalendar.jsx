@@ -80,11 +80,11 @@ export default function SajuCalendar({ form, setStep, askQuick, user }) {
 
   // ── Supabase 이벤트 로드 (로그인 시) ──
   useEffect(() => {
-    if (!user?.kakaoId) return;
+    if (!user?.id) return;
     supabase
       .from('calendar_events')
       .select('date, title, id')
-      .eq('kakao_id', user.kakaoId)
+      .eq('kakao_id', user.id)
       .then(({ data }) => {
         if (!data || data.length === 0) return;
         const merged = { ...loadEvents() };
@@ -98,7 +98,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user }) {
         setEvents(merged);
         saveToStorage(merged);
       });
-  }, [user?.kakaoId]);
+  }, [user?.id]);
 
   const userIlji = useMemo(() => {
     if (!form?.by || !form?.bm || !form?.bd) return null;
@@ -148,10 +148,10 @@ export default function SajuCalendar({ form, setStep, askQuick, user }) {
     saveToStorage(updated);
     setInputText('');
     // Supabase 저장 (로그인 시)
-    if (user?.kakaoId) {
+    if (user?.id) {
       const { data } = await supabase
         .from('calendar_events')
-        .insert({ kakao_id: user.kakaoId, date: selectedKey, title })
+        .insert({ kakao_id: user.id, date: selectedKey, title })
         .select('id')
         .single();
       if (data?.id) {
@@ -173,8 +173,8 @@ export default function SajuCalendar({ form, setStep, askQuick, user }) {
     setEvents(updated);
     saveToStorage(updated);
     // Supabase 삭제 (로그인 시)
-    if (user?.kakaoId && target?.supabaseId) {
-      supabase.from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', user.kakaoId);
+    if (user?.id && target?.supabaseId) {
+      supabase.from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', user.id);
     }
   };
 
