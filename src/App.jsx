@@ -410,6 +410,13 @@ export default function App() {
                     </div>
                     {form.by ? (
                       <>
+                        {/* ── 오후 5시 이후: 오늘 있었던 일 적기 (맨 위) ── */}
+                        {new Date().getHours() >= 17 && (
+                          <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.1))', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setShowDiary(true)}>
+                            📓 오늘 있었던 일 적기 ✦
+                          </button>
+                        )}
+
                         {/* ── 오늘 하루 나의 별숨 ── */}
                         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 6, marginBottom: 6 }}>
                           ✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일
@@ -427,13 +434,6 @@ export default function App() {
                         ) : (
                           <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>
                             오늘 기운 확인하기 ✦
-                          </button>
-                        )}
-
-                        {/* ── 오후 5시 이후: 오늘 있었던 일 적기 ── */}
-                        {new Date().getHours() >= 17 && (
-                          <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.1))', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setShowDiary(true)}>
-                            📓 오늘 있었던 일 적기 ✦
                           </button>
                         )}
 
