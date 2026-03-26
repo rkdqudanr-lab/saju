@@ -92,6 +92,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
   border-color:var(--acc);
   background:linear-gradient(135deg,var(--goldf),rgba(155,142,196,.06));
   box-shadow:0 4px 24px rgba(232,176,72,.08);
+  padding:var(--sp3) var(--sp2);
 }
 .llc-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--acc)}
 .llc-avatar-placeholder{width:48px;height:48px;border-radius:50%;background:var(--bg2);border:2px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
@@ -249,7 +250,7 @@ select.inp option{background:var(--bg2)}
 .mood-label{font-size:var(--xs);color:var(--t4);margin-bottom:2px;letter-spacing:.06em}
 .mood-word{font-size:var(--sm);font-weight:600}
 
-.star-summary{padding:28px 28px;background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin-bottom:var(--sp4);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
+.star-summary{padding:var(--sp3);background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin:0 var(--sp3) var(--sp3);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
 .star-summary-icon{color:var(--gold);font-size:1.3rem;line-height:1;flex-shrink:0;margin-top:2px}
 .star-summary-text{font-size:1.05rem;color:var(--gold);font-weight:600;line-height:1.6;letter-spacing:-0.01em}
 
@@ -597,7 +598,7 @@ select.inp option{background:var(--bg2)}
 @keyframes dsc-spark{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.7;transform:scale(1.2)}}
 @keyframes dsc-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
 
-.dsc-wrap{position:relative;margin:var(--sp3) 0;animation:fadeUp .6s .2s both}
+.dsc-wrap{position:relative;margin:var(--sp3) var(--sp2);animation:fadeUp .6s .2s both}
 .dsc-spark{position:absolute;font-size:.55rem;color:var(--gold);pointer-events:none;animation:dsc-spark 3s ease-in-out infinite}
 .dsc-spark-1{top:-6px;left:18%;animation-delay:0s}
 .dsc-spark-2{top:30%;right:-4px;font-size:.8rem;color:var(--lav);animation-delay:.7s}

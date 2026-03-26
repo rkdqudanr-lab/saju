@@ -908,7 +908,7 @@ export default function App() {
                       onRetry={() => retryAnswer(i)}
                     />
                     {openAcc === i && typedSet.has(i) && answers[i] && (
-                      <div style={{ padding: '0 var(--sp3) var(--sp2)', borderBottom: '1px solid var(--line)' }}>
+                      <div style={{ padding: '0 var(--sp4) var(--sp2)', borderBottom: '1px solid var(--line)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <FeedbackBtn qIdx={i} />
                           <button className="res-top-btn" style={{ fontSize: 'var(--xs)' }} onClick={() => shareCard(i)}>↗ Q{i + 1} 이미지 저장</button>
