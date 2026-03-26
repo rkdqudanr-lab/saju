@@ -13,7 +13,7 @@ const MBTI_TYPES = [
 // ═══════════════════════════════════════════════════════════
 //  👤 개인화 프로필 모달
 // ═══════════════════════════════════════════════════════════
-export default function ProfileModal({profile,setProfile,onClose}){
+export default function ProfileModal({profile,setProfile,onClose,user,saveUserProfileExtra}){
   const[local,setLocal]=useState({mbti:'',selfDesc:'',...profile});
   const[showNaturalInput,setShowNaturalInput]=useState(false);
   const sheetRef=useRef(null);
@@ -49,7 +49,11 @@ export default function ProfileModal({profile,setProfile,onClose}){
     return null;
   },[local.partnerBm,local.partnerBd]);
 
-  const save=()=>{setProfile(local);onClose();};
+  const save=()=>{
+    setProfile(local);
+    if(user&&saveUserProfileExtra) saveUserProfileExtra(local,user);
+    onClose();
+  };
   const upd=(k,v)=>setLocal(p=>({...p,[k]:v}));
 
   return(
