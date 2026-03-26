@@ -110,6 +110,7 @@ export default function App() {
           otherForm, setOtherForm, showProfileModal, setShowProfileModal,
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
+          loginLoading,
           kakaoLogin, kakaoLogout, saveOtherProfile,
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
@@ -315,6 +316,28 @@ export default function App() {
       setShareModal({ open: true, title: '별숨 ✦', text: shareText });
     }
   }, [answers]);
+
+  // ── 카카오 로그인 처리 중 로딩 화면 ──
+  if (loginLoading) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <StarCanvas isDark={isDark} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', gap: 24 }}>
+          <div className="land-orb" style={{ marginBottom: 8 }}>
+            <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>별숨이 당신을 맞이하고 있어요</div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요 🌙</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
