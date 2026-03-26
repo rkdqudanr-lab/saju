@@ -20,6 +20,10 @@ import CSS from "./styles/theme.js";
 // supabase
 import { supabase } from "./lib/supabase.js";
 
+// 인터넷 시간 동기화
+import { useServerTime } from "./hooks/useServerTime.js";
+import { getServerHour } from "./utils/serverTime.js";
+
 // components
 import StarCanvas         from "./components/StarCanvas.jsx";
 import DailyStarCard     from "./components/DailyStarCard.jsx";
@@ -114,6 +118,8 @@ export default function App() {
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
           saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer } = userProfile;
+
+  useServerTime(); // 앱 마운트 시 인터넷 시간 동기화 (1회)
 
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
@@ -411,7 +417,7 @@ export default function App() {
                     {form.by ? (
                       <>
                         {/* ── 오후 5시 이후: 오늘 있었던 일 적기 (맨 위) ── */}
-                        {new Date().getHours() >= 17 && (
+                        {getServerHour() >= 17 && (
                           <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.1))', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setShowDiary(true)}>
                             📓 오늘 있었던 일 적기 ✦
                           </button>

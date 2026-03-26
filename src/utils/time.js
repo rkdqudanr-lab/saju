@@ -1,8 +1,10 @@
 // ═══════════════════════════════════════════════════════════
 //  ⏰ 시간대 유틸
 // ═══════════════════════════════════════════════════════════
+import { getServerHour } from './serverTime.js';
+
 export function getTimeSlot(){
-  const h=new Date().getHours();
+  const h = getServerHour();
   if(h>=5&&h<12) return 'morning';
   if(h>=12&&h<19) return 'afternoon';
   if(h>=19&&h<24) return 'evening';
