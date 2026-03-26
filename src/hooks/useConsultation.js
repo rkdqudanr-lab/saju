@@ -118,6 +118,14 @@ export function useConsultation(buildCtx, formOk) {
   // ── Supabase 상담기록 저장 ──
   const saveHistoryToSupabase = useCallback(async (questions, answers, slot) => {
     if (!supabase) return;
+    // history 동의 여부 확인 - 비동의 시 Supabase에 저장하지 않음
+    const consentStr = localStorage.getItem('byeolsoom_consent');
+    if (consentStr) {
+      try {
+        const consent = JSON.parse(consentStr);
+        if (consent.history === false) return;
+      } catch { /* 파싱 오류 시 진행 */ }
+    }
     try {
       const userStr = localStorage.getItem('byeolsoom_user');
       if (!userStr) return;

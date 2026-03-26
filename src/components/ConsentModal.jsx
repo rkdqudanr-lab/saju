@@ -58,6 +58,9 @@ export default function ConsentModal({ flags, setFlags, onConfirm }) {
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 600, marginBottom: 2 }}>{label}</div>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>{desc}</div>
+              {!flags[key] && (
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 3 }}>당신의 기기 내에만 저장돼요</div>
+              )}
             </div>
             <button
               className={`toggle ${flags[key] ? 'on' : 'off'}`}
