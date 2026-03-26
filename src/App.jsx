@@ -109,7 +109,8 @@ export default function App() {
           loginError, setLoginError,
           kakaoLogin, kakaoLogout, saveOtherProfile,
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
-          showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm } = userProfile;
+          showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
+          saveProfileToSupabase } = userProfile;
 
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
@@ -732,7 +733,7 @@ export default function App() {
                       {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
                     </div>
                   )}
-                  <button className="btn-main" disabled={editingMyProfile ? !formOk : !(formOk && fieldTouched.by && fieldTouched.bm && fieldTouched.bd)} onClick={() => { if (editingMyProfile) { setEditingMyProfile(false); } else if (!onboardingDone) { setSelQs([]); setStep(15); } else { setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
+                  <button className="btn-main" disabled={editingMyProfile ? !formOk : !(formOk && fieldTouched.by && fieldTouched.bm && fieldTouched.bd)} onClick={() => { if (user) saveProfileToSupabase(form, user); if (editingMyProfile) { setEditingMyProfile(false); } else if (!onboardingDone) { setSelQs([]); setStep(15); } else { setSelQs([]); setStep(2); } }}>{editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}</button>
                 </div>
               )}
             </div>
