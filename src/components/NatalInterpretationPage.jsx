@@ -1,37 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { OC, OE, ON, ILGAN_DESC } from "../utils/saju.js";
-import { stripMarkdown } from "../utils/constants.js";
-
-// ── 섹션 파서 ──
-// [본질] [균형] [강점] [과제] [재능] / [특성] [재능] [성장]
-function parseSections(text, tags) {
-  if (!text) return {};
-  const result = {};
-  for (let i = 0; i < tags.length; i++) {
-    const tag   = `[${tags[i]}]`;
-    const next  = tags[i + 1] ? `[${tags[i + 1]}]` : null;
-    const start = text.indexOf(tag);
-    if (start === -1) continue;
-    const contentStart = start + tag.length;
-    const end = next ? text.indexOf(next) : text.length;
-    result[tags[i]] = text.slice(contentStart, end !== -1 ? end : undefined).trim();
-  }
-  return result;
-}
-
-// ── 카드 섹션 정의 ──
-const NATAL_SECTIONS = [
-  { tag: '본질', icon: '🌱', title: '나의 타고난 본질' },
-  { tag: '균형', icon: '⚖️', title: '오행의 균형' },
-  { tag: '강점', icon: '✨', title: '타고난 강점' },
-  { tag: '과제', icon: '🌿', title: '성장의 방향' },
-  { tag: '재능', icon: '🎯', title: '숨겨진 재능' },
-];
-const ZODIAC_SECTIONS = [
-  { tag: '특성', icon: '✦', title: '별자리의 결' },
-  { tag: '재능', icon: '🌟', title: '빛나는 재능' },
-  { tag: '성장', icon: '🌙', title: '성장의 방향' },
-];
 
 // ── 오행 테마 ──
 const ELEMENT_THEME = {
@@ -41,41 +9,6 @@ const ELEMENT_THEME = {
   금: { grad: 'linear-gradient(135deg, rgba(184,160,53,.18) 0%, rgba(184,160,53,.04) 100%)', border: 'rgba(184,160,53,.3)' },
   수: { grad: 'linear-gradient(135deg, rgba(74,142,196,.18) 0%, rgba(74,142,196,.04) 100%)', border: 'rgba(74,142,196,.3)' },
 };
-
-// ── 로딩 스피너 ──
-function Spinner() {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0' }}>
-      <div style={{ width: 28, height: 28, border: '2.5px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite' }} />
-    </div>
-  );
-}
-
-// ── 섹션 카드 ──
-function SectionCard({ icon, title, text, delay = 0 }) {
-  if (!text) return null;
-  return (
-    <div
-      className="step-fade"
-      style={{
-        animationDelay: `${delay}ms`,
-        background: 'var(--bg2)',
-        border: '1px solid var(--line)',
-        borderRadius: 20,
-        padding: 'var(--sp3)',
-        marginBottom: 'var(--sp2)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: '1.1rem' }}>{icon}</span>
-        <span style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', letterSpacing: '.02em' }}>{title}</span>
-      </div>
-      <p style={{ margin: 0, fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-        {text}
-      </p>
-    </div>
-  );
-}
 
 // ── 4기둥 카드 (가로 스크롤) ──
 const PILLAR_META = [
@@ -120,89 +53,12 @@ function PillarCards({ saju }) {
 }
 
 // ── 메인 컴포넌트 ──
-export default function NatalInterpretationPage({ saju, sun, moon, form, buildCtx }) {
+export default function NatalInterpretationPage({ saju, sun, moon, asc, form, onGoStep }) {
   const [tab, setTab] = useState(0); // 0: 사주원국, 1: 별자리
 
-  // ── 캐시 키 (출생 정보 기반) ──
-  const natalKey  = `byeolsoom_natal_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
-  const zodiacKey = `byeolsoom_zodiac_${form.bm}${form.bd}`;
-
-  const [natalText,    setNatalText]    = useState(() => localStorage.getItem(natalKey)  || '');
-  const [zodiacText,   setZodiacText]   = useState(() => localStorage.getItem(zodiacKey) || '');
-  const [natalLoading, setNatalLoading] = useState(false);
-  const [zodiacLoading,setZodiacLoading]= useState(false);
-  const [natalErr,     setNatalErr]     = useState(false);
-  const [zodiacErr,    setZodiacErr]    = useState(false);
-
-  // ── 원국 AI 요청 ──
-  const fetchNatal = useCallback(async () => {
-    if (!saju || natalLoading) return;
-    setNatalLoading(true);
-    setNatalErr(false);
-    try {
-      const sajuSummary = `연주 ${saju.yeon.g}${saju.yeon.j} / 월주 ${saju.wol.g}${saju.wol.j} / 일주 ${saju.il.g}${saju.il.j} / 시주 ${saju.si.g}${saju.si.j}. 타고난 기질: ${ILGAN_DESC[saju.ilgan] || ''}. 강한 기운: ${ON[saju.dom]}, 약한 기운: ${ON[saju.lac]}.`;
-      const userMsg = `나의 사주 원국을 해석해주세요. ${sajuSummary}`;
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isNatal: true }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API 오류');
-      const cleaned = stripMarkdown(data.text || '');
-      setNatalText(cleaned);
-      localStorage.setItem(natalKey, cleaned);
-    } catch {
-      setNatalErr(true);
-    } finally {
-      setNatalLoading(false);
-    }
-  }, [saju, buildCtx, natalKey, natalLoading]);
-
-  // ── 별자리 AI 요청 ──
-  const fetchZodiac = useCallback(async () => {
-    if (!sun || zodiacLoading) return;
-    setZodiacLoading(true);
-    setZodiacErr(false);
-    try {
-      const userMsg = `나의 별자리(${sun.n} ${sun.s}) 해설을 해주세요. ${sun.desc || ''}`;
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isZodiac: true }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API 오류');
-      const cleaned = stripMarkdown(data.text || '');
-      setZodiacText(cleaned);
-      localStorage.setItem(zodiacKey, cleaned);
-    } catch {
-      setZodiacErr(true);
-    } finally {
-      setZodiacLoading(false);
-    }
-  }, [sun, buildCtx, zodiacKey, zodiacLoading]);
-
-  // ── 탭 전환 시 자동 로드 ──
-  useEffect(() => {
-    if (tab === 0 && !natalText && !natalLoading && saju) fetchNatal();
-  }, [tab, saju]);
-
-  useEffect(() => {
-    if (tab === 1 && !zodiacText && !zodiacLoading && sun) fetchZodiac();
-  }, [tab, sun]);
-
-  // 초기 로드 (사주 탭)
-  useEffect(() => {
-    if (!natalText && !natalLoading && saju) fetchNatal();
-  }, []);
-
-  const natalSections  = parseSections(natalText,  NATAL_SECTIONS.map(s => s.tag));
-  const zodiacSections = parseSections(zodiacText, ZODIAC_SECTIONS.map(s => s.tag));
-
-  const domEl      = saju?.dom || '목';
-  const elTheme    = ELEMENT_THEME[domEl] || ELEMENT_THEME['목'];
-  const domColor   = OC[domEl] || 'var(--gold)';
+  const domEl    = saju?.dom || '목';
+  const elTheme  = ELEMENT_THEME[domEl] || ELEMENT_THEME['목'];
+  const domColor = OC[domEl] || 'var(--gold)';
 
   return (
     <div className="page step-fade">
@@ -220,7 +76,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, form, buildCt
           }}
         >
           <div style={{ fontSize: 'var(--xs)', color: domColor, fontWeight: 700, letterSpacing: '.1em', marginBottom: 6, opacity: .85 }}>
-            나의 사주 원국
+            나의 별숨 · 사주원국과 별자리
           </div>
           {saju && (
             <>
@@ -273,6 +129,11 @@ export default function NatalInterpretationPage({ saju, sun, moon, form, buildCt
                   🌙 달 {moon.n}
                 </span>
               )}
+              {asc && (
+                <span style={{ fontSize: 'var(--xs)', background: 'var(--bg3)', color: 'var(--t3)', borderRadius: 20, padding: '4px 12px' }}>
+                  ↑ 상승 {asc.n}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -315,58 +176,34 @@ export default function NatalInterpretationPage({ saju, sun, moon, form, buildCt
         {/* ── 사주 원국 탭 ── */}
         {tab === 0 && (
           <div>
-            {/* 4기둥 */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', marginBottom: 10 }}>
-                ✦ 네 기둥 이야기
-              </div>
-              <PillarCards saju={saju} />
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', marginBottom: 10 }}>
+              ✦ 네 기둥 이야기
             </div>
+            <PillarCards saju={saju} />
 
-            {/* AI 섹션들 */}
-            {natalLoading && <Spinner />}
-
-            {natalErr && !natalLoading && (
-              <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <div style={{ fontSize: 'var(--sm)', color: 'var(--t4)', marginBottom: 14 }}>
-                  별이 잠시 쉬고 있어요 🌙
-                </div>
-                <button
-                  onClick={fetchNatal}
-                  style={{
-                    background: 'none', border: '1px solid var(--line)', borderRadius: 20,
-                    padding: '8px 20px', color: 'var(--t3)', fontSize: 'var(--xs)',
-                    fontFamily: 'var(--ff)', cursor: 'pointer',
-                  }}
-                >
-                  다시 불러오기
-                </button>
+            {/* 일간 설명 */}
+            {saju && (
+              <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6, letterSpacing: '.04em' }}>✦ 일간의 기질</div>
+                <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>{saju.ilganDesc || ILGAN_DESC[saju.ilgan] || ''}</div>
               </div>
             )}
 
-            {!natalLoading && !natalErr && natalText && NATAL_SECTIONS.map(({ tag, icon, title }, i) =>
-              natalSections[tag] ? (
-                <SectionCard
-                  key={tag}
-                  icon={icon}
-                  title={title}
-                  text={natalSections[tag]}
-                  delay={i * 60}
-                />
-              ) : null
-            )}
-
-            {/* 텍스트는 있는데 파싱이 안 된 경우 (fallback) */}
-            {!natalLoading && !natalErr && natalText && Object.keys(natalSections).length === 0 && (
-              <div
-                style={{
-                  background: 'var(--bg2)', border: '1px solid var(--line)',
-                  borderRadius: 20, padding: '20px',
-                }}
-              >
-                <p style={{ margin: 0, fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>
-                  {natalText}
-                </p>
+            {/* 오행 균형 설명 */}
+            {saju && (
+              <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 16, padding: '16px 18px' }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>⚖️ 오행 구성</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {Object.entries(saju.or).filter(([, v]) => v > 0).map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ width: 32, fontSize: 'var(--xs)', color: OC[k], fontWeight: 700 }}>{OE[k]} {ON[k]}</span>
+                      <div style={{ flex: 1, height: 6, background: 'var(--bg3)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ width: `${(v / 8) * 100}%`, height: '100%', background: OC[k], borderRadius: 3 }} />
+                      </div>
+                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', width: 16, textAlign: 'right' }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -375,84 +212,107 @@ export default function NatalInterpretationPage({ saju, sun, moon, form, buildCt
         {/* ── 별자리 탭 ── */}
         {tab === 1 && (
           <div>
-            {/* 별자리 히어로 */}
-            {sun && (
-              <div
-                style={{
-                  background: 'var(--bg2)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 20,
-                  padding: '20px',
-                  marginBottom: 16,
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '2.2rem', marginBottom: 6 }}>{sun.s}</div>
-                <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>{sun.n}</div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-                  {sun.sm}월 {sun.sd}일 — {sun.em}월 {sun.ed}일
-                </div>
-                {sun.desc && (
-                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 10, lineHeight: 1.7 }}>
-                    {sun.desc}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {zodiacLoading && <Spinner />}
-
-            {zodiacErr && !zodiacLoading && (
-              <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <div style={{ fontSize: 'var(--sm)', color: 'var(--t4)', marginBottom: 14 }}>
-                  별이 잠시 쉬고 있어요 🌙
-                </div>
-                <button
-                  onClick={fetchZodiac}
+            {sun ? (
+              <>
+                {/* 태양 별자리 */}
+                <div
                   style={{
-                    background: 'none', border: '1px solid var(--line)', borderRadius: 20,
-                    padding: '8px 20px', color: 'var(--t3)', fontSize: 'var(--xs)',
-                    fontFamily: 'var(--ff)', cursor: 'pointer',
+                    background: 'var(--bg2)',
+                    border: '1px solid var(--line)',
+                    borderRadius: 20,
+                    padding: '20px',
+                    marginBottom: 12,
+                    textAlign: 'center',
                   }}
                 >
-                  다시 불러오기
-                </button>
-              </div>
-            )}
+                  <div style={{ fontSize: '2.2rem', marginBottom: 6 }}>{sun.s}</div>
+                  <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>{sun.n}</div>
+                  <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>☀ 태양 별자리</div>
+                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+                    {sun.sm}월 {sun.sd}일 — {sun.em}월 {sun.ed}일
+                  </div>
+                  {sun.desc && (
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 10, lineHeight: 1.7 }}>
+                      {sun.desc}
+                    </div>
+                  )}
+                </div>
 
-            {!zodiacLoading && !zodiacErr && zodiacText && ZODIAC_SECTIONS.map(({ tag, icon, title }, i) =>
-              zodiacSections[tag] ? (
-                <SectionCard
-                  key={tag}
-                  icon={icon}
-                  title={title}
-                  text={zodiacSections[tag]}
-                  delay={i * 60}
-                />
-              ) : null
-            )}
+                {/* 달 별자리 */}
+                {moon && (
+                  <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: '1.4rem' }}>🌙</span>
+                      <div>
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 2 }}>달 별자리 · 감정과 내면</div>
+                        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>{moon.s} {moon.n}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-            {/* fallback */}
-            {!zodiacLoading && !zodiacErr && zodiacText && Object.keys(zodiacSections).length === 0 && (
-              <div
-                style={{
-                  background: 'var(--bg2)', border: '1px solid var(--line)',
-                  borderRadius: 20, padding: '20px',
-                }}
-              >
-                <p style={{ margin: 0, fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>
-                  {zodiacText}
-                </p>
-              </div>
-            )}
-
-            {!sun && (
+                {/* 상승 별자리 */}
+                {asc && (
+                  <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 16, padding: '16px 18px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: '1.4rem' }}>↑</span>
+                      <div>
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 2 }}>상승 별자리 · 외면과 첫인상</div>
+                        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>{asc.s} {asc.n}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--t4)', fontSize: 'var(--sm)' }}>
-                생년월일을 입력하면 별자리 해설을 볼 수 있어요
+                생년월일을 입력하면 별자리 정보를 볼 수 있어요
               </div>
             )}
           </div>
         )}
+
+        {/* ── AI 분석으로 이동 버튼 ── */}
+        <div style={{ display: 'flex', gap: 10, marginTop: 28, marginBottom: 16 }}>
+          <button
+            onClick={() => onGoStep && onGoStep(14)}
+            style={{
+              flex: 1,
+              padding: '14px 10px',
+              borderRadius: 'var(--r1)',
+              border: '1px solid rgba(180,140,50,0.5)',
+              background: 'var(--goldf)',
+              color: 'var(--gold)',
+              fontSize: 'var(--sm)',
+              fontWeight: 600,
+              fontFamily: 'var(--ff)',
+              cursor: 'pointer',
+              transition: 'opacity .15s',
+              lineHeight: 1.4,
+            }}
+          >
+            별숨의 종합사주 ✦
+          </button>
+          <button
+            onClick={() => onGoStep && onGoStep(16)}
+            style={{
+              flex: 1,
+              padding: '14px 10px',
+              borderRadius: 'var(--r1)',
+              border: '1px solid var(--line)',
+              background: 'transparent',
+              color: 'var(--t2)',
+              fontSize: 'var(--sm)',
+              fontWeight: 600,
+              fontFamily: 'var(--ff)',
+              cursor: 'pointer',
+              transition: 'opacity .15s',
+              lineHeight: 1.4,
+            }}
+          >
+            종합 점성술 🌟
+          </button>
+        </div>
 
         <div style={{ height: 40 }} />
       </div>
