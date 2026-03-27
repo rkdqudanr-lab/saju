@@ -232,11 +232,12 @@ function DetailPanel({ pair, members, onClose }) {
 // ─────────────────────────────────────────────────────────
 //  메인 컴포넌트
 // ─────────────────────────────────────────────────────────
-export default function GroupBulseumPage({ form, saju, sun, setStep }) {
+export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode }) {
   const [phase, setPhase] = useState('landing'); // landing | join | members | graph
   const [sessionId, setSessionId] = useState(null);
   const [inviteCode, setInviteCode] = useState('');
-  const [codeInput, setCodeInput] = useState('');
+  const [codeInput, setCodeInput] = useState(initialCode || '');
+  const [linkCopied, setLinkCopied] = useState(false);
   const [members, setMembers] = useState([]);
   const [selectedPair, setSelectedPair] = useState(null);
   const [codeError, setCodeError] = useState('');
@@ -364,20 +365,20 @@ export default function GroupBulseumPage({ form, saju, sun, setStep }) {
               <span style={{ background: 'var(--bg1)', padding: '0 12px', fontSize: 'var(--xs)', color: 'var(--t4)', position: 'relative' }}>또는</span>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <div style={{ marginBottom: 8 }}>
               <input
                 className="inp"
                 placeholder="초대 코드 입력 (6자리)"
                 value={codeInput}
                 onChange={e => { setCodeInput(e.target.value.toUpperCase().slice(0, 6)); setCodeError(''); }}
-                style={{ marginBottom: 0, flex: 1, letterSpacing: 4, textAlign: 'center', fontWeight: 700 }}
+                style={{ width: '100%', boxSizing: 'border-box', letterSpacing: 6, textAlign: 'center', fontWeight: 700, fontSize: 'var(--md)', marginBottom: 10 }}
                 maxLength={6}
               />
               <button
                 className="btn-main"
                 onClick={joinGroup}
                 disabled={codeInput.length !== 6}
-                style={{ flex: 'none', padding: '12px 20px' }}
+                style={{ width: '100%' }}
               >
                 참여
               </button>
@@ -414,17 +415,35 @@ export default function GroupBulseumPage({ form, saju, sun, setStep }) {
         <div className="inner">
           <div style={{ paddingTop: 20 }}>
             <div style={{
-              textAlign: 'center', marginBottom: 24,
-              padding: '12px', background: 'var(--goldf)',
+              textAlign: 'center', marginBottom: 16,
+              padding: '16px', background: 'var(--goldf)',
               borderRadius: 'var(--r1)', border: '1px solid var(--acc)',
             }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>초대 코드</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--gold)', letterSpacing: 8 }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gold)', letterSpacing: 10, marginBottom: 4 }}>
                 {inviteCode}
               </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 4 }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 12 }}>
                 현재 {members.length}명 참여 중
               </div>
+              <button
+                onClick={() => {
+                  const link = `${window.location.origin}?group=${inviteCode}`;
+                  navigator.clipboard.writeText(link).then(() => {
+                    setLinkCopied(true);
+                    setTimeout(() => setLinkCopied(false), 2000);
+                  });
+                }}
+                style={{
+                  background: linkCopied ? 'var(--acc)' : 'var(--bg1)',
+                  border: '1px solid var(--acc)', borderRadius: 20,
+                  padding: '6px 16px', color: linkCopied ? '#fff' : 'var(--gold)',
+                  fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                  fontWeight: 700, transition: 'all .2s',
+                }}
+              >
+                {linkCopied ? '✓ 복사됨!' : '🔗 초대 링크 복사'}
+              </button>
             </div>
 
             <MemberForm
