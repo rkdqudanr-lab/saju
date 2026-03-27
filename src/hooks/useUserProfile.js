@@ -159,14 +159,15 @@ export function useUserProfile() {
         if (data) {
           setProfile(p => ({
             ...p,
-            ...(data.mbti              && { mbti:      data.mbti }),
-            ...(data.self_desc         && { selfDesc:  data.self_desc }),
-            ...(data.partner_name      && { partner:   data.partner_name }),
+            ...(data.mbti              && { mbti:       data.mbti }),
+            ...(data.self_desc         && { selfDesc:   data.self_desc }),
+            ...(data.partner_name      && { partner:    data.partner_name }),
             ...(data.partner_birth_year  && { partnerBy: String(data.partner_birth_year) }),
             ...(data.partner_birth_month && { partnerBm: String(data.partner_birth_month) }),
             ...(data.partner_birth_day   && { partnerBd: String(data.partner_birth_day) }),
-            ...(data.workplace         && { workplace: data.workplace }),
-            ...(data.worry_text        && { worryText: data.worry_text }),
+            ...(data.workplace         && { workplace:  data.workplace }),
+            ...(data.worry_text        && { worryText:  data.worry_text }),
+            ...(data.qa_answers        && { qa_answers: data.qa_answers }),
           }));
         }
       } catch (e) {
@@ -252,6 +253,8 @@ export function useUserProfile() {
         workplace:           consentFlags.workplace ? (profileData.workplace || null) : null,
         // worry 동의 시에만 저장
         worry_text:          consentFlags.worry ? (profileData.worryText || null) : null,
+        // 20문 20답 답변 (항상 저장)
+        qa_answers:          profileData.qa_answers || null,
         updated_at:          new Date().toISOString(),
       }, { onConflict: 'kakao_id', ignoreDuplicates: false });
       if (error) console.error('[별숨] user_profiles 저장 오류:', error);

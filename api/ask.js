@@ -16,13 +16,13 @@ import { buildSystem } from "../lib/prompts/buildSystem/index.js";
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
   }
-  if (userMessage.length > 2000) {
-    return { ok: false, reason: 'userMessage가 너무 길어요 (최대 2000자)' };
+  if (userMessage.length > 3000) {
+    return { ok: false, reason: 'userMessage가 너무 길어요 (최대 3000자)' };
   }
   if (context !== undefined && typeof context !== 'string') {
     return { ok: false, reason: 'context는 문자열이어야 해요' };
@@ -42,6 +42,8 @@ function validateRequest(body) {
       isZodiac: !!isZodiac,
       isComprehensive: !!isComprehensive,
       isAstrology: !!isAstrology,
+      isProfileQuestion: !!isProfileQuestion,
+      isGroupAnalysis: !!isGroupAnalysis,
     },
   };
 }
@@ -54,7 +56,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: validation.reason });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
@@ -74,27 +76,44 @@ export default async function handler(req, res) {
     categoryExample, isNatal, isZodiac, isComprehensive, isAstrology
   );
 
-  const systemWithContext = systemBase
+  // isProfileQuestion: 프로필 맞춤 질문 생성 전용 시스템 프롬프트
+  const profileQuestionSystem = isProfileQuestion
+    ? `당신은 별숨(byeolsoom)이에요. 사주와 별자리를 기반으로 사용자를 깊이 이해하는 점성술 AI예요.
+사용자의 20가지 자기소개 답변을 읽고, 그 사람에게만 맞는 심층 질문 5개를 JSON 배열로만 답해주세요.
+각 질문은 사주와 별자리 관점에서 더 깊이 이해하기 위한 것으로, 개인적이고 구체적이어야 해요.
+반드시 JSON만 응답하세요: [{"id":"aq_1","q":"질문 내용"},{"id":"aq_2","q":"..."},...]`
+    : null;
+
+  // isGroupAnalysis: 그룹 관계 분석 전용 시스템 프롬프트
+  const groupAnalysisSystem = isGroupAnalysis
+    ? `당신은 별숨(byeolsoom)이에요. 여러 사람의 사주와 별자리를 읽고 그들의 관계를 따뜻하고 재밌게 분석해줘요.
+두 사람의 관계를 분석할 때는: 좋은 점, 조심해야 할 점, 함께하면 시너지가 나는 상황, 서로에게 필요한 것을 별숨의 언어로 이야기해주세요.
+판단하지 말고, 재밌고 따뜻하게 두 별의 관계를 풀어주세요.`
+    : null;
+
+  const systemWithContext = (profileQuestionSystem || groupAnalysisSystem || systemBase)
     + (context
       ? `\n\n━━━ 오늘 상담하는 분의 기운 데이터 ━━━\n${context}\n(위 데이터는 취재 노트예요. 이걸 그대로 보여주는 게 아니라, 에세이의 재료로 자연스럽게 녹여요.)`
       : '');
 
   // 감성 깊이가 필요한 모드는 sonnet, 나머지는 haiku (비용 최적화)
-  const model = (isLetter || isStory || isComprehensive || isAstrology)
+  const model = (isLetter || isStory || isComprehensive || isAstrology || isGroupAnalysis)
     ? "claude-sonnet-4-20250514"
     : "claude-haiku-4-5-20251001";
 
   // 모드별 최대 토큰 분기 (불필요한 장문 생성 방지)
   const maxTokens =
-    isComprehensive ? 3000 :
-    isAstrology     ? 3000 :
-    isReport        ? 2000 :
-    isLetter        ? 1000 :
-    isStory         ? 2500 :
-    isScenario      ? 1500 :
-    isNatal         ? 2000 :
-    isZodiac        ?  900 :
-                       600;
+    isComprehensive     ? 3000 :
+    isAstrology         ? 3000 :
+    isReport            ? 2000 :
+    isLetter            ? 1000 :
+    isStory             ? 2500 :
+    isScenario          ? 1500 :
+    isNatal             ? 2000 :
+    isZodiac            ?  900 :
+    isGroupAnalysis     ? 1200 :
+    isProfileQuestion   ?  600 :
+                           600;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {

@@ -86,8 +86,12 @@ create table if not exists user_profiles (
   partner_birth_day    integer,
   workplace            text,
   worry_text           text,
+  qa_answers           jsonb,       -- 20문 20답 + AI 맞춤 질문 답변 저장
   updated_at           timestamptz default now()
 );
+
+-- 기존 테이블에 qa_answers 컬럼 추가 (이미 테이블이 있는 경우)
+alter table user_profiles add column if not exists qa_answers jsonb;
 
 alter table user_profiles enable row level security;
 
@@ -137,17 +141,30 @@ create policy "quiz_update" on daily_quiz_answers
 
 -- ── diary_entries ─────────────────────────────────────────
 create table if not exists diary_entries (
-  id         uuid primary key default gen_random_uuid(),
-  kakao_id   text not null,
-  date       date not null default current_date,
-  content    text not null,
-  created_at timestamptz default now()
+  id             uuid primary key default gen_random_uuid(),
+  kakao_id       text not null,
+  date           date not null default current_date,
+  content        text not null,
+  mood           integer,           -- 1(매우 힘듦) ~ 5(아주 좋음)
+  weather        text,              -- sunny | cloudy | rain | snow | fine_dust | thunder | wind
+  energy         integer,           -- 1(방전) ~ 5(가득)
+  gratitude      text,              -- 오늘 감사했던 일
+  tomorrow_goal  text,              -- 내일 한 가지 목표
+  created_at     timestamptz default now()
 );
+
+-- 기존 테이블에 컬럼 추가 (이미 테이블이 있는 경우)
+alter table diary_entries add column if not exists mood          integer;
+alter table diary_entries add column if not exists weather       text;
+alter table diary_entries add column if not exists energy        integer;
+alter table diary_entries add column if not exists gratitude     text;
+alter table diary_entries add column if not exists tomorrow_goal text;
 
 alter table diary_entries enable row level security;
 
 drop policy if exists "diary_insert" on diary_entries;
 drop policy if exists "diary_select" on diary_entries;
+drop policy if exists "diary_update" on diary_entries;
 drop policy if exists "diary_delete" on diary_entries;
 
 create policy "diary_insert" on diary_entries
@@ -155,6 +172,9 @@ create policy "diary_insert" on diary_entries
 
 create policy "diary_select" on diary_entries
   for select to anon using (true);
+
+create policy "diary_update" on diary_entries
+  for update to anon using (true) with check (kakao_id is not null);
 
 create policy "diary_delete" on diary_entries
   for delete to anon using (true);
@@ -182,3 +202,47 @@ create policy "cal_select" on calendar_events
 
 create policy "cal_delete" on calendar_events
   for delete to anon using (true);
+
+-- ── group_sessions (우리 모임의 별숨은?) ───────────────────────────
+create table if not exists group_sessions (
+  id          uuid primary key default gen_random_uuid(),
+  invite_code text unique not null,
+  created_by  text,       -- kakao_id (optional, 비로그인 허용)
+  created_at  timestamptz default now()
+);
+
+alter table group_sessions enable row level security;
+
+drop policy if exists "group_sessions_insert" on group_sessions;
+drop policy if exists "group_sessions_select" on group_sessions;
+
+create policy "group_sessions_insert" on group_sessions
+  for insert to anon with check (invite_code is not null);
+
+create policy "group_sessions_select" on group_sessions
+  for select to anon using (true);
+
+-- ── group_members ─────────────────────────────────────────────────
+create table if not exists group_members (
+  id           uuid primary key default gen_random_uuid(),
+  session_id   uuid references group_sessions(id) on delete cascade,
+  name         text not null,
+  birth_year   integer not null,
+  birth_month  integer not null,
+  birth_day    integer not null,
+  birth_hour   integer,   -- null이면 시간 모름
+  gender       text,
+  kakao_id     text,      -- optional, 로그인 사용자만
+  created_at   timestamptz default now()
+);
+
+alter table group_members enable row level security;
+
+drop policy if exists "group_members_insert" on group_members;
+drop policy if exists "group_members_select" on group_members;
+
+create policy "group_members_insert" on group_members
+  for insert to anon with check (name is not null and session_id is not null);
+
+create policy "group_members_select" on group_members
+  for select to anon using (true);
