@@ -66,6 +66,9 @@ export default function App() {
   const [copyDone, setCopyDone] = useState(false);
   // showDiary/diaryText 제거됨 → Step 17 DiaryPage 사용
   const [diaryQuickContent, setDiaryQuickContent] = useState('');
+  const [diaryQuickMood, setDiaryQuickMood] = useState(null);
+  const [diaryQuickWeather, setDiaryQuickWeather] = useState('');
+  const [diaryQuickEnergy, setDiaryQuickEnergy] = useState(null);
   const [showDailyCard, setShowDailyCard] = useState(false);
   const [anniversaryDate, setAnniversaryDate] = useState('');
   const [anniversaryType, setAnniversaryType] = useState('');
@@ -370,6 +373,7 @@ export default function App() {
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
             if (s === 'history' && item) { setHistItem(item); setStep(9); }
+            else if (s === 'fortune') { setShowDailyCard(true); setStep(0); }
             else if (s === 1 && formOk && otherProfiles.length === 0) { setSelQs([]); setStep(2); }
             else { setStep(s); }
           }}
@@ -482,14 +486,59 @@ export default function App() {
                                 )}
 
                                 {/* ── 오후 5시 이후: 인라인 일기 입력 ── */}
+                                {/* ── 오후 5시 이후: 인라인 일기 입력 ── */}
                                 <div style={{
                                   marginTop: 12, padding: '16px',
                                   background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.08))',
                                   borderRadius: 'var(--r1)', border: '1px solid var(--gold)',
                                 }}>
-                                  <div style={{ fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.03em', lineHeight: 1.5 }}>
+                                  <div style={{ fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700, marginBottom: 14, letterSpacing: '.03em', lineHeight: 1.5 }}>
                                     오늘 당신의 하루를 별숨에게 들려주세요
                                   </div>
+
+                                  {/* 기분 */}
+                                  <div style={{ marginBottom: 12 }}>
+                                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, fontWeight: 600 }}>✦ 오늘 기분</div>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                      {[{v:1,e:'😞'},{v:2,e:'😕'},{v:3,e:'😐'},{v:4,e:'🙂'},{v:5,e:'😄'}].map(({v,e}) => (
+                                        <button key={v} onClick={() => setDiaryQuickMood(v)} style={{
+                                          flex: 1, background: diaryQuickMood===v ? 'var(--acc)' : 'var(--bg1)',
+                                          border: `1px solid ${diaryQuickMood===v ? 'var(--acc)' : 'var(--line)'}`,
+                                          borderRadius: 8, padding: '8px 0', fontSize: '1.4rem', cursor: 'pointer',
+                                        }}>{e}</button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {/* 날씨 */}
+                                  <div style={{ marginBottom: 12 }}>
+                                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, fontWeight: 600 }}>✦ 날씨</div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                      {[{v:'sunny',e:'☀️'},{v:'cloudy',e:'☁️'},{v:'rain',e:'🌧️'},{v:'snow',e:'❄️'},{v:'fine_dust',e:'😷'},{v:'thunder',e:'⛈️'},{v:'wind',e:'🌬️'}].map(({v,e}) => (
+                                        <button key={v} onClick={() => setDiaryQuickWeather(v)} style={{
+                                          background: diaryQuickWeather===v ? 'var(--acc)' : 'var(--bg1)',
+                                          border: `1px solid ${diaryQuickWeather===v ? 'var(--acc)' : 'var(--line)'}`,
+                                          borderRadius: 8, padding: '6px 10px', fontSize: '1.2rem', cursor: 'pointer',
+                                        }}>{e}</button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {/* 에너지 */}
+                                  <div style={{ marginBottom: 12 }}>
+                                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, fontWeight: 600 }}>✦ 에너지</div>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                      {[{v:1,e:'🪫'},{v:2,e:'🔋'},{v:3,e:'🔋'},{v:4,e:'🔋'},{v:5,e:'⚡'}].map(({v,e}) => (
+                                        <button key={v} onClick={() => setDiaryQuickEnergy(v)} style={{
+                                          flex: 1, background: diaryQuickEnergy===v ? 'var(--acc)' : 'var(--bg1)',
+                                          border: `1px solid ${diaryQuickEnergy===v ? 'var(--acc)' : 'var(--line)'}`,
+                                          borderRadius: 8, padding: '8px 0', fontSize: '1.2rem', cursor: 'pointer',
+                                        }}>{e}</button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {/* 오늘 하루 텍스트 */}
                                   <textarea
                                     value={diaryQuickContent}
                                     onChange={e => setDiaryQuickContent(e.target.value)}
@@ -1391,6 +1440,9 @@ export default function App() {
               askReview={askReview}
               setStep={setStep}
               initialContent={diaryQuickContent}
+              initialMood={diaryQuickMood}
+              initialWeather={diaryQuickWeather}
+              initialEnergy={diaryQuickEnergy}
             />
           </Suspense>
         )}

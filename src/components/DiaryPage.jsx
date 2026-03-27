@@ -43,10 +43,10 @@ function Section({ title, children }) {
   );
 }
 
-export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent }) {
-  const [mood, setMood] = useState(null);
-  const [weather, setWeather] = useState('');
-  const [energy, setEnergy] = useState(null);
+export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent, initialMood, initialWeather, initialEnergy }) {
+  const [mood, setMood] = useState(initialMood || null);
+  const [weather, setWeather] = useState(initialWeather || '');
+  const [energy, setEnergy] = useState(initialEnergy || null);
   const [gratitude, setGratitude] = useState('');
   const [tomorrowGoal, setTomorrowGoal] = useState('');
   const [content, setContent] = useState(initialContent || '');
