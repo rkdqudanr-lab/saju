@@ -32,9 +32,8 @@ create table if not exists consultation_history (
 );
 
 -- ── RLS: users ───────────────────────────────────────────────────
--- 주의: anon key는 PostgreSQL 세션 변수(current_setting)를 설정할 수 없으므로
--- current_setting 기반 정책 대신 anon 역할에 허용하는 정책을 사용합니다.
--- 클라이언트 코드에서 kakao_id 기준으로 직접 필터링합니다.
+-- x-kakao-id 커스텀 헤더 기반 본인 인증 정책.
+-- 클라이언트는 getAuthenticatedClient(kakaoId)로 헤더를 주입합니다.
 
 alter table users enable row level security;
 
@@ -49,13 +48,17 @@ drop policy if exists "users_update" on users;
 create policy "users_insert" on users
   for insert to anon with check (kakao_id is not null);
 
--- 조회: 클라이언트가 .eq('kakao_id', ...) 필터를 직접 적용
+-- 조회: x-kakao-id 헤더와 일치하는 본인 행만 조회
 create policy "users_select" on users
-  for select to anon using (true);
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
--- 수정: upsert 시 onConflict: kakao_id 로 자신의 행만 갱신
+-- 수정: x-kakao-id 헤더와 일치하는 본인 행만 수정 (upsert 포함)
 create policy "users_update" on users
-  for update to anon using (true) with check (true);
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
 
 -- ── RLS: consultation_history ─────────────────────────────────────
 alter table consultation_history enable row level security;
@@ -70,9 +73,14 @@ drop policy if exists "history_select" on consultation_history;
 create policy "history_insert" on consultation_history
   for insert to anon with check (user_id is not null);
 
--- 조회: 클라이언트가 .eq('user_id', ...) 필터를 직접 적용
+-- 조회: x-kakao-id 헤더와 일치하는 users의 id로 필터
 create policy "history_select" on consultation_history
-  for select to anon using (true);
+  for select to anon using (
+    user_id in (
+      select id from users
+      where kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+    )
+  );
 
 -- ── user_profiles ─────────────────────────────────────────────
 create table if not exists user_profiles (
@@ -103,13 +111,17 @@ drop policy if exists "profiles_update" on user_profiles;
 create policy "profiles_insert" on user_profiles
   for insert to anon with check (kakao_id is not null);
 
--- 조회: 클라이언트가 .eq('kakao_id', ...) 필터를 직접 적용
+-- 조회: x-kakao-id 헤더와 일치하는 본인 행만 조회
 create policy "profiles_select" on user_profiles
-  for select to anon using (true);
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
--- 수정: upsert 시 onConflict: kakao_id 로 자신의 행만 갱신
+-- 수정: x-kakao-id 헤더와 일치하는 본인 행만 수정
 create policy "profiles_update" on user_profiles
-  for update to anon using (true) with check (kakao_id is not null);
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
 
 -- ── daily_quiz_answers ────────────────────────────────────────
 create table if not exists daily_quiz_answers (
@@ -131,13 +143,17 @@ drop policy if exists "quiz_update" on daily_quiz_answers;
 create policy "quiz_insert" on daily_quiz_answers
   for insert to anon with check (kakao_id is not null);
 
--- 조회: 클라이언트가 .eq('kakao_id', ...) 필터를 직접 적용
+-- 조회: x-kakao-id 헤더와 일치하는 본인 행만 조회
 create policy "quiz_select" on daily_quiz_answers
-  for select to anon using (true);
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
--- 수정: upsert 시 onConflict: kakao_id,question_id 로 자신의 행만 갱신
+-- 수정: x-kakao-id 헤더와 일치하는 본인 행만 수정
 create policy "quiz_update" on daily_quiz_answers
-  for update to anon using (true) with check (kakao_id is not null);
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
 
 -- ── diary_entries ─────────────────────────────────────────
 create table if not exists diary_entries (
@@ -171,13 +187,19 @@ create policy "diary_insert" on diary_entries
   for insert to anon with check (kakao_id is not null);
 
 create policy "diary_select" on diary_entries
-  for select to anon using (true);
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 create policy "diary_update" on diary_entries
-  for update to anon using (true) with check (kakao_id is not null);
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
 
 create policy "diary_delete" on diary_entries
-  for delete to anon using (true);
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 -- ── calendar_events ───────────────────────────────────────
 create table if not exists calendar_events (
@@ -198,10 +220,14 @@ create policy "cal_insert" on calendar_events
   for insert to anon with check (kakao_id is not null);
 
 create policy "cal_select" on calendar_events
-  for select to anon using (true);
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 create policy "cal_delete" on calendar_events
-  for delete to anon using (true);
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 -- ── group_sessions (우리 모임의 별숨은?) ───────────────────────────
 create table if not exists group_sessions (

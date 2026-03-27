@@ -14,9 +14,6 @@ import { useUserProfile }   from "./hooks/useUserProfile.js";
 import { useSajuContext }   from "./hooks/useSajuContext.js";
 import { useConsultation }  from "./hooks/useConsultation.js";
 
-// styles
-import CSS from "./styles/theme.js";
-
 // supabase
 import { supabase } from "./lib/supabase.js";
 
@@ -42,6 +39,7 @@ const AstrologyPage            = lazy(() => import("./components/AstrologyPage.j
 const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
 const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
 const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
+const SettingsPage             = lazy(() => import("./components/SettingsPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -137,7 +135,7 @@ export default function App() {
           dailyResult, dailyLoading,
           diaryReviewResult, diaryReviewLoading,
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
-          retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
+          retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
   const IS_BETA = true; // 베타 기간 종료 시 false로 변경
@@ -285,6 +283,27 @@ export default function App() {
     }
   }, [user?.id, form.by, form.bm, form.bd, step]); // askDailyHoroscope 레퍼런스 제외 (무한루프 방지)
 
+  // ── 모달 열림 시 body 스크롤 잠금 ──
+  useEffect(() => {
+    const anyOpen = showUpgradeModal || showOtherProfileModal || showInviteModal || shareModal.open;
+    document.body.style.overflow = anyOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [showUpgradeModal, showOtherProfileModal, showInviteModal, shareModal.open]);
+
+  // ── Escape 키로 모달/사이드바 닫기 ──
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key !== 'Escape') return;
+      if (shareModal.open) { setShareModal(s => ({ ...s, open: false })); return; }
+      if (showUpgradeModal) { setShowUpgradeModal(false); return; }
+      if (showOtherProfileModal) { setShowOtherProfileModal(false); return; }
+      if (showInviteModal) { setShowInviteModal(false); return; }
+      if (showSidebar) { setShowSidebar(false); return; }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [shareModal.open, showUpgradeModal, showOtherProfileModal, showInviteModal, showSidebar]);
+
   // ── 테마 ──
   useEffect(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }, [isDark]);
   const toggleDark = () => {
@@ -340,7 +359,6 @@ export default function App() {
   if (loginLoading) {
     return (
       <>
-        <style>{CSS}</style>
         <StarCanvas isDark={isDark} />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', gap: 24 }}>
           <div className="land-orb" style={{ marginBottom: 8 }}>
@@ -360,7 +378,6 @@ export default function App() {
 
   return (
     <>
-      <style>{CSS}</style>
       <StarCanvas isDark={isDark} />
       <PWAInstallBanner />
 
@@ -378,9 +395,12 @@ export default function App() {
           user={user} step={step}
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
+            // 출생정보가 필요한 페이지들: formOk 없으면 step 1로
+            const needsForm = [2, 5, 6, 7, 8, 10, 12, 13, 14, 16, 17, 18];
             if (s === 'history' && item) { setHistItem(item); setStep(9); }
-            else if (s === 'fortune') { setStep(18); }
+            else if (s === 'fortune') { formOk ? setStep(18) : setStep(1); }
             else if (s === 1 && formOk && otherProfiles.length === 0) { setSelQs([]); setStep(2); }
+            else if (typeof s === 'number' && needsForm.includes(s) && !formOk) { setStep(1); }
             else { setStep(s); }
           }}
           onKakaoLogin={kakaoLogin}
@@ -388,6 +408,7 @@ export default function App() {
           onProfileOpen={() => setShowProfileModal(true)}
           onInvite={() => setShowInviteModal(true)}
           onAddOther={() => setShowOtherProfileModal(true)}
+          onSettings={() => setStep(19)}
         />
       )}
 
@@ -408,7 +429,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 18) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 18 || step === 19) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>🏠</button>}
 
@@ -970,12 +991,21 @@ export default function App() {
         )}
 
         {/* ── Step 3: 로딩 ── */}
-        {step === 3 && <div className="page" role="status" aria-live="polite" aria-busy="true"><SkeletonLoader qCount={selQs.length} saju={saju} loadingMsgIdx={loadingMsgIdx} selQs={selQs} qLoadStatus={qLoadStatus} /></div>}
+        {step === 3 && (
+          <div className="page" role="status" aria-live="polite" aria-busy="true" aria-label="별숨이 답변을 준비하고 있어요">
+            <SkeletonLoader qCount={selQs.length} saju={saju} loadingMsgIdx={loadingMsgIdx} selQs={selQs} qLoadStatus={qLoadStatus} />
+            {retryMsg && (
+              <div style={{ marginTop: 12, padding: '10px 16px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--gold)', textAlign: 'center', animation: 'fadeUp .3s ease' }}>
+                {retryMsg}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Step 4: 결과 ── */}
         {step === 4 && (
           <div className="page-top">
-            <div className="res-wrap" ref={resultsRef}>
+            <div className="res-wrap" ref={resultsRef} role="region" aria-label="별숨의 답변">
               <div className="res-card">
                 <div className="res-top-bar">
                   <button className="res-top-btn" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')); alert('복사됐어요 📋'); }}>📋 복사</button>
@@ -1447,6 +1477,20 @@ export default function App() {
           </div>
         )}
 
+        {/* ── Step 19: 설정 ── */}
+        {step === 19 && (
+          <Suspense fallback={<PageSpinner />}>
+            <SettingsPage
+              form={form}
+              setForm={setForm}
+              user={user}
+              saveProfileToSupabase={saveProfileToSupabase}
+              onBack={() => setStep(0)}
+              showToast={showToast}
+            />
+          </Suspense>
+        )}
+
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>
           ✦ 별숨은 점술 및 오락 목적의 서비스이며, 결과에 대해서는 법적 책임이나 효력을 지지 않습니다.
         </div>
@@ -1460,7 +1504,7 @@ export default function App() {
       )}
 
       {showUpgradeModal && (
-        <div className="upgrade-modal-bg" onClick={() => setShowUpgradeModal(false)}>
+        <div className="upgrade-modal-bg" role="dialog" aria-modal="true" onClick={() => setShowUpgradeModal(false)}>
           <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
             <div style={{ textAlign: 'center', fontSize: '2rem', marginBottom: 8 }}>✦</div>
             <div className="upgrade-modal-title">더 많이 물어보고 싶어요?</div>
@@ -1483,7 +1527,7 @@ export default function App() {
       )}
 
       {showOtherProfileModal && (
-        <div className="other-modal-bg" onClick={() => setShowOtherProfileModal(false)}>
+        <div className="other-modal-bg" role="dialog" aria-modal="true" onClick={() => setShowOtherProfileModal(false)}>
           <div className="other-modal" onClick={e => e.stopPropagation()}>
             <div className="other-modal-title">{editingOtherIdx !== null ? '다른 사람 정보 수정' : '다른 사람의 별숨 추가'}</div>
             <div className="other-modal-sub">{editingOtherIdx !== null ? '저장된 정보를 수정해요' : '가족, 친구, 연인의 생년월일을 입력하면\n그 사람의 별숨을 대신 물어볼 수 있어요'}</div>
@@ -1529,7 +1573,7 @@ export default function App() {
 
       {/* ── 친구 초대 모달 ── */}
       {showInviteModal && (
-        <div className="upgrade-modal-bg" onClick={() => setShowInviteModal(false)}>
+        <div className="upgrade-modal-bg" role="dialog" aria-modal="true" onClick={() => setShowInviteModal(false)}>
           <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
             <div style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: 6 }}>🔗</div>
             <div className="upgrade-modal-title">친구 초대하기</div>
@@ -1570,7 +1614,7 @@ export default function App() {
       {/* 일기 모달 제거됨 → Step 17 DiaryPage로 이동 */}
 
       {shareModal.open && (
-        <div className="upgrade-modal-bg" onClick={() => setShareModal(s => ({ ...s, open: false }))}>
+        <div className="upgrade-modal-bg" role="dialog" aria-modal="true" onClick={() => setShareModal(s => ({ ...s, open: false }))}>
           <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
             <div style={{ textAlign: 'center', fontSize: '2rem', marginBottom: 8 }}>✦</div>
             <div className="upgrade-modal-title">공유하기</div>

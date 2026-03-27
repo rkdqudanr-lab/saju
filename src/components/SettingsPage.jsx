@@ -1,0 +1,452 @@
+import { useState, useCallback } from "react";
+
+// ═══════════════════════════════════════════════════════════
+//  ⚙️ 설정 페이지
+// ═══════════════════════════════════════════════════════════
+
+const STYLE_OPTIONS = [
+  {
+    value: 'T',
+    label: '분석형',
+    sub: 'T형',
+    desc: '논리적이고 구체적인 분석 중심',
+    emoji: '🧠',
+  },
+  {
+    value: 'M',
+    label: '균형형',
+    sub: '중간형',
+    desc: '분석과 공감을 균형 있게',
+    emoji: '⚖️',
+  },
+  {
+    value: 'F',
+    label: '공감형',
+    sub: 'F형',
+    desc: '따뜻하고 감성적인 위로 중심',
+    emoji: '🌸',
+  },
+];
+
+const PLANS = [
+  {
+    id: 'beta',
+    label: '베타 무료',
+    desc: '현재 베타 기간 중 — 모든 기능 무료',
+    badge: '이용 중',
+    hot: true,
+  },
+  {
+    id: 'basic',
+    label: '기본 플랜',
+    desc: '출시 예정 — 기본 상담 기능',
+    badge: '준비 중',
+    hot: false,
+  },
+  {
+    id: 'premium',
+    label: '프리미엄 플랜',
+    desc: '출시 예정 — 채팅·리포트·예언 무제한',
+    badge: '준비 중',
+    hot: false,
+  },
+];
+
+export default function SettingsPage({
+  form,
+  setForm,
+  user,
+  saveProfileToSupabase,
+  onBack,
+  showToast,
+}) {
+  const [tab, setTab] = useState(0); // 0: 개인정보, 1: 요금제, 2: 스타일
+  const [localForm, setLocalForm] = useState({ ...form });
+  const [saving, setSaving] = useState(false);
+
+  // T/F 스타일 상태 (localStorage)
+  const [responseStyle, setResponseStyle] = useState(() => {
+    try { return localStorage.getItem('byeolsoom_style') || 'M'; } catch { return 'M'; }
+  });
+
+  const handleStyleChange = useCallback((val) => {
+    setResponseStyle(val);
+    try { localStorage.setItem('byeolsoom_style', val); } catch {}
+    showToast?.('스타일이 저장됐어요 ✦', 'success');
+  }, [showToast]);
+
+  const handleSaveProfile = useCallback(async () => {
+    if (!localForm.by || !localForm.bm || !localForm.bd) {
+      showToast?.('생년월일을 모두 입력해줘요', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      setForm(localForm);
+      try { localStorage.setItem('byeolsoom_profile', JSON.stringify(localForm)); } catch {}
+      if (user) await saveProfileToSupabase(localForm, user);
+      showToast?.('개인정보가 저장됐어요 ✦', 'success');
+    } catch {
+      showToast?.('저장에 실패했어요. 다시 시도해봐요 🌙', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [localForm, setForm, user, saveProfileToSupabase, showToast]);
+
+  const styleIdx = STYLE_OPTIONS.findIndex(s => s.value === responseStyle);
+
+  return (
+    <div className="page step-fade" style={{ alignItems: 'stretch', paddingTop: 56 }}>
+      <div className="inner" style={{ paddingTop: 16, paddingBottom: 60 }}>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.1em', marginBottom: 4 }}>⚙️ 설정</div>
+        <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 20 }}>나의 별숨 설정</div>
+
+        {/* ── 탭 ── */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 4 }}>
+          {['개인정보', '요금제', '별숨 스타일'].map((label, i) => (
+            <button
+              key={i}
+              onClick={() => setTab(i)}
+              style={{
+                flex: 1,
+                padding: '8px 4px',
+                borderRadius: 8,
+                border: 'none',
+                fontFamily: 'var(--ff)',
+                fontSize: 'var(--xs)',
+                fontWeight: tab === i ? 700 : 400,
+                cursor: 'pointer',
+                transition: 'all .2s',
+                background: tab === i ? 'var(--bg1)' : 'transparent',
+                color: tab === i ? 'var(--gold)' : 'var(--t3)',
+                boxShadow: tab === i ? '0 1px 4px rgba(0,0,0,.15)' : 'none',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Tab 0: 개인정보 수정 ── */}
+        {tab === 0 && (
+          <div className="card" style={{ gap: 'var(--sp2)' }}>
+            <div className="card-title">개인정보 수정</div>
+            <div className="card-sub">저장된 생년월일, 이름, 성별을 수정할 수 있어요</div>
+
+            <label className="lbl" htmlFor="set-name">이름 (선택)</label>
+            <input
+              id="set-name"
+              className="inp"
+              placeholder="뭐라고 불러드릴까요?"
+              value={localForm.name || ''}
+              onChange={e => setLocalForm(f => ({ ...f, name: e.target.value }))}
+            />
+
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+              <legend className="lbl">생년월일</legend>
+              <div className="row" style={{ marginBottom: 'var(--sp2)' }}>
+                <div className="col">
+                  <input
+                    className="inp"
+                    placeholder="1998"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    aria-label="출생 연도"
+                    value={localForm.by || ''}
+                    onChange={e => setLocalForm(f => ({ ...f, by: e.target.value.replace(/\D/, '').slice(0, 4) }))}
+                    style={{ marginBottom: 0 }}
+                  />
+                </div>
+                <div className="col">
+                  <select
+                    className="inp"
+                    aria-label="출생 월"
+                    value={localForm.bm || ''}
+                    onChange={e => setLocalForm(f => ({ ...f, bm: e.target.value }))}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <option value="">월</option>
+                    {[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}
+                  </select>
+                </div>
+                <div className="col">
+                  <select
+                    className="inp"
+                    aria-label="출생 일"
+                    value={localForm.bd || ''}
+                    onChange={e => setLocalForm(f => ({ ...f, bd: e.target.value }))}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <option value="">일</option>
+                    {[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}
+                  </select>
+                </div>
+              </div>
+            </fieldset>
+
+            <div
+              className="toggle-row"
+              onClick={() => setLocalForm(f => ({ ...f, noTime: !f.noTime, bh: '' }))}
+            >
+              <button
+                className={`toggle ${localForm.noTime ? 'on' : 'off'}`}
+                role="switch"
+                aria-checked={localForm.noTime}
+                aria-label="태어난 시간 모름"
+                onClick={e => { e.stopPropagation(); setLocalForm(f => ({ ...f, noTime: !f.noTime, bh: '' })); }}
+              />
+              <span className="toggle-label">태어난 시간을 몰라요</span>
+            </div>
+
+            {!localForm.noTime && (
+              <>
+                <label className="lbl" htmlFor="set-bh">태어난 시각</label>
+                <select
+                  id="set-bh"
+                  className="inp"
+                  value={localForm.bh || ''}
+                  onChange={e => setLocalForm(f => ({ ...f, bh: e.target.value }))}
+                >
+                  <option value="">시각 선택</option>
+                  {Array.from({ length: 144 }, (_, i) => {
+                    const h = Math.floor(i / 6);
+                    const m = (i % 6) * 10;
+                    const val = (h + m / 60).toFixed(4);
+                    return (
+                      <option key={i} value={val}>
+                        {String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}
+                      </option>
+                    );
+                  })}
+                </select>
+              </>
+            )}
+
+            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+              <legend className="lbl">성별</legend>
+              <div className="gender-group" role="group" aria-label="성별 선택">
+                {['여성', '남성', '기타'].map(g => (
+                  <button
+                    key={g}
+                    className={`gbtn ${localForm.gender === g ? 'on' : ''}`}
+                    aria-pressed={localForm.gender === g}
+                    onClick={() => setLocalForm(f => ({ ...f, gender: g }))}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <button
+              className="btn-main"
+              style={{ marginTop: 'var(--sp2)' }}
+              disabled={saving || !localForm.by || !localForm.bm || !localForm.bd}
+              onClick={handleSaveProfile}
+            >
+              {saving ? '저장 중...' : '저장하기 ✦'}
+            </button>
+          </div>
+        )}
+
+        {/* ── Tab 1: 나의 요금제 ── */}
+        {tab === 1 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="card" style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: 'var(--sp3)' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>현재 이용 중</div>
+              <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 6 }}>베타 무료 플랜</div>
+              <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>
+                베타 기간 중 모든 기능을 무료로 이용하실 수 있어요.<br />
+                정식 출시 이후 요금제 정보가 업데이트될 예정이에요.
+              </div>
+              <div style={{ marginTop: 14, padding: '12px 14px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--gold)', lineHeight: 1.7 }}>
+                ✦ 현재 사용 가능한 기능<br />
+                <span style={{ color: 'var(--t2)' }}>
+                  별숨에게 질문하기 · 월간 리포트 · 별숨과 대화하기 · 예언 · 궁합 · 달력 · 모임 별숨 · 나의 별숨 · 종합사주 · 종합점성술 · 일기
+                </span>
+              </div>
+            </div>
+
+            {PLANS.filter(p => p.id !== 'beta').map(plan => (
+              <div
+                key={plan.id}
+                style={{
+                  background: 'var(--bg1)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--r2)',
+                  padding: 'var(--sp3)',
+                  opacity: 0.6,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                  <div style={{ fontSize: 'var(--md)', fontWeight: 600, color: 'var(--t2)' }}>{plan.label}</div>
+                  <div style={{ fontSize: 'var(--xs)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--line)', color: 'var(--t4)' }}>{plan.badge}</div>
+                </div>
+                <div style={{ fontSize: 'var(--sm)', color: 'var(--t4)', lineHeight: 1.6 }}>{plan.desc}</div>
+              </div>
+            ))}
+
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.7, marginTop: 4 }}>
+              정식 출시 시 이메일 또는 카카오 채널로 안내드릴게요 🌙
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 2: 별숨 스타일 (T형/F형) ── */}
+        {tab === 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="card" style={{ padding: 'var(--sp3)' }}>
+              <div className="card-title">별숨 스타일 설정</div>
+              <div className="card-sub" style={{ marginBottom: 20 }}>
+                별숨이 답변하는 방식을 조정할 수 있어요.<br />
+                분석형은 논리적·구체적으로, 공감형은 감성적·위로 중심으로 이야기해줘요.
+              </div>
+
+              {/* ── 가로 슬라이더 바 ── */}
+              <div style={{ position: 'relative', marginBottom: 24 }}>
+                {/* 배경 바 */}
+                <div style={{
+                  display: 'flex',
+                  borderRadius: 40,
+                  overflow: 'hidden',
+                  border: '1px solid var(--line)',
+                  background: 'var(--bg2)',
+                  position: 'relative',
+                }}>
+                  {STYLE_OPTIONS.map((opt, i) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleStyleChange(opt.value)}
+                      aria-pressed={responseStyle === opt.value}
+                      style={{
+                        flex: 1,
+                        padding: '12px 8px',
+                        border: 'none',
+                        fontFamily: 'var(--ff)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 4,
+                        transition: 'all .25s ease',
+                        background: responseStyle === opt.value
+                          ? 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.12))'
+                          : 'transparent',
+                        borderLeft: i > 0 ? '1px solid var(--line)' : 'none',
+                        position: 'relative',
+                      }}
+                    >
+                      {responseStyle === opt.value && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: '20%',
+                          right: '20%',
+                          height: 2,
+                          background: 'var(--gold)',
+                          borderRadius: 1,
+                        }} />
+                      )}
+                      <span style={{ fontSize: '1.2rem' }}>{opt.emoji}</span>
+                      <span style={{
+                        fontSize: 'var(--xs)',
+                        fontWeight: responseStyle === opt.value ? 700 : 400,
+                        color: responseStyle === opt.value ? 'var(--gold)' : 'var(--t3)',
+                        letterSpacing: '.02em',
+                      }}>
+                        {opt.label}
+                      </span>
+                      <span style={{
+                        fontSize: '0.6rem',
+                        color: responseStyle === opt.value ? 'var(--gold)' : 'var(--t4)',
+                        opacity: 0.8,
+                      }}>
+                        {opt.sub}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 현재 선택된 스타일 설명 */}
+              {(() => {
+                const cur = STYLE_OPTIONS.find(s => s.value === responseStyle);
+                const styleDescriptions = {
+                  T: [
+                    '사주와 별자리 데이터를 바탕으로 논리적이고 체계적인 분석을 해드려요.',
+                    '감정보다는 구체적인 상황과 행동 방안에 집중해서 이야기해줘요.',
+                    '사실 기반의 명확한 인사이트를 선호하는 분께 추천해요.',
+                  ],
+                  M: [
+                    '논리적 분석과 따뜻한 공감을 균형 있게 담아 이야기해드려요.',
+                    '상황 파악과 감정 위로, 두 가지를 함께 전해드려요.',
+                    '대부분의 상황에서 편안하게 받아들일 수 있는 스타일이에요.',
+                  ],
+                  F: [
+                    '감정에 깊이 공감하며 따뜻한 위로와 응원을 전해드려요.',
+                    '논리보다는 지금 이 순간의 감정과 마음에 초점을 맞춰줘요.',
+                    '힘든 날 위로가 필요할 때, 감성적인 답변을 선호하는 분께 추천해요.',
+                  ],
+                };
+                return (
+                  <div style={{
+                    padding: '14px 16px',
+                    background: 'var(--bg2)',
+                    borderRadius: 'var(--r1)',
+                    border: '1px solid var(--acc)',
+                  }}>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>
+                      {cur?.emoji} 현재: {cur?.label} ({cur?.sub})
+                    </div>
+                    {(styleDescriptions[responseStyle] || []).map((line, i) => (
+                      <div key={i} style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7, marginBottom: i < 2 ? 4 : 0 }}>
+                        {i === 0 ? line : <span style={{ color: 'var(--t3)', fontSize: 'var(--xs)' }}>{line}</span>}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              <div style={{ marginTop: 16, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7, textAlign: 'center' }}>
+                스타일은 언제든지 변경할 수 있어요 🌙<br />
+                변경 즉시 다음 답변부터 적용돼요.
+              </div>
+            </div>
+
+            {/* 스타일별 예시 */}
+            <div style={{ padding: 'var(--sp3)', background: 'var(--bg1)', border: '1px solid var(--line)', borderRadius: 'var(--r2)' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontWeight: 600, marginBottom: 12, letterSpacing: '.04em' }}>
+                스타일별 답변 예시 (같은 질문: "요즘 연애가 잘 안 풀려요")
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { val: 'T', text: '지금 당신의 일간 기질이 논리를 앞세우는 경향이 있어, 감정 표현보다 판단이 먼저 나올 수 있어요. 상대방의 감정 언어를 확인하는 대화를 먼저 시도해봐요.' },
+                  { val: 'M', text: '마음이 쓰이는 거 느껴져요. 지금 당신의 별은 연결을 원하는데, 방식이 맞지 않아 엇갈리고 있는 것 같아요. 오늘 먼저 솔직하게 이야기 꺼내봐요.' },
+                  { val: 'F', text: '지금 많이 지치셨겠어요. 잘 풀리지 않는 연애 앞에서 스스로를 탓하지 말아요. 별은 지금 당신에게 잠깐 쉬어가도 된다고 속삭이고 있어요 🌙' },
+                ].map(ex => (
+                  <div
+                    key={ex.val}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 'var(--r1)',
+                      border: `1px solid ${responseStyle === ex.val ? 'var(--acc)' : 'var(--line)'}`,
+                      background: responseStyle === ex.val ? 'var(--goldf)' : 'var(--bg2)',
+                      opacity: responseStyle === ex.val ? 1 : 0.55,
+                      transition: 'all .2s',
+                    }}
+                  >
+                    <div style={{ fontSize: 'var(--xs)', color: responseStyle === ex.val ? 'var(--gold)' : 'var(--t4)', fontWeight: 600, marginBottom: 5 }}>
+                      {STYLE_OPTIONS.find(s => s.value === ex.val)?.emoji} {STYLE_OPTIONS.find(s => s.value === ex.val)?.label}
+                      {responseStyle === ex.val && ' (현재 선택)'}
+                    </div>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>{ex.text}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
