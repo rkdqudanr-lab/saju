@@ -121,7 +121,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 { icon: '🀄', label: '나의 별숨(사주원국과 별자리)', s: 13 },
                 { icon: '✦', label: '별숨의 종합사주', s: 14 },
                 { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
-                { icon: '📓', label: '오늘 하루 나의 별숨', s: 17 },
+                { icon: '📓', label: '나의 하루를 별숨에게', s: 17 },
               ].map(m => (
                 <li key={m.s}>
                   <button
