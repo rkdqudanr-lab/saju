@@ -373,7 +373,7 @@ export default function App() {
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
             if (s === 'history' && item) { setHistItem(item); setStep(9); }
-            else if (s === 'fortune') { setShowDailyCard(true); setStep(0); }
+            else if (s === 'fortune') { setStep(18); }
             else if (s === 1 && formOk && otherProfiles.length === 0) { setSelQs([]); setStep(2); }
             else { setStep(s); }
           }}
@@ -402,7 +402,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 18) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>🏠</button>}
 
@@ -485,81 +485,19 @@ export default function App() {
                                   </div>
                                 )}
 
-                                {/* ── 오후 5시 이후: 인라인 일기 입력 ── */}
-                                {/* ── 오후 5시 이후: 인라인 일기 입력 ── */}
-                                <div style={{
-                                  marginTop: 12, padding: '16px',
-                                  background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.08))',
-                                  borderRadius: 'var(--r1)', border: '1px solid var(--gold)',
-                                }}>
-                                  <div style={{ fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700, marginBottom: 14, letterSpacing: '.03em', lineHeight: 1.5 }}>
-                                    오늘 당신의 하루를 별숨에게 들려주세요
-                                  </div>
-
-                                  {/* 기분 */}
-                                  <div style={{ marginBottom: 12 }}>
-                                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, fontWeight: 600 }}>✦ 오늘 기분</div>
-                                    <div style={{ display: 'flex', gap: 6 }}>
-                                      {[{v:1,e:'😞'},{v:2,e:'😕'},{v:3,e:'😐'},{v:4,e:'🙂'},{v:5,e:'😄'}].map(({v,e}) => (
-                                        <button key={v} onClick={() => setDiaryQuickMood(v)} style={{
-                                          flex: 1, background: diaryQuickMood===v ? 'var(--acc)' : 'var(--bg1)',
-                                          border: `1px solid ${diaryQuickMood===v ? 'var(--acc)' : 'var(--line)'}`,
-                                          borderRadius: 8, padding: '8px 0', fontSize: '1.4rem', cursor: 'pointer',
-                                        }}>{e}</button>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {/* 날씨 */}
-                                  <div style={{ marginBottom: 12 }}>
-                                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, fontWeight: 600 }}>✦ 날씨</div>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                      {[{v:'sunny',e:'☀️'},{v:'cloudy',e:'☁️'},{v:'rain',e:'🌧️'},{v:'snow',e:'❄️'},{v:'fine_dust',e:'😷'},{v:'thunder',e:'⛈️'},{v:'wind',e:'🌬️'}].map(({v,e}) => (
-                                        <button key={v} onClick={() => setDiaryQuickWeather(v)} style={{
-                                          background: diaryQuickWeather===v ? 'var(--acc)' : 'var(--bg1)',
-                                          border: `1px solid ${diaryQuickWeather===v ? 'var(--acc)' : 'var(--line)'}`,
-                                          borderRadius: 8, padding: '6px 10px', fontSize: '1.2rem', cursor: 'pointer',
-                                        }}>{e}</button>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {/* 에너지 */}
-                                  <div style={{ marginBottom: 12 }}>
-                                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, fontWeight: 600 }}>✦ 에너지</div>
-                                    <div style={{ display: 'flex', gap: 6 }}>
-                                      {[{v:1,e:'🪫'},{v:2,e:'🔋'},{v:3,e:'🔋'},{v:4,e:'🔋'},{v:5,e:'⚡'}].map(({v,e}) => (
-                                        <button key={v} onClick={() => setDiaryQuickEnergy(v)} style={{
-                                          flex: 1, background: diaryQuickEnergy===v ? 'var(--acc)' : 'var(--bg1)',
-                                          border: `1px solid ${diaryQuickEnergy===v ? 'var(--acc)' : 'var(--line)'}`,
-                                          borderRadius: 8, padding: '8px 0', fontSize: '1.2rem', cursor: 'pointer',
-                                        }}>{e}</button>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {/* 오늘 하루 텍스트 */}
-                                  <textarea
-                                    value={diaryQuickContent}
-                                    onChange={e => setDiaryQuickContent(e.target.value)}
-                                    placeholder="오늘 하루 어떠셨나요..."
-                                    rows={4}
-                                    style={{
-                                      width: '100%', boxSizing: 'border-box',
-                                      background: 'var(--bg1)', border: '1px solid var(--line)',
-                                      borderRadius: 8, padding: '10px 12px',
-                                      color: 'var(--t1)', fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
-                                      resize: 'vertical', lineHeight: 1.7,
-                                    }}
+                                {/* ── 오후 5시 이후: 나의 하루를 별숨에게 (전체 페이지) ── */}
+                                <Suspense fallback={<PageSpinner />}>
+                                  <DiaryPage
+                                    user={user}
+                                    form={form}
+                                    saju={saju}
+                                    sun={sun}
+                                    buildCtx={buildCtx}
+                                    askReview={askReview}
+                                    setStep={setStep}
+                                    embedded={true}
                                   />
-                                  <button
-                                    className="cta-main"
-                                    style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8 }}
-                                    onClick={() => setStep(17)}
-                                  >
-                                    별숨에게 전하기 ✦
-                                  </button>
-                                </div>
+                                </Suspense>
 
                                 {/* ── 별숨에게 질문하기 ── */}
                                 <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
@@ -1428,7 +1366,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 17: 오늘 하루 나의 별숨 (일기) ── */}
+        {/* ── Step 17: 나의 하루를 별숨에게 (일기) ── */}
         {step === 17 && (
           <Suspense fallback={<PageSpinner />}>
             <DiaryPage
@@ -1439,12 +1377,43 @@ export default function App() {
               buildCtx={buildCtx}
               askReview={askReview}
               setStep={setStep}
-              initialContent={diaryQuickContent}
-              initialMood={diaryQuickMood}
-              initialWeather={diaryQuickWeather}
-              initialEnergy={diaryQuickEnergy}
             />
           </Suspense>
+        )}
+
+        {/* ── Step 18: 오늘 하루 나의 별숨 (운세 카드) ── */}
+        {step === 18 && (
+          <div className="page step-fade">
+            <div className="inner" style={{ paddingTop: 16, paddingBottom: 40 }}>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>🌟</div>
+                <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
+                  오늘 하루 나의 별숨
+                </div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+                  {today.month}월 {today.day}일 · 매일 새로워져요
+                </div>
+              </div>
+              {dailyResult ? (
+                <DailyStarCard result={dailyResult} />
+              ) : dailyLoading ? (
+                <div className="dsc-loading-btn">
+                  <span>별숨이 오늘을 읽고 있어요</span>
+                  <span className="dsc-loading-dot" />
+                  <span className="dsc-loading-dot" />
+                  <span className="dsc-loading-dot" />
+                </div>
+              ) : (
+                <button
+                  className="cta-main"
+                  style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }}
+                  onClick={askDailyHoroscope}
+                >
+                  오늘 기운 확인하기 ✦
+                </button>
+              )}
+            </div>
+          </div>
         )}
 
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>
