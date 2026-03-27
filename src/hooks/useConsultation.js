@@ -251,6 +251,30 @@ export function useConsultation(buildCtx, formOk) {
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
   }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
 
+  // ── 일기 회고: step 이동 없이 메인페이지에서 결과 표시용 ──
+  function getDiaryReviewKey() {
+    const d = new Date();
+    return `byeolsoom_diary_review_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  }
+  const [diaryReviewResult, setDiaryReviewResult] = useState(() => {
+    try { return localStorage.getItem(getDiaryReviewKey()) || null; } catch { return null; }
+  });
+  const [diaryReviewLoading, setDiaryReviewLoading] = useState(false);
+
+  const askDiaryReview = useCallback(async (text, prompt) => {
+    if (!formOk) { setStep(1); return; }
+    setDiaryReviewLoading(true);
+    try {
+      const ans = await callApi(`[질문]\n${prompt}\n\n[오늘 있었던 일]\n${text}`);
+      setDiaryReviewResult(ans);
+      try { localStorage.setItem(getDiaryReviewKey(), ans); } catch {}
+      const q = `오늘 하루 회고: ${text.slice(0, 30)}${text.length > 30 ? '…' : ''}`;
+      addHistory([q], [ans]); setHistItems(loadHistory());
+      saveHistoryToSupabase([q], [ans], timeSlot);
+    } catch { setDiaryReviewResult(ERR_MSG); }
+    finally { setDiaryReviewLoading(false); }
+  }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
+
   // ── 단일 답변 재시도 ──
   const retryAnswer = useCallback(async (idx) => {
     const q = selQs[idx];
@@ -335,7 +359,8 @@ export function useConsultation(buildCtx, formOk) {
     callApi,
     addQ, rmQ,
     dailyResult, dailyLoading,
-    askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview,
+    diaryReviewResult, diaryReviewLoading,
+    askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview, askDiaryReview,
     retryAnswer,
     handleTypingDone, handleAccToggle,
     sendChat, genReport,

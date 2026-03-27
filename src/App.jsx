@@ -6,7 +6,7 @@ import { getSun } from "./utils/astrology.js";
 import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT, DAILY_QUESTIONS } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
 import { loadHistory, deleteHistory } from "./utils/history.js";
-import { saveShareCard, saveProphecyImage, saveCompatImage } from "./utils/imageExport.js";
+import { saveShareCard, saveProphecyImage, saveCompatImage, saveChatImage } from "./utils/imageExport.js";
 import { loadQuiz, saveQuiz, getTodayStr, isTodayAnswered } from "./utils/quiz.js";
 
 // hooks
@@ -135,7 +135,8 @@ export default function App() {
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
           qLoadStatus,
           dailyResult, dailyLoading,
-          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, handleTypingDone: _handleTypingDone, handleAccToggle,
+          diaryReviewResult, diaryReviewLoading,
+          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, resetSession } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
@@ -309,6 +310,11 @@ export default function App() {
   const handleSaveCompatImage = useCallback((result, myF, partnerF, placeObj, score) => {
     saveCompatImage({ result, myF, partnerF, placeObj, score, isDark });
   }, [isDark]);
+
+  const handleSaveChatImage = useCallback(() => {
+    if (typeof window.gtag === 'function') window.gtag('event', 'chat_image_save');
+    saveChatImage({ chatHistory, isDark, today });
+  }, [chatHistory, isDark, today]);
 
   // ── 공유 ──
   const shareResult = useCallback((type, text, label = '') => {
@@ -493,11 +499,31 @@ export default function App() {
                                     saju={saju}
                                     sun={sun}
                                     buildCtx={buildCtx}
-                                    askReview={askReview}
+                                    askReview={askDiaryReview}
                                     setStep={setStep}
                                     embedded={true}
                                   />
                                 </Suspense>
+
+                                {/* ── 별숨의 회고 결과 (메인페이지 표시) ── */}
+                                {diaryReviewLoading && (
+                                  <div style={{ margin: '12px var(--sp2) 0', padding: '14px 16px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--gold)', fontSize: 'var(--xs)' }}>
+                                      <span>✦ 별숨이 오늘 하루를 읽고 있어요</span>
+                                      <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+                                    </div>
+                                  </div>
+                                )}
+                                {diaryReviewResult && !diaryReviewLoading && (
+                                  <div style={{ margin: '12px var(--sp2) 0', padding: '16px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)' }}>
+                                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
+                                      ✦ 별숨의 하루 회고
+                                    </div>
+                                    <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
+                                      {diaryReviewResult}
+                                    </div>
+                                  </div>
+                                )}
 
                                 {/* ── 별숨에게 질문하기 ── */}
                                 <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
@@ -1145,7 +1171,12 @@ export default function App() {
         {step === 5 && (
           <div className="chat-page">
             <div className="chat-page-header">
-              <div className="chat-page-title">💬 별숨과 대화하기</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className="chat-page-title">💬 별숨과 대화하기</div>
+                {chatHistory.length > 0 && (
+                  <button className="res-top-btn" style={{ flexShrink: 0, marginTop: 2 }} onClick={handleSaveChatImage}>🖼 저장</button>
+                )}
+              </div>
               <div className="chat-page-sub">
                 {selQs.slice(0, 2).map((q, i) => <div key={i} style={{ marginTop: 3 }}>Q{i + 1}. {q.length > 28 ? q.slice(0, 28) + '…' : q}</div>)}
               </div>
