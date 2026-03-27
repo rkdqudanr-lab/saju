@@ -43,7 +43,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent, initialMood, initialWeather, initialEnergy }) {
+export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent, initialMood, initialWeather, initialEnergy, embedded }) {
   const [mood, setMood] = useState(initialMood || null);
   const [weather, setWeather] = useState(initialWeather || '');
   const [energy, setEnergy] = useState(initialEnergy || null);
@@ -116,19 +116,16 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
   };
 
   if (loadingEntry) {
-    return (
-      <div className="page">
-        <div className="inner" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
-          <div style={{ width: 36, height: 36, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite' }} />
-        </div>
+    const spinner = (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+        <div style={{ width: 36, height: 36, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite' }} />
       </div>
     );
+    return embedded ? spinner : <div className="page"><div className="inner">{spinner}</div></div>;
   }
 
-  return (
-    <div className="page">
-      <div className="inner">
-        <div style={{ paddingTop: 8, paddingBottom: 40 }}>
+  const pageContent = (
+    <div style={{ paddingTop: 8, paddingBottom: embedded ? 16 : 40 }}>
           {/* 헤더 */}
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
             <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>📓</div>
@@ -282,15 +279,22 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
             </div>
           )}
 
-          <button
-            className="res-btn"
-            style={{ width: '100%' }}
-            onClick={() => setStep(0)}
-          >
-            ← 홈으로
-          </button>
+          {!embedded && (
+            <button
+              className="res-btn"
+              style={{ width: '100%' }}
+              onClick={() => setStep(0)}
+            >
+              ← 홈으로
+            </button>
+          )}
         </div>
-      </div>
+  );
+
+  if (embedded) return pageContent;
+  return (
+    <div className="page">
+      <div className="inner">{pageContent}</div>
     </div>
   );
 }
