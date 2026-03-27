@@ -232,6 +232,9 @@ function DetailPanel({ pair, members, onClose }) {
 // ─────────────────────────────────────────────────────────
 //  메인 컴포넌트
 // ─────────────────────────────────────────────────────────
+// localStorage 백업 키
+function getGroupLocalKey(code) { return `byeolsoom_group_${code}`; }
+
 export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode }) {
   const [phase, setPhase] = useState('landing'); // landing | join | members | graph
   const [sessionId, setSessionId] = useState(null);
@@ -242,6 +245,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
   const [selectedPair, setSelectedPair] = useState(null);
   const [codeError, setCodeError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   // 멤버 사주/별자리 계산
   const enrichedMembers = useMemo(() => members.map(m => {
@@ -264,10 +268,16 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
     return result;
   }, [enrichedMembers]);
 
+  // localStorage에 멤버 목록 백업
+  const saveLocalMembers = (code, memberList) => {
+    try { localStorage.setItem(getGroupLocalKey(code), JSON.stringify(memberList)); } catch {}
+  };
+
   // 새 모임 만들기
   const createGroup = async () => {
     setCreateLoading(true);
     setCodeError('');
+    setSaveError('');
     const code = genInviteCode();
     try {
       if (supabase) {
@@ -280,7 +290,12 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
       setInviteCode(code);
       setPhase('join');
     } catch (e) {
-      setCodeError('모임을 만드는 데 실패했어요. 잠시 후 다시 시도해봐요.');
+      // Supabase 실패 시 로컬 모드로 진행
+      console.error('[GroupBulseum] 모임 생성 오류:', e);
+      setSessionId('local_' + Date.now());
+      setInviteCode(code);
+      setPhase('join');
+      setSaveError('서버 저장에 실패했어요. 이 기기에서만 유효한 모임으로 진행돼요.');
     } finally {
       setCreateLoading(false);
     }
@@ -290,17 +305,38 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
   const joinGroup = async () => {
     if (!codeInput.trim()) return;
     setCodeError('');
+    setSaveError('');
     const code = codeInput.trim().toUpperCase();
     try {
       if (supabase) {
         const { data, error } = await supabase.from('group_sessions').select('id').eq('invite_code', code).single();
-        if (error || !data) { setCodeError('코드를 찾을 수 없어요. 다시 확인해봐요.'); return; }
+        if (error || !data) {
+          // 서버에 없으면 로컬 백업 확인
+          const localData = localStorage.getItem(getGroupLocalKey(code));
+          if (localData) {
+            try {
+              const localMembers = JSON.parse(localData);
+              setMembers(localMembers);
+              setSessionId('local_' + code);
+              setInviteCode(code);
+              setPhase('join');
+              return;
+            } catch {}
+          }
+          setCodeError('코드를 찾을 수 없어요. 다시 확인해봐요.');
+          return;
+        }
         setSessionId(data.id);
         setInviteCode(code);
         // 기존 멤버 불러오기
         const { data: existingMembers } = await supabase.from('group_members').select('*').eq('session_id', data.id);
         if (existingMembers?.length) setMembers(existingMembers);
       } else {
+        // 로컬 백업에서 복원 시도
+        const localData = localStorage.getItem(getGroupLocalKey(code));
+        if (localData) {
+          try { setMembers(JSON.parse(localData)); } catch {}
+        }
         setSessionId('local_' + code);
         setInviteCode(code);
       }
@@ -312,6 +348,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
 
   // 멤버 추가
   const addMember = async (memberForm) => {
+    setSaveError('');
     const newMember = {
       name: memberForm.name,
       birth_year: +memberForm.by,
@@ -322,10 +359,17 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
     };
     try {
       if (supabase && sessionId && !sessionId.startsWith('local_')) {
-        await supabase.from('group_members').insert({ ...newMember, session_id: sessionId });
+        const { error } = await supabase.from('group_members').insert({ ...newMember, session_id: sessionId });
+        if (error) throw error;
       }
-    } catch {}
-    setMembers(prev => [...prev, newMember]);
+    } catch (e) {
+      console.error('[GroupBulseum] 멤버 저장 오류:', e);
+      setSaveError('서버에 저장하지 못했어요. 기기 내에 임시 저장됩니다.');
+    }
+    const updatedMembers = [...members, newMember];
+    setMembers(updatedMembers);
+    // 항상 로컬에도 백업
+    if (inviteCode) saveLocalMembers(inviteCode, updatedMembers);
     setPhase('members');
   };
 
@@ -451,6 +495,12 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
               onSubmit={addMember}
             />
 
+            {saveError && (
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', background: 'rgba(200,80,80,0.08)', border: '1px solid rgba(200,80,80,0.2)', borderRadius: 'var(--r1)', padding: '10px 14px', marginTop: 8, lineHeight: 1.6 }}>
+                ⚠️ {saveError}
+              </div>
+            )}
+
             {members.length > 0 && (
               <button
                 className="res-btn"
@@ -514,6 +564,12 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
               ))}
             </div>
 
+            {saveError && (
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', background: 'rgba(200,80,80,0.08)', border: '1px solid rgba(200,80,80,0.2)', borderRadius: 'var(--r1)', padding: '10px 14px', marginBottom: 12, lineHeight: 1.6 }}>
+                ⚠️ {saveError}
+              </div>
+            )}
+
             <button
               className="btn-main"
               disabled={members.length < 2}
@@ -526,7 +582,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
             <button
               className="res-btn"
               style={{ width: '100%', marginBottom: 8 }}
-              onClick={() => setPhase('join')}
+              onClick={() => { setSaveError(''); setPhase('join'); }}
             >
               + 멤버 추가하기
             </button>
