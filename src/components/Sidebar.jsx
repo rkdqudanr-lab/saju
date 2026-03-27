@@ -112,6 +112,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {[
                 { icon: '🏠', label: '홈', s: 0 },
                 { icon: '✦', label: '별숨에게 물어보기', s: 1 },
+                { icon: '🌟', label: '오늘 하루 나의 별숨', s: 'fortune' },
                 { icon: '📅', label: '월간 리포트', s: 6 },
                 { icon: '💞', label: '1대1 별숨', s: 7 },
                 { icon: '🔮', label: '별숨의 예언', s: 8 },
