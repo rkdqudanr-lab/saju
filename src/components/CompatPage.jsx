@@ -1,28 +1,28 @@
 import { useState, useMemo } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
-import { PLACES } from "../utils/constants.js";
 
 // ═══════════════════════════════════════════════════════════
-//  💞 오늘 우리가 만나면 — 시나리오 궁합 페이지
+//  💞 1대1 별숨 — 두 별의 인연 읽기
 // ═══════════════════════════════════════════════════════════
-export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, onBack, shareResult, saveCompatImage }) {
+export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, onBack, shareResult }) {
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
-  const [place, setPlace] = useState('burger');
-  const [customPlace, setCustomPlace] = useState('');
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [phase, setPhase] = useState('input');
   const [storyResult, setStoryResult] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
-  const [showStory, setShowStory] = useState(false);
 
-  const partnerSaju = useMemo(() => (partner.by && partner.bm && partner.bd) ? getSaju(+partner.by, +partner.bm, +partner.bd, 12) : null, [partner]);
-  const partnerSun = useMemo(() => (partner.bm && partner.bd) ? getSun(+partner.bm, +partner.bd) : null, [partner.bm, partner.bd]);
+  const partnerSaju = useMemo(() => {
+    if (partner.by && partner.bm && partner.bd) {
+      try { return getSaju(+partner.by, +partner.bm, +partner.bd, 12); } catch { return null; }
+    }
+    return null;
+  }, [partner]);
+  const partnerSun = useMemo(() => {
+    if (partner.bm && partner.bd) {
+      try { return getSun(+partner.bm, +partner.bd); } catch { return null; }
+    }
+    return null;
+  }, [partner.bm, partner.bd]);
   const partnerOk = partner.by && partner.bm && partner.bd && partner.gender;
-  const selectedPlace = place === 'custom'
-    ? { id: 'custom', emoji: '📍', label: customPlace || '직접 입력한 장소', hint: '직접 입력' }
-    : (PLACES.find(p => p.id === place) || PLACES[0]);
 
   const compatScore = useMemo(() => {
     if (!mySaju || !partnerSaju) return 75;
@@ -48,7 +48,6 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
   const runStory = async () => {
     setStoryLoading(true);
     setStoryResult(null);
-    setShowStory(true);
     const now = new Date();
     const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
     try {
@@ -56,7 +55,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userMessage: `[오늘 우리의 이야기] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 오늘 하루 어떤 이야기가 펼쳐질지 소설처럼 이야기해줘요.`,
+          userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요.`,
           context: buildPartnerCtx(),
           isChat: false, isReport: false, isScenario: false, isStory: true,
         }),
@@ -73,15 +72,13 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           tip: parsed.tip || '',
           chemistry: parsed.chemistry || '',
         });
-      } catch (parseErr) {
-        // JSON 파싱 실패 시 상세 로깅
-        console.error('[CompatPage] JSON parse error (story):', parseErr?.message, '\nRaw text:', data.text?.slice(0, 300));
+      } catch {
         setStoryResult({ todayVibe: '', story: data.text, moments: [], tip: '', chemistry: '' });
       }
     } catch (fetchErr) {
-      console.error('[CompatPage] fetch error (story):', fetchErr?.message);
+      console.error('[CompatPage] fetch error:', fetchErr?.message);
       setStoryResult({
-        todayVibe: '별이 잠시 쉬고 있어요',
+        todayVibe: '',
         story: '두 사람의 이야기를 불러오는 데 실패했어요. 잠시 후 다시 시도해봐요 🌙',
         moments: [], tip: '', chemistry: ''
       });
@@ -90,290 +87,16 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
     }
   };
 
-  const run = async () => {
-    setLoading(true);
-    setPhase('result');
-    setResult(null);
-    const placeObj = place === 'custom'
-      ? { emoji: '📍', label: customPlace || '직접 입력한 장소' }
-      : (PLACES.find(p => p.id === place) || PLACES[0]);
-    const now = new Date();
-    const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
-
-    try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: `[오늘 우리가 만나면] 두 사람이 오늘 ${placeObj.label}에서 만났을 때의 시나리오를 써주세요.
-
-오늘: ${todayStr}
-
-규칙:
-- A(${myForm.name || '나'})와 B(${partner.name || '상대'})가 번갈아가며 자연스럽게 대화
-- 반드시 A→B→A→B 순으로 번갈아 말함 (한 사람이 연속으로 말하면 안 됨)
-- JSON 객체로만 응답: {"topic":"오늘 두 사람 대화의 핵심 장면 (구체적 상황, 20자 이내)","bubbles":[{"who":"A","text":"..."},{"who":"B","text":"..."},...],"todayEvents":["오늘 두 사람이 함께 겪을 구체적 상황 1","상황 2","상황 3"],"recommendedFood":"추천 음식 이름 + 한 줄 이유","recommendedPlace":"추천 데이트 장소 이름 + 한 줄 이유","summary":"총평","reason":"설명"}
-- 두 사람의 성격 차이를 설명하지 말고 말 한마디와 반응으로 직접 보여줄 것
-- 웃음 포인트 1개, 공감 포인트 1개
-- reason에는 왜 이런 대화가 일어났는지 사주와 별자리를 바탕으로 쉽게 설명 (존댓말)`,
-          context: buildPartnerCtx(),
-          isChat: false, isReport: false, isScenario: true,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      try {
-        const raw = data.text.replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setResult({
-            bubbles: parsed.filter(b => b.who),
-            summary: parsed.find(b => b.summary)?.summary || '',
-            reason: '',
-            topic: '',
-            todayEvents: [],
-            recommendedFood: '',
-            recommendedPlace: '',
-          });
-        } else {
-          setResult({
-            bubbles: (parsed.bubbles || []).filter(b => b.who),
-            summary: parsed.summary || '',
-            reason: parsed.reason || '',
-            topic: parsed.topic || '',
-            todayEvents: parsed.todayEvents || [],
-            recommendedFood: parsed.recommendedFood || '',
-            recommendedPlace: parsed.recommendedPlace || '',
-          });
-        }
-      } catch (parseErr) {
-        // JSON 파싱 실패 시 상세 로깅
-        console.error('[CompatPage] JSON parse error (run):', parseErr?.message, '\nRaw text:', data.text?.slice(0, 300));
-        setResult({ bubbles: [{ who: 'A', text: data.text }], summary: '', reason: '', topic: '', todayEvents: [], recommendedFood: '', recommendedPlace: '' });
-      }
-    } catch (fetchErr) {
-      console.error('[CompatPage] fetch error (run):', fetchErr?.message);
-      setResult({
-        bubbles: [
-          { who: 'A', text: '별이 잠시 바쁜가봐요 🌙' },
-          { who: 'B', text: '다시 한번 시도해볼까요? 두 번째엔 더 좋은 이야기가 나올 거예요.' }
-        ],
-        summary: '잠시 후 다시 시도해봐요',
-        reason: '',
-        topic: '',
-        todayEvents: [],
-        recommendedFood: '',
-        recommendedPlace: '',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (phase === 'result') {
-    return (
-      <div className="page-top">
-        <div className="compat-page">
-          <div className="compat-header">
-            <div style={{ fontSize: '2rem', marginBottom: 8 }}>{selectedPlace.emoji}</div>
-            <div className="compat-title">{myForm.name || '나'} × {partner.name || '상대'}</div>
-            <div className="compat-sub">{selectedPlace.label}에서 만난다면</div>
-          </div>
-
-          <div className="compat-total" style={{ marginBottom: 'var(--sp2)' }}>
-            <div className="compat-total-label">✦ 두 별의 공명 지수</div>
-            <div className="kizmet-score">{compatScore}%</div>
-            <div className="kizmet-bar"><div className="kizmet-fill" style={{ width: `${compatScore}%` }} /></div>
-            {mySaju && partnerSaju && (
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>
-                {ON[mySaju.dom]} 기운 × {ON[partnerSaju.dom]} 기운
-              </div>
-            )}
-          </div>
-
-          <div className="scenario-wrap">
-            <div className="scenario-header">
-              <span className="scenario-place-icon">{selectedPlace.emoji}</span>
-              <div>
-                <div className="scenario-place-name">{selectedPlace.label} 시나리오</div>
-                <div className="scenario-sub">{myForm.name || 'A'} × {partner.name || 'B'}</div>
-              </div>
-            </div>
-
-            {/* 오늘의 대화 주제 */}
-            {result?.topic && !loading && (
-              <div style={{
-                padding: '10px 14px',
-                background: 'rgba(180,140,50,0.08)',
-                borderRadius: 'var(--r1)',
-                marginBottom: 'var(--sp2)',
-                fontSize: 'var(--sm)',
-                color: 'var(--t2)',
-                borderLeft: '3px solid var(--gold)',
-                lineHeight: 1.6,
-              }}>
-                <span style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, display: 'block', marginBottom: 4 }}>오늘의 장면</span>
-                {result.topic}
-              </div>
-            )}
-
-            {loading ? (
-              <div className="scenario-loading">
-                <div className="scenario-typing-dots"><span /><span /><span /></div>
-                오늘의 이야기를 쓰고 있어요...
-              </div>
-            ) : (
-              <>
-                <div className="bubble-list">
-                  {result?.bubbles.map((b, i) => (
-                    <div key={i} className={`bubble-row ${b.who === 'B' ? 'b-row' : 'a-row'}`} style={{ animationDelay: `${i * 0.1}s` }}>
-                      <div className={`bubble-avatar ${b.who === 'B' ? 'b-av' : 'a-av'}`}>
-                        {b.who === 'A' ? (myForm.name || 'A').slice(0, 1) : (partner.name || 'B').slice(0, 1)}
-                      </div>
-                      <div>
-                        <div className="bubble-name">{b.who === 'A' ? myForm.name || 'A' : partner.name || 'B'}</div>
-                        <div className="bubble-text">{b.text}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {result?.summary && (
-                  <div className="scenario-summary">✦ {result.summary}</div>
-                )}
-
-                {/* 오늘 두 사람에게 일어날 일 */}
-                {result?.todayEvents?.length > 0 && (
-                  <div style={{
-                    marginTop: 'var(--sp2)',
-                    padding: 'var(--sp2)',
-                    background: 'var(--bg2)',
-                    borderRadius: 'var(--r1)',
-                  }}>
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 10 }}>
-                      ✦ 오늘 두 사람에게 일어날 일
-                    </div>
-                    {result.todayEvents.map((event, i) => (
-                      <div key={i} style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 8,
-                        marginBottom: i < result.todayEvents.length - 1 ? 10 : 0,
-                        fontSize: 'var(--sm)',
-                        color: 'var(--t2)',
-                        lineHeight: 1.65,
-                      }}>
-                        <span style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }}>✦</span>
-                        <span>{event}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 오늘 가까이 하면 좋은 것 */}
-                {(result?.recommendedFood || result?.recommendedPlace) && (
-                  <div style={{
-                    marginTop: 'var(--sp2)',
-                    padding: 'var(--sp2)',
-                    background: 'var(--bg2)',
-                    borderRadius: 'var(--r1)',
-                  }}>
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 10 }}>
-                      ✦ 오늘 가까이 하면 좋은 것
-                    </div>
-                    {result.recommendedFood && (
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 10,
-                        marginBottom: result.recommendedPlace ? 10 : 0,
-                        fontSize: 'var(--sm)',
-                        color: 'var(--t2)',
-                        lineHeight: 1.65,
-                      }}>
-                        <span style={{ flexShrink: 0 }}>🍽</span>
-                        <span>{result.recommendedFood}</span>
-                      </div>
-                    )}
-                    {result.recommendedPlace && (
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 10,
-                        fontSize: 'var(--sm)',
-                        color: 'var(--t2)',
-                        lineHeight: 1.65,
-                      }}>
-                        <span style={{ flexShrink: 0 }}>📍</span>
-                        <span>{result.recommendedPlace}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 왜 이런 대화가 이뤄졌을까요 */}
-                {result?.reason && (
-                  <div style={{
-                    marginTop: 'var(--sp2)',
-                    padding: 'var(--sp2)',
-                    background: 'var(--bg2)',
-                    borderRadius: 'var(--r1)',
-                    borderLeft: '3px solid var(--gold)',
-                  }}>
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 8 }}>
-                      ✦ 왜 이런 대화가 이뤄졌을까요?
-                    </div>
-                    <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.75 }}>
-                      {result.reason}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* 저장 / 공유 버튼 */}
-          {!loading && result && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 'var(--sp2)' }}>
-              {saveCompatImage && (
-                <button
-                  className="res-top-btn"
-                  style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
-                  onClick={() => saveCompatImage(result, myForm, partner, selectedPlace, compatScore)}
-                >
-                  🖼 이미지 저장
-                </button>
-              )}
-              {shareResult && (
-                <button
-                  className="res-top-btn primary"
-                  style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
-                  onClick={() => shareResult('compat', result?.summary, `${myForm.name || '나'} × ${partner.name || '상대'}`)}
-                >
-                  ↗ 공유하기
-                </button>
-              )}
-            </div>
-          )}
-
-          <div className="compat-btns">
-            <button className="res-btn" style={{ flex: 1 }} onClick={() => { setPhase('input'); setResult(null); }}>↩ 다시 하기</button>
-            <button className="res-btn" style={{ flex: 1 }} onClick={onBack}>← 결과로</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="page">
       <div className="inner">
         <div className="compat-page">
           <div className="compat-header">
-            <div className="compat-title">오늘 우리가 만나면 💞</div>
-            <div className="compat-sub">오늘의 사주와 별자리 기운으로<br />두 사람이 만나면 어떤 일이 펼쳐질지 보여드려요</div>
+            <div className="compat-title">1대1 별숨 💞</div>
+            <div className="compat-sub">두 사람의 사주와 별자리 기운으로<br />두 별의 인연을 읽어드려요</div>
           </div>
 
+          {/* 두 사람 */}
           <div className="compat-section">
             <div className="compat-label">두 사람</div>
             <div className="person-cards">
@@ -410,11 +133,31 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                       style={{ padding: '6px 4px', fontSize: 'var(--xs)' }}>{g}</button>
                   ))}
                 </div>
+                {partnerSaju && (
+                  <div style={{ marginTop: 8, fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
+                    {partnerSun && <span>{partnerSun.s} {partnerSun.n} · </span>}
+                    {ON[partnerSaju.dom]} 기운
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* 오늘의 우리 이야기 버튼 */}
+          {/* 궁합 점수 (상대 입력 시) */}
+          {partnerOk && (
+            <div className="compat-total" style={{ marginBottom: 'var(--sp2)' }}>
+              <div className="compat-total-label">✦ 두 별의 공명 지수</div>
+              <div className="kizmet-score">{compatScore}%</div>
+              <div className="kizmet-bar"><div className="kizmet-fill" style={{ width: `${compatScore}%` }} /></div>
+              {mySaju && partnerSaju && (
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>
+                  {ON[mySaju.dom]} 기운 × {ON[partnerSaju.dom]} 기운
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 별의 인연 읽기 */}
           <button
             className="btn-main"
             disabled={!partnerOk || storyLoading}
@@ -425,7 +168,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           </button>
 
           {/* 이야기 결과 */}
-          {showStory && (
+          {storyResult && (
             <div style={{
               background: 'var(--bg2)',
               borderRadius: 'var(--r1)',
@@ -438,15 +181,12 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                   <div className="scenario-typing-dots"><span /><span /><span /></div>
                   두 별의 인연을 읽고 있어요...
                 </div>
-              ) : storyResult && (
+              ) : (
                 <>
                   {storyResult.todayVibe && (
                     <div style={{
-                      fontSize: 'var(--sm)',
-                      fontWeight: 700,
-                      color: 'var(--gold)',
-                      marginBottom: 12,
-                      paddingBottom: 10,
+                      fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--gold)',
+                      marginBottom: 12, paddingBottom: 10,
                       borderBottom: '1px solid rgba(180,140,50,0.15)',
                     }}>
                       ✦ {storyResult.todayVibe}
@@ -454,11 +194,8 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                   )}
                   {storyResult.story && (
                     <div style={{
-                      fontSize: 'var(--sm)',
-                      color: 'var(--t2)',
-                      lineHeight: 1.85,
-                      marginBottom: 14,
-                      whiteSpace: 'pre-line',
+                      fontSize: 'var(--sm)', color: 'var(--t2)',
+                      lineHeight: 1.85, marginBottom: 14, whiteSpace: 'pre-line',
                     }}>
                       {storyResult.story}
                     </div>
@@ -482,68 +219,36 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
                   )}
                   {storyResult.chemistry && (
                     <div style={{
-                      fontSize: 'var(--xs)',
-                      color: 'var(--t3)',
-                      fontStyle: 'italic',
+                      fontSize: 'var(--xs)', color: 'var(--t3)', fontStyle: 'italic',
                       marginBottom: storyResult.tip ? 10 : 0,
-                      paddingTop: 8,
-                      borderTop: '1px solid rgba(180,140,50,0.12)',
+                      paddingTop: 8, borderTop: '1px solid rgba(180,140,50,0.12)',
                     }}>
                       {storyResult.chemistry}
                     </div>
                   )}
                   {storyResult.tip && (
                     <div style={{
-                      background: 'rgba(180,140,50,0.08)',
-                      borderRadius: 'var(--r1)',
-                      padding: '10px 14px',
-                      fontSize: 'var(--sm)',
-                      color: 'var(--t2)',
-                      lineHeight: 1.65,
-                      borderLeft: '3px solid var(--gold)',
-                      marginTop: 4,
+                      background: 'rgba(180,140,50,0.08)', borderRadius: 'var(--r1)',
+                      padding: '10px 14px', fontSize: 'var(--sm)', color: 'var(--t2)',
+                      lineHeight: 1.65, borderLeft: '3px solid var(--gold)', marginTop: 4,
                     }}>
                       💡 {storyResult.tip}
                     </div>
+                  )}
+                  {shareResult && storyResult.story && (
+                    <button
+                      className="res-top-btn primary"
+                      style={{ width: '100%', marginTop: 12, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
+                      onClick={() => shareResult('compat', storyResult.story?.slice(0, 100), `${myForm.name || '나'} × ${partner.name || '상대'}`)}
+                    >
+                      ↗ 공유하기
+                    </button>
                   )}
                 </>
               )}
             </div>
           )}
 
-          <div className="compat-section">
-            <div className="compat-label">오늘 여기서 만난다면?</div>
-            <div className="place-grid">
-              {PLACES.map(p => (
-                <button key={p.id} className={`place-btn ${place === p.id ? 'on' : ''}`} onClick={() => setPlace(p.id)}>
-                  <span className="place-emoji">{p.emoji}</span>
-                  <span className="place-label">{p.label}</span>
-                </button>
-              ))}
-              <button
-                className={`place-btn ${place === 'custom' ? 'on' : ''}`}
-                onClick={() => setPlace('custom')}
-                style={{ position: 'relative' }}
-              >
-                <span className="place-emoji">✏️</span>
-                <span className="place-label">만날 곳 직접 입력</span>
-              </button>
-            </div>
-            {place === 'custom' && (
-              <input
-                className="inp"
-                placeholder="만날 장소를 입력해주세요"
-                value={customPlace}
-                onChange={e => setCustomPlace(e.target.value)}
-                style={{ marginTop: 8, padding: '8px 12px', fontSize: 'var(--sm)' }}
-                autoFocus
-              />
-            )}
-          </div>
-
-          <button className="btn-main" disabled={!partnerOk || loading || (place === 'custom' && !customPlace.trim())} onClick={run}>
-            {loading ? '시나리오를 쓰고 있어요...' : '별숨에게 오늘의 우리 물어보기'}
-          </button>
           <button className="res-btn" style={{ width: '100%', marginTop: 8 }} onClick={onBack}>← 돌아가기</button>
         </div>
       </div>

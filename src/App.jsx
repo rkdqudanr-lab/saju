@@ -34,13 +34,14 @@ const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
 const FutureProphecyPage = lazy(() => import("./components/FutureProphecyPage.jsx"));
 const CompatPage         = lazy(() => import("./components/CompatPage.jsx"));
 const SajuCalendar       = lazy(() => import("./components/SajuCalendar.jsx"));
-const RadarChart         = lazy(() => import("./components/RadarChart.jsx"));
+const GroupBulseumPage   = lazy(() => import("./components/GroupBulseumPage.jsx"));
 const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
 const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
 const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
 const AstrologyPage            = lazy(() => import("./components/AstrologyPage.jsx"));
 const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
 const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
+const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -63,8 +64,7 @@ export default function App() {
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
   const [copyDone, setCopyDone] = useState(false);
-  const [showDiary, setShowDiary] = useState(false);
-  const [diaryText, setDiaryText] = useState('');
+  // showDiary/diaryText 제거됨 → Step 17 DiaryPage 사용
   const [anniversaryDate, setAnniversaryDate] = useState('');
   const [anniversaryType, setAnniversaryType] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -453,12 +453,21 @@ export default function App() {
                           </button>
                         )}
 
-                        {/* ── 오후 5시 이후: 오늘 있었던 일 적기 ── */}
-                        {new Date().getHours() >= 17 && (
-                          <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.1))', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setShowDiary(true)}>
-                            📓 오늘 있었던 일 적기 ✦
-                          </button>
-                        )}
+                        {/* ── 오늘 하루 나의 별숨 (오후 5시 이후 강조) ── */}
+                        <button
+                          className="cta-main"
+                          style={{
+                            alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)',
+                            justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px',
+                            background: new Date().getHours() >= 17
+                              ? 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.1))'
+                              : 'none',
+                            border: '1px solid var(--gold)', color: 'var(--gold)',
+                          }}
+                          onClick={() => setStep(17)}
+                        >
+                          📓 오늘 하루 나의 별숨 ✦
+                        </button>
 
                         {/* ── 별숨에게 질문하기 ── */}
                         <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
@@ -1188,7 +1197,6 @@ export default function App() {
               callApi={callApi} buildCtx={buildCtx}
               onBack={() => setStep(4)}
               shareResult={shareResult}
-              saveCompatImage={handleSaveCompatImage}
             />
           </Suspense>
         )}
@@ -1223,10 +1231,10 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 11: 궁합 레이더 ── */}
+        {/* ── Step 11: 우리 모임의 별숨은? ── */}
         {step === 11 && (
           <Suspense fallback={<PageSpinner />}>
-            <RadarChart form={form} otherProfiles={otherProfiles} setStep={setStep} onAddOther={() => setShowOtherProfileModal(true)} />
+            <GroupBulseumPage form={form} saju={saju} sun={sun} setStep={setStep} />
           </Suspense>
         )}
 
@@ -1292,6 +1300,21 @@ export default function App() {
               asc={asc}
               form={form}
               buildCtx={buildCtx}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 17: 오늘 하루 나의 별숨 (일기) ── */}
+        {step === 17 && (
+          <Suspense fallback={<PageSpinner />}>
+            <DiaryPage
+              user={user}
+              form={form}
+              saju={saju}
+              sun={sun}
+              buildCtx={buildCtx}
+              askReview={askReview}
+              setStep={setStep}
             />
           </Suspense>
         )}
@@ -1416,43 +1439,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── 별숨 일기 모달 ── */}
-      {showDiary && (
-        <div className="upgrade-modal-bg" onClick={() => setShowDiary(false)}>
-          <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
-            <div style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: 6 }}>📓</div>
-            <div className="upgrade-modal-title">오늘 있었던 일</div>
-            <div className="upgrade-modal-sub" style={{ marginBottom: 'var(--sp3)' }}>별숨이 사주와 별자리 관점으로 재해석해드려요</div>
-            <textarea
-              className="diary-textarea"
-              rows={5}
-              placeholder="오늘 어떤 일이 있었나요? 기뻤던 일, 속상했던 일, 작은 설렘까지 — 모두 괜찮아요."
-              value={diaryText}
-              onChange={e => setDiaryText(e.target.value)}
-              maxLength={500}
-            />
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'right', marginBottom: 'var(--sp3)' }}>{diaryText.length}/500</div>
-            <button
-              className="btn-main"
-              disabled={diaryText.trim().length < 5}
-              onClick={() => {
-                const content = diaryText.trim();
-                setShowDiary(false);
-                // Supabase 저장 (로그인 시)
-                if (user?.id) {
-                  const today_str = new Date().toISOString().slice(0, 10);
-                  supabase.from('diary_entries').insert({ kakao_id: user.id, date: today_str, content });
-                }
-                askReview(content, DIARY_PROMPT);
-                setDiaryText('');
-              }}
-            >
-              별숨의 해석 듣기 ✦
-            </button>
-            <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }} onClick={() => setShowDiary(false)}>취소</button>
-          </div>
-        </div>
-      )}
+      {/* 일기 모달 제거됨 → Step 17 DiaryPage로 이동 */}
 
       {shareModal.open && (
         <div className="upgrade-modal-bg" onClick={() => setShareModal(s => ({ ...s, open: false }))}>

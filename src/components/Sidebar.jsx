@@ -113,14 +113,15 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 { icon: '🏠', label: '홈', s: 0 },
                 { icon: '✦', label: '별숨에게 물어보기', s: 1 },
                 { icon: '📅', label: '월간 리포트', s: 6 },
-                { icon: '💞', label: '오늘 우리가 만나면', s: 7 },
+                { icon: '💞', label: '1대1 별숨', s: 7 },
                 { icon: '🔮', label: '별숨의 예언', s: 8 },
                 { icon: '🗓️', label: '별숨 달력', s: 10 },
-                { icon: '🕸️', label: '나의 궁합 레이더', s: 11 },
+                { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
                 { icon: '🎂', label: '기념일 운세', s: 12 },
                 { icon: '🀄', label: '나의 별숨(사주원국과 별자리)', s: 13 },
                 { icon: '✦', label: '별숨의 종합사주', s: 14 },
                 { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
+                { icon: '📓', label: '오늘 하루 나의 별숨', s: 17 },
               ].map(m => (
                 <li key={m.s}>
                   <button
