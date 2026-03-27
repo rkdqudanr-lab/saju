@@ -36,7 +36,7 @@ function getDateRange(filter) {
   return null;
 }
 
-export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther }) {
+export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther, onSettings }) {
   const [histItems, setHistItems] = useState(() => loadHistory());
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');
@@ -152,6 +152,13 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   </button>
                 </li>
               )}
+              <li>
+                <button className="sidebar-menu-item" onClick={() => { onSettings?.(); onClose(); }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSettings?.(); onClose(); } }}>
+                  <span className="smi-icon" aria-hidden="true">🛠️</span>
+                  <span className="smi-text">설정</span>
+                </button>
+              </li>
             </ul>
           </div>
 

@@ -64,13 +64,23 @@ export function useConsultation(buildCtx, formOk) {
   const maxChat  = curPkg.chat;
   const chatLeft = maxChat - chatUsed;
 
-  // ── API 호출 (최대 3회 재시도) ──
+  // ── API 호출 (최대 3회 재시도 + 재시도 메시지) ──
+  const [retryMsg, setRetryMsg] = useState('');
+
   const callApi = useCallback(async (userMessage, opts = {}) => {
     const maxRetries = 3;
     let lastErr;
+    const responseStyle = (() => { try { return localStorage.getItem('byeolsoom_style') || 'M'; } catch { return 'M'; } })();
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        if (attempt > 0) await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+        if (attempt > 0) {
+          const msgs = [
+            '별이 잠시 바빠요. 다시 불러오는 중이에요... (1/3)',
+            '조금 더 기다려봐요... (2/3)',
+          ];
+          setRetryMsg(msgs[attempt - 1] || '');
+          await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+        }
         const res  = await fetch('/api/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -85,16 +95,19 @@ export function useConsultation(buildCtx, formOk) {
             isNatal: opts.isNatal || false,
             isZodiac: opts.isZodiac || false,
             isComprehensive: opts.isComprehensive || false,
+            responseStyle,
           }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'API 오류');
+        setRetryMsg('');
         return stripMarkdown(data.text || '');
       } catch (e) {
         lastErr = e;
         if (attempt < maxRetries - 1) continue;
       }
     }
+    setRetryMsg('');
     throw lastErr;
   }, [buildCtx]);
 
@@ -356,7 +369,7 @@ export function useConsultation(buildCtx, formOk) {
     showUpgradeModal, setShowUpgradeModal,
     chatEndRef,
     qLoadStatus,
-    callApi,
+    callApi, retryMsg,
     addQ, rmQ,
     dailyResult, dailyLoading,
     diaryReviewResult, diaryReviewLoading,

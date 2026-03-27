@@ -31,5 +31,5 @@ export default function StarCanvas({isDark}){
     draw();
     return()=>{cancelAnimationFrame(raf);window.removeEventListener('resize',resize);};
   },[isDark]);
-  return <canvas ref={ref} className="bg-canvas"/>;
+  return <canvas ref={ref} className="bg-canvas" aria-hidden="true" role="presentation"/>;
 }

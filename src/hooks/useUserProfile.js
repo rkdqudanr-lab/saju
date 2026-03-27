@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from '../lib/supabase.js'
+import { supabase, getAuthenticatedClient } from '../lib/supabase.js'
 
 const DEFAULT_PROFILE = { partner: '', partnerBy: '', partnerBm: '', partnerBd: '', workplace: '', worryText: '', mbti: '', selfDesc: '' };
 const DEFAULT_FORM    = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
@@ -66,6 +66,21 @@ export function useUserProfile() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     if (!code) return;
+
+    // CSRF 방어: state 검증
+    const urlState       = params.get('state');
+    const savedState     = (() => { try { return sessionStorage.getItem('byeolsoom_oauth_state'); } catch { return null; } })();
+    // state가 저장돼 있는데 불일치하면 CSRF 공격 의심
+    if (savedState && urlState !== savedState) {
+      window.history.replaceState({}, '', window.location.pathname);
+      try { sessionStorage.removeItem('byeolsoom_oauth_state'); } catch {}
+      setLoginError('보안 오류가 발생했어요. 다시 로그인해주세요.');
+      setLoginLoading(false);
+      return;
+    }
+    // 검증 완료 후 state 삭제
+    try { sessionStorage.removeItem('byeolsoom_oauth_state'); } catch {}
+
     window.history.replaceState({}, '', window.location.pathname);
     (async () => {
       try {
@@ -76,7 +91,8 @@ export function useUserProfile() {
         setUser(userData);
         localStorage.setItem('byeolsoom_user', JSON.stringify(userData));
         if (supabase) {
-          const { error: sbError } = await supabase
+          const authClient = getAuthenticatedClient(String(data.id));
+          const { error: sbError } = await (authClient || supabase)
             .from('users')
             .upsert({
               kakao_id: String(data.id),
@@ -90,7 +106,7 @@ export function useUserProfile() {
             console.error('[별숨] Supabase upsert 오류:', sbError)
           } else {
             // 기존 저장 데이터 복원 (다기기 대응)
-            const { data: saved } = await supabase
+            const { data: saved } = await (authClient || supabase)
               .from('users')
               .select('id, birth_year, birth_month, birth_day, consent_flags')
               .eq('kakao_id', String(data.id))
@@ -129,7 +145,8 @@ export function useUserProfile() {
     if (params.get('code')) return;
     (async () => {
       try {
-        const { data } = await supabase
+        const authClient = getAuthenticatedClient(user.id);
+        const { data } = await (authClient || supabase)
           .from('users')
           .select('consent_flags')
           .eq('kakao_id', String(user.id))
@@ -151,7 +168,8 @@ export function useUserProfile() {
     if (!supabase || !user?.id) return;
     (async () => {
       try {
-        const { data } = await supabase
+        const authClient = getAuthenticatedClient(user.id);
+        const { data } = await (authClient || supabase)
           .from('user_profiles')
           .select('*')
           .eq('kakao_id', user.id)
@@ -189,7 +207,15 @@ export function useUserProfile() {
       try { window.Kakao.init(JS_KEY); } catch (e) { setLoginError('카카오 초기화에 실패했어요 🌙 페이지를 새로고침 후 시도해봐요.'); return; }
     }
     setLoginError('');
-    window.Kakao.Auth.authorize({ redirectUri: window.location.origin });
+    // CSRF 방어: state 파라미터 생성 후 sessionStorage에 저장
+    try {
+      const state = crypto.randomUUID();
+      sessionStorage.setItem('byeolsoom_oauth_state', state);
+      window.Kakao.Auth.authorize({ redirectUri: window.location.origin, state });
+    } catch {
+      // 카카오 SDK가 state를 지원하지 않거나 crypto 오류 시 state 없이 진행
+      window.Kakao.Auth.authorize({ redirectUri: window.location.origin });
+    }
   }, []);
 
   const kakaoLogout = useCallback(() => {
@@ -223,7 +249,8 @@ export function useUserProfile() {
     const { by, bm, bd, name } = currentForm;
     if (!by || !bm || !bd) return;
     try {
-      const { error } = await supabase.from('users').upsert({
+      const authClient = getAuthenticatedClient(currentUser.id);
+      const { error } = await (authClient || supabase).from('users').upsert({
         kakao_id: currentUser.id,
         birth_year: parseInt(by, 10),
         birth_month: parseInt(bm, 10),
@@ -240,7 +267,8 @@ export function useUserProfile() {
   const saveUserProfileExtra = useCallback(async (profileData, currentUser) => {
     if (!supabase || !currentUser?.id) return;
     try {
-      const { error } = await supabase.from('user_profiles').upsert({
+      const authClient = getAuthenticatedClient(currentUser.id);
+      const { error } = await (authClient || supabase).from('user_profiles').upsert({
         kakao_id:            currentUser.id,
         mbti:                profileData.mbti || null,
         self_desc:           profileData.selfDesc || null,
@@ -266,7 +294,8 @@ export function useUserProfile() {
   const saveDailyQuizAnswer = useCallback(async (currentUser, questionId, answer) => {
     if (!supabase || !currentUser?.id || !questionId) return;
     try {
-      const { error } = await supabase.from('daily_quiz_answers').upsert({
+      const authClient = getAuthenticatedClient(currentUser.id);
+      const { error } = await (authClient || supabase).from('daily_quiz_answers').upsert({
         kakao_id:    currentUser.id,
         question_id: questionId,
         answer,

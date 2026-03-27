@@ -3,6 +3,54 @@ import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "
 import { getCategoryHint, pickEndingHint, getCategoryExample } from "../lib/prompts/hints.js";
 import { buildSystem } from "../lib/prompts/buildSystem/index.js";
 
+// ── IP 기반 레이트 리미팅 (Upstash Redis) ──
+async function checkRateLimit(ip) {
+  const url   = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // 환경변수 없으면 로컬 개발용으로 스킵
+  if (!url || !token) return { ok: true };
+
+  const now      = Math.floor(Date.now() / 1000);
+  const minuteKey = `rl:min:${ip}:${Math.floor(now / 60)}`;
+  const dayKey    = `rl:day:${ip}:${Math.floor(now / 86400)}`;
+
+  async function redisCmd(cmd) {
+    const res = await fetch(`${url}/${cmd.join('/')}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.json();
+  }
+
+  try {
+    // 분당 카운트
+    const [minResult] = await Promise.all([
+      redisCmd(['pipeline']).catch(() => null),
+    ]);
+
+    // 파이프라인으로 incr + expire 동시 실행
+    const pipe = await fetch(`${url}/pipeline`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify([
+        ['INCR', minuteKey],
+        ['EXPIRE', minuteKey, 60],
+        ['INCR', dayKey],
+        ['EXPIRE', dayKey, 86400],
+      ]),
+    });
+    const results = await pipe.json();
+    const minCount = results?.[0]?.result ?? 0;
+    const dayCount = results?.[2]?.result ?? 0;
+
+    if (minCount > 20) return { ok: false, reason: 'minute' };
+    if (dayCount > 200) return { ok: false, reason: 'day' };
+    return { ok: true };
+  } catch {
+    // Redis 오류 시 통과 (가용성 우선)
+    return { ok: true };
+  }
+}
+
 // ── 요청 스키마 검증 ──
 /**
  * @typedef {{ userMessage: string, context?: string, isChat?: boolean, isReport?: boolean, isLetter?: boolean, isScenario?: boolean, isStory?: boolean }} AskRequest
@@ -16,7 +64,7 @@ import { buildSystem } from "../lib/prompts/buildSystem/index.js";
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, responseStyle } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -27,6 +75,10 @@ function validateRequest(body) {
   if (context !== undefined && typeof context !== 'string') {
     return { ok: false, reason: 'context는 문자열이어야 해요' };
   }
+
+  // responseStyle: 'T' | 'M' | 'F' (기본: 'M')
+  const validStyles = ['T', 'M', 'F'];
+  const style = typeof responseStyle === 'string' && validStyles.includes(responseStyle) ? responseStyle : 'M';
 
   return {
     ok: true,
@@ -44,6 +96,7 @@ function validateRequest(body) {
       isAstrology: !!isAstrology,
       isProfileQuestion: !!isProfileQuestion,
       isGroupAnalysis: !!isGroupAnalysis,
+      responseStyle: style,
     },
   };
 }
@@ -51,12 +104,19 @@ function validateRequest(body) {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  // ── 레이트 리미팅 ──
+  const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  const rl = await checkRateLimit(ip);
+  if (!rl.ok) {
+    return res.status(429).json({ error: '너무 많은 요청이에요. 잠시 후 다시 시도해봐요 🌙' });
+  }
+
   const validation = validateRequest(req.body);
   if (!validation.ok) {
     return res.status(400).json({ error: validation.reason });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, responseStyle } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
@@ -73,7 +133,7 @@ export default async function handler(req, res) {
   const systemBase = await buildSystem(
     today, season, categoryHint, endingHint, timeHorizon,
     userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision,
-    categoryExample, isNatal, isZodiac, isComprehensive, isAstrology
+    categoryExample, isNatal, isZodiac, isComprehensive, isAstrology, responseStyle
   );
 
   // isProfileQuestion: 프로필 맞춤 질문 생성 전용 시스템 프롬프트

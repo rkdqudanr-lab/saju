@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import './styles/theme.css'
 
 const gaId = import.meta.env.VITE_GA_ID;
 if (gaId) {
