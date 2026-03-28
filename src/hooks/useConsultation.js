@@ -56,8 +56,9 @@ async function saveDailyCacheToSupabase(userId, type, content) {
  * @param {object|null} user - 로그인 사용자 ({ id, supabaseId, ... })
  * @param {object} consentFlags - 동의 플래그
  * @param {string} responseStyle - 응답 스타일 ('T'|'M'|'F')
+ * @param {Function} [onLoginRequired] - 로그인 필요 시 호출할 콜백 (카카오 로그인 트리거)
  */
-export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle) {
+export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired) {
   const [timeSlot, setTimeSlot] = useState(() => getTimeSlot());
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const loadMsgRef = useRef(null);
@@ -162,6 +163,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
   // ── API 호출 (최대 3회 재시도) ──
   const callApi = useCallback(async (userMessage, opts = {}) => {
+    // 로그인 필수 체크
+    if (!user?.id) {
+      if (typeof onLoginRequired === 'function') onLoginRequired();
+      throw new Error('LOGIN_REQUIRED');
+    }
+
     const maxRetries = 3;
     let lastErr;
     const style = responseStyle || 'M';
@@ -178,6 +185,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           body: JSON.stringify({
             userMessage,
             context: buildCtx(),
+            kakaoId:         user.id,
             isChat:          opts.isChat          || false,
             isReport:        opts.isReport        || false,
             isLetter:        opts.isLetter        || false,
@@ -200,7 +208,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     }
     setRetryMsg('');
     throw lastErr;
-  }, [buildCtx, responseStyle]);
+  }, [buildCtx, responseStyle, user?.id, onLoginRequired]);
 
   // ── 질문 추가/삭제 ──
   const addQ = useCallback(q => {
