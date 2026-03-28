@@ -42,11 +42,10 @@ export function useUserProfile() {
 
   // ── 개인 설정 (Supabase 연동) ──
   const [responseStyle, setResponseStyle] = useState(() => lsRaw('byeolsoom_style', 'M'));
-  const [theme, setTheme] = useState(() => {
-    const saved = lsRaw('byeolsoom_theme');
-    if (saved !== null) return saved;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
+  // 테마는 항상 기기 설정을 따름 (Supabase 저장 안함)
+  const [theme, setTheme] = useState(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  );
   const [onboarded, setOnboarded] = useState(() => lsRaw('byeolsoom_onboarded') === '1');
   const [quizState, setQuizState] = useState(() => lsGet('byeolsoom_quiz', DEFAULT_QUIZ));
 
@@ -109,7 +108,7 @@ export function useUserProfile() {
           // 저장된 데이터 복원 (다기기 대응)
           const { data: saved } = await (authClient || supabase)
             .from('users')
-            .select('id, birth_year, birth_month, birth_day, consent_flags, response_style, theme, onboarded, quiz_state')
+            .select('id, birth_year, birth_month, birth_day, consent_flags, response_style, onboarded, quiz_state')
             .eq('kakao_id', String(data.id))
             .single();
 
@@ -131,7 +130,6 @@ export function useUserProfile() {
           }
           // 개인 설정 복원
           if (saved?.response_style) { setResponseStyle(saved.response_style); lsSet('byeolsoom_style', saved.response_style); }
-          if (saved?.theme)          { setTheme(saved.theme);                   lsSet('byeolsoom_theme', saved.theme); }
           if (saved?.onboarded != null) { setOnboarded(saved.onboarded);        lsSet('byeolsoom_onboarded', saved.onboarded ? '1' : ''); }
           if (saved?.quiz_state)     { setQuizState(saved.quiz_state);          lsSet('byeolsoom_quiz', saved.quiz_state); }
         } else if (!lsRaw('byeolsoom_consent')) {
@@ -157,13 +155,12 @@ export function useUserProfile() {
         const authClient = getAuthenticatedClient(user.id);
         const { data } = await (authClient || supabase)
           .from('users')
-          .select('consent_flags, response_style, theme, onboarded, quiz_state')
+          .select('consent_flags, response_style, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
           .single();
         if (data?.consent_flags) { setConsentFlags(data.consent_flags); lsSet('byeolsoom_consent', data.consent_flags); }
         else if (!lsRaw('byeolsoom_consent')) setShowConsentModal(true);
         if (data?.response_style) { setResponseStyle(data.response_style); lsSet('byeolsoom_style', data.response_style); }
-        if (data?.theme)          { setTheme(data.theme);                   lsSet('byeolsoom_theme', data.theme); }
         if (data?.onboarded != null) { setOnboarded(data.onboarded);        lsSet('byeolsoom_onboarded', data.onboarded ? '1' : ''); }
         if (data?.quiz_state)     { setQuizState(data.quiz_state);          lsSet('byeolsoom_quiz', data.quiz_state); }
       } catch (e) {
@@ -262,13 +259,13 @@ export function useUserProfile() {
   const saveSettings = useCallback(async (updates) => {
     const currentUser = (() => { try { return JSON.parse(localStorage.getItem('byeolsoom_user')); } catch { return null; } })();
     if (updates.responseStyle !== undefined) { setResponseStyle(updates.responseStyle); lsSet('byeolsoom_style', updates.responseStyle); }
-    if (updates.theme         !== undefined) { setTheme(updates.theme);                  lsSet('byeolsoom_theme', updates.theme); }
+    // 테마는 기기 설정을 따르므로 Supabase에 저장하지 않음 (세션 내 토글만 허용)
+    if (updates.theme         !== undefined) { setTheme(updates.theme); }
     if (updates.onboarded     !== undefined) { setOnboarded(updates.onboarded);           lsSet('byeolsoom_onboarded', updates.onboarded ? '1' : ''); }
     if (updates.quizState     !== undefined) { setQuizState(updates.quizState);           lsSet('byeolsoom_quiz', updates.quizState); }
     if (!supabase || !currentUser?.id) return;
     const dbUpdates = {};
     if (updates.responseStyle !== undefined) dbUpdates.response_style = updates.responseStyle;
-    if (updates.theme         !== undefined) dbUpdates.theme           = updates.theme;
     if (updates.onboarded     !== undefined) dbUpdates.onboarded       = updates.onboarded;
     if (updates.quizState     !== undefined) dbUpdates.quiz_state      = updates.quizState;
     if (!Object.keys(dbUpdates).length) return;

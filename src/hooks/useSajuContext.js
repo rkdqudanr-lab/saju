@@ -17,12 +17,23 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
 
   const saju = useMemo(() => {
     if (!(form.by && form.bm && form.bd)) return null;
-    const [h, min] = parseBh(form.noTime, form.bh);
-    return getSaju(+form.by, +form.bm, +form.bd, h, min);
+    try {
+      const [h, min] = parseBh(form.noTime, form.bh);
+      return getSaju(+form.by, +form.bm, +form.bd, h, min);
+    } catch (e) { console.error('[별숨] getSaju 오류:', e); return null; }
   }, [form]);
-  const sun  = useMemo(() => (form.bm && form.bd) ? getSun(+form.bm, +form.bd) : null, [form.bm, form.bd]);
-  const moon = useMemo(() => (form.by && form.bm && form.bd) ? getMoon(+form.by, +form.bm, +form.bd) : null, [form.by, form.bm, form.bd]);
-  const asc  = useMemo(() => (!form.noTime && form.bh && form.bm) ? getAsc(+form.bh, +form.bm) : null, [form]);
+  const sun  = useMemo(() => {
+    if (!(form.bm && form.bd)) return null;
+    try { return getSun(+form.bm, +form.bd); } catch (e) { console.error('[별숨] getSun 오류:', e); return null; }
+  }, [form.bm, form.bd]);
+  const moon = useMemo(() => {
+    if (!(form.by && form.bm && form.bd)) return null;
+    try { return getMoon(+form.by, +form.bm, +form.bd); } catch (e) { console.error('[별숨] getMoon 오류:', e); return null; }
+  }, [form.by, form.bm, form.bd]);
+  const asc  = useMemo(() => {
+    if (!(!form.noTime && form.bh && form.bm)) return null;
+    try { return getAsc(+form.bh, +form.bm); } catch (e) { console.error('[별숨] getAsc 오류:', e); return null; }
+  }, [form]);
   const age  = form.by ? today.year - +form.by : 0;
   const formOk = !!(form.by && form.bm && form.bd);
 
@@ -30,10 +41,15 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
   const activeSaju   = useMemo(() => {
     const f = activeForm;
     if (!(f.by && f.bm && f.bd)) return null;
-    const [h, min] = parseBh(f.noTime, f.bh);
-    return getSaju(+f.by, +f.bm, +f.bd, h, min);
+    try {
+      const [h, min] = parseBh(f.noTime, f.bh);
+      return getSaju(+f.by, +f.bm, +f.bd, h, min);
+    } catch (e) { console.error('[별숨] activeSaju 오류:', e); return null; }
   }, [activeForm]);
-  const activeSun    = useMemo(() => (activeForm.bm && activeForm.bd) ? getSun(+activeForm.bm, +activeForm.bd) : null, [activeForm]);
+  const activeSun    = useMemo(() => {
+    if (!(activeForm.bm && activeForm.bd)) return null;
+    try { return getSun(+activeForm.bm, +activeForm.bd); } catch (e) { console.error('[별숨] activeSun 오류:', e); return null; }
+  }, [activeForm]);
   const activeAge    = activeForm.by ? today.year - +activeForm.by : 0;
 
   const buildCtx = useCallback(() => {

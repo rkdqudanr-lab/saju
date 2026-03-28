@@ -95,7 +95,7 @@ export default function SettingsPage({
   const styleIdx = STYLE_OPTIONS.findIndex(s => s.value === responseStyle);
 
   return (
-    <div className="page step-fade" style={{ alignItems: 'stretch', paddingTop: 56 }}>
+    <div className="page step-fade" style={{ paddingTop: 56 }}>
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 60 }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.1em', marginBottom: 4 }}>⚙️ 설정</div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 20 }}>나의 별숨 설정</div>
