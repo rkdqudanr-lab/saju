@@ -108,7 +108,7 @@ export function useUserProfile() {
           // 저장된 데이터 복원 (다기기 대응)
           const { data: saved } = await (authClient || supabase)
             .from('users')
-            .select('id, birth_year, birth_month, birth_day, consent_flags, response_style, onboarded, quiz_state')
+            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, no_time, consent_flags, response_style, onboarded, quiz_state')
             .eq('kakao_id', String(data.id))
             .single();
 
@@ -118,9 +118,17 @@ export function useUserProfile() {
             lsSet('byeolsoom_user', userDataWithUuid);
           }
           if (saved?.birth_year) {
-            setForm(f => ({ ...f, by: String(saved.birth_year), bm: String(saved.birth_month), bd: String(saved.birth_day) }));
+            const restoredForm = {
+              by: String(saved.birth_year),
+              bm: String(saved.birth_month),
+              bd: String(saved.birth_day),
+              bh: saved.birth_hour != null ? String(saved.birth_hour) : '',
+              gender: saved.gender || '',
+              noTime: saved.no_time || false,
+            };
+            setForm(f => ({ ...f, ...restoredForm }));
             const cur = lsGet('byeolsoom_profile', {});
-            lsSet('byeolsoom_profile', { ...cur, by: String(saved.birth_year), bm: String(saved.birth_month), bd: String(saved.birth_day) });
+            lsSet('byeolsoom_profile', { ...cur, ...restoredForm });
           }
           if (saved?.consent_flags) {
             setConsentFlags(saved.consent_flags);
@@ -155,9 +163,22 @@ export function useUserProfile() {
         const authClient = getAuthenticatedClient(user.id);
         const { data } = await (authClient || supabase)
           .from('users')
-          .select('consent_flags, response_style, onboarded, quiz_state')
+          .select('birth_year, birth_month, birth_day, birth_hour, gender, no_time, consent_flags, response_style, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
           .single();
+        if (data?.birth_year) {
+          const restoredForm = {
+            by: String(data.birth_year),
+            bm: String(data.birth_month),
+            bd: String(data.birth_day),
+            bh: data.birth_hour != null ? String(data.birth_hour) : '',
+            gender: data.gender || '',
+            noTime: data.no_time || false,
+          };
+          setForm(f => ({ ...f, ...restoredForm }));
+          const cur = lsGet('byeolsoom_profile', {});
+          lsSet('byeolsoom_profile', { ...cur, ...restoredForm });
+        }
         if (data?.consent_flags) { setConsentFlags(data.consent_flags); lsSet('byeolsoom_consent', data.consent_flags); }
         else if (!lsRaw('byeolsoom_consent')) setShowConsentModal(true);
         if (data?.response_style) { setResponseStyle(data.response_style); lsSet('byeolsoom_style', data.response_style); }
@@ -324,7 +345,7 @@ export function useUserProfile() {
 
   const saveProfileToSupabase = useCallback(async (currentForm, currentUser) => {
     if (!supabase || !currentUser?.id) return;
-    const { by, bm, bd, name } = currentForm;
+    const { by, bm, bd, bh, name, gender, noTime } = currentForm;
     if (!by || !bm || !bd) return;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
@@ -333,6 +354,9 @@ export function useUserProfile() {
         birth_year:  parseInt(by, 10),
         birth_month: parseInt(bm, 10),
         birth_day:   parseInt(bd, 10),
+        birth_hour:  bh ? parseFloat(bh) : null,
+        gender:      gender || null,
+        no_time:     noTime || false,
         nickname:    name || currentUser.nickname || '별님',
         updated_at:  new Date().toISOString(),
       }, { onConflict: 'kakao_id', ignoreDuplicates: false });

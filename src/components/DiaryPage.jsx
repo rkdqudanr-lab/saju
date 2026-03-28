@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase.js";
+import { getAuthenticatedClient } from "../lib/supabase.js";
 import { DIARY_PROMPT } from "../utils/constants.js";
 
 // ═══════════════════════════════════════════════════════════
@@ -58,10 +58,11 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
 
   // 오늘 일기 불러오기
   useEffect(() => {
-    if (!supabase || !user?.id) { setLoadingEntry(false); return; }
+    const authClient = getAuthenticatedClient(user?.id);
+    if (!authClient || !user?.id) { setLoadingEntry(false); return; }
     (async () => {
       try {
-        const { data } = await supabase.from('diary_entries')
+        const { data } = await authClient.from('diary_entries')
           .select('*').eq('kakao_id', user.id).eq('date', today).single();
         if (data) {
           setTodayEntry(data);
@@ -91,13 +92,14 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     };
 
     // Supabase 저장
-    if (supabase && user?.id) {
+    const authClient = getAuthenticatedClient(user?.id);
+    if (authClient && user?.id) {
       try {
         const payload = { kakao_id: user.id, date: today, ...entry };
         if (todayEntry?.id) {
-          await supabase.from('diary_entries').update(entry).eq('id', todayEntry.id);
+          await authClient.from('diary_entries').update(entry).eq('id', todayEntry.id);
         } else {
-          await supabase.from('diary_entries').insert(payload);
+          await authClient.from('diary_entries').insert(payload);
         }
       } catch (e) {
         console.error('[DiaryPage] 저장 오류:', e);

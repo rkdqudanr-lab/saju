@@ -282,6 +282,9 @@ alter table users add column if not exists response_style text    default 'M';
 alter table users add column if not exists theme           text    default 'dark';
 alter table users add column if not exists onboarded       boolean default false;
 alter table users add column if not exists quiz_state      jsonb   default '{"nextQIdx":0,"lastAnsweredDate":"","answers":{}}';
+alter table users add column if not exists birth_hour      numeric;
+alter table users add column if not exists gender          text;
+alter table users add column if not exists no_time         boolean default false;
 
 -- ── other_profiles (나의 다른 사람 프로필) ────────────────────────
 create table if not exists other_profiles (
