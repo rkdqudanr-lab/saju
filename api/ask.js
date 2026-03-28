@@ -3,6 +3,33 @@ import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "
 import { getCategoryHint, pickEndingHint, getCategoryExample } from "../lib/prompts/hints.js";
 import { buildSystem } from "../lib/prompts/buildSystem/index.js";
 
+// ── 로그인 사용자 검증 (Supabase RLS) ──
+async function verifyUser(kakaoId) {
+  const supabaseUrl   = process.env.SUPABASE_URL;
+  const supabaseAnon  = process.env.SUPABASE_ANON_KEY;
+  // 환경변수 없으면 로컬 개발용으로 스킵 (kakaoId 존재 여부만 확인)
+  if (!supabaseUrl || !supabaseAnon) return !!kakaoId;
+
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/users?select=id&limit=1`,
+      {
+        headers: {
+          apikey: supabaseAnon,
+          Authorization: `Bearer ${supabaseAnon}`,
+          'x-kakao-id': String(kakaoId),
+        },
+      }
+    );
+    if (!res.ok) return false;
+    const rows = await res.json();
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    // Supabase 오류 시 통과 (가용성 우선)
+    return true;
+  }
+}
+
 // ── IP 기반 레이트 리미팅 (Upstash Redis) ──
 async function checkRateLimit(ip) {
   const url   = process.env.UPSTASH_REDIS_REST_URL;
@@ -64,7 +91,7 @@ async function checkRateLimit(ip) {
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, responseStyle } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, responseStyle, kakaoId } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -97,6 +124,7 @@ function validateRequest(body) {
       isProfileQuestion: !!isProfileQuestion,
       isGroupAnalysis: !!isGroupAnalysis,
       responseStyle: style,
+      kakaoId: kakaoId || null,
     },
   };
 }
@@ -114,6 +142,16 @@ export default async function handler(req, res) {
   const validation = validateRequest(req.body);
   if (!validation.ok) {
     return res.status(400).json({ error: validation.reason });
+  }
+
+  // ── 로그인 인증 ──
+  const { kakaoId } = validation.data;
+  if (!kakaoId) {
+    return res.status(401).json({ error: '로그인이 필요해요 🌙' });
+  }
+  const isValidUser = await verifyUser(kakaoId);
+  if (!isValidUser) {
+    return res.status(401).json({ error: '로그인이 필요해요 🌙' });
   }
 
   const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, responseStyle } = validation.data;
