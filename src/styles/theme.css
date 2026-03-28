@@ -299,7 +299,7 @@ select.inp option{background:var(--bg2)}
 .sugg-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}
 .chat-input-area{padding:var(--sp2) var(--sp3);padding-bottom:max(var(--sp2),env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg1);flex-shrink:0}
 .chat-inp-row{display:flex;gap:8px}
-.chat-inp{flex:1;padding:11px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:max(16px,var(--sm));font-family:var(--ff);transition:border-color .2s}
+.chat-inp{flex:1;min-width:0;padding:11px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:50px;color:var(--t1);font-size:max(16px,var(--sm));font-family:var(--ff);transition:border-color .2s}
 .chat-inp:focus{outline:none;border-color:var(--acc)}.chat-inp::placeholder{color:var(--t4)}.chat-inp:disabled{opacity:.4}
 .chat-send{width:40px;height:40px;border-radius:50%;border:none;background:var(--gold);color:#0D0B14;font-size:.85rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .15s}
 .chat-send:hover{opacity:.85}.chat-send:active{transform:scale(.93)}.chat-send:disabled{opacity:.3;cursor:not-allowed}
