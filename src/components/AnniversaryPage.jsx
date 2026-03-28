@@ -93,7 +93,7 @@ export default function AnniversaryPage({
           {anniversaryType === '직접입력' && (
             <input
               className="inp"
-              placeholder="어떤 날인지 적어주세요 (예: 첫 만남)"
+              placeholder="어떤 날인지 적어주세요"
               value={customLabel}
               onChange={e => setCustomLabel(e.target.value)}
               style={{ marginTop: 10 }}

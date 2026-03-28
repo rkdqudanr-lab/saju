@@ -213,7 +213,7 @@ export const DAILY_QUESTIONS = [
     q: '요즘 어떤 일 하고 있어요?',
     sub: '직업과 상황을 알면 별이 더 구체적으로 말해줘요',
     type: 'mixed',
-    placeholder: '예: 스타트업 마케터, 취준생, 프리랜서...',
+    placeholder: '입력하기',
     chips: ['직장인', '취준생', '프리랜서', '학생', '주부', '사업가', '무직'],
     field: 'workplace',
   },
@@ -246,7 +246,7 @@ export const DAILY_QUESTIONS = [
     q: '스스로를 한 문장으로 표현하면요?',
     sub: '당신이 직접 쓴 말이 가장 정확한 나침반이에요',
     type: 'text',
-    placeholder: '예: 겉은 차갑지만 속은 따뜻한 사람',
+    placeholder: '입력하기',
     field: 'selfDesc',
   },
   {
@@ -270,7 +270,7 @@ export const DAILY_QUESTIONS = [
     q: '요즘 즐겨 하는 취미가 있어요?',
     sub: '취미 안에 숨겨진 재능이 보여요',
     type: 'text',
-    placeholder: '예: 독서, 러닝, 그림 그리기...',
+    placeholder: '입력하기',
     field: null,
   },
   {
@@ -295,7 +295,7 @@ export const DAILY_QUESTIONS = [
     q: '지금 가장 잘 되고 싶은 관계가 있어요?',
     sub: '관계의 기운이 가장 많이 묻어나는 사람이 있잖아요',
     type: 'text',
-    placeholder: '예: 직장 상사, 오래된 친구, 부모님...',
+    placeholder: '입력하기',
     field: null,
   },
   {
@@ -311,7 +311,7 @@ export const DAILY_QUESTIONS = [
     q: '지금 어떤 변화를 원하고 있어요?',
     sub: '원하는 게 있다는 건 이미 기운이 움직이기 시작했다는 뜻이에요',
     type: 'text',
-    placeholder: '예: 직장을 바꾸고 싶어요, 관계를 정리하고 싶어요...',
+    placeholder: '입력하기',
     field: null,
   },
   {
@@ -351,7 +351,7 @@ export const DAILY_QUESTIONS = [
     q: '당신만의 작은 행운 루틴이 있어요?',
     sub: '이미 알고 있는 기운을 믿어봐요',
     type: 'text',
-    placeholder: '예: 출근 전 커피 한 잔, 일기 쓰기...',
+    placeholder: '입력하기',
     field: null,
   },
   {
@@ -367,7 +367,7 @@ export const DAILY_QUESTIONS = [
     q: '지금 살고 있는 지역이 어디예요?',
     sub: '방향과 지역의 기운도 운에 영향을 줘요',
     type: 'text',
-    placeholder: '예: 서울 마포구, 부산 해운대...',
+    placeholder: '입력하기',
     field: null,
   },
   {
@@ -383,7 +383,7 @@ export const DAILY_QUESTIONS = [
     q: '가장 친한 사람을 한 단어로 표현하면요?',
     sub: '가장 가까운 인연의 기운을 참고해요',
     type: 'text',
-    placeholder: '예: 든든한, 따뜻한, 재밌는...',
+    placeholder: '입력하기',
     field: null,
   },
   {
@@ -391,7 +391,7 @@ export const DAILY_QUESTIONS = [
     q: '자주 꾸는 꿈의 이미지가 있어요?',
     sub: '꿈에 담긴 기운을 같이 읽어드릴게요',
     type: 'text',
-    placeholder: '예: 쫓기는 꿈, 하늘을 나는 꿈, 물 꿈...',
+    placeholder: '입력하기',
     field: null,
   },
   {
@@ -407,7 +407,7 @@ export const DAILY_QUESTIONS = [
     q: '어떤 사람으로 기억되고 싶어요?',
     sub: '원하는 모습에서 타고난 별의 방향이 보여요',
     type: 'text',
-    placeholder: '예: 따뜻한 사람, 자기 삶을 사는 사람...',
+    placeholder: '입력하기',
     field: null,
   },
   {
@@ -415,7 +415,7 @@ export const DAILY_QUESTIONS = [
     q: '지금 용기가 필요한 순간이 있어요?',
     sub: '별숨이 그 용기의 타이밍을 읽어드릴게요',
     type: 'text',
-    placeholder: '예: 고백, 퇴사, 새로운 시작...',
+    placeholder: '입력하기',
     field: null,
   },
   {
