@@ -637,7 +637,7 @@ export default function App() {
                                   {(q.type === 'text' || q.type === 'mixed') && (
                                     <div style={{ display: 'flex', gap: 6 }}>
                                       <input className="chat-inp"
-                                        placeholder={q.placeholder || '직접 입력...'}
+                                        placeholder={q.placeholder || '직접 입력'}
                                         value={quizInput}
                                         onChange={e => setQuizInput(e.target.value)}
                                         onKeyDown={e => e.key === 'Enter' && handleQuizAnswer(q, quizInput)}
