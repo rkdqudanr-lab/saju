@@ -59,21 +59,20 @@ export default function SettingsPage({
   saveProfileToSupabase,
   onBack,
   showToast,
+  responseStyle: responseStyleProp = 'M',
+  onStyleChange,
 }) {
   const [tab, setTab] = useState(0); // 0: 개인정보, 1: 요금제, 2: 스타일
   const [localForm, setLocalForm] = useState({ ...form });
   const [saving, setSaving] = useState(false);
 
-  // T/F 스타일 상태 (localStorage)
-  const [responseStyle, setResponseStyle] = useState(() => {
-    try { return localStorage.getItem('byeolsoom_style') || 'M'; } catch { return 'M'; }
-  });
+  // T/F 스타일: props 기반 (Supabase에 저장됨)
+  const responseStyle = responseStyleProp;
 
   const handleStyleChange = useCallback((val) => {
-    setResponseStyle(val);
-    try { localStorage.setItem('byeolsoom_style', val); } catch {}
+    onStyleChange?.(val);
     showToast?.('스타일이 저장됐어요 ✦', 'success');
-  }, [showToast]);
+  }, [onStyleChange, showToast]);
 
   const handleSaveProfile = useCallback(async () => {
     if (!localForm.by || !localForm.bm || !localForm.bd) {

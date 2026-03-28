@@ -5,9 +5,8 @@ import { OC, OE, ON, ILGAN_POETIC, CGO } from "./utils/saju.js";
 import { getSun } from "./utils/astrology.js";
 import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT, DAILY_QUESTIONS } from "./utils/constants.js";
 import { TIME_CONFIG } from "./utils/time.js";
-import { loadHistory, deleteHistory } from "./utils/history.js";
 import { saveShareCard, saveProphecyImage, saveCompatImage, saveChatImage } from "./utils/imageExport.js";
-import { loadQuiz, saveQuiz, getTodayStr, isTodayAnswered } from "./utils/quiz.js";
+import { getTodayStr, isTodayAnswered } from "./utils/quiz.js";
 
 // hooks
 import { useUserProfile }   from "./hooks/useUserProfile.js";
@@ -53,11 +52,7 @@ function PageSpinner() {
 //  🏠 메인 앱
 // ═══════════════════════════════════════════════════════════
 export default function App() {
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('byeolsoom_theme');
-    if (saved !== null) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  // isDark / onboardingDone / quiz 는 useUserProfile에서 관리됨 (아래 userProfile 훅 초기화 후 사용)
   const [showSidebar, setShowSidebar] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
@@ -75,7 +70,7 @@ export default function App() {
   const [fieldTouched, setFieldTouched] = useState({ by: false, bm: false, bd: false });
   const [showAllCats, setShowAllCats] = useState(false);
   const [showSubNudge, setShowSubNudge] = useState(false);
-  const [quiz, setQuiz] = useState(() => loadQuiz());
+  // quiz는 userProfile.quizState 에서 가져옴 (아래)
   const [quizInput, setQuizInput] = useState('');
   const [profileNudge, setProfileNudge] = useState(null);
   const [refCode] = useState(() => {
@@ -91,8 +86,7 @@ export default function App() {
   const resultsRef = useRef(null);
   const askBtnRef = useRef(null);
 
-  // ── 온보딩 카드 상태 ──
-  const [onboardingDone, setOnboardingDone] = useState(() => localStorage.getItem('byeolsoom_onboarded') === '1');
+  // onboardingDone은 userProfile.onboarded 에서 가져옴 (아래)
 
   const showToast = useCallback((message, type = 'info') => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -121,12 +115,18 @@ export default function App() {
           kakaoLogin, kakaoLogout, saveOtherProfile,
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
-          saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer } = userProfile;
+          saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
+          responseStyle, theme, onboarded, quizState, saveSettings } = userProfile;
+
+  // isDark / onboardingDone / quiz → userProfile에서 파생
+  const isDark          = theme === 'dark';
+  const onboardingDone  = onboarded;
+  const quiz            = quizState;
 
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
 
-  const consultation = useConsultation(buildCtx, formOk);
+  const consultation = useConsultation(buildCtx, formOk, user, consentFlags, responseStyle);
   const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
@@ -135,7 +135,8 @@ export default function App() {
           dailyResult, dailyLoading,
           diaryReviewResult, diaryReviewLoading,
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
-          retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession } = consultation;
+          retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
+          deleteHistoryItem } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
   const IS_BETA = true; // 베타 기간 종료 시 false로 변경
@@ -150,10 +151,9 @@ export default function App() {
 
   // ── 온보딩 완료 ──
   const handleOnboardingFinish = useCallback(() => {
-    localStorage.setItem('byeolsoom_onboarded', '1');
-    setOnboardingDone(true);
+    saveSettings({ onboarded: true });
     setStep(0);
-  }, [setStep]);
+  }, [setStep, saveSettings]);
 
   // ── 빠른 개인화 입력 저장 ──
   const handleQuizAnswer = useCallback((question, value) => {
@@ -171,12 +171,11 @@ export default function App() {
       nextQIdx: Math.min((quiz.nextQIdx || 0) + 1, DAILY_QUESTIONS.length - 1),
       lastAnsweredDate: getTodayStr(),
     };
-    setQuiz(updated);
-    saveQuiz(updated);
+    saveSettings({ quizState: updated });
     if (user) saveDailyQuizAnswer(user, question.id, val);
     setQuizInput('');
     showToast('별숨이 기억했어요 ✦', 'success');
-  }, [quiz, quizInput, setProfile, showToast, user, saveDailyQuizAnswer]);
+  }, [quiz, quizInput, setProfile, showToast, user, saveDailyQuizAnswer, saveSettings]);
 
   // ── 채팅 전송 (넛지 초기화 포함) ──
   const handleSendChat = useCallback(() => {
@@ -211,9 +210,9 @@ export default function App() {
     if (loginError) { showToast(loginError, 'error'); setLoginError(''); }
   }, [loginError, showToast, setLoginError]);
 
-  // ── 초대 코드 저장 ──
+  // ── 초대 코드 저장 (기기별 임시 저장) ──
   useEffect(() => {
-    if (refCode) localStorage.setItem('byeolsoom_ref', refCode);
+    if (refCode) { try { localStorage.setItem('byeolsoom_ref', refCode); } catch {} }
   }, [refCode]);
 
   useEffect(() => {
@@ -306,13 +305,9 @@ export default function App() {
 
   // ── 테마 ──
   useEffect(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }, [isDark]);
-  const toggleDark = () => {
-    setIsDark(p => {
-      const next = !p;
-      localStorage.setItem('byeolsoom_theme', next ? 'dark' : 'light');
-      return next;
-    });
-  };
+  const toggleDark = useCallback(() => {
+    saveSettings({ theme: isDark ? 'light' : 'dark' });
+  }, [isDark, saveSettings]);
 
   // ── 이미지 저장 ──
   const shareCard = useCallback((idx) => {
@@ -1342,7 +1337,7 @@ export default function App() {
             <HistoryPage
               item={histItem}
               onBack={() => { setHistItem(null); setStep(0); }}
-              onDelete={(id) => { deleteHistory(id); setHistItems(loadHistory()); }}
+              onDelete={(id, supabaseId) => { deleteHistoryItem(id, supabaseId); }}
             />
           </Suspense>
         )}
@@ -1399,6 +1394,7 @@ export default function App() {
               sun={sun}
               form={form}
               buildCtx={buildCtx}
+              user={user}
             />
           </Suspense>
         )}
@@ -1423,6 +1419,7 @@ export default function App() {
               asc={asc}
               form={form}
               buildCtx={buildCtx}
+              user={user}
             />
           </Suspense>
         )}
@@ -1487,6 +1484,8 @@ export default function App() {
               saveProfileToSupabase={saveProfileToSupabase}
               onBack={() => setStep(0)}
               showToast={showToast}
+              responseStyle={responseStyle}
+              onStyleChange={(val) => saveSettings({ responseStyle: val })}
             />
           </Suspense>
         )}
