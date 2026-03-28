@@ -641,7 +641,7 @@ export default function App() {
                                         value={quizInput}
                                         onChange={e => setQuizInput(e.target.value)}
                                         onKeyDown={e => e.key === 'Enter' && handleQuizAnswer(q, quizInput)}
-                                        style={{ flex: 1, fontSize: 'var(--sm)' }} />
+                                        style={{ flex: 1 }} />
                                       <button className="chat-send" onClick={() => handleQuizAnswer(q, quizInput)} disabled={!quizInput.trim()} style={{ flexShrink: 0 }}>✦</button>
                                     </div>
                                   )}
