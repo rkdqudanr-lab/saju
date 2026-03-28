@@ -213,7 +213,7 @@ export const DAILY_QUESTIONS = [
     q: '요즘 어떤 일 하고 있어요?',
     sub: '직업과 상황을 알면 별이 더 구체적으로 말해줘요',
     type: 'mixed',
-    placeholder: '예: 스타트업 마케터, 취준생, 프리랜서...',
+    placeholder: '입력하기',
     chips: ['직장인', '취준생', '프리랜서', '학생', '주부', '사업가', '무직'],
     field: 'workplace',
   },
