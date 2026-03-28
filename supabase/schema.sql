@@ -272,3 +272,119 @@ create policy "group_members_insert" on group_members
 
 create policy "group_members_select" on group_members
   for select to anon using (true);
+
+-- ================================================================
+-- 추가 마이그레이션: 로컬스토리지 → Supabase 통합
+-- ================================================================
+
+-- ── users 추가 컬럼 (개인 설정) ──────────────────────────────────
+alter table users add column if not exists response_style text    default 'M';
+alter table users add column if not exists theme           text    default 'dark';
+alter table users add column if not exists onboarded       boolean default false;
+alter table users add column if not exists quiz_state      jsonb   default '{"nextQIdx":0,"lastAnsweredDate":"","answers":{}}';
+
+-- ── other_profiles (나의 다른 사람 프로필) ────────────────────────
+create table if not exists other_profiles (
+  id           uuid primary key default gen_random_uuid(),
+  kakao_id     text not null,
+  name         text not null default '',
+  birth_year   integer,
+  birth_month  integer,
+  birth_day    integer,
+  birth_hour   numeric,
+  gender       text,
+  no_time      boolean default false,
+  sort_order   integer default 0,
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+
+alter table other_profiles enable row level security;
+
+drop policy if exists "other_profiles_insert" on other_profiles;
+drop policy if exists "other_profiles_select" on other_profiles;
+drop policy if exists "other_profiles_update" on other_profiles;
+drop policy if exists "other_profiles_delete" on other_profiles;
+
+create policy "other_profiles_insert" on other_profiles
+  for insert to anon with check (kakao_id is not null);
+
+create policy "other_profiles_select" on other_profiles
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "other_profiles_update" on other_profiles
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
+
+create policy "other_profiles_delete" on other_profiles
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- ── analysis_cache (점성술·종합사주 분석 캐시) ────────────────────
+create table if not exists analysis_cache (
+  id         uuid primary key default gen_random_uuid(),
+  kakao_id   text not null,
+  cache_key  text not null,
+  content    text not null,
+  created_at timestamptz default now(),
+  unique(kakao_id, cache_key)
+);
+
+alter table analysis_cache enable row level security;
+
+drop policy if exists "analysis_cache_insert" on analysis_cache;
+drop policy if exists "analysis_cache_select" on analysis_cache;
+drop policy if exists "analysis_cache_update" on analysis_cache;
+drop policy if exists "analysis_cache_delete" on analysis_cache;
+
+create policy "analysis_cache_insert" on analysis_cache
+  for insert to anon with check (kakao_id is not null);
+
+create policy "analysis_cache_select" on analysis_cache
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "analysis_cache_update" on analysis_cache
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
+
+create policy "analysis_cache_delete" on analysis_cache
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- ── daily_cache (오늘 별숨 · 일기 회고 캐시) ──────────────────────
+create table if not exists daily_cache (
+  id           uuid primary key default gen_random_uuid(),
+  kakao_id     text not null,
+  cache_date   date not null,
+  cache_type   text not null,  -- 'horoscope' | 'diary_review'
+  content      text not null,
+  created_at   timestamptz default now(),
+  unique(kakao_id, cache_date, cache_type)
+);
+
+alter table daily_cache enable row level security;
+
+drop policy if exists "daily_cache_insert" on daily_cache;
+drop policy if exists "daily_cache_select" on daily_cache;
+drop policy if exists "daily_cache_update" on daily_cache;
+
+create policy "daily_cache_insert" on daily_cache
+  for insert to anon with check (kakao_id is not null);
+
+create policy "daily_cache_select" on daily_cache
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "daily_cache_update" on daily_cache
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);

@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ON } from "../utils/saju.js";
 import { stripMarkdown } from "../utils/constants.js";
+import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 
 // ── 섹션 파서 ──
 function parseSections(text, tags) {
@@ -60,19 +61,51 @@ function SectionCard({ icon, title, text, delay = 0 }) {
   );
 }
 
+// ── Supabase analysis_cache 헬퍼 ──
+async function loadAnalysisCache(userId, cacheKey) {
+  if (!supabase || !userId) return null;
+  try {
+    const authClient = getAuthenticatedClient(userId);
+    const { data } = await (authClient || supabase)
+      .from('analysis_cache').select('content').eq('kakao_id', userId).eq('cache_key', cacheKey).single();
+    return data?.content || null;
+  } catch { return null; }
+}
+async function saveAnalysisCache(userId, cacheKey, content) {
+  if (!supabase || !userId) return;
+  try {
+    const authClient = getAuthenticatedClient(userId);
+    await (authClient || supabase).from('analysis_cache').upsert(
+      { kakao_id: userId, cache_key: cacheKey, content },
+      { onConflict: 'kakao_id,cache_key' }
+    );
+  } catch (e) { console.error('[별숨] analysis_cache 저장 오류:', e); }
+}
+
 // ── 메인 컴포넌트 ──
-export default function ComprehensivePage({ saju, sun, form, buildCtx }) {
-  const cacheKey = `byeolsoom_comp_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
-  const [text, setText]       = useState(() => localStorage.getItem(cacheKey) || '');
+export default function ComprehensivePage({ saju, sun, form, buildCtx, user }) {
+  const cacheKey = `comp_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
+  const localKey = `byeolsoom_comp_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
+
+  // 초기값: localStorage 캐시 (빠른 로드)
+  const [text, setText]       = useState(() => { try { return localStorage.getItem(localKey) || ''; } catch { return ''; } });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(false);
+
+  // 로그인 시 Supabase에서 캐시 로드
+  useEffect(() => {
+    if (!user?.id || text) return;
+    loadAnalysisCache(user.id, cacheKey).then(content => {
+      if (content) { setText(content); try { localStorage.setItem(localKey, content); } catch {} }
+    });
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetch_ = useCallback(async () => {
     if (loading) return;
     setLoading(true);
     setError(false);
     setText('');
-    localStorage.removeItem(cacheKey);
+    try { localStorage.removeItem(localKey); } catch {}
     try {
       const now = new Date().getFullYear();
       const sajuSummary = saju
@@ -89,13 +122,16 @@ export default function ComprehensivePage({ saju, sun, form, buildCtx }) {
       if (!res.ok) throw new Error(data.error || 'API 오류');
       const cleaned = stripMarkdown(data.text || '');
       setText(cleaned);
-      localStorage.setItem(cacheKey, cleaned);
+      // localStorage 캐시
+      try { localStorage.setItem(localKey, cleaned); } catch {}
+      // Supabase 캐시
+      if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
     } catch {
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, [saju, sun, buildCtx, cacheKey, loading]);
+  }, [saju, sun, buildCtx, cacheKey, localKey, loading, user?.id]);
 
   const sections = parseSections(text, COMP_SECTIONS.map(s => s.tag));
   const hasContent = Object.values(sections).some(v => v);

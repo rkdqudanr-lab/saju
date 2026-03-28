@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { getSaju, ON } from "../utils/saju.js";
-import { supabase } from "../lib/supabase.js";
+import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 
 // ─────────────────────────────────────────────
 // 일진 점수 계산
@@ -49,17 +49,17 @@ function scoreLabel(score) {
 }
 
 // ─────────────────────────────────────────────
-// 이벤트 저장소 (localStorage)
+// 이벤트 저장소 (localStorage는 비로그인 fallback용)
 // ─────────────────────────────────────────────
 const STORAGE_KEY = "byeolsoom_calendar_events";
 
-function loadEvents() {
+function loadEventsFromLocal() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
   catch { return {}; }
 }
 
-function saveToStorage(events) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+function saveToLocal(events) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); } catch {}
 }
 
 function dateKey(y, m, d) {
@@ -75,28 +75,28 @@ export default function SajuCalendar({ form, setStep, askQuick, user }) {
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
   const [selected, setSelected] = useState(null);
-  const [events, setEvents] = useState(loadEvents);
+  // 초기값: localStorage 캐시 (비로그인 fallback)
+  const [events, setEvents] = useState(loadEventsFromLocal);
   const [inputText, setInputText] = useState('');
 
-  // ── Supabase 이벤트 로드 (로그인 시) ──
+  // ── Supabase 이벤트 로드 (로그인 시) — Supabase가 primary ──
   useEffect(() => {
     if (!user?.id) return;
-    supabase
+    const authClient = getAuthenticatedClient(user.id);
+    (authClient || supabase)
       .from('calendar_events')
       .select('date, title, id')
       .eq('kakao_id', user.id)
       .then(({ data }) => {
-        if (!data || data.length === 0) return;
-        const merged = { ...loadEvents() };
-        data.forEach(row => {
-          const key = row.date; // 'YYYY-MM-DD'
-          if (!merged[key]) merged[key] = [];
-          if (!merged[key].find(e => e.supabaseId === row.id)) {
-            merged[key].push({ id: row.id, supabaseId: row.id, title: row.title });
-          }
+        // Supabase 데이터로 완전 교체
+        const fresh = {};
+        (data || []).forEach(row => {
+          const key = row.date;
+          if (!fresh[key]) fresh[key] = [];
+          fresh[key].push({ id: row.id, supabaseId: row.id, title: row.title });
         });
-        setEvents(merged);
-        saveToStorage(merged);
+        setEvents(fresh);
+        saveToLocal(fresh); // localStorage 캐시 갱신
       });
   }, [user?.id]);
 
@@ -142,39 +142,46 @@ export default function SajuCalendar({ form, setStep, askQuick, user }) {
   const addEvent = async () => {
     if (!inputText.trim() || !selectedKey) return;
     const title = inputText.trim();
-    const newEvent = { id: Date.now(), title };
-    const updated = { ...events, [selectedKey]: [...(events[selectedKey] || []), newEvent] };
-    setEvents(updated);
-    saveToStorage(updated);
     setInputText('');
-    // Supabase 저장 (로그인 시)
     if (user?.id) {
-      const { data } = await supabase
+      // 로그인: Supabase primary
+      const authClient = getAuthenticatedClient(user.id);
+      const { data } = await (authClient || supabase)
         .from('calendar_events')
         .insert({ kakao_id: user.id, date: selectedKey, title })
-        .select('id')
-        .single();
+        .select('id').single();
       if (data?.id) {
-        // supabaseId를 이벤트에 기록
-        const updated2 = { ...updated };
-        const list = updated2[selectedKey].map(e => e.id === newEvent.id ? { ...e, supabaseId: data.id } : e);
-        updated2[selectedKey] = list;
-        setEvents(updated2);
-        saveToStorage(updated2);
+        const newEvent = { id: data.id, supabaseId: data.id, title };
+        setEvents(prev => {
+          const updated = { ...prev, [selectedKey]: [...(prev[selectedKey] || []), newEvent] };
+          saveToLocal(updated);
+          return updated;
+        });
       }
+    } else {
+      // 비로그인: localStorage fallback
+      const newEvent = { id: Date.now(), title };
+      setEvents(prev => {
+        const updated = { ...prev, [selectedKey]: [...(prev[selectedKey] || []), newEvent] };
+        saveToLocal(updated);
+        return updated;
+      });
     }
   };
 
   const deleteEvent = (key, id) => {
     const target = (events[key] || []).find(e => e.id === id);
-    const updated = { ...events };
-    updated[key] = (updated[key] || []).filter(e => e.id !== id);
-    if (updated[key].length === 0) delete updated[key];
-    setEvents(updated);
-    saveToStorage(updated);
+    setEvents(prev => {
+      const updated = { ...prev };
+      updated[key] = (updated[key] || []).filter(e => e.id !== id);
+      if (updated[key].length === 0) delete updated[key];
+      saveToLocal(updated);
+      return updated;
+    });
     // Supabase 삭제 (로그인 시)
     if (user?.id && target?.supabaseId) {
-      supabase.from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', user.id);
+      const authClient = getAuthenticatedClient(user.id);
+      (authClient || supabase).from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', user.id);
     }
   };
 
