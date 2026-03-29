@@ -1352,7 +1352,7 @@ export default function App() {
         {/* ── Step 10: 별숨 달력 ── */}
         {step === 10 && (
           <Suspense fallback={<PageSpinner />}>
-            <SajuCalendar form={form} setStep={setStep} askQuick={askQuick} user={user} />
+            <SajuCalendar form={form} setStep={setStep} askQuick={askQuick} user={user} callApi={callApi} />
           </Suspense>
         )}
 
