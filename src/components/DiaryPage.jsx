@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase.js";
 import { DIARY_PROMPT } from "../utils/constants.js";
 
 // ═══════════════════════════════════════════════════════════
-//  📓 오늘 하루 나의 별숨 — 일기 페이지
+//  📓 나의 하루를 별숨에게 — 일기 페이지
 // ═══════════════════════════════════════════════════════════
 
 const MOOD_OPTIONS = [
@@ -78,16 +78,16 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     })();
   }, [user?.id, today]);
 
-  const canSubmit = mood && weather && energy && content.trim().length >= 5;
+  const canSubmit = true;
 
   const handleSubmit = async () => {
     const entry = {
-      mood,
-      weather,
-      energy,
+      mood: mood || null,
+      weather: weather || null,
+      energy: energy || null,
       gratitude: gratitude.trim() || null,
       tomorrow_goal: tomorrowGoal.trim() || null,
-      content: content.trim(),
+      content: content.trim() || '',
     };
 
     // Supabase 저장
@@ -130,7 +130,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
             <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>📓</div>
             <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
-              오늘 하루 나의 별숨
+              나의 하루를 별숨에게
             </div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
               {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
@@ -273,11 +273,6 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
           >
             별숨의 해석 듣기 ✦
           </button>
-          {!canSubmit && (
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center', marginBottom: 12 }}>
-              기분 · 날씨 · 에너지를 선택하고 오늘 있었던 일을 적어주세요
-            </div>
-          )}
 
           {!embedded && (
             <button
