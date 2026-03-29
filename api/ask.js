@@ -3,31 +3,12 @@ import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "
 import { getCategoryHint, pickEndingHint, getCategoryExample } from "../lib/prompts/hints.js";
 import { buildSystem } from "../lib/prompts/buildSystem/index.js";
 
-// ── 로그인 사용자 검증 (Supabase RLS) ──
+// ── 로그인 사용자 검증 ──
+// kakaoId가 있으면 통과. Supabase 레코드 유무와 무관하게 허용.
+// (수파베이스 마이그레이션 이전 사용자 등 레코드 미존재 케이스 대응)
+// 남용 방지는 IP 기반 레이트 리미팅으로 처리.
 async function verifyUser(kakaoId) {
-  const supabaseUrl   = process.env.SUPABASE_URL;
-  const supabaseAnon  = process.env.SUPABASE_ANON_KEY;
-  // 환경변수 없으면 로컬 개발용으로 스킵 (kakaoId 존재 여부만 확인)
-  if (!supabaseUrl || !supabaseAnon) return !!kakaoId;
-
-  try {
-    const res = await fetch(
-      `${supabaseUrl}/rest/v1/users?select=id&limit=1`,
-      {
-        headers: {
-          apikey: supabaseAnon,
-          Authorization: `Bearer ${supabaseAnon}`,
-          'x-kakao-id': String(kakaoId),
-        },
-      }
-    );
-    if (!res.ok) return false;
-    const rows = await res.json();
-    return Array.isArray(rows) && rows.length > 0;
-  } catch {
-    // Supabase 오류 시 통과 (가용성 우선)
-    return true;
-  }
+  return !!kakaoId;
 }
 
 // ── IP 기반 레이트 리미팅 (Upstash Redis) ──
@@ -198,7 +179,7 @@ export default async function handler(req, res) {
 
   // 감성 깊이가 필요한 모드는 sonnet, 나머지는 haiku (비용 최적화)
   const model = (isLetter || isStory || isComprehensive || isAstrology || isGroupAnalysis || isCalendarMonth)
-    ? "claude-sonnet-4-20250514"
+    ? "claude-sonnet-4-6"
     : "claude-haiku-4-5-20251001";
 
   // 모드별 최대 토큰 분기 — 응답이 중간에 끊기지 않도록 넉넉하게 설정

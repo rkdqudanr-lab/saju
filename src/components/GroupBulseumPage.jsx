@@ -177,6 +177,7 @@ function DetailPanel({ pair, members, onClose }) {
           context: ctx,
           isGroupAnalysis: true,
           isChat: true,
+          kakaoId: user?.id || null,
           clientHour: new Date().getHours(),
         }),
       });
@@ -236,7 +237,7 @@ function DetailPanel({ pair, members, onClose }) {
 // localStorage 백업 키
 function getGroupLocalKey(code) { return `byeolsoom_group_${code}`; }
 
-export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode }) {
+export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode, user }) {
   const [phase, setPhase] = useState('landing'); // landing | join | members | graph
   const [sessionId, setSessionId] = useState(null);
   const [inviteCode, setInviteCode] = useState('');

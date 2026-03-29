@@ -1322,6 +1322,7 @@ export default function App() {
               callApi={callApi} buildCtx={buildCtx}
               onBack={() => setStep(4)}
               shareResult={shareResult}
+              user={user}
             />
           </Suspense>
         )}
@@ -1359,7 +1360,7 @@ export default function App() {
         {/* ── Step 11: 우리 모임의 별숨은? ── */}
         {step === 11 && (
           <Suspense fallback={<PageSpinner />}>
-            <GroupBulseumPage form={form} saju={saju} sun={sun} setStep={setStep} initialCode={groupCode} />
+            <GroupBulseumPage form={form} saju={saju} sun={sun} setStep={setStep} initialCode={groupCode} user={user} />
           </Suspense>
         )}
 
