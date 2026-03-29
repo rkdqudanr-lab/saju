@@ -6,48 +6,40 @@ const DEFAULT_FORM    = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', 
 const DEFAULT_OTHER   = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_QUIZ    = { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
 
-// ── localStorage 헬퍼 ──
-function lsGet(key, fallback) {
-  try { const v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : fallback; } catch { return fallback; }
+// ── 인증 세션만 localStorage 사용 (다른 모든 데이터는 Supabase) ──
+function getAuthUser() {
+  try { return JSON.parse(localStorage.getItem('byeolsoom_user')); } catch { return null; }
 }
-function lsSet(key, val) {
-  try { localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch {}
-}
-function lsRaw(key, fallback = null) {
-  try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+function setAuthUser(val) {
+  try { localStorage.setItem('byeolsoom_user', val === null ? '' : JSON.stringify(val)); } catch {}
+  if (val === null) { try { localStorage.removeItem('byeolsoom_user'); } catch {} }
 }
 
 export function useUserProfile() {
-  const [user, setUser] = useState(() => lsGet('byeolsoom_user', null));
-  const [profile, setProfile] = useState(() => lsGet('byeolsoom_extra', DEFAULT_PROFILE));
-  const [form, setForm] = useState(() => {
-    const p = lsGet('byeolsoom_profile', null);
-    if (p) return { name: p.name || '', by: p.by || '', bm: p.bm || '', bd: p.bd || '', bh: p.bh || '', gender: p.gender || '', noTime: p.noTime || false };
-    return DEFAULT_FORM;
-  });
-  const [otherProfiles, setOtherProfiles] = useState(() => lsGet('byeolsoom_others', []));
+  const [user, setUser] = useState(() => getAuthUser());
+  const [profile, setProfile] = useState(DEFAULT_PROFILE);
+  const [form, setForm] = useState(DEFAULT_FORM);
+  const [otherProfiles, setOtherProfiles] = useState([]);
   const [activeProfileIdx, setActiveProfileIdx]       = useState(0);
   const [otherForm, setOtherForm]                     = useState(DEFAULT_OTHER);
   const [editingOtherIdx, setEditingOtherIdx]         = useState(null);
   const [showProfileModal, setShowProfileModal]       = useState(false);
   const [showOtherProfileModal, setShowOtherProfileModal] = useState(false);
   const [showConsentModal, setShowConsentModal]       = useState(false);
-  const [consentFlags, setConsentFlags] = useState(() =>
-    lsGet('byeolsoom_consent', { history: true, partner: false, workplace: true, worry: false })
-  );
+  const [consentFlags, setConsentFlags] = useState(null); // null = 아직 로드 안 됨
   const [loginError, setLoginError]   = useState('');
   const [loginLoading, setLoginLoading] = useState(() =>
     new URLSearchParams(window.location.search).has('code')
   );
 
-  // ── 개인 설정 (Supabase 연동) ──
-  const [responseStyle, setResponseStyle] = useState(() => lsRaw('byeolsoom_style', 'M'));
-  // 테마는 항상 기기 설정을 따름 (Supabase 저장 안함)
+  // ── 개인 설정 (Supabase 저장) ──
+  const [responseStyle, setResponseStyle] = useState('M');
+  // 테마: 기기 설정 따름 (localStorage 저장 안 함, 세션 내 토글만)
   const [theme, setTheme] = useState(() =>
     window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   );
-  const [onboarded, setOnboarded] = useState(() => lsRaw('byeolsoom_onboarded') === '1');
-  const [quizState, setQuizState] = useState(() => lsGet('byeolsoom_quiz', DEFAULT_QUIZ));
+  const [onboarded, setOnboarded] = useState(false);
+  const [quizState, setQuizState] = useState(DEFAULT_QUIZ);
 
   // ── 카카오 SDK 초기화 ──
   useEffect(() => {
@@ -95,7 +87,7 @@ export function useUserProfile() {
         if (!res.ok) throw new Error(data.error || '인증 실패');
         const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: data.profileImage || null };
         setUser(userData);
-        lsSet('byeolsoom_user', userData);
+        setAuthUser(userData);
 
         if (supabase) {
           const authClient = getAuthenticatedClient(String(data.id));
@@ -105,7 +97,6 @@ export function useUserProfile() {
             updated_at: new Date().toISOString(),
           }, { onConflict: 'kakao_id', ignoreDuplicates: false });
 
-          // 저장된 데이터 복원 (다기기 대응)
           const { data: saved } = await (authClient || supabase)
             .from('users')
             .select('id, birth_year, birth_month, birth_day, consent_flags, response_style, onboarded, quiz_state')
@@ -115,24 +106,20 @@ export function useUserProfile() {
           if (saved?.id) {
             const userDataWithUuid = { ...userData, supabaseId: saved.id };
             setUser(userDataWithUuid);
-            lsSet('byeolsoom_user', userDataWithUuid);
+            setAuthUser(userDataWithUuid);
           }
           if (saved?.birth_year) {
             setForm(f => ({ ...f, by: String(saved.birth_year), bm: String(saved.birth_month), bd: String(saved.birth_day) }));
-            const cur = lsGet('byeolsoom_profile', {});
-            lsSet('byeolsoom_profile', { ...cur, by: String(saved.birth_year), bm: String(saved.birth_month), bd: String(saved.birth_day) });
           }
           if (saved?.consent_flags) {
             setConsentFlags(saved.consent_flags);
-            lsSet('byeolsoom_consent', saved.consent_flags);
-          } else if (!lsRaw('byeolsoom_consent')) {
+          } else {
             setShowConsentModal(true);
           }
-          // 개인 설정 복원
-          if (saved?.response_style) { setResponseStyle(saved.response_style); lsSet('byeolsoom_style', saved.response_style); }
-          if (saved?.onboarded != null) { setOnboarded(saved.onboarded);        lsSet('byeolsoom_onboarded', saved.onboarded ? '1' : ''); }
-          if (saved?.quiz_state)     { setQuizState(saved.quiz_state);          lsSet('byeolsoom_quiz', saved.quiz_state); }
-        } else if (!lsRaw('byeolsoom_consent')) {
+          if (saved?.response_style) setResponseStyle(saved.response_style);
+          if (saved?.onboarded != null) setOnboarded(saved.onboarded);
+          if (saved?.quiz_state) setQuizState(saved.quiz_state);
+        } else {
           setShowConsentModal(true);
         }
       } catch (err) {
@@ -148,21 +135,24 @@ export function useUserProfile() {
   useEffect(() => {
     if (!supabase || !user?.id) return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get('code')) return; // OAuth 흐름에서 이미 처리함
+    if (params.get('code')) return;
 
     (async () => {
       try {
         const authClient = getAuthenticatedClient(user.id);
         const { data } = await (authClient || supabase)
           .from('users')
-          .select('consent_flags, response_style, onboarded, quiz_state')
+          .select('birth_year, birth_month, birth_day, consent_flags, response_style, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
           .single();
-        if (data?.consent_flags) { setConsentFlags(data.consent_flags); lsSet('byeolsoom_consent', data.consent_flags); }
-        else if (!lsRaw('byeolsoom_consent')) setShowConsentModal(true);
-        if (data?.response_style) { setResponseStyle(data.response_style); lsSet('byeolsoom_style', data.response_style); }
-        if (data?.onboarded != null) { setOnboarded(data.onboarded);        lsSet('byeolsoom_onboarded', data.onboarded ? '1' : ''); }
-        if (data?.quiz_state)     { setQuizState(data.quiz_state);          lsSet('byeolsoom_quiz', data.quiz_state); }
+        if (data?.birth_year) {
+          setForm(f => f.by ? f : { ...f, by: String(data.birth_year), bm: String(data.birth_month), bd: String(data.birth_day) });
+        }
+        if (data?.consent_flags) setConsentFlags(data.consent_flags);
+        else if (consentFlags === null) setShowConsentModal(true);
+        if (data?.response_style) setResponseStyle(data.response_style);
+        if (data?.onboarded != null) setOnboarded(data.onboarded);
+        if (data?.quiz_state) setQuizState(data.quiz_state);
       } catch (e) {
         console.error('[별숨] users 동기화 오류:', e);
       }
@@ -206,7 +196,7 @@ export function useUserProfile() {
         const { data } = await (authClient || supabase)
           .from('other_profiles').select('*').eq('kakao_id', user.id).order('sort_order');
         if (data && data.length > 0) {
-          const profiles = data.map(row => ({
+          setOtherProfiles(data.map(row => ({
             name:   row.name || '',
             by:     row.birth_year  ? String(row.birth_year)  : '',
             bm:     row.birth_month ? String(row.birth_month) : '',
@@ -214,20 +204,13 @@ export function useUserProfile() {
             bh:     row.birth_hour  ? String(row.birth_hour)  : '',
             gender: row.gender || '',
             noTime: row.no_time || false,
-          }));
-          setOtherProfiles(profiles);
-          lsSet('byeolsoom_others', profiles);
+          })));
         }
       } catch (e) {
         console.error('[별숨] other_profiles 불러오기 오류:', e);
       }
     })();
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── localStorage 캐시 동기화 ──
-  useEffect(() => { if (form.by && form.bm && form.bd) lsSet('byeolsoom_profile', form); }, [form]);
-  useEffect(() => { lsSet('byeolsoom_extra', profile); }, [profile]);
-  useEffect(() => { lsSet('byeolsoom_others', otherProfiles); }, [otherProfiles]);
 
   // ── other_profiles Supabase 전체 교체 저장 ──
   const syncOtherProfilesToSupabase = useCallback(async (profiles, currentUser) => {
@@ -257,12 +240,11 @@ export function useUserProfile() {
 
   // ── 개인 설정 저장 (responseStyle / theme / onboarded / quizState) ──
   const saveSettings = useCallback(async (updates) => {
-    const currentUser = (() => { try { return JSON.parse(localStorage.getItem('byeolsoom_user')); } catch { return null; } })();
-    if (updates.responseStyle !== undefined) { setResponseStyle(updates.responseStyle); lsSet('byeolsoom_style', updates.responseStyle); }
-    // 테마는 기기 설정을 따르므로 Supabase에 저장하지 않음 (세션 내 토글만 허용)
-    if (updates.theme         !== undefined) { setTheme(updates.theme); }
-    if (updates.onboarded     !== undefined) { setOnboarded(updates.onboarded);           lsSet('byeolsoom_onboarded', updates.onboarded ? '1' : ''); }
-    if (updates.quizState     !== undefined) { setQuizState(updates.quizState);           lsSet('byeolsoom_quiz', updates.quizState); }
+    const currentUser = getAuthUser();
+    if (updates.responseStyle !== undefined) setResponseStyle(updates.responseStyle);
+    if (updates.theme         !== undefined) setTheme(updates.theme);
+    if (updates.onboarded     !== undefined) setOnboarded(updates.onboarded);
+    if (updates.quizState     !== undefined) setQuizState(updates.quizState);
     if (!supabase || !currentUser?.id) return;
     const dbUpdates = {};
     if (updates.responseStyle !== undefined) dbUpdates.response_style = updates.responseStyle;
@@ -297,7 +279,11 @@ export function useUserProfile() {
   const kakaoLogout = useCallback(() => {
     if (window.Kakao?.Auth) window.Kakao.Auth.logout(() => {});
     setUser(null);
-    localStorage.removeItem('byeolsoom_user');
+    setForm(DEFAULT_FORM);
+    setProfile(DEFAULT_PROFILE);
+    setOtherProfiles([]);
+    setConsentFlags(null);
+    setAuthUser(null);
   }, []);
 
   const startEditOtherProfile = useCallback((idx) => {
@@ -315,7 +301,7 @@ export function useUserProfile() {
       newProfiles = [...otherProfiles, { ...otherForm }];
     }
     setOtherProfiles(newProfiles);
-    const currentUser = (() => { try { return JSON.parse(localStorage.getItem('byeolsoom_user')); } catch { return null; } })();
+    const currentUser = getAuthUser();
     syncOtherProfilesToSupabase(newProfiles, currentUser);
     setOtherForm(DEFAULT_OTHER);
     setEditingOtherIdx(null);
@@ -350,12 +336,12 @@ export function useUserProfile() {
         kakao_id:            currentUser.id,
         mbti:                profileData.mbti || null,
         self_desc:           profileData.selfDesc || null,
-        partner_name:        consentFlags.partner ? (profileData.partner || null) : null,
-        partner_birth_year:  consentFlags.partner && profileData.partnerBy ? parseInt(profileData.partnerBy, 10) : null,
-        partner_birth_month: consentFlags.partner && profileData.partnerBm ? parseInt(profileData.partnerBm, 10) : null,
-        partner_birth_day:   consentFlags.partner && profileData.partnerBd ? parseInt(profileData.partnerBd, 10) : null,
-        workplace:           consentFlags.workplace ? (profileData.workplace || null) : null,
-        worry_text:          consentFlags.worry ? (profileData.worryText || null) : null,
+        partner_name:        consentFlags?.partner ? (profileData.partner || null) : null,
+        partner_birth_year:  consentFlags?.partner && profileData.partnerBy ? parseInt(profileData.partnerBy, 10) : null,
+        partner_birth_month: consentFlags?.partner && profileData.partnerBm ? parseInt(profileData.partnerBm, 10) : null,
+        partner_birth_day:   consentFlags?.partner && profileData.partnerBd ? parseInt(profileData.partnerBd, 10) : null,
+        workplace:           consentFlags?.workplace ? (profileData.workplace || null) : null,
+        worry_text:          consentFlags?.worry ? (profileData.worryText || null) : null,
         qa_answers:          profileData.qa_answers || null,
         updated_at:          new Date().toISOString(),
       }, { onConflict: 'kakao_id', ignoreDuplicates: false });
@@ -382,14 +368,12 @@ export function useUserProfile() {
   }, []);
 
   const handleConsentConfirm = useCallback(async (flags) => {
-    const saved = flags ?? consentFlags;
-    lsSet('byeolsoom_consent', saved);
+    const saved = flags ?? consentFlags ?? { history: true, partner: false, workplace: true, worry: false };
     setConsentFlags(saved);
     if (supabase) {
-      const kakaoId = (() => { try { return JSON.parse(localStorage.getItem('byeolsoom_user'))?.id; } catch { return null; } })();
+      const kakaoId = getAuthUser()?.id;
       if (kakaoId) {
-        const { error } = await supabase.from('users').upsert({ kakao_id: kakaoId, consent_flags: saved, updated_at: new Date().toISOString() }, { onConflict: 'kakao_id', ignoreDuplicates: false });
-        if (error) console.error('[별숨] consent_flags 저장 오류:', error);
+        await supabase.from('users').upsert({ kakao_id: kakaoId, consent_flags: saved, updated_at: new Date().toISOString() }, { onConflict: 'kakao_id', ignoreDuplicates: false });
       }
     }
     setShowConsentModal(false);
@@ -410,10 +394,8 @@ export function useUserProfile() {
     handleConsentConfirm,
     loginError, setLoginError,
     loginLoading,
-    // 개인 설정
     responseStyle, theme, onboarded, quizState,
     saveSettings,
-    // 기존 함수들
     kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile,
     saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
   };

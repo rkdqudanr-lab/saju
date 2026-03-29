@@ -1,16 +1,10 @@
-const QUIZ_KEY = 'byeolsoom_quiz';
+// quiz.js — localStorage 미사용, 상태는 Supabase users.quiz_state 저장
 
 export function loadQuiz() {
-  try {
-    return JSON.parse(localStorage.getItem(QUIZ_KEY)) || { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
-  } catch {
-    return { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
-  }
+  return { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
 }
 
-export function saveQuiz(state) {
-  try { localStorage.setItem(QUIZ_KEY, JSON.stringify(state)); } catch {}
-}
+export function saveQuiz(_state) {}
 
 export function getTodayStr() {
   const d = new Date();

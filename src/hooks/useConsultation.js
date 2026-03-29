@@ -9,11 +9,8 @@ import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 
 const SLOT_TAG_MAP = { morning: '[오전·100자]', afternoon: '[오후·100자]', evening: '[저녁·100자]', dawn: '[새벽·100자]' };
 const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.';
+export const DAILY_MAX = 3;
 
-function getDailyKey() {
-  const d = new Date();
-  return `byeolsoom_daily_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
-}
 function getTodayDateStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -86,27 +83,18 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   const [reportText, setReportText]       = useState('');
   const [reportLoading, setReportLoading] = useState(false);
   const [histItem, setHistItem]           = useState(null);
-  const [histItems, setHistItems]         = useState(() => loadHistory());
+  const [histItems, setHistItems]         = useState([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [qLoadStatus, setQLoadStatus]     = useState([]);
   const [retryMsg, setRetryMsg]           = useState('');
 
-  // 오늘 별숨 카드: 초기값은 localStorage 캐시 (빠른 로드), 이후 Supabase에서 덮어씀
-  const [dailyResult, setDailyResult] = useState(() => {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(getDailyKey()) || 'null');
-      return (parsed && typeof parsed.text === 'string') ? parsed : null;
-    } catch { return null; }
-  });
+  // 오늘 별숨 카드 — Supabase에서만 로드/저장
+  const [dailyResult, setDailyResult] = useState(null);
   const [dailyLoading, setDailyLoading] = useState(false);
+  const [dailyCount, setDailyCount] = useState(0);
 
-  // 일기 회고: 초기값은 localStorage 캐시, 이후 Supabase에서 덮어씀
-  const [diaryReviewResult, setDiaryReviewResult] = useState(() => {
-    try {
-      const key = `byeolsoom_diary_review_${getTodayDateStr().replace(/-/g, '')}`;
-      return localStorage.getItem(key) || null;
-    } catch { return null; }
-  });
+  // 일기 회고 — Supabase에서만 로드/저장
+  const [diaryReviewResult, setDiaryReviewResult] = useState(null);
   const [diaryReviewLoading, setDiaryReviewLoading] = useState(false);
 
   const chatEndRef = useRef(null);
@@ -118,7 +106,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   // ── 로그인 시 Supabase에서 히스토리 로드 ──
   useEffect(() => {
     if (!supabase || !user?.id) {
-      setHistItems(loadHistory());
+      setHistItems([]);
       return;
     }
     const authClient = getAuthenticatedClient(user.id);
@@ -143,11 +131,9 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             };
           });
           setHistItems(items);
-        } else {
-          setHistItems(loadHistory());
         }
       })
-      .catch(() => setHistItems(loadHistory()));
+      .catch(() => {});
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 로그인 시 Supabase에서 오늘 캐시 로드 ──
@@ -158,6 +144,9 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     });
     loadDailyCacheFromSupabase(user.id, 'diary_review').then(content => {
       if (content) setDiaryReviewResult(content);
+    });
+    loadDailyCacheFromSupabase(user.id, 'horoscope_count').then(countStr => {
+      if (countStr) setDailyCount(parseInt(countStr, 10) || 0);
     });
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -185,16 +174,17 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           body: JSON.stringify({
             userMessage,
             context: buildCtx(),
-            kakaoId:         user.id,
-            isChat:          opts.isChat          || false,
-            isReport:        opts.isReport        || false,
-            isLetter:        opts.isLetter        || false,
-            isStory:         opts.isStory         || false,
-            isScenario:      opts.isScenario      || false,
-            isNatal:         opts.isNatal         || false,
-            isZodiac:        opts.isZodiac        || false,
-            isComprehensive: opts.isComprehensive || false,
-            responseStyle:   style,
+            kakaoId:           user.id,
+            isChat:            opts.isChat            || false,
+            isReport:          opts.isReport          || false,
+            isLetter:          opts.isLetter          || false,
+            isStory:           opts.isStory           || false,
+            isScenario:        opts.isScenario        || false,
+            isNatal:           opts.isNatal           || false,
+            isZodiac:          opts.isZodiac          || false,
+            isComprehensive:   opts.isComprehensive   || false,
+            isCalendarMonth:   opts.isCalendarMonth   || false,
+            responseStyle:     style,
           }),
         });
         const data = await res.json();
@@ -228,7 +218,6 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   // ── Supabase 상담기록 저장 ──
   const saveHistoryToSupabase = useCallback(async (questions, answersArr, slot) => {
     if (!supabase) return;
-    // history 동의 여부 확인
     if (consentFlags?.history === false) return;
     try {
       const kakaoId = user?.id;
@@ -244,7 +233,6 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
         user_id: supabaseUserId, questions, answers: answersArr, slot,
       }).select('id').single();
       if (error) { console.error('[별숨] 상담기록 Supabase 저장 오류:', error); return; }
-      // histItems에 새 항목 prepend
       if (inserted?.id) {
         const now = new Date();
         const dateStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -258,20 +246,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     }
   }, [user, consentFlags]);
 
-  // ── 로컬 히스토리에도 저장 (비로그인 사용자 지원) ──
-  const recordHistory = useCallback((questions, answersArr) => {
-    if (!user?.id) {
-      addHistory(questions, answersArr);
-      setHistItems(loadHistory());
-    }
-  }, [user?.id]);
+  // ── 로컬 히스토리 (비로그인 — 현재는 no-op) ──
+  const recordHistory = useCallback((_questions, _answersArr) => {}, []);
 
   // ── Supabase 상담기록 삭제 ──
   const deleteHistoryItem = useCallback(async (id, supabaseId) => {
-    // 로컬 히스토리 삭제
-    deleteHistory(id);
     setHistItems(prev => prev.filter(i => i.id !== id));
-    // Supabase 삭제
     if (supabase && supabaseId && user?.id) {
       try {
         const authClient = getAuthenticatedClient(user.id);
@@ -303,11 +283,10 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       r.status === 'fulfilled' ? r.value : `Q${i + 1} 답변을 불러오지 못했어요 🌙\n잠시 후 다시 시도해봐요.`
     );
     setAnswers(newAnswers);
-    recordHistory(selQs, newAnswers);
     saveHistoryToSupabase(selQs, newAnswers, timeSlot);
     setLatestChatIdx(-1);
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [selQs, callApi, startLoadingMsg, stopLoadingMsg, saveHistoryToSupabase, recordHistory, timeSlot]);
+  }, [selQs, callApi, startLoadingMsg, stopLoadingMsg, saveHistoryToSupabase, timeSlot]);
 
   const askQuick = useCallback(async (q) => {
     if (!q.trim()) return;
@@ -317,11 +296,11 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     try {
       const ans = await callApi(`[질문]\n${q.trim()}`);
-      setAnswers([ans]); recordHistory([q.trim()], [ans]);
+      setAnswers([ans]);
       saveHistoryToSupabase([q.trim()], [ans], timeSlot);
     } catch { setAnswers([ERR_MSG]); }
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [formOk, callApi, saveHistoryToSupabase, recordHistory, timeSlot]);
+  }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
 
   const askTimeSlot = useCallback(async (prompt) => {
     if (!formOk) { setStep(1); return; }
@@ -330,34 +309,30 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     try {
       const ans = await callApi(`[질문]\n${prompt}`);
-      setAnswers([ans]); recordHistory([q], [ans]);
+      setAnswers([ans]);
     } catch { setAnswers([ERR_MSG]); }
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [formOk, timeSlot, callApi, recordHistory]);
+  }, [formOk, timeSlot, callApi]);
 
   const askDailyHoroscope = useCallback(async () => {
     if (!formOk) { setStep(1); return; }
+    if (dailyCount >= DAILY_MAX) return;
     if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
-    // 캐시 확인: 메모리 → localStorage → Supabase 순서
-    if (dailyResult) { if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_cache_hit'); return; }
-    const localCached = (() => {
-      try { const p = JSON.parse(localStorage.getItem(getDailyKey()) || 'null'); return (p && typeof p.text === 'string') ? p : null; } catch { return null; }
-    })();
-    if (localCached) { setDailyResult(localCached); return; }
     setDailyLoading(true);
     try {
       const ans = await callApi('오늘 하루 나의 별숨은?');
       const result = { text: ans };
-      // localStorage 캐시
-      try { localStorage.setItem(getDailyKey(), JSON.stringify(result)); } catch {}
+      const newCount = dailyCount + 1;
       setDailyResult(result);
-      // Supabase 저장
-      if (user?.id) await saveDailyCacheToSupabase(user.id, 'horoscope', ans);
-      recordHistory(['오늘 하루 나의 별숨은?'], [ans]);
+      setDailyCount(newCount);
+      if (user?.id) {
+        await saveDailyCacheToSupabase(user.id, 'horoscope', ans);
+        await saveDailyCacheToSupabase(user.id, 'horoscope_count', String(newCount));
+      }
       saveHistoryToSupabase(['오늘 하루 나의 별숨은?'], [ans], timeSlot);
     } catch { /* 에러는 버튼 상태로 처리 */ }
     finally { setDailyLoading(false); }
-  }, [formOk, callApi, dailyResult, saveHistoryToSupabase, recordHistory, timeSlot, user?.id]);
+  }, [formOk, callApi, dailyCount, saveHistoryToSupabase, timeSlot, user?.id]);
 
   const askReview = useCallback(async (text, prompt) => {
     if (!formOk) { setStep(1); return; }
@@ -366,11 +341,11 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     try {
       const ans = await callApi(`[질문]\n${prompt}\n\n[오늘 있었던 일]\n${text}`);
-      setAnswers([ans]); recordHistory([q], [ans]);
+      setAnswers([ans]);
       saveHistoryToSupabase([q], [ans], timeSlot);
     } catch { setAnswers([ERR_MSG]); }
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [formOk, callApi, saveHistoryToSupabase, recordHistory, timeSlot]);
+  }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
 
   const askDiaryReview = useCallback(async (text, prompt) => {
     if (!formOk) { setStep(1); return; }
@@ -378,16 +353,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     try {
       const ans = await callApi(`[질문]\n${prompt}\n\n[오늘 있었던 일]\n${text}`);
       setDiaryReviewResult(ans);
-      // localStorage 캐시
-      try { localStorage.setItem(`byeolsoom_diary_review_${getTodayDateStr().replace(/-/g, '')}`, ans); } catch {}
-      // Supabase 저장
       if (user?.id) await saveDailyCacheToSupabase(user.id, 'diary_review', ans);
       const q = `오늘 하루 회고: ${text.slice(0, 30)}${text.length > 30 ? '…' : ''}`;
-      recordHistory([q], [ans]);
       saveHistoryToSupabase([q], [ans], timeSlot);
     } catch { setDiaryReviewResult(ERR_MSG); }
     finally { setDiaryReviewLoading(false); }
-  }, [formOk, callApi, saveHistoryToSupabase, recordHistory, timeSlot, user?.id]);
+  }, [formOk, callApi, saveHistoryToSupabase, timeSlot, user?.id]);
 
   // ── 단일 답변 재시도 ──
   const retryAnswer = useCallback(async (idx) => {
@@ -466,7 +437,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     qLoadStatus,
     callApi, retryMsg,
     addQ, rmQ,
-    dailyResult, dailyLoading,
+    dailyResult, dailyLoading, dailyCount, DAILY_MAX,
     diaryReviewResult, diaryReviewLoading,
     askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview, askDiaryReview,
     retryAnswer,

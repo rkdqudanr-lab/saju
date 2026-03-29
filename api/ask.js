@@ -91,7 +91,7 @@ async function checkRateLimit(ip) {
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, responseStyle, kakaoId } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, responseStyle, kakaoId } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -123,6 +123,7 @@ function validateRequest(body) {
       isAstrology: !!isAstrology,
       isProfileQuestion: !!isProfileQuestion,
       isGroupAnalysis: !!isGroupAnalysis,
+      isCalendarMonth: !!isCalendarMonth,
       responseStyle: style,
       kakaoId: kakaoId || null,
     },
@@ -154,7 +155,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: '로그인이 필요해요 🌙' });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, responseStyle } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, responseStyle } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
@@ -195,23 +196,25 @@ export default async function handler(req, res) {
       : '');
 
   // 감성 깊이가 필요한 모드는 sonnet, 나머지는 haiku (비용 최적화)
-  const model = (isLetter || isStory || isComprehensive || isAstrology || isGroupAnalysis)
+  const model = (isLetter || isStory || isComprehensive || isAstrology || isGroupAnalysis || isCalendarMonth)
     ? "claude-sonnet-4-20250514"
     : "claude-haiku-4-5-20251001";
 
-  // 모드별 최대 토큰 분기 (불필요한 장문 생성 방지)
+  // 모드별 최대 토큰 분기 — 응답이 중간에 끊기지 않도록 넉넉하게 설정
   const maxTokens =
-    isComprehensive     ? 3000 :
-    isAstrology         ? 3000 :
-    isReport            ? 2000 :
-    isLetter            ? 1000 :
-    isStory             ? 2500 :
-    isScenario          ? 1500 :
-    isNatal             ? 2000 :
-    isZodiac            ?  900 :
-    isGroupAnalysis     ? 1200 :
-    isProfileQuestion   ?  600 :
-                           600;
+    isComprehensive     ? 3500 :
+    isAstrology         ? 3500 :
+    isReport            ? 2500 :
+    isCalendarMonth     ? 2000 :
+    isLetter            ? 1500 :
+    isStory             ? 3000 :
+    isScenario          ? 2000 :
+    isNatal             ? 2500 :
+    isZodiac            ? 1200 :
+    isGroupAnalysis     ? 1800 :
+    isProfileQuestion   ?  800 :
+    isChat              ? 1200 :
+                          1500;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {

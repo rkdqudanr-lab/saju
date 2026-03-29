@@ -132,7 +132,7 @@ export default function App() {
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
           histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
           qLoadStatus,
-          dailyResult, dailyLoading,
+          dailyResult, dailyLoading, dailyCount, DAILY_MAX,
           diaryReviewResult, diaryReviewLoading,
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
@@ -266,21 +266,6 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [setStep]);
-
-  // ── 재방문 사용자 자동 오늘의 별숨 로딩 ──
-  useEffect(() => {
-    if (
-      step === 0 &&
-      user &&
-      form.by &&
-      form.bm &&
-      form.bd &&
-      !dailyResult &&
-      !dailyLoading
-    ) {
-      askDailyHoroscope();
-    }
-  }, [user?.id, form.by, form.bm, form.bd, step]); // askDailyHoroscope 레퍼런스 제외 (무한루프 방지)
 
   // ── 모달 열림 시 body 스크롤 잠금 ──
   useEffect(() => {
@@ -490,15 +475,26 @@ export default function App() {
                                 </button>
                                 {showDailyCard && (
                                   <div style={{ marginTop: 8 }}>
-                                    {dailyResult ? (
-                                      <DailyStarCard result={dailyResult} />
-                                    ) : dailyLoading ? (
+                                    {dailyLoading ? (
                                       <div className="dsc-loading-btn">
                                         <span>별숨이 오늘을 읽고 있어요</span>
                                         <span className="dsc-loading-dot" />
                                         <span className="dsc-loading-dot" />
                                         <span className="dsc-loading-dot" />
                                       </div>
+                                    ) : dailyResult ? (
+                                      <>
+                                        <DailyStarCard result={dailyResult} />
+                                        {dailyCount < DAILY_MAX ? (
+                                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
+                                            다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
+                                          </button>
+                                        ) : (
+                                          <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>
+                                            오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙
+                                          </div>
+                                        )}
+                                      </>
                                     ) : (
                                       <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>
                                         오늘 기운 확인하기 ✦
@@ -555,15 +551,26 @@ export default function App() {
                                 ✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일
                                 <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
                               </div>
-                              {dailyResult ? (
-                                <DailyStarCard result={dailyResult} />
-                              ) : dailyLoading ? (
+                              {dailyLoading ? (
                                 <div className="dsc-loading-btn">
                                   <span>별숨이 오늘을 읽고 있어요</span>
                                   <span className="dsc-loading-dot" />
                                   <span className="dsc-loading-dot" />
                                   <span className="dsc-loading-dot" />
                                 </div>
+                              ) : dailyResult ? (
+                                <>
+                                  <DailyStarCard result={dailyResult} />
+                                  {dailyCount < DAILY_MAX ? (
+                                    <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
+                                      다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
+                                    </button>
+                                  ) : (
+                                    <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>
+                                      오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙
+                                    </div>
+                                  )}
+                                </>
                               ) : (
                                 <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>
                                   오늘 기운 확인하기 ✦
@@ -1345,7 +1352,7 @@ export default function App() {
         {/* ── Step 10: 별숨 달력 ── */}
         {step === 10 && (
           <Suspense fallback={<PageSpinner />}>
-            <SajuCalendar form={form} setStep={setStep} askQuick={askQuick} user={user} />
+            <SajuCalendar form={form} setStep={setStep} askQuick={askQuick} user={user} callApi={callApi} />
           </Suspense>
         )}
 
@@ -1452,15 +1459,30 @@ export default function App() {
                   {today.month}월 {today.day}일 · 매일 새로워져요
                 </div>
               </div>
-              {dailyResult ? (
-                <DailyStarCard result={dailyResult} />
-              ) : dailyLoading ? (
+              {dailyLoading ? (
                 <div className="dsc-loading-btn">
                   <span>별숨이 오늘을 읽고 있어요</span>
                   <span className="dsc-loading-dot" />
                   <span className="dsc-loading-dot" />
                   <span className="dsc-loading-dot" />
                 </div>
+              ) : dailyResult ? (
+                <>
+                  <DailyStarCard result={dailyResult} />
+                  {dailyCount < DAILY_MAX ? (
+                    <button
+                      className="cta-main"
+                      style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 12, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }}
+                      onClick={askDailyHoroscope}
+                    >
+                      다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
+                    </button>
+                  ) : (
+                    <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 12 }}>
+                      오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙
+                    </div>
+                  )}
+                </>
               ) : (
                 <button
                   className="cta-main"
