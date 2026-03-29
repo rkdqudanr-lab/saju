@@ -4,11 +4,30 @@ import { getCategoryHint, pickEndingHint, getCategoryExample } from "../lib/prom
 import { buildSystem } from "../lib/prompts/buildSystem/index.js";
 
 // ── 로그인 사용자 검증 ──
-// kakaoId가 있으면 통과. Supabase 레코드 유무와 무관하게 허용.
-// (수파베이스 마이그레이션 이전 사용자 등 레코드 미존재 케이스 대응)
-// 남용 방지는 IP 기반 레이트 리미팅으로 처리.
+// Kakao ID 형식 검증(숫자 문자열) + 선택적 Supabase 레코드 확인.
+// SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY 환경변수가 있으면 DB 조회,
+// 없으면 형식 검증만 수행. 남용 방지는 IP 기반 레이트 리미팅으로 처리.
 async function verifyUser(kakaoId) {
-  return !!kakaoId;
+  if (!kakaoId) return false;
+  // Kakao ID는 숫자 문자열 형식
+  if (!/^\d+$/.test(String(kakaoId))) return false;
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const res = await fetch(
+        `${supabaseUrl}/rest/v1/users?select=kakao_id&kakao_id=eq.${encodeURIComponent(String(kakaoId))}&limit=1`,
+        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+      );
+      const data = await res.json();
+      return Array.isArray(data) && data.length > 0;
+    } catch {
+      // Supabase 연결 오류 시 통과 (가용성 우선)
+      return true;
+    }
+  }
+  return true;
 }
 
 // ── IP 기반 레이트 리미팅 (Upstash Redis) ──
@@ -30,12 +49,7 @@ async function checkRateLimit(ip) {
   }
 
   try {
-    // 분당 카운트
-    const [minResult] = await Promise.all([
-      redisCmd(['pipeline']).catch(() => null),
-    ]);
-
-    // 파이프라인으로 incr + expire 동시 실행
+    // 파이프라인으로 incr + expire 동시 실행 (atomic)
     const pipe = await fetch(`${url}/pipeline`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -72,7 +86,7 @@ async function checkRateLimit(ip) {
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, responseStyle, kakaoId, clientHour } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, isSlot, responseStyle, kakaoId, clientHour } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -105,6 +119,7 @@ function validateRequest(body) {
       isProfileQuestion: !!isProfileQuestion,
       isGroupAnalysis: !!isGroupAnalysis,
       isCalendarMonth: !!isCalendarMonth,
+      isSlot: !!isSlot,
       responseStyle: style,
       kakaoId: kakaoId || null,
       clientHour: (typeof clientHour === 'number' && Number.isInteger(clientHour) && clientHour >= 0 && clientHour <= 23) ? clientHour : undefined,
@@ -137,7 +152,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: '로그인이 필요해요 🌙' });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, responseStyle, clientHour } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, isSlot, responseStyle, clientHour } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
@@ -150,11 +165,11 @@ export default async function handler(req, res) {
   const timeHorizon     = getTimeHorizon(userMessage);
   const isDecision   = isDecisionQuestion(userMessage);
 
-  // 모드별 동적 로드
+  // 모드별 동적 로드 — isSlot은 프론트에서 명시적으로 전달받아 사용 (userMessage 분석 없음)
   const systemBase = await buildSystem(
     today, season, categoryHint, endingHint, timeHorizon,
     userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision,
-    categoryExample, isNatal, isZodiac, isComprehensive, isAstrology, responseStyle
+    categoryExample, isNatal, isZodiac, isComprehensive, isAstrology, responseStyle, isSlot
   );
 
   // isProfileQuestion: 프로필 맞춤 질문 생성 전용 시스템 프롬프트

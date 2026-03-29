@@ -184,6 +184,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             isZodiac:          opts.isZodiac          || false,
             isComprehensive:   opts.isComprehensive   || false,
             isCalendarMonth:   opts.isCalendarMonth   || false,
+            isSlot:            opts.isSlot            || false,
             responseStyle:     style,
             clientHour:        new Date().getHours(),
           }),
@@ -309,7 +310,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     setSelQs([q]);
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     try {
-      const ans = await callApi(`[질문]\n${prompt}`);
+      const ans = await callApi(`[질문]\n${prompt}`, { isSlot: true });
       setAnswers([ans]);
     } catch { setAnswers([ERR_MSG]); }
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
@@ -395,12 +396,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     setChatInput('');
     setChatHistory(p => [...p, { role: 'user', text: userMsg }]);
     setChatLoading(true);
-    setChatUsed(p => p + 1);
     const prevQAs  = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${answers[i] || ''}`).join('\n\n');
     const prevChat = chatHistory.map(m => `[${m.role === 'ai' ? '별숨' : '나'}] ${m.text}`).join('\n');
     const fullMsg  = `[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
     try {
       const aiText = await callApi(fullMsg, { isChat: true });
+      setChatUsed(p => p + 1); // 성공 시에만 카운트 증가
       setChatHistory(p => { const updated = [...p, { role: 'ai', text: aiText }]; setLatestChatIdx(updated.length - 1); return updated; });
     } catch { setChatHistory(p => [...p, { role: 'ai', text: '앗, 잠깐 연결이 끊겼어요 🌙 다시 시도해봐요!' }]); }
     finally { setChatLoading(false); }

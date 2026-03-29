@@ -395,3 +395,22 @@ create policy "daily_cache_update" on daily_cache
   for update to anon
   using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
   with check (kakao_id is not null);
+
+-- ── daily_cache 오래된 레코드 자동 삭제 함수 ─────────────────────────
+-- Supabase 대시보드 > Database > Extensions 에서 pg_cron 활성화 후 사용
+-- 또는 Supabase Edge Function 스케줄러로 주기적으로 호출 가능
+create or replace function cleanup_old_daily_cache()
+returns void
+language sql
+security definer
+as $$
+  delete from daily_cache
+  where cache_date < (current_date - interval '90 days');
+$$;
+
+-- pg_cron 사용 가능한 경우 매일 새벽 3시 KST (18:00 UTC) 자동 실행
+-- select cron.schedule('cleanup-daily-cache', '0 18 * * *', 'select cleanup_old_daily_cache()');
+
+-- analysis_cache 복합 인덱스 (성능 최적화)
+create index if not exists idx_analysis_cache_kakao_key
+  on analysis_cache(kakao_id, cache_key);

@@ -70,7 +70,8 @@ export function useUserProfile() {
 
     const urlState   = params.get('state');
     const savedState = (() => { try { return sessionStorage.getItem('byeolsoom_oauth_state'); } catch { return null; } })();
-    if (savedState && urlState !== savedState) {
+    // savedState 없으면(sessionStorage 불가 등) CSRF 검증 불가 → 로그인 거부
+    if (!savedState || urlState !== savedState) {
       window.history.replaceState({}, '', window.location.pathname);
       try { sessionStorage.removeItem('byeolsoom_oauth_state'); } catch {}
       setLoginError('보안 오류가 발생했어요. 다시 로그인해주세요.');
@@ -91,11 +92,12 @@ export function useUserProfile() {
 
         if (supabase) {
           const authClient = getAuthenticatedClient(String(data.id));
-          await (authClient || supabase).from('users').upsert({
+          const { error: upsertErr } = await (authClient || supabase).from('users').upsert({
             kakao_id: String(data.id),
             nickname: data.nickname || '별님',
             updated_at: new Date().toISOString(),
           }, { onConflict: 'kakao_id', ignoreDuplicates: false });
+          if (upsertErr) throw new Error('사용자 정보 저장에 실패했어요. 다시 로그인해주세요.');
 
           const { data: saved } = await (authClient || supabase)
             .from('users')
@@ -131,20 +133,28 @@ export function useUserProfile() {
     })();
   }, []);
 
-  // ── 앱 로드 시 Supabase에서 전체 사용자 데이터 동기화 ──
+  // ── 앱 로드 시 Supabase에서 전체 사용자 데이터 병렬 동기화 ──
   useEffect(() => {
     if (!supabase || !user?.id) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get('code')) return;
 
+    const authClient = getAuthenticatedClient(user.id);
+    const client = authClient || supabase;
+
     (async () => {
-      try {
-        const authClient = getAuthenticatedClient(user.id);
-        const { data } = await (authClient || supabase)
-          .from('users')
+      const [usersRes, profilesRes, othersRes] = await Promise.allSettled([
+        client.from('users')
           .select('birth_year, birth_month, birth_day, consent_flags, response_style, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
-          .single();
+          .single(),
+        client.from('user_profiles').select('*').eq('kakao_id', user.id).single(),
+        client.from('other_profiles').select('*').eq('kakao_id', user.id).order('sort_order'),
+      ]);
+
+      // users 테이블
+      if (usersRes.status === 'fulfilled') {
+        const data = usersRes.value.data;
         if (data?.birth_year) {
           setForm(f => f.by ? f : { ...f, by: String(data.birth_year), bm: String(data.birth_month), bd: String(data.birth_day) });
         }
@@ -153,20 +163,13 @@ export function useUserProfile() {
         if (data?.response_style) setResponseStyle(data.response_style);
         if (data?.onboarded != null) setOnboarded(data.onboarded);
         if (data?.quiz_state) setQuizState(data.quiz_state);
-      } catch (e) {
-        console.error('[별숨] users 동기화 오류:', e);
+      } else {
+        console.error('[별숨] users 동기화 오류:', usersRes.reason);
       }
-    })();
-  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 로그인 후 user_profiles Supabase에서 불러오기 ──
-  useEffect(() => {
-    if (!supabase || !user?.id) return;
-    (async () => {
-      try {
-        const authClient = getAuthenticatedClient(user.id);
-        const { data } = await (authClient || supabase)
-          .from('user_profiles').select('*').eq('kakao_id', user.id).single();
+      // user_profiles 테이블
+      if (profilesRes.status === 'fulfilled') {
+        const data = profilesRes.value.data;
         if (data) {
           setProfile(p => ({
             ...p,
@@ -181,20 +184,13 @@ export function useUserProfile() {
             ...(data.qa_answers        && { qa_answers: data.qa_answers }),
           }));
         }
-      } catch (e) {
-        console.error('[별숨] user_profiles 불러오기 오류:', e);
+      } else {
+        console.error('[별숨] user_profiles 불러오기 오류:', profilesRes.reason);
       }
-    })();
-  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 로그인 후 other_profiles Supabase에서 불러오기 ──
-  useEffect(() => {
-    if (!supabase || !user?.id) return;
-    (async () => {
-      try {
-        const authClient = getAuthenticatedClient(user.id);
-        const { data } = await (authClient || supabase)
-          .from('other_profiles').select('*').eq('kakao_id', user.id).order('sort_order');
+      // other_profiles 테이블
+      if (othersRes.status === 'fulfilled') {
+        const data = othersRes.value.data;
         if (data && data.length > 0) {
           setOtherProfiles(data.map(row => ({
             name:   row.name || '',
@@ -206,8 +202,8 @@ export function useUserProfile() {
             noTime: row.no_time || false,
           })));
         }
-      } catch (e) {
-        console.error('[별숨] other_profiles 불러오기 오류:', e);
+      } else {
+        console.error('[별숨] other_profiles 불러오기 오류:', othersRes.reason);
       }
     })();
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -368,7 +364,8 @@ export function useUserProfile() {
   }, []);
 
   const handleConsentConfirm = useCallback(async (flags) => {
-    const saved = flags ?? consentFlags ?? { history: true, partner: false, workplace: true, worry: false };
+    // 명시적 동의 없이는 모두 false (GDPR opt-in 원칙)
+    const saved = flags ?? consentFlags ?? { history: false, partner: false, workplace: false, worry: false };
     setConsentFlags(saved);
     if (supabase) {
       const kakaoId = getAuthUser()?.id;
