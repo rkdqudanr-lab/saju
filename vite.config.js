@@ -15,12 +15,14 @@ export default defineConfig({
         runtimeCaching: [
           {
             // API 호출은 네트워크 우선, 실패 시 캐시
+            // 2xx 응답만 캐시 (429 등 오류 응답 캐시 방지)
             urlPattern: /^\/api\//,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
               networkTimeoutSeconds: 10,
               expiration: { maxEntries: 20, maxAgeSeconds: 3600 },
+              cacheableResponse: { statuses: [200] },
             },
           },
           {

@@ -56,9 +56,12 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     const af   = activeForm;
     const as_  = activeSaju;
     const asSun = activeSun;
+    // 이름 sanitization: 프롬프트 인젝션 방지 (대괄호, 줄바꿈, 30자 초과 제거)
+    const rawName = af.name || '';
+    const safeName = rawName.replace(/[\[\]\n\r]/g, '').slice(0, 30);
     const genderPart = af.gender ? ` · ${af.gender}` : '';
-    let c = `[${af.name || '고객님'} · ${activeAge}세${genderPart}]\n\n`;
-    if (activeProfileIdx > 0) c = `[${af.name || '이 사람'}의 별숨 — 대신 물어봐주는 질문]\n` + c;
+    let c = `[${safeName || '고객님'} · ${activeAge}세${genderPart}]\n\n`;
+    if (activeProfileIdx > 0) c = `[${safeName || '이 사람'}의 별숨 — 대신 물어봐주는 질문]\n` + c;
 
     if (as_) {
       c += `[사주 기운]\n`;

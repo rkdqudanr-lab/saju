@@ -130,6 +130,13 @@ export function getDailyInfo(date) {
 }
 
 export function getSaju(y,m,d,h,min=0){
+  // 자시(子時) 경계 처리: 23:00 이후는 사주상 다음날 자시에 해당
+  // (전통 사주에서 23:00~01:00가 자시이며, 23:00부터 날이 바뀜)
+  if(h===23){
+    const next=new Date(y,m-1,d+1);
+    y=next.getFullYear(); m=next.getMonth()+1; d=next.getDate();
+    h=0;
+  }
   const yg=((y-4)%10+10)%10,yj=((y-4)%12+12)%12;
   // 월지: 절기(입절) 기준 월주 지지
   const wj = getMonthJijiIndex(y, m, d, h, min);
