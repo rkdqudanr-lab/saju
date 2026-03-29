@@ -58,6 +58,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요.`,
           context: buildPartnerCtx(),
           isChat: false, isReport: false, isScenario: false, isStory: true,
+          clientHour: new Date().getHours(),
         }),
       });
       const data = await res.json();

@@ -177,6 +177,7 @@ function DetailPanel({ pair, members, onClose }) {
           context: ctx,
           isGroupAnalysis: true,
           isChat: true,
+          clientHour: new Date().getHours(),
         }),
       });
       const data = await res.json();
