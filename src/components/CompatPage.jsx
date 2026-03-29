@@ -5,7 +5,7 @@ import { getSun } from "../utils/astrology.js";
 // ═══════════════════════════════════════════════════════════
 //  💞 1대1 별숨 — 두 별의 인연 읽기
 // ═══════════════════════════════════════════════════════════
-export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, onBack, shareResult }) {
+export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, onBack, shareResult, user }) {
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
   const [storyResult, setStoryResult] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
@@ -58,6 +58,7 @@ export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, o
           userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요.`,
           context: buildPartnerCtx(),
           isChat: false, isReport: false, isScenario: false, isStory: true,
+          kakaoId: user?.id || null,
           clientHour: new Date().getHours(),
         }),
       });

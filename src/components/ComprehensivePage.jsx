@@ -116,7 +116,7 @@ export default function ComprehensivePage({ saju, sun, form, buildCtx, user }) {
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isComprehensive: true, clientHour: new Date().getHours() }),
+        body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isComprehensive: true, kakaoId: user?.id || null, clientHour: new Date().getHours() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'API 오류');
