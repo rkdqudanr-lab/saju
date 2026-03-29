@@ -178,9 +178,7 @@ export default async function handler(req, res) {
       : '');
 
   // 감성 깊이가 필요한 모드는 sonnet, 나머지는 haiku (비용 최적화)
-  const model = (isLetter || isStory || isComprehensive || isAstrology || isGroupAnalysis || isCalendarMonth)
-    ? "claude-sonnet-4-6"
-    : "claude-haiku-4-5-20251001";
+  const model = "claude-haiku-4-5-20251001";
 
   // 모드별 최대 토큰 분기 — 응답이 중간에 끊기지 않도록 넉넉하게 설정
   const maxTokens =
