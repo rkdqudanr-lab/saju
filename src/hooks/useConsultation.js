@@ -185,6 +185,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             isComprehensive:   opts.isComprehensive   || false,
             isCalendarMonth:   opts.isCalendarMonth   || false,
             responseStyle:     style,
+            clientHour:        new Date().getHours(),
           }),
         });
         const data = await res.json();

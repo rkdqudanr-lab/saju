@@ -114,7 +114,7 @@ export default function AstrologyPage({ sun, moon, asc, form, buildCtx, user }) 
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isAstrology: true }),
+        body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isAstrology: true, clientHour: new Date().getHours() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'API 오류');

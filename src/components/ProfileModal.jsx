@@ -123,6 +123,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
           사용자 답변:
           ${summary}`,
           isProfileQuestion: true,
+          clientHour: new Date().getHours(),
         }),
       });
       const data = await res.json();

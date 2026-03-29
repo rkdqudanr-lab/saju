@@ -91,7 +91,7 @@ async function checkRateLimit(ip) {
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, responseStyle, kakaoId } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, responseStyle, kakaoId, clientHour } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -126,6 +126,7 @@ function validateRequest(body) {
       isCalendarMonth: !!isCalendarMonth,
       responseStyle: style,
       kakaoId: kakaoId || null,
+      clientHour: (typeof clientHour === 'number' && Number.isInteger(clientHour) && clientHour >= 0 && clientHour <= 23) ? clientHour : undefined,
     },
   };
 }
@@ -155,12 +156,12 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: '로그인이 필요해요 🌙' });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, responseStyle } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, responseStyle, clientHour } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
 
-  const today        = getTodayStr();
+  const today        = getTodayStr(clientHour);
   const season       = getSeasonDesc(today.m);
   const categoryHint = getCategoryHint(userMessage);
   const endingHint      = pickEndingHint(userMessage);
