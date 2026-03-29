@@ -11,12 +11,7 @@ create table if not exists users (
   birth_year   integer,
   birth_month  integer,
   birth_day    integer,
-  consent_flags jsonb default '{
-    "history": false,
-    "partner": false,
-    "workplace": false,
-    "worry": false
-  }',
+  consent_flags jsonb,   -- null = 동의 미완료 (앱에서 consent modal 표시)
   created_at   timestamptz default now(),
   updated_at   timestamptz default now()
 );
@@ -69,6 +64,9 @@ drop policy if exists "본인만 삽입" on consultation_history;
 drop policy if exists "history_insert" on consultation_history;
 drop policy if exists "history_select" on consultation_history;
 
+-- 기존 정책 제거
+drop policy if exists "history_delete" on consultation_history;
+
 -- 삽입: user_id가 있으면 삽입 가능
 create policy "history_insert" on consultation_history
   for insert to anon with check (user_id is not null);
@@ -76,6 +74,15 @@ create policy "history_insert" on consultation_history
 -- 조회: x-kakao-id 헤더와 일치하는 users의 id로 필터
 create policy "history_select" on consultation_history
   for select to anon using (
+    user_id in (
+      select id from users
+      where kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+    )
+  );
+
+-- 삭제: x-kakao-id 헤더와 일치하는 본인 기록만 삭제
+create policy "history_delete" on consultation_history
+  for delete to anon using (
     user_id in (
       select id from users
       where kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
@@ -364,7 +371,7 @@ create table if not exists daily_cache (
   id           uuid primary key default gen_random_uuid(),
   kakao_id     text not null,
   cache_date   date not null,
-  cache_type   text not null,  -- 'horoscope' | 'diary_review'
+  cache_type   text not null,  -- 'horoscope' | 'horoscope_count' | 'diary_review'
   content      text not null,
   created_at   timestamptz default now(),
   unique(kakao_id, cache_date, cache_type)
