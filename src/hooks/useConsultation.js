@@ -14,6 +14,11 @@ function getDailyKey() {
   const d = new Date();
   return `byeolsoom_daily_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
 }
+function getDailyCountKey() {
+  const d = new Date();
+  return `byeolsoom_daily_count_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+const DAILY_MAX = 3;
 function getTodayDateStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -99,6 +104,9 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     } catch { return null; }
   });
   const [dailyLoading, setDailyLoading] = useState(false);
+  const [dailyCount, setDailyCount] = useState(() => {
+    try { return parseInt(localStorage.getItem(getDailyCountKey()) || '0', 10); } catch { return 0; }
+  });
 
   // 일기 회고: 초기값은 localStorage 캐시, 이후 Supabase에서 덮어씀
   const [diaryReviewResult, setDiaryReviewResult] = useState(() => {
@@ -337,27 +345,23 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
   const askDailyHoroscope = useCallback(async () => {
     if (!formOk) { setStep(1); return; }
+    if (dailyCount >= DAILY_MAX) return;
     if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
-    // 캐시 확인: 메모리 → localStorage → Supabase 순서
-    if (dailyResult) { if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_cache_hit'); return; }
-    const localCached = (() => {
-      try { const p = JSON.parse(localStorage.getItem(getDailyKey()) || 'null'); return (p && typeof p.text === 'string') ? p : null; } catch { return null; }
-    })();
-    if (localCached) { setDailyResult(localCached); return; }
     setDailyLoading(true);
     try {
       const ans = await callApi('오늘 하루 나의 별숨은?');
       const result = { text: ans };
-      // localStorage 캐시
+      const newCount = dailyCount + 1;
       try { localStorage.setItem(getDailyKey(), JSON.stringify(result)); } catch {}
+      try { localStorage.setItem(getDailyCountKey(), String(newCount)); } catch {}
       setDailyResult(result);
-      // Supabase 저장
+      setDailyCount(newCount);
       if (user?.id) await saveDailyCacheToSupabase(user.id, 'horoscope', ans);
       recordHistory(['오늘 하루 나의 별숨은?'], [ans]);
       saveHistoryToSupabase(['오늘 하루 나의 별숨은?'], [ans], timeSlot);
     } catch { /* 에러는 버튼 상태로 처리 */ }
     finally { setDailyLoading(false); }
-  }, [formOk, callApi, dailyResult, saveHistoryToSupabase, recordHistory, timeSlot, user?.id]);
+  }, [formOk, callApi, dailyCount, saveHistoryToSupabase, recordHistory, timeSlot, user?.id]);
 
   const askReview = useCallback(async (text, prompt) => {
     if (!formOk) { setStep(1); return; }
@@ -466,7 +470,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     qLoadStatus,
     callApi, retryMsg,
     addQ, rmQ,
-    dailyResult, dailyLoading,
+    dailyResult, dailyLoading, dailyCount, DAILY_MAX,
     diaryReviewResult, diaryReviewLoading,
     askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview, askDiaryReview,
     retryAnswer,
