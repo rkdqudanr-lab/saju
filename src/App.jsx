@@ -134,7 +134,7 @@ export default function App() {
           qLoadStatus,
           dailyResult, dailyLoading, dailyCount, DAILY_MAX,
           diaryReviewResult, diaryReviewLoading,
-          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
+          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
           deleteHistoryItem } = consultation;
 
@@ -466,9 +466,94 @@ export default function App() {
                         {(() => {
                           const isAfter5 = new Date().getHours() >= 17;
                           if (isAfter5) {
+                            // ── ① 로딩: 전체 화면 로딩 ──
+                            if (diaryReviewLoading) {
+                              return (
+                                <div className="step-fade" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: 16 }}>
+                                  <div style={{ fontSize: '2.2rem', animation: 'orbSpin 2s linear infinite', display: 'inline-block' }}>✦</div>
+                                  <div style={{ color: 'var(--gold)', fontSize: 'var(--md)', fontWeight: 600, textAlign: 'center' }}>
+                                    별숨이 오늘 하루를 읽고 있어요
+                                  </div>
+                                  <div style={{ display: 'flex', gap: 6 }}>
+                                    <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+                                  </div>
+                                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center', maxWidth: 220, lineHeight: 1.8 }}>
+                                    오늘의 기운과 별자리를<br />함께 읽는 중이에요 🌙
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            // ── ② 결과: 전체 화면 답변 ──
+                            if (diaryReviewResult) {
+                              return (
+                                <div className="step-fade" style={{ paddingTop: 8, paddingBottom: 20 }}>
+                                  {/* 운세 토글 (접힌 상태) */}
+                                  <button
+                                    onClick={() => setShowDailyCard(v => !v)}
+                                    style={{
+                                      background: 'none', border: '1px solid var(--line)',
+                                      borderRadius: 'var(--r1)', padding: '10px 14px',
+                                      color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+                                      cursor: 'pointer', width: '100%', textAlign: 'left',
+                                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                      marginBottom: 8,
+                                    }}
+                                  >
+                                    <span>✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일</span>
+                                    <span style={{ fontSize: '0.7em', opacity: 0.6 }}>{showDailyCard ? '▲ 접기' : '▼ 보기'}</span>
+                                  </button>
+                                  {showDailyCard && (
+                                    <div style={{ marginBottom: 8 }}>
+                                      {dailyLoading ? (
+                                        <div className="dsc-loading-btn">
+                                          <span>별숨이 오늘을 읽고 있어요</span>
+                                          <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+                                        </div>
+                                      ) : dailyResult ? (
+                                        <DailyStarCard result={dailyResult} />
+                                      ) : (
+                                        <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px' }} onClick={askDailyHoroscope}>
+                                          오늘 기운 확인하기 ✦
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* 별숨의 하루 회고 결과 */}
+                                  <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden', marginBottom: 12 }}>
+                                    <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                      <span style={{ fontSize: '1.2rem' }}>📓</span>
+                                      <div>
+                                        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>별숨의 하루 회고</div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>
+                                          {today.month}월 {today.day}일 · 별숨이 오늘을 읽었어요
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div style={{ padding: '14px 16px 16px', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+                                      {diaryReviewResult}
+                                    </div>
+                                  </div>
+
+                                  {/* 액션 버튼 */}
+                                  <button
+                                    onClick={resetDiaryReview}
+                                    style={{ width: '100%', padding: '11px', background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', cursor: 'pointer', marginBottom: 8 }}
+                                  >
+                                    ← 다시 쓰기
+                                  </button>
+                                  <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '13px' }} onClick={() => setStep(formOk ? 2 : 1)}>
+                                    별숨에게 질문하기 ✦
+                                  </button>
+                                </div>
+                              );
+                            }
+
+                            // ── ③ 폼: 일기 작성 + 운세 토글 ──
                             return (
                               <>
-                                {/* ── 오후 5시 이후: 운세 접힌 토글 ── */}
+                                {/* 운세 접힌 토글 */}
                                 <button
                                   onClick={() => setShowDailyCard(v => !v)}
                                   style={{
@@ -512,7 +597,7 @@ export default function App() {
                                   </div>
                                 )}
 
-                                {/* ── 오후 5시 이후: 나의 하루를 별숨에게 (전체 페이지) ── */}
+                                {/* 일기 폼 */}
                                 <Suspense fallback={<PageSpinner />}>
                                   <DiaryPage
                                     user={user}
@@ -526,27 +611,6 @@ export default function App() {
                                   />
                                 </Suspense>
 
-                                {/* ── 별숨의 회고 결과 (메인페이지 표시) ── */}
-                                {diaryReviewLoading && (
-                                  <div style={{ margin: '12px var(--sp2) 0', padding: '14px 16px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--gold)', fontSize: 'var(--xs)' }}>
-                                      <span>✦ 별숨이 오늘 하루를 읽고 있어요</span>
-                                      <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
-                                    </div>
-                                  </div>
-                                )}
-                                {diaryReviewResult && !diaryReviewLoading && (
-                                  <div style={{ margin: '12px var(--sp2) 0', padding: '16px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)' }}>
-                                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
-                                      ✦ 별숨의 하루 회고
-                                    </div>
-                                    <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
-                                      {diaryReviewResult}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* ── 별숨에게 질문하기 ── */}
                                 <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
                                   별숨에게 질문하기 ✦
                                 </button>

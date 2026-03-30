@@ -451,6 +451,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     dailyResult, dailyLoading, dailyCount, DAILY_MAX,
     diaryReviewResult, diaryReviewLoading,
     askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview, askDiaryReview,
+    resetDiaryReview: useCallback(() => { setDiaryReviewResult(null); }, []),
     retryAnswer,
     handleTypingDone, handleAccToggle,
     sendChat, genReport,
