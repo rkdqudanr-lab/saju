@@ -136,19 +136,20 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
     const dateFrom = `${ym}-01`;
     const dateTo = `${ym}-31`;
 
-    // 오늘 별숨 카드 기록
+    // 오늘 별숨 카드 기록 (cache_type = 'horoscope')
     (authClient || supabase)
       .from('daily_cache')
       .select('cache_date, content')
       .eq('kakao_id', user.id)
-      .eq('cache_type', 'daily')
+      .eq('cache_type', 'horoscope')
       .gte('cache_date', dateFrom)
       .lte('cache_date', dateTo)
       .then(({ data }) => {
         const fresh = {};
         (data || []).forEach(row => { fresh[row.cache_date] = row.content; });
         setDailyFortunes(fresh);
-      });
+      })
+      .catch(e => console.error('[별숨] 달력 운세 로드 오류:', e));
 
     // 일기 기록
     (authClient || supabase)
@@ -161,7 +162,8 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
         const fresh = {};
         (data || []).forEach(row => { fresh[row.date] = row; });
         setDiaryEntries(fresh);
-      });
+      })
+      .catch(e => console.error('[별숨] 달력 일기 로드 오류:', e));
   }, [user?.id, viewYear, viewMonth]);
 
   // 월 변경 시 월별 분석 결과 초기화
