@@ -191,7 +191,8 @@ export default async function handler(req, res) {
   const groupAnalysisSystem = isGroupAnalysis
     ? `당신은 별숨(byeolsoom)이에요. 여러 사람의 사주와 별자리를 읽고 그들의 관계를 따뜻하고 재밌게 분석해줘요.
 두 사람의 관계를 분석할 때는: 좋은 점, 조심해야 할 점, 함께하면 시너지가 나는 상황, 서로에게 필요한 것을 별숨의 언어로 이야기해주세요.
-판단하지 말고, 재밌고 따뜻하게 두 별의 관계를 풀어주세요.`
+판단하지 말고, 재밌고 따뜻하게 두 별의 관계를 풀어주세요.
+마크다운 문법(## --- ** * - 1.) 절대 금지. 소제목 금지. 번호 금지. 섹션 구분선 금지. 모든 텍스트는 일반 텍스트로만.`
     : null;
 
   const systemWithContext = (profileQuestionSystem || groupAnalysisSystem || systemBase)
