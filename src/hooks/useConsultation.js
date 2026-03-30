@@ -55,7 +55,7 @@ async function saveDailyCacheToSupabase(userId, type, content) {
  * @param {string} responseStyle - 응답 스타일 ('T'|'M'|'F')
  * @param {Function} [onLoginRequired] - 로그인 필요 시 호출할 콜백 (카카오 로그인 트리거)
  */
-export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired) {
+export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired, onDailyLimitReached) {
   const [timeSlot, setTimeSlot] = useState(() => getTimeSlot());
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const loadMsgRef = useRef(null);
@@ -251,16 +251,18 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   // ── 로컬 히스토리 (비로그인 — 현재는 no-op) ──
   const recordHistory = useCallback((_questions, _answersArr) => {}, []);
 
-  // ── Supabase 상담기록 삭제 ──
+  // ── Supabase 상담기록 삭제 (DB 성공 후 로컬 상태 업데이트) ──
   const deleteHistoryItem = useCallback(async (id, supabaseId) => {
-    setHistItems(prev => prev.filter(i => i.id !== id));
     if (supabase && supabaseId && user?.id) {
       try {
         const authClient = getAuthenticatedClient(user.id);
         await (authClient || supabase).from('consultation_history').delete().eq('id', supabaseId);
+        setHistItems(prev => prev.filter(i => i.id !== id)); // DB 성공 후 로컬 반영
       } catch (e) {
         console.error('[별숨] 상담기록 삭제 오류:', e);
       }
+    } else {
+      setHistItems(prev => prev.filter(i => i.id !== id));
     }
   }, [user]);
 
@@ -318,7 +320,11 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
   const askDailyHoroscope = useCallback(async () => {
     if (!formOk) { setStep(1); return; }
-    if (dailyCount >= DAILY_MAX) return;
+    if (dailyLoading) return; // 중복 호출 방지 (레이스 컨디션 가드)
+    if (dailyCount >= DAILY_MAX) {
+      if (typeof onDailyLimitReached === 'function') onDailyLimitReached();
+      return;
+    }
     if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
     setDailyLoading(true);
     try {
@@ -334,7 +340,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       saveHistoryToSupabase(['오늘 하루 나의 별숨은?'], [ans], timeSlot);
     } catch { /* 에러는 버튼 상태로 처리 */ }
     finally { setDailyLoading(false); }
-  }, [formOk, callApi, dailyCount, saveHistoryToSupabase, timeSlot, user?.id]);
+  }, [formOk, callApi, dailyCount, dailyLoading, saveHistoryToSupabase, timeSlot, user?.id, onDailyLimitReached]);
 
   const askReview = useCallback(async (text, prompt) => {
     if (!formOk) { setStep(1); return; }
