@@ -9,8 +9,8 @@ import { buildSystem } from "../lib/prompts/buildSystem/index.js";
 // 없으면 형식 검증만 수행. 남용 방지는 IP 기반 레이트 리미팅으로 처리.
 async function verifyUser(kakaoId) {
   if (!kakaoId) return false;
-  // Kakao ID는 숫자 문자열 형식
-  if (!/^\d+$/.test(String(kakaoId))) return false;
+  // Kakao ID는 숫자 문자열 형식, 길이 1~20자리 제한 (임의 길이 공격 방지)
+  if (!/^\d{1,20}$/.test(String(kakaoId))) return false;
 
   // SUPABASE_URL 또는 VITE_SUPABASE_URL 둘 다 지원 (Vercel 환경변수 이름 혼용 방어)
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -23,11 +23,13 @@ async function verifyUser(kakaoId) {
       );
       const data = await res.json();
       return Array.isArray(data) && data.length > 0;
-    } catch {
-      // Supabase 연결 오류 시 통과 (가용성 우선)
-      return true;
+    } catch (e) {
+      // Supabase 연결 오류 시 거부 (보안 우선 — 인증 불가 상태에서 통과시키지 않음)
+      console.error('[별숨] verifyUser Supabase 연결 오류:', e?.message);
+      return false;
     }
   }
+  // 환경변수 미설정 = 로컬 개발 환경으로 간주, 형식 검증만 수행
   return true;
 }
 
@@ -68,9 +70,10 @@ async function checkRateLimit(ip) {
     if (minCount > 20) return { ok: false, reason: 'minute' };
     if (dayCount > 200) return { ok: false, reason: 'day' };
     return { ok: true };
-  } catch {
-    // Redis 오류 시 통과 (가용성 우선)
-    return { ok: true };
+  } catch (e) {
+    // Redis 오류: 안전 우선으로 거부 (가용성보다 보안 우선)
+    console.error('[별숨] Redis rate limit check failed:', e?.message);
+    return { ok: false, reason: 'service' };
   }
 }
 
@@ -135,6 +138,9 @@ export default async function handler(req, res) {
   const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
   const rl = await checkRateLimit(ip);
   if (!rl.ok) {
+    if (rl.reason === 'service') {
+      return res.status(503).json({ error: '서비스가 잠시 점검 중이에요. 조금 뒤에 다시 시도해봐요 🌙' });
+    }
     return res.status(429).json({ error: '너무 많은 요청이에요. 잠시 후 다시 시도해봐요 🌙' });
   }
 

@@ -408,12 +408,16 @@ as $$
   where cache_date < (current_date - interval '90 days');
 $$;
 
--- pg_cron 사용 가능한 경우 매일 새벽 3시 KST (18:00 UTC) 자동 실행
--- select cron.schedule('cleanup-daily-cache', '0 18 * * *', 'select cleanup_old_daily_cache()');
+-- 스케줄 설정 방법은 파일 하단 '자동 정리 스케줄 설정 방법' 섹션 참고
 
 -- analysis_cache 복합 인덱스 (성능 최적화)
 create index if not exists idx_analysis_cache_kakao_key
   on analysis_cache(kakao_id, cache_key);
+
+-- ── consultation_history 인덱스 (쿼리 성능 최적화) ───────────────────
+-- user_id + created_at 복합 인덱스: 사용자별 최신순 조회에 최적화
+create index if not exists idx_consultation_history_user_created
+  on consultation_history(user_id, created_at desc);
 
 -- ── consultation_history 오래된 레코드 자동 삭제 함수 ─────────────────
 -- 365일 이상 된 상담 기록 자동 삭제 (스토리지 비용 절감)
@@ -426,5 +430,11 @@ as $$
   where created_at < (now() - interval '365 days');
 $$;
 
--- pg_cron 사용 가능한 경우 매일 새벽 4시 KST (19:00 UTC) 자동 실행
--- select cron.schedule('cleanup-consultation-history', '0 19 * * *', 'select cleanup_old_consultation_history()');
+-- ── 자동 정리 스케줄 설정 방법 (택 1) ───────────────────────────────
+-- 방법 A: Supabase 대시보드 > Database > Extensions > pg_cron 활성화 후:
+--   select cron.schedule('cleanup-daily-cache',           '0 18 * * *', 'select cleanup_old_daily_cache()');
+--   select cron.schedule('cleanup-consultation-history',  '0 19 * * *', 'select cleanup_old_consultation_history()');
+--
+-- 방법 B: Supabase Edge Function + Vercel Cron (vercel.json crons 설정):
+--   Edge Function: supabase/functions/cleanup/index.ts
+--   vercel.json: { "crons": [{ "path": "/api/cleanup", "schedule": "0 19 * * *" }] }

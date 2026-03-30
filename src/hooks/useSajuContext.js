@@ -31,8 +31,8 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     try { return getMoon(+form.by, +form.bm, +form.bd); } catch (e) { console.error('[별숨] getMoon 오류:', e); return null; }
   }, [form.by, form.bm, form.bd]);
   const asc  = useMemo(() => {
-    if (!(!form.noTime && form.bh && form.bm)) return null;
-    try { return getAsc(+form.bh, +form.bm); } catch (e) { console.error('[별숨] getAsc 오류:', e); return null; }
+    if (!(!form.noTime && form.bh)) return null;
+    try { return getAsc(+form.bh); } catch (e) { console.error('[별숨] getAsc 오류:', e); return null; }
   }, [form]);
   const age  = form.by ? today.year - +form.by : 0;
   const formOk = !!(form.by && form.bm && form.bd);

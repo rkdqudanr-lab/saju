@@ -126,7 +126,7 @@ export default function App() {
   const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
 
-  const consultation = useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, kakaoLogin);
+  const consultation = useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast);
   const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
