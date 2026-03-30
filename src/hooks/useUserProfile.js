@@ -159,7 +159,7 @@ export function useUserProfile() {
           setForm(f => f.by ? f : { ...f, by: String(data.birth_year), bm: String(data.birth_month), bd: String(data.birth_day) });
         }
         if (data?.consent_flags) setConsentFlags(data.consent_flags);
-        else if (consentFlags === null) setShowConsentModal(true);
+        else setShowConsentModal(true); // DB에 동의 정보 없으면 항상 모달 표시
         if (data?.response_style) setResponseStyle(data.response_style);
         if (data?.onboarded != null) setOnboarded(data.onboarded);
         if (data?.quiz_state) setQuizState(data.quiz_state);
@@ -197,7 +197,8 @@ export function useUserProfile() {
             by:     row.birth_year  ? String(row.birth_year)  : '',
             bm:     row.birth_month ? String(row.birth_month) : '',
             bd:     row.birth_day   ? String(row.birth_day)   : '',
-            bh:     row.birth_hour  ? String(row.birth_hour)  : '',
+            // birth_hour=0(자시/자정)은 유효한 시간값이므로 null/undefined 체크로 처리
+            bh:     row.birth_hour != null ? String(row.birth_hour) : '',
             gender: row.gender || '',
             noTime: row.no_time || false,
           })));
