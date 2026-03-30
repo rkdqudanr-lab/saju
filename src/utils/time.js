@@ -3,9 +3,11 @@
 // ═══════════════════════════════════════════════════════════
 export function getTimeSlot(){
   const h=new Date().getHours();
+  // dawn: 0~4시 / morning: 5~11시 / afternoon: 12~17시 / evening: 18~23시
+  // lib/prompts/utils.js getTodayStr()의 시간 슬롯 경계와 반드시 동일하게 유지
   if(h>=5&&h<12) return 'morning';
-  if(h>=12&&h<19) return 'afternoon';
-  if(h>=19&&h<24) return 'evening';
+  if(h>=12&&h<18) return 'afternoon';
+  if(h>=18) return 'evening';
   return 'dawn';
 }
 
