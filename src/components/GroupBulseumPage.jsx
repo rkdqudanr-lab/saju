@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { supabase } from "../lib/supabase.js";
@@ -75,7 +75,7 @@ function MemberForm({ onSubmit, title }) {
       <input className="inp" placeholder="이름" value={form.name} onChange={e => upd('name', e.target.value)} />
       <div className="row" style={{ gap: 6, marginBottom: 'var(--sp2)' }}>
         <input className="inp" placeholder="출생년도" inputMode="numeric"
-          value={form.by} onChange={e => upd('by', e.target.value.replace(/\D/, '').slice(0, 4))}
+          value={form.by} onChange={e => upd('by', e.target.value.replace(/\D/g, '').slice(0, 4))}
           style={{ marginBottom: 0 }} />
         <select className="inp" value={form.bm} onChange={e => upd('bm', e.target.value)} style={{ marginBottom: 0 }}>
           <option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}
@@ -132,7 +132,6 @@ function RelationGraph({ members, pairs }) {
       {members.map((m, i) => {
         const pos = positions[i];
         if (!pos) return null;
-        const sun = m.saju ? null : null;
         return (
           <g key={i}>
             <circle cx={pos.x} cy={pos.y} r={26}
@@ -167,8 +166,14 @@ function DetailPanel({ pair, members, onClose, user }) {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const abortRef = useRef(null);
 
   const askDetail = async () => {
+    // 이전 요청 취소
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setHasError(false);
     setResult('');
@@ -182,6 +187,7 @@ function DetailPanel({ pair, members, onClose, user }) {
       }).join('\n');
       const res = await fetch('/api/ask', {
         method: 'POST',
+        signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userMessage: `${a.name}과 ${b.name}의 별숨 관계를 깊이 분석해주세요. 좋은 점, 나쁜 점, 서로 주의해야 할 점, 함께할 때의 케미를 별숨의 언어로 이야기해주세요.`,
@@ -195,15 +201,19 @@ function DetailPanel({ pair, members, onClose, user }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'api error');
       setResult(data.text || '분석을 불러오지 못했어요 🌙');
-    } catch {
+    } catch (e) {
+      if (e?.name === 'AbortError') return; // 언마운트 취소 — 상태 업데이트 생략
       setHasError(true);
       setResult('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.');
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   };
 
-  useEffect(() => { askDetail(); }, []);
+  useEffect(() => {
+    askDetail();
+    return () => { if (abortRef.current) abortRef.current.abort(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const a = members[pair.idxA], b = members[pair.idxB];
   return (
@@ -275,7 +285,8 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
   // 멤버 사주/별자리 계산
   const enrichedMembers = useMemo(() => members.map(m => {
     try {
-      const s = getSaju(+m.birth_year, +m.birth_month, +m.birth_day, m.birth_hour ? +m.birth_hour : 12);
+      // birth_hour=0(자시/자정)은 유효한 시간값이므로 null 체크로 처리
+      const s = getSaju(+m.birth_year, +m.birth_month, +m.birth_day, m.birth_hour != null ? +m.birth_hour : 12);
       const sun = getSun(+m.birth_month, +m.birth_day);
       return { ...m, saju: s, sun };
     } catch { return { ...m, saju: null, sun: null }; }
