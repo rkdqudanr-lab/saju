@@ -73,20 +73,6 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
       c += `[별자리 기운]\n`;
       c += `태양: ${asSun.n}(${asSun.s}) — ${asSun.desc}\n`;
     }
-    if (profile.partner) {
-      // 연인 이름 sanitization: 프롬프트 인젝션 방지
-      const safePartner = profile.partner.replace(/[\[\]\n\r]/g, '').slice(0, 30);
-      c += `[연인 정보]\n이름: ${safePartner}\n`;
-      if (profile.partnerBy && profile.partnerBm && profile.partnerBd) {
-        try {
-          const ps   = getSaju(+profile.partnerBy, +profile.partnerBm, +profile.partnerBd, 12);
-          const psun = getSun(+profile.partnerBm, +profile.partnerBd);
-          c += `연인 사주: 연${ps.yeon.g}${ps.yeon.j} 월${ps.wol.g}${ps.wol.j} 일${ps.il.g}${ps.il.j}\n`;
-          c += `연인 기질: ${ps.ilganDesc} / 강한 기운: ${ON[ps.dom]}\n`;
-          c += `연인 별자리: ${psun.n}(${psun.s})\n\n`;
-        } catch (e) { console.error('[별숨] 연인 사주 계산 오류:', e); }
-      }
-    }
     // MBTI 형식 검증 (ENFJ, ISTP 등 4자리 형식만 허용)
     if (profile.mbti && /^[EI][NS][TF][JP]$/i.test(profile.mbti)) {
       c += `[MBTI] ${profile.mbti.toUpperCase()}\n`;
