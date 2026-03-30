@@ -132,6 +132,10 @@ export function getDailyInfo(date) {
 }
 
 export function getSaju(y,m,d,h,min=0){
+  // 입력값 범위 가드 — 비정상 값으로 인한 오작동 방지
+  if(!Number.isInteger(y)||!Number.isInteger(m)||!Number.isInteger(d)||!Number.isInteger(h)) return null;
+  if(m<1||m>12||d<1||d>31||h<0||h>23) return null;
+
   // 자시(子時) 경계 처리: 23:00 이후는 사주상 다음날 자시에 해당
   // (전통 사주에서 23:00~01:00가 자시이며, 23:00부터 날이 바뀜)
   if(h===23){

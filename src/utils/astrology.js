@@ -25,9 +25,14 @@ export function getSun(m,d){
 }
 
 export function getMoon(y,m,d){
-  const days=(new Date(y,m-1,d)-new Date(2000,0,1))/86400000;
+  // 기준 신월(New Moon): 2000-01-06 18:14 UTC (실제 삭 시각 기준)
+  // Date.UTC 사용으로 로컬 타임존 오프셋 오차 제거
+  const REF_NEW_MOON = Date.UTC(2000,0,6,18,14,0);
+  const days=(Date.UTC(y,m-1,d)-REF_NEW_MOON)/86400000;
   // 29.53일: 삭망(시노딕) 주기 — 달의 별자리 계산에 올바른 값 (항성 주기 27.32는 오류)
   return SIGNS[Math.abs(Math.floor((((days%29.53)+29.53)%29.53/29.53)*12))%12];
 }
 
-export function getAsc(h,bm){return SIGNS[(Math.floor(h/2)+bm+6)%12];}
+// ASC(상승궁): 서양 점성술에서 탄생 시각 + 위도로 결정. 월(month)은 무관.
+// 위도 미지원 환경에서의 시간 기반 근사 — 탄생월 인수 제거.
+export function getAsc(h){return SIGNS[(Math.floor(h/2)+6)%12];}

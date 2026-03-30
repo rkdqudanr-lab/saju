@@ -55,7 +55,7 @@ async function saveDailyCacheToSupabase(userId, type, content) {
  * @param {string} responseStyle - 응답 스타일 ('T'|'M'|'F')
  * @param {Function} [onLoginRequired] - 로그인 필요 시 호출할 콜백 (카카오 로그인 트리거)
  */
-export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired, onDailyLimitReached) {
+export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired, onDailyLimitReached, showToast) {
   const [timeSlot, setTimeSlot] = useState(() => getTimeSlot());
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const loadMsgRef = useRef(null);
@@ -133,7 +133,10 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           setHistItems(items);
         }
       })
-      .catch(() => {});
+      .catch((e) => {
+        console.error('[별숨] 상담 기록 로드 오류:', e);
+        if (typeof showToast === 'function') showToast('상담 기록을 불러오지 못했어요', 'error');
+      });
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 로그인 시 Supabase에서 오늘 캐시 로드 ──
