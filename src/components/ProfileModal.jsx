@@ -127,9 +127,10 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
           clientHour: new Date().getHours(),
         }),
       });
+      if (!res.ok) throw new Error(`AI 질문 생성 실패 (${res.status})`);
       const data = await res.json();
       try {
-        const raw = data.text.replace(/```json|```/g, '').trim();
+        const raw = (data.text || '').replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setAiQuestions(parsed);
@@ -139,7 +140,8 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
       } catch {
         setPhase('done');
       }
-    } catch {
+    } catch (e) {
+      console.error('[별숨] AI 질문 생성 오류:', e);
       setPhase('done');
     } finally {
       setAiLoading(false);
@@ -239,7 +241,11 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
     : Math.round((answeredCount / totalQ) * 100);
 
   if (!activeQ) {
-    // 데이터 없으면 닫기
+    // AI 단계에서 질문이 없으면(빈 배열 등) done 단계로 전환
+    if (phase === 'ai') {
+      // 다음 렌더에서 done으로 처리되도록 effect 트리거 대신 직접 닫기
+      return null;
+    }
     return null;
   }
 

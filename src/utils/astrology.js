@@ -26,7 +26,8 @@ export function getSun(m,d){
 
 export function getMoon(y,m,d){
   const days=(new Date(y,m-1,d)-new Date(2000,0,1))/86400000;
-  return SIGNS[Math.abs(Math.floor((((days%27.32)+27.32)%27.32/27.32)*12))%12];
+  // 29.53일: 삭망(시노딕) 주기 — 달의 별자리 계산에 올바른 값 (항성 주기 27.32는 오류)
+  return SIGNS[Math.abs(Math.floor((((days%29.53)+29.53)%29.53/29.53)*12))%12];
 }
 
 export function getAsc(h,bm){return SIGNS[(Math.floor(h/2)+bm+6)%12];}

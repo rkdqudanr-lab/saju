@@ -12,7 +12,8 @@ async function verifyUser(kakaoId) {
   // Kakao ID는 숫자 문자열 형식
   if (!/^\d+$/.test(String(kakaoId))) return false;
 
-  const supabaseUrl = process.env.SUPABASE_URL;
+  // SUPABASE_URL 또는 VITE_SUPABASE_URL 둘 다 지원 (Vercel 환경변수 이름 혼용 방어)
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (supabaseUrl && supabaseKey) {
     try {
@@ -212,27 +213,37 @@ export default async function handler(req, res) {
                           1500;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": "prompt-caching-2024-07-31",
-      },
-      body: JSON.stringify({
-        model: model,
-        max_tokens: maxTokens,
-        system: [
-          {
-            type: "text",
-            text: systemWithContext,
-            cache_control: { type: "ephemeral" },
-          },
-        ],
-        messages: [{ role: "user", content: userMessage }],
-      }),
-    });
+    // Vercel 함수 30초 제한보다 5초 여유를 두고 25초 타임아웃 설정
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+    let response;
+    try {
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-beta": "prompt-caching-2024-07-31",
+        },
+        body: JSON.stringify({
+          model: model,
+          max_tokens: maxTokens,
+          system: [
+            {
+              type: "text",
+              text: systemWithContext,
+              cache_control: { type: "ephemeral" },
+            },
+          ],
+          messages: [{ role: "user", content: userMessage }],
+        }),
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     const data = await response.json();
     if (!response.ok) {
@@ -245,6 +256,10 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
 
   } catch (err) {
+    if (err?.name === 'AbortError') {
+      console.error("Anthropic API timeout (25s exceeded)");
+      return res.status(504).json({ error: "별이 잠시 바빠요 🌙 잠시 후 다시 시도해봐요." });
+    }
     console.error("Server error:", err?.message || err);
     return res.status(500).json({ error: "서버 오류가 났어요. 잠시 후 다시 시도해봐요 🌙" });
   }

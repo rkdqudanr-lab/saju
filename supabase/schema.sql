@@ -414,3 +414,17 @@ $$;
 -- analysis_cache 복합 인덱스 (성능 최적화)
 create index if not exists idx_analysis_cache_kakao_key
   on analysis_cache(kakao_id, cache_key);
+
+-- ── consultation_history 오래된 레코드 자동 삭제 함수 ─────────────────
+-- 365일 이상 된 상담 기록 자동 삭제 (스토리지 비용 절감)
+create or replace function cleanup_old_consultation_history()
+returns void
+language sql
+security definer
+as $$
+  delete from consultation_history
+  where created_at < (now() - interval '365 days');
+$$;
+
+-- pg_cron 사용 가능한 경우 매일 새벽 4시 KST (19:00 UTC) 자동 실행
+-- select cron.schedule('cleanup-consultation-history', '0 19 * * *', 'select cleanup_old_consultation_history()');
