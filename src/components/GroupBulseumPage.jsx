@@ -154,6 +154,14 @@ function RelationGraph({ members, pairs }) {
   );
 }
 
+function stripMd(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^#{1,3}\s+/gm, '')
+    .replace(/^[-─━]+$/gm, '');
+}
+
 // ── 상세 분석 패널 ──
 function DetailPanel({ pair, members, onClose, user }) {
   const [result, setResult] = useState('');
@@ -229,7 +237,7 @@ function DetailPanel({ pair, members, onClose, user }) {
         ) : (
           <>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
-              {result}
+              {stripMd(result)}
             </div>
             {hasError && (
               <button
