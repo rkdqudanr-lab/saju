@@ -62,6 +62,36 @@ function dateKey(y, m, d) {
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 
+// 운세/일기 표시용 맵
+const MOOD_MAP = {
+  1: { emoji: '😞', label: '많이 힘들어요' },
+  2: { emoji: '😕', label: '조금 힘들어요' },
+  3: { emoji: '😐', label: '그냥 그래요' },
+  4: { emoji: '🙂', label: '좋은 편이에요' },
+  5: { emoji: '😄', label: '아주 좋아요' },
+};
+const WEATHER_MAP = {
+  sunny: '☀️', cloudy: '☁️', rain: '🌧️', snow: '❄️',
+  fine_dust: '😷', thunder: '⛈️', wind: '🌬️',
+};
+const ENERGY_MAP = { 1: '🪫', 2: '🔋', 3: '🔋', 4: '🔋', 5: '⚡' };
+
+// 오늘 별숨 카드 텍스트 파싱 (달력 내 미리보기용)
+function parseFortuneText(text) {
+  if (!text) return { summary: '', items: [] };
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  let summary = '';
+  const items = [];
+  const summaryIdx = lines.findIndex(l => l.startsWith('[요약]'));
+  if (summaryIdx !== -1) summary = lines[summaryIdx].replace('[요약]', '').trim();
+  const colorStart = lines.findIndex(l => l.includes('오늘의 색은'));
+  const itemStart = colorStart !== -1 ? colorStart : (summaryIdx !== -1 ? summaryIdx + 1 : 0);
+  for (let i = itemStart; i < lines.length && items.length < 5; i++) items.push(lines[i]);
+  return { summary, items };
+}
+
+const FORTUNE_ITEM_ICONS = ['🎨', '🌿', '🧭', '✨', '🌙'];
+
 export default function SajuCalendar({ form, setStep, askQuick, user, callApi }) {
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
@@ -69,6 +99,10 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
   const [selected, setSelected] = useState(null);
   const [events, setEvents] = useState({});
   const [inputText, setInputText] = useState('');
+
+  // 운세·일기 기록 (날짜 → 데이터)
+  const [dailyFortunes, setDailyFortunes] = useState({});
+  const [diaryEntries, setDiaryEntries] = useState({});
 
   // 월별 상황 분석
   const [selectedCatId, setSelectedCatId] = useState(null);
@@ -93,6 +127,42 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
         setEvents(fresh);
       });
   }, [user?.id]);
+
+  // ── 운세·일기 기록 로드 (월 변경 시 갱신) ──
+  useEffect(() => {
+    if (!user?.id) return;
+    const authClient = getAuthenticatedClient(user.id);
+    const ym = `${viewYear}-${String(viewMonth).padStart(2, '0')}`;
+    const dateFrom = `${ym}-01`;
+    const dateTo = `${ym}-31`;
+
+    // 오늘 별숨 카드 기록
+    (authClient || supabase)
+      .from('daily_cache')
+      .select('cache_date, content')
+      .eq('kakao_id', user.id)
+      .eq('cache_type', 'daily')
+      .gte('cache_date', dateFrom)
+      .lte('cache_date', dateTo)
+      .then(({ data }) => {
+        const fresh = {};
+        (data || []).forEach(row => { fresh[row.cache_date] = row.content; });
+        setDailyFortunes(fresh);
+      });
+
+    // 일기 기록
+    (authClient || supabase)
+      .from('diary_entries')
+      .select('date, mood, weather, energy, content, gratitude, tomorrow_goal')
+      .eq('kakao_id', user.id)
+      .gte('date', dateFrom)
+      .lte('date', dateTo)
+      .then(({ data }) => {
+        const fresh = {};
+        (data || []).forEach(row => { fresh[row.date] = row; });
+        setDiaryEntries(fresh);
+      });
+  }, [user?.id, viewYear, viewMonth]);
 
   // 월 변경 시 월별 분석 결과 초기화
   useEffect(() => { setMonthlyResult(null); }, [viewYear, viewMonth]);
@@ -135,6 +205,9 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
   const selectedData = selected ? daysData.find(d => d.d === selected) : null;
   const selectedKey = selected ? dateKey(viewYear, viewMonth, selected) : null;
   const selectedEvents = selectedKey ? (events[selectedKey] || []) : [];
+  const selectedFortune = selectedKey ? (dailyFortunes[selectedKey] || null) : null;
+  const selectedDiary = selectedKey ? (diaryEntries[selectedKey] || null) : null;
+  const todayKey = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
   const addEvent = async () => {
     if (!inputText.trim() || !selectedKey) return;
@@ -233,6 +306,8 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
             const weekday = new Date(viewYear, viewMonth - 1, d).getDay();
             const key = dateKey(viewYear, viewMonth, d);
             const hasEvents = (events[key] || []).length > 0;
+            const hasFortune = !!dailyFortunes[key];
+            const hasDiary = !!diaryEntries[key];
             return (
               <button
                 key={d}
@@ -265,8 +340,19 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
                 <span style={{ fontSize: '0.6rem', color: isSel ? '#0D0B14' : scoreColor(score), fontWeight: 700 }}>
                   {score}
                 </span>
-                {hasEvents && (
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--gold)', display: 'block' }} />
+                {/* 기록 인디케이터 */}
+                {(hasEvents || hasFortune || hasDiary) && (
+                  <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    {hasFortune && (
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--gold)', display: 'block' }} title="운세 기록" />
+                    )}
+                    {hasDiary && (
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--lav, #9b8ec4)', display: 'block' }} title="일기 기록" />
+                    )}
+                    {hasEvents && (
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--teal, #4DB6AC)', display: 'block' }} title="일정" />
+                    )}
+                  </div>
                 )}
               </button>
             );
@@ -280,6 +366,18 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
           <span><span style={{ color: '#E6C35A' }}>■</span> 50+ 무난</span>
           <span><span style={{ color: '#FF8A65' }}>■</span> 38+ 조심</span>
           <span><span style={{ color: '#E05A3A' }}>■</span> 38미만 주의</span>
+        </div>
+        {/* 기록 인디케이터 범례 */}
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 6, fontSize: '0.6rem', color: 'var(--t4)', flexWrap: 'wrap' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block' }} /> 운세 기록
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--lav, #9b8ec4)', display: 'inline-block' }} /> 일기 기록
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--teal, #4DB6AC)', display: 'inline-block' }} /> 일정
+          </span>
         </div>
 
         {/* ── 이번 달의 별숨 날짜 보기 (상황별 분석) ── */}
@@ -362,6 +460,93 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* ── 오늘 하루 나의 별숨 기록 ── */}
+            {selectedFortune && (() => {
+              const { summary, items } = parseFortuneText(selectedFortune);
+              return (
+                <div style={{ marginBottom: 14, background: 'var(--bg1)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
+                  <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>✦ 오늘 하루 나의 별숨</span>
+                  </div>
+                  <div style={{ padding: '10px 14px 12px' }}>
+                    {summary && (
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 8, lineHeight: 1.6, fontStyle: 'italic' }}>
+                        "{summary}"
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      {items.map((item, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6 }}>
+                          <span style={{ flexShrink: 0 }}>{FORTUNE_ITEM_ICONS[i] || '·'}</span>
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── 나의 하루를 별숨에게 (일기 기록) ── */}
+            {selectedDiary && (
+              <div style={{ marginBottom: 14, background: 'var(--bg1)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
+                <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--lav, #9b8ec4)', fontWeight: 700, letterSpacing: '.04em' }}>📓 나의 하루를 별숨에게</span>
+                </div>
+                <div style={{ padding: '10px 14px 12px' }}>
+                  {/* 기분·날씨·에너지 */}
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                    {selectedDiary.mood && (
+                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', background: 'var(--bg2)', borderRadius: 20, padding: '3px 10px' }}>
+                        {MOOD_MAP[selectedDiary.mood]?.emoji} {MOOD_MAP[selectedDiary.mood]?.label}
+                      </span>
+                    )}
+                    {selectedDiary.weather && (
+                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', background: 'var(--bg2)', borderRadius: 20, padding: '3px 10px' }}>
+                        {WEATHER_MAP[selectedDiary.weather] || ''} 날씨
+                      </span>
+                    )}
+                    {selectedDiary.energy && (
+                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', background: 'var(--bg2)', borderRadius: 20, padding: '3px 10px' }}>
+                        {ENERGY_MAP[selectedDiary.energy]} 에너지
+                      </span>
+                    )}
+                  </div>
+                  {selectedDiary.content && (
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7, marginBottom: selectedDiary.gratitude || selectedDiary.tomorrow_goal ? 8 : 0, whiteSpace: 'pre-wrap' }}>
+                      {selectedDiary.content}
+                    </div>
+                  )}
+                  {selectedDiary.gratitude && (
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>
+                      🌿 감사했던 일: {selectedDiary.gratitude}
+                    </div>
+                  )}
+                  {selectedDiary.tomorrow_goal && (
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>
+                      ✦ 내일 목표: {selectedDiary.tomorrow_goal}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── 오늘 기록이 없으면 일기 쓰러 가기 버튼 ── */}
+            {!selectedDiary && selectedKey === todayKey && user?.id && (
+              <button
+                onClick={() => setStep(17)}
+                style={{
+                  width: '100%', marginBottom: 14, padding: '10px 14px',
+                  background: 'var(--bg1)', border: '1px dashed var(--lav, #9b8ec4)',
+                  borderRadius: 'var(--r1)', cursor: 'pointer', fontFamily: 'var(--ff)',
+                  fontSize: 'var(--xs)', color: 'var(--lav, #9b8ec4)', fontWeight: 600,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                📓 오늘 하루를 별숨에게 기록하러 가기 →
+              </button>
             )}
 
             {/* 일정 목록 */}
