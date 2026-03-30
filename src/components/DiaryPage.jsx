@@ -43,7 +43,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent, initialMood, initialWeather, initialEnergy, embedded }) {
+export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading }) {
   const [mood, setMood] = useState(initialMood || null);
   const [weather, setWeather] = useState(initialWeather || '');
   const [energy, setEnergy] = useState(initialEnergy || null);
@@ -273,6 +273,31 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
           >
             별숨의 해석 듣기 ✦
           </button>
+
+          {/* 별숨의 해석 */}
+          {submitted && (diaryReviewLoading || diaryReviewResult) && (
+            <div style={{ marginTop: 8, marginBottom: 8 }}>
+              <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
+                <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: '1.1rem' }}>✦</span>
+                  <div>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>별숨의 해석</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 오늘을 읽었어요</div>
+                  </div>
+                </div>
+                {diaryReviewLoading ? (
+                  <div style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--t4)', fontSize: 'var(--xs)' }}>
+                    <div style={{ width: 14, height: 14, border: '2px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', flexShrink: 0 }} />
+                    오늘의 기운을 읽고 있어요...
+                  </div>
+                ) : (
+                  <div style={{ padding: '14px 16px 16px', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+                    {diaryReviewResult}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {!embedded && (
             <button
