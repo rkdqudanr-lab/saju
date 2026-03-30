@@ -97,8 +97,8 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     if (profile.selfDesc)  c += `[자기 소개] ${profile.selfDesc.slice(0, 200)}\n`;
 
     c += `\n[특별 지침]\n`;
-    c += `1. 결과에 '요약'이라는 단어를 절대 노출하지 마세요.\n`;
-    c += `2. 답변 시 모호한 표현을 피하고, 행운의 색깔, 방향, 특정 날짜, 도움되는 숫자나 초성, 피해야 할 행동 등 매우 명확하고 구체적인 점술적 요소를 1개 이상 반드시 포함하세요.\n`;
+    c += `1. 반드시 [요약] 태그로 시작하는 한 줄 요약을 첫 번째로 써요. [요약] 태그 자체는 그대로 출력해요 (UI에서 파싱·숨김 처리됨).\n`;
+    c += `2. 답변 시 모호한 표현을 피하고, 구체적인 날짜·방향·행동·감각(음식·향·소리 등) 중 하나를 반드시 포함하세요.\n`;
     return c;
   }, [activeForm, activeSaju, activeSun, activeAge, profile, activeProfileIdx]);
 
