@@ -168,7 +168,7 @@ export default function App() {
     const updated = {
       ...quiz,
       answers: { ...quiz.answers, [question.id]: val },
-      nextQIdx: Math.min((quiz.nextQIdx || 0) + 1, DAILY_QUESTIONS.length - 1),
+      nextQIdx: Math.min((quiz.nextQIdx || 0) + 1, DAILY_QUESTIONS.length),
       lastAnsweredDate: getTodayStr(),
     };
     saveSettings({ quizState: updated });
@@ -176,6 +176,15 @@ export default function App() {
     setQuizInput('');
     showToast('별숨이 기억했어요 ✦', 'success');
   }, [quiz, quizInput, setProfile, showToast, user, saveDailyQuizAnswer, saveSettings]);
+
+  // ── 오늘 별숨의 질문 건너뛰기 ──
+  const handleQuizSkip = useCallback((currentQIdx) => {
+    const updated = {
+      ...quiz,
+      nextQIdx: Math.min(currentQIdx + 1, DAILY_QUESTIONS.length),
+    };
+    saveSettings({ quizState: updated });
+  }, [quiz, saveSettings]);
 
   // ── 채팅 전송 (넛지 초기화 포함) ──
   const handleSendChat = useCallback(() => {
@@ -587,13 +596,31 @@ export default function App() {
 
                         {/* ── 오늘 별숨의 질문 ── */}
                         {(() => {
-                          const qIdx = quiz.nextQIdx || 0;
+                          const rawQIdx = quiz.nextQIdx || 0;
                           const todayDone = isTodayAnswered(quiz);
-                          const allDone = qIdx >= DAILY_QUESTIONS.length;
-                          const q = DAILY_QUESTIONS[Math.min(qIdx, DAILY_QUESTIONS.length - 1)];
                           const answeredCount = Object.keys(quiz.answers || {}).length;
-                          const lastAnsweredQ = DAILY_QUESTIONS[qIdx > 0 ? qIdx - 1 : 0];
-                          const lastAnsweredVal = lastAnsweredQ ? quiz.answers[lastAnsweredQ.id] : null;
+
+                          // F-3: auto-skip questions whose profile field is already filled
+                          let qIdx = rawQIdx;
+                          while (qIdx < DAILY_QUESTIONS.length) {
+                            const cq = DAILY_QUESTIONS[qIdx];
+                            if (cq.field && profile[cq.field]) { qIdx++; } else { break; }
+                          }
+
+                          // F-4: cycle-back when all questions exhausted
+                          let cycleNote = null;
+                          if (qIdx >= DAILY_QUESTIONS.length) {
+                            const firstUnanswered = DAILY_QUESTIONS.findIndex(dq => !quiz.answers?.[dq.id]);
+                            if (firstUnanswered >= 0) {
+                              qIdx = firstUnanswered;
+                              cycleNote = '모든 질문을 한 바퀴 돌았어요. 아직 남은 질문이에요 🌀';
+                            }
+                          }
+
+                          const allDone = qIdx >= DAILY_QUESTIONS.length;
+                          const q = allDone ? null : DAILY_QUESTIONS[qIdx];
+                          const lastAnsweredQ = rawQIdx > 0 ? DAILY_QUESTIONS[Math.min(rawQIdx - 1, DAILY_QUESTIONS.length - 1)] : null;
+                          const lastAnsweredVal = lastAnsweredQ ? quiz.answers?.[lastAnsweredQ.id] : null;
 
                           return (
                             <div style={{ marginTop: 10, marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', border: '1px solid var(--line)' }}>
@@ -605,7 +632,7 @@ export default function App() {
                                 <>
                                   <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7, marginBottom: 10 }}>
                                     별숨이 당신을 잘 알게 됐어요 🌟<br/>
-                                    <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>{DAILY_QUESTIONS.length}개의 이야기를 모두 들었어요</span>
+                                    <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>{answeredCount}개의 이야기를 모두 들었어요</span>
                                   </div>
                                   <button onClick={() => setShowProfileModal(true)} style={{ fontSize: 'var(--xs)', color: 'var(--gold)', background: 'none', border: 'none', fontFamily: 'var(--ff)', cursor: 'pointer', padding: 0 }}>
                                     별숨에게 나를 알려주기 →
@@ -623,6 +650,7 @@ export default function App() {
                                 </>
                               ) : (
                                 <>
+                                  {cycleNote && <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8 }}>{cycleNote}</div>}
                                   <div style={{ fontSize: 'var(--base)', color: 'var(--t1)', fontWeight: 500, lineHeight: 1.6, marginBottom: 4 }}>
                                     "{q.q}"
                                   </div>
@@ -652,6 +680,11 @@ export default function App() {
                                       <button className="chat-send" onClick={() => handleQuizAnswer(q, quizInput)} disabled={!quizInput.trim()} style={{ flexShrink: 0 }}>✦</button>
                                     </div>
                                   )}
+
+                                  {/* F-5: skip button */}
+                                  <button onClick={() => handleQuizSkip(qIdx)} style={{ marginTop: 10, fontSize: 'var(--xs)', color: 'var(--t4)', background: 'none', border: 'none', fontFamily: 'var(--ff)', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                                    건너뛸게요
+                                  </button>
                                 </>
                               )}
                             </div>
@@ -661,7 +694,9 @@ export default function App() {
                         {/* ── 오늘의 추천질문 (버튼) ── */}
                         {formOk && (() => {
                           const allQs = CATS_ALL.flatMap(c => c.qs.map(q => ({ q, icon: c.icon, label: c.label })));
-                          const recQ = allQs[(today.day - 1) % allQs.length];
+                          // F-2: year+dayOfYear seed — unique per calendar day, doesn't repeat monthly
+                          const dayOfYear = Math.floor((new Date(today.year, today.month - 1, today.day) - new Date(today.year, 0, 0)) / 86400000);
+                          const recQ = allQs[(today.year * 1000 + dayOfYear) % allQs.length];
                           return recQ ? (
                             <button
                               onClick={() => { setDiy(recQ.q); setStep(2); }}

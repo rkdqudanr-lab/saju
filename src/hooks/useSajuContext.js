@@ -73,20 +73,6 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
       c += `[별자리 기운]\n`;
       c += `태양: ${asSun.n}(${asSun.s}) — ${asSun.desc}\n`;
     }
-    if (profile.partner) {
-      // 연인 이름 sanitization: 프롬프트 인젝션 방지
-      const safePartner = profile.partner.replace(/[\[\]\n\r]/g, '').slice(0, 30);
-      c += `[연인 정보]\n이름: ${safePartner}\n`;
-      if (profile.partnerBy && profile.partnerBm && profile.partnerBd) {
-        try {
-          const ps   = getSaju(+profile.partnerBy, +profile.partnerBm, +profile.partnerBd, 12);
-          const psun = getSun(+profile.partnerBm, +profile.partnerBd);
-          c += `연인 사주: 연${ps.yeon.g}${ps.yeon.j} 월${ps.wol.g}${ps.wol.j} 일${ps.il.g}${ps.il.j}\n`;
-          c += `연인 기질: ${ps.ilganDesc} / 강한 기운: ${ON[ps.dom]}\n`;
-          c += `연인 별자리: ${psun.n}(${psun.s})\n\n`;
-        } catch (e) { console.error('[별숨] 연인 사주 계산 오류:', e); }
-      }
-    }
     // MBTI 형식 검증 (ENFJ, ISTP 등 4자리 형식만 허용)
     if (profile.mbti && /^[EI][NS][TF][JP]$/i.test(profile.mbti)) {
       c += `[MBTI] ${profile.mbti.toUpperCase()}\n`;
@@ -97,8 +83,8 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     if (profile.selfDesc)  c += `[자기 소개] ${profile.selfDesc.slice(0, 200)}\n`;
 
     c += `\n[특별 지침]\n`;
-    c += `1. 결과에 '요약'이라는 단어를 절대 노출하지 마세요.\n`;
-    c += `2. 답변 시 모호한 표현을 피하고, 행운의 색깔, 방향, 특정 날짜, 도움되는 숫자나 초성, 피해야 할 행동 등 매우 명확하고 구체적인 점술적 요소를 1개 이상 반드시 포함하세요.\n`;
+    c += `1. 반드시 [요약] 태그로 시작하는 한 줄 요약을 첫 번째로 써요. [요약] 태그 자체는 그대로 출력해요 (UI에서 파싱·숨김 처리됨).\n`;
+    c += `2. 답변 시 모호한 표현을 피하고, 구체적인 날짜·방향·행동·감각(음식·향·소리 등) 중 하나를 반드시 포함하세요.\n`;
     return c;
   }, [activeForm, activeSaju, activeSun, activeAge, profile, activeProfileIdx]);
 

@@ -155,12 +155,15 @@ function RelationGraph({ members, pairs }) {
 }
 
 // ── 상세 분석 패널 ──
-function DetailPanel({ pair, members, onClose }) {
+function DetailPanel({ pair, members, onClose, user }) {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const askDetail = async () => {
     setLoading(true);
+    setHasError(false);
+    setResult('');
     try {
       const a = members[pair.idxA], b = members[pair.idxB];
       const ctx = [a, b].map(m => {
@@ -182,8 +185,10 @@ function DetailPanel({ pair, members, onClose }) {
         }),
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'api error');
       setResult(data.text || '분석을 불러오지 못했어요 🌙');
     } catch {
+      setHasError(true);
       setResult('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.');
     } finally {
       setLoading(false);
@@ -222,9 +227,19 @@ function DetailPanel({ pair, members, onClose }) {
             ))}
           </div>
         ) : (
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
-            {result}
-          </div>
+          <>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
+              {result}
+            </div>
+            {hasError && (
+              <button
+                onClick={askDetail}
+                style={{ marginTop: 14, fontSize: 'var(--xs)', color: 'var(--gold)', background: 'none', border: '1px solid var(--gold)', borderRadius: 20, padding: '6px 16px', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+              >
+                다시 불러오기 ↺
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -358,6 +373,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
       birth_day: +memberForm.bd,
       birth_hour: memberForm.bh ? +memberForm.bh : null,
       gender: memberForm.gender,
+      kakao_id: user?.id ? String(user.id) : null,
     };
     try {
       if (supabase && sessionId && !sessionId.startsWith('local_')) {
@@ -365,7 +381,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
         if (error) throw error;
       }
     } catch (e) {
-      console.error('[GroupBulseum] 멤버 저장 오류:', e);
+      console.error('[GroupBulseum] 멤버 저장 오류:', e?.message);
       setSaveError('서버에 저장하지 못했어요. 기기 내에 임시 저장됩니다.');
     }
     const updatedMembers = [...members, newMember];
@@ -744,6 +760,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
             pair={selectedPair}
             members={enrichedMembers}
             onClose={() => setSelectedPair(null)}
+            user={user}
           />
         )}
       </div>

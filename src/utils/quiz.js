@@ -8,7 +8,8 @@ export function saveQuiz(_state) {}
 
 export function getTodayStr() {
   const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 export function isTodayAnswered(quiz) {
