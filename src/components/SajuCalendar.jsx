@@ -99,6 +99,8 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
   const [selected, setSelected] = useState(null);
   const [events, setEvents] = useState({});
   const [inputText, setInputText] = useState('');
+  const [editingEventId, setEditingEventId] = useState(null);
+  const [editingEventText, setEditingEventText] = useState('');
 
   // 운세·일기 기록 (날짜 → 데이터)
   const [dailyFortunes, setDailyFortunes] = useState({});
@@ -244,6 +246,33 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
       const authClient = getAuthenticatedClient(user.id);
       (authClient || supabase).from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', String(user.id));
     }
+  };
+
+  const startEditEvent = (ev) => {
+    setEditingEventId(ev.id);
+    setEditingEventText(ev.title);
+  };
+
+  const cancelEditEvent = () => {
+    setEditingEventId(null);
+    setEditingEventText('');
+  };
+
+  const saveEditEvent = async (key, id) => {
+    const title = editingEventText.trim();
+    if (!title) return;
+    setEvents(prev => {
+      const updated = { ...prev };
+      updated[key] = (updated[key] || []).map(e => e.id === id ? { ...e, title } : e);
+      return updated;
+    });
+    const target = (events[key] || []).find(e => e.id === id);
+    if (user?.id && target?.supabaseId) {
+      const authClient = getAuthenticatedClient(user.id);
+      (authClient || supabase).from('calendar_events').update({ title }).eq('id', target.supabaseId).eq('kakao_id', String(user.id));
+    }
+    setEditingEventId(null);
+    setEditingEventText('');
   };
 
   const askAboutEvent = (eventTitle, score, d) => {
@@ -558,18 +587,47 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {selectedEvents.map(ev => (
                     <div key={ev.id} style={{ background: 'var(--bg1)', borderRadius: 'var(--r1)', padding: '10px 12px', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ flex: 1, fontSize: 'var(--sm)', color: 'var(--t1)' }}>📅 {ev.title}</span>
-                      <button
-                        onClick={() => askAboutEvent(ev.title, selectedData.score, selectedData.d)}
-                        style={{ background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.15))', border: '1px solid var(--gold)', borderRadius: 20, padding: '5px 12px', fontSize: 'var(--xs)', color: 'var(--gold)', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
-                      >
-                        별숨에게 물어보기 ✦
-                      </button>
-                      <button
-                        onClick={() => deleteEvent(selectedKey, ev.id)}
-                        style={{ background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', fontSize: '0.75rem', padding: '4px', fontFamily: 'var(--ff)' }}
-                        aria-label="일정 삭제"
-                      >✕</button>
+                      {editingEventId === ev.id ? (
+                        <>
+                          <input
+                            className="inp"
+                            style={{ flex: 1, marginBottom: 0, padding: '6px 10px', fontSize: 'var(--sm)' }}
+                            value={editingEventText}
+                            onChange={e => setEditingEventText(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) saveEditEvent(selectedKey, ev.id); if (e.key === 'Escape') cancelEditEvent(); }}
+                            maxLength={40}
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => saveEditEvent(selectedKey, ev.id)}
+                            style={{ background: 'var(--gold)', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 'var(--xs)', color: '#0D0B14', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}
+                          >저장</button>
+                          <button
+                            onClick={cancelEditEvent}
+                            style={{ background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', fontSize: '0.75rem', padding: '4px', fontFamily: 'var(--ff)' }}
+                          >✕</button>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ flex: 1, fontSize: 'var(--sm)', color: 'var(--t1)' }}>📅 {ev.title}</span>
+                          <button
+                            onClick={() => askAboutEvent(ev.title, selectedData.score, selectedData.d)}
+                            style={{ background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.15))', border: '1px solid var(--gold)', borderRadius: 20, padding: '5px 12px', fontSize: 'var(--xs)', color: 'var(--gold)', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
+                          >
+                            별숨에게 물어보기 ✦
+                          </button>
+                          <button
+                            onClick={() => startEditEvent(ev)}
+                            style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '0.75rem', padding: '4px', fontFamily: 'var(--ff)' }}
+                            aria-label="일정 수정"
+                          >✎</button>
+                          <button
+                            onClick={() => deleteEvent(selectedKey, ev.id)}
+                            style={{ background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', fontSize: '0.75rem', padding: '4px', fontFamily: 'var(--ff)' }}
+                            aria-label="일정 삭제"
+                          >✕</button>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
