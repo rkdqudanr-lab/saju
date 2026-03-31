@@ -234,18 +234,25 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
     }
   };
 
-  const deleteEvent = (key, id) => {
+  const deleteEvent = async (key, id) => {
     const target = (events[key] || []).find(e => e.id === id);
+    if (!target) return;
+    // DB 삭제 먼저, 성공 후 로컬 상태 업데이트
+    if (user?.id && target?.supabaseId) {
+      try {
+        const authClient = getAuthenticatedClient(user.id);
+        await (authClient || supabase).from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', String(user.id));
+      } catch (e) {
+        console.error('[별숨] 일정 삭제 오류:', e);
+        return; // DB 실패 시 로컬 상태 유지
+      }
+    }
     setEvents(prev => {
       const updated = { ...prev };
       updated[key] = (updated[key] || []).filter(e => e.id !== id);
       if (updated[key].length === 0) delete updated[key];
       return updated;
     });
-    if (user?.id && target?.supabaseId) {
-      const authClient = getAuthenticatedClient(user.id);
-      (authClient || supabase).from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', String(user.id));
-    }
   };
 
   const startEditEvent = (ev) => {
@@ -261,16 +268,23 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
   const saveEditEvent = async (key, id) => {
     const title = editingEventText.trim();
     if (!title) return;
+    const target = (events[key] || []).find(e => e.id === id);
+    if (user?.id && target?.supabaseId) {
+      try {
+        const authClient = getAuthenticatedClient(user.id);
+        await (authClient || supabase).from('calendar_events').update({ title }).eq('id', target.supabaseId).eq('kakao_id', String(user.id));
+      } catch (e) {
+        console.error('[별숨] 일정 수정 오류:', e);
+        setEditingEventId(null);
+        setEditingEventText('');
+        return;
+      }
+    }
     setEvents(prev => {
       const updated = { ...prev };
       updated[key] = (updated[key] || []).map(e => e.id === id ? { ...e, title } : e);
       return updated;
     });
-    const target = (events[key] || []).find(e => e.id === id);
-    if (user?.id && target?.supabaseId) {
-      const authClient = getAuthenticatedClient(user.id);
-      (authClient || supabase).from('calendar_events').update({ title }).eq('id', target.supabaseId).eq('kakao_id', String(user.id));
-    }
     setEditingEventId(null);
     setEditingEventText('');
   };
@@ -704,6 +718,48 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
             날짜를 눌러 일정을 입력하면<br />별숨에게 바로 물어볼 수 있어요 🌙
           </div>
         )}
+
+        {/* ── 빠른 연결 버튼 ── */}
+        <div style={{ marginTop: 28, borderTop: '1px solid var(--line)', paddingTop: 20 }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontWeight: 600, marginBottom: 12, letterSpacing: '.04em' }}>
+            ✦ 함께 이용해보세요
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              onClick={() => setStep(17)}
+              style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
+            >
+              <span style={{ fontSize: '1rem' }}>📓</span>
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: 2 }}>오늘 하루를 별숨에게</div>
+                <div style={{ color: 'var(--t4)', fontSize: '0.65rem' }}>일기를 쓰고 별숨의 해석을 들어봐요</div>
+              </div>
+              <span style={{ marginLeft: 'auto', color: 'var(--t4)' }}>›</span>
+            </button>
+            <button
+              onClick={() => setStep(18)}
+              style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
+            >
+              <span style={{ fontSize: '1rem' }}>✦</span>
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: 2 }}>오늘 하루 나의 별숨</div>
+                <div style={{ color: 'var(--t4)', fontSize: '0.65rem' }}>오늘의 운세 카드를 확인해봐요</div>
+              </div>
+              <span style={{ marginLeft: 'auto', color: 'var(--t4)' }}>›</span>
+            </button>
+            <button
+              onClick={() => setStep(2)}
+              style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
+            >
+              <span style={{ fontSize: '1rem' }}>🔮</span>
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: 2 }}>별숨에게 질문하기</div>
+                <div style={{ color: 'var(--t4)', fontSize: '0.65rem' }}>궁금한 것을 직접 물어봐요</div>
+              </div>
+              <span style={{ marginLeft: 'auto', color: 'var(--t4)' }}>›</span>
+            </button>
+          </div>
+        </div>
 
         <div style={{ height: 40 }} />
       </div>
