@@ -1,12 +1,7 @@
-import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 
 // utils
-import { OC, OE, ON, ILGAN_POETIC, CGO } from "./utils/saju.js";
-import { getSun } from "./utils/astrology.js";
-import { getDailyWord, parseAccSummary, CATS, CATS_ALL, PKGS, REVIEWS, CHAT_SUGG, SIGN_MOOD, TIMING, DIARY_PROMPT, ANNIVERSARY_PROMPT, DAILY_QUESTIONS } from "./utils/constants.js";
-import { TIME_CONFIG } from "./utils/time.js";
-import { saveShareCard, saveProphecyImage, saveCompatImage, saveChatImage } from "./utils/imageExport.js";
-import { getTodayStr, isTodayAnswered } from "./utils/quiz.js";
+import { PKGS, TIMING, ANNIVERSARY_PROMPT } from "./utils/constants.js";
 
 // hooks
 import { useUserProfile }   from "./hooks/useUserProfile.js";
@@ -20,11 +15,8 @@ import { supabase } from "./lib/supabase.js";
 
 // components
 import StarCanvas         from "./components/StarCanvas.jsx";
-import DailyStarCard     from "./components/DailyStarCard.jsx";
 import SkeletonLoader     from "./components/SkeletonLoader.jsx";
-import AccItem, { FeedbackBtn, ChatBubble, ReportBody } from "./components/AccItem.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
-import SamplePreview      from "./components/SamplePreview.jsx";
 import PWAInstallBanner   from "./components/PWAInstallBanner.jsx";
 
 const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
