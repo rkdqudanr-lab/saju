@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
 import { isTodayAnswered } from "../utils/quiz.js";
 import DailyStarCard from "../components/DailyStarCard.jsx";
@@ -38,6 +39,7 @@ export default function LandingPage({
   setEditingMyProfile, setShowProfileModal,
   askDailyHoroscope, askDiaryReview, resetDiaryReview,
   handleQuizAnswer, handleQuizSkip,
+  DiaryPageLazy,
 }) {
   return (
     <div className="page step-fade">
@@ -110,57 +112,61 @@ export default function LandingPage({
                             </div>
                           )}
 
-                          {/* ── 나의 하루를 별숨에게 (일기 섹션) ── */}
-                          <div style={{ marginTop: 10, background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
-                            <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span>📓</span>
-                                <span style={{ fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 700 }}>나의 하루를 별숨에게</span>
-                              </div>
-                              {diaryReviewResult && (
-                                <button
-                                  onClick={resetDiaryReview}
-                                  style={{ fontSize: '0.65rem', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer' }}
-                                >
-                                  다시 쓰기
-                                </button>
-                              )}
-                            </div>
-                            <div style={{ padding: '12px 14px' }}>
-                              {diaryReviewLoading ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--t4)', fontSize: 'var(--xs)', padding: '8px 0' }}>
-                                  <div style={{ width: 14, height: 14, border: '2px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', flexShrink: 0 }} />
-                                  별숨이 오늘의 기운을 읽고 있어요...
+                          {/* ── 나의 하루를 별숨에게 ──
+                               결과 없을 때: embedded 일기 폼 (제출 → step 17에서 결과 집중)
+                               결과 있을 때: 결과 미리보기 카드 (클릭 → step 17 전체 보기)         */}
+                          {(diaryReviewResult || diaryReviewLoading) ? (
+                            <div style={{ marginTop: 10, background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
+                              <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <span>📓</span>
+                                  <span style={{ fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 700 }}>나의 하루를 별숨에게</span>
                                 </div>
-                              ) : diaryReviewResult ? (
-                                <>
-                                  <div style={{ marginBottom: 10 }}>
-                                    <div style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700, marginBottom: 6, letterSpacing: '.04em' }}>✦ 별숨의 해석</div>
-                                    <DiaryReviewPreview text={diaryReviewResult} />
-                                  </div>
+                                {diaryReviewResult && !diaryReviewLoading && (
                                   <button
-                                    onClick={() => setStep(17)}
-                                    style={{ width: '100%', padding: '10px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--gold)', cursor: 'pointer', fontWeight: 600 }}
+                                    onClick={resetDiaryReview}
+                                    style={{ fontSize: '0.65rem', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer' }}
                                   >
-                                    별숨의 해석 전체 보기 →
+                                    다시 쓰기
                                   </button>
-                                </>
-                              ) : (
-                                <>
-                                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7, marginBottom: 12 }}>
-                                    오늘 하루를 기록하면 별숨이 사주와 별자리로 해석해 드려요 🌙
+                                )}
+                              </div>
+                              <div style={{ padding: '12px 14px' }}>
+                                {diaryReviewLoading ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--t4)', fontSize: 'var(--xs)', padding: '8px 0' }}>
+                                    <div style={{ width: 14, height: 14, border: '2px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', flexShrink: 0 }} />
+                                    별숨이 오늘의 기운을 읽고 있어요...
                                   </div>
-                                  <button
-                                    className="cta-main"
-                                    style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '13px' }}
-                                    onClick={() => setStep(17)}
-                                  >
-                                    저장하고 별숨의 해석듣기 ✦
-                                  </button>
-                                </>
-                              )}
+                                ) : (
+                                  <>
+                                    <div style={{ marginBottom: 10 }}>
+                                      <div style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700, marginBottom: 6, letterSpacing: '.04em' }}>✦ 별숨의 해석</div>
+                                      <DiaryReviewPreview text={diaryReviewResult} />
+                                    </div>
+                                    <button
+                                      onClick={() => setStep(17)}
+                                      style={{ width: '100%', padding: '10px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--gold)', cursor: 'pointer', fontWeight: 600 }}
+                                    >
+                                      별숨의 해석 전체 보기 →
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            /* 아직 오늘 해석이 없을 때: 임베디드 일기 폼 */
+                            <div style={{ marginTop: 10 }}>
+                              <Suspense fallback={<PageSpinner />}>
+                                {DiaryPageLazy && (
+                                  <DiaryPageLazy
+                                    user={user} form={form} saju={saju} sun={sun} buildCtx={buildCtx}
+                                    askReview={askDiaryReview} setStep={setStep} embedded={true}
+                                    diaryReviewResult={diaryReviewResult} diaryReviewLoading={diaryReviewLoading}
+                                  />
+                                )}
+                              </Suspense>
+                            </div>
+                          )}
 
                           <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
                             별숨에게 질문하기 ✦

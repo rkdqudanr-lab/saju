@@ -255,6 +255,7 @@ export default function App() {
             askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview}
             resetDiaryReview={resetDiaryReview}
             handleQuizAnswer={handleQuizAnswer} handleQuizSkip={handleQuizSkip}
+            DiaryPageLazy={DiaryPage}
           />
         )}
 
