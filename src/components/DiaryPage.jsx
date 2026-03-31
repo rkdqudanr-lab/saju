@@ -56,10 +56,12 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
 
   const today = new Date().toISOString().slice(0, 10);
 
-  // diaryReviewResult가 있으면 submitted 자동 설정 (새로고침 후 결과 복원)
+  // 결과/로딩 상태 → submitted 자동 설정
+  // - 새로고침 후 결과 복원
+  // - 임베디드 폼에서 제출 후 step 17로 이동 시 diaryReviewLoading이 이미 true이므로 즉시 로딩 표시
   useEffect(() => {
-    if (diaryReviewResult) setSubmitted(true);
-  }, [diaryReviewResult]);
+    if (diaryReviewLoading || diaryReviewResult) setSubmitted(true);
+  }, [diaryReviewLoading, diaryReviewResult]);
 
   // 오늘 일기 불러오기 (인증 클라이언트 사용)
   useEffect(() => {
