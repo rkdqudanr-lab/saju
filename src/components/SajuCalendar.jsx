@@ -116,7 +116,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
     (authClient || supabase)
       .from('calendar_events')
       .select('date, title, id')
-      .eq('kakao_id', user.id)
+      .eq('kakao_id', String(user.id))
       .then(({ data }) => {
         const fresh = {};
         (data || []).forEach(row => {
@@ -140,7 +140,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
     (authClient || supabase)
       .from('daily_cache')
       .select('cache_date, content')
-      .eq('kakao_id', user.id)
+      .eq('kakao_id', String(user.id))
       .eq('cache_type', 'horoscope')
       .gte('cache_date', dateFrom)
       .lte('cache_date', dateTo)
@@ -155,7 +155,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
     (authClient || supabase)
       .from('diary_entries')
       .select('date, mood, weather, energy, content, gratitude, tomorrow_goal')
-      .eq('kakao_id', user.id)
+      .eq('kakao_id', String(user.id))
       .gte('date', dateFrom)
       .lte('date', dateTo)
       .then(({ data }) => {
@@ -242,7 +242,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
     });
     if (user?.id && target?.supabaseId) {
       const authClient = getAuthenticatedClient(user.id);
-      (authClient || supabase).from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', user.id);
+      (authClient || supabase).from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', String(user.id));
     }
   };
 

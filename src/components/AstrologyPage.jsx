@@ -66,7 +66,7 @@ async function loadAnalysisCache(userId, cacheKey) {
   try {
     const authClient = getAuthenticatedClient(userId);
     const { data } = await (authClient || supabase)
-      .from('analysis_cache').select('content').eq('kakao_id', userId).eq('cache_key', cacheKey).single();
+      .from('analysis_cache').select('content').eq('kakao_id', String(userId)).eq('cache_key', cacheKey).single();
     return data?.content || null;
   } catch { return null; }
 }
@@ -75,7 +75,7 @@ async function saveAnalysisCache(userId, cacheKey, content) {
   try {
     const authClient = getAuthenticatedClient(userId);
     await (authClient || supabase).from('analysis_cache').upsert(
-      { kakao_id: userId, cache_key: cacheKey, content },
+      { kakao_id: String(userId), cache_key: cacheKey, content },
       { onConflict: 'kakao_id,cache_key' }
     );
   } catch (e) { console.error('[별숨] analysis_cache 저장 오류:', e); }

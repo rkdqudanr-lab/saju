@@ -62,7 +62,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     (async () => {
       try {
         const { data } = await supabase.from('diary_entries')
-          .select('*').eq('kakao_id', user.id).eq('date', today).single();
+          .select('*').eq('kakao_id', String(user.id)).eq('date', today).single();
         if (data) {
           setTodayEntry(data);
           if (data.mood) setMood(data.mood);
