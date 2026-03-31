@@ -430,6 +430,11 @@ as $$
   where created_at < (now() - interval '365 days');
 $$;
 
+-- ── users 테이블 컬럼 추가 마이그레이션 ──────────────────────────────
+-- (기존 DB에 적용 시 SQL Editor에서 실행)
+alter table users add column if not exists gender     text;
+alter table users add column if not exists birth_hour numeric;
+
 -- ── 자동 정리 스케줄 설정 방법 (택 1) ───────────────────────────────
 -- 방법 A: Supabase 대시보드 > Database > Extensions > pg_cron 활성화 후:
 --   select cron.schedule('cleanup-daily-cache',           '0 18 * * *', 'select cleanup_old_daily_cache()');

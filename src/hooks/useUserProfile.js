@@ -111,7 +111,7 @@ export function useUserProfile() {
 
           const { data: saved } = await (authClient || supabase)
             .from('users')
-            .select('id, birth_year, birth_month, birth_day, consent_flags, response_style, onboarded, quiz_state')
+            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, onboarded, quiz_state')
             .eq('kakao_id', String(data.id))
             .single();
 
@@ -121,7 +121,15 @@ export function useUserProfile() {
             setAuthUser(userDataWithUuid);
           }
           if (saved?.birth_year) {
-            setForm(f => ({ ...f, by: String(saved.birth_year), bm: String(saved.birth_month), bd: String(saved.birth_day) }));
+            setForm(f => ({
+              ...f,
+              by: String(saved.birth_year),
+              bm: String(saved.birth_month),
+              bd: String(saved.birth_day),
+              ...(saved.birth_hour != null && { bh: String(saved.birth_hour) }),
+              ...(saved.gender         && { gender: saved.gender }),
+              ...(saved.nickname       && { name: saved.nickname }),
+            }));
           }
           if (saved?.consent_flags) {
             setConsentFlags(saved.consent_flags);
@@ -155,7 +163,7 @@ export function useUserProfile() {
     (async () => {
       const [usersRes, profilesRes, othersRes] = await Promise.allSettled([
         client.from('users')
-          .select('birth_year, birth_month, birth_day, consent_flags, response_style, onboarded, quiz_state')
+          .select('birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
           .single(),
         client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).single(),
@@ -166,7 +174,15 @@ export function useUserProfile() {
       if (usersRes.status === 'fulfilled') {
         const data = usersRes.value.data;
         if (data?.birth_year) {
-          setForm(f => f.by ? f : { ...f, by: String(data.birth_year), bm: String(data.birth_month), bd: String(data.birth_day) });
+          setForm(f => f.by ? f : {
+            ...f,
+            by: String(data.birth_year),
+            bm: String(data.birth_month),
+            bd: String(data.birth_day),
+            ...(data.birth_hour != null && { bh: String(data.birth_hour) }),
+            ...(data.gender    && { gender: data.gender }),
+            ...(data.nickname  && { name: data.nickname }),
+          });
         }
         if (data?.consent_flags) setConsentFlags(data.consent_flags);
         else setShowConsentModal(true); // DB에 동의 정보 없으면 항상 모달 표시
@@ -318,7 +334,7 @@ export function useUserProfile() {
 
   const saveProfileToSupabase = useCallback(async (currentForm, currentUser) => {
     if (!supabase || !currentUser?.id) return;
-    const { by, bm, bd, name } = currentForm;
+    const { by, bm, bd, name, bh, gender, noTime } = currentForm;
     if (!by || !bm || !bd) return;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
@@ -327,6 +343,8 @@ export function useUserProfile() {
         birth_year:  parseInt(by, 10),
         birth_month: parseInt(bm, 10),
         birth_day:   parseInt(bd, 10),
+        birth_hour:  !noTime && bh ? parseFloat(bh) : null,
+        gender:      gender || null,
         nickname:    name || currentUser.nickname || '별님',
         updated_at:  new Date().toISOString(),
       }, { onConflict: 'kakao_id', ignoreDuplicates: false });
