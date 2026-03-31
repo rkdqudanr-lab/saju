@@ -2,17 +2,33 @@
 import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "../lib/prompts/utils.js";
 import { getCategoryHint, pickEndingHint, getCategoryExample } from "../lib/prompts/hints.js";
 import { buildSystem } from "../lib/prompts/buildSystem/index.js";
+import { verifyJWT } from "../lib/jwt.js";
 
-// ── 로그인 사용자 검증 ──
-// Kakao ID 형식 검증(숫자 문자열) + 선택적 Supabase 레코드 확인.
-// SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY 환경변수가 있으면 DB 조회,
-// 없으면 형식 검증만 수행. 남용 방지는 IP 기반 레이트 리미팅으로 처리.
-async function verifyUser(kakaoId) {
-  if (!kakaoId) return false;
-  // Kakao ID는 숫자 문자열 형식, 길이 1~20자리 제한 (임의 길이 공격 방지)
-  if (!/^\d{1,20}$/.test(String(kakaoId))) return false;
+// ── JWT 또는 kakao_id 기반 사용자 검증 ──
+// 우선순위: Authorization: Bearer <JWT> → kakao_id 형식 검증 (하위 호환)
+// JWT_SECRET 환경변수가 있으면 JWT 검증 활성화
+async function verifyUser(req) {
+  const jwtSecret = process.env.JWT_SECRET;
 
-  // SUPABASE_URL 또는 VITE_SUPABASE_URL 둘 다 지원 (Vercel 환경변수 이름 혼용 방어)
+  // JWT 검증 (Authorization 헤더)
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'] || '';
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (jwtSecret) {
+      const payload = verifyJWT(token, jwtSecret);
+      if (payload?.sub) return { ok: true, kakaoId: payload.sub };
+      return { ok: false };
+    }
+    // JWT_SECRET 미설정: 토큰이 있어도 형식만 검증(로컬 개발용)
+    console.warn('[별숨] JWT_SECRET 없음 — Bearer 토큰 형식 검증만 수행');
+  }
+
+  // 하위 호환: body의 kakaoId로 검증 (JWT_SECRET 미설정 또는 토큰 없는 구 클라이언트)
+  const kakaoId = req.body?.kakaoId;
+  if (!kakaoId) return { ok: false };
+  if (!/^\d{1,20}$/.test(String(kakaoId))) return { ok: false };
+
+  // Supabase DB 조회 (환경변수가 있을 때만)
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (supabaseUrl && supabaseKey) {
@@ -22,15 +38,15 @@ async function verifyUser(kakaoId) {
         { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
       );
       const data = await res.json();
-      return Array.isArray(data) && data.length > 0;
+      if (Array.isArray(data) && data.length > 0) return { ok: true, kakaoId };
+      return { ok: false };
     } catch (e) {
-      // Supabase 연결 오류 시 거부 (보안 우선 — 인증 불가 상태에서 통과시키지 않음)
       console.error('[별숨] verifyUser Supabase 연결 오류:', e?.message);
-      return false;
+      return { ok: false };
     }
   }
-  // 환경변수 미설정 = 로컬 개발 환경으로 간주, 형식 검증만 수행
-  return true;
+  // 환경변수 미설정 = 로컬 개발 환경
+  return { ok: true, kakaoId };
 }
 
 // ── IP 기반 레이트 리미팅 (Upstash Redis) ──
@@ -149,13 +165,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: validation.reason });
   }
 
-  // ── 로그인 인증 ──
+  // ── 로그인 인증 (JWT 우선, kakaoId 하위 호환) ──
   const { kakaoId } = validation.data;
   if (!kakaoId) {
     return res.status(401).json({ error: '로그인이 필요해요 🌙' });
   }
-  const isValidUser = await verifyUser(kakaoId);
-  if (!isValidUser) {
+  const authResult = await verifyUser(req);
+  if (!authResult.ok) {
     return res.status(401).json({ error: '로그인이 필요해요 🌙' });
   }
 

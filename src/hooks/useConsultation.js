@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { stripMarkdown, PKGS, TIMING, LOAD_STATES } from "../utils/constants.js";
+import { getAuthToken } from "./useUserProfile.js";
 
 // 베타 기간 종료 시 false로 변경 (또는 서버 설정으로 대체)
 const IS_BETA = true;
@@ -171,9 +172,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           setRetryMsg(msgs[attempt - 1] || '');
           await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
         }
+        const token = getAuthToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
         const res = await fetch('/api/ask', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             userMessage,
             context: buildCtx(),
