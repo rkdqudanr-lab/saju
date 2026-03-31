@@ -158,8 +158,8 @@ export function useUserProfile() {
           .select('birth_year, birth_month, birth_day, consent_flags, response_style, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
           .single(),
-        client.from('user_profiles').select('*').eq('kakao_id', user.id).single(),
-        client.from('other_profiles').select('*').eq('kakao_id', user.id).order('sort_order'),
+        client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).single(),
+        client.from('other_profiles').select('*').eq('kakao_id', String(user.id)).order('sort_order'),
       ]);
 
       // users 테이블
