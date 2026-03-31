@@ -13,6 +13,7 @@ import { useUserProfile }   from "./hooks/useUserProfile.js";
 import { useSajuContext }   from "./hooks/useSajuContext.js";
 import { useConsultation }  from "./hooks/useConsultation.js";
 import { useNavigation }    from "./hooks/useNavigation.js";
+import { useAppHandlers }   from "./hooks/useAppHandlers.js";
 
 // supabase
 import { supabase } from "./lib/supabase.js";
@@ -68,16 +69,9 @@ function PageSpinner() {
 //  🏠 메인 앱
 // ═══════════════════════════════════════════════════════════
 export default function App() {
-  // isDark / onboardingDone / quiz 는 useUserProfile에서 관리됨 (아래 userProfile 훅 초기화 후 사용)
   const [showSidebar, setShowSidebar] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
-  const [copyDone, setCopyDone] = useState(false);
-  // showDiary/diaryText 제거됨 → Step 17 DiaryPage 사용
-  const [diaryQuickContent, setDiaryQuickContent] = useState('');
-  const [diaryQuickMood, setDiaryQuickMood] = useState(null);
-  const [diaryQuickWeather, setDiaryQuickWeather] = useState('');
-  const [diaryQuickEnergy, setDiaryQuickEnergy] = useState(null);
   const [showDailyCard, setShowDailyCard] = useState(false);
   const [anniversaryDate, setAnniversaryDate] = useState('');
   const [anniversaryType, setAnniversaryType] = useState('');
@@ -85,33 +79,16 @@ export default function App() {
   const [editingMyProfile, setEditingMyProfile] = useState(false);
   const [fieldTouched, setFieldTouched] = useState({ by: false, bm: false, bd: false });
   const [showAllCats, setShowAllCats] = useState(false);
-  const [showSubNudge, setShowSubNudge] = useState(false);
-  // quiz는 userProfile.quizState 에서 가져옴 (아래)
   const [quizInput, setQuizInput] = useState('');
-  const [profileNudge, setProfileNudge] = useState(null);
   const toastTimer = useRef(null);
-  const copyTimer = useRef(null);
   const resultsRef = useRef(null);
   const askBtnRef = useRef(null);
-
-  // onboardingDone은 userProfile.onboarded 에서 가져옴 (아래)
 
   const showToast = useCallback((message, type = 'info') => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ message, type });
     toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
   }, []);
-
-  // ── 개인화 감지 헬퍼 ──
-  function detectProfileHint(msg, prof) {
-    if (!prof.workplace && /직장|직업|회사|일하|취업|이직|재직|근무|스타트업|공무원|프리랜서/.test(msg))
-      return { label: '직장/직업 정보를 저장해드릴까요?' };
-    if (!prof.partner && /연인|남자친구|여자친구|남친|여친|애인|사귀|좋아하는 사람/.test(msg))
-      return { label: '연인 정보를 저장해드릴까요?' };
-    if (!prof.worryText && /고민|걱정|불안|힘들|스트레스|갈등|막막|어려/.test(msg))
-      return { label: '지금 고민을 저장해드릴까요?' };
-    return null;
-  }
 
   // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
@@ -147,82 +124,20 @@ export default function App() {
           deleteHistoryItem } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
-  const IS_BETA = true; // 베타 기간 종료 시 false로 변경
 
   const { refCode, groupCode } = useNavigation({ step, setStep, resultsRef, showToast, loginError, setLoginError });
 
-  // 첫 번째 답변 완료 시 구독 넛지 표시
-  const handleTypingDone = useCallback((idx) => {
-    _handleTypingDone(idx);
-    if (idx === 0 && (!user || curPkg.id === 'basic') && !IS_BETA) {
-      setTimeout(() => setShowSubNudge(true), 800);
-    }
-  }, [_handleTypingDone, user, curPkg, IS_BETA]);
-
-  // ── 온보딩 완료 ──
-  const handleOnboardingFinish = useCallback(() => {
-    saveSettings({ onboarded: true });
-    setStep(0);
-  }, [setStep, saveSettings]);
-
-  // ── 빠른 개인화 입력 저장 ──
-  const handleQuizAnswer = useCallback((question, value) => {
-    const val = (value || quizInput).trim();
-    if (!val) return;
-    if (question.field) {
-      setProfile(p => ({ ...p, [question.field]: val }));
-    } else {
-      const note = `${question.q.replace(/[?요]/g, '').trim()} → ${val}`;
-      setProfile(p => ({ ...p, selfDesc: p.selfDesc ? p.selfDesc + ' / ' + note : note }));
-    }
-    const updated = {
-      ...quiz,
-      answers: { ...quiz.answers, [question.id]: val },
-      nextQIdx: Math.min((quiz.nextQIdx || 0) + 1, DAILY_QUESTIONS.length),
-      lastAnsweredDate: getTodayStr(),
-    };
-    saveSettings({ quizState: updated });
-    if (user) saveDailyQuizAnswer(user, question.id, val);
-    setQuizInput('');
-    showToast('별숨이 기억했어요 ✦', 'success');
-  }, [quiz, quizInput, setProfile, showToast, user, saveDailyQuizAnswer, saveSettings]);
-
-  // ── 오늘 별숨의 질문 건너뛰기 ──
-  const handleQuizSkip = useCallback((currentQIdx) => {
-    const updated = {
-      ...quiz,
-      nextQIdx: Math.min(currentQIdx + 1, DAILY_QUESTIONS.length),
-    };
-    saveSettings({ quizState: updated });
-  }, [quiz, saveSettings]);
-
-  // ── 채팅 전송 (넛지 초기화 포함) ──
-  const handleSendChat = useCallback(() => {
-    setProfileNudge(null);
-    sendChat();
-  }, [sendChat]);
-
-  /** 클립보드 복사 + toast + 체크마크 아이콘 피드백 (1.5초) */
-  const handleCopyAll = useCallback(() => {
-    const text = answers.join('\n\n');
-    if (!text) return;
-    navigator.clipboard?.writeText(text).then(() => {
-      showToast('복사됐어요 📋', 'success');
-      if (copyTimer.current) clearTimeout(copyTimer.current);
-      setCopyDone(true);
-      copyTimer.current = setTimeout(() => setCopyDone(false), 1500);
-    }).catch(() => showToast('복사에 실패했어요', 'error'));
-  }, [answers, showToast]);
-
-  // ── 채팅 중 프로필 감지 넛지 ──
-  useEffect(() => {
-    if (chatHistory.length < 2) return;
-    const last = chatHistory[chatHistory.length - 1];
-    const userMsg = chatHistory[chatHistory.length - 2];
-    if (last?.role !== 'ai' || userMsg?.role !== 'user') return;
-    const hint = detectProfileHint(userMsg.text, profile);
-    if (hint) setProfileNudge(hint);
-  }, [chatHistory]); // eslint-disable-line react-hooks/exhaustive-deps
+  const {
+    copyDone, profileNudge, setProfileNudge, showSubNudge,
+    handleTypingDone, handleOnboardingFinish, handleQuizAnswer, handleQuizSkip,
+    handleSendChat, handleCopyAll, shareCard,
+    handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage, shareResult,
+  } = useAppHandlers({
+    answers, selQs, chatHistory, quiz, quizInput, setQuizInput,
+    profile, setProfile, user, saveDailyQuizAnswer, saveSettings,
+    sendChat, _handleTypingDone, curPkg, isDark, today,
+    setShareModal, showToast, setStep,
+  });
 
   // ── 모달 열림 시 body 스크롤 잠금 ──
   useEffect(() => {
@@ -250,47 +165,6 @@ export default function App() {
   const toggleDark = useCallback(() => {
     saveSettings({ theme: isDark ? 'light' : 'dark' });
   }, [isDark, saveSettings]);
-
-  // ── 이미지 저장 ──
-  const shareCard = useCallback((idx) => {
-    if (typeof window.gtag === 'function') window.gtag('event', 'image_save');
-    const q = selQs[idx] || '';
-    const parsedText = parseAccSummary(answers[idx] || '').text;
-    saveShareCard({ idx, q, parsedText, isDark, today });
-  }, [selQs, answers, isDark, today]);
-
-  const handleSaveProphecyImage = useCallback((type, text, period) => {
-    saveProphecyImage({ text, period, isDark, today });
-  }, [isDark, today]);
-
-  const handleSaveCompatImage = useCallback((result, myF, partnerF, placeObj, score) => {
-    saveCompatImage({ result, myF, partnerF, placeObj, score, isDark });
-  }, [isDark]);
-
-  const handleSaveChatImage = useCallback(() => {
-    if (typeof window.gtag === 'function') window.gtag('event', 'chat_image_save');
-    saveChatImage({ chatHistory, isDark, today });
-  }, [chatHistory, isDark, today]);
-
-  // ── 공유 ──
-  const shareResult = useCallback((type, text, label = '') => {
-    if (typeof window.gtag === 'function') window.gtag('event', 'share', { type });
-    const appUrl = window.location.origin;
-    let shareText = '';
-    if (type === 'prophecy') {
-      shareText = `✦ 별숨의 예언 — ${label}\n\n${(text || '').slice(0, 100)}...\n\n나만의 사주+별자리 운세 → ${appUrl}`;
-    } else if (type === 'compat') {
-      shareText = `✦ 우리가 만나면 — ${label}\n\n${(text || '').slice(0, 100)}\n\n별숨에서 나의 궁합을 봐요 → ${appUrl}`;
-    } else {
-      const ans = answers[0] ? parseAccSummary(answers[0]).text.slice(0, 100) : '';
-      shareText = `✦ 오늘의 별숨\n\n${ans}...\n\n나만의 사주+별자리 운세 → ${appUrl}`;
-    }
-    if (navigator.share) {
-      navigator.share({ title: '별숨 ✦', text: shareText, url: appUrl }).catch(() => {});
-    } else {
-      setShareModal({ open: true, title: '별숨 ✦', text: shareText });
-    }
-  }, [answers]);
 
   // ── 카카오 로그인 처리 중 로딩 화면 ──
   if (loginLoading) {
