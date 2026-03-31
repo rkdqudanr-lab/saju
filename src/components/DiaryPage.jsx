@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAuthenticatedClient } from "../lib/supabase.js";
+import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { DIARY_PROMPT } from "../utils/constants.js";
 
 // ═══════════════════════════════════════════════════════════
@@ -66,11 +66,11 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
   // 오늘 일기 불러오기 (인증 클라이언트 사용)
   useEffect(() => {
     if (!user?.id) { setLoadingEntry(false); return; }
-    const authClient = getAuthenticatedClient(user.id);
-    if (!authClient) { setLoadingEntry(false); return; }
+    const client = getAuthenticatedClient(user.id) || supabase;
+    if (!client) { setLoadingEntry(false); return; }
     (async () => {
       try {
-        const { data } = await authClient.from('diary_entries')
+        const { data } = await client.from('diary_entries')
           .select('*').eq('kakao_id', String(user.id)).eq('date', today).single();
         if (data) {
           setTodayEntry(data);
@@ -102,13 +102,13 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     // Supabase 저장 (인증 클라이언트 사용)
     if (user?.id) {
       try {
-        const authClient = getAuthenticatedClient(user.id);
-        if (authClient) {
+        const client = getAuthenticatedClient(user.id) || supabase;
+        if (client) {
           const payload = { kakao_id: String(user.id), date: today, ...entry };
           if (todayEntry?.id) {
-            await authClient.from('diary_entries').update(entry).eq('id', todayEntry.id);
+            await client.from('diary_entries').update(entry).eq('id', todayEntry.id).eq('kakao_id', String(user.id));
           } else {
-            const { data: inserted } = await authClient.from('diary_entries').insert(payload).select('id').single();
+            const { data: inserted } = await client.from('diary_entries').insert(payload).select('id').single();
             if (inserted?.id) setTodayEntry({ id: inserted.id, ...payload });
           }
         }
