@@ -5,7 +5,7 @@ import { getSun } from "../utils/astrology.js";
 // ═══════════════════════════════════════════════════════════
 //  💞 1대1 별숨 — 두 별의 인연 읽기
 // ═══════════════════════════════════════════════════════════
-export default function CompatPage({ myForm, mySaju, mySun, callApi, buildCtx, onBack, shareResult, user }) {
+export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, shareResult, user }) {
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
   const [storyResult, setStoryResult] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
