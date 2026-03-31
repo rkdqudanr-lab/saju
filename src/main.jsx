@@ -24,6 +24,18 @@ class ErrorBoundary extends React.Component {
   static getDerivedStateFromError(error) {
     return { hasError: true, error }
   }
+  componentDidCatch(error) {
+    const msg = error?.message || '';
+    const isChunkError =
+      error?.name === 'ChunkLoadError' ||
+      /Loading chunk \d+ failed/i.test(msg) ||
+      /Failed to fetch dynamically imported module/i.test(msg) ||
+      /Importing a module script failed/i.test(msg);
+    if (isChunkError && !sessionStorage.getItem('_chunkErrReloaded')) {
+      sessionStorage.setItem('_chunkErrReloaded', '1');
+      window.location.reload();
+    }
+  }
   render() {
     if (this.state.hasError) {
       return (
