@@ -6,13 +6,22 @@ const DEFAULT_FORM    = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', 
 const DEFAULT_OTHER   = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_QUIZ    = { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
 
-// ── 인증 세션만 localStorage 사용 (다른 모든 데이터는 Supabase) ──
+// ── 인증 세션 + JWT 토큰 localStorage 관리 ──
 function getAuthUser() {
   try { return JSON.parse(localStorage.getItem('byeolsoom_user')); } catch { return null; }
 }
 function setAuthUser(val) {
   try { localStorage.setItem('byeolsoom_user', val === null ? '' : JSON.stringify(val)); } catch {}
   if (val === null) { try { localStorage.removeItem('byeolsoom_user'); } catch {} }
+}
+export function getAuthToken() {
+  try { return localStorage.getItem('byeolsoom_jwt') || null; } catch { return null; }
+}
+function setAuthToken(token) {
+  try {
+    if (token) { localStorage.setItem('byeolsoom_jwt', token); }
+    else { localStorage.removeItem('byeolsoom_jwt'); }
+  } catch {}
 }
 
 export function useUserProfile() {
@@ -86,6 +95,7 @@ export function useUserProfile() {
         const res  = await fetch('/api/kakao-auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, redirectUri: window.location.origin }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || '인증 실패');
+        if (data.token) setAuthToken(data.token);
         const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: data.profileImage || null };
         setUser(userData);
         setAuthUser(userData);
@@ -281,6 +291,7 @@ export function useUserProfile() {
     setOtherProfiles([]);
     setConsentFlags(null);
     setAuthUser(null);
+    setAuthToken(null);
   }, []);
 
   const startEditOtherProfile = useCallback((idx) => {
