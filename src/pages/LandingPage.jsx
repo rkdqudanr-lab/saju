@@ -3,19 +3,12 @@ import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/const
 import { isTodayAnswered } from "../utils/quiz.js";
 import DailyStarCard from "../components/DailyStarCard.jsx";
 import SamplePreview from "../components/SamplePreview.jsx";
-const DiaryPage = /* @__PURE__ */ (() => import("../components/DiaryPage.jsx"))();
-
 function PageSpinner() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
       <div style={{ width: 36, height: 36, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite' }} />
     </div>
   );
-}
-
-function LazyDiaryPage(props) {
-  const Comp = require('../components/DiaryPage.jsx').default ?? null;
-  return Comp ? <Comp {...props} /> : null;
 }
 
 export default function LandingPage({

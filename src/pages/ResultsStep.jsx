@@ -9,7 +9,7 @@ export default function ResultsStep({
   chatLeft, curPkg,
   showSubNudge,
   user, copyDone,
-  resultsRef,
+  formOk, resultsRef,
   handleAccToggle, handleTypingDone, retryAnswer,
   shareCard, handleCopyAll, shareResult,
   setStep, setSelQs, setDiy, setShowSidebar, setShowUpgradeModal,
@@ -142,7 +142,7 @@ export default function ResultsStep({
             </div>
 
             <div className="res-btns">
-              <button className="res-btn" onClick={() => { setSelQs([]); setDiy(''); resetSession(); setStep(2); }}>다른 질문</button>
+              <button className="res-btn" onClick={() => { setSelQs([]); setDiy(''); resetSession(); setStep(formOk ? 2 : 1); }}>다른 질문</button>
               <button className="res-btn" onClick={() => setShowSidebar(true)}>지난 이야기</button>
               <button className="res-btn" onClick={() => setStep(0)}>홈으로</button>
             </div>
