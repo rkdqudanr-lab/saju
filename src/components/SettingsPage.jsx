@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 // ═══════════════════════════════════════════════════════════
 //  ⚙️ 설정 페이지
@@ -57,17 +57,21 @@ export default function SettingsPage({
   setForm,
   user,
   saveProfileToSupabase,
-  onBack,
   showToast,
   responseStyle: responseStyleProp = 'M',
   onStyleChange,
 }) {
   const [tab, setTab] = useState(0); // 0: 개인정보, 1: 요금제, 2: 스타일
-  const [localForm, setLocalForm] = useState({ ...form });
+  const [localForm, setLocalForm] = useState(form || {});
   const [saving, setSaving] = useState(false);
 
-  // T/F 스타일: props 기반 (Supabase에 저장됨)
-  const responseStyle = responseStyleProp;
+  // form prop이 지연 전달될 때 localForm 동기화
+  useEffect(() => {
+    if (form) setLocalForm(form);
+  }, [form]);
+
+  // T/F 스타일: props 기반 (Supabase에 저장됨), null 방어
+  const responseStyle = responseStyleProp || 'M';
 
   const handleStyleChange = useCallback((val) => {
     onStyleChange?.(val);
@@ -91,8 +95,6 @@ export default function SettingsPage({
       setSaving(false);
     }
   }, [localForm, setForm, user, saveProfileToSupabase, showToast]);
-
-  const styleIdx = STYLE_OPTIONS.findIndex(s => s.value === responseStyle);
 
   return (
     <div className="page step-fade" style={{ paddingTop: 56 }}>
