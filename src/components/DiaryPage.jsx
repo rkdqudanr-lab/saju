@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase.js";
+import { getAuthenticatedClient } from "../lib/supabase.js";
 import { DIARY_PROMPT } from "../utils/constants.js";
 
 // ═══════════════════════════════════════════════════════════
@@ -56,12 +56,19 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
 
   const today = new Date().toISOString().slice(0, 10);
 
-  // 오늘 일기 불러오기
+  // diaryReviewResult가 있으면 submitted 자동 설정 (새로고침 후 결과 복원)
   useEffect(() => {
-    if (!supabase || !user?.id) { setLoadingEntry(false); return; }
+    if (diaryReviewResult) setSubmitted(true);
+  }, [diaryReviewResult]);
+
+  // 오늘 일기 불러오기 (인증 클라이언트 사용)
+  useEffect(() => {
+    if (!user?.id) { setLoadingEntry(false); return; }
+    const authClient = getAuthenticatedClient(user.id);
+    if (!authClient) { setLoadingEntry(false); return; }
     (async () => {
       try {
-        const { data } = await supabase.from('diary_entries')
+        const { data } = await authClient.from('diary_entries')
           .select('*').eq('kakao_id', String(user.id)).eq('date', today).single();
         if (data) {
           setTodayEntry(data);
@@ -90,14 +97,18 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       content: content.trim() || '',
     };
 
-    // Supabase 저장
-    if (supabase && user?.id) {
+    // Supabase 저장 (인증 클라이언트 사용)
+    if (user?.id) {
       try {
-        const payload = { kakao_id: user.id, date: today, ...entry };
-        if (todayEntry?.id) {
-          await supabase.from('diary_entries').update(entry).eq('id', todayEntry.id);
-        } else {
-          await supabase.from('diary_entries').insert(payload);
+        const authClient = getAuthenticatedClient(user.id);
+        if (authClient) {
+          const payload = { kakao_id: String(user.id), date: today, ...entry };
+          if (todayEntry?.id) {
+            await authClient.from('diary_entries').update(entry).eq('id', todayEntry.id);
+          } else {
+            const { data: inserted } = await authClient.from('diary_entries').insert(payload).select('id').single();
+            if (inserted?.id) setTodayEntry({ id: inserted.id, ...payload });
+          }
         }
       } catch (e) {
         console.error('[DiaryPage] 저장 오류:', e);
@@ -112,6 +123,10 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       const context = `[오늘의 기분: ${moodLabel}] [날씨: ${weatherLabel}] [에너지: ${energyLabel}]${gratitude ? `\n[감사한 일: ${gratitude}]` : ''}${tomorrowGoal ? `\n[내일 목표: ${tomorrowGoal}]` : ''}`;
       askReview(`${context}\n\n${content.trim()}`, DIARY_PROMPT);
       setSubmitted(true);
+      // 임베디드 모드: 저장 후 전체 페이지로 이동해서 결과 보여주기
+      if (embedded && setStep) {
+        setStep(17);
+      }
     }
   };
 
@@ -271,7 +286,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
             onClick={handleSubmit}
             style={{ marginBottom: 8 }}
           >
-            별숨의 해석 듣기 ✦
+            저장하고 별숨의 해석듣기 ✦
           </button>
 
           {/* 별숨의 해석 */}
@@ -296,6 +311,26 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
                   </div>
                 )}
               </div>
+
+              {/* 해석 후 연결 버튼 */}
+              {!embedded && diaryReviewResult && !diaryReviewLoading && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button
+                    className="res-btn"
+                    style={{ flex: 1 }}
+                    onClick={() => setStep(10)}
+                  >
+                    🗓️ 별숨달력에서 보기
+                  </button>
+                  <button
+                    className="res-btn"
+                    style={{ flex: 1 }}
+                    onClick={() => setStep(0)}
+                  >
+                    ← 홈으로
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

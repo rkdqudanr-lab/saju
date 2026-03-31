@@ -126,9 +126,9 @@ export function useUserProfile() {
               by: String(saved.birth_year),
               bm: String(saved.birth_month),
               bd: String(saved.birth_day),
-              ...(saved.birth_hour != null && { bh: String(saved.birth_hour) }),
-              ...(saved.gender         && { gender: saved.gender }),
-              ...(saved.nickname       && { name: saved.nickname }),
+              ...(saved.birth_hour != null ? { bh: String(parseFloat(saved.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
+              ...(saved.gender   && { gender: saved.gender }),
+              ...(saved.nickname && { name: saved.nickname }),
             }));
           }
           if (saved?.consent_flags) {
@@ -179,7 +179,7 @@ export function useUserProfile() {
             by: String(data.birth_year),
             bm: String(data.birth_month),
             bd: String(data.birth_day),
-            ...(data.birth_hour != null && { bh: String(data.birth_hour) }),
+            ...(data.birth_hour != null ? { bh: String(parseFloat(data.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
             ...(data.gender    && { gender: data.gender }),
             ...(data.nickname  && { name: data.nickname }),
           });

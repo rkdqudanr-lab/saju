@@ -16,28 +16,44 @@ if (gaId) {
   gtag('config', gaId);
 }
 
+function isChunkLoadError(error) {
+  const msg = error?.message || '';
+  return (
+    error?.name === 'ChunkLoadError' ||
+    /Loading chunk \d+ failed/i.test(msg) ||
+    /Failed to fetch dynamically imported module/i.test(msg) ||
+    /Importing a module script failed/i.test(msg)
+  );
+}
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = { hasError: false, isChunkError: false, error: null }
   }
   static getDerivedStateFromError(error) {
-    return { hasError: true, error }
+    const chunk = isChunkLoadError(error);
+    return { hasError: true, isChunkError: chunk, error }
   }
   componentDidCatch(error) {
-    const msg = error?.message || '';
-    const isChunkError =
-      error?.name === 'ChunkLoadError' ||
-      /Loading chunk \d+ failed/i.test(msg) ||
-      /Failed to fetch dynamically imported module/i.test(msg) ||
-      /Importing a module script failed/i.test(msg);
-    if (isChunkError && !sessionStorage.getItem('_chunkErrReloaded')) {
+    // 청크 로드 오류 → 한 번만 자동 재로드 (배포 후 캐시 무효화 대응)
+    if (isChunkLoadError(error) && !sessionStorage.getItem('_chunkErrReloaded')) {
       sessionStorage.setItem('_chunkErrReloaded', '1');
       window.location.reload();
     }
   }
   render() {
     if (this.state.hasError) {
+      // 청크 오류: 재로드 중이면 빈 화면(깜빡임 없이 reload 대기)
+      if (this.state.isChunkError) {
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+            <div style={{ width: 32, height: 32, border: '3px solid #eee', borderTopColor: '#c8b06e', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        )
+      }
+      // 그 외 오류: 재시작 버튼 표시
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'sans-serif', color: '#888', gap: 12 }}>
           <div style={{ fontSize: 40 }}>🌙</div>
