@@ -33,6 +33,12 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
   const [aiLoading, setAiLoading] = useState(false);
   const [phase, setPhase] = useState('quiz'); // 'quiz' | 'ai' | 'done'
   const sheetRef = useRef(null);
+  const abortRef = useRef(null);
+
+  // 컴포넌트 언마운트 시 진행 중인 요청 취소
+  useEffect(() => {
+    return () => { if (abortRef.current) abortRef.current.abort(); };
+  }, []);
 
   const answeredCount = countAnswered(qa);
   const totalQ = PROFILE_QS.length;
@@ -107,6 +113,13 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
   };
 
   const triggerAiQuestions = async (finalQa) => {
+    // 로그인 안 된 경우 바로 완료
+    if (!user?.id) { setPhase('done'); return; }
+
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setAiLoading(true);
     setPhase('ai');
     try {
@@ -115,6 +128,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           userMessage: `사용자의 20가지 답변을 읽고, 이 사람에게 맞춤형 심층 질문 5개를 JSON 배열로만 답해주세요.
           형식: [{"id":"aq_1","q":"질문 내용"},...]
@@ -123,7 +137,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
           사용자 답변:
           ${summary}`,
           isProfileQuestion: true,
-          kakaoId: user?.id || null,
+          kakaoId: user.id,
           clientHour: new Date().getHours(),
         }),
       });
@@ -141,6 +155,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
         setPhase('done');
       }
     } catch (e) {
+      if (e?.name === 'AbortError') return;
       console.error('[별숨] AI 질문 생성 오류:', e);
       setPhase('done');
     } finally {
@@ -332,8 +347,8 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
           </div>
         )}
 
-        {/* 텍스트 입력 */}
-        {(activeQ.type === 'text' || activeQ.type === 'mixed') && (
+        {/* 텍스트 입력 — AI 질문은 type이 없으므로 text로 폴백 */}
+        {(activeQ.type === 'text' || activeQ.type === 'mixed' || (phase === 'ai' && !activeQ.type)) && (
           <div style={{ marginTop: activeQ.type === 'mixed' ? 0 : 0 }}>
             <textarea
               className="diy-inp"

@@ -229,7 +229,8 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       if (!kakaoId) return;
       let supabaseUserId = user?.supabaseId || null;
       if (!supabaseUserId) {
-        const { data: userRow } = await supabase.from('users').select('id').eq('kakao_id', String(kakaoId)).single();
+        const authClient = getAuthenticatedClient(kakaoId);
+        const { data: userRow } = await (authClient || supabase).from('users').select('id').eq('kakao_id', String(kakaoId)).single();
         supabaseUserId = userRow?.id || null;
       }
       if (!supabaseUserId) return;
