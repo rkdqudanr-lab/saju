@@ -38,6 +38,10 @@ const AstrologyPage            = lazy(() => import("./components/AstrologyPage.j
 const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
 const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
 const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
+
+// pages
+import ReportStep          from "./pages/ReportStep.jsx";
+import DailyHoroscopePage  from "./pages/DailyHoroscopePage.jsx";
 const SettingsPage             = lazy(() => import("./components/SettingsPage.jsx"));
 
 function PageSpinner() {
@@ -1299,44 +1303,11 @@ export default function App() {
 
         {/* ── Step 6: 월간 리포트 ── */}
         {step === 6 && (
-          <div className="page-top">
-            <div className="inner report-page">
-              <div className="report-header">
-                <div className="report-date">{today.year}년 {today.month}월 · {today.lunar}</div>
-                <div className="report-title">{form.name || '당신'}님의<br />심층 리포트</div>
-                <div className="report-name">사주 × 별자리 통합 운세</div>
-              </div>
-              {!reportLoading && !reportText ? (
-                <div style={{ textAlign: 'center', padding: 'var(--sp4) var(--sp3) var(--sp5)' }}>
-                  <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.8, marginBottom: 'var(--sp4)' }}>
-                    이번 달 별과 사주가 전하는<br />연애 · 재물 · 건강 · 직업 종합 에세이
-                  </div>
-                  <button className="up-btn" style={{ maxWidth: 320, margin: '0 auto' }} onClick={genReport}>
-                    당신의 이번달 별숨은? ✦
-                  </button>
-                </div>
-              ) : reportLoading ? (
-                <div style={{ textAlign: 'center', padding: 'var(--sp5)', color: 'var(--t3)', fontSize: 'var(--sm)' }}>
-                  <div className="load-orb-wrap">
-                    <div className="load-orb">
-                      <div className="load-orb-core" /><div className="load-orb-ring" /><div className="load-orb-ring2" />
-                    </div>
-                  </div>
-                  별의 움직임을 분석하여<br />심층 리포트를 작성하고 있습니다...
-                </div>
-              ) : (
-                <>
-                  <ReportBody text={reportText} />
-                  {reportText && (
-                    <div style={{ display: 'flex', gap: 8, marginTop: 'var(--sp3)' }}>
-                      <button className="res-top-btn" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)' }} onClick={() => shareCard(0)}>🖼 이미지 저장</button>
-                      <button className="res-top-btn primary" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)' }} onClick={() => shareResult('report', reportText, '월간 리포트')}>↗ 공유하기</button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+          <ReportStep
+            form={form} today={today}
+            reportText={reportText} reportLoading={reportLoading}
+            genReport={genReport} shareCard={shareCard} shareResult={shareResult}
+          />
         )}
 
         {/* ── Step 7: 궁합 ── */}
@@ -1476,52 +1447,12 @@ export default function App() {
 
         {/* ── Step 18: 오늘 하루 나의 별숨 (운세 카드) ── */}
         {step === 18 && (
-          <div className="page step-fade">
-            <div className="inner" style={{ paddingTop: 16, paddingBottom: 40 }}>
-              <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>🌟</div>
-                <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
-                  오늘 하루 나의 별숨
-                </div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-                  {today.month}월 {today.day}일 · 매일 새로워져요
-                </div>
-              </div>
-              {dailyLoading ? (
-                <div className="dsc-loading-btn">
-                  <span>별숨이 오늘을 읽고 있어요</span>
-                  <span className="dsc-loading-dot" />
-                  <span className="dsc-loading-dot" />
-                  <span className="dsc-loading-dot" />
-                </div>
-              ) : dailyResult ? (
-                <>
-                  <DailyStarCard result={dailyResult} />
-                  {dailyCount < DAILY_MAX ? (
-                    <button
-                      className="cta-main"
-                      style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 12, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }}
-                      onClick={askDailyHoroscope}
-                    >
-                      다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
-                    </button>
-                  ) : (
-                    <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 12 }}>
-                      오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙
-                    </div>
-                  )}
-                </>
-              ) : (
-                <button
-                  className="cta-main"
-                  style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }}
-                  onClick={askDailyHoroscope}
-                >
-                  오늘 기운 확인하기 ✦
-                </button>
-              )}
-            </div>
-          </div>
+          <DailyHoroscopePage
+            today={today}
+            dailyResult={dailyResult} dailyLoading={dailyLoading}
+            dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
+            askDailyHoroscope={askDailyHoroscope}
+          />
         )}
 
         {/* ── Step 19: 설정 ── */}
