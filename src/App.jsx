@@ -12,6 +12,7 @@ import { getTodayStr, isTodayAnswered } from "./utils/quiz.js";
 import { useUserProfile }   from "./hooks/useUserProfile.js";
 import { useSajuContext }   from "./hooks/useSajuContext.js";
 import { useConsultation }  from "./hooks/useConsultation.js";
+import { useNavigation }    from "./hooks/useNavigation.js";
 
 // supabase
 import { supabase } from "./lib/supabase.js";
@@ -88,14 +89,6 @@ export default function App() {
   // quiz는 userProfile.quizState 에서 가져옴 (아래)
   const [quizInput, setQuizInput] = useState('');
   const [profileNudge, setProfileNudge] = useState(null);
-  const [refCode] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('ref') || null;
-  });
-  const [groupCode] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('group') || null;
-  });
   const toastTimer = useRef(null);
   const copyTimer = useRef(null);
   const resultsRef = useRef(null);
@@ -155,6 +148,8 @@ export default function App() {
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
   const IS_BETA = true; // 베타 기간 종료 시 false로 변경
+
+  const { refCode, groupCode } = useNavigation({ step, setStep, resultsRef, showToast, loginError, setLoginError });
 
   // 첫 번째 답변 완료 시 구독 넛지 표시
   const handleTypingDone = useCallback((idx) => {
@@ -228,68 +223,6 @@ export default function App() {
     const hint = detectProfileHint(userMsg.text, profile);
     if (hint) setProfileNudge(hint);
   }, [chatHistory]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── loginError 토스트 표시 ──
-  useEffect(() => {
-    if (loginError) { showToast(loginError, 'error'); setLoginError(''); }
-  }, [loginError, showToast, setLoginError]);
-
-  // ── 초대 코드 저장 (기기별 임시 저장) ──
-  useEffect(() => {
-    if (refCode) { try { localStorage.setItem('byeolsoom_ref', refCode); } catch {} }
-  }, [refCode]);
-
-  useEffect(() => {
-    if (groupCode) setStep(11);
-  }, [groupCode, setStep]);
-
-  // ── 화면 전환 시 스크롤 맨 위로 ──
-  useEffect(() => {
-    if (step !== 3) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
-  }, [step]);
-
-  // ── 결과 자동 스크롤 ──
-  useEffect(() => {
-    if (step === 4 && resultsRef.current) {
-      setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
-    }
-  }, [step]);
-
-  // ── GA4 step 변경 추적 ──
-  useEffect(() => {
-    if (step === 3) return;
-    if (typeof window.gtag === 'function') window.gtag('event', 'step_change', { step });
-    if (step === 2 && typeof window.gtag === 'function') window.gtag('event', 'step2_enter');
-    if (step === 5 && typeof window.gtag === 'function') window.gtag('event', 'chat_page_enter');
-    if (step === 6 && typeof window.gtag === 'function') window.gtag('event', 'report_page_enter');
-    if (step === 7 && typeof window.gtag === 'function') window.gtag('event', 'compat_page_enter');
-  }, [step]);
-
-  // ── 브라우저 히스토리 동기화 (뒤로가기 UX 개선) ──
-  const isPopState = useRef(false);
-
-  // step이 바뀔 때마다 브라우저 히스토리에 push (로딩 step 3은 제외)
-  useEffect(() => {
-    if (step === 3) return; // 로딩 페이지는 히스토리에 쌓지 않음
-    if (isPopState.current) {
-      isPopState.current = false;
-      return;
-    }
-    window.history.pushState({ step }, '', window.location.pathname);
-  }, [step]);
-
-  // 브라우저 뒤로가기/앞으로가기 이벤트 처리
-  useEffect(() => {
-    const handlePopState = (e) => {
-      const prevStep = e.state?.step ?? 0;
-      isPopState.current = true;
-      setStep(prevStep);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [setStep]);
 
   // ── 모달 열림 시 body 스크롤 잠금 ──
   useEffect(() => {
