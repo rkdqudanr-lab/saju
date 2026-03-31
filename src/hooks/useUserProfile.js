@@ -371,7 +371,12 @@ export function useUserProfile() {
     if (supabase) {
       const kakaoId = getAuthUser()?.id;
       if (kakaoId) {
-        await supabase.from('users').upsert({ kakao_id: kakaoId, consent_flags: saved, updated_at: new Date().toISOString() }, { onConflict: 'kakao_id', ignoreDuplicates: false });
+        try {
+          const authClient = getAuthenticatedClient(kakaoId);
+          await (authClient || supabase).from('users').upsert({ kakao_id: kakaoId, consent_flags: saved, updated_at: new Date().toISOString() }, { onConflict: 'kakao_id', ignoreDuplicates: false });
+        } catch (e) {
+          console.error('[별숨] 동의 저장 오류:', e);
+        }
       }
     }
     setShowConsentModal(false);
