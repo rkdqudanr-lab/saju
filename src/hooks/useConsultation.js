@@ -25,7 +25,7 @@ async function loadDailyCacheFromSupabase(userId, type) {
     const { data } = await (authClient || supabase)
       .from('daily_cache')
       .select('content')
-      .eq('kakao_id', userId)
+      .eq('kakao_id', String(userId))
       .eq('cache_date', getTodayDateStr())
       .eq('cache_type', type)
       .single();
@@ -38,7 +38,7 @@ async function saveDailyCacheToSupabase(userId, type, content) {
   try {
     const authClient = getAuthenticatedClient(userId);
     await (authClient || supabase).from('daily_cache').upsert({
-      kakao_id:   userId,
+      kakao_id:   String(userId),
       cache_date: getTodayDateStr(),
       cache_type: type,
       content,

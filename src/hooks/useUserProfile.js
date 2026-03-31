@@ -224,11 +224,11 @@ export function useUserProfile() {
     if (!supabase || !currentUser?.id) return;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
-      await (authClient || supabase).from('other_profiles').delete().eq('kakao_id', currentUser.id);
+      await (authClient || supabase).from('other_profiles').delete().eq('kakao_id', String(currentUser.id));
       if (profiles.length > 0) {
         await (authClient || supabase).from('other_profiles').insert(
           profiles.map((p, i) => ({
-            kakao_id:    currentUser.id,
+            kakao_id:    String(currentUser.id),
             name:        p.name || '',
             birth_year:  p.by ? parseInt(p.by, 10) : null,
             birth_month: p.bm ? parseInt(p.bm, 10) : null,
@@ -260,7 +260,7 @@ export function useUserProfile() {
     if (!Object.keys(dbUpdates).length) return;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
-      await (authClient || supabase).from('users').update({ ...dbUpdates, updated_at: new Date().toISOString() }).eq('kakao_id', currentUser.id);
+      await (authClient || supabase).from('users').update({ ...dbUpdates, updated_at: new Date().toISOString() }).eq('kakao_id', String(currentUser.id));
     } catch (e) {
       console.error('[별숨] 설정 저장 오류:', e);
     }
