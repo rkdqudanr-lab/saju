@@ -36,10 +36,13 @@ class ErrorBoundary extends React.Component {
     return { hasError: true, isChunkError: chunk, error }
   }
   componentDidCatch(error) {
-    // 청크 로드 오류 → 한 번만 자동 재로드 (배포 후 캐시 무효화 대응)
-    if (isChunkLoadError(error) && !sessionStorage.getItem('_chunkErrReloaded')) {
-      sessionStorage.setItem('_chunkErrReloaded', '1');
-      window.location.reload();
+    // 청크 로드 오류 → 최대 3회 자동 재로드 (배포 후 CDN 캐시 무효화 대응)
+    if (isChunkLoadError(error)) {
+      const count = parseInt(sessionStorage.getItem('_chunkErrReloaded') || '0', 10);
+      if (count < 3) {
+        sessionStorage.setItem('_chunkErrReloaded', String(count + 1));
+        window.location.reload();
+      }
     }
   }
   render() {
