@@ -1,7 +1,8 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { ON } from "../utils/saju.js";
 import { CATS, CATS_ALL } from "../utils/constants.js";
 import { TIME_CONFIG } from "../utils/time.js";
+import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 
 export default function QuestionStep({
   form, saju, sun, moon,
@@ -13,7 +14,30 @@ export default function QuestionStep({
   showAllCats, setShowAllCats,
   addQ, rmQ, askQuick, askClaude,
   askBtnRef,
+  user,
 }) {
+  const [recentQs, setRecentQs] = useState([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    loadAnalysisCache(user.id, 'recent_questions').then(s => {
+      try { setRecentQs(JSON.parse(s || '[]')); } catch { setRecentQs([]); }
+    });
+  }, [user?.id]);
+
+  const handleAskQuick = useCallback((q) => {
+    if (!q.trim()) return;
+    setDiy('');
+    askQuick(q);
+    if (user?.id) {
+      setRecentQs(prev => {
+        const deduped = prev.filter(r => r !== q);
+        const next = [q, ...deduped].slice(0, 5);
+        saveAnalysisCache(user.id, 'recent_questions', JSON.stringify(next));
+        return next;
+      });
+    }
+  }, [askQuick, setDiy, user?.id]);
   return (
     <div className="page">
       <div className="inner">
@@ -43,13 +67,26 @@ export default function QuestionStep({
 
           <div className="diy-wrap" style={{ marginBottom: diy.trim() ? 0 : 'var(--sp2)' }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 6, letterSpacing: '.06em' }}>✦ 직접 물어보기</div>
+            {recentQs.length > 0 && !diy.trim() && (
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>최근 질문</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {recentQs.map((q, i) => (
+                    <button key={i} onClick={() => setDiy(q)}
+                      style={{ padding: '4px 10px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t3)', fontSize: 'var(--xs)', cursor: 'pointer', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {q.length > 22 ? q.slice(0, 22) + '…' : q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <textarea className="diy-inp"
               placeholder="직접 묻고 싶은 게 있어요? 자유롭게 써봐요 🌙"
               maxLength={200} value={diy} onChange={e => setDiy(e.target.value)} />
             <div className="diy-row"><span className="hint">{diy.length}/200</span></div>
             {diy.trim() && (
               <button className="btn-main" style={{ marginTop: 8 }}
-                onClick={() => { const q = diy.trim(); if (q) { setDiy(''); askQuick(q); } }}>
+                onClick={() => handleAskQuick(diy.trim())}>
                 ✦ 질문하기
               </button>
             )}
