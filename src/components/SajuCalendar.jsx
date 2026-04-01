@@ -92,7 +92,7 @@ function parseFortuneText(text) {
 
 const FORTUNE_ITEM_ICONS = ['🎨', '🌿', '🧭', '✨', '🌙'];
 
-export default function SajuCalendar({ form, setStep, askQuick, user, callApi }) {
+export default function SajuCalendar({ form, setStep, askQuick, user, callApi, showToast }) {
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
@@ -219,14 +219,17 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi })
     setInputText('');
     if (user?.id) {
       const authClient = getAuthenticatedClient(user.id);
-      const { data } = await (authClient || supabase)
+      const { data, error } = await (authClient || supabase)
         .from('calendar_events')
         .insert({ kakao_id: user.id, date: selectedKey, title })
         .select('id').single();
-      if (data?.id) {
-        const newEvent = { id: data.id, supabaseId: data.id, title };
-        setEvents(prev => ({ ...prev, [selectedKey]: [...(prev[selectedKey] || []), newEvent] }));
+      if (error || !data?.id) {
+        setInputText(title); // 텍스트 복원
+        showToast?.('일정 저장에 실패했어요. 다시 시도해봐요 🌙', 'error');
+        return;
       }
+      const newEvent = { id: data.id, supabaseId: data.id, title };
+      setEvents(prev => ({ ...prev, [selectedKey]: [...(prev[selectedKey] || []), newEvent] }));
     } else {
       // 비로그인: 세션 메모리에만 (저장 안 됨)
       const newEvent = { id: Date.now(), title };
