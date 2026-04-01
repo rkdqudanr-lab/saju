@@ -196,6 +196,7 @@ export default function App() {
       {showSidebar && (
         <Sidebar
           user={user} step={step}
+          histItems={histItems}
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
             // 출생정보가 필요한 페이지들: formOk 없으면 step 1로
@@ -242,6 +243,7 @@ export default function App() {
         {step === 0 && (
           <LandingPage
             user={user} form={form} saju={saju} sun={sun} today={today}
+            otherProfiles={otherProfiles}
             formOk={formOk} profile={profile}
             quiz={quiz} quizInput={quizInput} setQuizInput={setQuizInput}
             dailyResult={dailyResult} dailyLoading={dailyLoading}
@@ -255,6 +257,7 @@ export default function App() {
             askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview}
             resetDiaryReview={resetDiaryReview}
             handleQuizAnswer={handleQuizAnswer} handleQuizSkip={handleQuizSkip}
+            showToast={showToast}
             DiaryPageLazy={DiaryPage}
           />
         )}
@@ -288,6 +291,7 @@ export default function App() {
             showAllCats={showAllCats} setShowAllCats={setShowAllCats}
             addQ={addQ} rmQ={rmQ} askQuick={askQuick} askClaude={askClaude}
             askBtnRef={askBtnRef}
+            user={user}
           />
         )}
 
@@ -475,6 +479,7 @@ export default function App() {
               setStep={setStep}
               diaryReviewResult={diaryReviewResult}
               diaryReviewLoading={diaryReviewLoading}
+              showToast={showToast}
             />
           </Suspense>
         )}

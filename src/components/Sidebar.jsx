@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { loadHistory, deleteHistory } from "../utils/history.js";
+import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 
 // ═══════════════════════════════════════════════════════════
 //  🗂️ 사이드바
@@ -36,11 +37,13 @@ function getDateRange(filter) {
   return null;
 }
 
-export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther, onSettings }) {
-  const [histItems, setHistItems] = useState(() => loadHistory());
+export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther, onSettings, histItems: histItemsProp }) {
+  const [histItems, setHistItems] = useState(() => histItemsProp || loadHistory());
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [starredIds, setStarredIds] = useState(new Set());
   const debounceRef = useRef(null);
 
   // 300ms 디바운스 처리
@@ -52,9 +55,33 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
 
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
+  // histItemsProp 변경 시 동기화
+  useEffect(() => { if (histItemsProp) setHistItems(histItemsProp); }, [histItemsProp]);
+
+  // 즐겨찾기 로드 (Supabase)
+  useEffect(() => {
+    if (!user?.id) return;
+    loadAnalysisCache(user.id, 'starred_consultations').then(s => {
+      try { setStarredIds(new Set(JSON.parse(s || '[]'))); } catch { setStarredIds(new Set()); }
+    });
+  }, [user?.id]);
+
+  const toggleStar = useCallback(async (itemId, e) => {
+    e.stopPropagation();
+    if (!user?.id) return;
+    setStarredIds(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId); else next.add(itemId);
+      saveAnalysisCache(user.id, 'starred_consultations', JSON.stringify([...next]));
+      return next;
+    });
+  }, [user?.id]);
+
   const rangeStart = getDateRange(dateFilter);
 
   const filtered = histItems.filter(h => {
+    // 즐겨찾기 필터
+    if (showStarredOnly && !starredIds.has(h.id)) return false;
     // 날짜 필터
     if (rangeStart) {
       const hDate = new Date(h.ts || h.date);
@@ -163,7 +190,17 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
           </div>
 
           <div className="sidebar-section">
-            <div className="sidebar-section-lbl">지난 이야기 ({histCount})</div>
+            <div className="sidebar-section-lbl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>지난 이야기 ({histCount})</span>
+              {user && histCount > 0 && (
+                <button
+                  onClick={() => setShowStarredOnly(v => !v)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--xs)', color: showStarredOnly ? 'var(--gold)' : 'var(--t4)', padding: '2px 4px', borderRadius: 4 }}
+                  aria-pressed={showStarredOnly}
+                  aria-label="즐겨찾기만 보기"
+                >{showStarredOnly ? '⭐ 즐겨찾기' : '☆ 즐겨찾기'}</button>
+              )}
+            </div>
             {histNearLimit && (
               <div role="status" aria-live="polite" style={{ margin: '0 var(--sp3) 8px', padding: '8px 12px', background: 'var(--rosef)', border: '1px solid var(--roseacc)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--rose)' }}>
                 기록이 거의 가득 찼어요 ({histCount}/{30}). 오래된 기록을 삭제해봐요.
@@ -214,6 +251,13 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 2 }}>
                       +{h.questions.length - 1}개 더
                     </div>
+                  )}
+                  {user && (
+                    <button
+                      onClick={e => toggleStar(h.id, e)}
+                      aria-label={starredIds.has(h.id) ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                      style={{ position: 'absolute', right: 28, top: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--xs)', padding: '2px 4px', color: starredIds.has(h.id) ? 'var(--gold)' : 'var(--t4)' }}
+                    >{starredIds.has(h.id) ? '⭐' : '☆'}</button>
                   )}
                   <button
                     className="shi-del"

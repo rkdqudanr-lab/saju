@@ -247,6 +247,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
         await (authClient || supabase).from('calendar_events').delete().eq('id', target.supabaseId).eq('kakao_id', String(user.id));
       } catch (e) {
         console.error('[별숨] 일정 삭제 오류:', e);
+        showToast?.('일정 삭제에 실패했어요...', 'error');
         return; // DB 실패 시 로컬 상태 유지
       }
     }
@@ -278,6 +279,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
         await (authClient || supabase).from('calendar_events').update({ title }).eq('id', target.supabaseId).eq('kakao_id', String(user.id));
       } catch (e) {
         console.error('[별숨] 일정 수정 오류:', e);
+        showToast?.('일정 수정에 실패했어요...', 'error');
         setEditingEventId(null);
         setEditingEventText('');
         return;

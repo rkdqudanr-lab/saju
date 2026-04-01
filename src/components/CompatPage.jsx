@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
+import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 
 function getDaysInMonth(year, month) {
   if (!month) return 31;
@@ -15,6 +16,26 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
   const [storyResult, setStoryResult] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
+  const storyLoadingRef = useRef(false);
+  const [recentPartners, setRecentPartners] = useState([]);
+
+  // 최근 궁합 파트너 로드 (Supabase)
+  useEffect(() => {
+    if (!user?.id) return;
+    loadAnalysisCache(user.id, 'compat_recent').then(s => {
+      try { setRecentPartners(JSON.parse(s || '[]')); } catch { setRecentPartners([]); }
+    });
+  }, [user?.id]);
+
+  const saveRecentPartner = useCallback((p) => {
+    if (!user?.id || !p.by) return;
+    setRecentPartners(prev => {
+      const deduped = prev.filter(r => !(r.name === p.name && r.by === p.by && r.bm === p.bm && r.bd === p.bd));
+      const next = [{ name: p.name, by: p.by, bm: p.bm, bd: p.bd, gender: p.gender }, ...deduped].slice(0, 3);
+      saveAnalysisCache(user.id, 'compat_recent', JSON.stringify(next));
+      return next;
+    });
+  }, [user?.id]);
 
   const partnerSaju = useMemo(() => {
     if (partner.by && partner.bm && partner.bd) {
@@ -54,10 +75,14 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
   };
 
   const runStory = async () => {
+    if (storyLoadingRef.current) return;
+    storyLoadingRef.current = true;
     setStoryLoading(true);
     setStoryResult(null);
     const now = new Date();
     const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 15000);
     try {
       const res = await fetch('/api/ask', {
         method: 'POST',
@@ -69,9 +94,11 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
           kakaoId: user?.id || null,
           clientHour: new Date().getHours(),
         }),
+        signal: ctrl.signal,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      saveRecentPartner(partner);
       try {
         const raw = data.text.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(raw);
@@ -93,6 +120,8 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
         moments: [], tip: '', chemistry: ''
       });
     } finally {
+      clearTimeout(timeout);
+      storyLoadingRef.current = false;
       setStoryLoading(false);
     }
   };
@@ -109,6 +138,20 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
           {/* 두 사람 */}
           <div className="compat-section">
             <div className="compat-label">두 사람</div>
+            {recentPartners.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6 }}>최근 비교한 사람</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {recentPartners.map((p, i) => (
+                    <button key={`${p.name}-${p.by}-${i}`}
+                      onClick={() => setPartner({ name: p.name || '', by: p.by || '', bm: p.bm || '', bd: p.bd || '', gender: p.gender || '' })}
+                      style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--xs)', cursor: 'pointer' }}>
+                      {p.name || '이름없음'} ({p.by}년)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="person-cards">
               <div className="person-card a-card">
                 <span className="person-badge a">나 (A)</span>
