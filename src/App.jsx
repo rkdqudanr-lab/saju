@@ -88,7 +88,7 @@ export default function App() {
           otherForm, setOtherForm, showProfileModal, setShowProfileModal,
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
-          loginLoading,
+          loginLoading, profileSyncing,
           kakaoLogin, kakaoLogout, saveOtherProfile,
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
@@ -158,6 +158,28 @@ export default function App() {
     saveSettings({ theme: isDark ? 'light' : 'dark' });
   }, [isDark, saveSettings]);
 
+  // ── 새 배포 후 ChunkLoadError 방지: 유저 로그인 시 lazy chunk 선제 프리패치 ──
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(() => {
+      import('./components/SajuCalendar.jsx').catch(() => {});
+      import('./components/GroupBulseumPage.jsx').catch(() => {});
+      import('./components/CompatPage.jsx').catch(() => {});
+      import('./components/FutureProphecyPage.jsx').catch(() => {});
+      import('./components/AnniversaryPage.jsx').catch(() => {});
+      import('./components/NatalInterpretationPage.jsx').catch(() => {});
+      import('./components/ComprehensivePage.jsx').catch(() => {});
+      import('./components/AstrologyPage.jsx').catch(() => {});
+      import('./components/DiaryPage.jsx').catch(() => {});
+      import('./components/HistoryPage.jsx').catch(() => {});
+      import('./components/SettingsPage.jsx').catch(() => {});
+      import('./components/ProfileModal.jsx').catch(() => {});
+      import('./components/OnboardingCards.jsx').catch(() => {});
+      import('./components/ConsentModal.jsx').catch(() => {});
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [user]);
+
   // ── 카카오 로그인 처리 중 로딩 화면 ──
   if (loginLoading) {
     return (
@@ -169,6 +191,27 @@ export default function App() {
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>별숨이 당신을 맞이하고 있어요</div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요 🌙</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ── 기존 로그인 유저 프로필 동기화 중 로딩 화면 (새로고침 시 버튼 플래시 방지) ──
+  if (profileSyncing) {
+    return (
+      <>
+        <StarCanvas isDark={isDark} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', gap: 24 }}>
+          <div className="land-orb" style={{ marginBottom: 8 }}>
+            <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>별숨 로그인 중</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요 🌙</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>

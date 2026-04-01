@@ -40,6 +40,10 @@ export function useUserProfile() {
   const [loginLoading, setLoginLoading] = useState(() =>
     new URLSearchParams(window.location.search).has('code')
   );
+  // 이미 로그인된 유저의 Supabase 프로필 동기화 중 여부 (새로고침 시 버튼 플래시 방지)
+  const [profileSyncing, setProfileSyncing] = useState(() =>
+    !!getAuthUser() && !new URLSearchParams(window.location.search).has('code')
+  );
 
   // ── 개인 설정 (Supabase 저장) ──
   const [responseStyle, setResponseStyle] = useState('M');
@@ -232,6 +236,8 @@ export function useUserProfile() {
       } else {
         console.error('[별숨] other_profiles 불러오기 오류:', othersRes.reason);
       }
+
+      setProfileSyncing(false);
     })();
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -428,6 +434,7 @@ export function useUserProfile() {
     handleConsentConfirm,
     loginError, setLoginError,
     loginLoading,
+    profileSyncing,
     responseStyle, theme, onboarded, quizState,
     saveSettings,
     kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile,

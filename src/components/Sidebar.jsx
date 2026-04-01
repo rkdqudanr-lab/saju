@@ -44,7 +44,9 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [starredIds, setStarredIds] = useState(new Set());
+  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, fortune: false });
   const debounceRef = useRef(null);
+  const toggleGroup = (key) => setOpenGroups(p => ({ ...p, [key]: !p[key] }));
 
   // 300ms 디바운스 처리
   const handleSearchChange = useCallback((val) => {
@@ -133,43 +135,10 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
         </div>
 
         <div className="sidebar-body">
+          {/* ── 나에 대해 (항상 펼침) ── */}
           <div className="sidebar-section">
-            <div className="sidebar-section-lbl">메뉴</div>
+            <div className="sidebar-section-lbl">나에 대해</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {[
-                { icon: '🏠', label: '홈', s: 0 },
-                { icon: '✦', label: '별숨에게 물어보기', s: 1 },
-                { icon: '🌟', label: '오늘 하루 나의 별숨', s: 'fortune' },
-                { icon: '📅', label: '월간 리포트', s: 6 },
-                { icon: '💞', label: '1대1 별숨', s: 7 },
-                { icon: '🔮', label: '별숨의 예언', s: 8 },
-                { icon: '🗓️', label: '별숨 달력', s: 10 },
-                { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
-                { icon: '🎂', label: '기념일 운세', s: 12 },
-                { icon: '🀄', label: '나의 별숨(사주원국과 별자리)', s: 13 },
-                { icon: '✦', label: '별숨의 종합사주', s: 14 },
-                { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
-                { icon: '📓', label: '나의 하루를 별숨에게', s: 17 },
-              ].map(m => (
-                <li key={m.s}>
-                  <button
-                    className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
-                    onClick={() => { onNav(m.s); onClose(); }}
-                    aria-current={step === m.s ? 'page' : undefined}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
-                  >
-                    <span className="smi-icon" aria-hidden="true">{m.icon}</span>
-                    <span className="smi-text">{m.label}</span>
-                  </button>
-                </li>
-              ))}
-              <li>
-                <button className="sidebar-menu-item" onClick={() => { onAddOther && onAddOther(); onClose(); }}
-                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAddOther && onAddOther(); onClose(); } }}>
-                  <span className="smi-icon" aria-hidden="true">👥</span>
-                  <span className="smi-text">다른 사람의 별숨 추가</span>
-                </button>
-              </li>
               {user && (
                 <li>
                   <button className="sidebar-menu-item" onClick={() => { onProfileOpen(); onClose(); }}
@@ -180,6 +149,13 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 </li>
               )}
               <li>
+                <button className="sidebar-menu-item" onClick={() => { onAddOther && onAddOther(); onClose(); }}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAddOther && onAddOther(); onClose(); } }}>
+                  <span className="smi-icon" aria-hidden="true">👥</span>
+                  <span className="smi-text">다른 사람의 별숨 추가</span>
+                </button>
+              </li>
+              <li>
                 <button className="sidebar-menu-item" onClick={() => { onSettings?.(); onClose(); }}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSettings?.(); onClose(); } }}>
                   <span className="smi-icon" aria-hidden="true">🛠️</span>
@@ -187,6 +163,97 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 </button>
               </li>
             </ul>
+          </div>
+
+          {/* ── 오늘의 별숨 (토글) ── */}
+          <div className="sidebar-section">
+            <button className="sidebar-group-header" onClick={() => toggleGroup('today')} aria-expanded={openGroups.today}>
+              <span>오늘의 별숨</span>
+              <span className="sidebar-group-arrow">{openGroups.today ? '▾' : '▸'}</span>
+            </button>
+            {openGroups.today && (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {[
+                  { icon: '🏠', label: '홈', s: 0 },
+                  { icon: '🌟', label: '오늘 하루 나의 별숨', s: 'fortune' },
+                  { icon: '📓', label: '나의 하루를 별숨에게', s: 17 },
+                  { icon: '🗓️', label: '별숨 달력', s: 10 },
+                ].map(m => (
+                  <li key={m.s}>
+                    <button
+                      className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                      onClick={() => { onNav(m.s); onClose(); }}
+                      aria-current={step === m.s ? 'page' : undefined}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                    >
+                      <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                      <span className="smi-text">{m.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* ── 별숨 상담 (토글) ── */}
+          <div className="sidebar-section">
+            <button className="sidebar-group-header" onClick={() => toggleGroup('consult')} aria-expanded={openGroups.consult}>
+              <span>별숨 상담</span>
+              <span className="sidebar-group-arrow">{openGroups.consult ? '▾' : '▸'}</span>
+            </button>
+            {openGroups.consult && (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {[
+                  { icon: '✦', label: '별숨에게 물어보기', s: 1 },
+                  { icon: '📅', label: '월간 리포트', s: 6 },
+                  { icon: '🔮', label: '별숨의 예언', s: 8 },
+                  { icon: '✦', label: '별숨의 종합사주', s: 14 },
+                  { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
+                ].map(m => (
+                  <li key={m.s}>
+                    <button
+                      className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                      onClick={() => { onNav(m.s); onClose(); }}
+                      aria-current={step === m.s ? 'page' : undefined}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                    >
+                      <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                      <span className="smi-text">{m.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* ── 운세 & 인연 (토글, 기본 접힘) ── */}
+          <div className="sidebar-section">
+            <button className="sidebar-group-header" onClick={() => toggleGroup('fortune')} aria-expanded={openGroups.fortune}>
+              <span>운세 & 인연</span>
+              <span className="sidebar-group-arrow">{openGroups.fortune ? '▾' : '▸'}</span>
+            </button>
+            {openGroups.fortune && (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {[
+                  { icon: '💞', label: '1대1 별숨 (궁합)', s: 7 },
+                  { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
+                  { icon: '🎂', label: '기념일 운세', s: 12 },
+                  { icon: '🀄', label: '나의 별숨 (사주원국·별자리)', s: 13 },
+                ].map(m => (
+                  <li key={m.s}>
+                    <button
+                      className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                      onClick={() => { onNav(m.s); onClose(); }}
+                      aria-current={step === m.s ? 'page' : undefined}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                    >
+                      <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                      <span className="smi-text">{m.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="sidebar-section">
