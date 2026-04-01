@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { stripMarkdown } from "../utils/constants.js";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
+import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 
 // ── 섹션 파서 ──
 function parseSections(text, tags) {
@@ -60,26 +61,6 @@ function SectionCard({ icon, title, text, delay = 0 }) {
   );
 }
 
-// ── Supabase analysis_cache 헬퍼 ──
-async function loadAnalysisCache(userId, cacheKey) {
-  if (!supabase || !userId) return null;
-  try {
-    const authClient = getAuthenticatedClient(userId);
-    const { data } = await (authClient || supabase)
-      .from('analysis_cache').select('content').eq('kakao_id', String(userId)).eq('cache_key', cacheKey).single();
-    return data?.content || null;
-  } catch { return null; }
-}
-async function saveAnalysisCache(userId, cacheKey, content) {
-  if (!supabase || !userId) return;
-  try {
-    const authClient = getAuthenticatedClient(userId);
-    await (authClient || supabase).from('analysis_cache').upsert(
-      { kakao_id: String(userId), cache_key: cacheKey, content },
-      { onConflict: 'kakao_id,cache_key' }
-    );
-  } catch (e) { console.error('[별숨] analysis_cache 저장 오류:', e); }
-}
 
 // ── 메인 컴포넌트 ──
 export default function AstrologyPage({ sun, moon, asc, form, buildCtx, user }) {
@@ -90,6 +71,7 @@ export default function AstrologyPage({ sun, moon, asc, form, buildCtx, user }) 
   const [text, setText]       = useState(() => { try { return localStorage.getItem(localKey) || ''; } catch { return ''; } });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(false);
+  const loadingRef            = useRef(false);
 
   // 로그인 시 Supabase에서 캐시 로드
   useEffect(() => {
@@ -100,7 +82,8 @@ export default function AstrologyPage({ sun, moon, asc, form, buildCtx, user }) 
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetch_ = useCallback(async () => {
-    if (loading) return;
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     setLoading(true);
     setError(false);
     setText('');
@@ -127,9 +110,10 @@ export default function AstrologyPage({ sun, moon, asc, form, buildCtx, user }) 
     } catch {
       setError(true);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [sun, moon, asc, buildCtx, cacheKey, localKey, loading, user?.id]);
+  }, [sun, moon, asc, buildCtx, cacheKey, localKey, user?.id]);
 
   const sections = parseSections(text, ASTRO_SECTIONS.map(s => s.tag));
   const hasContent = Object.values(sections).some(v => v);

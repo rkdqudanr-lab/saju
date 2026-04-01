@@ -26,8 +26,19 @@ function DiaryReviewPreview({ text }) {
   );
 }
 
+function getBdayDday(bm, bd) {
+  if (!bm || !bd) return null;
+  const now = new Date();
+  const thisYear = new Date(now.getFullYear(), parseInt(bm) - 1, parseInt(bd));
+  thisYear.setHours(0, 0, 0, 0);
+  const today0 = new Date(now); today0.setHours(0, 0, 0, 0);
+  const next = thisYear >= today0 ? thisYear : new Date(now.getFullYear() + 1, parseInt(bm) - 1, parseInt(bd));
+  return Math.round((next - today0) / 86400000);
+}
+
 export default function LandingPage({
   user, form, saju, sun, today,
+  otherProfiles,
   formOk, profile,
   quiz, quizInput, setQuizInput,
   dailyResult, dailyLoading, dailyCount, DAILY_MAX,
@@ -39,6 +50,7 @@ export default function LandingPage({
   setEditingMyProfile, setShowProfileModal,
   askDailyHoroscope, askDiaryReview, resetDiaryReview,
   handleQuizAnswer, handleQuizSkip,
+  showToast,
   DiaryPageLazy,
 }) {
   return (
@@ -162,6 +174,7 @@ export default function LandingPage({
                                     user={user} form={form} saju={saju} sun={sun} buildCtx={buildCtx}
                                     askReview={askDiaryReview} setStep={setStep} embedded={true}
                                     diaryReviewResult={diaryReviewResult} diaryReviewLoading={diaryReviewLoading}
+                                    showToast={showToast}
                                   />
                                 )}
                               </Suspense>
@@ -277,6 +290,7 @@ export default function LandingPage({
                                   value={quizInput}
                                   onChange={e => setQuizInput(e.target.value)}
                                   onKeyDown={e => e.key === 'Enter' && handleQuizAnswer(q, quizInput)}
+                                  maxLength={200}
                                   style={{ flex: 1 }} />
                                 <button className="chat-send" onClick={() => handleQuizAnswer(q, quizInput)} disabled={!quizInput.trim()} style={{ flexShrink: 0 }}>✦</button>
                               </div>
@@ -348,6 +362,39 @@ export default function LandingPage({
 
         {!user && <div className="land-scroll-hint"><span>↓</span></div>}
       </div>
+
+      {/* ── 생일 D-Day 위젯 ── */}
+      {user && form.bm && (() => {
+        const all = [
+          { label: form.name || '나', bm: form.bm, bd: form.bd },
+          ...(otherProfiles || []).map(p => ({ label: p.name || '이름없음', bm: p.bm, bd: p.bd })),
+        ];
+        const cards = all
+          .map(p => ({ label: p.label, dday: getBdayDday(p.bm, p.bd) }))
+          .filter(c => c.dday !== null && c.dday <= 30)
+          .sort((a, b) => a.dday - b.dday);
+        if (cards.length === 0) return null;
+        return (
+          <div style={{ padding: '0 var(--sp3) var(--sp2)' }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 8, letterSpacing: '.04em' }}>🎂 다가오는 생일</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {cards.map((c, i) => (
+                <div key={`bday-${i}`} style={{
+                  padding: '8px 14px', borderRadius: 'var(--r1)',
+                  border: `1px solid ${c.dday === 0 ? 'var(--gold)' : c.dday <= 7 ? '#e07' : 'var(--line)'}`,
+                  background: c.dday === 0 ? 'var(--goldf)' : 'var(--bg2)',
+                  fontSize: 'var(--xs)', color: 'var(--t2)',
+                }}>
+                  <span style={{ fontWeight: 700 }}>{c.label}</span>
+                  <span style={{ marginLeft: 8, color: c.dday === 0 ? 'var(--gold)' : c.dday <= 7 ? '#e07' : 'var(--t4)' }}>
+                    {c.dday === 0 ? '🎂 오늘이에요!' : `D-${c.dday}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {!user && (
         <div className="inner land-scroll-zone">
