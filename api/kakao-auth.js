@@ -18,11 +18,17 @@ export default async function handler(req, res) {
     // redirect_uri는 URLSearchParams 쓰면 자동 인코딩되어 KOE303 오류 발생
     // 직접 문자열로 조합해야 함
     const body = `grant_type=authorization_code&client_id=${restKey}&redirect_uri=${redirectUri}&code=${code}`;
-    const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body,
-    });
+    const ctrl1 = new AbortController();
+    const t1 = setTimeout(() => ctrl1.abort(), 8000);
+    let tokenRes;
+    try {
+      tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+        signal: ctrl1.signal,
+      });
+    } finally { clearTimeout(t1); }
     const tokenData = await tokenRes.json();
     if (!tokenRes.ok || tokenData.error) {
       console.error('토큰 교환 실패:', tokenData);
@@ -30,12 +36,18 @@ export default async function handler(req, res) {
     }
 
     // ── STEP 2: 액세스토큰 → 유저정보 ──
-    const userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
-      headers: {
-        'Authorization': `Bearer ${tokenData.access_token}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(() => ctrl2.abort(), 8000);
+    let userRes;
+    try {
+      userRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        signal: ctrl2.signal,
+      });
+    } finally { clearTimeout(t2); }
     const userData = await userRes.json();
     if (!userRes.ok) {
       return res.status(userRes.status).json({ error: '유저 정보 조회 실패' });

@@ -14,13 +14,14 @@ export default function ResultsStep({
   shareCard, handleCopyAll, shareResult,
   setStep, setSelQs, setDiy, setShowSidebar, setShowUpgradeModal,
   kakaoLogin, genReport, resetSession,
+  showToast,
 }) {
   return (
     <div className="page-top">
       <div className="res-wrap" ref={resultsRef} role="region" aria-label="별숨의 답변">
         <div className="res-card">
           <div className="res-top-bar">
-            <button className="res-top-btn" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')); alert('복사됐어요 📋'); }}>📋 복사</button>
+            <button className="res-top-btn" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')).then(() => showToast?.('복사됐어요 📋', 'success')); }}>📋 복사</button>
             {answers[0] && <button className="res-top-btn" onClick={() => shareCard(0)}>🖼 저장</button>}
             {answers[0] && <button className="res-top-btn primary" onClick={() => shareResult('result')}>↗ 공유</button>}
           </div>

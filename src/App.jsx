@@ -272,6 +272,7 @@ export default function App() {
             startEditOtherProfile={startEditOtherProfile}
             setSelQs={setSelQs} setStep={setStep} setShowOtherProfileModal={setShowOtherProfileModal}
             saveProfileToSupabase={saveProfileToSupabase}
+            showToast={showToast}
           />
         )}
 
@@ -317,6 +318,7 @@ export default function App() {
             setStep={setStep} setSelQs={setSelQs} setDiy={setDiy}
             setShowSidebar={setShowSidebar} setShowUpgradeModal={setShowUpgradeModal}
             kakaoLogin={kakaoLogin} genReport={genReport} resetSession={resetSession}
+            showToast={showToast}
           />
         )}
 
@@ -545,6 +547,7 @@ export default function App() {
         <ShareModal
           shareModal={shareModal}
           onClose={() => setShareModal(s => ({ ...s, open: false }))}
+          showToast={showToast}
         />
       )}
 

@@ -1,3 +1,9 @@
+function getDaysInMonth(year, month) {
+  if (!month) return 31;
+  if (!year || String(year).length < 4) return 31;
+  return new Date(parseInt(year), parseInt(month), 0).getDate();
+}
+
 export default function OtherProfileModal({
   editingOtherIdx, setEditingOtherIdx,
   otherForm, setOtherForm,
@@ -16,9 +22,14 @@ export default function OtherProfileModal({
         <fieldset style={{border:'none',padding:0,margin:0}}>
           <legend className="lbl">생년월일</legend>
           <div className="row" style={{ marginBottom: 'var(--sp2)' }}>
-            <div className="col"><input className="inp" placeholder="1998" inputMode="numeric" aria-label="출생 연도" value={otherForm.by} onChange={e => setOtherForm(f => ({ ...f, by: e.target.value.replace(/\D/, '').slice(0, 4) }))} style={{ marginBottom: 0 }} /></div>
-            <div className="col"><select className="inp" aria-label="출생 월" value={otherForm.bm} onChange={e => setOtherForm(f => ({ ...f, bm: e.target.value }))} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
-            <div className="col"><select className="inp" aria-label="출생 일" value={otherForm.bd} onChange={e => setOtherForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
+            <div className="col">
+              <input className="inp" placeholder="1998" inputMode="numeric" aria-label="출생 연도" value={otherForm.by} onChange={e => setOtherForm(f => ({ ...f, by: e.target.value.replace(/\D/, '').slice(0, 4) }))} style={{ marginBottom: 0 }} />
+              {otherForm.by?.length === 4 && (parseInt(otherForm.by) < 1800 || parseInt(otherForm.by) > 2040) && (
+                <div style={{ fontSize: 'var(--xs)', color: '#e06', marginTop: 4 }}>1800~2040년 사이의 연도를 입력해주세요</div>
+              )}
+            </div>
+            <div className="col"><select className="inp" aria-label="출생 월" value={otherForm.bm} onChange={e => { const nm = e.target.value; const max = getDaysInMonth(otherForm.by, nm); setOtherForm(f => ({ ...f, bm: nm, bd: f.bd && parseInt(f.bd) > max ? '' : f.bd })); }} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
+            <div className="col"><select className="inp" aria-label="출생 일" value={otherForm.bd} onChange={e => setOtherForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(getDaysInMonth(otherForm.by, otherForm.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
           </div>
         </fieldset>
         <div className="toggle-row" onClick={() => setOtherForm(f => ({ ...f, noTime: !f.noTime, bh: '' }))}>
