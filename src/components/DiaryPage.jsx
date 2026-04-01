@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { DIARY_PROMPT } from "../utils/constants.js";
+import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 
 // ═══════════════════════════════════════════════════════════
 //  📓 나의 하루를 별숨에게 — 일기 페이지
@@ -43,7 +44,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading }) {
+export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, showToast }) {
   const [mood, setMood] = useState(initialMood || null);
   const [weather, setWeather] = useState(initialWeather || '');
   const [energy, setEnergy] = useState(initialEnergy || null);
@@ -53,6 +54,9 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
   const [submitted, setSubmitted] = useState(false);
   const [todayEntry, setTodayEntry] = useState(null);
   const [loadingEntry, setLoadingEntry] = useState(true);
+  const [summaryText, setSummaryText] = useState('');
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -87,7 +91,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     })();
   }, [user?.id, today]);
 
-  const canSubmit = true;
+  const canSubmit = !!(mood || weather || energy || content.trim());
 
   const handleSubmit = async () => {
     const entry = {
@@ -114,6 +118,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
         }
       } catch (e) {
         console.error('[DiaryPage] 저장 오류:', e);
+        showToast?.('일기 저장에 실패했어요...', 'error');
       }
     }
 
@@ -129,6 +134,61 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       if (embedded && setStep) {
         setStep(17);
       }
+    }
+  };
+
+  const handleMonthlySummary = async () => {
+    if (summaryLoading || !user?.id) return;
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const cacheKey = `diary_summary_${yyyy}-${mm}`;
+
+    // 캐시 확인
+    const cached = await loadAnalysisCache(user.id, cacheKey);
+    if (cached) { setSummaryText(cached); setShowSummary(true); return; }
+
+    setSummaryLoading(true);
+    try {
+      const client = getAuthenticatedClient(user.id) || supabase;
+      const { data: entries } = await client.from('diary_entries')
+        .select('date,content,mood,energy,weather')
+        .eq('kakao_id', String(user.id))
+        .gte('date', `${yyyy}-${mm}-01`)
+        .lte('date', `${yyyy}-${mm}-31`)
+        .order('date');
+
+      if (!entries || entries.length < 3) {
+        showToast?.('이달 일기가 3개 이상 있어야 요약할 수 있어요 🌙', 'info');
+        return;
+      }
+
+      const entrySummary = entries.map(e => {
+        const moodLabel = ['', '많이 힘들어요', '조금 힘들어요', '그냥 그래요', '좋은 편이에요', '아주 좋아요'][e.mood] || '';
+        return `[${e.date}] 기분:${moodLabel} 에너지:${e.energy || '?'}/5\n${e.content || '(내용 없음)'}`;
+      }).join('\n\n');
+
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: `이번 달(${yyyy}년 ${now.getMonth() + 1}월)의 일기 ${entries.length}개를 사주·별자리 관점으로 따뜻하게 요약해줘요. 감정 흐름, 반복된 패턴, 성장한 부분을 짚어주세요.\n\n${entrySummary}`,
+          context: '',
+          isDiaryReview: true,
+          kakaoId: user.id,
+          clientHour: now.getHours(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const text = data.text || '';
+      setSummaryText(text);
+      setShowSummary(true);
+      await saveAnalysisCache(user.id, cacheKey, text);
+    } catch {
+      showToast?.('이달 요약 생성에 실패했어요...', 'error');
+    } finally {
+      setSummaryLoading(false);
     }
   };
 
@@ -344,6 +404,29 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
             >
               ← 홈으로
             </button>
+          )}
+
+          {/* 이번 달 돌아보기 (비임베디드, 로그인 사용자) */}
+          {!embedded && user?.id && (
+            <div style={{ marginTop: 16 }}>
+              <button
+                className="res-btn"
+                style={{ width: '100%', color: 'var(--gold)', borderColor: 'var(--acc)' }}
+                onClick={showSummary ? () => setShowSummary(false) : handleMonthlySummary}
+                disabled={summaryLoading}
+              >
+                {summaryLoading
+                  ? '이달 이야기를 읽고 있어요...'
+                  : showSummary
+                    ? '▲ 이달 요약 닫기'
+                    : '✦ 이번 달 돌아보기'}
+              </button>
+              {showSummary && summaryText && (
+                <div style={{ marginTop: 10, padding: '14px 16px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+                  {summaryText}
+                </div>
+              )}
+            </div>
           )}
         </div>
   );

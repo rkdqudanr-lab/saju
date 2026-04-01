@@ -251,9 +251,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
   const activeQ = phase === 'ai' ? aiQuestions[aiIdx] : currentQ;
   const activeIdx = phase === 'ai' ? aiIdx : currentIdx;
   const activeTotal = phase === 'ai' ? aiQuestions.length : totalQ;
-  const progressPct = phase === 'ai'
-    ? 100 + ((aiIdx / aiQuestions.length) * 0)  // AI 단계는 100% 이후
-    : Math.round((answeredCount / totalQ) * 100);
+  const progressPct = phase === 'ai' ? 100 : Math.round((answeredCount / totalQ) * 100);
 
   if (!activeQ) {
     // AI 단계에서 질문이 없으면(빈 배열 등) done 단계로 전환

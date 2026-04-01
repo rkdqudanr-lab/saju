@@ -101,7 +101,7 @@ export default function ProfileStep({
               <legend className="lbl">생년월일</legend>
               <div className="row" style={{ marginBottom: 'var(--sp3)' }}>
                 <div className="col">
-                  <input id="inp-by" className="inp" placeholder="1998" inputMode="numeric" pattern="[0-9]*" aria-label="출생 연도" value={form.by} onChange={e => { const v = e.target.value.replace(/\D/, '').slice(0, 4); setForm(f => ({ ...f, by: v })); const yr = parseInt(v); if (v.length === 4 && yr >= 1800 && yr <= 2040) setFieldTouched(t => ({ ...t, by: true })); else if (v.length === 4) setFieldTouched(t => ({ ...t, by: false })); }} style={{ marginBottom: 0 }} />
+                  <input id="inp-by" className="inp" placeholder="1998" inputMode="numeric" pattern="[0-9]*" aria-label="출생 연도" value={form.by} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); setForm(f => ({ ...f, by: v })); const yr = parseInt(v); if (v.length === 4 && yr >= 1800 && yr <= 2040) setFieldTouched(t => ({ ...t, by: true })); else if (v.length === 4) setFieldTouched(t => ({ ...t, by: false })); }} style={{ marginBottom: 0 }} />
                   {form.by?.length === 4 && (parseInt(form.by) < 1800 || parseInt(form.by) > 2040) && (
                     <div style={{ fontSize: 'var(--xs)', color: '#e06', marginTop: 4 }}>1800~2040년 사이의 연도를 입력해주세요</div>
                   )}
