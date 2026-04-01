@@ -3,6 +3,12 @@ import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { supabase } from "../lib/supabase.js";
 
+function getDaysInMonth(year, month) {
+  if (!month) return 31;
+  if (!year || String(year).length < 4) return 31;
+  return new Date(parseInt(year), parseInt(month), 0).getDate();
+}
+
 // 오행 상생(相生) / 상극(相克) 관계 (로컬 정의)
 const SANGSAENG = { 목: '화', 화: '토', 토: '금', 금: '수', 수: '목' };
 const SANGGEUK  = { 목: '토', 화: '금', 토: '수', 금: '목', 수: '화' };
@@ -77,11 +83,11 @@ function MemberForm({ onSubmit, title }) {
         <input className="inp" placeholder="출생년도" inputMode="numeric"
           value={form.by} onChange={e => upd('by', e.target.value.replace(/\D/g, '').slice(0, 4))}
           style={{ marginBottom: 0 }} />
-        <select className="inp" value={form.bm} onChange={e => upd('bm', e.target.value)} style={{ marginBottom: 0 }}>
+        <select className="inp" value={form.bm} onChange={e => { const nm = e.target.value; const max = getDaysInMonth(form.by, nm); setForm(p => ({ ...p, bm: nm, bd: p.bd && parseInt(p.bd) > max ? '' : p.bd })); }} style={{ marginBottom: 0 }}>
           <option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}
         </select>
         <select className="inp" value={form.bd} onChange={e => upd('bd', e.target.value)} style={{ marginBottom: 0 }}>
-          <option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}
+          <option value="">일</option>{[...Array(getDaysInMonth(form.by, form.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}
         </select>
       </div>
       <div style={{ marginBottom: 'var(--sp2)' }}>

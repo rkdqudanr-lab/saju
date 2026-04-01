@@ -354,10 +354,14 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
               className="diy-inp"
               placeholder={activeQ.placeholder || '자유롭게 적어주세요'}
               value={textInput}
+              maxLength={300}
               onChange={e => setTextInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); answerText(); } }}
-              style={{ height: 80, marginBottom: 8 }}
+              style={{ height: 80, marginBottom: 4 }}
             />
+            <div style={{ fontSize: 'var(--xs)', color: textInput.length >= 270 ? 'var(--gold)' : 'var(--t4)', textAlign: 'right', marginBottom: 8 }}>
+              {textInput.length}/300
+            </div>
             <button
               className="btn-main"
               disabled={!textInput.trim()}

@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 
+function getDaysInMonth(year, month) {
+  if (!month) return 31;
+  if (!year || String(year).length < 4) return 31;
+  return new Date(parseInt(year), parseInt(month), 0).getDate();
+}
+
 // ═══════════════════════════════════════════════════════════
 //  ⚙️ 설정 페이지
 // ═══════════════════════════════════════════════════════════
@@ -154,7 +160,7 @@ export default function SettingsPage({
                     pattern="[0-9]*"
                     aria-label="출생 연도"
                     value={localForm.by || ''}
-                    onChange={e => setLocalForm(f => ({ ...f, by: e.target.value.replace(/\D/, '').slice(0, 4) }))}
+                    onChange={e => setLocalForm(f => ({ ...f, by: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
                     style={{ marginBottom: 0 }}
                   />
                 </div>
@@ -163,7 +169,7 @@ export default function SettingsPage({
                     className="inp"
                     aria-label="출생 월"
                     value={localForm.bm || ''}
-                    onChange={e => setLocalForm(f => ({ ...f, bm: e.target.value }))}
+                    onChange={e => { const nm = e.target.value; const max = getDaysInMonth(localForm.by, nm); setLocalForm(f => ({ ...f, bm: nm, bd: f.bd && parseInt(f.bd) > max ? '' : f.bd })); }}
                     style={{ marginBottom: 0 }}
                   >
                     <option value="">월</option>
@@ -179,7 +185,7 @@ export default function SettingsPage({
                     style={{ marginBottom: 0 }}
                   >
                     <option value="">일</option>
-                    {[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}
+                    {[...Array(getDaysInMonth(localForm.by, localForm.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}
                   </select>
                 </div>
               </div>

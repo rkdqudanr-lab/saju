@@ -2,6 +2,12 @@ import { useState, useMemo } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 
+function getDaysInMonth(year, month) {
+  if (!month) return 31;
+  if (!year || String(year).length < 4) return 31;
+  return new Date(parseInt(year), parseInt(month), 0).getDate();
+}
+
 // ═══════════════════════════════════════════════════════════
 //  💞 1대1 별숨 — 두 별의 인연 읽기
 // ═══════════════════════════════════════════════════════════
@@ -27,11 +33,13 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
   const compatScore = useMemo(() => {
     if (!mySaju || !partnerSaju) return 75;
     const SENG = { 목: ['수', '목'], 화: ['목', '화'], 토: ['화', '토'], 금: ['토', '금'], 수: ['금', '수'] };
+    const elements = ['목', '화', '토', '금', '수'];
     const a = mySaju.dom, b = partnerSaju.dom;
-    if (SENG[a]?.includes(b) || SENG[b]?.includes(a)) return Math.floor(Math.random() * 15) + 80;
-    if (a === b) return Math.floor(Math.random() * 10) + 75;
-    return Math.floor(Math.random() * 20) + 60;
-  }, [mySaju, partnerSaju]);
+    const seed = (elements.indexOf(a) * 7 + elements.indexOf(b) * 11) % 100;
+    if (SENG[a]?.includes(b) || SENG[b]?.includes(a)) return 80 + (seed % 15);
+    if (a === b) return 75 + (seed % 10);
+    return 60 + (seed % 20);
+  }, [mySaju?.dom, partnerSaju?.dom]);
 
   const buildPartnerCtx = () => {
     let c = `[나 — ${myForm.name || 'A'}]\n`;
@@ -119,13 +127,13 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                   <input className="inp" placeholder="년도" inputMode="numeric"
                     value={partner.by} onChange={e => setPartner(p => ({ ...p, by: e.target.value.replace(/\D/, '').slice(0, 4) }))}
                     style={{ marginBottom: 0, padding: '7px 6px', fontSize: 'var(--xs)' }} />
-                  <select className="inp" value={partner.bm} onChange={e => setPartner(p => ({ ...p, bm: e.target.value }))}
+                  <select className="inp" value={partner.bm} onChange={e => { const nm = e.target.value; const max = getDaysInMonth(partner.by, nm); setPartner(p => ({ ...p, bm: nm, bd: p.bd && parseInt(p.bd) > max ? '' : p.bd })); }}
                     style={{ marginBottom: 0, padding: '7px 4px', fontSize: 'var(--xs)' }}>
                     <option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
                   </select>
                   <select className="inp" value={partner.bd} onChange={e => setPartner(p => ({ ...p, bd: e.target.value }))}
                     style={{ marginBottom: 0, padding: '7px 4px', fontSize: 'var(--xs)' }}>
-                    <option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
+                    <option value="">일</option>{[...Array(getDaysInMonth(partner.by, partner.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
                   </select>
                 </div>
                 <div className="gender-group" style={{ marginTop: 6, marginBottom: 0 }}>

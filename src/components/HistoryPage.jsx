@@ -7,6 +7,7 @@ import { exportHistory } from "../utils/history.js";
 export default function HistoryPage({item,onBack,onDelete}){
   const[openIdx,setOpenIdx]=useState(0);
   const[deleted,setDeleted]=useState(false);
+  const[confirmDel,setConfirmDel]=useState(false);
   const SLOT_LABEL={morning:'오전 운세',afternoon:'오후 운세',evening:'저녁 회고',dawn:'새벽 별숨'};
 
   if(deleted) return null;
@@ -42,7 +43,13 @@ export default function HistoryPage({item,onBack,onDelete}){
         <div style={{padding:'0 var(--sp3) var(--sp5)',display:'flex',gap:8,flexWrap:'wrap'}}>
           <button className="res-btn" style={{flex:1}} onClick={onBack} aria-label="목록으로 돌아가기">← 돌아가기</button>
           <button className="res-btn" onClick={exportHistory} aria-label="전체 히스토리 내보내기">⬇ 내보내기</button>
-          <button className="hist-del-btn" onClick={()=>{onDelete(item.id, item.supabaseId);setDeleted(true);onBack();}} aria-label="이 기록 삭제">삭제</button>
+          {confirmDel
+            ? <>
+                <button className="hist-del-btn" style={{background:'var(--error,#e06)',color:'#fff'}} onClick={()=>{onDelete(item.id,item.supabaseId);setDeleted(true);onBack();}} aria-label="삭제 확인">정말 삭제</button>
+                <button className="res-btn" onClick={()=>setConfirmDel(false)} aria-label="삭제 취소">취소</button>
+              </>
+            : <button className="hist-del-btn" onClick={()=>setConfirmDel(true)} aria-label="이 기록 삭제">삭제</button>
+          }
         </div>
       </div>
     </div>

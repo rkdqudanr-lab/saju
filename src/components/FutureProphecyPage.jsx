@@ -39,7 +39,7 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
   }, [callApi]);
 
   const handleGenerate = () => {
-    if (!selectedPeriod) return;
+    if (!selectedPeriod || loading) return;
     fetchProphecy(selectedPeriod);
   };
 
