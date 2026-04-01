@@ -48,7 +48,8 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
         <div className="acc-q-wrap">
           <div className="acc-q-num">Q{idx+1}</div>
           <div className="acc-q-text">{q}</div>
-          {!isOpen&&!display&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
+          {!isOpen&&isError&&<div style={{fontSize:'var(--xs)',color:'#e06',marginTop:3}}>⚠ 오류 · 탭하여 다시 시도</div>}
+          {!isOpen&&!display&&!isError&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
         </div>
         <div className="acc-right">
           {isOpen&&!isDone&&<button className="skip-btn" aria-label="타이핑 건너뛰기" onClick={e=>{e.stopPropagation();skipToEnd();}}>바로 보기</button>}

@@ -1,6 +1,12 @@
 import { OC, OE, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 
+function getDaysInMonth(year, month) {
+  if (!month) return 31;
+  if (!year || String(year).length < 4) return 31;
+  return new Date(parseInt(year), parseInt(month), 0).getDate();
+}
+
 export default function ProfileStep({
   form, setForm,
   user, saju, sun, moon, asc,
@@ -12,6 +18,7 @@ export default function ProfileStep({
   startEditOtherProfile,
   setSelQs, setStep, setShowOtherProfileModal,
   saveProfileToSupabase,
+  showToast,
 }) {
   return (
     <div className="page step-fade">
@@ -93,9 +100,14 @@ export default function ProfileStep({
             <fieldset style={{border:'none',padding:0,margin:0}}>
               <legend className="lbl">생년월일</legend>
               <div className="row" style={{ marginBottom: 'var(--sp3)' }}>
-                <div className="col"><input id="inp-by" className="inp" placeholder="1998" inputMode="numeric" pattern="[0-9]*" aria-label="출생 연도" value={form.by} onChange={e => { const v = e.target.value.replace(/\D/, '').slice(0, 4); setForm(f => ({ ...f, by: v })); if (v.length === 4) setFieldTouched(t => ({ ...t, by: true })); }} style={{ marginBottom: 0 }} /></div>
-                <div className="col"><select id="inp-bm" className="inp" aria-label="출생 월" value={form.bm} onChange={e => setForm(f => ({ ...f, bm: e.target.value }))} onBlur={e => { if (e.target.value) setFieldTouched(t => ({ ...t, bm: true })); }} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
-                <div className="col"><select id="inp-bd" className="inp" aria-label="출생 일" value={form.bd} onChange={e => setForm(f => ({ ...f, bd: e.target.value }))} onBlur={e => { if (e.target.value) setFieldTouched(t => ({ ...t, bd: true })); }} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(31)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
+                <div className="col">
+                  <input id="inp-by" className="inp" placeholder="1998" inputMode="numeric" pattern="[0-9]*" aria-label="출생 연도" value={form.by} onChange={e => { const v = e.target.value.replace(/\D/, '').slice(0, 4); setForm(f => ({ ...f, by: v })); const yr = parseInt(v); if (v.length === 4 && yr >= 1800 && yr <= 2040) setFieldTouched(t => ({ ...t, by: true })); else if (v.length === 4) setFieldTouched(t => ({ ...t, by: false })); }} style={{ marginBottom: 0 }} />
+                  {form.by?.length === 4 && (parseInt(form.by) < 1800 || parseInt(form.by) > 2040) && (
+                    <div style={{ fontSize: 'var(--xs)', color: '#e06', marginTop: 4 }}>1800~2040년 사이의 연도를 입력해주세요</div>
+                  )}
+                </div>
+                <div className="col"><select id="inp-bm" className="inp" aria-label="출생 월" value={form.bm} onChange={e => { const nm = e.target.value; const max = getDaysInMonth(form.by, nm); setForm(f => ({ ...f, bm: nm, bd: f.bd && parseInt(f.bd) > max ? '' : f.bd })); }} onBlur={e => { if (e.target.value) setFieldTouched(t => ({ ...t, bm: true })); }} style={{ marginBottom: 0 }}><option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}</select></div>
+                <div className="col"><select id="inp-bd" className="inp" aria-label="출생 일" value={form.bd} onChange={e => setForm(f => ({ ...f, bd: e.target.value }))} onBlur={e => { if (e.target.value) setFieldTouched(t => ({ ...t, bd: true })); }} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(getDaysInMonth(form.by, form.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
               </div>
             </fieldset>
 
@@ -154,8 +166,11 @@ export default function ProfileStep({
             )}
             <button className="btn-main"
               disabled={editingMyProfile ? !formOk : !(formOk && fieldTouched.by && fieldTouched.bm && fieldTouched.bd)}
-              onClick={() => {
-                if (user) saveProfileToSupabase(form, user);
+              onClick={async () => {
+                if (user) {
+                  const ok = await saveProfileToSupabase(form, user);
+                  if (ok === false) { showToast?.('저장에 실패했어요. 다시 시도해봐요 🌙', 'error'); return; }
+                }
                 if (editingMyProfile) { setEditingMyProfile(false); }
                 else if (!onboardingDone) { setSelQs([]); setStep(15); }
                 else { setSelQs([]); setStep(2); }

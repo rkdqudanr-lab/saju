@@ -64,6 +64,16 @@ export default function ChatStep({
       )}
 
       <div className="chat-input-area">
+        {chatLeft > 0 && (
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'right', padding: '4px 16px 0' }}>
+            남은 채팅 {chatLeft}회
+          </div>
+        )}
+        {chatLeft <= 0 && (
+          <div style={{ textAlign: 'center', padding: '8px 16px', fontSize: 'var(--xs)', color: 'var(--t4)', borderTop: '1px solid var(--line)' }}>
+            채팅을 모두 사용했어요 · 새 상담을 시작하거나 업그레이드하세요
+          </div>
+        )}
         {chatLeft > 0 && !chatLoading && (
           <div className="chat-sugg-wrap">
             {CHAT_SUGG.map((s, i) => <button key={i} className="sugg-btn" onClick={() => setChatInput(s)}>{s}</button>)}

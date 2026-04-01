@@ -1,4 +1,4 @@
-export default function ShareModal({ shareModal, onClose }) {
+export default function ShareModal({ shareModal, onClose, showToast }) {
   return (
     <div className="upgrade-modal-bg" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
@@ -9,8 +9,8 @@ export default function ShareModal({ shareModal, onClose }) {
           {shareModal.text}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <button className="btn-main" onClick={() => { navigator.clipboard?.writeText(shareModal.text).then(() => { alert('복사됐어요! 친구에게 붙여넣기 해주세요 💌'); }); onClose(); }}>📋 텍스트 복사하기</button>
-          <button className="btn-main" style={{ background: 'var(--bg3)', color: 'var(--t1)' }} onClick={() => { navigator.clipboard?.writeText(window.location.origin).then(() => { alert('별숨 링크가 복사됐어요! 친구에게 공유해주세요 ✦'); }); onClose(); }}>🔗 별숨 링크 공유하기</button>
+          <button className="btn-main" onClick={() => { navigator.clipboard?.writeText(shareModal.text).then(() => showToast?.('복사됐어요! 친구에게 붙여넣기 해주세요 💌', 'success')); onClose(); }}>📋 텍스트 복사하기</button>
+          <button className="btn-main" style={{ background: 'var(--bg3)', color: 'var(--t1)' }} onClick={() => { navigator.clipboard?.writeText(window.location.origin).then(() => showToast?.('별숨 링크가 복사됐어요! 친구에게 공유해주세요 ✦', 'success')); onClose(); }}>🔗 별숨 링크 공유하기</button>
           <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }} onClick={onClose}>닫기</button>
         </div>
       </div>

@@ -333,9 +333,9 @@ export function useUserProfile() {
   }, [otherProfiles, otherForm, editingOtherIdx, syncOtherProfilesToSupabase]);
 
   const saveProfileToSupabase = useCallback(async (currentForm, currentUser) => {
-    if (!supabase || !currentUser?.id) return;
+    if (!supabase || !currentUser?.id) return true;
     const { by, bm, bd, name, bh, gender, noTime } = currentForm;
-    if (!by || !bm || !bd) return;
+    if (!by || !bm || !bd) return true;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
       const { error } = await (authClient || supabase).from('users').upsert({
@@ -348,9 +348,11 @@ export function useUserProfile() {
         nickname:    name || currentUser.nickname || '별님',
         updated_at:  new Date().toISOString(),
       }, { onConflict: 'kakao_id', ignoreDuplicates: false });
-      if (error) console.error('[별숨] 프로필 저장 오류:', error);
+      if (error) { console.error('[별숨] 프로필 저장 오류:', error); return false; }
+      return true;
     } catch (e) {
       console.error('[별숨] 프로필 저장 오류:', e);
+      return false;
     }
   }, []);
 

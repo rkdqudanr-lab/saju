@@ -13,7 +13,6 @@ export default function ConsentModal({ flags, setFlags, onConfirm }) {
   return (
     <div
       className="upgrade-modal-bg"
-      onClick={onConfirm}
       role="dialog"
       aria-modal="true"
       aria-label="별숨 데이터 동의"
