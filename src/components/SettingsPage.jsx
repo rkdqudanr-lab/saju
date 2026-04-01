@@ -66,8 +66,10 @@ export default function SettingsPage({
   showToast,
   responseStyle: responseStyleProp = 'M',
   onStyleChange,
+  sidebarPrefs,
+  onSidebarPrefsChange,
 }) {
-  const [tab, setTab] = useState(0); // 0: 개인정보, 1: 요금제, 2: 스타일
+  const [tab, setTab] = useState(0); // 0: 개인정보, 1: 요금제, 2: 스타일, 3: 메뉴설정
   const [localForm, setLocalForm] = useState(form || {});
   const [saving, setSaving] = useState(false);
 
@@ -110,7 +112,7 @@ export default function SettingsPage({
 
         {/* ── 탭 ── */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 4 }}>
-          {['개인정보', '요금제', '별숨 스타일'].map((label, i) => (
+          {['개인정보', '요금제', '별숨 스타일', '메뉴 설정'].map((label, i) => (
             <button
               key={i}
               onClick={() => setTab(i)}
@@ -450,6 +452,49 @@ export default function SettingsPage({
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 3: 메뉴 설정 ── */}
+        {tab === 3 && (
+          <div className="card" style={{ gap: 'var(--sp2)' }}>
+            <div className="card-title">메뉴 설정</div>
+            <div className="card-sub" style={{ marginBottom: 16 }}>
+              사이드바에서 보이지 않을 메뉴 그룹을 선택하세요.<br />
+              설정은 자동으로 저장돼요.
+            </div>
+            {[
+              { key: 'today', label: '오늘의 별숨', desc: '홈, 오늘 운세, 일기, 달력' },
+              { key: 'consult', label: '별숨 상담', desc: '물어보기, 리포트, 예언, 종합사주 등' },
+              { key: 'fortune', label: '운세 & 인연', desc: '궁합, 모임, 기념일, 사주원국' },
+            ].map(({ key, label, desc }) => {
+              const hidden = (sidebarPrefs?.hiddenGroups || []).includes(key);
+              const toggle = () => {
+                const prev = sidebarPrefs?.hiddenGroups || [];
+                const next = hidden ? prev.filter(k => k !== key) : [...prev, key];
+                onSidebarPrefsChange?.({ ...(sidebarPrefs || {}), hiddenGroups: next });
+                showToast?.(hidden ? `'${label}' 메뉴를 표시해요 ✦` : `'${label}' 메뉴를 숨겼어요`, 'success');
+              };
+              return (
+                <div key={key} className="toggle-row" onClick={toggle} style={{ cursor: 'pointer', marginBottom: 8 }}>
+                  <button
+                    className={`toggle ${hidden ? 'off' : 'on'}`}
+                    role="switch"
+                    aria-checked={!hidden}
+                    aria-label={`${label} 메뉴 표시`}
+                    onClick={e => { e.stopPropagation(); toggle(); }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <span className="toggle-label" style={{ display: 'block', fontWeight: 600 }}>{label}</span>
+                    <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>{desc}</span>
+                  </div>
+                  <span style={{ fontSize: 'var(--xs)', color: hidden ? 'var(--t4)' : 'var(--gold)', marginLeft: 8 }}>{hidden ? '숨김' : '표시'}</span>
+                </div>
+              );
+            })}
+            <div style={{ marginTop: 8, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7 }}>
+              메뉴를 숨겨도 직접 URL 이동은 가능해요 🌙
             </div>
           </div>
         )}

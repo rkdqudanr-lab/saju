@@ -274,6 +274,25 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     }
   }, [user]);
 
+  // ── Supabase 상담기록 전체삭제 ──
+  const deleteAllHistoryItems = useCallback(async () => {
+    if (!user?.id) { setHistItems([]); return; }
+    try {
+      const authClient = getAuthenticatedClient(user.id);
+      // users 테이블에서 supabase UUID 조회 후 consultation_history 전체 삭제
+      const { data: userData } = await (authClient || supabase)
+        .from('users').select('id').eq('kakao_id', String(user.id)).single();
+      if (userData?.id) {
+        await (authClient || supabase)
+          .from('consultation_history').delete().eq('user_id', userData.id);
+      }
+      setHistItems([]);
+    } catch (e) {
+      console.error('[별숨] 상담기록 전체삭제 오류:', e);
+      setHistItems([]);
+    }
+  }, [user]);
+
   // ── 질문 전송 ──
   const askClaude = useCallback(async () => {
     if (!selQs.length) return;
@@ -461,6 +480,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     handleTypingDone, handleAccToggle,
     sendChat, genReport,
     deleteHistoryItem,
+    deleteAllHistoryItems,
     resetSession: useCallback(() => { setChatHistory([]); setChatUsed(0); }, []),
   };
 }

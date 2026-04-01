@@ -37,22 +37,25 @@ function getDateRange(filter) {
   return null;
 }
 
-export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther, onSettings, histItems: histItemsProp }) {
+export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther, onSettings, histItems: histItemsProp, onDeleteAllHistory, sidebarPrefs, todayDiaryWritten }) {
   const [histItems, setHistItems] = useState(() => histItemsProp || loadHistory());
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [starredIds, setStarredIds] = useState(new Set());
-  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, fortune: false });
+  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, fortune: true });
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [displayLimit, setDisplayLimit] = useState(15);
   const debounceRef = useRef(null);
+  const hiddenGroups = sidebarPrefs?.hiddenGroups || [];
   const toggleGroup = (key) => setOpenGroups(p => ({ ...p, [key]: !p[key] }));
 
   // 300ms 디바운스 처리
   const handleSearchChange = useCallback((val) => {
     setRawSearch(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setSearch(val), 300);
+    debounceRef.current = setTimeout(() => { setSearch(val); setDisplayLimit(15); }, 300);
   }, []);
 
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
@@ -101,6 +104,14 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
     e.stopPropagation();
     deleteHistory(id);
     setHistItems(loadHistory());
+  };
+
+  const handleDeleteAll = async (e) => {
+    e.stopPropagation();
+    if (!confirmDeleteAll) { setConfirmDeleteAll(true); return; }
+    setConfirmDeleteAll(false);
+    await onDeleteAllHistory?.();
+    setHistItems([]);
   };
 
   const SLOT_EMOJI = { morning: '🌅', afternoon: '✦', evening: '🌙', dawn: '🌌' };
@@ -166,107 +177,126 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
           </div>
 
           {/* ── 오늘의 별숨 (토글) ── */}
-          <div className="sidebar-section">
-            <button className="sidebar-group-header" onClick={() => toggleGroup('today')} aria-expanded={openGroups.today}>
-              <span>오늘의 별숨</span>
-              <span className="sidebar-group-arrow">{openGroups.today ? '▾' : '▸'}</span>
-            </button>
-            {openGroups.today && (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {[
-                  { icon: '🏠', label: '홈', s: 0 },
-                  { icon: '🌟', label: '오늘 하루 나의 별숨', s: 'fortune' },
-                  { icon: '📓', label: '나의 하루를 별숨에게', s: 17 },
-                  { icon: '🗓️', label: '별숨 달력', s: 10 },
-                ].map(m => (
-                  <li key={m.s}>
-                    <button
-                      className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
-                      onClick={() => { onNav(m.s); onClose(); }}
-                      aria-current={step === m.s ? 'page' : undefined}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
-                    >
-                      <span className="smi-icon" aria-hidden="true">{m.icon}</span>
-                      <span className="smi-text">{m.label}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {!hiddenGroups.includes('today') && (
+            <div className="sidebar-section">
+              <button className="sidebar-group-header" onClick={() => toggleGroup('today')} aria-expanded={openGroups.today}>
+                <span>오늘의 별숨</span>
+                <span className="sidebar-group-arrow">{openGroups.today ? '▾' : '▸'}</span>
+              </button>
+              {openGroups.today && (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    { icon: '🏠', label: '홈', s: 0 },
+                    { icon: '🌟', label: '오늘 하루 나의 별숨', s: 'fortune' },
+                    { icon: '📓', label: '나의 하루를 별숨에게', s: 17, badge: todayDiaryWritten === false },
+                    { icon: '📚', label: '일기 모아보기', s: 20 },
+                    { icon: '🗓️', label: '별숨 달력', s: 10 },
+                  ].map(m => (
+                    <li key={m.s}>
+                      <button
+                        className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                        onClick={() => { onNav(m.s); onClose(); }}
+                        aria-current={step === m.s ? 'page' : undefined}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                      >
+                        <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                        <span className="smi-text">{m.label}</span>
+                        {m.badge && <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--rose, #e05c7a)', marginLeft: 5, flexShrink: 0 }} aria-hidden="true" />}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {/* ── 별숨 상담 (토글) ── */}
-          <div className="sidebar-section">
-            <button className="sidebar-group-header" onClick={() => toggleGroup('consult')} aria-expanded={openGroups.consult}>
-              <span>별숨 상담</span>
-              <span className="sidebar-group-arrow">{openGroups.consult ? '▾' : '▸'}</span>
-            </button>
-            {openGroups.consult && (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {[
-                  { icon: '✦', label: '별숨에게 물어보기', s: 1 },
-                  { icon: '📅', label: '월간 리포트', s: 6 },
-                  { icon: '🔮', label: '별숨의 예언', s: 8 },
-                  { icon: '✦', label: '별숨의 종합사주', s: 14 },
-                  { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
-                ].map(m => (
-                  <li key={m.s}>
-                    <button
-                      className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
-                      onClick={() => { onNav(m.s); onClose(); }}
-                      aria-current={step === m.s ? 'page' : undefined}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
-                    >
-                      <span className="smi-icon" aria-hidden="true">{m.icon}</span>
-                      <span className="smi-text">{m.label}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* ── 운세 & 인연 (토글, 기본 접힘) ── */}
-          <div className="sidebar-section">
-            <button className="sidebar-group-header" onClick={() => toggleGroup('fortune')} aria-expanded={openGroups.fortune}>
-              <span>운세 & 인연</span>
-              <span className="sidebar-group-arrow">{openGroups.fortune ? '▾' : '▸'}</span>
-            </button>
-            {openGroups.fortune && (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {[
-                  { icon: '💞', label: '1대1 별숨 (궁합)', s: 7 },
-                  { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
-                  { icon: '🎂', label: '기념일 운세', s: 12 },
-                  { icon: '🀄', label: '나의 별숨 (사주원국·별자리)', s: 13 },
-                ].map(m => (
-                  <li key={m.s}>
-                    <button
-                      className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
-                      onClick={() => { onNav(m.s); onClose(); }}
-                      aria-current={step === m.s ? 'page' : undefined}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
-                    >
-                      <span className="smi-icon" aria-hidden="true">{m.icon}</span>
-                      <span className="smi-text">{m.label}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="sidebar-section">
-            <div className="sidebar-section-lbl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span>지난 이야기 ({histCount})</span>
-              {user && histCount > 0 && (
-                <button
-                  onClick={() => setShowStarredOnly(v => !v)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--xs)', color: showStarredOnly ? 'var(--gold)' : 'var(--t4)', padding: '2px 4px', borderRadius: 4 }}
-                  aria-pressed={showStarredOnly}
-                  aria-label="즐겨찾기만 보기"
-                >{showStarredOnly ? '⭐ 즐겨찾기' : '☆ 즐겨찾기'}</button>
+          {!hiddenGroups.includes('consult') && (
+            <div className="sidebar-section">
+              <button className="sidebar-group-header" onClick={() => toggleGroup('consult')} aria-expanded={openGroups.consult}>
+                <span>별숨 상담</span>
+                <span className="sidebar-group-arrow">{openGroups.consult ? '▾' : '▸'}</span>
+              </button>
+              {openGroups.consult && (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    { icon: '✦', label: '별숨에게 물어보기', s: 1 },
+                    { icon: '📅', label: '월간 리포트', s: 6 },
+                    { icon: '🔮', label: '별숨의 예언', s: 8 },
+                    { icon: '✦', label: '별숨의 종합사주', s: 14 },
+                    { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
+                  ].map(m => (
+                    <li key={m.s}>
+                      <button
+                        className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                        onClick={() => { onNav(m.s); onClose(); }}
+                        aria-current={step === m.s ? 'page' : undefined}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                      >
+                        <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                        <span className="smi-text">{m.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
+            </div>
+          )}
+
+          {/* ── 운세 & 인연 (토글) ── */}
+          {!hiddenGroups.includes('fortune') && (
+            <div className="sidebar-section">
+              <button className="sidebar-group-header" onClick={() => toggleGroup('fortune')} aria-expanded={openGroups.fortune}>
+                <span>운세 & 인연</span>
+                <span className="sidebar-group-arrow">{openGroups.fortune ? '▾' : '▸'}</span>
+              </button>
+              {openGroups.fortune && (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    { icon: '💞', label: '1대1 별숨 (궁합)', s: 7 },
+                    { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
+                    { icon: '🎂', label: '기념일 운세', s: 12 },
+                    { icon: '🀄', label: '나의 별숨 (사주원국·별자리)', s: 13 },
+                  ].map(m => (
+                    <li key={m.s}>
+                      <button
+                        className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                        onClick={() => { onNav(m.s); onClose(); }}
+                        aria-current={step === m.s ? 'page' : undefined}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                      >
+                        <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                        <span className="smi-text">{m.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <div className="sidebar-section">
+            <div className="sidebar-section-lbl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+              <span>지난 이야기 ({histCount})</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {user && histCount > 0 && (
+                  <button
+                    onClick={() => setShowStarredOnly(v => !v)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--xs)', color: showStarredOnly ? 'var(--gold)' : 'var(--t4)', padding: '2px 4px', borderRadius: 4 }}
+                    aria-pressed={showStarredOnly}
+                    aria-label="즐겨찾기만 보기"
+                  >{showStarredOnly ? '⭐' : '☆'}</button>
+                )}
+                {user && histCount > 0 && (
+                  <button
+                    onClick={handleDeleteAll}
+                    onBlur={() => setConfirmDeleteAll(false)}
+                    style={{ background: confirmDeleteAll ? 'var(--rosef)' : 'none', border: confirmDeleteAll ? '1px solid var(--roseacc)' : 'none', cursor: 'pointer', fontSize: 'var(--xs)', color: confirmDeleteAll ? 'var(--rose)' : 'var(--t4)', padding: '2px 6px', borderRadius: 4, transition: 'all .15s' }}
+                    aria-label="전체삭제"
+                    title="지난 이야기 전체삭제"
+                  >{confirmDeleteAll ? '정말요?' : '전체삭제'}</button>
+                )}
+              </div>
             </div>
             {histNearLimit && (
               <div role="status" aria-live="polite" style={{ margin: '0 var(--sp3) 8px', padding: '8px 12px', background: 'var(--rosef)', border: '1px solid var(--roseacc)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--rose)' }}>
@@ -308,32 +338,40 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   : '아직 별숨과 나눈 이야기가 없어요 🌙\n첫 질문을 던져봐요'}
               </div>
             ) : (
-              filtered.slice(0, 15).map(h => (
-                <div key={h.id} className="sidebar-hist-item" onClick={() => { onNav('history', h); onClose(); }}>
-                  <div className="shi-date">{SLOT_EMOJI[h.slot] || '✦'} {h.date}</div>
-                  <div className="shi-q">
-                    <Highlight text={h.questions[0]} query={search} />
-                  </div>
-                  {h.questions.length > 1 && (
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 2 }}>
-                      +{h.questions.length - 1}개 더
+              <>
+                {filtered.slice(0, displayLimit).map(h => (
+                  <div key={h.id} className="sidebar-hist-item" onClick={() => { onNav('history', h); onClose(); }}>
+                    <div className="shi-date">{SLOT_EMOJI[h.slot] || '✦'} {h.date}</div>
+                    <div className="shi-q">
+                      <Highlight text={h.questions[0]} query={search} />
                     </div>
-                  )}
-                  {user && (
+                    {h.questions.length > 1 && (
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 2 }}>
+                        +{h.questions.length - 1}개 더
+                      </div>
+                    )}
+                    {user && (
+                      <button
+                        onClick={e => toggleStar(h.id, e)}
+                        aria-label={starredIds.has(h.id) ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                        style={{ position: 'absolute', right: 28, top: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--xs)', padding: '2px 4px', color: starredIds.has(h.id) ? 'var(--gold)' : 'var(--t4)' }}
+                      >{starredIds.has(h.id) ? '⭐' : '☆'}</button>
+                    )}
                     <button
-                      onClick={e => toggleStar(h.id, e)}
-                      aria-label={starredIds.has(h.id) ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-                      style={{ position: 'absolute', right: 28, top: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--xs)', padding: '2px 4px', color: starredIds.has(h.id) ? 'var(--gold)' : 'var(--t4)' }}
-                    >{starredIds.has(h.id) ? '⭐' : '☆'}</button>
-                  )}
+                      className="shi-del"
+                      onClick={e => del(h.id, e)}
+                      aria-label="기록 삭제"
+                      style={{ position: 'absolute', right: 8, top: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t4)', fontSize: 'var(--xs)', padding: '2px 4px', borderRadius: 4 }}
+                    >✕</button>
+                  </div>
+                ))}
+                {filtered.length > displayLimit && (
                   <button
-                    className="shi-del"
-                    onClick={e => del(h.id, e)}
-                    aria-label="기록 삭제"
-                    style={{ position: 'absolute', right: 8, top: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--t4)', fontSize: 'var(--xs)', padding: '2px 4px', borderRadius: 4 }}
-                  >✕</button>
-                </div>
-              ))
+                    onClick={() => setDisplayLimit(prev => Math.min(prev + 15, 50))}
+                    style={{ width: '100%', padding: '8px', background: 'none', border: 'none', borderTop: '1px solid var(--line)', cursor: 'pointer', fontSize: 'var(--xs)', color: 'var(--gold)', textAlign: 'center', margin: 0 }}
+                  >더보기 ({filtered.length - displayLimit}개 남음) ▾</button>
+                )}
+              </>
             )}
           </div>
         </div>

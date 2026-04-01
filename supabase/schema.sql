@@ -12,9 +12,19 @@ create table if not exists users (
   birth_month  integer,
   birth_day    integer,
   consent_flags jsonb,   -- null = 동의 미완료 (앱에서 consent modal 표시)
+  response_style text default 'M',
+  theme        text default 'light',
+  onboarded    boolean default false,
+  quiz_state   jsonb,
   created_at   timestamptz default now(),
   updated_at   timestamptz default now()
 );
+
+-- users 테이블 컬럼 추가 (기존 DB에 없을 경우 대비)
+alter table users add column if not exists response_style text default 'M';
+alter table users add column if not exists theme text default 'light';
+alter table users add column if not exists onboarded boolean default false;
+alter table users add column if not exists quiz_state jsonb;
 
 -- ── consultation_history ─────────────────────────────────────────
 create table if not exists consultation_history (

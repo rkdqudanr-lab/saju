@@ -11,7 +11,10 @@ import { useNavigation }    from "./hooks/useNavigation.js";
 import { useAppHandlers }   from "./hooks/useAppHandlers.js";
 
 // supabase
-import { supabase } from "./lib/supabase.js";
+import { supabase, getAuthenticatedClient } from "./lib/supabase.js";
+
+// analysis cache
+import { loadAnalysisCache, saveAnalysisCache } from "./lib/analysisCache.js";
 
 // components
 import StarCanvas         from "./components/StarCanvas.jsx";
@@ -32,6 +35,7 @@ const AstrologyPage            = lazy(() => import("./components/AstrologyPage.j
 const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
 const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
 const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
+const DiaryListPage            = lazy(() => import("./components/DiaryListPage.jsx"));
 
 // modal components
 import UpgradeModal        from "./components/UpgradeModal.jsx";
@@ -72,6 +76,8 @@ export default function App() {
   const [fieldTouched, setFieldTouched] = useState({ by: false, bm: false, bd: false });
   const [showAllCats, setShowAllCats] = useState(false);
   const [quizInput, setQuizInput] = useState('');
+  const [sidebarPrefs, setSidebarPrefs] = useState({ hiddenGroups: [] });
+  const [todayDiaryWritten, setTodayDiaryWritten] = useState(null); // null=미확인, true/false
   const toastTimer = useRef(null);
   const resultsRef = useRef(null);
   const askBtnRef = useRef(null);
@@ -113,7 +119,7 @@ export default function App() {
           diaryReviewResult, diaryReviewLoading,
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
-          deleteHistoryItem } = consultation;
+          deleteHistoryItem, deleteAllHistoryItems } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
 
@@ -171,6 +177,7 @@ export default function App() {
       import('./components/ComprehensivePage.jsx').catch(() => {});
       import('./components/AstrologyPage.jsx').catch(() => {});
       import('./components/DiaryPage.jsx').catch(() => {});
+      import('./components/DiaryListPage.jsx').catch(() => {});
       import('./components/HistoryPage.jsx').catch(() => {});
       import('./components/SettingsPage.jsx').catch(() => {});
       import('./components/ProfileModal.jsx').catch(() => {});
@@ -179,6 +186,25 @@ export default function App() {
     }, 1000);
     return () => clearTimeout(t);
   }, [user]);
+
+  // ── 사이드바 설정 로드 (로그인 후) ──
+  useEffect(() => {
+    if (!user?.id) return;
+    loadAnalysisCache(user.id, 'sidebar_prefs').then(raw => {
+      if (!raw) return;
+      try { setSidebarPrefs(JSON.parse(raw)); } catch {}
+    });
+  }, [user?.id]);
+
+  // ── 오늘 일기 작성 여부 확인 ──
+  useEffect(() => {
+    if (!user?.id) { setTodayDiaryWritten(null); return; }
+    const client = getAuthenticatedClient(user.id) || supabase;
+    if (!client) return;
+    const today = new Date().toISOString().slice(0, 10);
+    client.from('diary_entries').select('id').eq('kakao_id', String(user.id)).eq('date', today).maybeSingle()
+      .then(({ data }) => setTodayDiaryWritten(!!data)).catch(() => {});
+  }, [user?.id]);
 
   // ── 카카오 로그인 처리 중 로딩 화면 ──
   if (loginLoading) {
@@ -243,7 +269,7 @@ export default function App() {
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
             // 출생정보가 필요한 페이지들: formOk 없으면 step 1로
-            const needsForm = [2, 5, 6, 7, 8, 10, 12, 13, 14, 16, 17, 18];
+            const needsForm = [2, 5, 6, 7, 8, 10, 12, 13, 14, 16, 17, 18, 20];
             if (s === 'history' && item) { setHistItem(item); setStep(9); }
             else if (s === 'fortune') { formOk ? setStep(18) : setStep(1); }
             else if (s === 1 && formOk && otherProfiles.length === 0) { setSelQs([]); setStep(2); }
@@ -256,6 +282,9 @@ export default function App() {
           onInvite={() => setShowInviteModal(true)}
           onAddOther={() => setShowOtherProfileModal(true)}
           onSettings={() => setStep(19)}
+          onDeleteAllHistory={deleteAllHistoryItems}
+          sidebarPrefs={sidebarPrefs}
+          todayDiaryWritten={todayDiaryWritten}
         />
       )}
 
@@ -276,7 +305,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>🏠</button>}
 
@@ -549,6 +578,21 @@ export default function App() {
               showToast={showToast}
               responseStyle={responseStyle}
               onStyleChange={(val) => saveSettings({ responseStyle: val })}
+              sidebarPrefs={sidebarPrefs}
+              onSidebarPrefsChange={(prefs) => {
+                setSidebarPrefs(prefs);
+                if (user?.id) saveAnalysisCache(user.id, 'sidebar_prefs', JSON.stringify(prefs));
+              }}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 20: 일기 모아보기 ── */}
+        {step === 20 && (
+          <Suspense fallback={<PageSpinner />}>
+            <DiaryListPage
+              user={user}
+              setStep={setStep}
             />
           </Suspense>
         )}

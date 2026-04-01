@@ -115,7 +115,7 @@ export function useUserProfile() {
 
           const { data: saved } = await (authClient || supabase)
             .from('users')
-            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, onboarded, quiz_state')
+            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
             .eq('kakao_id', String(data.id))
             .single();
 
@@ -141,6 +141,7 @@ export function useUserProfile() {
             setShowConsentModal(true);
           }
           if (saved?.response_style) setResponseStyle(saved.response_style);
+          if (saved?.theme) setTheme(saved.theme);
           if (saved?.onboarded != null) setOnboarded(saved.onboarded);
           if (saved?.quiz_state) setQuizState(saved.quiz_state);
         } else {
@@ -167,7 +168,7 @@ export function useUserProfile() {
     (async () => {
       const [usersRes, profilesRes, othersRes] = await Promise.allSettled([
         client.from('users')
-          .select('birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, onboarded, quiz_state')
+          .select('birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
           .single(),
         client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).single(),
@@ -191,6 +192,7 @@ export function useUserProfile() {
         if (data?.consent_flags) setConsentFlags(data.consent_flags);
         else setShowConsentModal(true); // DB에 동의 정보 없으면 항상 모달 표시
         if (data?.response_style) setResponseStyle(data.response_style);
+        if (data?.theme) setTheme(data.theme);
         if (data?.onboarded != null) setOnboarded(data.onboarded);
         if (data?.quiz_state) setQuizState(data.quiz_state);
       } else {
@@ -277,6 +279,7 @@ export function useUserProfile() {
     if (!supabase || !currentUser?.id) return;
     const dbUpdates = {};
     if (updates.responseStyle !== undefined) dbUpdates.response_style = updates.responseStyle;
+    if (updates.theme         !== undefined) dbUpdates.theme           = updates.theme;
     if (updates.onboarded     !== undefined) dbUpdates.onboarded       = updates.onboarded;
     if (updates.quizState     !== undefined) dbUpdates.quiz_state      = updates.quizState;
     if (!Object.keys(dbUpdates).length) return;
