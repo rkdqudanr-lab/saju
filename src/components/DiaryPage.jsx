@@ -52,13 +52,40 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
   const [tomorrowGoal, setTomorrowGoal] = useState('');
   const [content, setContent] = useState(initialContent || '');
   const [submitted, setSubmitted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [todayEntry, setTodayEntry] = useState(null);
   const [loadingEntry, setLoadingEntry] = useState(true);
   const [summaryText, setSummaryText] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [diaryStreak, setDiaryStreak] = useState(0);
 
   const today = new Date().toISOString().slice(0, 10);
+
+  // 연속 작성 스트릭 계산
+  useEffect(() => {
+    if (!user?.id) return;
+    const client = getAuthenticatedClient(user.id) || supabase;
+    if (!client) return;
+    (async () => {
+      try {
+        const { data: entries } = await client.from('diary_entries')
+          .select('date').eq('kakao_id', String(user.id))
+          .order('date', { ascending: false }).limit(60);
+        if (!entries || entries.length === 0) { setDiaryStreak(0); return; }
+        const dateSet = new Set(entries.map(e => e.date));
+        let streak = 0;
+        const cur = new Date(today);
+        while (true) {
+          const d = cur.toISOString().slice(0, 10);
+          if (!dateSet.has(d)) break;
+          streak++;
+          cur.setDate(cur.getDate() - 1);
+        }
+        setDiaryStreak(streak);
+      } catch {}
+    })();
+  }, [user?.id, today]);
 
   // 결과/로딩 상태 → submitted 자동 설정
   // - 새로고침 후 결과 복원
@@ -85,6 +112,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
           if (data.tomorrow_goal) setTomorrowGoal(data.tomorrow_goal);
           if (data.content) setContent(data.content);
           setSubmitted(true);
+          setIsEditing(false);
         }
       } catch {}
       finally { setLoadingEntry(false); }
@@ -130,6 +158,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       const context = `[오늘의 기분: ${moodLabel}] [날씨: ${weatherLabel}] [에너지: ${energyLabel}]${gratitude ? `\n[감사한 일: ${gratitude}]` : ''}${tomorrowGoal ? `\n[내일 목표: ${tomorrowGoal}]` : ''}`;
       askReview(`${context}\n\n${content.trim()}`, DIARY_PROMPT);
       setSubmitted(true);
+      setIsEditing(false);
       // 임베디드 모드: 저장 후 전체 페이지로 이동해서 결과 보여주기
       if (embedded && setStep) {
         setStep(17);
@@ -201,6 +230,138 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     return embedded ? spinner : <div className="page"><div className="inner">{spinner}</div></div>;
   }
 
+  // ── 뷰 모드 (작성 완료 후) ──
+  const moodOpt   = MOOD_OPTIONS.find(m => m.value === mood);
+  const weatherOpt = WEATHER_OPTIONS.find(w => w.value === weather);
+  const energyOpt = ENERGY_OPTIONS.find(e => e.value === energy);
+
+  const viewContent = (
+    <div style={{ paddingTop: 8, paddingBottom: embedded ? 16 : 40 }}>
+      {/* 헤더 */}
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>📓</div>
+        <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
+          나의 하루를 별숨에게
+        </div>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+          {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
+        </div>
+      </div>
+
+      {diaryStreak >= 2 && (
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,120,50,.12)', border: '1px solid rgba(255,120,50,.3)', borderRadius: 20, padding: '5px 14px', fontSize: 'var(--xs)', color: '#ff7832', fontWeight: 700 }}>
+            🔥 {diaryStreak}일 연속 기록 중!
+          </span>
+        </div>
+      )}
+
+      {/* 기분 · 날씨 · 에너지 요약 카드 */}
+      <div style={{ background: 'var(--bg2)', border: '1px solid var(--acc)', borderRadius: 'var(--r2)', padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: 12 }}>
+        {moodOpt && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem' }}>{moodOpt.emoji}</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 4 }}>{moodOpt.label}</div>
+          </div>
+        )}
+        {weatherOpt && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem' }}>{weatherOpt.emoji}</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 4 }}>{weatherOpt.label}</div>
+          </div>
+        )}
+        {energyOpt && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem' }}>{energyOpt.emoji}</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 4 }}>에너지 {energyOpt.value}/5</div>
+          </div>
+        )}
+      </div>
+
+      {/* 감사한 일 */}
+      {gratitude && (
+        <div style={{ marginBottom: 16, padding: '12px 16px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>✦ 오늘 감사했던 일</div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>{gratitude}</div>
+        </div>
+      )}
+
+      {/* 내일 목표 */}
+      {tomorrowGoal && (
+        <div style={{ marginBottom: 16, padding: '12px 16px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>✦ 내일 한 가지 목표</div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>{tomorrowGoal}</div>
+        </div>
+      )}
+
+      {/* 일기 내용 */}
+      {content && (
+        <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)' }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>✦ 오늘 있었던 일</div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>{content}</div>
+        </div>
+      )}
+
+      {/* 별숨의 해석 */}
+      {(diaryReviewLoading || diaryReviewResult) && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: '1.1rem' }}>✦</span>
+              <div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>별숨의 해석</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 오늘을 읽었어요</div>
+              </div>
+            </div>
+            {diaryReviewLoading ? (
+              <div style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--t4)', fontSize: 'var(--xs)' }}>
+                <div style={{ width: 14, height: 14, border: '2px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', flexShrink: 0 }} />
+                오늘의 기운을 읽고 있어요...
+              </div>
+            ) : (
+              <div style={{ padding: '14px 16px 16px', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+                {diaryReviewResult}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 해석 후 연결 버튼 */}
+      {diaryReviewResult && !diaryReviewLoading && !embedded && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(10)}>🗓️ 별숨달력에서 보기</button>
+          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(20)}>📚 일기 모아보기</button>
+        </div>
+      )}
+
+      {/* 수정 / 홈 */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="res-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✏️ 수정하기</button>
+        {!embedded && <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(0)}>← 홈으로</button>}
+      </div>
+
+      {/* 이번 달 돌아보기 */}
+      {!embedded && user?.id && (
+        <div style={{ marginTop: 16 }}>
+          <button
+            className="res-btn"
+            style={{ width: '100%', color: 'var(--gold)', borderColor: 'var(--acc)' }}
+            onClick={showSummary ? () => setShowSummary(false) : handleMonthlySummary}
+            disabled={summaryLoading}
+          >
+            {summaryLoading ? '이달 이야기를 읽고 있어요...' : showSummary ? '▲ 이달 요약 닫기' : '✦ 이번 달 돌아보기'}
+          </button>
+          {showSummary && summaryText && (
+            <div style={{ marginTop: 10, padding: '14px 16px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+              {summaryText}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   const pageContent = (
     <div style={{ paddingTop: 8, paddingBottom: embedded ? 16 : 40 }}>
           {/* 헤더 */}
@@ -214,14 +375,17 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
             </div>
           </div>
 
-          {submitted && todayEntry && (
-            <div style={{
-              padding: '10px 14px', background: 'var(--goldf)',
-              borderRadius: 'var(--r1)', border: '1px solid var(--acc)',
-              fontSize: 'var(--xs)', color: 'var(--gold)',
-              marginBottom: 20, textAlign: 'center',
-            }}>
-              ✦ 오늘 일기를 이미 작성했어요. 수정할 수 있어요.
+          {diaryStreak >= 2 && (
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,120,50,.12)', border: '1px solid rgba(255,120,50,.3)', borderRadius: 20, padding: '5px 14px', fontSize: 'var(--xs)', color: '#ff7832', fontWeight: 700 }}>
+                🔥 {diaryStreak}일 연속 기록 중!
+              </span>
+            </div>
+          )}
+
+          {isEditing && submitted && (
+            <div style={{ padding: '10px 14px', background: 'var(--goldf)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)', fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 20, textAlign: 'center' }}>
+              ✦ 수정 모드 — 저장하면 별숨이 다시 해석해줘요
             </div>
           )}
 
@@ -431,10 +595,13 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
         </div>
   );
 
+  // 제출 완료 + 편집 모드 아닌 경우 → 뷰 모드
+  const activeContent = (!embedded && submitted && !isEditing) ? viewContent : pageContent;
+
   if (embedded) return pageContent;
   return (
     <div className="page">
-      <div className="inner">{pageContent}</div>
+      <div className="inner">{activeContent}</div>
     </div>
   );
 }
