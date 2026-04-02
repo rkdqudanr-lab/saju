@@ -44,7 +44,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, showToast }) {
+export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, showToast }) {
   const [mood, setMood] = useState(initialMood || null);
   const [weather, setWeather] = useState(initialWeather || '');
   const [energy, setEnergy] = useState(initialEnergy || null);
@@ -53,14 +53,18 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
   const [content, setContent] = useState(initialContent || '');
   const [submitted, setSubmitted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [todayEntry, setTodayEntry] = useState(null);
   const [loadingEntry, setLoadingEntry] = useState(true);
+  const [pastDiaryReview, setPastDiaryReview] = useState(null);
   const [summaryText, setSummaryText] = useState('');
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [diaryStreak, setDiaryStreak] = useState(0);
 
   const today = new Date().toISOString().slice(0, 10);
+  const targetDate = viewDate || today;
+  const isPastEntry = !!(viewDate && viewDate !== today);
 
   // 연속 작성 스트릭 계산
   useEffect(() => {
@@ -94,7 +98,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     if (diaryReviewLoading || diaryReviewResult) setSubmitted(true);
   }, [diaryReviewLoading, diaryReviewResult]);
 
-  // 오늘 일기 불러오기 (인증 클라이언트 사용)
+  // 일기 불러오기 (targetDate 기준, 인증 클라이언트 사용)
   useEffect(() => {
     if (!user?.id) { setLoadingEntry(false); return; }
     const client = getAuthenticatedClient(user.id) || supabase;
@@ -102,7 +106,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     (async () => {
       try {
         const { data } = await client.from('diary_entries')
-          .select('*').eq('kakao_id', String(user.id)).eq('date', today).single();
+          .select('*').eq('kakao_id', String(user.id)).eq('date', targetDate).single();
         if (data) {
           setTodayEntry(data);
           if (data.mood) setMood(data.mood);
@@ -113,15 +117,32 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
           if (data.content) setContent(data.content);
           setSubmitted(true);
           setIsEditing(false);
+        } else if (isPastEntry) {
+          // 과거 날짜인데 일기가 없으면 읽기 모드로 시작 (빈 상태)
+          setSubmitted(false);
+          setIsEditing(false);
         }
+        // 별숨 해석 로드 (daily_cache)
+        try {
+          const { data: cacheData } = await client
+            .from('daily_cache')
+            .select('content')
+            .eq('kakao_id', String(user.id))
+            .eq('cache_type', 'diary_review')
+            .eq('cache_date', targetDate)
+            .single();
+          if (cacheData?.content) setPastDiaryReview(cacheData.content);
+        } catch {}
       } catch {}
       finally { setLoadingEntry(false); }
     })();
-  }, [user?.id, today]);
+  }, [user?.id, targetDate]);
 
   const canSubmit = !!(mood || weather || energy || content.trim());
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const entry = {
       mood: mood || null,
       weather: weather || null,
@@ -136,7 +157,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       try {
         const client = getAuthenticatedClient(user.id) || supabase;
         if (client) {
-          const payload = { kakao_id: String(user.id), date: today, ...entry };
+          const payload = { kakao_id: String(user.id), date: targetDate, ...entry };
           if (todayEntry?.id) {
             await client.from('diary_entries').update(entry).eq('id', todayEntry.id).eq('kakao_id', String(user.id));
           } else {
@@ -147,11 +168,13 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       } catch (e) {
         console.error('[DiaryPage] 저장 오류:', e);
         showToast?.('일기 저장에 실패했어요...', 'error');
+        setIsSubmitting(false);
+        return;
       }
     }
 
-    // 별숨 해석 요청
-    if (askReview) {
+    // 별숨 해석 요청 (오늘 날짜만)
+    if (askReview && !isPastEntry) {
       const moodLabel = MOOD_OPTIONS.find(m => m.value === mood)?.label || '';
       const weatherLabel = WEATHER_OPTIONS.find(w => w.value === weather)?.label || '';
       const energyLabel = ENERGY_OPTIONS.find(e => e.value === energy)?.label || '';
@@ -163,6 +186,25 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       if (embedded && setStep) {
         setStep(17);
       }
+    } else {
+      // 과거 날짜 또는 askReview 없음: 저장 후 읽기 모드로 전환
+      setSubmitted(true);
+      setIsEditing(false);
+      showToast?.('일기가 저장됐어요 🌙', 'info');
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('이 일기를 삭제할까요?')) return;
+    if (!todayEntry?.id) return;
+    const client = getAuthenticatedClient(user.id) || supabase;
+    try {
+      await client.from('diary_entries').delete().eq('id', todayEntry.id).eq('kakao_id', String(user.id));
+      showToast?.('일기가 삭제됐어요 🌙', 'info');
+      setStep(20);
+    } catch {
+      showToast?.('삭제에 실패했어요...', 'error');
     }
   };
 
@@ -244,11 +286,11 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
           나의 하루를 별숨에게
         </div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-          {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
+          {new Date(targetDate + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
         </div>
       </div>
 
-      {diaryStreak >= 2 && (
+      {!isPastEntry && diaryStreak >= 2 && (
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,120,50,.12)', border: '1px solid rgba(255,120,50,.3)', borderRadius: 20, padding: '5px 14px', fontSize: 'var(--xs)', color: '#ff7832', fontWeight: 700 }}>
             🔥 {diaryStreak}일 연속 기록 중!
@@ -302,8 +344,8 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
         </div>
       )}
 
-      {/* 별숨의 해석 */}
-      {(diaryReviewLoading || diaryReviewResult) && (
+      {/* 별숨의 해석 — 오늘(실시간) 또는 과거(캐시) */}
+      {(!isPastEntry && (diaryReviewLoading || diaryReviewResult)) && (
         <div style={{ marginBottom: 16 }}>
           <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -326,19 +368,38 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
           </div>
         </div>
       )}
+      {isPastEntry && pastDiaryReview && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: '1.1rem' }}>✦</span>
+              <div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>별숨의 해석</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 그날을 읽었어요</div>
+              </div>
+            </div>
+            <div style={{ padding: '14px 16px 16px', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+              {pastDiaryReview}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 해석 후 연결 버튼 */}
-      {diaryReviewResult && !diaryReviewLoading && !embedded && (
+      {!isPastEntry && diaryReviewResult && !diaryReviewLoading && !embedded && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(10)}>🗓️ 별숨달력에서 보기</button>
           <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(20)}>📚 일기 모아보기</button>
         </div>
       )}
 
-      {/* 수정 / 홈 */}
+      {/* 수정 / 삭제 / 홈 */}
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="res-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✏️ 수정하기</button>
-        {!embedded && <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(0)}>← 홈으로</button>}
+        {todayEntry?.id && (
+          <button className="res-btn" style={{ flex: 1, color: 'var(--rose)' }} onClick={handleDelete}>🗑️ 삭제하기</button>
+        )}
+        {!embedded && <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(isPastEntry ? 20 : 0)}>{isPastEntry ? '← 목록으로' : '← 홈으로'}</button>}
       </div>
 
       {/* 이번 달 돌아보기 */}
@@ -371,7 +432,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
               나의 하루를 별숨에게
             </div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-              {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
+              {new Date(targetDate + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
             </div>
           </div>
 
@@ -508,11 +569,11 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
           {/* 제출 버튼 */}
           <button
             className="btn-main"
-            disabled={!canSubmit}
+            disabled={!canSubmit || isSubmitting}
             onClick={handleSubmit}
             style={{ marginBottom: 8 }}
           >
-            저장하고 별숨의 해석듣기 ✦
+            {isPastEntry ? (isSubmitting ? '저장 중...' : '저장하기 ✦') : (isSubmitting ? '저장 중...' : '저장하고 별숨의 해석듣기 ✦')}
           </button>
 
           {/* 별숨의 해석 */}

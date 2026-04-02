@@ -78,6 +78,7 @@ export default function App() {
   const [quizInput, setQuizInput] = useState('');
   const [sidebarPrefs, setSidebarPrefs] = useState({ hiddenGroups: [] });
   const [todayDiaryWritten, setTodayDiaryWritten] = useState(null); // null=미확인, true/false
+  const [diaryViewDate, setDiaryViewDate] = useState(null); // null=오늘, 'YYYY-MM-DD'=특정 날짜
   const toastTimer = useRef(null);
   const resultsRef = useRef(null);
   const askBtnRef = useRef(null);
@@ -459,7 +460,7 @@ export default function App() {
         {/* ── Step 10: 별숨 달력 ── */}
         {step === 10 && (
           <Suspense fallback={<PageSpinner />}>
-            <SajuCalendar form={form} setStep={setStep} askQuick={askQuick} user={user} callApi={callApi} showToast={showToast} />
+            <SajuCalendar form={form} setStep={setStep} askQuick={askQuick} user={user} callApi={callApi} showToast={showToast} setDiaryViewDate={setDiaryViewDate} />
           </Suspense>
         )}
 
@@ -549,6 +550,7 @@ export default function App() {
               buildCtx={buildCtx}
               askReview={askDiaryReview}
               setStep={setStep}
+              viewDate={diaryViewDate}
               diaryReviewResult={diaryReviewResult}
               diaryReviewLoading={diaryReviewLoading}
               showToast={showToast}
@@ -593,6 +595,7 @@ export default function App() {
             <DiaryListPage
               user={user}
               setStep={setStep}
+              onSelectEntry={(date) => setDiaryViewDate(date)}
             />
           </Suspense>
         )}
