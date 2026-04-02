@@ -28,7 +28,7 @@ async function loadDailyCacheFromSupabase(userId, type) {
       .eq('kakao_id', String(userId))
       .eq('cache_date', getTodayDateStr())
       .eq('cache_type', type)
-      .single();
+      .maybeSingle();
     return data?.content || null;
   } catch { return null; }
 }

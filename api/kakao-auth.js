@@ -55,7 +55,8 @@ export default async function handler(req, res) {
 
     const kakaoId   = String(userData.id);
     const nickname  = userData.kakao_account?.profile?.nickname || '별님';
-    const profileImage = userData.kakao_account?.profile?.thumbnail_image_url || null;
+    const rawProfileImage = userData.kakao_account?.profile?.thumbnail_image_url || null;
+    const profileImage = rawProfileImage ? rawProfileImage.replace(/^http:\/\//, 'https://') : null;
 
     // ── STEP 3: JWT 발급 (24시간 유효) ──
     const jwtSecret = process.env.JWT_SECRET;
