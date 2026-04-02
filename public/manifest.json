@@ -1,7 +1,7 @@
 {
   "name": "별숨",
   "short_name": "별숨",
-  "description": "사주와 점성술로 당신의 질문에 답해드려요",
+  "description": "AI로 분석하는 사주풀이, 사주팔자, 점성술, 오늘의 운세, 궁합 상담 — 별숨",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
