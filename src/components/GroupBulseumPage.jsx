@@ -351,7 +351,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
     const code = codeInput.trim().toUpperCase();
     try {
       if (supabase) {
-        const { data, error } = await supabase.from('group_sessions').select('id').eq('invite_code', code).single();
+        const { data, error } = await supabase.from('group_sessions').select('id').eq('invite_code', code).maybeSingle();
         if (error || !data) {
           // 서버에 없으면 로컬 백업 확인
           const localData = localStorage.getItem(getGroupLocalKey(code));

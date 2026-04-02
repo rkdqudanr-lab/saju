@@ -8,7 +8,7 @@ export async function loadAnalysisCache(userId, cacheKey) {
     const authClient = getAuthenticatedClient(userId);
     const { data } = await (authClient || supabase)
       .from('analysis_cache').select('content')
-      .eq('kakao_id', String(userId)).eq('cache_key', cacheKey).single();
+      .eq('kakao_id', String(userId)).eq('cache_key', cacheKey).maybeSingle();
     return data?.content || null;
   } catch { return null; }
 }

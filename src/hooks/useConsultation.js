@@ -28,7 +28,7 @@ async function loadDailyCacheFromSupabase(userId, type) {
       .eq('kakao_id', String(userId))
       .eq('cache_date', getTodayDateStr())
       .eq('cache_type', type)
-      .single();
+      .maybeSingle();
     return data?.content || null;
   } catch { return null; }
 }
@@ -234,7 +234,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       let supabaseUserId = user?.supabaseId || null;
       if (!supabaseUserId) {
         const authClient = getAuthenticatedClient(kakaoId);
-        const { data: userRow } = await (authClient || supabase).from('users').select('id').eq('kakao_id', String(kakaoId)).single();
+        const { data: userRow } = await (authClient || supabase).from('users').select('id').eq('kakao_id', String(kakaoId)).maybeSingle();
         supabaseUserId = userRow?.id || null;
       }
       if (!supabaseUserId) return;
@@ -281,7 +281,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       const authClient = getAuthenticatedClient(user.id);
       // users 테이블에서 supabase UUID 조회 후 consultation_history 전체 삭제
       const { data: userData } = await (authClient || supabase)
-        .from('users').select('id').eq('kakao_id', String(user.id)).single();
+        .from('users').select('id').eq('kakao_id', String(user.id)).maybeSingle();
       if (userData?.id) {
         await (authClient || supabase)
           .from('consultation_history').delete().eq('user_id', userData.id);

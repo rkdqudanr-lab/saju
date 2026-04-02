@@ -106,7 +106,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
     (async () => {
       try {
         const { data } = await client.from('diary_entries')
-          .select('*').eq('kakao_id', String(user.id)).eq('date', targetDate).single();
+          .select('*').eq('kakao_id', String(user.id)).eq('date', targetDate).maybeSingle();
         if (data) {
           setTodayEntry(data);
           if (data.mood) setMood(data.mood);
@@ -130,7 +130,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
             .eq('kakao_id', String(user.id))
             .eq('cache_type', 'diary_review')
             .eq('cache_date', targetDate)
-            .single();
+            .maybeSingle();
           if (cacheData?.content) setPastDiaryReview(cacheData.content);
         } catch {}
       } catch {}

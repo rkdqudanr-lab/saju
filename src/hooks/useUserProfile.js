@@ -117,7 +117,7 @@ export function useUserProfile() {
             .from('users')
             .select('id, birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
             .eq('kakao_id', String(data.id))
-            .single();
+            .maybeSingle();
 
           if (saved?.id) {
             const userDataWithUuid = { ...userData, supabaseId: saved.id };
@@ -170,8 +170,8 @@ export function useUserProfile() {
         client.from('users')
           .select('birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
-          .single(),
-        client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).single(),
+          .maybeSingle(),
+        client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).maybeSingle(),
         client.from('other_profiles').select('*').eq('kakao_id', String(user.id)).order('sort_order'),
       ]);
 
