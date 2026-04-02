@@ -137,7 +137,8 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
     const authClient = getAuthenticatedClient(user.id);
     const ym = `${viewYear}-${String(viewMonth).padStart(2, '0')}`;
     const dateFrom = `${ym}-01`;
-    const dateTo = `${ym}-31`;
+    const lastDay = new Date(viewYear, viewMonth, 0).getDate();
+    const dateTo = `${ym}-${String(lastDay).padStart(2, '0')}`;
 
     // 오늘 별숨 카드 기록 (cache_type = 'horoscope')
     (authClient || supabase)

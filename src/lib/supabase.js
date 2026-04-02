@@ -33,7 +33,19 @@ export function getAuthenticatedClient(kakaoId) {
   if (!kakaoId) return supabase
   const key = String(kakaoId)
   if (!_authClientCache.has(key)) {
-    _authClientCache.set(key, createSafeClient({ 'x-kakao-id': key }))
+    if (!supabaseUrl || !supabaseAnonKey) {
+      _authClientCache.set(key, null)
+    } else {
+      try {
+        _authClientCache.set(key, createClient(supabaseUrl, supabaseAnonKey, {
+          global: { headers: { 'x-kakao-id': key } },
+          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+        }))
+      } catch (e) {
+        console.error('[별숨] 인증 클라이언트 초기화 실패:', e)
+        _authClientCache.set(key, null)
+      }
+    }
   }
   return _authClientCache.get(key)
 }
