@@ -21,12 +21,19 @@ function createSafeClient(extraHeaders = {}) {
 
 export const supabase = createSafeClient()
 
+const _authClientCache = new Map()
+
 /**
  * kakao_id를 x-kakao-id 헤더에 주입한 인증 클라이언트 반환.
  * RLS 정책에서 request.header('x-kakao-id')로 본인 데이터만 접근.
+ * 동일 kakaoId에 대해 싱글턴 인스턴스를 재사용하여 GoTrueClient 중복 경고를 방지.
  * @param {string} kakaoId
  */
 export function getAuthenticatedClient(kakaoId) {
   if (!kakaoId) return supabase
-  return createSafeClient({ 'x-kakao-id': String(kakaoId) })
+  const key = String(kakaoId)
+  if (!_authClientCache.has(key)) {
+    _authClientCache.set(key, createSafeClient({ 'x-kakao-id': key }))
+  }
+  return _authClientCache.get(key)
 }
