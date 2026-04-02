@@ -92,7 +92,7 @@ function parseFortuneText(text) {
 
 const FORTUNE_ITEM_ICONS = ['🎨', '🌿', '🧭', '✨', '🌙'];
 
-export default function SajuCalendar({ form, setStep, askQuick, user, callApi, showToast }) {
+export default function SajuCalendar({ form, setStep, askQuick, user, callApi, showToast, setDiaryViewDate }) {
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
@@ -105,6 +105,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   // 운세·일기 기록 (날짜 → 데이터)
   const [dailyFortunes, setDailyFortunes] = useState({});
   const [diaryEntries, setDiaryEntries] = useState({});
+  const [diaryReviews, setDiaryReviews] = useState({});
 
   // 월별 상황 분석
   const [selectedCatId, setSelectedCatId] = useState(null);
@@ -156,7 +157,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
     // 일기 기록
     (authClient || supabase)
       .from('diary_entries')
-      .select('date, mood, weather, energy, content, gratitude, tomorrow_goal')
+      .select('id, date, mood, weather, energy, content, gratitude, tomorrow_goal')
       .eq('kakao_id', String(user.id))
       .gte('date', dateFrom)
       .lte('date', dateTo)
@@ -166,6 +167,21 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
         setDiaryEntries(fresh);
       })
       .catch(e => console.error('[별숨] 달력 일기 로드 오류:', e));
+
+    // 별숨 해석 기록 (diary_review)
+    (authClient || supabase)
+      .from('daily_cache')
+      .select('cache_date, content')
+      .eq('kakao_id', String(user.id))
+      .eq('cache_type', 'diary_review')
+      .gte('cache_date', dateFrom)
+      .lte('cache_date', dateTo)
+      .then(({ data }) => {
+        const fresh = {};
+        (data || []).forEach(row => { fresh[row.cache_date] = row.content; });
+        setDiaryReviews(fresh);
+      })
+      .catch(e => console.error('[별숨] 달력 일기 해석 로드 오류:', e));
   }, [user?.id, viewYear, viewMonth]);
 
   // 월 변경 시 월별 분석 결과 초기화
@@ -211,6 +227,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   const selectedEvents = selectedKey ? (events[selectedKey] || []) : [];
   const selectedFortune = selectedKey ? (dailyFortunes[selectedKey] || null) : null;
   const selectedDiary = selectedKey ? (diaryEntries[selectedKey] || null) : null;
+  const selectedDiaryReview = selectedKey ? (diaryReviews[selectedKey] || null) : null;
   const todayKey = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
   const addEvent = async () => {
@@ -292,6 +309,22 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
     });
     setEditingEventId(null);
     setEditingEventText('');
+  };
+
+  const handleDeleteDiary = async (dateKey) => {
+    if (!window.confirm('이 일기를 삭제할까요?')) return;
+    const entry = diaryEntries[dateKey];
+    if (!entry?.id) { showToast?.('삭제할 일기 정보가 없어요.', 'error'); return; }
+    const authClient = getAuthenticatedClient(user.id);
+    try {
+      await (authClient || supabase)
+        .from('diary_entries').delete()
+        .eq('id', entry.id).eq('kakao_id', String(user.id));
+      setDiaryEntries(prev => { const next = { ...prev }; delete next[dateKey]; return next; });
+      showToast?.('일기가 삭제됐어요 🌙', 'info');
+    } catch {
+      showToast?.('삭제에 실패했어요...', 'error');
+    }
   };
 
   const askAboutEvent = (eventTitle, score, d) => {
@@ -542,8 +575,22 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
             {/* ── 나의 하루를 별숨에게 (일기 기록) ── */}
             {selectedDiary && (
               <div style={{ marginBottom: 14, background: 'var(--bg1)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
-                <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.7rem', color: 'var(--lav, #9b8ec4)', fontWeight: 700, letterSpacing: '.04em' }}>📓 나의 하루를 별숨에게</span>
+                  {user?.id && (
+                    <div style={{ display: 'flex', gap: 2 }}>
+                      <button
+                        onClick={() => { setDiaryViewDate?.(selectedKey); setStep(17); }}
+                        style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '0.75rem', padding: '2px 6px', fontFamily: 'var(--ff)' }}
+                        aria-label="일기 수정"
+                      >✎ 수정</button>
+                      <button
+                        onClick={() => handleDeleteDiary(selectedKey)}
+                        style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', fontSize: '0.75rem', padding: '2px 6px', fontFamily: 'var(--ff)' }}
+                        aria-label="일기 삭제"
+                      >✕ 삭제</button>
+                    </div>
+                  )}
                 </div>
                 <div style={{ padding: '10px 14px 12px' }}>
                   {/* 기분·날씨·에너지 */}
@@ -575,8 +622,16 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                     </div>
                   )}
                   {selectedDiary.tomorrow_goal && (
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: selectedDiaryReview ? 8 : 0 }}>
                       ✦ 내일 목표: {selectedDiary.tomorrow_goal}
+                    </div>
+                  )}
+                  {selectedDiaryReview && (
+                    <div style={{ marginTop: 10, padding: '8px 10px', background: 'var(--goldf)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)' }}>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700, marginBottom: 4 }}>✦ 별숨의 해석</div>
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                        {selectedDiaryReview}
+                      </div>
                     </div>
                   )}
                 </div>

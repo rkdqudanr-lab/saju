@@ -26,7 +26,7 @@ function formatMonthLabel(yyyyMM) {
   return `${y}년 ${parseInt(m)}월`;
 }
 
-export default function DiaryListPage({ user, setStep }) {
+export default function DiaryListPage({ user, setStep, onSelectEntry }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -43,7 +43,14 @@ export default function DiaryListPage({ user, setStep }) {
           .eq('kakao_id', String(user.id))
           .order('date', { ascending: false })
           .limit(200);
-        setEntries(data || []);
+        // 날짜 기준 중복 제거 (같은 날짜 첫 번째 항목만 유지)
+        const seen = new Set();
+        const deduped = (data || []).filter(e => {
+          if (seen.has(e.date)) return false;
+          seen.add(e.date);
+          return true;
+        });
+        setEntries(deduped);
       } catch {}
       finally { setLoading(false); }
     })();
@@ -126,7 +133,7 @@ export default function DiaryListPage({ user, setStep }) {
                     return (
                       <div
                         key={entry.id}
-                        onClick={() => setStep(17)}
+                        onClick={() => { onSelectEntry?.(entry.date); setStep(17); }}
                         style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px 16px', cursor: 'pointer', transition: 'border-color .15s, background .15s' }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.background = 'var(--goldf)'; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.background = 'var(--bg2)'; }}
