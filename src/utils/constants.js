@@ -511,17 +511,6 @@ export const LOAD_STATES=[
   {t:"오늘 당신의 별이 어떤 말을 건네는지 듣고 있어요",s:"잠깐만요 ✦"},
 ];
 
-/** 마크다운 제거 */
-export function stripMarkdown(text) {
-  return text
-    .replace(/^#+\s/gm, '')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/~~(.+?)~~/g, '$1')
-    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
-    .replace(/`(.+?)`/g, '$1');
-}
-
 /** 텍스트 파일로 다운로드 */
 export function exportReadingAsTxt(title, text) {
   if (!text) return;

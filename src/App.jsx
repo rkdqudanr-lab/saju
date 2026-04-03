@@ -336,7 +336,7 @@ export default function App() {
             setStep={setStep} setDiy={setDiy}
             kakaoLogin={kakaoLogin} kakaoLogout={kakaoLogout}
             setEditingMyProfile={setEditingMyProfile} setShowProfileModal={setShowProfileModal}
-            askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview}
+            askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview} askWeeklyReview={askWeeklyReview}
             resetDiaryReview={resetDiaryReview}
             handleQuizAnswer={handleQuizAnswer} handleQuizSkip={handleQuizSkip}
             showToast={showToast}

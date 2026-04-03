@@ -222,7 +222,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     }
     setRetryMsg('');
     throw lastErr;
-  }, [buildCtx, responseStyle, user?.id, onLoginRequired]);
+  }, [buildCtx, histItems, responseStyle, user?.id, onLoginRequired]);
 
   // ── 질문 추가/삭제 ──
   const addQ = useCallback(q => {
