@@ -36,6 +36,7 @@ const OnboardingCards          = lazy(() => import("./components/OnboardingCards
 const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
 const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
 const DiaryListPage            = lazy(() => import("./components/DiaryListPage.jsx"));
+const SajuCardPage             = lazy(() => import("./components/SajuCardPage.jsx"));
 
 // modal components
 import UpgradeModal        from "./components/UpgradeModal.jsx";
@@ -121,7 +122,7 @@ export default function App() {
           qLoadStatus,
           dailyResult, dailyLoading, dailyCount, DAILY_MAX,
           diaryReviewResult, diaryReviewLoading,
-          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
+          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
           deleteHistoryItem, deleteAllHistoryItems } = consultation;
 
@@ -611,6 +612,19 @@ export default function App() {
               user={user}
               setStep={setStep}
               onSelectEntry={(date) => setDiaryViewDate(date)}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 21: 사주 명함 카드 ── */}
+        {step === 21 && (
+          <Suspense fallback={<PageSpinner />}>
+            <SajuCardPage
+              form={form}
+              saju={saju}
+              sun={sun}
+              setStep={setStep}
+              showToast={showToast}
             />
           </Suspense>
         )}

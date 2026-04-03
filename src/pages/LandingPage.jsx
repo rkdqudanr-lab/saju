@@ -48,7 +48,7 @@ export default function LandingPage({
   setStep, setDiy,
   kakaoLogin, kakaoLogout,
   setEditingMyProfile, setShowProfileModal,
-  askDailyHoroscope, askDiaryReview, resetDiaryReview,
+  askDailyHoroscope, askDiaryReview, askWeeklyReview, resetDiaryReview,
   handleQuizAnswer, handleQuizSkip,
   showToast,
   DiaryPageLazy,

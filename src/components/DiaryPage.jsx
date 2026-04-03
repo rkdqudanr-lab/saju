@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
-import { DIARY_PROMPT } from "../utils/constants.js";
+import { DIARY_PROMPT, getMoonPhase } from "../utils/constants.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 
 // ═══════════════════════════════════════════════════════════
@@ -193,7 +193,9 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       const weatherLabel = WEATHER_OPTIONS.find(w => w.value === weather)?.label || '';
       const energyLabel = ENERGY_OPTIONS.find(e => e.value === energy)?.label || '';
       const context = `[오늘의 기분: ${moodLabel}] [날씨: ${weatherLabel}] [에너지: ${energyLabel}]${gratitude ? `\n[감사한 일: ${gratitude}]` : ''}${tomorrowGoal ? `\n[내일 목표: ${tomorrowGoal}]` : ''}`;
-      askReview(`${context}\n\n${content.trim()}`, DIARY_PROMPT);
+      const [ty, tm, td] = targetDate.split('-').map(Number);
+      const moonPhase = getMoonPhase(ty, tm, td);
+      askReview(`${context}\n\n${content.trim()}`, DIARY_PROMPT(moonPhase.label));
       setSubmitted(true);
       setIsEditing(false);
       // 임베디드 모드: 저장 후 전체 페이지로 이동해서 결과 보여주기
@@ -299,8 +301,9 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
         <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
           나의 하루를 별숨에게
         </div>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-          {new Date(targetDate + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          <span>{new Date(targetDate + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</span>
+          {(() => { const [ty,tm,td] = targetDate.split('-').map(Number); const mp = getMoonPhase(ty,tm,td); return <span title={mp.label}>{mp.icon}</span>; })()}
         </div>
       </div>
 

@@ -106,7 +106,7 @@ async function checkRateLimit(ip) {
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isCalendarMonth, isSlot, responseStyle, kakaoId, clientHour } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, responseStyle, kakaoId, clientHour } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -138,8 +138,10 @@ function validateRequest(body) {
       isAstrology: !!isAstrology,
       isProfileQuestion: !!isProfileQuestion,
       isGroupAnalysis: !!isGroupAnalysis,
+      teamMode: !!(teamMode || isGroupAnalysis),
       isCalendarMonth: !!isCalendarMonth,
       isSlot: !!isSlot,
+      isWeekly: !!isWeekly,
       responseStyle: style,
       kakaoId: kakaoId || null,
       clientHour: (typeof clientHour === 'number' && Number.isInteger(clientHour) && clientHour >= 0 && clientHour <= 23) ? clientHour : undefined,
@@ -190,11 +192,11 @@ export default async function handler(req, res) {
   const timeHorizon     = getTimeHorizon(userMessage);
   const isDecision   = isDecisionQuestion(userMessage);
 
-  // 모드별 동적 로드 — isSlot은 프론트에서 명시적으로 전달받아 사용 (userMessage 분석 없음)
+  // 모드별 동적 로드 — isSlot, isWeekly는 프론트에서 명시적으로 전달받아 사용 (userMessage 분석 없음)
   const systemBase = await buildSystem(
     today, season, categoryHint, endingHint, timeHorizon,
     userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision,
-    categoryExample, isNatal, isZodiac, isComprehensive, isAstrology, responseStyle, isSlot
+    categoryExample, isNatal, isZodiac, isComprehensive, isAstrology, responseStyle, isSlot, isWeekly
   );
 
   // isProfileQuestion: 프로필 맞춤 질문 생성 전용 시스템 프롬프트
@@ -205,8 +207,8 @@ export default async function handler(req, res) {
 반드시 JSON만 응답하세요: [{"id":"aq_1","q":"질문 내용"},{"id":"aq_2","q":"..."},...]`
     : null;
 
-  // isGroupAnalysis: 그룹 관계 분석 전용 시스템 프롬프트
-  const groupAnalysisSystem = isGroupAnalysis
+  // teamMode/isGroupAnalysis: 그룹 관계 분석 전용 시스템 프롬프트
+  const groupAnalysisSystem = (isGroupAnalysis || teamMode)
     ? `당신은 별숨(byeolsoom)이에요. 여러 사람의 사주와 별자리를 읽고 그들의 관계를 따뜻하고 재밌게 분석해줘요.
 두 사람의 관계를 분석할 때는: 좋은 점, 조심해야 할 점, 함께하면 시너지가 나는 상황, 서로에게 필요한 것을 별숨의 언어로 이야기해주세요.
 판단하지 말고, 재밌고 따뜻하게 두 별의 관계를 풀어주세요.

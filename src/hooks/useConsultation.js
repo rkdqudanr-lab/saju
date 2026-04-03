@@ -175,12 +175,26 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
         const token = getAuthToken();
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        // 최근 상담 3개 이력을 context에 추가
+        const recentConsults = histItems
+          .slice(0, 3)
+          .map((h, i) => {
+            const q = (h.questions || []).join(' ').slice(0, 80);
+            const a = (h.answers || []).join(' ').slice(0, 80);
+            return `[이전 상담 ${i+1}] ${q}\n→ ${a}`;
+          })
+          .join('\n');
+        const fullContext = recentConsults
+          ? `[최근 상담 기억]\n${recentConsults}\n\n${buildCtx()}`
+          : buildCtx();
+
         const res = await fetch('/api/ask', {
           method: 'POST',
           headers,
           body: JSON.stringify({
             userMessage,
-            context: buildCtx(),
+            context: fullContext,
             kakaoId:           user.id,
             isChat:            opts.isChat            || false,
             isReport:          opts.isReport          || false,
@@ -192,6 +206,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             isComprehensive:   opts.isComprehensive   || false,
             isCalendarMonth:   opts.isCalendarMonth   || false,
             isSlot:            opts.isSlot            || false,
+            isWeekly:          opts.isWeekly          || false,
             responseStyle:     style,
             clientHour:        new Date().getHours(),
           }),
@@ -395,6 +410,19 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     finally { setDiaryReviewLoading(false); }
   }, [formOk, callApi, saveHistoryToSupabase, timeSlot, user?.id]);
 
+  const askWeeklyReview = useCallback(async (text) => {
+    if (!formOk) { setStep(1); return; }
+    const q = `이번 주 회고: ${text.slice(0, 30)}${text.length > 30 ? '…' : ''}`;
+    setSelQs([q]);
+    setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
+    try {
+      const ans = await callApi(`[이번 주의 경험과 감정]\n${text}`, { isWeekly: true });
+      setAnswers([ans]);
+      saveHistoryToSupabase([q], [ans], timeSlot);
+    } catch { setAnswers([ERR_MSG]); }
+    setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
+  }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
+
   // ── 단일 답변 재시도 ──
   const retryAnswer = useCallback(async (idx) => {
     const q = selQs[idx];
@@ -474,7 +502,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     addQ, rmQ,
     dailyResult, dailyLoading, dailyCount, DAILY_MAX,
     diaryReviewResult, diaryReviewLoading,
-    askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview, askDiaryReview,
+    askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview,
     resetDiaryReview: useCallback(() => { setDiaryReviewResult(null); }, []),
     retryAnswer,
     handleTypingDone, handleAccToggle,
