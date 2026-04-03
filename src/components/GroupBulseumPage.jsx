@@ -198,7 +198,7 @@ function DetailPanel({ pair, members, onClose, user }) {
         body: JSON.stringify({
           userMessage: `${a.name}과 ${b.name}의 별숨 관계를 깊이 분석해주세요. 좋은 점, 나쁜 점, 서로 주의해야 할 점, 함께할 때의 케미를 별숨의 언어로 이야기해주세요.`,
           context: ctx,
-          isGroupAnalysis: true,
+          teamMode: true,
           isChat: true,
           kakaoId: user?.id || null,
           clientHour: new Date().getHours(),
@@ -287,6 +287,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
   const [codeError, setCodeError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [teamMode, setTeamMode] = useState(false);
 
   // 멤버 사주/별자리 계산
   const enrichedMembers = useMemo(() => members.map(m => {
@@ -573,11 +574,21 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
               <div style={{ fontWeight: 700, color: 'var(--t1)', fontSize: 'var(--md)' }}>
                 우리 모임 ({members.length}명)
               </div>
-              <div style={{
-                fontSize: 'var(--xs)', color: 'var(--gold)',
-                padding: '4px 10px', background: 'var(--goldf)',
-                borderRadius: 20, fontWeight: 700, letterSpacing: 2,
-              }}>{inviteCode}</div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button onClick={() => setTeamMode(!teamMode)} style={{
+                  padding: '4px 10px', background: teamMode ? 'var(--acc)' : 'var(--bg2)',
+                  border: `1px solid ${teamMode ? 'var(--acc)' : 'var(--line)'}`,
+                  borderRadius: 20, fontSize: 'var(--xs)', fontWeight: 700, color: teamMode ? '#fff' : 'var(--t3)',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}>
+                  {teamMode ? '👥 팀 모드' : '두 명'}
+                </button>
+                <div style={{
+                  fontSize: 'var(--xs)', color: 'var(--gold)',
+                  padding: '4px 10px', background: 'var(--goldf)',
+                  borderRadius: 20, fontWeight: 700, letterSpacing: 2,
+                }}>{inviteCode}</div>
+              </div>
             </div>
 
             {/* 멤버 카드 */}

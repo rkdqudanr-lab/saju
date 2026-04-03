@@ -1,4 +1,5 @@
 import { ReportBody } from "../components/AccItem.jsx";
+import { exportReadingAsTxt } from "../utils/constants.js";
 
 export default function ReportStep({
   form, today,
@@ -35,9 +36,10 @@ export default function ReportStep({
           <>
             <ReportBody text={reportText} />
             {reportText && (
-              <div style={{ display: 'flex', gap: 8, marginTop: 'var(--sp3)' }}>
-                <button className="res-top-btn" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)' }} onClick={() => shareCard(0)}>🖼 이미지 저장</button>
-                <button className="res-top-btn primary" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)' }} onClick={() => shareResult('report', reportText, '월간 리포트')}>↗ 공유하기</button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 'var(--sp3)', flexWrap: 'wrap' }}>
+                <button className="res-top-btn" style={{ flex: 1, minWidth: 100, padding: 12, borderRadius: 'var(--r1)' }} onClick={() => shareCard(0)}>🖼 이미지 저장</button>
+                <button className="res-top-btn" style={{ flex: 1, minWidth: 100, padding: 12, borderRadius: 'var(--r1)' }} onClick={() => exportReadingAsTxt('월간리포트', reportText)}>📄 텍스트 저장</button>
+                <button className="res-top-btn primary" style={{ flex: 1, minWidth: 100, padding: 12, borderRadius: 'var(--r1)' }} onClick={() => shareResult('report', reportText, '월간 리포트')}>↗ 공유하기</button>
               </div>
             )}
           </>

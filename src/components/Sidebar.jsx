@@ -190,6 +190,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     { icon: '🌟', label: '오늘 하루 나의 별숨', s: 'fortune' },
                     { icon: '📓', label: '나의 하루를 별숨에게', s: 17, badge: todayDiaryWritten === false },
                     { icon: '📚', label: '일기 모아보기', s: 20 },
+                    { icon: '🎴', label: '나의 사주 명함', s: 21 },
                     { icon: '🗓️', label: '별숨 달력', s: 10 },
                   ].map(m => (
                     <li key={m.s}>

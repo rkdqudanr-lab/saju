@@ -34,10 +34,32 @@ export const DAILY_WORDS = [
 
 export function getDailyWord(d){ return DAILY_WORDS[(d-1)%DAILY_WORDS.length]; }
 
-export const DIARY_PROMPT = `사용자가 오늘 하루 있었던 일을 솔직하게 적었습니다.
+const MOON_PHASES = [
+  { icon: '🌑', label: '신월' },
+  { icon: '🌒', label: '초승달' },
+  { icon: '🌓', label: '상현달' },
+  { icon: '🌔', label: '상현볼록달' },
+  { icon: '🌕', label: '보름달' },
+  { icon: '🌖', label: '하현볼록달' },
+  { icon: '🌗', label: '하현달' },
+  { icon: '🌘', label: '그믐달' },
+];
+
+/** 달 위상 계산 (기준 신월: 2000-01-06) */
+export function getMoonPhase(year, month, day) {
+  const ref = new Date(2000, 0, 6);
+  const target = new Date(year, month - 1, day);
+  const diffDays = (target - ref) / 86400000;
+  const phase = ((diffDays % 29.53059) + 29.53059) % 29.53059;
+  const idx = Math.round((phase / 29.53059) * 8) % 8;
+  return MOON_PHASES[idx];
+}
+
+export const DIARY_PROMPT = (moonPhaseLabel = null) =>
+  `사용자가 오늘 하루 있었던 일을 솔직하게 적었습니다.
 사주와 별자리 관점에서 이 상황을 따뜻하고 공감하며 재해석해주세요.
 왜 이런 일이 일어났는지, 어떤 기운이 작용했는지, 앞으로 어떻게 받아들이면 좋을지 이야기해주세요.
-판단하지 말고 별숨의 언어로 위로하고 통찰을 나눠주세요.
+판단하지 말고 별숨의 언어로 위로하고 통찰을 나눠주세요.${moonPhaseLabel ? `\n\n[달의 위상] 오늘은 ${moonPhaseLabel}이에요. 달의 에너지를 해석에 자연스럽게 녹여주세요.` : ''}
 
 응답 마지막에 반드시 아래 형식으로 후속 질문 2개를 제안해주세요:
 [후속질문] 질문1 / 질문2`;
@@ -474,3 +496,76 @@ export const LOAD_STATES=[
   {t:"당신에게 꼭 맞는 이야기를 고르고 있어요",s:"거의 다 왔어요 ✨"},
   {t:"오늘 당신의 별이 어떤 말을 건네는지 듣고 있어요",s:"잠깐만요 ✦"},
 ];
+
+/** 마크다운 제거 */
+export function stripMarkdown(text) {
+  return text
+    .replace(/^#+\s/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    .replace(/`(.+?)`/g, '$1');
+}
+
+/** 텍스트 파일로 다운로드 */
+export function exportReadingAsTxt(title, text) {
+  if (!text) return;
+  const clean = stripMarkdown(text);
+  const blob = new Blob([clean], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${title || '별숨결과'}_${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/** 사주 명함 카드 이미지로 저장 */
+export function saveSajuNameCard(name, saju, sun) {
+  if (!name || !saju || !sun) return;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 600;
+  canvas.height = 400;
+
+  // 배경
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 테두리
+  ctx.strokeStyle = '#c9a661';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+  // 이름
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 48px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(name, canvas.width / 2, 100);
+
+  // 사주 정보
+  ctx.fillStyle = '#c9a661';
+  ctx.font = '20px sans-serif';
+  ctx.textAlign = 'left';
+  const sajuText = `일주: ${saju.il.g}${saju.il.j} | 기질: ${saju.dom}`;
+  ctx.fillText(sajuText, 60, 200);
+
+  // 별자리
+  const sunText = `${sun.n} (${sun.s})`;
+  ctx.fillText(sunText, 60, 250);
+
+  // PNG로 다운로드
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${name}_사주명함_${new Date().toISOString().slice(0, 10)}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  });
+}
