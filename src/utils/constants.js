@@ -47,12 +47,16 @@ const MOON_PHASES = [
 
 /** 달 위상 계산 (기준 신월: 2000-01-06) */
 export function getMoonPhase(year, month, day) {
+  if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
+    return MOON_PHASES[0];
+  }
   const ref = new Date(2000, 0, 6);
   const target = new Date(year, month - 1, day);
   const diffDays = (target - ref) / 86400000;
+  if (isNaN(diffDays)) return MOON_PHASES[0];
   const phase = ((diffDays % 29.53059) + 29.53059) % 29.53059;
   const idx = Math.round((phase / 29.53059) * 8) % 8;
-  return MOON_PHASES[idx];
+  return MOON_PHASES[idx] || MOON_PHASES[0];
 }
 
 export const DIARY_PROMPT = (moonPhaseLabel = null) =>

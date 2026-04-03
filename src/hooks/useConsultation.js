@@ -176,18 +176,22 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        // 최근 상담 3개 이력을 context에 추가
-        const recentConsults = histItems
-          .slice(0, 3)
-          .map((h, i) => {
-            const q = (h.questions || []).join(' ').slice(0, 80);
-            const a = (h.answers || []).join(' ').slice(0, 80);
-            return `[이전 상담 ${i+1}] ${q}\n→ ${a}`;
-          })
-          .join('\n');
-        const fullContext = recentConsults
-          ? `[최근 상담 기억]\n${recentConsults}\n\n${buildCtx()}`
-          : buildCtx();
+        // 최근 상담 기억 context (오류 시 기본 context로 fallback)
+        let fullContext = buildCtx();
+        try {
+          if (histItems.length > 0) {
+            const recentConsults = histItems
+              .slice(0, 3)
+              .map((h, i) => {
+                const q = (Array.isArray(h.questions) ? h.questions : []).join(' ').slice(0, 60);
+                const a = (Array.isArray(h.answers) ? h.answers : []).join(' ').slice(0, 60);
+                return (q || a) ? `[이전 상담 ${i+1}] ${q}\n→ ${a}` : null;
+              })
+              .filter(Boolean)
+              .join('\n');
+            if (recentConsults) fullContext = `[최근 상담 기억]\n${recentConsults}\n\n${buildCtx()}`;
+          }
+        } catch { /* 이력 주입 실패 시 기본 context 사용 */ }
 
         const res = await fetch('/api/ask', {
           method: 'POST',
