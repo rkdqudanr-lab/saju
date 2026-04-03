@@ -303,7 +303,7 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
         </div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <span>{new Date(targetDate + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</span>
-          {(() => { const [ty,tm,td] = targetDate.split('-').map(Number); const mp = getMoonPhase(ty,tm,td); return <span title={mp.label}>{mp.icon}</span>; })()}
+          {(() => { try { const [ty,tm,td] = (targetDate||'').split('-').map(Number); const mp = getMoonPhase(ty,tm,td); return mp ? <span title={mp.label}>{mp.icon}</span> : null; } catch { return null; } })()}
         </div>
       </div>
 
