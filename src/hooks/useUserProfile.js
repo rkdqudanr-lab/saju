@@ -84,8 +84,16 @@ export function useUserProfile() {
     if (!code) return;
 
     const urlState   = params.get('state');
-    const savedState = (() => { try { return sessionStorage.getItem('byeolsoom_oauth_state'); } catch { return null; } })();
-    // savedState 없으면(sessionStorage 불가 등) CSRF 검증 불가 → 로그인 거부
+    // Safari는 외부 도메인(카카오) 리다이렉트 후 sessionStorage가 초기화되는 버그가 있어
+    // 쿠키를 fallback으로 함께 사용
+    const savedState = (() => {
+      try { const s = sessionStorage.getItem('byeolsoom_oauth_state'); if (s) return s; } catch {}
+      try { const m = document.cookie.match(/byeolsoom_oauth_state=([^;]+)/); if (m) return m[1]; } catch {}
+      return null;
+    })();
+    // CSRF state 쿠키 즉시 삭제
+    try { document.cookie = 'byeolsoom_oauth_state=;max-age=0;path=/;SameSite=Lax'; } catch {}
+    // savedState 없으면(sessionStorage + 쿠키 모두 불가) CSRF 검증 불가 → 로그인 거부
     if (!savedState || urlState !== savedState) {
       window.history.replaceState({}, '', window.location.pathname);
       try { sessionStorage.removeItem('byeolsoom_oauth_state'); } catch {}
@@ -311,7 +319,9 @@ export function useUserProfile() {
     setLoginError('');
     try {
       const state = crypto.randomUUID();
-      sessionStorage.setItem('byeolsoom_oauth_state', state);
+      // Safari fallback: sessionStorage가 실패해도 쿠키에 저장 (5분 유효)
+      try { sessionStorage.setItem('byeolsoom_oauth_state', state); } catch {}
+      try { document.cookie = `byeolsoom_oauth_state=${state};max-age=300;path=/;SameSite=Lax`; } catch {}
       window.Kakao.Auth.authorize({ redirectUri: window.location.origin, state });
     } catch {
       window.Kakao.Auth.authorize({ redirectUri: window.location.origin });
