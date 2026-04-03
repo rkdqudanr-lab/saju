@@ -182,7 +182,9 @@ export default async function handler(req, res) {
 
   const today        = getTodayStr(clientHour);
   const season       = getSeasonDesc(today.m);
-  const categoryHint = getCategoryHint(userMessage);
+  // context 문자열에서 직업/상황 정보 추출 (직업 인식 힌트용)
+  const userContext  = context ? context.slice(0, 500) : '';
+  const categoryHint = getCategoryHint(userMessage, userContext);
   const endingHint      = pickEndingHint(userMessage);
   const categoryExample = getCategoryExample(userMessage);
   const timeHorizon     = getTimeHorizon(userMessage);

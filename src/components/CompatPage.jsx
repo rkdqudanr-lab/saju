@@ -12,12 +12,13 @@ function getDaysInMonth(year, month) {
 // ═══════════════════════════════════════════════════════════
 //  💞 1대1 별숨 — 두 별의 인연 읽기
 // ═══════════════════════════════════════════════════════════
-export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, shareResult, user }) {
+export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, shareResult, user, otherProfiles = [], saveOtherProfile }) {
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
   const [storyResult, setStoryResult] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
   const storyLoadingRef = useRef(false);
   const [recentPartners, setRecentPartners] = useState([]);
+  const [savedMsg, setSavedMsg] = useState('');
 
   // 최근 궁합 파트너 로드 (Supabase)
   useEffect(() => {
@@ -36,6 +37,17 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
       return next;
     });
   }, [user?.id]);
+
+  // 파트너를 otherProfiles에 저장
+  const handleSavePartner = useCallback(() => {
+    if (!partner.by || !partner.bm || !partner.bd) return;
+    const already = otherProfiles.some(
+      o => o.by === partner.by && o.bm === partner.bm && o.bd === partner.bd
+    );
+    if (already) { setSavedMsg('이미 저장된 사람이에요 🌙'); setTimeout(() => setSavedMsg(''), 2500); return; }
+    saveOtherProfile?.({ ...partner, noTime: true });
+    setSavedMsg('별숨 목록에 저장했어요 ✦'); setTimeout(() => setSavedMsg(''), 2500);
+  }, [partner, otherProfiles, saveOtherProfile]);
 
   const partnerSaju = useMemo(() => {
     if (partner.by && partner.bm && partner.bd) {
@@ -138,14 +150,29 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
           {/* 두 사람 */}
           <div className="compat-section">
             <div className="compat-label">두 사람</div>
-            {recentPartners.length > 0 && (
+            {/* 저장된 별숨 사람 (otherProfiles) */}
+            {otherProfiles.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 6 }}>저장된 사람</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {otherProfiles.map((p, i) => (
+                    <button key={`saved-${i}`}
+                      onClick={() => setPartner({ name: p.name || '', by: p.by || '', bm: p.bm || '', bd: p.bd || '', gender: p.gender || '' })}
+                      style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid var(--acc)', background: 'var(--goldf)', color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--ff)' }}>
+                      ✦ {p.name || '이름없음'} ({p.by}년)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {recentPartners.filter(r => !otherProfiles.some(o => o.by === r.by && o.bm === r.bm && o.bd === r.bd)).length > 0 && (
               <div style={{ marginBottom: 10 }}>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6 }}>최근 비교한 사람</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {recentPartners.map((p, i) => (
+                  {recentPartners.filter(r => !otherProfiles.some(o => o.by === r.by && o.bm === r.bm && o.bd === r.bd)).map((p, i) => (
                     <button key={`${p.name}-${p.by}-${i}`}
                       onClick={() => setPartner({ name: p.name || '', by: p.by || '', bm: p.bm || '', bd: p.bd || '', gender: p.gender || '' })}
-                      style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--xs)', cursor: 'pointer' }}>
+                      style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--xs)', cursor: 'pointer', fontFamily: 'var(--ff)' }}>
                       {p.name || '이름없음'} ({p.by}년)
                     </button>
                   ))}
@@ -195,6 +222,23 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
               </div>
             </div>
           </div>
+
+          {/* 상대 저장 */}
+          {partnerOk && saveOtherProfile && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <button
+                onClick={handleSavePartner}
+                style={{
+                  padding: '8px 14px', borderRadius: 20, border: '1px solid var(--acc)',
+                  background: 'var(--goldf)', color: 'var(--gold)', fontSize: 'var(--xs)',
+                  fontWeight: 600, fontFamily: 'var(--ff)', cursor: 'pointer',
+                }}
+              >
+                ✦ 별숨 목록에 저장하기
+              </button>
+              {savedMsg && <span style={{ fontSize: 'var(--xs)', color: 'var(--gold)' }}>{savedMsg}</span>}
+            </div>
+          )}
 
           {/* 궁합 점수 (상대 입력 시) */}
           {partnerOk && (
