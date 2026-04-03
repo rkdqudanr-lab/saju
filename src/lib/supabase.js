@@ -12,6 +12,7 @@ function createSafeClient(extraHeaders = {}) {
   try {
     return createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: extraHeaders },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     })
   } catch (e) {
     console.error('[별숨] Supabase 초기화 실패:', e)
