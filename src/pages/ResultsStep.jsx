@@ -1,5 +1,5 @@
 import { ON } from "../utils/saju.js";
-import { parseAccSummary, PKGS, SIGN_MOOD, CHAT_SUGG } from "../utils/constants.js";
+import { parseAccSummary, breakAtNatural, PKGS, SIGN_MOOD, CHAT_SUGG } from "../utils/constants.js";
 import AccItem, { FeedbackBtn } from "../components/AccItem.jsx";
 
 export default function ResultsStep({
@@ -58,7 +58,7 @@ export default function ResultsStep({
             return summaryStr ? (
               <div className="star-summary">
                 <span className="star-summary-icon">✦</span>
-                <span className="star-summary-text">{summaryStr}</span>
+                <span className="star-summary-text">{breakAtNatural(summaryStr)}</span>
               </div>
             ) : null;
           })()}

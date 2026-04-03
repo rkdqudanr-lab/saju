@@ -1,5 +1,6 @@
 // DailyStarCard — 오늘 하루 별숨 카드 (메인 페이지 상시 표시)
 // 응답 5항목: 색 / 음식 / 방향 / 해도 좋은 것 / 조심할 것
+import { breakAtNatural } from '../utils/constants.js';
 
 const ITEM_ICONS  = ['🎨', '🌿', '🧭', '✨', '🌙'];
 const ITEM_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
@@ -52,7 +53,7 @@ export default function DailyStarCard({ result }) {
         </div>
 
         {summary && (
-          <div className="dsc-summary">{summary}</div>
+          <div className="dsc-summary">{breakAtNatural(summary)}</div>
         )}
 
         <div className="dsc-items">
