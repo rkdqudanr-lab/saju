@@ -445,6 +445,10 @@ $$;
 alter table users add column if not exists gender     text;
 alter table users add column if not exists birth_hour numeric;
 
+-- ── 생애 단계 + 큰 글씨 모드 (개선 5, 9) ─────────────────────────────
+alter table users add column if not exists life_stage text default 'free';
+alter table users add column if not exists font_size  text default 'standard';
+
 -- ── 자동 정리 스케줄 설정 방법 (택 1) ───────────────────────────────
 -- 방법 A: Supabase 대시보드 > Database > Extensions > pg_cron 활성화 후:
 --   select cron.schedule('cleanup-daily-cache',           '0 18 * * *', 'select cleanup_old_daily_cache()');

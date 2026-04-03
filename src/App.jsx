@@ -100,17 +100,20 @@ export default function App() {
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
           saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
-          responseStyle, theme, onboarded, quizState, saveSettings } = userProfile;
+          responseStyle, theme, onboarded, quizState, lifeStage, fontSize, saveSettings } = userProfile;
 
   // isDark / onboardingDone / quiz → userProfile에서 파생
   const isDark          = theme === 'dark';
   const onboardingDone  = onboarded;
   const quiz            = quizState;
 
-  const sajuCtx = useSajuContext(form, profile, activeProfileIdx, otherProfiles);
-  const { today, saju, sun, moon, asc, age, formOk, activeForm, activeSaju, activeSun, activeAge, buildCtx } = sajuCtx;
+  // lifeStage + qaAnswers를 profile에 병합하여 AI 컨텍스트 빌더에 전달
+  const profileWithMeta = { ...profile, lifeStage, qaAnswers: profile.qa_answers || profile.qaAnswers };
+  const sajuCtx = useSajuContext(form, profileWithMeta, activeProfileIdx, otherProfiles);
+  const { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx } = sajuCtx;
 
-  const consultation = useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast);
+  // formOkApprox: 년+월만 있어도 체험 가능하도록 게이트 완화
+  const consultation = useConsultation(buildCtx, formOkApprox, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast);
   const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
@@ -164,6 +167,11 @@ export default function App() {
   const toggleDark = useCallback(() => {
     saveSettings({ theme: isDark ? 'light' : 'dark' });
   }, [isDark, saveSettings]);
+
+  // ── 큰 글씨 모드 ──
+  useEffect(() => {
+    document.documentElement.setAttribute('data-font', fontSize === 'large' ? 'large' : 'standard');
+  }, [fontSize]);
 
   // ── 새 배포 후 ChunkLoadError 방지: 유저 로그인 시 lazy chunk 선제 프리패치 ──
   useEffect(() => {
@@ -269,12 +277,12 @@ export default function App() {
           histItems={histItems}
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
-            // 출생정보가 필요한 페이지들: formOk 없으면 step 1로
+            // 출생정보가 필요한 페이지들: formOkApprox 없으면 step 1로
             const needsForm = [2, 5, 6, 7, 8, 10, 12, 13, 14, 16, 17, 18, 20];
             if (s === 'history' && item) { setHistItem(item); setStep(9); }
-            else if (s === 'fortune') { formOk ? setStep(18) : setStep(1); }
-            else if (s === 1 && formOk && otherProfiles.length === 0) { setSelQs([]); setStep(2); }
-            else if (typeof s === 'number' && needsForm.includes(s) && !formOk) { setStep(1); }
+            else if (s === 'fortune') { formOkApprox ? setStep(18) : setStep(1); }
+            else if (s === 1 && formOkApprox && otherProfiles.length === 0) { setSelQs([]); setStep(2); }
+            else if (typeof s === 'number' && needsForm.includes(s) && !formOkApprox) { setStep(1); }
             else { setStep(s); }
           }}
           onKakaoLogin={kakaoLogin}
@@ -317,7 +325,7 @@ export default function App() {
           <LandingPage
             user={user} form={form} saju={saju} sun={sun} today={today}
             otherProfiles={otherProfiles}
-            formOk={formOk} profile={profile}
+            formOk={formOk} formOkApprox={formOkApprox} isApproximate={isApproximate} profile={profile}
             quiz={quiz} quizInput={quizInput} setQuizInput={setQuizInput}
             dailyResult={dailyResult} dailyLoading={dailyLoading}
             dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
@@ -430,6 +438,8 @@ export default function App() {
               onBack={() => setStep(4)}
               shareResult={shareResult}
               user={user}
+              otherProfiles={otherProfiles}
+              saveOtherProfile={saveOtherProfile}
             />
           </Suspense>
         )}
@@ -550,6 +560,7 @@ export default function App() {
               buildCtx={buildCtx}
               askReview={askDiaryReview}
               setStep={setStep}
+              setDiy={setDiy}
               viewDate={diaryViewDate}
               diaryReviewResult={diaryReviewResult}
               diaryReviewLoading={diaryReviewLoading}
@@ -585,6 +596,10 @@ export default function App() {
                 setSidebarPrefs(prefs);
                 if (user?.id) saveAnalysisCache(user.id, 'sidebar_prefs', JSON.stringify(prefs));
               }}
+              lifeStage={lifeStage}
+              onLifeStageChange={(val) => saveSettings({ lifeStage: val })}
+              fontSize={fontSize}
+              onFontSizeChange={(val) => saveSettings({ fontSize: val })}
             />
           </Suspense>
         )}

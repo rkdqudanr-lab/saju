@@ -9,6 +9,14 @@ const ANNIVERSARY_TYPES = [
   { key: "직접입력",   emoji: "✦" },
 ];
 
+const FUTURE_TYPES = [
+  { key: "면접·시험일", emoji: "🎯" },
+  { key: "계약·서류일", emoji: "📝" },
+  { key: "결혼 후보일", emoji: "💍" },
+  { key: "여행·이동일", emoji: "✈️" },
+  { key: "직접입력",    emoji: "✦" },
+];
+
 const CONTEXT_LINES = {
   결혼기념일: "이 날을 선택한 이유가 있었군요. 두 사람이 하나가 된 날의 기운을 살펴볼게요.",
   시험일:     "이 날을 선택한 이유가 있었군요. 그 날의 기운이 어떻게 당신에게 작용했는지 볼게요.",
@@ -26,6 +34,9 @@ export default function AnniversaryPage({
   const [customLabel, setCustomLabel] = useState('');
   const [interpretation, setInterpretation] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isFutureMode, setIsFutureMode] = useState(false);
+
+  const today = new Date().toISOString().slice(0, 10);
 
   const parsed = useMemo(() => {
     if (!anniversaryDate) return null;
@@ -37,7 +48,8 @@ export default function AnniversaryPage({
     } catch { return null; }
   }, [anniversaryDate]);
 
-  const typeLabel = anniversaryType === '직접입력' ? (customLabel || '특별한 날') : anniversaryType;
+  const activeTypes = isFutureMode ? FUTURE_TYPES : ANNIVERSARY_TYPES;
+  const typeLabel = anniversaryType === '직접입력' ? (customLabel || (isFutureMode ? '계획 중인 날' : '특별한 날')) : anniversaryType;
 
   const handleAskAI = async () => {
     if (!parsed) return;
@@ -47,7 +59,7 @@ export default function AnniversaryPage({
       const dateStr = `${parsed.y}년 ${parsed.m}월 ${parsed.d}일`;
       const sajuDesc = `간지 ${parsed.saju.il.gh}${parsed.saju.il.jh}, 오행 ${ON[parsed.saju.dom]} 기운`;
       const ctx = buildCtx ? buildCtx() : '';
-      const prompt = ANNIVERSARY_PROMPT(typeLabel, `${dateStr} (${sajuDesc})`);
+      const prompt = ANNIVERSARY_PROMPT(typeLabel, `${dateStr} (${sajuDesc})`, isFutureMode);
       const result = await callApi(prompt + (ctx ? `\n\n[나의 사주 정보]\n${ctx}` : ''));
       setInterpretation(result);
     } catch {
@@ -61,16 +73,39 @@ export default function AnniversaryPage({
     <div className="page step-fade">
       <div className="inner">
         <div style={{ textAlign: 'center', marginBottom: 'var(--sp3)' }}>
-          <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>🎂</div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>기념일 운세</h2>
-          <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>특별한 날의 기운을 사주로 살펴봐요</p>
+          <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{isFutureMode ? '🔮' : '🎂'}</div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>
+            {isFutureMode ? '미래 날짜 점보기' : '기념일 운세'}
+          </h2>
+          <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>
+            {isFutureMode ? '앞으로 다가올 날의 기운을 미리 살펴봐요' : '특별한 날의 기운을 사주로 살펴봐요'}
+          </p>
+        </div>
+
+        {/* 과거/미래 모드 토글 */}
+        <div style={{ display: 'flex', borderRadius: 40, overflow: 'hidden', border: '1px solid var(--line)', background: 'var(--bg2)', marginBottom: 'var(--sp3)' }}>
+          {[{ label: '지난 날 돌아보기', future: false }, { label: '앞으로의 날 미리보기', future: true }].map(opt => (
+            <button
+              key={String(opt.future)}
+              onClick={() => { setIsFutureMode(opt.future); setAnniversaryType(''); setInterpretation(''); }}
+              style={{
+                flex: 1, padding: '10px 8px', border: 'none', fontFamily: 'var(--ff)',
+                fontSize: 'var(--xs)', fontWeight: isFutureMode === opt.future ? 700 : 400,
+                cursor: 'pointer', transition: 'all .2s',
+                background: isFutureMode === opt.future ? 'var(--goldf)' : 'transparent',
+                color: isFutureMode === opt.future ? 'var(--gold)' : 'var(--t3)',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
 
         {/* 기념일 종류 선택 */}
         <div style={{ marginBottom: 'var(--sp3)' }}>
           <div className="lbl">어떤 날인가요?</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {ANNIVERSARY_TYPES.map(t => (
+            {activeTypes.map(t => (
               <button
                 key={t.key}
                 onClick={() => setAnniversaryType(t.key)}
@@ -103,14 +138,21 @@ export default function AnniversaryPage({
 
         {/* 날짜 선택 */}
         <div style={{ marginBottom: 'var(--sp3)' }}>
-          <div className="lbl">날짜를 선택하세요</div>
+          <div className="lbl">{isFutureMode ? '어떤 날짜인가요? (미래)' : '날짜를 선택하세요'}</div>
           <input
             type="date"
             className="inp"
             value={anniversaryDate}
+            min={isFutureMode ? today : undefined}
+            max={isFutureMode ? undefined : today}
             onChange={e => { setAnniversaryDate(e.target.value); setInterpretation(''); }}
             style={{ width: '100%', boxSizing: 'border-box' }}
           />
+          {isFutureMode && (
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 6, lineHeight: 1.6 }}>
+              계약일, 면접일, 발표일 등 중요한 예정 날짜를 입력해보세요
+            </div>
+          )}
         </div>
 
         {/* 날짜 사주 요약 */}
@@ -159,7 +201,7 @@ export default function AnniversaryPage({
             onClick={handleAskAI}
             style={{ marginBottom: 'var(--sp3)' }}
           >
-            {loading ? '별이 기운을 읽는 중 🌙' : '✦ AI 해석 받기'}
+            {loading ? '별이 기운을 읽는 중 🌙' : (isFutureMode ? '✦ 이 날의 기운 미리보기' : '✦ AI 해석 받기')}
           </button>
         )}
 

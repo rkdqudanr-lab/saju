@@ -10,6 +10,18 @@ function getDaysInMonth(year, month) {
 //  ⚙️ 설정 페이지
 // ═══════════════════════════════════════════════════════════
 
+const LIFE_STAGE_OPTIONS = [
+  { value: 'jobseek', label: '취업 준비 중', emoji: '📋' },
+  { value: 'dating', label: '연애 중', emoji: '💕' },
+  { value: 'healing', label: '이별 후 회복 중', emoji: '💧' },
+  { value: 'employed', label: '직장인', emoji: '💼' },
+  { value: 'business', label: '사업 운영 중', emoji: '📈' },
+  { value: 'student', label: '학업·시험 준비 중', emoji: '📚' },
+  { value: 'parenting', label: '육아 중', emoji: '🏡' },
+  { value: 'reentry', label: '경력 재진입 준비 중', emoji: '🌱' },
+  { value: 'free', label: '자유 선택 (기본)', emoji: '✦' },
+];
+
 const STYLE_OPTIONS = [
   {
     value: 'T',
@@ -68,10 +80,17 @@ export default function SettingsPage({
   onStyleChange,
   sidebarPrefs,
   onSidebarPrefsChange,
+  lifeStage: lifeStageProp = 'free',
+  onLifeStageChange,
+  fontSize: fontSizeProp = 'standard',
+  onFontSizeChange,
 }) {
   const [tab, setTab] = useState(0); // 0: 개인정보, 1: 요금제, 2: 스타일, 3: 메뉴설정
   const [localForm, setLocalForm] = useState(form || {});
   const [saving, setSaving] = useState(false);
+
+  const lifeStage = lifeStageProp || 'free';
+  const fontSize = fontSizeProp || 'standard';
 
   // form prop이 지연 전달될 때 localForm 동기화
   useEffect(() => {
@@ -452,6 +471,73 @@ export default function SettingsPage({
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 2 추가 섹션: 현재 나의 상황 (생애 단계) ── */}
+        {tab === 2 && (
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
+            <div className="card-title">현재 나의 상황</div>
+            <div className="card-sub" style={{ marginBottom: 12 }}>
+              지금 내 상황을 알려주면 별숨이 더 맞춤 언어로 이야기해줘요.
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {LIFE_STAGE_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    onLifeStageChange?.(opt.value);
+                    showToast?.('상황이 저장됐어요 ✦', 'success');
+                  }}
+                  style={{
+                    padding: '7px 14px',
+                    borderRadius: 20,
+                    border: `1px solid ${lifeStage === opt.value ? 'var(--acc)' : 'var(--line)'}`,
+                    background: lifeStage === opt.value ? 'var(--goldf)' : 'var(--bg2)',
+                    color: lifeStage === opt.value ? 'var(--gold)' : 'var(--t3)',
+                    fontSize: 'var(--xs)',
+                    fontWeight: lifeStage === opt.value ? 700 : 400,
+                    fontFamily: 'var(--ff)',
+                    cursor: 'pointer',
+                    transition: 'all .2s',
+                  }}
+                >
+                  {opt.emoji} {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 2 추가 섹션: 큰 글씨 모드 ── */}
+        {tab === 2 && (
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
+            <div className="card-title">큰 글씨 모드</div>
+            <div className="card-sub" style={{ marginBottom: 8 }}>
+              글씨가 조금 더 크게 보이도록 설정할 수 있어요.
+            </div>
+            <div
+              className="toggle-row"
+              onClick={() => {
+                const next = fontSize === 'large' ? 'standard' : 'large';
+                onFontSizeChange?.(next);
+                showToast?.(next === 'large' ? '큰 글씨 모드로 바꿨어요 ✦' : '기본 글씨 크기로 돌아왔어요', 'success');
+              }}
+            >
+              <button
+                className={`toggle ${fontSize === 'large' ? 'on' : 'off'}`}
+                role="switch"
+                aria-checked={fontSize === 'large'}
+                aria-label="큰 글씨 모드"
+                onClick={e => {
+                  e.stopPropagation();
+                  const next = fontSize === 'large' ? 'standard' : 'large';
+                  onFontSizeChange?.(next);
+                  showToast?.(next === 'large' ? '큰 글씨 모드로 바꿨어요 ✦' : '기본 글씨 크기로 돌아왔어요', 'success');
+                }}
+              />
+              <span className="toggle-label">큰 글씨 모드 {fontSize === 'large' ? '(켜짐)' : '(꺼짐)'}</span>
             </div>
           </div>
         )}

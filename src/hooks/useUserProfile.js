@@ -53,6 +53,8 @@ export function useUserProfile() {
   );
   const [onboarded, setOnboarded] = useState(false);
   const [quizState, setQuizState] = useState(DEFAULT_QUIZ);
+  const [lifeStage, setLifeStage] = useState('free');
+  const [fontSize, setFontSize] = useState('standard');
 
   // ── 카카오 SDK 초기화 ──
   useEffect(() => {
@@ -144,6 +146,8 @@ export function useUserProfile() {
           if (saved?.theme) setTheme(saved.theme);
           if (saved?.onboarded != null) setOnboarded(saved.onboarded);
           if (saved?.quiz_state) setQuizState(saved.quiz_state);
+          if (saved?.life_stage) setLifeStage(saved.life_stage);
+          if (saved?.font_size) setFontSize(saved.font_size);
         } else {
           setShowConsentModal(true);
         }
@@ -195,6 +199,8 @@ export function useUserProfile() {
         if (data?.theme) setTheme(data.theme);
         if (data?.onboarded != null) setOnboarded(data.onboarded);
         if (data?.quiz_state) setQuizState(data.quiz_state);
+        if (data?.life_stage) setLifeStage(data.life_stage);
+        if (data?.font_size) setFontSize(data.font_size);
       } else {
         console.error('[별숨] users 동기화 오류:', usersRes.reason);
       }
@@ -269,19 +275,23 @@ export function useUserProfile() {
     }
   }, []);
 
-  // ── 개인 설정 저장 (responseStyle / theme / onboarded / quizState) ──
+  // ── 개인 설정 저장 (responseStyle / theme / onboarded / quizState / lifeStage / fontSize) ──
   const saveSettings = useCallback(async (updates) => {
     const currentUser = getAuthUser();
     if (updates.responseStyle !== undefined) setResponseStyle(updates.responseStyle);
     if (updates.theme         !== undefined) setTheme(updates.theme);
     if (updates.onboarded     !== undefined) setOnboarded(updates.onboarded);
     if (updates.quizState     !== undefined) setQuizState(updates.quizState);
+    if (updates.lifeStage     !== undefined) setLifeStage(updates.lifeStage);
+    if (updates.fontSize      !== undefined) setFontSize(updates.fontSize);
     if (!supabase || !currentUser?.id) return;
     const dbUpdates = {};
     if (updates.responseStyle !== undefined) dbUpdates.response_style = updates.responseStyle;
     if (updates.theme         !== undefined) dbUpdates.theme           = updates.theme;
     if (updates.onboarded     !== undefined) dbUpdates.onboarded       = updates.onboarded;
     if (updates.quizState     !== undefined) dbUpdates.quiz_state      = updates.quizState;
+    if (updates.lifeStage     !== undefined) dbUpdates.life_stage      = updates.lifeStage;
+    if (updates.fontSize      !== undefined) dbUpdates.font_size       = updates.fontSize;
     if (!Object.keys(dbUpdates).length) return;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
@@ -438,7 +448,7 @@ export function useUserProfile() {
     loginError, setLoginError,
     loginLoading,
     profileSyncing,
-    responseStyle, theme, onboarded, quizState,
+    responseStyle, theme, onboarded, quizState, lifeStage, fontSize,
     saveSettings,
     kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile,
     saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,

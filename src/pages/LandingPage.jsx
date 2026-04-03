@@ -39,7 +39,7 @@ function getBdayDday(bm, bd) {
 export default function LandingPage({
   user, form, saju, sun, today,
   otherProfiles,
-  formOk, profile,
+  formOk, formOkApprox, isApproximate, profile,
   quiz, quizInput, setQuizInput,
   dailyResult, dailyLoading, dailyCount, DAILY_MAX,
   diaryReviewResult, diaryReviewLoading,
@@ -66,6 +66,22 @@ export default function LandingPage({
         <p className="land-beta-notice">
           지금 별숨은 베타 테스트 중으로, 무료로 이용할 수 있어요.
         </p>
+
+        {/* 추정 모드 배너 */}
+        {isApproximate && (
+          <div
+            onClick={() => setStep(1)}
+            style={{
+              margin: '0 0 12px', padding: '10px 16px',
+              background: 'var(--goldf)', border: '1px solid var(--acc)',
+              borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--gold)',
+              lineHeight: 1.7, textAlign: 'center', cursor: 'pointer',
+            }}
+          >
+            지금은 추정 사주로 보고 있어요.<br />
+            <strong>생일 일자를 추가하면 더 정확해져요 →</strong>
+          </div>
+        )}
 
         <div className="land-login-section">
           {user ? (

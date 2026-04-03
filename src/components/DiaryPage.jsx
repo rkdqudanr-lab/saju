@@ -44,7 +44,21 @@ function Section({ title, children }) {
   );
 }
 
-export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, showToast }) {
+/** [후속질문] 태그에서 질문 추출 */
+function parseFollowUpQuestions(text) {
+  if (!text) return [];
+  const match = text.match(/\[후속질문\]\s*(.+)/);
+  if (!match) return [];
+  return match[1].split('/').map(q => q.trim()).filter(Boolean).slice(0, 2);
+}
+
+/** diaryReviewResult에서 [후속질문] 태그 이전 본문만 반환 */
+function stripFollowUp(text) {
+  if (!text) return text;
+  return text.replace(/\[후속질문\].*/s, '').trim();
+}
+
+export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, setDiy, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, showToast }) {
   const [mood, setMood] = useState(initialMood || null);
   const [weather, setWeather] = useState(initialWeather || '');
   const [energy, setEnergy] = useState(initialEnergy || null);
@@ -361,9 +375,37 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
                 오늘의 기운을 읽고 있어요...
               </div>
             ) : (
-              <div style={{ padding: '14px 16px 16px', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
-                {diaryReviewResult}
-              </div>
+              <>
+                <div style={{ padding: '14px 16px 16px', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+                  {stripFollowUp(diaryReviewResult)}
+                </div>
+                {/* 후속 질문 브릿지 */}
+                {setDiy && setStep && (() => {
+                  const followUps = parseFollowUpQuestions(diaryReviewResult);
+                  if (!followUps.length) return null;
+                  return (
+                    <div style={{ padding: '0 16px 14px' }}>
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8 }}>이 내용으로 더 물어볼게요 →</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {followUps.map((q, i) => (
+                          <button
+                            key={i}
+                            onClick={() => { setDiy(q); setStep(1); }}
+                            style={{
+                              textAlign: 'left', padding: '9px 14px', borderRadius: 'var(--r1)',
+                              border: '1px solid var(--acc)', background: 'var(--goldf)',
+                              color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 600,
+                              fontFamily: 'var(--ff)', cursor: 'pointer',
+                            }}
+                          >
+                            ✦ {q}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>
             )}
           </div>
         </div>
