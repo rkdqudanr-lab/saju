@@ -48,6 +48,20 @@ export const ANNIVERSARY_PROMPT = (type, dateStr) =>
 // ═══════════════════════════════════════════════════════════
 //  🧹 마크다운 전처리기 및 요약 파서
 // ═══════════════════════════════════════════════════════════
+// 요약 텍스트를 중간 공백 기준으로 자연스럽게 두 줄로 나눠요
+export function breakAtNatural(text) {
+  if (!text || text.length <= 14) return text;
+  const mid = Math.floor(text.length / 2);
+  const leftIdx = text.lastIndexOf(' ', mid);
+  const rightIdx = text.indexOf(' ', mid);
+  if (leftIdx < 0 && rightIdx < 0) return text;
+  let breakIdx;
+  if (leftIdx < 0) breakIdx = rightIdx;
+  else if (rightIdx < 0) breakIdx = leftIdx;
+  else breakIdx = (mid - leftIdx <= rightIdx - mid) ? leftIdx : rightIdx;
+  return text.slice(0, breakIdx) + '\n' + text.slice(breakIdx + 1);
+}
+
 export function stripMarkdown(text){
   return text
     .replace(/^#{1,6}\s+/gm,'')

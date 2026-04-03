@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
-import { CATS_ALL } from "../utils/constants.js";
+import { CATS_ALL, breakAtNatural } from "../utils/constants.js";
 
 // ─────────────────────────────────────────────
 // 일진 점수 계산 (5단계 색상)
@@ -556,8 +556,8 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                   </div>
                   <div style={{ padding: '10px 14px 12px' }}>
                     {summary && (
-                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 8, lineHeight: 1.6, fontStyle: 'italic' }}>
-                        "{summary}"
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 8, lineHeight: 1.6, fontStyle: 'italic', whiteSpace: 'pre-wrap', textAlign: 'center' }}>
+                        "{breakAtNatural(summary)}"
                       </div>
                     )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
