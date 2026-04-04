@@ -69,7 +69,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', update); };
   }, []);
 
-  const [step, setStep]                   = useState(0);
+  const [step, setStep]                   = useState(() => user ? 22 : 0);
   const [cat, setCat]                     = useState(0);
   const [selQs, setSelQs]                 = useState([]);
   const [diy, setDiy]                     = useState('');
