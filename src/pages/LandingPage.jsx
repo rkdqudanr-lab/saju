@@ -2,6 +2,11 @@ import { Suspense } from "react";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
 import { isTodayAnswered } from "../utils/quiz.js";
 import DailyStarCard from "../components/DailyStarCard.jsx";
+import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
+import GamificationHeader from "../components/GamificationHeader.jsx";
+import BPDisplay from "../components/BPDisplay.jsx";
+import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
+import MissionDashboard from "../components/MissionDashboard.jsx";
 import SamplePreview from "../components/SamplePreview.jsx";
 
 function PageSpinner() {
@@ -52,6 +57,14 @@ export default function LandingPage({
   handleQuizAnswer, handleQuizSkip,
   showToast,
   DiaryPageLazy,
+  // 게이미피케이션 props
+  gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 },
+  missions = [],
+  onBlockBadtime = null,
+  onCompleteMission = null,
+  onFreeRecharge = null,
+  isBlockingBadtime = false,
+  freeRechargeAvailable = true,
 }) {
   return (
     <div className="page step-fade">
@@ -125,7 +138,53 @@ export default function LandingPage({
                                 </div>
                               ) : dailyResult ? (
                                 <>
-                                  <DailyStarCard result={dailyResult} />
+                                  {/* 게이미피케이션 헤더 */}
+                                  <GamificationHeader
+                                    currentBp={gamificationState.currentBp}
+                                    guardianLevel={gamificationState.guardianLevel}
+                                    loginStreak={gamificationState.loginStreak}
+                                    todayMissionsDone={missions.filter(m => m.is_completed).length}
+                                    totalMissionsTodo={missions.length || 3}
+                                  />
+
+                                  {/* 메인 카드 */}
+                                  <DailyStarCardV2
+                                    result={dailyResult}
+                                    onBlockBadtime={onBlockBadtime}
+                                    isBlocking={isBlockingBadtime}
+                                    canBlockBadtime={onBlockBadtime !== null}
+                                    currentBp={gamificationState.currentBp}
+                                  />
+
+                                  {/* 미션 대시보드 */}
+                                  {missions.length > 0 && (
+                                    <MissionDashboard
+                                      missions={missions}
+                                      onMissionComplete={onCompleteMission}
+                                    />
+                                  )}
+
+                                  {/* BP 디스플레이 */}
+                                  {user && (
+                                    <BPDisplay
+                                      currentBp={gamificationState.currentBp}
+                                      maxBp={100}
+                                      guardianLevel={gamificationState.guardianLevel}
+                                      onFreeRecharge={onFreeRecharge}
+                                      freeRechargeAvailable={freeRechargeAvailable}
+                                    />
+                                  )}
+
+                                  {/* 레벨 배지 */}
+                                  {user && (
+                                    <GuardianLevelBadge
+                                      level={gamificationState.guardianLevel}
+                                      nextLevelMissions={gamificationState.nextLevelMissions || 0}
+                                      totalMissionsToNextLevel={15 * gamificationState.guardianLevel}
+                                    />
+                                  )}
+
+                                  {/* 다시 물어보기 버튼 */}
                                   {dailyCount < DAILY_MAX ? (
                                     <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
                                       다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
@@ -216,7 +275,53 @@ export default function LandingPage({
                           </div>
                         ) : dailyResult ? (
                           <>
-                            <DailyStarCard result={dailyResult} />
+                            {/* 게이미피케이션 헤더 */}
+                            <GamificationHeader
+                              currentBp={gamificationState.currentBp}
+                              guardianLevel={gamificationState.guardianLevel}
+                              loginStreak={gamificationState.loginStreak}
+                              todayMissionsDone={missions.filter(m => m.is_completed).length}
+                              totalMissionsTodo={missions.length || 3}
+                            />
+
+                            {/* 메인 카드 */}
+                            <DailyStarCardV2
+                              result={dailyResult}
+                              onBlockBadtime={onBlockBadtime}
+                              isBlocking={isBlockingBadtime}
+                              canBlockBadtime={onBlockBadtime !== null}
+                              currentBp={gamificationState.currentBp}
+                            />
+
+                            {/* 미션 대시보드 */}
+                            {missions.length > 0 && (
+                              <MissionDashboard
+                                missions={missions}
+                                onMissionComplete={onCompleteMission}
+                              />
+                            )}
+
+                            {/* BP 디스플레이 */}
+                            {user && (
+                              <BPDisplay
+                                currentBp={gamificationState.currentBp}
+                                maxBp={100}
+                                guardianLevel={gamificationState.guardianLevel}
+                                onFreeRecharge={onFreeRecharge}
+                                freeRechargeAvailable={freeRechargeAvailable}
+                              />
+                            )}
+
+                            {/* 레벨 배지 */}
+                            {user && (
+                              <GuardianLevelBadge
+                                level={gamificationState.guardianLevel}
+                                nextLevelMissions={gamificationState.nextLevelMissions || 0}
+                                totalMissionsToNextLevel={15 * gamificationState.guardianLevel}
+                              />
+                            )}
+
+                            {/* 다시 물어보기 버튼 */}
                             {dailyCount < DAILY_MAX ? (
                               <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
                                 다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})

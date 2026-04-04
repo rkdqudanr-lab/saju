@@ -7,6 +7,7 @@ const IS_BETA = true;
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { loadHistory, addHistory, deleteHistory } from "../utils/history.js";
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
+import { parseHoroscopeForGamification } from '../utils/missionGenerator.js';
 
 const SLOT_TAG_MAP = { morning: '[오전·100자]', afternoon: '[오후·100자]', evening: '[저녁·100자]', dawn: '[새벽·100자]' };
 const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.';
@@ -382,6 +383,47 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       if (user?.id) {
         await saveDailyCacheToSupabase(user.id, 'horoscope', ans);
         await saveDailyCacheToSupabase(user.id, 'horoscope_count', String(newCount));
+
+        // ── 게이미피케이션 처리 ──
+        try {
+          // 1. AI 응답 파싱
+          const gamData = parseHoroscopeForGamification(ans);
+
+          const authClient = getAuthenticatedClient(user.id);
+          const client = authClient || supabase;
+          const today = getTodayDateStr();
+
+          // 2. 미션 생성 및 저장
+          if (gamData.missions && gamData.missions.length > 0) {
+            for (const mission of gamData.missions) {
+              await client.from('missions').upsert(
+                {
+                  kakao_id: String(user.id),
+                  date: today,
+                  mission_type: mission.type,
+                  mission_content: mission.content,
+                  bp_reward: 10,
+                  is_completed: false,
+                },
+                { onConflict: 'kakao_id,date,mission_type' }
+              );
+            }
+          }
+
+          // 3. 배드타임 감지 및 저장 (선택사항, 나중에 UI에서 표시)
+          if (gamData.badtime?.detected) {
+            // badtime 정보를 daily_cache에 저장하거나 별도 테이블에 저장 가능
+            // 지금은 dailyResult에 포함시킴
+            setDailyResult(prev => ({
+              ...prev,
+              badtime: gamData.badtime,
+              score: gamData.score,
+            }));
+          }
+        } catch (gamErr) {
+          console.error('[별숨] 게이미피케이션 처리 오류:', gamErr);
+          // 게이미피케이션 오류가 전체 흐름을 막지 않도록 함
+        }
       }
       saveHistoryToSupabase(['오늘 하루 나의 별숨은?'], [ans], timeSlot);
     } catch { /* 에러는 버튼 상태로 처리 */ }
