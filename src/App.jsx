@@ -9,6 +9,7 @@ import { useSajuContext }   from "./hooks/useSajuContext.js";
 import { useConsultation }  from "./hooks/useConsultation.js";
 import { useNavigation }    from "./hooks/useNavigation.js";
 import { useAppHandlers }   from "./hooks/useAppHandlers.js";
+import { useGamification }  from "./hooks/useGamification.js";
 
 // supabase
 import { supabase, getAuthenticatedClient } from "./lib/supabase.js";
@@ -128,6 +129,65 @@ export default function App() {
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
 
+  // ── 게이미피케이션 시스템 ──
+  const gamification = useGamification(user, showToast);
+  const {
+    gamificationState, missions,
+    earnBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP,
+  } = gamification;
+
+  // 배드타임 액막이 상태
+  const [isBlockingBadtime, setIsBlockingBadtime] = useState(false);
+
+  // 무료 BP 충전 가능 여부
+  const [freeRechargeAvailable, setFreeRechargeAvailable] = useState(true);
+
+  // 배드타임 액막이 핸들러
+  const handleBlockBadtime = useCallback(async () => {
+    if (!gamificationState.currentBp || gamificationState.currentBp < 20) {
+      showToast('BP가 부족합니다 😢', 'error');
+      return;
+    }
+    setIsBlockingBadtime(true);
+    try {
+      const result = await blockBadtime('badtime_1', 20);
+      if (result.success) {
+        showToast('액막이 발동! 악운을 긍정적으로 바꿨어요 ✨', 'success');
+      }
+    } finally {
+      setIsBlockingBadtime(false);
+    }
+  }, [gamificationState.currentBp, blockBadtime, showToast]);
+
+  // 미션 완료 핸들러
+  const handleCompleteMission = useCallback(async (missionId) => {
+    try {
+      const result = await completeMission(missionId);
+      if (result.success) {
+        showToast('미션 완료! +10 BP 획득 🎯', 'success');
+        // 미션 목록 새로고침
+        await loadTodayMissions(user?.id);
+      }
+    } catch (error) {
+      showToast('미션 완료 중 오류 발생', 'error');
+    }
+  }, [completeMission, loadTodayMissions, user?.id, showToast]);
+
+  // 무료 BP 충전 핸들러
+  const handleFreeRecharge = useCallback(async () => {
+    try {
+      const result = await rechargeFreeBP();
+      if (result.success) {
+        showToast(`+${result.recharged} BP 충전! 🔋`, 'success');
+        setFreeRechargeAvailable(false); // 충전 완료 후 상태 업데이트
+      } else if (result.message === '일일 1회 제한') {
+        showToast('내일 다시 충전할 수 있습니다 ⏰', 'info');
+      }
+    } catch (error) {
+      showToast('BP 충전 중 오류 발생', 'error');
+    }
+  }, [rechargeFreeBP, showToast]);
+
   const { refCode, groupCode } = useNavigation({ step, setStep, resultsRef, showToast, loginError, setLoginError });
 
   const {
@@ -204,6 +264,41 @@ export default function App() {
       if (!raw) return;
       try { setSidebarPrefs(JSON.parse(raw)); } catch {}
     });
+  }, [user?.id]);
+
+  // ── 무료 BP 충전 가능 여부 체크 (로그인 후) ──
+  useEffect(() => {
+    if (!user?.id) {
+      setFreeRechargeAvailable(true);
+      return;
+    }
+
+    const checkFreeRechargeAvailability = async () => {
+      try {
+        const authClient = getAuthenticatedClient(user.id) || supabase;
+        const { data: userData } = await authClient
+          .from('users')
+          .select('free_bp_recharge_at')
+          .eq('kakao_id', String(user.id))
+          .maybeSingle();
+
+        if (!userData?.free_bp_recharge_at) {
+          setFreeRechargeAvailable(true);
+          return;
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        const lastRechargeDate = userData.free_bp_recharge_at;
+        const isAvailable = lastRechargeDate !== today;
+
+        setFreeRechargeAvailable(isAvailable);
+      } catch (error) {
+        console.error('무료 BP 충전 가능 여부 체크 오류:', error);
+        setFreeRechargeAvailable(true); // 오류 시 true로 처리
+      }
+    };
+
+    checkFreeRechargeAvailability();
   }, [user?.id]);
 
   // ── 오늘 일기 작성 여부 확인 ──
@@ -341,6 +436,14 @@ export default function App() {
             handleQuizAnswer={handleQuizAnswer} handleQuizSkip={handleQuizSkip}
             showToast={showToast}
             DiaryPageLazy={DiaryPage}
+            // 게이미피케이션
+            gamificationState={gamificationState}
+            missions={missions}
+            onBlockBadtime={handleBlockBadtime}
+            onCompleteMission={handleCompleteMission}
+            onFreeRecharge={handleFreeRecharge}
+            isBlockingBadtime={isBlockingBadtime}
+            freeRechargeAvailable={freeRechargeAvailable}
           />
         )}
 

@@ -604,3 +604,20 @@ create index if not exists idx_missions_kakao_date
 
 create index if not exists idx_user_gamification_kakao
   on user_gamification(kakao_id);
+
+-- ── increment_login_streak RPC 함수 ───────────────────────────────────
+-- 로그인 스트릭 증가 함수 (1회 호출 = +1 스트릭)
+create or replace function increment_login_streak(kid text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update users
+  set
+    login_streak = login_streak + 1,
+    last_login_date = current_date,
+    daily_login_reward_at = current_date,
+    updated_at = now()
+  where kakao_id = kid;
+$$;
