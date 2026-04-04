@@ -3,7 +3,7 @@ import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/const
 import { isTodayAnswered } from "../utils/quiz.js";
 import DailyStarCard from "../components/DailyStarCard.jsx";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
-import GamificationHeader from "../components/GamificationHeader.jsx";
+import GamificationHeaderV2 from "../components/GamificationHeaderV2.jsx";
 import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
 import MissionDashboard from "../components/MissionDashboard.jsx";
@@ -139,12 +139,13 @@ export default function LandingPage({
                               ) : dailyResult ? (
                                 <>
                                   {/* 게이미피케이션 헤더 */}
-                                  <GamificationHeader
+                                  <GamificationHeaderV2
                                     currentBp={gamificationState.currentBp}
                                     guardianLevel={gamificationState.guardianLevel}
                                     loginStreak={gamificationState.loginStreak}
                                     todayMissionsDone={missions.filter(m => m.is_completed).length}
                                     totalMissionsTodo={missions.length || 3}
+                                    freeRechargeAvailable={freeRechargeAvailable}
                                   />
 
                                   {/* 메인 카드 */}
@@ -276,12 +277,13 @@ export default function LandingPage({
                         ) : dailyResult ? (
                           <>
                             {/* 게이미피케이션 헤더 */}
-                            <GamificationHeader
+                            <GamificationHeaderV2
                               currentBp={gamificationState.currentBp}
                               guardianLevel={gamificationState.guardianLevel}
                               loginStreak={gamificationState.loginStreak}
                               todayMissionsDone={missions.filter(m => m.is_completed).length}
                               totalMissionsTodo={missions.length || 3}
+                              freeRechargeAvailable={freeRechargeAvailable}
                             />
 
                             {/* 메인 카드 */}
