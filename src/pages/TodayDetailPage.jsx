@@ -1,7 +1,14 @@
 import { Suspense } from 'react';
 import DailyStarCardV2 from '../components/DailyStarCardV2.jsx';
-import PageSpinner from '../components/PageSpinner.jsx';
 import '../styles/TodayDetailPage.css';
+
+function PageSpinner() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+      <div style={{ width: 36, height: 36, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite' }} />
+    </div>
+  );
+}
 
 /**
  * TodayDetailPage - "오늘 하루 나의 별숨" 운세 상세 페이지
