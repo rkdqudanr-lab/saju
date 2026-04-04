@@ -42,8 +42,8 @@ export default function TodayIntroPage({ setStep }) {
 
         {/* 메인 메시지 */}
         <div className="today-intro-message">
-          <p className="message-line-1">모두의 별숨이</p>
-          <p className="message-line-2">당신을 기다리고 있어요 💫</p>
+          <p className="message-line-1">별숨은 당신의 사주와 점성술을</p>
+          <p className="message-line-2">함께 바라보고 있어요 💫</p>
         </div>
 
         {/* CTA 버튼 영역 */}
