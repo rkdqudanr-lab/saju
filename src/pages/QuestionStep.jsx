@@ -3,6 +3,8 @@ import { ON } from "../utils/saju.js";
 import { CATS, CATS_ALL } from "../utils/constants.js";
 import { TIME_CONFIG } from "../utils/time.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
+import BPInsufficientModal from "../components/BPInsufficientModal.jsx";
+import { useBPCostGate } from "../hooks/useBPCostGate.js";
 
 export default function QuestionStep({
   form, saju, sun, moon,
@@ -15,8 +17,24 @@ export default function QuestionStep({
   addQ, rmQ, askQuick, askClaude,
   askBtnRef,
   user,
+  // 게이미피케이션 props
+  gamificationState = {},
+  earnBP = null,
+  showToast = null,
+  freeRechargeAvailable = false,
+  freeRechargeTimeRemaining = null,
+  onRechargeFreeBP = null,
 }) {
   const [recentQs, setRecentQs] = useState([]);
+  const [bpModal, setBpModal] = useState({ isOpen: false, isRecharging: false });
+
+  // BP 비용 게이팅
+  const { askQuestion, QUESTION_COST } = useBPCostGate(
+    user,
+    gamificationState,
+    earnBP,
+    showToast
+  );
 
   useEffect(() => {
     if (!user?.id) return;
@@ -25,8 +43,22 @@ export default function QuestionStep({
     });
   }, [user?.id]);
 
-  const handleAskQuick = useCallback((q) => {
+  const handleAskQuick = useCallback(async (q) => {
     if (!q.trim()) return;
+
+    // BP 부족 확인
+    if (earnBP) {
+      const result = await askQuestion(q);
+      if (result.blocked) {
+        setBpModal({ isOpen: true, isRecharging: false });
+        return;
+      }
+      if (!result.success) {
+        if (showToast) showToast('질문을 할 수 없습니다', 'error');
+        return;
+      }
+    }
+
     setDiy('');
     askQuick(q);
     if (user?.id) {
@@ -37,7 +69,7 @@ export default function QuestionStep({
         return next;
       });
     }
-  }, [askQuick, setDiy, user?.id]);
+  }, [askQuick, setDiy, user?.id, askQuestion, earnBP, showToast]);
   return (
     <div className="page">
       <div className="inner">
@@ -152,6 +184,24 @@ export default function QuestionStep({
           )}
         </div>
       </div>
+
+      {/* BP 부족 모달 */}
+      <BPInsufficientModal
+        isOpen={bpModal.isOpen}
+        currentBp={gamificationState?.currentBp || 0}
+        requiredBp={QUESTION_COST}
+        freeRechargeAvailable={freeRechargeAvailable}
+        freeRechargeTimeRemaining={freeRechargeTimeRemaining}
+        onClose={() => setBpModal({ ...bpModal, isOpen: false })}
+        onRecharge={async () => {
+          if (onRechargeFreeBP) {
+            setBpModal({ ...bpModal, isRecharging: true });
+            await onRechargeFreeBP();
+            setBpModal({ isOpen: false, isRecharging: false });
+          }
+        }}
+        isRecharging={bpModal.isRecharging}
+      />
     </div>
   );
 }

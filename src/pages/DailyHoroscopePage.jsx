@@ -1,10 +1,52 @@
+import { useState, useEffect } from "react";
 import DailyStarCard from "../components/DailyStarCard.jsx";
+import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
+import { detectBadtime } from "../utils/gamificationLogic.js";
 
 export default function DailyHoroscopePage({
   today,
   dailyResult, dailyLoading, dailyCount, DAILY_MAX,
   askDailyHoroscope,
+  // 게이미피케이션 props
+  gamificationState = {},
+  currentBp = 0,
+  freeRechargeAvailable = false,
+  freeRechargeTimeRemaining = null,
+  onBlockBadtime = null,
+  onRechargeFreeBP = null,
+  isBlockingBadtime = false,
 }) {
+  const [badtimeModal, setBadtimeModal] = useState({
+    isOpen: false,
+    badtime: null,
+  });
+
+  // 배드타임 감지 및 모달 표시
+  useEffect(() => {
+    if (dailyResult) {
+      const badtime = detectBadtime(dailyResult.score || 0, dailyResult.text || '');
+      if (badtime) {
+        setBadtimeModal({
+          isOpen: true,
+          badtime: badtime,
+        });
+      }
+    }
+  }, [dailyResult]);
+
+  const handleBlockBadtime = async () => {
+    if (onBlockBadtime) {
+      await onBlockBadtime();
+      setBadtimeModal({ isOpen: false, badtime: null });
+    }
+  };
+
+  const handleRecharge = async () => {
+    if (onRechargeFreeBP) {
+      await onRechargeFreeBP();
+    }
+  };
+
   return (
     <div className="page step-fade">
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 40 }}>
@@ -41,6 +83,20 @@ export default function DailyHoroscopePage({
           </button>
         )}
       </div>
+
+      {/* 배드타임 액막이 모달 */}
+      <ShieldBlockModal
+        isOpen={badtimeModal.isOpen}
+        symptom={badtimeModal.badtime?.symptom}
+        currentBp={currentBp}
+        cost={badtimeModal.badtime?.cost || 20}
+        freeRechargeAvailable={freeRechargeAvailable}
+        freeRechargeTimeRemaining={freeRechargeTimeRemaining}
+        onBlock={handleBlockBadtime}
+        onClose={() => setBadtimeModal({ isOpen: false, badtime: null })}
+        onRecharge={handleRecharge}
+        isBlocking={isBlockingBadtime}
+      />
     </div>
   );
 }
