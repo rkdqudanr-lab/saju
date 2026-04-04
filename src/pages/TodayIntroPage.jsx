@@ -6,8 +6,20 @@ import '../styles/TodayIntroPage.css';
  * 로그인 후 첫 진입점
  * 사용자에게 앱의 핵심 가치(오늘의 운세)를 명확히 전달
  */
-export default function TodayIntroPage({ setStep }) {
+export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoading = false }) {
   const [today, setToday] = useState('');
+
+  const handleKnowMore = async () => {
+    // 운세 데이터를 로드한 후 상세 페이지로 이동
+    if (askDailyHoroscope && !dailyLoading) {
+      try {
+        await askDailyHoroscope();
+      } catch (error) {
+        console.error('운세 로드 실패:', error);
+      }
+    }
+    setStep(23);
+  };
 
   useEffect(() => {
     // 현재 날짜 및 요일 설정
@@ -50,9 +62,10 @@ export default function TodayIntroPage({ setStep }) {
         <div className="today-intro-buttons">
           <button
             className="btn-primary today-intro-btn-know-more"
-            onClick={() => setStep(23)}
+            onClick={handleKnowMore}
+            disabled={dailyLoading}
           >
-            오늘의 운세 알아보기
+            {dailyLoading ? '별숨이 오늘을 읽고 있어요...' : '오늘의 운세 알아보기'}
           </button>
           <button
             className="btn-secondary today-intro-btn-later"

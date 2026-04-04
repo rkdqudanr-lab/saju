@@ -737,7 +737,11 @@ export default function App() {
 
         {/* ── Step 22: "오늘의 별숨" 인트로 페이지 ── */}
         {step === 22 && (
-          <TodayIntroPage setStep={setStep} />
+          <TodayIntroPage
+            setStep={setStep}
+            askDailyHoroscope={askDailyHoroscope}
+            dailyLoading={dailyLoading}
+          />
         )}
 
         {/* ── Step 23: "오늘의 별숨" 상세 페이지 ── */}
