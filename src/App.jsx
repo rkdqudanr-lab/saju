@@ -53,6 +53,8 @@ import ResultsStep         from "./pages/ResultsStep.jsx";
 import QuestionStep        from "./pages/QuestionStep.jsx";
 import ProfileStep         from "./pages/ProfileStep.jsx";
 import LandingPage         from "./pages/LandingPage.jsx";
+import TodayIntroPage      from "./pages/TodayIntroPage.jsx";
+import TodayDetailPage     from "./pages/TodayDetailPage.jsx";
 const SettingsPage             = lazy(() => import("./components/SettingsPage.jsx"));
 
 function PageSpinner() {
@@ -412,6 +414,7 @@ export default function App() {
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
       {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
+      {step === 22 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>🏠</button>}
 
       <div className="app" id="main-content">
@@ -730,6 +733,22 @@ export default function App() {
               showToast={showToast}
             />
           </Suspense>
+        )}
+
+        {/* ── Step 22: "오늘의 별숨" 인트로 페이지 ── */}
+        {step === 22 && (
+          <TodayIntroPage setStep={setStep} />
+        )}
+
+        {/* ── Step 23: "오늘의 별숨" 상세 페이지 ── */}
+        {step === 23 && (
+          <TodayDetailPage
+            dailyResult={dailyResult}
+            gamificationState={gamificationState}
+            onBlockBadtime={onBlockBadtime}
+            isBlockingBadtime={isBlockingBadtime}
+            setStep={setStep}
+          />
         )}
 
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>

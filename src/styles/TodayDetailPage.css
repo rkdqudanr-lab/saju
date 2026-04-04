@@ -1,0 +1,147 @@
+/* ── Today Detail Page Styles ── */
+
+.today-detail-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  position: relative;
+}
+
+/* 헤더 */
+.today-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  gap: 16px;
+}
+
+.today-detail-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--t1);
+  letter-spacing: 0.02em;
+}
+
+.today-detail-back-btn,
+.today-detail-refresh-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: var(--t1);
+}
+
+.today-detail-back-btn:active,
+.today-detail-refresh-btn:active {
+  background: var(--bg-primary);
+  transform: scale(0.95);
+}
+
+/* 메인 콘텐츠 */
+.today-detail-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  overflow-y: auto;
+}
+
+/* 하단 버튼 영역 */
+.today-detail-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+  gap: 12px;
+}
+
+.today-detail-btn-primary {
+  flex: 1;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+}
+
+.today-detail-btn-primary:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 480px) {
+  .today-detail-header {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .today-detail-title {
+    font-size: 1rem;
+  }
+
+  .today-detail-back-btn,
+  .today-detail-refresh-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+
+  .today-detail-content {
+    padding: 16px;
+  }
+
+  .today-detail-footer {
+    padding: 16px;
+  }
+
+  .today-detail-btn-primary {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+}
+
+/* DailyStarCardV2 적응 */
+.today-detail-content .daily-star-card-v2 {
+  width: 100%;
+  max-width: 500px;
+}
+
+/* 오버플로우 처리 */
+.today-detail-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.today-detail-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.today-detail-content::-webkit-scrollbar-thumb {
+  background: var(--t4);
+  border-radius: 3px;
+}
+
+.today-detail-content::-webkit-scrollbar-thumb:hover {
+  background: var(--t3);
+}
