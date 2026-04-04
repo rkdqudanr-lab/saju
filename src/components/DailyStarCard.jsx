@@ -6,13 +6,20 @@ const ITEM_ICONS  = ['🎨', '🌿', '🧭', '✨', '🌙'];
 const ITEM_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
 
 function parseDailyLines(text) {
-  if (!text || typeof text !== 'string') return { summary: '', items: [] };
+  if (!text || typeof text !== 'string') return { score: null, summary: '', items: [] };
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  let score = null;
   let summary = '';
   const items = [];
   let summaryFound = false;
 
-  // Extract [요약] summary first
+  // Extract [점수] score
+  const scoreIdx = lines.findIndex(l => l.startsWith('[점수]'));
+  if (scoreIdx !== -1) {
+    score = lines[scoreIdx].replace('[점수]', '').trim();
+  }
+
+  // Extract [요약] summary
   const summaryIdx = lines.findIndex(l => l.startsWith('[요약]'));
   if (summaryIdx !== -1) {
     summary = lines[summaryIdx].replace('[요약]', '').trim();
@@ -20,19 +27,19 @@ function parseDailyLines(text) {
   }
 
   // Find item start: first line with "오늘의 색은" (the color item).
-  // This skips any intro paragraph the AI may insert between [요약] and the items.
   const colorStart = lines.findIndex(l => l.includes('오늘의 색은'));
   const itemStart = colorStart !== -1 ? colorStart : (summaryFound ? summaryIdx + 1 : 0);
 
   for (let i = itemStart; i < lines.length && items.length < 5; i++) {
+    if (lines[i].startsWith('[점수]') || lines[i].startsWith('[요약]')) continue;
     items.push(lines[i]);
   }
 
-  return { summary, items };
+  return { score, summary, items };
 }
 
 export default function DailyStarCard({ result }) {
-  const { summary, items } = parseDailyLines(result.text);
+  const { score, summary, items } = parseDailyLines(result.text);
 
   return (
     <div className="dsc-wrap">
@@ -51,6 +58,10 @@ export default function DailyStarCard({ result }) {
           <span className="dsc-title">오늘 하루 나의 별숨</span>
           <span className="dsc-header-dot" />
         </div>
+
+        {score && (
+          <div className="dsc-score">별숨 점수 <strong>{score}</strong></div>
+        )}
 
         {summary && (
           <div className="dsc-summary">{breakAtNatural(summary)}</div>
