@@ -457,3 +457,150 @@ alter table users add column if not exists font_size  text default 'standard';
 -- 방법 B: Supabase Edge Function + Vercel Cron (vercel.json crons 설정):
 --   Edge Function: supabase/functions/cleanup/index.ts
 --   vercel.json: { "crons": [{ "path": "/api/cleanup", "schedule": "0 19 * * *" }] }
+
+-- ================================================================
+-- 게이미피케이션 시스템 추가 (별숨 포인트, 레벨, 미션)
+-- ================================================================
+
+-- ── users 테이블 확장 (게이미피케이션 컬럼) ──────────────────────────
+alter table users add column if not exists current_bp integer default 0;
+alter table users add column if not exists guardian_level integer default 1;
+alter table users add column if not exists login_streak integer default 0;
+alter table users add column if not exists last_login_date date;
+alter table users add column if not exists free_bp_recharge_at timestamptz;
+alter table users add column if not exists daily_login_reward_at date;
+
+-- ── user_gamification (게이미피케이션 상세 정보) ──────────────────────
+create table if not exists user_gamification (
+  id                    uuid primary key default gen_random_uuid(),
+  kakao_id              text not null unique,
+
+  -- BP 통계
+  total_bp_earned       integer default 0,
+  total_bp_spent        integer default 0,
+
+  -- 배드타임 및 액막이
+  last_badtime_detected timestamptz,
+  last_badtime_blocked  timestamptz,
+  badtime_blocks_count  integer default 0,
+
+  -- 미션 관련
+  today_missions_done   integer default 0,
+  total_missions_done   integer default 0,
+
+  -- 시스템 정보
+  created_at            timestamptz default now(),
+  updated_at            timestamptz default now()
+);
+
+alter table user_gamification enable row level security;
+
+drop policy if exists "gamification_insert" on user_gamification;
+drop policy if exists "gamification_select" on user_gamification;
+drop policy if exists "gamification_update" on user_gamification;
+
+create policy "gamification_insert" on user_gamification
+  for insert to anon with check (kakao_id is not null);
+
+create policy "gamification_select" on user_gamification
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "gamification_update" on user_gamification
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
+
+-- ── daily_bp_log (BP 획득/소비 이력) ──────────────────────────────────
+create table if not exists daily_bp_log (
+  id              uuid primary key default gen_random_uuid(),
+  kakao_id        text not null,
+  date            date not null default current_date,
+  bp_amount       integer not null,
+  reason          text not null,
+  mission_id      text,
+  created_at      timestamptz default now(),
+
+  unique(kakao_id, date, reason)
+);
+
+alter table daily_bp_log enable row level security;
+
+drop policy if exists "bp_log_insert" on daily_bp_log;
+drop policy if exists "bp_log_select" on daily_bp_log;
+
+create policy "bp_log_insert" on daily_bp_log
+  for insert to anon with check (kakao_id is not null);
+
+create policy "bp_log_select" on daily_bp_log
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- ── missions (일일 미션) ───────────────────────────────────────────────
+create table if not exists missions (
+  id              uuid primary key default gen_random_uuid(),
+  kakao_id        text not null,
+  date            date not null default current_date,
+  mission_type    text not null,
+  mission_content text not null,
+  is_completed    boolean default false,
+  completed_at    timestamptz,
+  bp_reward       integer default 10,
+  created_at      timestamptz default now(),
+
+  unique(kakao_id, date, mission_type)
+);
+
+alter table missions enable row level security;
+
+drop policy if exists "missions_insert" on missions;
+drop policy if exists "missions_select" on missions;
+drop policy if exists "missions_update" on missions;
+
+create policy "missions_insert" on missions
+  for insert to anon with check (kakao_id is not null);
+
+create policy "missions_select" on missions
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "missions_update" on missions
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
+
+-- ── guardian_level_history (레벨 승격 이력) ───────────────────────────
+create table if not exists guardian_level_history (
+  id                uuid primary key default gen_random_uuid(),
+  kakao_id          text not null,
+  from_level        integer not null,
+  to_level          integer not null,
+  promotion_reason  text not null,
+  promoted_at       timestamptz default now()
+);
+
+alter table guardian_level_history enable row level security;
+
+drop policy if exists "level_history_insert" on guardian_level_history;
+drop policy if exists "level_history_select" on guardian_level_history;
+
+create policy "level_history_insert" on guardian_level_history
+  for insert to anon with check (kakao_id is not null);
+
+create policy "level_history_select" on guardian_level_history
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- ── 게이미피케이션 인덱스 (성능 최적화) ──────────────────────────────
+create index if not exists idx_daily_bp_log_kakao_date
+  on daily_bp_log(kakao_id, date desc);
+
+create index if not exists idx_missions_kakao_date
+  on missions(kakao_id, date desc);
+
+create index if not exists idx_user_gamification_kakao
+  on user_gamification(kakao_id);
