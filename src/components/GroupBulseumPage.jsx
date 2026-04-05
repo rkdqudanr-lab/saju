@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { supabase } from "../lib/supabase.js";
+import { getAuthToken } from "../hooks/useUserProfile.js";
 
 function getDaysInMonth(year, month) {
   if (!month) return 31;
@@ -191,10 +192,13 @@ function DetailPanel({ pair, members, onClose, user }) {
         if (m.sun) s += `별자리: ${m.sun.n}(${m.sun.s})\n`;
         return s;
       }).join('\n');
+      const _token = getAuthToken();
+      const _headers = { 'Content-Type': 'application/json' };
+      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
       const res = await fetch('/api/ask', {
         method: 'POST',
         signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' },
+        headers: _headers,
         body: JSON.stringify({
           userMessage: `${a.name}과 ${b.name}의 별숨 관계를 깊이 분석해주세요. 좋은 점, 나쁜 점, 서로 주의해야 할 점, 함께할 때의 케미를 별숨의 언어로 이야기해주세요.`,
           context: ctx,

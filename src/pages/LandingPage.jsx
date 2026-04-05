@@ -118,10 +118,65 @@ export default function LandingPage({
                 <>
                   {(() => {
                     const isAfter5 = new Date().getHours() >= 17;
+
+                    // ── 공통: 게이미피케이션 + 카드 블록 ──
+                    const dailyCardContent = dailyLoading ? (
+                      <div className="dsc-loading-btn">
+                        <span>별숨이 오늘을 읽고 있어요</span>
+                        <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+                      </div>
+                    ) : dailyResult ? (
+                      <>
+                        <GamificationHeaderV2
+                          currentBp={gamificationState.currentBp}
+                          guardianLevel={gamificationState.guardianLevel}
+                          loginStreak={gamificationState.loginStreak}
+                          todayMissionsDone={missions.filter(m => m.is_completed).length}
+                          totalMissionsTodo={missions.length || 3}
+                          freeRechargeAvailable={freeRechargeAvailable}
+                        />
+                        <DailyStarCardV2
+                          result={dailyResult}
+                          onBlockBadtime={onBlockBadtime}
+                          isBlocking={isBlockingBadtime}
+                          canBlockBadtime={onBlockBadtime !== null}
+                          currentBp={gamificationState.currentBp}
+                        />
+                        {missions.length > 0 && (
+                          <MissionDashboard missions={missions} onMissionComplete={onCompleteMission} />
+                        )}
+                        {user && (
+                          <BPDisplay
+                            currentBp={gamificationState.currentBp}
+                            maxBp={100}
+                            guardianLevel={gamificationState.guardianLevel}
+                            onFreeRecharge={onFreeRecharge}
+                            freeRechargeAvailable={freeRechargeAvailable}
+                          />
+                        )}
+                        {user && (
+                          <GuardianLevelBadge
+                            level={gamificationState.guardianLevel}
+                            nextLevelMissions={gamificationState.nextLevelMissions || 0}
+                            totalMissionsToNextLevel={15 * gamificationState.guardianLevel}
+                          />
+                        )}
+                        {dailyCount < DAILY_MAX ? (
+                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
+                            다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
+                          </button>
+                        ) : (
+                          <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙</div>
+                        )}
+                      </>
+                    ) : (
+                      <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>오늘 기운 확인하기 ✦</button>
+                    );
+
                     if (isAfter5) {
                       return (
                         <>
-                          {/* ── 오늘 하루 나의 별숨 ── */}
+                          {/* ── 오늘 하루 나의 별숨 (접기/펼치기) ── */}
                           <button
                             onClick={() => setShowDailyCard(v => !v)}
                             style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '10px 14px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', width: '100%', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
@@ -130,79 +185,10 @@ export default function LandingPage({
                             <span style={{ fontSize: '0.7em', opacity: 0.6 }}>{showDailyCard ? '▲ 접기' : '▼ 보기'}</span>
                           </button>
                           {showDailyCard && (
-                            <div style={{ marginTop: 8 }}>
-                              {dailyLoading ? (
-                                <div className="dsc-loading-btn">
-                                  <span>별숨이 오늘을 읽고 있어요</span>
-                                  <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
-                                </div>
-                              ) : dailyResult ? (
-                                <>
-                                  {/* 게이미피케이션 헤더 */}
-                                  <GamificationHeaderV2
-                                    currentBp={gamificationState.currentBp}
-                                    guardianLevel={gamificationState.guardianLevel}
-                                    loginStreak={gamificationState.loginStreak}
-                                    todayMissionsDone={missions.filter(m => m.is_completed).length}
-                                    totalMissionsTodo={missions.length || 3}
-                                    freeRechargeAvailable={freeRechargeAvailable}
-                                  />
-
-                                  {/* 메인 카드 */}
-                                  <DailyStarCardV2
-                                    result={dailyResult}
-                                    onBlockBadtime={onBlockBadtime}
-                                    isBlocking={isBlockingBadtime}
-                                    canBlockBadtime={onBlockBadtime !== null}
-                                    currentBp={gamificationState.currentBp}
-                                  />
-
-                                  {/* 미션 대시보드 */}
-                                  {missions.length > 0 && (
-                                    <MissionDashboard
-                                      missions={missions}
-                                      onMissionComplete={onCompleteMission}
-                                    />
-                                  )}
-
-                                  {/* BP 디스플레이 */}
-                                  {user && (
-                                    <BPDisplay
-                                      currentBp={gamificationState.currentBp}
-                                      maxBp={100}
-                                      guardianLevel={gamificationState.guardianLevel}
-                                      onFreeRecharge={onFreeRecharge}
-                                      freeRechargeAvailable={freeRechargeAvailable}
-                                    />
-                                  )}
-
-                                  {/* 레벨 배지 */}
-                                  {user && (
-                                    <GuardianLevelBadge
-                                      level={gamificationState.guardianLevel}
-                                      nextLevelMissions={gamificationState.nextLevelMissions || 0}
-                                      totalMissionsToNextLevel={15 * gamificationState.guardianLevel}
-                                    />
-                                  )}
-
-                                  {/* 다시 물어보기 버튼 */}
-                                  {dailyCount < DAILY_MAX ? (
-                                    <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
-                                      다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
-                                    </button>
-                                  ) : (
-                                    <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙</div>
-                                  )}
-                                </>
-                              ) : (
-                                <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>오늘 기운 확인하기 ✦</button>
-                              )}
-                            </div>
+                            <div style={{ marginTop: 8 }}>{dailyCardContent}</div>
                           )}
 
-                          {/* ── 나의 하루를 별숨에게 ──
-                               결과 없을 때: embedded 일기 폼 (제출 → step 17에서 결과 집중)
-                               결과 있을 때: 결과 미리보기 카드 (클릭 → step 17 전체 보기)         */}
+                          {/* ── 나의 하루를 별숨에게 ── */}
                           {(diaryReviewResult || diaryReviewLoading) ? (
                             <div style={{ marginTop: 10, background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
                               <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -242,7 +228,6 @@ export default function LandingPage({
                               </div>
                             </div>
                           ) : (
-                            /* 아직 오늘 해석이 없을 때: 임베디드 일기 폼 */
                             <div style={{ marginTop: 10 }}>
                               <Suspense fallback={<PageSpinner />}>
                                 {DiaryPageLazy && (
@@ -269,72 +254,7 @@ export default function LandingPage({
                           ✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일
                           <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
                         </div>
-                        {dailyLoading ? (
-                          <div className="dsc-loading-btn">
-                            <span>별숨이 오늘을 읽고 있어요</span>
-                            <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
-                          </div>
-                        ) : dailyResult ? (
-                          <>
-                            {/* 게이미피케이션 헤더 */}
-                            <GamificationHeaderV2
-                              currentBp={gamificationState.currentBp}
-                              guardianLevel={gamificationState.guardianLevel}
-                              loginStreak={gamificationState.loginStreak}
-                              todayMissionsDone={missions.filter(m => m.is_completed).length}
-                              totalMissionsTodo={missions.length || 3}
-                              freeRechargeAvailable={freeRechargeAvailable}
-                            />
-
-                            {/* 메인 카드 */}
-                            <DailyStarCardV2
-                              result={dailyResult}
-                              onBlockBadtime={onBlockBadtime}
-                              isBlocking={isBlockingBadtime}
-                              canBlockBadtime={onBlockBadtime !== null}
-                              currentBp={gamificationState.currentBp}
-                            />
-
-                            {/* 미션 대시보드 */}
-                            {missions.length > 0 && (
-                              <MissionDashboard
-                                missions={missions}
-                                onMissionComplete={onCompleteMission}
-                              />
-                            )}
-
-                            {/* BP 디스플레이 */}
-                            {user && (
-                              <BPDisplay
-                                currentBp={gamificationState.currentBp}
-                                maxBp={100}
-                                guardianLevel={gamificationState.guardianLevel}
-                                onFreeRecharge={onFreeRecharge}
-                                freeRechargeAvailable={freeRechargeAvailable}
-                              />
-                            )}
-
-                            {/* 레벨 배지 */}
-                            {user && (
-                              <GuardianLevelBadge
-                                level={gamificationState.guardianLevel}
-                                nextLevelMissions={gamificationState.nextLevelMissions || 0}
-                                totalMissionsToNextLevel={15 * gamificationState.guardianLevel}
-                              />
-                            )}
-
-                            {/* 다시 물어보기 버튼 */}
-                            {dailyCount < DAILY_MAX ? (
-                              <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
-                                다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
-                              </button>
-                            ) : (
-                              <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙</div>
-                            )}
-                          </>
-                        ) : (
-                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>오늘 기운 확인하기 ✦</button>
-                        )}
+                        {dailyCardContent}
                         <button className="cta-main" style={{ alignSelf: 'stretch', marginLeft: 'var(--sp2)', marginRight: 'var(--sp2)', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 10, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={() => setStep(formOk ? 2 : 1)}>
                           별숨에게 질문하기 ✦
                         </button>

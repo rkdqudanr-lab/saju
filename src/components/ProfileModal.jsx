@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { DAILY_QUESTIONS, PROFILE_QUESTIONS_IDS } from "../utils/constants.js";
+import { getAuthToken } from "../hooks/useUserProfile.js";
 
 // 20문 20답용 질문 목록 (DAILY_QUESTIONS에서 선별)
 const PROFILE_QS = DAILY_QUESTIONS.filter(q => PROFILE_QUESTIONS_IDS.includes(q.id));
@@ -125,9 +126,12 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
     try {
       // 답변 요약 컨텍스트 생성
       const summary = PROFILE_QS.map(q => `${q.q} → ${finalQa[q.id] || '(미답변)'}`).join('\n');
+      const _token = getAuthToken();
+      const _headers = { 'Content-Type': 'application/json' };
+      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
       const res = await fetch('/api/ask', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: _headers,
         signal: controller.signal,
         body: JSON.stringify({
           userMessage: `사용자의 20가지 답변을 읽고, 이 사람에게 맞춤형 심층 질문 5개를 JSON 배열로만 답해주세요.
