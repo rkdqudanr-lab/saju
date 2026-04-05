@@ -751,7 +751,7 @@ export default function App() {
             dailyResult={dailyResult}
             dailyLoading={dailyLoading}
             gamificationState={gamificationState}
-            onBlockBadtime={onBlockBadtime}
+            onBlockBadtime={handleBlockBadtime}
             isBlockingBadtime={isBlockingBadtime}
             setStep={setStep}
             onRefresh={askDailyHoroscope}
