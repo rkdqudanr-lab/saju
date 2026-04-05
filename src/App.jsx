@@ -741,6 +741,7 @@ export default function App() {
             setStep={setStep}
             askDailyHoroscope={askDailyHoroscope}
             dailyLoading={dailyLoading}
+            dailyResult={dailyResult}
           />
         )}
 
@@ -748,10 +749,12 @@ export default function App() {
         {step === 23 && (
           <TodayDetailPage
             dailyResult={dailyResult}
+            dailyLoading={dailyLoading}
             gamificationState={gamificationState}
             onBlockBadtime={onBlockBadtime}
             isBlockingBadtime={isBlockingBadtime}
             setStep={setStep}
+            onRefresh={askDailyHoroscope}
           />
         )}
 

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { stripMarkdown } from "../utils/constants.js";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
+import { getAuthToken } from "../hooks/useUserProfile.js";
 
 // ── 섹션 파서 ──
 function parseSections(text, tags) {
@@ -94,9 +95,12 @@ export default function AstrologyPage({ sun, moon, asc, form, buildCtx, user }) 
       const moonSummary = moon ? `달(감정): ${moon.n}(${moon.s}) — ${moon.desc}` : '달 정보 없음(태양 기반으로 감정 해석 부탁)';
       const ascSummary  = asc  ? `상승(첫인상): ${asc.n}(${asc.s}) — ${asc.desc}` : '상승 정보 없음(태양 기반으로 첫인상 해석 부탁)';
       const userMsg = `나의 종합 점성술 리포트를 작성해주세요. ${sunSummary}. ${moonSummary}. ${ascSummary}. 현재 ${now}년.`;
+      const _token = getAuthToken();
+      const _headers = { 'Content-Type': 'application/json' };
+      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
       const res = await fetch('/api/ask', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: _headers,
         body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isAstrology: true, kakaoId: user?.id || null, clientHour: new Date().getHours() }),
       });
       const data = await res.json();
