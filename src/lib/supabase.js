@@ -7,12 +7,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('[별숨] Supabase 환경변수가 없어요 — Supabase 기능이 비활성화됩니다')
 }
 
-function createSafeClient(extraHeaders = {}) {
+function createSafeClient(extraHeaders = {}, storageKey = 'byeolsoom_anon') {
   if (!supabaseUrl || !supabaseAnonKey) return null
   try {
     return createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: extraHeaders },
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey },
     })
   } catch (e) {
     console.error('[별숨] Supabase 초기화 실패:', e)
@@ -40,7 +40,7 @@ export function getAuthenticatedClient(kakaoId) {
       try {
         _authClientCache.set(key, createClient(supabaseUrl, supabaseAnonKey, {
           global: { headers: { 'x-kakao-id': key } },
-          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: `byeolsoom_auth_${key}` },
         }))
       } catch (e) {
         console.error('[별숨] 인증 클라이언트 초기화 실패:', e)
