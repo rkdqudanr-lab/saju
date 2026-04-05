@@ -139,7 +139,7 @@ export default function LandingPage({
                           result={dailyResult}
                           onBlockBadtime={onBlockBadtime}
                           isBlocking={isBlockingBadtime}
-                          canBlockBadtime={onBlockBadtime !== null}
+                          canBlockBadtime={onBlockBadtime != null}
                           currentBp={gamificationState.currentBp}
                         />
                         {missions.length > 0 && (

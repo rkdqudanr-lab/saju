@@ -683,6 +683,13 @@ export default function App() {
             dailyResult={dailyResult} dailyLoading={dailyLoading}
             dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
             askDailyHoroscope={askDailyHoroscope}
+            user={user}
+            gamificationState={gamificationState}
+            currentBp={gamificationState?.currentBp || 0}
+            onBlockBadtime={handleBlockBadtime}
+            isBlockingBadtime={isBlockingBadtime}
+            freeRechargeAvailable={freeRechargeAvailable}
+            earnBP={earnBP}
           />
         )}
 

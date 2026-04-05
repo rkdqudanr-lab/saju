@@ -17,7 +17,7 @@ export default function TodayDetailPage({
   dailyResult,
   dailyLoading,
   gamificationState,
-  onBlockBadtime,
+  onBlockBadtime = null,
   isBlockingBadtime,
   setStep,
   onRefresh,
@@ -54,7 +54,7 @@ export default function TodayDetailPage({
               result={dailyResult}
               onBlockBadtime={onBlockBadtime}
               isBlocking={isBlockingBadtime}
-              canBlockBadtime={onBlockBadtime !== null}
+              canBlockBadtime={onBlockBadtime != null}
               currentBp={gamificationState?.currentBp || 0}
             />
           </Suspense>
