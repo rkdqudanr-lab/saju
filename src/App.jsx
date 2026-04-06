@@ -100,7 +100,7 @@ export default function App() {
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
           loginLoading, profileSyncing,
-          kakaoLogin, kakaoLogout, saveOtherProfile,
+          kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile,
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
           saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
@@ -117,7 +117,7 @@ export default function App() {
   const { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx } = sajuCtx;
 
   // formOkApprox: 년+월만 있어도 체험 가능하도록 게이트 완화
-  const consultation = useConsultation(buildCtx, formOkApprox, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast);
+  const consultation = useConsultation(buildCtx, formOkApprox, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast, handleSessionExpired);
   const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,

@@ -24,8 +24,35 @@ function setAuthToken(token) {
   } catch {}
 }
 
+// ── JWT 만료 여부 확인 (client-side, 서명 검증 없이 exp만 체크) ──
+export function isJwtExpired(token) {
+  if (!token || typeof token !== 'string') return true;
+  const parts = token.split('.');
+  if (parts.length !== 3) return true;
+  try {
+    // base64url → base64
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(b64));
+    if (!payload.exp) return false; // exp 없으면 만료 체크 안 함
+    return payload.exp < Math.floor(Date.now() / 1000);
+  } catch {
+    return true;
+  }
+}
+
 export function useUserProfile() {
-  const [user, setUser] = useState(() => getAuthUser());
+  // 앱 시작 시 JWT 만료 여부 확인: 만료됐으면 저장된 user/token 모두 정리
+  const [user, setUser] = useState(() => {
+    const storedUser = getAuthUser();
+    if (!storedUser) return null;
+    const token = getAuthToken();
+    if (token && isJwtExpired(token)) {
+      try { localStorage.removeItem('byeolsoom_user'); } catch {}
+      try { localStorage.removeItem('byeolsoom_jwt'); } catch {}
+      return null;
+    }
+    return storedUser;
+  });
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [otherProfiles, setOtherProfiles] = useState([]);
@@ -339,6 +366,18 @@ export function useUserProfile() {
     setAuthToken(null);
   }, []);
 
+  // ── 세션 만료 처리: 상태 정리 + 로그인 필요 알림 ──
+  // API가 401을 반환하거나 JWT가 만료됐을 때 호출됨
+  const handleSessionExpired = useCallback(() => {
+    setUser(null);
+    setForm(DEFAULT_FORM);
+    setProfile(DEFAULT_PROFILE);
+    setOtherProfiles([]);
+    setConsentFlags(null);
+    setAuthUser(null);
+    setAuthToken(null);
+  }, []);
+
   const startEditOtherProfile = useCallback((idx) => {
     setEditingOtherIdx(idx);
     setOtherForm({ ...otherProfiles[idx] });
@@ -460,7 +499,7 @@ export function useUserProfile() {
     profileSyncing,
     responseStyle, theme, onboarded, quizState, lifeStage, fontSize,
     saveSettings,
-    kakaoLogin, kakaoLogout, saveOtherProfile, startEditOtherProfile,
+    kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile,
     saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
   };
 }

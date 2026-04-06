@@ -56,8 +56,9 @@ async function saveDailyCacheToSupabase(userId, type, content) {
  * @param {object} consentFlags - 동의 플래그
  * @param {string} responseStyle - 응답 스타일 ('T'|'M'|'F')
  * @param {Function} [onLoginRequired] - 로그인 필요 시 호출할 콜백 (카카오 로그인 트리거)
+ * @param {Function} [onSessionExpired] - 서버가 401 반환 시 호출할 콜백 (자동 로그아웃 등)
  */
-export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired, onDailyLimitReached, showToast) {
+export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired, onDailyLimitReached, showToast, onSessionExpired) {
   const [timeSlot, setTimeSlot] = useState(() => getTimeSlot());
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const loadMsgRef = useRef(null);
@@ -216,18 +217,28 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             clientHour:        new Date().getHours(),
           }),
         });
+        // 401: 세션 만료 → 재시도 없이 즉시 로그아웃 + 재로그인 유도
+        if (res.status === 401) {
+          setRetryMsg('');
+          if (typeof onSessionExpired === 'function') onSessionExpired();
+          if (typeof showToast === 'function') showToast('세션이 만료됐어요. 다시 로그인해주세요 🌙', 'warn');
+          if (typeof onLoginRequired === 'function') onLoginRequired();
+          throw new Error('SESSION_EXPIRED');
+        }
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'API 오류');
         setRetryMsg('');
         return stripMarkdown(data.text || '');
       } catch (e) {
         lastErr = e;
+        // 세션 만료는 재시도하지 않음
+        if (e?.message === 'SESSION_EXPIRED') throw e;
         if (attempt < maxRetries - 1) continue;
       }
     }
     setRetryMsg('');
     throw lastErr;
-  }, [buildCtx, histItems, responseStyle, user?.id, onLoginRequired]);
+  }, [buildCtx, histItems, responseStyle, user?.id, onLoginRequired, onSessionExpired, showToast]);
 
   // ── 질문 추가/삭제 ──
   const addQ = useCallback(q => {
