@@ -11,7 +11,6 @@ export default function GuardianLevelBadge({
   totalMissionsToNextLevel = 15,
   className = '',
 }) {
-  // 레벨별 라벨
   const levelLabels = {
     1: '초급 액막이사',
     2: '중급 액막이사',
@@ -20,9 +19,8 @@ export default function GuardianLevelBadge({
     5: '별숨의 수호자',
   };
 
-  // 레벨별 색상
   const levelColors = {
-    1: '#4A8EC4',
+    1: '#9B8EC4',
     2: '#5FAD7A',
     3: '#C08830',
     4: '#E05A3A',
@@ -30,7 +28,7 @@ export default function GuardianLevelBadge({
   };
 
   const label = levelLabels[level] || '초급 액막이사';
-  const color = levelColors[level] || '#4A8EC4';
+  const color = levelColors[level] || '#9B8EC4';
   const isMaxLevel = level >= 5;
   const progress = isMaxLevel ? 100 : Math.min(100, ((totalMissionsToNextLevel - nextLevelMissions) / totalMissionsToNextLevel) * 100);
 
@@ -46,22 +44,27 @@ export default function GuardianLevelBadge({
           borderRadius: '20px',
           fontSize: '13px',
           fontWeight: '600',
-          marginBottom: '12px',
+          marginBottom: '4px',
         }}
       >
         Lv{level} · {label}
       </div>
 
+      {/* 레벨업 혜택 설명 */}
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: '10px' }}>
+        미션 완료 · 액막이 · 출석으로 레벨업 → 무료 충전량 증가
+      </div>
+
       {/* 다음 레벨 진행률 */}
       {!isMaxLevel && (
-        <div style={{ marginTop: '8px' }}>
+        <div style={{ marginTop: '4px' }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '6px',
           }}>
-            <div style={{ fontSize: '12px', color: '#666' }}>
+            <div style={{ fontSize: '12px', color: 'var(--t3)' }}>
               다음 레벨까지
             </div>
             <div style={{ fontSize: '12px', fontWeight: '600', color: color }}>
@@ -73,7 +76,7 @@ export default function GuardianLevelBadge({
           <div style={{
             width: '100%',
             height: '6px',
-            backgroundColor: '#e0e0e0',
+            backgroundColor: 'var(--bg3)',
             borderRadius: '3px',
             overflow: 'hidden',
           }}>
@@ -98,7 +101,7 @@ export default function GuardianLevelBadge({
           marginTop: '8px',
           textAlign: 'center',
         }}>
-          ✨ 최고 레벨 달성! 주간 보너스 100 BP 획득
+          최고 레벨 달성! 주간 보너스 100 BP 획득
         </div>
       )}
     </div>
