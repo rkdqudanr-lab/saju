@@ -31,21 +31,18 @@ function parseDailyLines(text) {
   let astrologyReason = '';
   let closingAdvice = '';
 
-  // [점수] 추출
   const scoreIdx = lines.findIndex(l => l.startsWith('[점수]'));
   if (scoreIdx !== -1) {
     const scoreStr = lines[scoreIdx].replace('[점수]', '').trim();
     score = parseInt(scoreStr, 10);
   }
 
-  // [요약] 추출
   const summaryIdx = lines.findIndex(l => l.startsWith('[요약]'));
   if (summaryIdx !== -1) {
     summary = lines[summaryIdx].replace('[요약]', '').trim();
     summaryFound = true;
   }
 
-  // 아이템 추출 (색/음식/방향/좋은것/조심할것)
   const colorStart = lines.findIndex(l => l.includes('오늘의 색'));
   const itemStart = colorStart !== -1 ? colorStart : (summaryFound ? summaryIdx + 1 : 0);
 
@@ -56,13 +53,11 @@ function parseDailyLines(text) {
     items.push(line);
   }
 
-  // 배드타임 섹션 추출
   const badtimeIdx = lines.findIndex(l => l.includes('배드타임') || l.includes('⚠️'));
   if (badtimeIdx !== -1) {
     let symptom = '';
     let transformation = '';
 
-    // 증상 추출
     for (let i = badtimeIdx; i < lines.length && i < badtimeIdx + 3; i++) {
       if (lines[i].includes('악운') || lines[i].includes('증상')) {
         symptom = lines[i].replace('악운 증상:', '').replace('악운:', '').replace('⚠️', '').trim();
@@ -70,7 +65,6 @@ function parseDailyLines(text) {
       }
     }
 
-    // 변환된 운명 추출
     for (let i = badtimeIdx; i < lines.length && i < badtimeIdx + 5; i++) {
       if (lines[i].includes('바꿨어요')) {
         transformation = lines[i].trim();
@@ -83,19 +77,16 @@ function parseDailyLines(text) {
     }
   }
 
-  // 사주 근거 추출 (🀄 아이콘)
   const sajuIdx = lines.findIndex(l => l.startsWith('🀄'));
   if (sajuIdx !== -1) {
     sajuReason = lines[sajuIdx].replace('🀄', '').trim();
   }
 
-  // 별자리 근거 추출 (✦ 아이콘)
   const astrologyIdx = lines.findIndex(l => l.startsWith('✦'));
   if (astrologyIdx !== -1) {
     astrologyReason = lines[astrologyIdx].replace('✦', '').trim();
   }
 
-  // 마무리 문장 추출 (마지막 1-2줄)
   if (lines.length > 0) {
     closingAdvice = lines[lines.length - 1];
   }
@@ -165,9 +156,14 @@ export default function DailyStarCardV2({
 
         {/* 점수 */}
         {score !== null && (
-          <div className="dsc-score">
-            별숨 점수 <strong>{score}</strong>
-          </div>
+          <>
+            <div className="dsc-score">
+              별숨 점수 <strong>{score}</strong>
+            </div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center', marginTop: 2, marginBottom: 4 }}>
+              오늘의 기운을 0~100으로 나타내요 · 50 미만이면 액막이 발동 가능
+            </div>
+          </>
         )}
 
         {/* 요약 */}
@@ -200,17 +196,17 @@ export default function DailyStarCardV2({
             style={{
               marginTop: '20px',
               padding: '16px',
-              backgroundColor: '#fff5f5',
-              borderLeft: '4px solid #E05A3A',
+              backgroundColor: 'var(--rosef)',
+              borderLeft: '4px solid var(--rose)',
               borderRadius: '4px',
             }}
           >
-            <div style={{ fontSize: '13px', fontWeight: '600', color: '#E05A3A', marginBottom: '8px' }}>
-              ⚠️ 배드타임 감지
+            <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--rose)', marginBottom: '8px' }}>
+              배드타임 감지
             </div>
 
             {badtime.symptom && (
-              <div style={{ fontSize: '12px', color: '#333', marginBottom: '10px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--t2)', marginBottom: '10px' }}>
                 악운: {badtime.symptom}
               </div>
             )}
@@ -223,12 +219,13 @@ export default function DailyStarCardV2({
                 style={{
                   width: '100%',
                   padding: '10px 12px',
-                  backgroundColor: canBlockBadtime && currentBp >= 20 ? '#5FAD7A' : '#ccc',
-                  color: '#fff',
+                  backgroundColor: canBlockBadtime && currentBp >= 20 ? 'var(--teal)' : 'var(--bg3)',
+                  color: canBlockBadtime && currentBp >= 20 ? '#fff' : 'var(--t4)',
                   border: 'none',
                   borderRadius: '4px',
                   fontSize: '12px',
                   fontWeight: '600',
+                  fontFamily: 'var(--ff)',
                   cursor:
                     isBlocking || !canBlockBadtime || currentBp < 20
                       ? 'not-allowed'
@@ -246,28 +243,28 @@ export default function DailyStarCardV2({
               <div
                 style={{
                   padding: '10px 12px',
-                  backgroundColor: '#e8f5e9',
+                  backgroundColor: 'var(--bg3)',
                   borderRadius: '4px',
                   fontSize: '12px',
-                  color: '#2e7d32',
+                  color: 'var(--teal)',
                   fontWeight: '600',
                   marginBottom: '8px',
                 }}
               >
-                ✨ {badtime.transformation || '별숨이 악운을 긍정적으로 바꿨어요'}
+                {badtime.transformation || '별숨이 악운을 긍정적으로 바꿨어요'}
               </div>
             )}
 
             {/* BP 부족 메시지 */}
             {!canBlockBadtime || currentBp < 20 ? (
-              <div style={{ fontSize: '11px', color: '#999', marginTop: '6px' }}>
-                💡 BP를 충전하거나 미션을 완료하면 액막이를 발동할 수 있습니다
+              <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: '6px' }}>
+                BP를 충전하거나 미션을 완료하면 액막이를 발동할 수 있습니다
               </div>
             ) : null}
 
             {/* 사주/별자리 근거 */}
             {(sajuReason || astrologyReason) && (
-              <div style={{ marginTop: '10px', fontSize: '11px', color: '#666' }}>
+              <div style={{ marginTop: '10px', fontSize: '11px', color: 'var(--t3)' }}>
                 {sajuReason && <div>🀄 {sajuReason}</div>}
                 {astrologyReason && <div>✦ {astrologyReason}</div>}
               </div>
@@ -280,9 +277,9 @@ export default function DailyStarCardV2({
           <div style={{
             marginTop: '16px',
             paddingTop: '12px',
-            borderTop: '1px solid #f0f0f0',
+            borderTop: '1px solid var(--line)',
             fontSize: '12px',
-            color: '#666',
+            color: 'var(--t3)',
             fontStyle: 'italic',
           }}>
             {closingAdvice}

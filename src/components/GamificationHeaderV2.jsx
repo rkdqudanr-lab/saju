@@ -11,33 +11,30 @@ export default function GamificationHeaderV2({
   loginStreak = 0,
   todayMissionsDone = 0,
   totalMissionsTodo = 3,
-  freeRechargeAvailable = false, // users.free_bp_recharge_at이 오늘인지 여부
+  freeRechargeAvailable = false,
   className = '',
 }) {
   const [timeUntilRecharge, setTimeUntilRecharge] = useState('');
 
-  // 레벨별 색상
   const levelColors = {
-    1: '#4A8EC4',
+    1: '#9B8EC4',
     2: '#5FAD7A',
     3: '#C08830',
     4: '#E05A3A',
     5: '#B8A035',
   };
 
-  const color = levelColors[guardianLevel] || '#4A8EC4';
+  const color = levelColors[guardianLevel] || '#9B8EC4';
   const missionProgress = `${todayMissionsDone}/${totalMissionsTodo}`;
 
-  // 매시간 2시까지의 시간 계산
   useEffect(() => {
     const calculateTimeUntilRecharge = () => {
       const now = new Date();
-      const nextRechargeHour = 14; // 오후 2시
+      const nextRechargeHour = 14;
 
       let nextRecharge = new Date();
       nextRecharge.setHours(nextRechargeHour, 0, 0, 0);
 
-      // 이미 2시가 지났으면 내일 2시로 설정
       if (now > nextRecharge) {
         nextRecharge.setDate(nextRecharge.getDate() + 1);
       }
@@ -56,7 +53,7 @@ export default function GamificationHeaderV2({
     };
 
     calculateTimeUntilRecharge();
-    const interval = setInterval(calculateTimeUntilRecharge, 60000); // 1분마다 업데이트
+    const interval = setInterval(calculateTimeUntilRecharge, 60000);
 
     return () => clearInterval(interval);
   }, [freeRechargeAvailable]);
@@ -69,8 +66,8 @@ export default function GamificationHeaderV2({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '8px 16px',
-        backgroundColor: '#f9f9f9',
-        borderBottom: '1px solid #eee',
+        backgroundColor: 'var(--bg2)',
+        borderBottom: '1px solid var(--line)',
         borderRadius: '0 0 8px 8px',
         marginBottom: '16px',
         gap: '12px',
@@ -95,7 +92,7 @@ export default function GamificationHeaderV2({
           style={{
             fontSize: '10px',
             fontWeight: '500',
-            color: freeRechargeAvailable ? '#5FAD7A' : '#999',
+            color: freeRechargeAvailable ? 'var(--teal)' : 'var(--t4)',
             opacity: 0.8,
           }}
         >
@@ -127,7 +124,7 @@ export default function GamificationHeaderV2({
             gap: '4px',
             fontSize: '13px',
             fontWeight: '600',
-            color: '#E05A3A',
+            color: 'var(--rose)',
           }}
         >
           <span>🔥</span>
@@ -143,7 +140,7 @@ export default function GamificationHeaderV2({
           gap: '4px',
           fontSize: '13px',
           fontWeight: '600',
-          color: '#666',
+          color: 'var(--t3)',
         }}
       >
         <span>🎯</span>

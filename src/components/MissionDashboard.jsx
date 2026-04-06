@@ -12,7 +12,6 @@ export default function MissionDashboard({
 }) {
   const [completingId, setCompletingId] = useState(null);
 
-  // 미션 타입별 이모지
   const missionEmojis = {
     color: '🎨',
     menu: '🍽️',
@@ -45,10 +44,10 @@ export default function MissionDashboard({
         <div style={{
           padding: '16px',
           textAlign: 'center',
-          color: '#999',
+          color: 'var(--t4)',
           fontSize: '13px',
         }}>
-          오늘의 미션을 불러오는 중... ✨
+          오늘의 미션을 불러오는 중...
         </div>
       </div>
     );
@@ -59,19 +58,24 @@ export default function MissionDashboard({
       className={`mission-dashboard ${className}`}
       style={{
         padding: '16px',
-        backgroundColor: '#fff',
-        borderRadius: '8px',
-        border: '1px solid #f0f0f0',
+        backgroundColor: 'var(--bg2)',
+        borderRadius: 'var(--r1)',
+        border: '1px solid var(--line)',
       }}
     >
       {/* 제목 */}
       <div style={{
         fontSize: '14px',
         fontWeight: '600',
-        marginBottom: '12px',
-        color: '#333',
+        marginBottom: '4px',
+        color: 'var(--t1)',
       }}>
-        오늘의 미션 🎯
+        오늘의 미션
+      </div>
+
+      {/* 미션 설명 */}
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: '12px' }}>
+        오늘의 처방을 실천하면 별숨포인트를 받아요
       </div>
 
       {/* 미션 목록 */}
@@ -89,9 +93,9 @@ export default function MissionDashboard({
                 alignItems: 'center',
                 gap: '12px',
                 padding: '12px',
-                backgroundColor: isCompleted ? '#f0f8f4' : '#fafafa',
+                backgroundColor: isCompleted ? 'var(--bg3)' : 'var(--bg1)',
                 borderRadius: '6px',
-                border: `1px solid ${isCompleted ? '#5FAD7A' : '#e0e0e0'}`,
+                border: `1px solid ${isCompleted ? 'var(--teal)' : 'var(--line)'}`,
                 transition: 'all 0.3s ease',
                 cursor: !isCompleted ? 'pointer' : 'default',
                 opacity: completingId === mission.id ? 0.7 : 1,
@@ -107,7 +111,7 @@ export default function MissionDashboard({
                   width: '20px',
                   height: '20px',
                   borderRadius: '4px',
-                  backgroundColor: isCompleted ? '#5FAD7A' : '#e0e0e0',
+                  backgroundColor: isCompleted ? 'var(--teal)' : 'var(--bg3)',
                   color: '#fff',
                   fontSize: '12px',
                   fontWeight: '600',
@@ -122,14 +126,14 @@ export default function MissionDashboard({
                 <div style={{
                   fontSize: '13px',
                   fontWeight: '500',
-                  color: isCompleted ? '#999' : '#333',
+                  color: isCompleted ? 'var(--t4)' : 'var(--t1)',
                   textDecoration: isCompleted ? 'line-through' : 'none',
                 }}>
                   {emoji} {mission.mission_content}
                 </div>
                 <div style={{
                   fontSize: '11px',
-                  color: '#999',
+                  color: 'var(--t4)',
                   marginTop: '3px',
                 }}>
                   {label}
@@ -140,7 +144,7 @@ export default function MissionDashboard({
               <div style={{
                 fontSize: '12px',
                 fontWeight: '600',
-                color: isCompleted ? '#5FAD7A' : '#E05A3A',
+                color: isCompleted ? 'var(--teal)' : 'var(--gold)',
                 flexShrink: 0,
               }}>
                 +{mission.bp_reward} BP
@@ -154,10 +158,10 @@ export default function MissionDashboard({
       <div style={{
         marginTop: '12px',
         padding: '10px',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: 'var(--bg3)',
         borderRadius: '4px',
         fontSize: '12px',
-        color: '#666',
+        color: 'var(--t3)',
         textAlign: 'center',
       }}>
         {missions.filter(m => m.is_completed).length} / {missions.length} 미션 완료

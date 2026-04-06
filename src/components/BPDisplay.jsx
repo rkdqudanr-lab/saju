@@ -25,16 +25,15 @@ export default function BPDisplay({
     }
   }, [onFreeRecharge, isRecharging]);
 
-  // 레벨별 색상
   const levelColors = {
-    1: '#4A8EC4', // 수(파란색)
-    2: '#5FAD7A', // 목(초록색)
-    3: '#C08830', // 토(갈색)
-    4: '#E05A3A', // 화(빨간색)
-    5: '#B8A035', // 금(금색)
+    1: '#9B8EC4',
+    2: '#5FAD7A',
+    3: '#C08830',
+    4: '#E05A3A',
+    5: '#B8A035',
   };
 
-  const color = levelColors[guardianLevel] || '#4A8EC4';
+  const color = levelColors[guardianLevel] || '#9B8EC4';
   const percentage = Math.min(100, (currentBp / maxBp) * 100);
 
   return (
@@ -44,21 +43,26 @@ export default function BPDisplay({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '8px',
+        marginBottom: '4px',
       }}>
-        <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+        <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--t1)' }}>
           별숨 포인트
         </div>
-        <div style={{ fontSize: '14px', color: '#666' }}>
+        <div style={{ fontSize: '14px', color: 'var(--t3)' }}>
           {currentBp} / {maxBp}
         </div>
+      </div>
+
+      {/* BP 용도 설명 */}
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: '10px' }}>
+        액막이 발동과 별숨 상담에 사용돼요
       </div>
 
       {/* 게이지 바 */}
       <div style={{
         width: '100%',
         height: '8px',
-        backgroundColor: '#e0e0e0',
+        backgroundColor: 'var(--bg3)',
         borderRadius: '4px',
         overflow: 'hidden',
         marginBottom: '12px',
@@ -81,12 +85,13 @@ export default function BPDisplay({
         style={{
           width: '100%',
           padding: '10px 12px',
-          backgroundColor: freeRechargeAvailable ? color : '#ccc',
-          color: '#fff',
+          backgroundColor: freeRechargeAvailable ? color : 'var(--bg3)',
+          color: freeRechargeAvailable ? '#fff' : 'var(--t4)',
           border: 'none',
           borderRadius: '6px',
           fontSize: '13px',
           fontWeight: '600',
+          fontFamily: 'var(--ff)',
           cursor: freeRechargeAvailable && !isRecharging ? 'pointer' : 'not-allowed',
           transition: 'opacity 0.2s ease',
           opacity: isRecharging ? 0.7 : 1,
@@ -98,8 +103,8 @@ export default function BPDisplay({
       {/* 설명 텍스트 */}
       {!freeRechargeAvailable && (
         <div style={{
-          fontSize: '12px',
-          color: '#999',
+          fontSize: 'var(--xs)',
+          color: 'var(--t4)',
           marginTop: '8px',
           textAlign: 'center',
         }}>
