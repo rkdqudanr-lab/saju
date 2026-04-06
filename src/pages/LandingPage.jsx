@@ -138,7 +138,8 @@ export default function LandingPage({
                   {activeTab === 0 && (
                     <div className="main-tab-content">
                       {(() => {
-                        const isAfter5 = new Date().getHours() >= 17;
+                        // 이미 읽었거나 오후 5시 이후면 접힌 상태로 표시
+                        const shouldCollapse = dailyResult || new Date().getHours() >= 17;
                         const dailyCardContent = dailyLoading ? (
                           <div className="dsc-loading-btn">
                             <span>별숨이 오늘을 읽고 있어요</span>
@@ -167,7 +168,7 @@ export default function LandingPage({
 
                         return (
                           <>
-                            {isAfter5 ? (
+                            {shouldCollapse ? (
                               <>
                                 <button
                                   onClick={() => setShowDailyCard(v => !v)}
