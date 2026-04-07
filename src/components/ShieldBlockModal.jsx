@@ -1,6 +1,6 @@
 /**
  * ShieldBlockModal 컴포넌트
- * 배드타임 액막이 모달: 악운이 감지되었을 때 표시
+ * 기운 정화 모달: 지친 기운이 감지되었을 때 표시 (공포 UX → 따뜻한 위로 UX)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -41,131 +41,144 @@ export default function ShieldBlockModal({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
           zIndex: 999,
-          animation: 'fadeIn 0.2s ease',
+          animation: 'sbmFadeIn 0.25s ease',
         }}
       />
 
-      {/* 모달 */}
+      {/* 모달 — 하단에서 슬라이드업 */}
       <div
         style={{
           position: 'fixed',
-          top: '50%',
+          bottom: 0,
           left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: '#fff',
-          borderRadius: '12px',
-          padding: '24px',
-          maxWidth: '320px',
-          width: '90%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'var(--bg1)',
+          borderRadius: 'var(--r3) var(--r3) 0 0',
+          padding: '28px 24px 36px',
+          maxWidth: '480px',
+          width: '100%',
           zIndex: 1000,
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-          animation: 'slideUp 0.3s ease',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.4)',
+          animation: 'sbmSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+          border: '1px solid var(--line)',
+          borderBottom: 'none',
         }}
       >
+        {/* 핸들 바 */}
+        <div style={{ width: 40, height: 4, background: 'var(--line)', borderRadius: 2, margin: '0 auto 24px' }} />
+
         {/* 헤더 */}
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div
             style={{
-              fontSize: '48px',
-              marginBottom: '12px',
-              animation: showAnimation && !canBlock ? 'none' : 'pulse 2s ease-in-out infinite',
+              fontSize: 52,
+              marginBottom: 14,
+              animation: 'sbmFloat 3s ease-in-out infinite',
+              display: 'inline-block',
             }}
           >
-            ⚠️
+            🌧️
           </div>
           <h2
             style={{
-              fontSize: '18px',
-              fontWeight: '700',
-              color: '#0D0B14',
-              margin: '0 0 8px 0',
+              fontSize: 'var(--lg)',
+              fontWeight: 700,
+              color: 'var(--t1)',
+              margin: '0 0 10px 0',
+              fontFamily: 'var(--ff)',
             }}
           >
-            악운이 감지됐어요
+            오늘의 기운이 조금 지쳐있어요
           </h2>
           <p
             style={{
-              fontSize: '13px',
-              color: '#666',
+              fontSize: 'var(--sm)',
+              color: 'var(--t2)',
               margin: 0,
-              lineHeight: 1.5,
+              lineHeight: 1.7,
             }}
           >
-            {symptom || '부정적인 기운이 감지되었습니다'}
+            {symptom
+              ? symptom
+              : '오늘 조금 무거운 기운이 감돌고 있어요.\n별숨의 기운 정화가 도움이 될 거예요 ✨'}
           </p>
         </div>
 
         {/* BP 현황 */}
         <div
           style={{
-            backgroundColor: '#f5f5f5',
-            borderRadius: '8px',
-            padding: '12px',
-            marginBottom: '20px',
-            fontSize: '12px',
-            textAlign: 'center',
+            background: 'var(--bg2)',
+            borderRadius: 'var(--r1)',
+            border: '1px solid var(--line)',
+            padding: '14px 16px',
+            marginBottom: 20,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '8px' }}>
-            <div>
-              <div style={{ color: '#999', marginBottom: '4px' }}>현재 BP</div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#4A8EC4' }}>
-                💎 {currentBp}
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 10, letterSpacing: '.04em' }}>
+            ✦ 별숨 포인트 현황
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>보유 BP</div>
+              <div style={{ fontSize: 'var(--xl)', fontWeight: 700, color: 'var(--lav)' }}>
+                ✦ {currentBp}
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', color: '#999' }}>
-              →
-            </div>
-            <div>
-              <div style={{ color: '#999', marginBottom: '4px' }}>필요한 BP</div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#E05A3A' }}>
-                💎 {cost}
+            <div style={{ color: 'var(--t4)', fontSize: 'var(--sm)' }}>→</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>정화에 필요한 BP</div>
+              <div style={{ fontSize: 'var(--xl)', fontWeight: 700, color: 'var(--gold)' }}>
+                ✦ {cost}
               </div>
             </div>
           </div>
           {!canBlock && (
             <div
               style={{
-                color: '#E05A3A',
-                fontSize: '11px',
-                fontWeight: '600',
+                marginTop: 10,
+                padding: '8px 12px',
+                background: 'var(--lavf)',
+                borderRadius: 'var(--r1)',
+                fontSize: 'var(--xs)',
+                color: 'var(--lav)',
+                textAlign: 'center',
               }}
             >
-              BP가 {bpShortage}개 부족해요
+              BP가 {bpShortage}개 더 있으면 정화할 수 있어요
             </div>
           )}
         </div>
 
-        {/* 조건에 따른 메시지 */}
+        {/* BP 부족 시 안내 */}
         {!canBlock && (
           <div
             style={{
-              backgroundColor: '#FFE5E5',
-              border: '1px solid #FFCCCC',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '20px',
-              fontSize: '12px',
-              color: '#E05A3A',
-              lineHeight: 1.5,
+              background: 'var(--lavf)',
+              border: '1px solid var(--lavacc)',
+              borderRadius: 'var(--r1)',
+              padding: '14px 16px',
+              marginBottom: 20,
+              fontSize: 'var(--sm)',
+              color: 'var(--lav)',
+              lineHeight: 1.7,
             }}
           >
             {freeRechargeAvailable ? (
               <div>
-                <strong>💎 무료 BP 충전이 가능해요!</strong>
-                <div style={{ marginTop: '4px' }}>
-                  {Math.ceil(bpShortage / 5)} BP 부족하니, 무료 충전으로 채우고 액막이를 발동할 수
-                  있어요.
+                <strong>✨ 오늘치 별의 에너지를 받아볼까요?</strong>
+                <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t2)' }}>
+                  별숨 포인트(BP)로 나의 별에게 맑은 기운을 선물할 수 있어요.
+                  무료 충전 후 기운을 정화해보세요.
                 </div>
               </div>
             ) : (
               <div>
-                <strong>💎 BP가 부족합니다</strong>
-                <div style={{ marginTop: '4px' }}>
-                  다음 무료 충전까지 {freeRechargeTimeRemaining || '몇 시간'} 남았어요. 또는 미션을
-                  완료해 BP를 획득해보세요.
+                <strong>✦ 미션을 완료하면 BP가 쌓여요</strong>
+                <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t2)' }}>
+                  다음 무료 충전까지 {freeRechargeTimeRemaining || '조금'} 남았어요.
+                  오늘의 미션을 완료하거나 내일 다시 시도해보세요.
                 </div>
               </div>
             )}
@@ -173,7 +186,7 @@ export default function ShieldBlockModal({
         )}
 
         {/* 버튼 그룹 */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: 10 }}>
           {canBlock ? (
             <>
               <button
@@ -181,32 +194,37 @@ export default function ShieldBlockModal({
                 disabled={isBlocking}
                 style={{
                   flex: 1,
-                  padding: '12px',
-                  backgroundColor: '#E05A3A',
+                  padding: '14px',
+                  background: 'linear-gradient(135deg, var(--lav), #7B6DB5)',
                   color: '#fff',
                   border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '600',
+                  borderRadius: 'var(--r1)',
+                  fontWeight: 700,
+                  fontSize: 'var(--sm)',
+                  fontFamily: 'var(--ff)',
                   cursor: isBlocking ? 'not-allowed' : 'pointer',
-                  opacity: isBlocking ? 0.6 : 1,
+                  opacity: isBlocking ? 0.7 : 1,
+                  transition: 'opacity .2s',
                 }}
               >
-                {isBlocking ? '발동 중...' : '🛡️ 액막이 발동!'}
+                {isBlocking ? '정화 중...' : '✨ 기운 정화하기'}
               </button>
               <button
                 onClick={onClose}
                 style={{
-                  flex: 1,
-                  padding: '12px',
-                  backgroundColor: '#f5f5f5',
-                  color: '#666',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '600',
+                  padding: '14px 18px',
+                  background: 'var(--bg2)',
+                  color: 'var(--t3)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--r1)',
+                  fontWeight: 600,
+                  fontSize: 'var(--sm)',
+                  fontFamily: 'var(--ff)',
                   cursor: 'pointer',
+                  flexShrink: 0,
                 }}
               >
-                시간을 기다릴게요
+                나중에
               </button>
             </>
           ) : (
@@ -216,32 +234,36 @@ export default function ShieldBlockModal({
                   onClick={onRecharge}
                   style={{
                     flex: 1,
-                    padding: '12px',
-                    backgroundColor: '#5FAD7A',
+                    padding: '14px',
+                    background: 'linear-gradient(135deg, var(--teal), #4A9B91)',
                     color: '#fff',
                     border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
+                    borderRadius: 'var(--r1)',
+                    fontWeight: 700,
+                    fontSize: 'var(--sm)',
+                    fontFamily: 'var(--ff)',
                     cursor: 'pointer',
                   }}
                 >
-                  💎 무료 충전
+                  ✦ 별 에너지 받기
                 </button>
               )}
               <button
                 onClick={onClose}
                 style={{
                   flex: 1,
-                  padding: '12px',
-                  backgroundColor: '#f5f5f5',
-                  color: '#666',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '600',
+                  padding: '14px',
+                  background: 'var(--bg2)',
+                  color: 'var(--t3)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--r1)',
+                  fontWeight: 600,
+                  fontSize: 'var(--sm)',
+                  fontFamily: 'var(--ff)',
                   cursor: 'pointer',
                 }}
               >
-                닫기
+                오늘은 쉬어갈게요
               </button>
             </>
           )}
@@ -249,25 +271,17 @@ export default function ShieldBlockModal({
       </div>
 
       <style>{`
-        @keyframes fadeIn {
+        @keyframes sbmFadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-
-        @keyframes slideUp {
-          from {
-            transform: translate(-50%, -45%);
-            opacity: 0;
-          }
-          to {
-            transform: translate(-50%, -50%);
-            opacity: 1;
-          }
+        @keyframes sbmSlideUp {
+          from { transform: translateX(-50%) translateY(100%); opacity: 0; }
+          to { transform: translateX(-50%) translateY(0); opacity: 1; }
         }
-
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
+        @keyframes sbmFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
         }
       `}</style>
     </>

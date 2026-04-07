@@ -505,12 +505,13 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
   const handleAccToggle = useCallback(i => { setOpenAcc(p => p === i ? -1 : i); }, []);
 
-  // ── 채팅 ──
-  const sendChat = useCallback(async () => {
-    if (!chatInput.trim() || chatLoading) return;
+  // ── 채팅 (overrideText: 칩 클릭 시 직접 텍스트 전달 가능) ──
+  const sendChat = useCallback(async (overrideText) => {
+    const rawText = overrideText ?? chatInput;
+    if (!rawText.trim() || chatLoading) return;
     if (chatLeft <= 0) { if (typeof window.gtag === 'function') window.gtag('event', 'chat_limit_reached'); setShowUpgradeModal(true); return; }
     if (typeof window.gtag === 'function') window.gtag('event', 'send_chat');
-    const userMsg = chatInput.trim();
+    const userMsg = rawText.trim();
     setChatInput('');
     setChatHistory(p => [...p, { role: 'user', text: userMsg }]);
     setChatLoading(true);

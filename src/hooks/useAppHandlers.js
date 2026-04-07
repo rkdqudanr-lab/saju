@@ -81,10 +81,10 @@ export function useAppHandlers({
     saveSettings({ quizState: { ...quiz, nextQIdx: Math.min(currentQIdx + 1, DAILY_QUESTIONS.length) } });
   }, [quiz, saveSettings]);
 
-  // ── 채팅 전송 ──
-  const handleSendChat = useCallback(() => {
+  // ── 채팅 전송 (overrideText: 칩 클릭 등 직접 텍스트 전달 가능) ──
+  const handleSendChat = useCallback((overrideText) => {
     setProfileNudge(null);
-    sendChat();
+    sendChat(typeof overrideText === 'string' ? overrideText : undefined);
   }, [sendChat]);
 
   // ── 전체 복사 ──

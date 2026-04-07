@@ -1,5 +1,27 @@
 import { ChatBubble } from "../components/AccItem.jsx";
-import { CHAT_SUGG } from "../utils/constants.js";
+
+// 대화 맥락 기반 스마트 추천 질문 칩
+function getContextualChips(chatHistory, selQs) {
+  const hasHistory = chatHistory.length > 0;
+  const lastAiMsg = [...chatHistory].reverse().find(m => m.role === 'ai');
+
+  if (!hasHistory) {
+    // 첫 진입 — 운세 결과 기반 추천
+    return ['그럼 조심해야 할 건 뭐야?', '언제쯤 좋아질까?', '자세히 설명해줘'];
+  }
+
+  const text = lastAiMsg?.text || '';
+  if (text.includes('연애') || text.includes('사랑') || text.includes('관계')) {
+    return ['지금 고백해도 될까?', '이 사람이 나를 어떻게 생각할까?', '관계가 더 좋아질 수 있을까?'];
+  }
+  if (text.includes('직장') || text.includes('일') || text.includes('커리어') || text.includes('취업')) {
+    return ['언제가 변화하기 좋은 시기야?', '지금 이직해도 괜찮을까?', '더 구체적으로 알려줘'];
+  }
+  if (text.includes('재물') || text.includes('돈') || text.includes('재정')) {
+    return ['투자 타이밍은 언제가 좋아?', '지출을 줄여야 할까?', '금전운이 좋아지는 때는?'];
+  }
+  return ['좀 더 자세히 알고 싶어요', '어떻게 행동하면 좋을까요?', '긍정적인 부분도 알고 싶어요'];
+}
 
 export default function ChatStep({
   chatHistory, chatInput, setChatInput, chatLoading,
@@ -10,6 +32,12 @@ export default function ChatStep({
   handleSendChat, handleSaveChatImage,
   chatEndRef,
 }) {
+  const chips = getContextualChips(chatHistory, selQs);
+
+  function sendChip(chip) {
+    handleSendChat(chip);
+  }
+
   return (
     <div className="chat-page">
       <div className="chat-page-header">
@@ -43,7 +71,10 @@ export default function ChatStep({
         {chatLoading && (
           <div className="chat-msg ai">
             <div className="chat-role">✦ 별숨</div>
-            <div className="typing-dots"><span /><span /><span /></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
+              <div className="typing-dots"><span /><span /><span /></div>
+              <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontStyle: 'italic' }}>별숨이 운명의 궤도를 읽는 중...</span>
+            </div>
           </div>
         )}
         <div ref={chatEndRef} />
@@ -74,9 +105,32 @@ export default function ChatStep({
             채팅을 모두 사용했어요 · 새 상담을 시작하거나 업그레이드하세요
           </div>
         )}
+        {/* ── 스마트 추천 질문 칩 (Quick Reply Chips) ── */}
         {chatLeft > 0 && !chatLoading && (
-          <div className="chat-sugg-wrap">
-            {CHAT_SUGG.map((s, i) => <button key={i} className="sugg-btn" onClick={() => setChatInput(s)}>{s}</button>)}
+          <div style={{ overflowX: 'auto', padding: '8px 16px 4px', display: 'flex', gap: 8, scrollbarWidth: 'none' }}>
+            {chips.map((chip, i) => (
+              <button
+                key={i}
+                onClick={() => sendChip(chip)}
+                style={{
+                  flexShrink: 0,
+                  padding: '6px 14px',
+                  borderRadius: 20,
+                  border: '1px solid var(--line)',
+                  background: 'var(--bg2)',
+                  color: 'var(--t2)',
+                  fontSize: 'var(--xs)',
+                  fontFamily: 'var(--ff)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all var(--trans-fast)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.color = 'var(--gold)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
+              >
+                {chip}
+              </button>
+            ))}
           </div>
         )}
         <div className="chat-inp-row">

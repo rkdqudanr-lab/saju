@@ -111,19 +111,49 @@ export default function ProfileStep({
               </div>
             </fieldset>
 
-            <div className="toggle-row" onClick={() => setForm(f => ({ ...f, noTime: !f.noTime, bh: '' }))}>
-              <button className={`toggle ${form.noTime ? 'on' : 'off'}`} role="switch" aria-checked={form.noTime} aria-label="태어난 시간 모름" onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, noTime: !f.noTime, bh: '' })); }} />
-              <span className="toggle-label">태어난 시간을 몰라요</span>
-            </div>
-            {!form.noTime && (
-              <>
-                <label className="lbl" htmlFor="inp-bh">태어난 시각</label>
+            {/* ── 태어난 시간: 알아요 / 모르겠어요 두 버튼으로 VIP 처리 ── */}
+            <div style={{ marginBottom: 'var(--sp2)' }}>
+              <div className="lbl" style={{ marginBottom: 8 }}>태어난 시각</div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: form.noTime ? 0 : 10 }}>
+                <button
+                  onClick={() => setForm(f => ({ ...f, noTime: false }))}
+                  style={{
+                    flex: 1, padding: '10px 8px', borderRadius: 'var(--r1)',
+                    border: `1px solid ${!form.noTime ? 'var(--gold)' : 'var(--line)'}`,
+                    background: !form.noTime ? 'var(--goldf)' : 'none',
+                    color: !form.noTime ? 'var(--gold)' : 'var(--t3)',
+                    fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                    fontWeight: !form.noTime ? 700 : 400, transition: 'all var(--trans-fast)',
+                  }}
+                >
+                  ⏰ 정확히 알아요
+                </button>
+                <button
+                  onClick={() => setForm(f => ({ ...f, noTime: true, bh: '' }))}
+                  style={{
+                    flex: 1, padding: '10px 8px', borderRadius: 'var(--r1)',
+                    border: `1px solid ${form.noTime ? 'var(--lav)' : 'var(--line)'}`,
+                    background: form.noTime ? 'var(--lavf)' : 'none',
+                    color: form.noTime ? 'var(--lav)' : 'var(--t3)',
+                    fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                    fontWeight: form.noTime ? 700 : 400, transition: 'all var(--trans-fast)',
+                  }}
+                >
+                  🤷 잘 모르겠어요
+                </button>
+              </div>
+              {form.noTime && (
+                <div style={{ padding: '10px 14px', background: 'var(--lavf)', border: '1px solid var(--lavacc)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>
+                  ✨ 괜찮아요! 시간을 몰라도 별숨이 하루의 중심(낮 12시)을 기준으로 가장 가까운 기운을 읽어드릴게요.
+                </div>
+              )}
+              {!form.noTime && (
                 <select id="inp-bh" className="inp" value={form.bh} onChange={e => setForm(f => ({ ...f, bh: e.target.value }))}>
                   <option value="">시각 선택</option>
                   {Array.from({ length: 144 }, (_, i) => { const h = Math.floor(i / 6); const m = (i % 6) * 10; const val = (h + m / 60).toFixed(4); return <option key={i} value={val}>{String(h).padStart(2, '0')}:{String(m).padStart(2, '0')}</option>; })}
                 </select>
-              </>
-            )}
+              )}
+            </div>
             <fieldset style={{border:'none',padding:0,margin:0}}>
               <legend className="lbl">성별</legend>
               <div className="gender-group" role="group" aria-label="성별 선택">
