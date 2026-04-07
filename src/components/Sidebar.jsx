@@ -276,34 +276,29 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
             </div>
           )}
 
-          {/* ── 특별 기능 (토글) ── */}
+          {/* ── 특별 기능 (항상 펼침) ── */}
           {!hiddenGroups.includes('special') && (
             <div className="sidebar-section">
-              <button className="sidebar-group-header" onClick={() => toggleGroup('special')} aria-expanded={openGroups.special}>
-                <span>✨ 특별 기능</span>
-                <span className="sidebar-group-arrow">{openGroups.special ? '▾' : '▸'}</span>
-              </button>
-              {openGroups.special && (
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {[
-                    { icon: '🌙', label: '꿈 해몽', s: 24 },
-                    { icon: '🗓️', label: '택일 (길일 찾기)', s: 25 },
-                    { icon: '📛', label: '이름 풀이 (성명학)', s: 26 },
-                  ].map(m => (
-                    <li key={m.s}>
-                      <button
-                        className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
-                        onClick={() => { onNav(m.s); onClose(); }}
-                        aria-current={step === m.s ? 'page' : undefined}
-                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
-                      >
-                        <span className="smi-icon" aria-hidden="true">{m.icon}</span>
-                        <span className="smi-text">{m.label}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <div className="sidebar-section-lbl">✨ 특별 기능</div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {[
+                  { icon: '🌙', label: '꿈 해몽', s: 24 },
+                  { icon: '🗓️', label: '택일 (길일 찾기)', s: 25 },
+                  { icon: '📛', label: '이름 풀이 (성명학)', s: 26 },
+                ].map(m => (
+                  <li key={m.s}>
+                    <button
+                      className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                      onClick={() => { onNav(m.s); onClose(); }}
+                      aria-current={step === m.s ? 'page' : undefined}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                    >
+                      <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                      <span className="smi-text">{m.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
