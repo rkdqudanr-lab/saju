@@ -38,7 +38,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 /* ══ 토스트 알림 ══ */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:999;max-width:340px;width:90%;padding:12px 20px;border-radius:var(--r1);font-size:var(--sm);text-align:center;animation:fadeUp .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.toast{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom, 0px) + 8px);left:50%;transform:translateX(-50%);z-index:999;max-width:340px;width:90%;padding:12px 20px;border-radius:var(--r1);font-size:var(--sm);text-align:center;animation:fadeUp .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.25)}
 .toast-error{background:#e05a3a;color:#fff}
 .toast-success{background:var(--gold);color:#0D0B14}
 .toast-warn{background:var(--rose);color:#fff}
@@ -547,6 +547,12 @@ select.inp option{background:var(--bg2)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes modalSlideUp{from{transform:translateX(-50%) translateY(100%);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+@keyframes floatGently{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ══ 모바일 버튼 터치 피드백 (스케일 0.95) ══ */
+button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
+.cta-main:active:not(:disabled){transform:scale(.96)!important}
 
 .share-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;border:1px solid var(--line);background:transparent;color:var(--t3);font-size:var(--xs);font-family:var(--ff);cursor:pointer;transition:all .2s}
 .share-btn:hover{border-color:var(--acc);color:var(--gold);background:var(--goldf)}

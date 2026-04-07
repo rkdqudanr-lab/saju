@@ -22,6 +22,7 @@ import StarCanvas         from "./components/StarCanvas.jsx";
 import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
 import PWAInstallBanner   from "./components/PWAInstallBanner.jsx";
+import BottomNav          from "./components/BottomNav.jsx";
 
 const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
 const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
@@ -373,6 +374,7 @@ export default function App() {
         </div>
       )}
 
+      {/* ── 사이드바 (메뉴 버튼 우측 상단에 유지 — 히스토리 검색 등 고급 기능 접근용) ── */}
       <button className="menu-btn" onClick={() => setShowSidebar(true)} aria-label="메뉴 열기" aria-expanded={showSidebar}>☰</button>
 
       {showSidebar && (
@@ -381,7 +383,6 @@ export default function App() {
           histItems={histItems}
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
-            // 출생정보가 필요한 페이지들: formOkApprox 없으면 step 1로
             const needsForm = [2, 5, 6, 7, 8, 10, 12, 13, 14, 16, 17, 18, 20];
             if (s === 'history' && item) { setHistItem(item); setStep(9); }
             else if (s === 'fortune') { formOkApprox ? setStep(18) : setStep(1); }
@@ -421,9 +422,11 @@ export default function App() {
       {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 24 || step === 25 || step === 26) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step === 22 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
-      {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>🏠</button>}
 
-      <div className="app" id="main-content">
+      {/* ── 하단 네비게이션 바 (로그인 여부 무관하게 항상 표시) ── */}
+      <BottomNav step={step} setStep={setStep} user={user} formOkApprox={formOkApprox} />
+
+      <div className="app" id="main-content" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
 
         {/* ── Step 0: 랜딩 ── */}
         {step === 0 && (
