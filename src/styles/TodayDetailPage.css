@@ -64,7 +64,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: var(--sp3) var(--sp2);
+  padding: var(--sp3);
   overflow-y: auto;
   gap: var(--sp2);
 }
@@ -137,7 +137,7 @@
     padding: 12px var(--sp2);
   }
   .today-detail-content {
-    padding: var(--sp2);
+    padding: var(--sp3) var(--sp2);
   }
   .today-detail-footer {
     padding: 12px var(--sp2);
