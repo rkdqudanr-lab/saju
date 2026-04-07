@@ -137,7 +137,8 @@ export function useUserProfile() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || '인증 실패');
         if (data.token) setAuthToken(data.token);
-        const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: data.profileImage || null };
+        const rawImage = data.profileImage || null;
+        const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: rawImage ? rawImage.replace(/^http:\/\//, 'https://') : null };
         setUser(userData);
         setAuthUser(userData);
 
