@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { getSaju } from "../utils/saju.js";
 import { TAEGIL_PROMPT } from "../utils/constants.js";
-import { getAuthToken } from "../hooks/useUserProfile.js";
 
 // ═══════════════════════════════════════════════════════════
 //  🗓️ 택일 — 중요한 날, 별숨이 골라드릴게요
@@ -78,29 +77,17 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
     return dates.sort((a, b) => b.score - a.score);
   }, [startDate, endDate]);
 
-  const callApi = callApiProp || (async (prompt) => {
-    const token = getAuthToken();
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch('/api/ask', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], system: '당신은 별숨의 택일 전문가예요. 길일과 흉일을 사주 오행 기준으로 분석하고, 간결하고 실용적인 조언을 해주세요.', stream: false }),
-    });
-    if (!res.ok) throw new Error('API 오류');
-    const data = await res.json();
-    return data.content || data.result || '';
-  });
+  const callApi = callApiProp;
 
   const handleAsk = async () => {
     if (!eventType) { showToast('이벤트 유형을 선택해주세요', 'info'); return; }
     if (!startDate || !endDate) { showToast('날짜 범위를 설정해주세요', 'info'); return; }
+    if (!callApi) { showToast('로그인이 필요해요 🌙', 'info'); return; }
     setLoading(true);
     setResult('');
     try {
-      const sajuCtx = buildCtx ? buildCtx() : '';
       const top = candidateDates.slice(0, 6);
-      const prompt = TAEGIL_PROMPT({ eventType, candidateDates: top, sajuCtx });
+      const prompt = TAEGIL_PROMPT({ eventType, candidateDates: top, sajuCtx: '' });
       const text = await callApi(prompt);
       setResult(text);
     } catch {

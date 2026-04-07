@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { getMoonPhase, DREAM_PROMPT } from "../utils/constants.js";
-import { getAuthToken } from "../hooks/useUserProfile.js";
 
 // ═══════════════════════════════════════════════════════════
 //  🌙 꿈 해몽 — 별숨이 꿈을 읽어요
@@ -44,7 +43,7 @@ function stripFollowUp(text) {
   return text.replace(/\[후속질문\].*/s, '').trim();
 }
 
-export default function DreamPage({ user, form, buildCtx, setStep, showToast }) {
+export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, setStep, showToast }) {
   const today = new Date();
   const moonPhase = getMoonPhase(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
@@ -62,34 +61,20 @@ export default function DreamPage({ user, form, buildCtx, setStep, showToast }) 
     setSelectedTags(p => p.includes(tag) ? p.filter(t => t !== tag) : [...p, tag]);
   };
 
-  const callApi = async (prompt) => {
-    const token = user ? getAuthToken() : null;
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch('/api/ask', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], system: '당신은 별숨의 꿈 해몽 전문가예요. 사주와 달의 기운, 오행을 바탕으로 꿈을 따뜻하게 해석해주세요. 길어도 400자 이내로 핵심만 전달해주세요.', stream: false }),
-    });
-    if (!res.ok) throw new Error('API 오류');
-    const data = await res.json();
-    return data.content || data.result || '';
-  };
-
   const handleAnalyze = async () => {
     if (!dreamText.trim()) { showToast('꿈 내용을 입력해주세요 🌙', 'info'); return; }
+    if (!callApiProp) { showToast('로그인이 필요해요 🌙', 'info'); return; }
     setLoading(true);
     setResult('');
     setFollowUps([]);
     try {
-      const sajuCtx = buildCtx ? buildCtx() : '';
       const prompt = DREAM_PROMPT({
         dreamText,
         dreamMood: mood,
         dreamTags: selectedTags,
         moonPhaseLabel: moonPhase.label,
-      }) + `\n\n[꿈 내용]\n${dreamText}` + (sajuCtx ? `\n\n[사용자 사주]\n${sajuCtx}` : '');
-      const text = await callApi(prompt);
+      }) + `\n\n[꿈 내용]\n${dreamText}`;
+      const text = await callApiProp(prompt);
       setResult(text);
       setFollowUps(parseFollowUp(text));
     } catch {
@@ -106,14 +91,13 @@ export default function DreamPage({ user, form, buildCtx, setStep, showToast }) 
 
   const handleChat = async (inputOverride) => {
     const msg = (inputOverride || chatInput).trim();
-    if (!msg || chatLoading) return;
+    if (!msg || chatLoading || !callApiProp) return;
     setChatInput('');
     setChatLoading(true);
     setChatHistory(p => [...p, { role: 'user', content: msg }]);
     try {
-      const sajuCtx = buildCtx ? buildCtx() : '';
-      const contextPrompt = `[꿈 해몽 맥락]\n꿈: ${dreamText}\n해몽: ${stripFollowUp(result)}\n\n[후속 질문]\n${msg}${sajuCtx ? `\n\n[사용자 사주]\n${sajuCtx}` : ''}`;
-      const res = await callApi(contextPrompt);
+      const contextPrompt = `[꿈 해몽 맥락]\n꿈: ${dreamText}\n해몽: ${stripFollowUp(result)}\n\n[후속 질문]\n${msg}`;
+      const res = await callApiProp(contextPrompt, { isChat: true });
       setChatHistory(p => [...p, { role: 'assistant', content: res }]);
     } catch {
       setChatHistory(p => [...p, { role: 'assistant', content: '별이 잠시 쉬고 있어요 🌙' }]);

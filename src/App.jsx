@@ -785,6 +785,7 @@ export default function App() {
               user={user}
               form={form}
               buildCtx={buildCtx}
+              callApi={callApi}
               setStep={setStep}
               showToast={showToast}
             />
@@ -809,6 +810,7 @@ export default function App() {
             <NameFortunePage
               form={form}
               buildCtx={buildCtx}
+              callApi={callApi}
               showToast={showToast}
             />
           </Suspense>

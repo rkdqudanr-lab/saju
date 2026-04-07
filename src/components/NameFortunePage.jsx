@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { NAME_FORTUNE_PROMPT } from "../utils/constants.js";
-import { getAuthToken } from "../hooks/useUserProfile.js";
 
 // ═══════════════════════════════════════════════════════════
 //  📛 이름 풀이 — 성명학으로 이름 속 기운 읽기
@@ -61,7 +60,7 @@ function getNameOhaeng(name) {
   return Object.entries(counts).filter(([,v]) => v > 0).map(([k, v]) => `${k}(${v})`).join(' · ');
 }
 
-export default function NameFortunePage({ form, buildCtx, showToast }) {
+export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, showToast }) {
   const [name, setName] = useState(form?.name || '');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -69,32 +68,14 @@ export default function NameFortunePage({ form, buildCtx, showToast }) {
   const strokes = useMemo(() => name ? calcStrokes(name) : 0, [name]);
   const sounds  = useMemo(() => name ? getNameOhaeng(name) : '', [name]);
 
-  const callApi = async (prompt) => {
-    const token = getAuthToken();
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch('/api/ask', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: prompt }],
-        system: '당신은 별숨의 성명학 전문가예요. 한국 이름을 오행·획수·음양 관점에서 따뜻하게 풀이해주세요. 400자 이내로 핵심만 전달해주세요.',
-        stream: false,
-      }),
-    });
-    if (!res.ok) throw new Error('API 오류');
-    const data = await res.json();
-    return data.content || data.result || '';
-  };
-
   const handleAnalyze = async () => {
     if (!name.trim()) { showToast('이름을 입력해주세요 ✦', 'info'); return; }
+    if (!callApiProp) { showToast('로그인이 필요해요 🌙', 'info'); return; }
     setLoading(true);
     setResult('');
     try {
-      const sajuCtx = buildCtx ? buildCtx() : '';
-      const prompt = NAME_FORTUNE_PROMPT({ name, strokes, sounds, sajuCtx });
-      const text = await callApi(prompt);
+      const prompt = NAME_FORTUNE_PROMPT({ name, strokes, sounds, sajuCtx: '' });
+      const text = await callApiProp(prompt);
       setResult(text);
     } catch {
       showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요 🌙', 'error');
