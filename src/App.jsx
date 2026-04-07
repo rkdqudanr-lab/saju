@@ -673,6 +673,8 @@ export default function App() {
               form={form}
               saju={saju}
               sun={sun}
+              today={today}
+              isApproximate={isApproximate}
               buildCtx={buildCtx}
               askReview={askDiaryReview}
               setStep={setStep}

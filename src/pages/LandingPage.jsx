@@ -166,6 +166,7 @@ export default function LandingPage({
                           {DiaryPageLazy && (
                             <DiaryPageLazy
                               user={user} form={form} saju={saju} sun={sun} buildCtx={buildCtx}
+                              today={today} isApproximate={isApproximate}
                               askReview={askDiaryReview} setStep={setStep} embedded={true}
                               diaryReviewResult={diaryReviewResult} diaryReviewLoading={diaryReviewLoading}
                               showToast={showToast}

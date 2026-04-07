@@ -59,7 +59,7 @@ function stripFollowUp(text) {
   return text.replace(/\[후속질문\].*/s, '').trim();
 }
 
-export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, setStep, setDiy, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, showToast }) {
+export default function DiaryPage({ user, form, saju, sun, today: todayInfo, isApproximate, buildCtx, askReview, setStep, setDiy, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, showToast }) {
   const [mood, setMood] = useState(initialMood || null);
   const [weather, setWeather] = useState(initialWeather || '');
   const [energy, setEnergy] = useState(initialEnergy || null);
@@ -193,7 +193,10 @@ export default function DiaryPage({ user, form, saju, sun, buildCtx, askReview, 
       const moodLabel = MOOD_OPTIONS.find(m => m.value === mood)?.label || '';
       const weatherLabel = WEATHER_OPTIONS.find(w => w.value === weather)?.label || '';
       const energyLabel = ENERGY_OPTIONS.find(e => e.value === energy)?.label || '';
-      const context = `[오늘의 기분: ${moodLabel}] [날씨: ${weatherLabel}] [에너지: ${energyLabel}]${gratitude ? `\n[감사한 일: ${gratitude}]` : ''}${tomorrowGoal ? `\n[내일 목표: ${tomorrowGoal}]` : ''}`;
+      const ilganInfo = saju?.ilgan ? `\n[유저의 타고난 기운(일간): ${saju.ilgan}${saju.ilganPoetic ? ` · ${saju.ilganPoetic}` : ''}]` : '';
+      const todayDateInfo = todayInfo ? `\n[오늘: ${todayInfo.solar} · ${todayInfo.lunar} · ${todayInfo.jeolgi}]` : '';
+      const timeDefense = isApproximate ? '\n[시스템 지시: 이 유저는 태어난 시간을 모릅니다. "시간을 몰라 분석이 어렵다"는 뉘앙스는 절대 금지. 일간과 날짜 기운만으로도 따뜻하고 확신에 찬 위로를 건네세요.]' : '';
+      const context = `[오늘의 기분: ${moodLabel}] [날씨: ${weatherLabel}] [에너지: ${energyLabel}]${gratitude ? `\n[감사한 일: ${gratitude}]` : ''}${tomorrowGoal ? `\n[내일 목표: ${tomorrowGoal}]` : ''}${ilganInfo}${todayDateInfo}${timeDefense}`;
       const [ty, tm, td] = targetDate.split('-').map(Number);
       const moonPhase = getMoonPhase(ty, tm, td);
       askReview(`${context}\n\n${content.trim()}`, DIARY_PROMPT(moonPhase.label));
