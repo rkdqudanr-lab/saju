@@ -160,7 +160,7 @@ export default function DailyStarCardV2({
             <div className="dsc-score">
               별숨 점수 <strong>{score}</strong>
             </div>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center', marginTop: 2, marginBottom: 4 }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', textAlign: 'center', marginTop: 2, marginBottom: 4 }}>
               오늘의 기운을 0~100으로 나타내요 · 50 미만이면 액막이 발동 가능
             </div>
           </>
@@ -278,8 +278,8 @@ export default function DailyStarCardV2({
             marginTop: '16px',
             paddingTop: '12px',
             borderTop: '1px solid var(--line)',
-            fontSize: '12px',
-            color: 'var(--t3)',
+            fontSize: 'var(--sm)',
+            color: 'var(--t2)',
             fontStyle: 'italic',
           }}>
             {closingAdvice}
