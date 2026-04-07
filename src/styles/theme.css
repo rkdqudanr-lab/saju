@@ -657,6 +657,43 @@ select.inp option{background:var(--bg2)}
 .dsc-item:nth-child(5) .dsc-item-icon-wrap{background:var(--rosef);border-color:var(--roseacc)}
 .dsc-item-text{font-size:var(--sm);color:var(--t1);line-height:2.0;flex:1}
 
+/* ── 3섹션 신형 레이아웃 ── */
+.dsc-sections{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.dsc-section{border-radius:var(--r1);padding:14px 16px;display:flex;flex-direction:column;gap:8px;animation:dsc-item-in .45s ease both}
+.dsc-section-east{background:var(--goldf);border:1px solid var(--acc)}
+.dsc-section-west{background:var(--lavf);border:1px solid var(--lavacc)}
+.dsc-section-synergy{background:var(--tealf);border:1px solid var(--tealacc)}
+.dsc-section-header{display:flex;align-items:center;gap:7px;margin-bottom:2px}
+.dsc-section-icon{font-size:.95rem;line-height:1}
+.dsc-section-title-text{font-size:var(--xs);font-weight:700;letter-spacing:.08em;color:var(--t2);text-transform:uppercase}
+.dsc-sipsin{font-size:var(--md);font-weight:700;color:var(--t1);line-height:1.5}
+.dsc-sipsin-desc{color:var(--t2);margin-top:-4px}
+.dsc-section-text{font-size:var(--sm);color:var(--t1);line-height:2.0}
+.dsc-action{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:6px;margin-top:2px}
+.dsc-action-do{background:rgba(255,255,255,.25)}
+.dsc-action-dont{background:rgba(0,0,0,.06)}
+.dsc-action-badge{flex-shrink:0;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:2px;letter-spacing:.04em}
+.dsc-badge-do{background:var(--teal);color:#fff}
+.dsc-badge-dont{background:var(--rose);color:#fff}
+.dsc-action-text{font-size:var(--sm);color:var(--t1);line-height:1.85;flex:1}
+.dsc-astro-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.dsc-astro-chip{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.3);border-radius:20px;padding:4px 10px;font-size:var(--sm);color:var(--t1);font-weight:600}
+.dsc-synergy-row{display:flex;align-items:flex-start;gap:8px;font-size:var(--sm);color:var(--t1);line-height:1.85}
+.dsc-synergy-label{flex-shrink:0;font-size:1rem;margin-top:1px}
+.dsc-synergy-value{flex:1}
+.dsc-synergy-summary{margin-top:6px;padding-top:8px;border-top:1px solid var(--tealacc);font-size:var(--sm);font-weight:600;color:var(--t1);line-height:1.7}
+
+/* ── 배드타임 ── */
+.dsc-badtime{margin-top:20px;padding:16px;background:var(--rosef);border-left:4px solid var(--rose);border-radius:4px}
+.dsc-badtime-title{font-size:13px;font-weight:600;color:var(--rose);margin-bottom:8px}
+.dsc-badtime-symptom{font-size:var(--sm);color:var(--t2);margin-bottom:10px;line-height:1.85}
+.dsc-block-btn{width:100%;padding:10px 12px;border:none;border-radius:4px;font-size:12px;font-weight:600;font-family:var(--ff);margin-bottom:8px;transition:opacity .2s}
+.dsc-block-done{padding:10px 12px;background:var(--bg3);border-radius:4px;font-size:12px;color:var(--teal);font-weight:600;margin-bottom:8px}
+.dsc-bp-hint{font-size:11px;color:var(--t4);margin-top:6px}
+
+/* ── 마무리 문장 ── */
+.dsc-closing{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:var(--sm);color:var(--t2);font-style:italic;line-height:1.85}
+
 /* 로딩 상태 버튼 */
 .dsc-loading-btn{width:100%;padding:14px;border:none;border-radius:var(--r1);background:var(--goldf);border:1px solid var(--acc);color:var(--gold);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;animation:fadeUp .4s both}
 .dsc-loading-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:dsc-spark 1s ease-in-out infinite}
