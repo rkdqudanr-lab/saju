@@ -634,11 +634,12 @@ select.inp option{background:var(--bg2)}
 .dsc-header-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.5;animation:dsc-spark 2.5s ease-in-out infinite}
 .dsc-header-dot:last-child{animation-delay:1.25s}
 .dsc-title{font-size:var(--xs);font-weight:600;letter-spacing:.14em;color:var(--t3);text-transform:uppercase}
+.dsc-score{text-align:center;font-size:var(--lg);font-weight:700;color:var(--t1);margin-bottom:4px}
 .dsc-summary{
   text-align:center;font-size:var(--md);font-weight:600;color:var(--t1);
-  line-height:1.65;margin-bottom:var(--sp3);padding:0 4px;white-space:pre-wrap;
+  line-height:1.85;margin-bottom:var(--sp3);padding:0 4px;white-space:pre-wrap;
 }
-.dsc-items{display:flex;flex-direction:column;gap:14px}
+.dsc-items{display:flex;flex-direction:column;gap:20px}
 .dsc-item{
   display:flex;align-items:flex-start;gap:12px;
   animation:dsc-item-in .45s ease both;
@@ -654,7 +655,7 @@ select.inp option{background:var(--bg2)}
 .dsc-item:nth-child(3) .dsc-item-icon-wrap{background:var(--goldf);border-color:var(--acc)}
 .dsc-item:nth-child(4) .dsc-item-icon-wrap{background:var(--goldf);border-color:var(--acc)}
 .dsc-item:nth-child(5) .dsc-item-icon-wrap{background:var(--rosef);border-color:var(--roseacc)}
-.dsc-item-text{font-size:var(--sm);color:var(--t1);line-height:1.72;flex:1}
+.dsc-item-text{font-size:var(--sm);color:var(--t1);line-height:2.0;flex:1}
 
 /* 로딩 상태 버튼 */
 .dsc-loading-btn{width:100%;padding:14px;border:none;border-radius:var(--r1);background:var(--goldf);border:1px solid var(--acc);color:var(--gold);font-size:var(--sm);font-weight:600;font-family:var(--ff);cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;animation:fadeUp .4s both}
