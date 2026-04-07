@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import '../styles/TodayIntroPage.css';
 
 /**
@@ -8,6 +8,7 @@ import '../styles/TodayIntroPage.css';
 export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoading = false, dailyResult }) {
   const [today, setToday] = useState('');
   const [error, setError] = useState(false);
+  const asked = useRef(false);
 
   useEffect(() => {
     const now = new Date();
@@ -18,14 +19,15 @@ export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoadin
     setToday(`${year}년 ${month}월 ${date}일 (${days[now.getDay()]})`);
   }, []);
 
-  // 이미 캐시된 결과가 있으면 바로 이동
+  // 이미 오늘 운세를 물어봤으면 메인으로 이동 (캐시 로딩이 비동기라 [dailyResult]로 감시)
   useEffect(() => {
-    if (dailyResult) setStep(23);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (dailyResult && !asked.current) setStep(0);
+  }, [dailyResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleKnowMore = async () => {
     if (dailyLoading) return;
     setError(false);
+    asked.current = true;
     try {
       if (askDailyHoroscope) await askDailyHoroscope();
       setStep(23);
