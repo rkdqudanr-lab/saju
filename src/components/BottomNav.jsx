@@ -5,10 +5,10 @@
 
 export default function BottomNav({ step, setStep, user, formOkApprox }) {
   const tabs = [
-    { id: 'home',    icon: '🌟', label: '오늘',   steps: [0] },
+    { id: 'home',    icon: '🌟', label: '오늘',   steps: [0, 22, 23] },
     { id: 'consult', icon: '💬', label: '상담',   steps: [2, 3, 4, 5] },
     { id: 'records', icon: '🗓️', label: '기록',   steps: [9, 10, 17, 20] },
-    { id: 'my',      icon: '👤', label: '마이',   steps: [1, 19] },
+    { id: 'my',      icon: '👤', label: '마이',   steps: [1, 19, 27] },
   ];
 
   const activeId =
@@ -19,7 +19,7 @@ export default function BottomNav({ step, setStep, user, formOkApprox }) {
     if (tab.id === 'home')    { setStep(0); return; }
     if (tab.id === 'consult') { setStep(formOkApprox ? 2 : 1); return; }
     if (tab.id === 'records') { setStep(user ? 20 : 1); return; }
-    if (tab.id === 'my')      { setStep(1); return; }
+    if (tab.id === 'my')      { setStep(user ? 27 : 1); return; }
   }
 
   return (
@@ -29,11 +29,11 @@ export default function BottomNav({ step, setStep, user, formOkApprox }) {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 800,
+        zIndex: 9999,
         background: 'var(--bg1)',
         borderTop: '1px solid var(--line)',
         display: 'flex',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
       }}
     >
       {tabs.map(tab => {

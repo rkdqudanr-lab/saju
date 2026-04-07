@@ -57,6 +57,7 @@ import LandingPage         from "./pages/LandingPage.jsx";
 import TodayIntroPage      from "./pages/TodayIntroPage.jsx";
 import TodayDetailPage     from "./pages/TodayDetailPage.jsx";
 const SettingsPage             = lazy(() => import("./components/SettingsPage.jsx"));
+const MyPage                   = lazy(() => import("./components/MyPage.jsx"));
 const DreamPage                = lazy(() => import("./components/DreamPage.jsx"));
 const TaegillPage              = lazy(() => import("./components/TaegillPage.jsx"));
 const NameFortunePage          = lazy(() => import("./components/NameFortunePage.jsx"));
@@ -76,7 +77,7 @@ export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
-  const [showDailyCard, setShowDailyCard] = useState(false);
+  const [showDailyCard, setShowDailyCard] = useState(true);
   const [anniversaryDate, setAnniversaryDate] = useState('');
   const [anniversaryType, setAnniversaryType] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -419,7 +420,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 24 || step === 25 || step === 26) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 24 || step === 25 || step === 26 || step === 27) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step === 22 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
 
@@ -808,6 +809,24 @@ export default function App() {
             <NameFortunePage
               form={form}
               buildCtx={buildCtx}
+              showToast={showToast}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 27: 마이페이지 (내 정보 대시보드) ── */}
+        {step === 27 && (
+          <Suspense fallback={<PageSpinner />}>
+            <MyPage
+              user={user}
+              form={form}
+              saju={saju}
+              sun={sun}
+              gamificationState={gamificationState}
+              missions={missions}
+              profile={profile}
+              setStep={setStep}
+              kakaoLogout={kakaoLogout}
               showToast={showToast}
             />
           </Suspense>
