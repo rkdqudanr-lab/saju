@@ -56,6 +56,9 @@ import LandingPage         from "./pages/LandingPage.jsx";
 import TodayIntroPage      from "./pages/TodayIntroPage.jsx";
 import TodayDetailPage     from "./pages/TodayDetailPage.jsx";
 const SettingsPage             = lazy(() => import("./components/SettingsPage.jsx"));
+const DreamPage                = lazy(() => import("./components/DreamPage.jsx"));
+const TaegillPage              = lazy(() => import("./components/TaegillPage.jsx"));
+const NameFortunePage          = lazy(() => import("./components/NameFortunePage.jsx"));
 
 function PageSpinner() {
   return (
@@ -255,6 +258,9 @@ export default function App() {
       import('./components/ProfileModal.jsx').catch(() => {});
       import('./components/OnboardingCards.jsx').catch(() => {});
       import('./components/ConsentModal.jsx').catch(() => {});
+      import('./components/DreamPage.jsx').catch(() => {});
+      import('./components/TaegillPage.jsx').catch(() => {});
+      import('./components/NameFortunePage.jsx').catch(() => {});
     }, 1000);
     return () => clearTimeout(t);
   }, [user]);
@@ -412,7 +418,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 24 || step === 25 || step === 26) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step === 22 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>🏠</button>}
@@ -683,6 +689,7 @@ export default function App() {
             dailyResult={dailyResult} dailyLoading={dailyLoading}
             dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
             askDailyHoroscope={askDailyHoroscope}
+            saju={saju}
             user={user}
             gamificationState={gamificationState}
             currentBp={gamificationState?.currentBp || 0}
@@ -763,6 +770,42 @@ export default function App() {
             setStep={setStep}
             onRefresh={askDailyHoroscope}
           />
+        )}
+
+        {/* ── Step 24: 꿈 해몽 ── */}
+        {step === 24 && (
+          <Suspense fallback={<PageSpinner />}>
+            <DreamPage
+              user={user}
+              form={form}
+              buildCtx={buildCtx}
+              setStep={setStep}
+              showToast={showToast}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 25: 택일 (길일 찾기) ── */}
+        {step === 25 && (
+          <Suspense fallback={<PageSpinner />}>
+            <TaegillPage
+              form={form}
+              buildCtx={buildCtx}
+              callApi={callApi}
+              showToast={showToast}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 26: 이름 풀이 (성명학) ── */}
+        {step === 26 && (
+          <Suspense fallback={<PageSpinner />}>
+            <NameFortunePage
+              form={form}
+              buildCtx={buildCtx}
+              showToast={showToast}
+            />
+          </Suspense>
         )}
 
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>

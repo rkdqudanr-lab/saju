@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import DailyStarCard from "../components/DailyStarCard.jsx";
 import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
 import OrbitalFrequencyMiniGame from "../components/OrbitalFrequencyMiniGame.jsx";
+import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
 import { detectBadtime } from "../utils/gamificationLogic.js";
 
 export default function DailyHoroscopePage({
   today,
   dailyResult, dailyLoading, dailyCount, DAILY_MAX,
   askDailyHoroscope,
+  // 사주 정보
+  saju = null,
   // 게이미피케이션 props
   user = null,
   gamificationState = {},
@@ -24,7 +27,7 @@ export default function DailyHoroscopePage({
     isOpen: false,
     badtime: null,
   });
-  const [activeTab, setActiveTab] = useState('horoscope'); // 'horoscope' | 'game'
+  const [activeTab, setActiveTab] = useState('horoscope'); // 'horoscope' | 'game' | 'lucky'
 
   // 배드타임 감지 및 모달 표시
   useEffect(() => {
@@ -106,6 +109,22 @@ export default function DailyHoroscopePage({
           >
             🎲 행운 번호
           </button>
+          <button
+            onClick={() => setActiveTab('lucky')}
+            style={{
+              flex: 1,
+              padding: '12px 0',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'lucky' ? '2px solid var(--gold)' : 'none',
+              color: activeTab === 'lucky' ? 'var(--gold)' : 'var(--t4)',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'lucky' ? '600' : '400',
+              fontSize: '13px',
+            }}
+          >
+            🍀 행운 아이템
+          </button>
         </div>
 
         {/* 운세 탭 */}
@@ -145,6 +164,11 @@ export default function DailyHoroscopePage({
             onEarnBP={earnBP}
             onUnlock={earnBP}
           />
+        )}
+
+        {/* 행운 아이템 탭 */}
+        {activeTab === 'lucky' && (
+          <LuckyItemsCard today={today} saju={saju} />
         )}
       </div>
 

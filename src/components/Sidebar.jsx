@@ -44,7 +44,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [starredIds, setStarredIds] = useState(new Set());
-  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, fortune: true });
+  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, fortune: true, special: false });
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [displayLimit, setDisplayLimit] = useState(15);
   const debounceRef = useRef(null);
@@ -258,6 +258,37 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
                     { icon: '🎂', label: '기념일 운세', s: 12 },
                     { icon: '🀄', label: '나의 별숨 (사주원국·별자리)', s: 13 },
+                  ].map(m => (
+                    <li key={m.s}>
+                      <button
+                        className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                        onClick={() => { onNav(m.s); onClose(); }}
+                        aria-current={step === m.s ? 'page' : undefined}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                      >
+                        <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                        <span className="smi-text">{m.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* ── 특별 기능 (토글) ── */}
+          {!hiddenGroups.includes('special') && (
+            <div className="sidebar-section">
+              <button className="sidebar-group-header" onClick={() => toggleGroup('special')} aria-expanded={openGroups.special}>
+                <span>✨ 특별 기능</span>
+                <span className="sidebar-group-arrow">{openGroups.special ? '▾' : '▸'}</span>
+              </button>
+              {openGroups.special && (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    { icon: '🌙', label: '꿈 해몽', s: 24 },
+                    { icon: '🗓️', label: '택일 (길일 찾기)', s: 25 },
+                    { icon: '📛', label: '이름 풀이 (성명학)', s: 26 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
