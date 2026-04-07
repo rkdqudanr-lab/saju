@@ -502,7 +502,36 @@ export function useGamification(user, showToast) {
   );
 
   // ─────────────────────────────────────────────────────────────
-  // 9. 레벨 진행도 계산
+  // 9. BP 소비 (답변 잠금 해제 등)
+  // ─────────────────────────────────────────────────────────────
+  const spendBP = useCallback(
+    async (amount, reason) => {
+      if (!user?.id) return { success: false, message: '로그인이 필요합니다' };
+      const current = gamificationState.currentBp || 0;
+      if (current < amount) return { success: false, message: '별 포인트가 부족해요' };
+
+      try {
+        const authClient = getAuthenticatedClient(user.id);
+        const client = authClient || supabase;
+        const newBp = current - amount;
+
+        await client
+          .from('users')
+          .update({ current_bp: newBp, updated_at: new Date().toISOString() })
+          .eq('kakao_id', String(user.id));
+
+        setGamificationState(prev => ({ ...prev, currentBp: newBp }));
+        return { success: true, newBp };
+      } catch (error) {
+        console.error('[별숨] BP 소비 오류:', error);
+        return { success: false, message: '네트워크 오류' };
+      }
+    },
+    [user?.id, gamificationState.currentBp]
+  );
+
+  // ─────────────────────────────────────────────────────────────
+  // 10. 레벨 진행도 계산
   // ─────────────────────────────────────────────────────────────
   const getLevelProgress = useCallback(() => {
     const state = gamificationState;
@@ -525,6 +554,7 @@ export function useGamification(user, showToast) {
 
     // 함수
     earnBP,
+    spendBP,
     blockBadtime,
     completeMission,
     loadTodayMissions,

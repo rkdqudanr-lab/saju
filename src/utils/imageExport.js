@@ -3,6 +3,10 @@
 
 const FONT = 'Pretendard,-apple-system,sans-serif';
 const GOLD = '#C89030';
+const GOLD2 = '#E8B048';
+
+// 오행 한글 이름
+const ON_KO = { 목: '나무', 화: '불', 토: '흙', 금: '금', 수: '물' };
 
 // 인스타그램 4:5 포트레이트
 const IG_W = 1080;
@@ -337,4 +341,147 @@ export function saveChatImage({ chatHistory, isDark, today }) {
     const suffix = totalPages > 1 ? `_${page + 1}of${totalPages}` : '';
     downloadCanvas(canvas, `byeolsoom_chat${suffix}.png`);
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 1:1 운세 공유 카드 (인스타 / 카카오 감성 정방형)
+// ─────────────────────────────────────────────────────────────
+export function saveFortuneCard({ name, sun, saju, today, summary, moodWord, isDark }) {
+  const SIZE = 1080;
+  const SCALE = 2;
+  const PADDING = 80;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = SIZE * SCALE;
+  canvas.height = SIZE * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  // ── 배경 그라디언트 ──
+  const bgGrad = ctx.createRadialGradient(SIZE / 2, SIZE / 2, 0, SIZE / 2, SIZE / 2, SIZE * 0.75);
+  bgGrad.addColorStop(0, '#1A1628');
+  bgGrad.addColorStop(1, '#0D0B14');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  // ── 상단 골드 바 ──
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(0, 0, SIZE, 6);
+
+  // ── 별 도트 장식 (랜덤하게 보이지만 seed 고정) ──
+  const stars = [
+    [120, 80, 2.5], [320, 55, 1.8], [520, 90, 2.2], [750, 70, 3],
+    [900, 50, 1.5], [980, 120, 2], [60, 200, 1.8], [860, 180, 2.5],
+    [440, 35, 1.5], [650, 110, 2], [200, 150, 1.2], [780, 95, 1.8],
+  ];
+  ctx.fillStyle = GOLD2 + '55';
+  for (const [sx, sy, sr] of stars) {
+    ctx.beginPath();
+    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ── 브랜드 + 날짜 (상단) ──
+  ctx.font = `600 26px ${FONT}`;
+  ctx.fillStyle = GOLD;
+  ctx.fillText('byeolsoom  ✦', PADDING, 68);
+
+  ctx.font = `400 20px ${FONT}`;
+  ctx.fillStyle = '#8A7FA0';
+  ctx.fillText(`${today.year}년 ${today.month}월 ${today.day}일`, PADDING, 98);
+
+  // ── 얇은 구분선 ──
+  ctx.strokeStyle = GOLD + '33';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PADDING, 120);
+  ctx.lineTo(SIZE - PADDING, 120);
+  ctx.stroke();
+
+  // ── 이름 + 타이틀 ──
+  const title = name ? `${name}에게 전하는` : '오늘 밤의';
+  ctx.font = `400 30px ${FONT}`;
+  ctx.fillStyle = '#8A7FA0';
+  ctx.fillText(title, PADDING, 178);
+
+  ctx.font = `700 48px ${FONT}`;
+  ctx.fillStyle = '#F0EBF8';
+  ctx.fillText('오늘의 별숨', PADDING, 240);
+
+  // ── 칩 (사주 오행 + 별자리) ──
+  const chips = [];
+  if (saju?.dom) chips.push(`🀄 ${ON_KO[saju.dom] || saju.dom} 기운`);
+  if (sun) chips.push(`${sun.s} ${sun.n}`);
+
+  let chipX = PADDING;
+  const chipY = 285;
+  const CHIP_H = 36;
+  const CHIP_PAD_X = 14;
+  const CHIP_R = 10;
+  ctx.font = `500 18px ${FONT}`;
+
+  for (const chip of chips) {
+    const chipW = ctx.measureText(chip).width + CHIP_PAD_X * 2;
+    ctx.fillStyle = GOLD + '22';
+    roundRect(ctx, chipX, chipY - 24, chipW, CHIP_H, CHIP_R);
+    ctx.fill();
+    ctx.strokeStyle = GOLD + '44';
+    ctx.lineWidth = 1;
+    roundRect(ctx, chipX, chipY - 24, chipW, CHIP_H, CHIP_R);
+    ctx.stroke();
+    ctx.fillStyle = GOLD2;
+    ctx.fillText(chip, chipX + CHIP_PAD_X, chipY - 2);
+    chipX += chipW + 10;
+  }
+
+  // ── 무드 워드 (중앙 강조) ──
+  ctx.font = `700 52px ${FONT}`;
+  ctx.fillStyle = GOLD2;
+  const moodText = moodWord ? `${moodWord} 하루예요` : '별의 이야기';
+  ctx.fillText(moodText, PADDING, 390);
+
+  // ── 별빛 라인 구분선 ──
+  const lineGrad = ctx.createLinearGradient(PADDING, 0, SIZE - PADDING, 0);
+  lineGrad.addColorStop(0, 'transparent');
+  lineGrad.addColorStop(0.3, GOLD + '66');
+  lineGrad.addColorStop(0.7, GOLD + '66');
+  lineGrad.addColorStop(1, 'transparent');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PADDING, 420);
+  ctx.lineTo(SIZE - PADDING, 420);
+  ctx.stroke();
+
+  // ── 요약 텍스트 박스 ──
+  const MAX_TEXT_W = SIZE - PADDING * 2 - 48;
+  const summaryLines = summary
+    ? wrapText(ctx, summary, MAX_TEXT_W, 24).slice(0, 6)
+    : ['오늘의 별이 당신에게 전하는 이야기'];
+
+  const BOX_PAD = 28;
+  const LINE_H = 38;
+  const boxH = summaryLines.length * LINE_H + BOX_PAD * 2;
+  const boxY = 444;
+
+  ctx.fillStyle = 'rgba(232,176,72,0.06)';
+  roundRect(ctx, PADDING, boxY, SIZE - PADDING * 2, boxH, 16);
+  ctx.fill();
+  ctx.strokeStyle = GOLD + '33';
+  ctx.lineWidth = 1;
+  roundRect(ctx, PADDING, boxY, SIZE - PADDING * 2, boxH, 16);
+  ctx.stroke();
+
+  ctx.font = `400 24px ${FONT}`;
+  ctx.fillStyle = '#C8BEDE';
+  summaryLines.forEach((line, li) => {
+    ctx.fillText(line, PADDING + BOX_PAD, boxY + BOX_PAD + 24 + li * LINE_H);
+  });
+
+  // ── 하단 브랜딩 ──
+  ctx.font = `400 18px ${FONT}`;
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.fillText('✦ 별숨 — 사주와 별자리로 읽는 나의 운명', PADDING, SIZE - 36);
+
+  downloadCanvas(canvas, `byeolsoom_fortune_${today.month}${today.day}.png`);
 }

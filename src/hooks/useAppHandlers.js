@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { parseAccSummary, PKGS, DAILY_QUESTIONS } from "../utils/constants.js";
-import { saveShareCard, saveProphecyImage, saveCompatImage, saveChatImage } from "../utils/imageExport.js";
+import { parseAccSummary, PKGS, DAILY_QUESTIONS, SIGN_MOOD } from "../utils/constants.js";
+import { saveShareCard, saveProphecyImage, saveCompatImage, saveChatImage, saveFortuneCard } from "../utils/imageExport.js";
 import { getTodayStr } from "../utils/quiz.js";
 
 function detectProfileHint(msg, prof) {
@@ -22,6 +22,7 @@ export function useAppHandlers({
   profile, setProfile, user, saveDailyQuizAnswer, saveSettings,
   sendChat, _handleTypingDone, curPkg, isDark, today,
   setShareModal, showToast, setStep,
+  sun, saju, form,
 }) {
   const [copyDone, setCopyDone] = useState(false);
   const [profileNudge, setProfileNudge] = useState(null);
@@ -140,12 +141,29 @@ export function useAppHandlers({
     }
   }, [answers, setShareModal]);
 
+  // ── 1:1 운세 공유 카드 저장 ──
+  const handleShareFortuneCard = useCallback(() => {
+    if (!answers[0]) return;
+    if (typeof window.gtag === 'function') window.gtag('event', 'fortune_card_save');
+    const summaryStr = parseAccSummary(answers[0]).summary || '';
+    const mood = SIGN_MOOD[sun?.n] || {};
+    saveFortuneCard({
+      name: form?.name || '',
+      sun,
+      saju,
+      today,
+      summary: summaryStr,
+      moodWord: mood.word || '신비로운',
+      isDark,
+    });
+  }, [answers, sun, saju, form, today, isDark]);
+
   return {
     copyDone, profileNudge, setProfileNudge, showSubNudge,
     handleTypingDone, handleOnboardingFinish,
     handleQuizAnswer, handleQuizSkip,
     handleSendChat, handleCopyAll,
     shareCard, handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage,
-    shareResult,
+    shareResult, handleShareFortuneCard,
   };
 }

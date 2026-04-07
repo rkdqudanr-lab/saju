@@ -1,21 +1,45 @@
+import { useState } from "react";
 import { ON } from "../utils/saju.js";
-import { parseAccSummary, breakAtNatural, PKGS, SIGN_MOOD, CHAT_SUGG } from "../utils/constants.js";
+import { parseAccSummary, breakAtNatural, PKGS, SIGN_MOOD } from "../utils/constants.js";
 import AccItem, { FeedbackBtn } from "../components/AccItem.jsx";
+import { useUserCtx } from "../context/AppContext.jsx";
+import { useSajuCtx } from "../context/AppContext.jsx";
+import { useGamCtx } from "../context/AppContext.jsx";
+
+const UNLOCK_COST = 10;
 
 export default function ResultsStep({
-  form, saju, sun, moon, asc, today,
   selQs, answers, openAcc, typedSet,
   cat, pkg,
   chatLeft, curPkg,
   showSubNudge,
-  user, copyDone,
-  formOk, resultsRef,
+  copyDone,
+  resultsRef,
   handleAccToggle, handleTypingDone, retryAnswer,
   shareCard, handleCopyAll, shareResult,
+  handleShareFortuneCard,
+  spendBP,
   setStep, setSelQs, setDiy, setShowSidebar, setShowUpgradeModal,
   kakaoLogin, genReport, resetSession,
-  showToast,
 }) {
+  const { user, form, showToast } = useUserCtx();
+  const { saju, sun, moon, asc, today, formOk } = useSajuCtx();
+  const { gamificationState } = useGamCtx();
+
+  const [unlockedAnswers, setUnlockedAnswers] = useState(new Set([0]));
+
+  const handleUnlock = async (i) => {
+    if (!user) { kakaoLogin(); return; }
+    const result = await spendBP(UNLOCK_COST, `answer_unlock_${i}`);
+    if (result.success) {
+      setUnlockedAnswers(prev => new Set([...prev, i]));
+      showToast(`✦ 이야기가 열렸어요 (남은 BP: ${result.newBp})`, 'success');
+    } else {
+      showToast(result.message || 'BP가 부족해요', 'error');
+      setShowUpgradeModal(true);
+    }
+  };
+
   return (
     <div className="page-top">
       <div className="res-wrap" ref={resultsRef} role="region" aria-label="별숨의 답변">
@@ -23,6 +47,7 @@ export default function ResultsStep({
           <div className="res-top-bar">
             <button className="res-top-btn" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')).then(() => showToast?.('복사됐어요 📋', 'success')); }}>📋 복사</button>
             {answers[0] && <button className="res-top-btn" onClick={() => shareCard(0)}>🖼 저장</button>}
+            {answers[0] && <button className="res-top-btn primary" onClick={handleShareFortuneCard}>✦ 카드 저장</button>}
             {answers[0] && <button className="res-top-btn primary" onClick={() => shareResult('result')}>↗ 공유</button>}
           </div>
 
@@ -63,26 +88,59 @@ export default function ResultsStep({
             ) : null;
           })()}
 
-          {selQs.map((q, i) => (
-            <div key={i}>
-              <AccItem
-                q={q} text={parseAccSummary(answers[i] || '').text} idx={i}
-                isOpen={openAcc === i}
-                onToggle={() => handleAccToggle(i)}
-                shouldType={!typedSet.has(i)}
-                onTypingDone={handleTypingDone}
-                onRetry={() => retryAnswer(i)}
-              />
-              {openAcc === i && typedSet.has(i) && answers[i] && (
-                <div style={{ padding: '0 var(--sp4) var(--sp2)', borderBottom: '1px solid var(--line)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <FeedbackBtn qIdx={i} />
-                    <button className="res-top-btn" style={{ fontSize: 'var(--xs)' }} onClick={() => shareCard(i)}>↗ Q{i + 1} 이미지 저장</button>
+          {selQs.map((q, i) => {
+            const isLocked = i > 0 && curPkg?.isFree && !unlockedAnswers.has(i);
+            return (
+              <div key={i}>
+                {isLocked ? (
+                  <div className="answer-locked-wrapper">
+                    <div className="answer-locked-blur">
+                      <AccItem
+                        q={q}
+                        text={answers[i] ? answers[i].slice(0, 80) + '...' : ''}
+                        idx={i}
+                        isOpen={false}
+                        onToggle={() => {}}
+                        shouldType={false}
+                        onTypingDone={() => {}}
+                        onRetry={() => {}}
+                      />
+                    </div>
+                    <div className="answer-unlock-overlay">
+                      <div className="unlock-icon">🔒</div>
+                      <div className="unlock-title">Q{i + 1} 이야기가 잠겨있어요</div>
+                      <div className="unlock-desc">별 포인트 {UNLOCK_COST}개로 열기 · 현재 {gamificationState?.currentBp || 0}BP</div>
+                      <button className="unlock-bp-btn" onClick={() => handleUnlock(i)}>
+                        ✦ {UNLOCK_COST}BP로 열기
+                      </button>
+                      <button className="unlock-premium-btn" onClick={() => setShowUpgradeModal(true)}>
+                        프리미엄으로 전체 보기
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                ) : (
+                  <>
+                    <AccItem
+                      q={q} text={parseAccSummary(answers[i] || '').text} idx={i}
+                      isOpen={openAcc === i}
+                      onToggle={() => handleAccToggle(i)}
+                      shouldType={!typedSet.has(i)}
+                      onTypingDone={handleTypingDone}
+                      onRetry={() => retryAnswer(i)}
+                    />
+                    {openAcc === i && typedSet.has(i) && answers[i] && (
+                      <div style={{ padding: '0 var(--sp4) var(--sp2)', borderBottom: '1px solid var(--line)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <FeedbackBtn qIdx={i} />
+                          <button className="res-top-btn" style={{ fontSize: 'var(--xs)' }} onClick={() => shareCard(i)}>↗ Q{i + 1} 이미지 저장</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
 
           <div className="res-actions">
             {showSubNudge && (
