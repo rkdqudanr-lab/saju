@@ -717,3 +717,15 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 
 /* ══ 설정 페이지 탭 ══ */
 .settings-tab-bar{display:flex;gap:4px;background:var(--bg2);border-radius:var(--r1);padding:4px;margin-bottom:20px}
+
+/* ══ 답변 잠금 (페이월 블러) ══ */
+.answer-locked-wrapper{position:relative;border-radius:var(--r2);overflow:hidden;margin-bottom:4px}
+.answer-locked-blur{filter:blur(6px);pointer-events:none;user-select:none;opacity:.6}
+.answer-unlock-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(to bottom,rgba(13,11,20,0) 0%,var(--bg1) 35%);gap:8px;padding:var(--sp3);text-align:center}
+.unlock-icon{font-size:1.6rem}
+.unlock-title{font-size:var(--sm);font-weight:600;color:var(--t1)}
+.unlock-desc{font-size:var(--xs);color:var(--t3)}
+.unlock-bp-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:var(--r1);padding:10px 20px;font-size:var(--sm);font-weight:700;cursor:pointer;font-family:var(--ff);margin-top:4px;transition:opacity var(--trans-fast)}
+.unlock-bp-btn:hover{opacity:.85}
+.unlock-premium-btn{background:transparent;color:var(--t3);border:1px solid var(--line);border-radius:var(--r1);padding:8px 16px;font-size:var(--xs);cursor:pointer;font-family:var(--ff);transition:color var(--trans-fast)}
+.unlock-premium-btn:hover{color:var(--t1)}

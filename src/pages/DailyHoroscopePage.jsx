@@ -4,16 +4,12 @@ import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
 import OrbitalFrequencyMiniGame from "../components/OrbitalFrequencyMiniGame.jsx";
 import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
 import { detectBadtime } from "../utils/gamificationLogic.js";
+import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 
 export default function DailyHoroscopePage({
   today,
   dailyResult, dailyLoading, dailyCount, DAILY_MAX,
   askDailyHoroscope,
-  // 사주 정보
-  saju = null,
-  // 게이미피케이션 props
-  user = null,
-  gamificationState = {},
   currentBp = 0,
   freeRechargeAvailable = false,
   freeRechargeTimeRemaining = null,
@@ -21,8 +17,11 @@ export default function DailyHoroscopePage({
   onRechargeFreeBP = null,
   onEarnBP = null,
   isBlockingBadtime = false,
-  earnBP = null, // useGamification.earnBP
+  earnBP = null,
 }) {
+  const { user } = useUserCtx();
+  const { saju = null } = useSajuCtx();
+  const { gamificationState = {} } = useGamCtx();
   const [badtimeModal, setBadtimeModal] = useState({
     isOpen: false,
     badtime: null,

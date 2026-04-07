@@ -1,4 +1,7 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense, useMemo } from "react";
+
+// context
+import { UserContext, SajuDataContext, GamificationContext } from "./context/AppContext.jsx";
 
 // utils
 import { PKGS, TIMING, ANNIVERSARY_PROMPT } from "./utils/constants.js";
@@ -140,7 +143,7 @@ export default function App() {
   const gamification = useGamification(user, showToast);
   const {
     gamificationState, missions,
-    earnBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP,
+    earnBP, spendBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP,
   } = gamification;
 
   // 배드타임 액막이 상태
@@ -202,11 +205,13 @@ export default function App() {
     handleTypingDone, handleOnboardingFinish, handleQuizAnswer, handleQuizSkip,
     handleSendChat, handleCopyAll, shareCard,
     handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage, shareResult,
+    handleShareFortuneCard,
   } = useAppHandlers({
     answers, selQs, chatHistory, quiz, quizInput, setQuizInput,
     profile, setProfile, user, saveDailyQuizAnswer, saveSettings,
     sendChat, _handleTypingDone, curPkg, isDark, today,
     setShareModal, showToast, setStep,
+    sun, saju, form,
   });
 
   // ── 모달 열림 시 body 스크롤 잠금 ──
@@ -321,6 +326,20 @@ export default function App() {
       .then(({ data }) => setTodayDiaryWritten(!!data)).catch(() => {});
   }, [user?.id]);
 
+  // ── 컨텍스트 값 (useMemo로 레퍼런스 안정화 → 불필요한 리렌더 방지) ──
+  const userCtxValue = useMemo(() => ({
+    user, profile, form, isDark, showToast,
+    kakaoLogin, kakaoLogout, saveProfileToSupabase,
+  }), [user, profile, form, isDark, showToast, kakaoLogin, kakaoLogout, saveProfileToSupabase]);
+
+  const sajuCtxValue = useMemo(() => ({
+    saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate,
+  }), [saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate]);
+
+  const gamCtxValue = useMemo(() => ({
+    gamificationState, missions, earnBP, spendBP,
+  }), [gamificationState, missions, earnBP, spendBP]);
+
   // ── 카카오 로그인 처리 중 로딩 화면 ──
   if (loginLoading) {
     return (
@@ -364,6 +383,9 @@ export default function App() {
   }
 
   return (
+    <UserContext.Provider value={userCtxValue}>
+    <SajuDataContext.Provider value={sajuCtxValue}>
+    <GamificationContext.Provider value={gamCtxValue}>
     <>
       <StarCanvas isDark={isDark} />
       <PWAInstallBanner />
@@ -432,7 +454,6 @@ export default function App() {
         {/* ── Step 0: 랜딩 ── */}
         {step === 0 && (
           <LandingPage
-            user={user} form={form} saju={saju} sun={sun} today={today}
             otherProfiles={otherProfiles}
             formOk={formOk} formOkApprox={formOkApprox} isApproximate={isApproximate} profile={profile}
             quiz={quiz} quizInput={quizInput} setQuizInput={setQuizInput}
@@ -440,17 +461,12 @@ export default function App() {
             dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
             diaryReviewResult={diaryReviewResult} diaryReviewLoading={diaryReviewLoading}
             showDailyCard={showDailyCard} setShowDailyCard={setShowDailyCard}
-            buildCtx={buildCtx}
             setStep={setStep} setDiy={setDiy}
-            kakaoLogin={kakaoLogin} kakaoLogout={kakaoLogout}
             setEditingMyProfile={setEditingMyProfile} setShowProfileModal={setShowProfileModal}
             askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview} askWeeklyReview={askWeeklyReview}
             resetDiaryReview={resetDiaryReview}
             handleQuizAnswer={handleQuizAnswer} handleQuizSkip={handleQuizSkip}
-            showToast={showToast}
             DiaryPageLazy={DiaryPage}
-            // 게이미피케이션
-            gamificationState={gamificationState}
             missions={missions}
             onBlockBadtime={handleBlockBadtime}
             onCompleteMission={handleCompleteMission}
@@ -508,19 +524,19 @@ export default function App() {
         {/* ── Step 4: 결과 ── */}
         {step === 4 && (
           <ResultsStep
-            form={form} saju={saju} sun={sun} moon={moon} asc={asc} today={today}
             selQs={selQs} answers={answers} openAcc={openAcc} typedSet={typedSet}
             cat={cat} pkg={pkg}
             chatLeft={chatLeft} curPkg={curPkg}
             showSubNudge={showSubNudge}
-            user={user} copyDone={copyDone}
-            formOk={formOk} resultsRef={resultsRef}
+            copyDone={copyDone}
+            resultsRef={resultsRef}
             handleAccToggle={handleAccToggle} handleTypingDone={handleTypingDone} retryAnswer={retryAnswer}
             shareCard={shareCard} handleCopyAll={handleCopyAll} shareResult={shareResult}
+            handleShareFortuneCard={handleShareFortuneCard}
+            spendBP={spendBP}
             setStep={setStep} setSelQs={setSelQs} setDiy={setDiy}
             setShowSidebar={setShowSidebar} setShowUpgradeModal={setShowUpgradeModal}
             kakaoLogin={kakaoLogin} genReport={genReport} resetSession={resetSession}
-            showToast={showToast}
           />
         )}
 
@@ -670,20 +686,12 @@ export default function App() {
         {step === 17 && (
           <Suspense fallback={<PageSpinner />}>
             <DiaryPage
-              user={user}
-              form={form}
-              saju={saju}
-              sun={sun}
-              today={today}
-              isApproximate={isApproximate}
-              buildCtx={buildCtx}
               askReview={askDiaryReview}
               setStep={setStep}
               setDiy={setDiy}
               viewDate={diaryViewDate}
               diaryReviewResult={diaryReviewResult}
               diaryReviewLoading={diaryReviewLoading}
-              showToast={showToast}
             />
           </Suspense>
         )}
@@ -695,9 +703,6 @@ export default function App() {
             dailyResult={dailyResult} dailyLoading={dailyLoading}
             dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
             askDailyHoroscope={askDailyHoroscope}
-            saju={saju}
-            user={user}
-            gamificationState={gamificationState}
             currentBp={gamificationState?.currentBp || 0}
             onBlockBadtime={handleBlockBadtime}
             isBlockingBadtime={isBlockingBadtime}
@@ -891,5 +896,8 @@ export default function App() {
         </Suspense>
       )}
     </>
+    </GamificationContext.Provider>
+    </SajuDataContext.Provider>
+    </UserContext.Provider>
   );
 }

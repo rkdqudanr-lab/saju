@@ -3,6 +3,7 @@ import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { DIARY_PROMPT, getMoonPhase } from "../utils/constants.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
+import { useUserCtx, useSajuCtx } from "../context/AppContext.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  📓 나의 하루를 별숨에게 — 일기 페이지
@@ -59,7 +60,9 @@ function stripFollowUp(text) {
   return text.replace(/\[후속질문\].*/s, '').trim();
 }
 
-export default function DiaryPage({ user, form, saju, sun, today: todayInfo, isApproximate, buildCtx, askReview, setStep, setDiy, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, showToast }) {
+export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading }) {
+  const { user, form, showToast } = useUserCtx();
+  const { saju, sun, today: todayInfo, isApproximate, buildCtx } = useSajuCtx();
   const [mood, setMood] = useState(initialMood || null);
   const [weather, setWeather] = useState(initialWeather || '');
   const [energy, setEnergy] = useState(initialEnergy || null);
