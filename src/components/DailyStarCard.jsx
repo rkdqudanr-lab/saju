@@ -16,7 +16,7 @@ function parseDailyLines(text) {
   // Extract [점수] score
   const scoreIdx = lines.findIndex(l => l.startsWith('[점수]'));
   if (scoreIdx !== -1) {
-    score = lines[scoreIdx].replace('[점수]', '').trim();
+    score = parseInt(lines[scoreIdx].replace('[점수]', '').trim(), 10);
   }
 
   // Extract [요약] summary

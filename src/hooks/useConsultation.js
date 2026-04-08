@@ -146,7 +146,14 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   useEffect(() => {
     if (!user?.id) return;
     loadDailyCacheFromSupabase(user.id, 'horoscope').then(content => {
-      if (content) setDailyResult({ text: content });
+      if (content) {
+        const gamData = parseHoroscopeForGamification(content);
+        setDailyResult({
+          text: content,
+          score: gamData.score,
+          ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
+        });
+      }
     });
     loadDailyCacheFromSupabase(user.id, 'diary_review').then(content => {
       if (content) setDiaryReviewResult(content);
@@ -421,16 +428,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             }
           }
 
-          // 3. 배드타임 감지 및 저장 (선택사항, 나중에 UI에서 표시)
-          if (gamData.badtime?.detected) {
-            // badtime 정보를 daily_cache에 저장하거나 별도 테이블에 저장 가능
-            // 지금은 dailyResult에 포함시킴
-            setDailyResult(prev => ({
-              ...prev,
-              badtime: gamData.badtime,
-              score: gamData.score,
-            }));
-          }
+          // 3. score 저장 (배드타임 유무와 관계없이 항상)
+          setDailyResult(prev => ({
+            ...prev,
+            score: gamData.score,
+            ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
+          }));
         } catch (gamErr) {
           console.error('[별숨] 게이미피케이션 처리 오류:', gamErr);
           // 게이미피케이션 오류가 전체 흐름을 막지 않도록 함

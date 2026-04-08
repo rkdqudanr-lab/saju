@@ -613,6 +613,7 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 @keyframes dsc-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
 
 .dsc-wrap{position:relative;margin:var(--sp3) var(--sp2);animation:fadeUp .6s .2s both}
+.daily-star-card-v2{position:relative}
 .dsc-spark{position:absolute;font-size:.55rem;color:var(--gold);pointer-events:none;animation:dsc-spark 3s ease-in-out infinite}
 .dsc-spark-1{top:-6px;left:18%;animation-delay:0s}
 .dsc-spark-2{top:30%;right:-4px;font-size:.8rem;color:var(--lav);animation-delay:.7s}
