@@ -258,6 +258,9 @@ select.inp option{background:var(--bg2)}
 .star-summary{padding:var(--sp3);background:linear-gradient(145deg,var(--goldf),rgba(232,176,72,0.02));border:1.5px solid rgba(232,176,72,0.4);border-radius:var(--r2);margin:var(--sp3);display:flex;align-items:flex-start;gap:12px;box-shadow:0 4px 20px rgba(232,176,72,0.1);animation:fadeUp .6s ease both}
 .star-summary-icon{color:var(--gold);font-size:1.3rem;line-height:1;flex-shrink:0;margin-top:2px}
 .star-summary-text{font-size:1.05rem;color:var(--gold);font-weight:600;line-height:1.6;letter-spacing:-0.01em;white-space:pre-wrap}
+.acc-score-wrap{text-align:center;padding:var(--sp2) var(--sp3) 0;animation:fadeUp .5s ease both}
+.acc-score-value{font-size:var(--lg);font-weight:700;color:var(--t1)}
+.acc-score-value strong{font-size:2rem;color:var(--gold);display:inline-block;margin-left:6px}
 
 /* 아코디언 */
 .acc-item{border-bottom:1px solid var(--line)}.acc-item:last-of-type{border-bottom:none}
@@ -641,7 +644,8 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 .dsc-header-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.5;animation:dsc-spark 2.5s ease-in-out infinite}
 .dsc-header-dot:last-child{animation-delay:1.25s}
 .dsc-title{font-size:var(--xs);font-weight:600;letter-spacing:.14em;color:var(--t3);text-transform:uppercase}
-.dsc-score{text-align:center;font-size:var(--lg);font-weight:700;color:var(--t1);margin-bottom:4px}
+.dsc-score{text-align:center;font-size:var(--xl);font-weight:700;color:var(--t1);margin-bottom:var(--sp2)}
+.dsc-score strong{font-size:2rem;color:var(--gold);display:inline-block;margin-left:6px}
 .dsc-summary{
   text-align:center;font-size:var(--md);font-weight:600;color:var(--t1);
   line-height:1.85;margin-bottom:var(--sp3);padding:0 4px;white-space:pre-wrap;

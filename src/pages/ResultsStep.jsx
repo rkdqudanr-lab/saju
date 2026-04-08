@@ -79,13 +79,22 @@ export default function ResultsStep({
           })()}
 
           {answers[0] && (() => {
-            const summaryStr = parseAccSummary(answers[0]).summary;
-            return summaryStr ? (
-              <div className="star-summary">
-                <span className="star-summary-icon">✦</span>
-                <span className="star-summary-text">{breakAtNatural(summaryStr)}</span>
-              </div>
-            ) : null;
+            const { score: ansScore, summary: summaryStr } = parseAccSummary(answers[0]);
+            return (
+              <>
+                {ansScore !== null && (
+                  <div className="acc-score-wrap">
+                    <div className="acc-score-value">별숨 점수 <strong>{ansScore}</strong></div>
+                  </div>
+                )}
+                {summaryStr ? (
+                  <div className="star-summary">
+                    <span className="star-summary-icon">✦</span>
+                    <span className="star-summary-text">{breakAtNatural(summaryStr)}</span>
+                  </div>
+                ) : null}
+              </>
+            );
           })()}
 
           {selQs.map((q, i) => {
