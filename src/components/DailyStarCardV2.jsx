@@ -5,6 +5,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { breakAtNatural } from '../utils/constants.js';
+import { BADTIME_THRESHOLD } from '../utils/gamificationLogic.js';
 
 /**
  * 응답 텍스트에서 [태그] 기준으로 섹션을 추출해 구조화된 객체로 반환
@@ -163,7 +164,7 @@ export default function DailyStarCardV2({
     items,
   } = parseDailyLines(result?.text || '');
 
-  const hasBadtime = badtime && score && score < 50;
+  const hasBadtime = badtime && score !== null && !isNaN(score) && score < BADTIME_THRESHOLD;
   const isNewFormat = !!(saju || astrology || synergy);
 
   const handleBlockBadtime = useCallback(async () => {

@@ -64,6 +64,8 @@ export default function ShieldBlockModal({
           animation: 'sbmSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           border: '1px solid var(--line)',
           borderBottom: 'none',
+          maxHeight: '85svh',
+          overflowY: 'auto',
         }}
       >
         {/* 핸들 바 */}

@@ -31,7 +31,11 @@ export default function DailyHoroscopePage({
   // 배드타임 감지 및 모달 표시
   useEffect(() => {
     if (dailyResult) {
-      const badtime = detectBadtime(dailyResult.score || 0, dailyResult.text || '');
+      const score = dailyResult.score;
+      // score가 없으면 감지하지 않음 (undefined || 0 fallback 방지)
+      const badtime = (score !== null && score !== undefined)
+        ? detectBadtime(score, dailyResult.text || '')
+        : null;
       if (badtime) {
         setBadtimeModal({
           isOpen: true,
