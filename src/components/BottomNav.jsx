@@ -5,7 +5,7 @@
 
 export default function BottomNav({ step, setStep, user, formOkApprox }) {
   const tabs = [
-    { id: 'home',    icon: '🌟', label: '오늘',   steps: [0, 22, 23] },
+    { id: 'home',    icon: '⌂',  label: '오늘',   steps: [0, 23] },
     { id: 'consult', icon: '💬', label: '상담',   steps: [2, 3, 4, 5] },
     { id: 'records', icon: '🗓️', label: '기록',   steps: [9, 10, 17, 20] },
     { id: 'my',      icon: '👤', label: '마이',   steps: [1, 19, 27] },

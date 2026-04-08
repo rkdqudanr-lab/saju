@@ -57,7 +57,6 @@ import ResultsStep         from "./pages/ResultsStep.jsx";
 import QuestionStep        from "./pages/QuestionStep.jsx";
 import ProfileStep         from "./pages/ProfileStep.jsx";
 import LandingPage         from "./pages/LandingPage.jsx";
-import TodayIntroPage      from "./pages/TodayIntroPage.jsx";
 import TodayDetailPage     from "./pages/TodayDetailPage.jsx";
 const SettingsPage             = lazy(() => import("./components/SettingsPage.jsx"));
 const MyPage                   = lazy(() => import("./components/MyPage.jsx"));
@@ -444,7 +443,7 @@ export default function App() {
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
       {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 24 || step === 25 || step === 26 || step === 27) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
-      {step === 22 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>⌂</button>}
 
       {/* ── 하단 네비게이션 바 (로그인 여부 무관하게 항상 표시) ── */}
       <BottomNav step={step} setStep={setStep} user={user} formOkApprox={formOkApprox} />
@@ -758,16 +757,6 @@ export default function App() {
               showToast={showToast}
             />
           </Suspense>
-        )}
-
-        {/* ── Step 22: "오늘의 별숨" 인트로 페이지 ── */}
-        {step === 22 && (
-          <TodayIntroPage
-            setStep={setStep}
-            askDailyHoroscope={askDailyHoroscope}
-            dailyLoading={dailyLoading}
-            dailyResult={dailyResult}
-          />
         )}
 
         {/* ── Step 23: "오늘의 별숨" 상세 페이지 ── */}
