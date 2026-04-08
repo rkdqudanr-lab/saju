@@ -205,6 +205,10 @@ export const ANNIVERSARY_PROMPT = (type, dateStr, isFuture = false) =>
 // 요약 텍스트를 중간 공백 기준으로 자연스럽게 두 줄로 나눠요
 export function breakAtNatural(text) {
   if (!text || text.length <= 14) return text;
+  // 문장 경계(. ! ?)에서 줄바꿈 우선 — 자연스러운 문장 단위로 분절
+  const withSentenceBreaks = text.replace(/([.!?。])\s+(?=\S)/g, '$1\n');
+  if (withSentenceBreaks !== text) return withSentenceBreaks;
+  // 문장 경계 없으면 중간 공백으로 분절
   const mid = Math.floor(text.length / 2);
   const leftIdx = text.lastIndexOf(' ', mid);
   const rightIdx = text.indexOf(' ', mid);
@@ -229,36 +233,46 @@ export function stripMarkdown(text){
 }
 
 export function parseAccSummary(text) {
-  if (!text) return { summary: '', text: '' };
+  if (!text) return { score: null, summary: '', text: '' };
+
+  // [점수] 추출 및 제거
+  let score = null;
+  let processedText = text;
+  const scoreMatch = text.match(/\[점수\]\s*(\d+)/);
+  if (scoreMatch) {
+    score = parseInt(scoreMatch[1], 10);
+    processedText = processedText.replace(/\[점수\].*?(?:\n|$)/, '').trim();
+  }
 
   // 1순위: [요약] 태그 명시적 파싱 (기존 방식)
-  const tagMatch = text.match(/\[요약\]\s*(.*?)(?:\n|$)/);
+  const tagMatch = processedText.match(/\[요약\]\s*(.*?)(?:\n|$)/);
   if (tagMatch) {
     const summary = tagMatch[1].replace(/^(요약|핵심)[\s:]*/i, '').trim();
-    const restText = text.replace(/\[요약\].*?(?:\n|$)/, '').trim();
-    return { summary, text: restText };
+    const restText = processedText.replace(/\[요약\].*?(?:\n|$)/, '').trim();
+    return { score, summary, text: restText };
   }
 
   // 2순위: 🀄 또는 ✦ 앵커 이전 첫 문장을 요약으로 추출 (신규 구조 대응)
-  const anchorIdx = text.search(/[🀄✦]/);
+  const anchorIdx = processedText.search(/[🀄✦]/);
   if (anchorIdx > 10) {
-    const beforeAnchor = text.slice(0, anchorIdx).trim();
+    const beforeAnchor = processedText.slice(0, anchorIdx).trim();
     const firstSentence = beforeAnchor.split(/[.!?。]\s*/)[0]?.trim();
     if (firstSentence && firstSentence.length > 5 && firstSentence.length < 60) {
       return {
+        score,
         summary: firstSentence,
-        text: text.slice(anchorIdx).trim(),
+        text: processedText.slice(anchorIdx).trim(),
       };
     }
   }
 
   // 3순위: 첫 줄이 짧으면 요약으로 처리
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const lines = processedText.split('\n').map(l => l.trim()).filter(Boolean);
   if (lines.length > 1 && lines[0].length < 50) {
-    return { summary: lines[0], text: lines.slice(1).join('\n').trim() };
+    return { score, summary: lines[0], text: lines.slice(1).join('\n').trim() };
   }
 
-  return { summary: '', text };
+  return { score, summary: '', text: processedText };
 }
 
 // ═══════════════════════════════════════════════════════════

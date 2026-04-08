@@ -199,14 +199,9 @@ export default function DailyStarCardV2({
 
         {/* 점수 */}
         {score !== null && (
-          <>
-            <div className="dsc-score">
-              별숨 점수 <strong>{score}</strong>
-            </div>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', textAlign: 'center', marginTop: 2, marginBottom: 4 }}>
-              오늘의 기운을 0~100으로 나타내요 · 50 미만이면 액막이 발동 가능
-            </div>
-          </>
+          <div className="dsc-score">
+            별숨 점수 <strong>{score}</strong>
+          </div>
         )}
 
         {/* 요약 */}
