@@ -87,12 +87,14 @@ function parseDailyLines(text) {
   const synergyLines = extractSection('[별숨픽]') || extractSection('[별숨 픽]');
   let synergy = null;
   if (synergyLines && synergyLines.length > 0) {
-    synergy = { food: '', place: '', summary: '' };
+    synergy = { food: '', place: '', color: '', summary: '' };
     for (const line of synergyLines) {
       if (line.startsWith('음식:') || line.startsWith('🍽️')) {
         synergy.food = line.replace('음식:', '').replace('🍽️', '').trim();
       } else if (line.startsWith('장소:') || line.startsWith('📍')) {
         synergy.place = line.replace('장소:', '').replace('📍', '').trim();
+      } else if (line.startsWith('색:') || line.startsWith('🎨')) {
+        synergy.color = line.replace('색:', '').replace('🎨', '').trim();
       } else if (line.startsWith('요약:') || line.startsWith('✨')) {
         synergy.summary = line.replace('요약:', '').replace('✨', '').trim();
       }
@@ -298,6 +300,12 @@ export default function DailyStarCardV2({
                     <span className="dsc-synergy-value">{synergy.place}</span>
                   </div>
                 )}
+                {synergy.color && (
+                  <div className="dsc-synergy-row">
+                    <span className="dsc-synergy-label">🎨</span>
+                    <span className="dsc-synergy-value">{synergy.color}</span>
+                  </div>
+                )}
                 {synergy.summary && (
                   <div className="dsc-synergy-summary">{synergy.summary}</div>
                 )}
@@ -363,8 +371,8 @@ export default function DailyStarCardV2({
           </div>
         )}
 
-        {/* 마무리 문장 */}
-        {closingAdvice && (
+        {/* 마무리 문장 — 신형 포맷에서만 표시 (구형 아이템 모드에서는 마지막 아이템과 중복되므로 제외) */}
+        {isNewFormat && closingAdvice && (
           <div className="dsc-closing">
             {closingAdvice}
           </div>

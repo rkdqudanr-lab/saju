@@ -220,6 +220,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             isCalendarMonth:   opts.isCalendarMonth   || false,
             isSlot:            opts.isSlot            || false,
             isWeekly:          opts.isWeekly          || false,
+            isDaily:           opts.isDaily           || false,
             responseStyle:     style,
             clientHour:        new Date().getHours(),
           }),
@@ -393,7 +394,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
     setDailyLoading(true);
     try {
-      const ans = await callApi('오늘 하루 나의 별숨은?');
+      const ans = await callApi('오늘 하루 나의 별숨은?', { isDaily: true });
       const result = { text: ans };
       const newCount = dailyCount + 1;
       setDailyResult(result);
