@@ -11,7 +11,9 @@ export default defineConfig({
       manifest: false, // public/manifest.json 직접 사용
       workbox: {
         // App Shell 캐싱 전략
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,svg,png,woff2}'],
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             // API 호출은 네트워크 우선, 실패 시 캐시

@@ -71,6 +71,14 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// 새 Service Worker 활성화 시 페이지 1회 자동 리로드
+// autoUpdate로 새 SW가 skipWaiting() 후 controllerchange 이벤트 발생 → 즉시 반영
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload()
+  })
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
