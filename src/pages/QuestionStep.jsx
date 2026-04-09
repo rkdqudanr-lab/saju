@@ -43,6 +43,16 @@ export default function QuestionStep({
     });
   }, [user?.id]);
 
+  const handleDeleteRecent = useCallback((q, e) => {
+    e.stopPropagation();
+    if (!user?.id) return;
+    setRecentQs(prev => {
+      const next = prev.filter(r => r !== q);
+      saveAnalysisCache(user.id, 'recent_questions', JSON.stringify(next));
+      return next;
+    });
+  }, [user?.id]);
+
   const handleAskQuick = useCallback(async (q) => {
     if (!q.trim()) return;
 
@@ -104,10 +114,16 @@ export default function QuestionStep({
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>최근 질문</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {recentQs.map((q, i) => (
-                    <button key={i} onClick={() => setDiy(q)}
-                      style={{ padding: '4px 10px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t3)', fontSize: 'var(--xs)', cursor: 'pointer', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {q.length > 22 ? q.slice(0, 22) + '…' : q}
-                    </button>
+                    <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
+                      <button onClick={() => setDiy(q)}
+                        style={{ padding: '4px 18px 4px 10px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t3)', fontSize: 'var(--xs)', cursor: 'pointer', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {q.length > 22 ? q.slice(0, 22) + '…' : q}
+                      </button>
+                      <button onClick={(e) => handleDeleteRecent(q, e)}
+                        style={{ position: 'absolute', top: -5, right: -5, width: 15, height: 15, borderRadius: '50%', background: 'var(--t3)', color: 'var(--bg1)', border: 'none', fontSize: 9, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1 }}>
+                        ✕
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
