@@ -433,7 +433,7 @@ export function useGamification(user, showToast) {
         return { success: false };
       }
     },
-    [user?.id, earnBP, loadTodayMissions, showToast]
+    [user?.id, earnBP, loadTodayMissions, showToast, missions]
   );
 
   // ─────────────────────────────────────────────────────────────
