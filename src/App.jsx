@@ -142,7 +142,7 @@ export default function App() {
   const gamification = useGamification(user, showToast);
   const {
     gamificationState, missions,
-    earnBP, spendBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP,
+    earnBP, earnDiaryBP, spendBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP,
   } = gamification;
 
   // 배드타임 액막이 상태
@@ -150,6 +150,9 @@ export default function App() {
 
   // 무료 BP 충전 가능 여부
   const [freeRechargeAvailable, setFreeRechargeAvailable] = useState(true);
+
+  // 오늘 일기 작성 여부 (세션 내 추적)
+  const [hasDiaryToday, setHasDiaryToday] = useState(false);
 
   // 배드타임 액막이 핸들러
   const handleBlockBadtime = useCallback(async () => {
@@ -173,7 +176,6 @@ export default function App() {
     try {
       const result = await completeMission(missionId);
       if (result.success) {
-        showToast('미션 완료! +10 BP 획득 🎯', 'success');
         // 미션 목록 새로고침
         await loadTodayMissions(user?.id);
       }
@@ -181,6 +183,13 @@ export default function App() {
       showToast('미션 완료 중 오류 발생', 'error');
     }
   }, [completeMission, loadTodayMissions, user?.id, showToast]);
+
+  // 일기 완료 핸들러 (새 일기 저장 시 BP 적립)
+  const handleDiaryComplete = useCallback(async () => {
+    if (!earnDiaryBP) return;
+    const result = await earnDiaryBP();
+    if (result?.success) setHasDiaryToday(true);
+  }, [earnDiaryBP]);
 
   // 무료 BP 충전 핸들러
   const handleFreeRecharge = useCallback(async () => {
@@ -470,6 +479,8 @@ export default function App() {
             onBlockBadtime={handleBlockBadtime}
             onCompleteMission={handleCompleteMission}
             onFreeRecharge={handleFreeRecharge}
+            onDiaryComplete={handleDiaryComplete}
+            hasDiaryToday={hasDiaryToday}
             isBlockingBadtime={isBlockingBadtime}
             freeRechargeAvailable={freeRechargeAvailable}
           />
@@ -691,6 +702,7 @@ export default function App() {
               viewDate={diaryViewDate}
               diaryReviewResult={diaryReviewResult}
               diaryReviewLoading={diaryReviewLoading}
+              onDiaryComplete={handleDiaryComplete}
             />
           </Suspense>
         )}

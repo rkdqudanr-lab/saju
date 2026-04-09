@@ -116,8 +116,60 @@ export function generateMissionsFromHoroscope(horoscopeText) {
     }
   }
 
-  // 최대 3개 미션까지만 반환
-  return missions.slice(0, 3);
+  // ─────────────────────────────────────────────────────────────
+  // 4. DO 실천 미션 추출 (5 BP)
+  // ─────────────────────────────────────────────────────────────
+  const doPatterns = [
+    /^DO:\s*(.+)/im,
+    /^✅\s*(.+)/im,
+  ];
+
+  let doMatch = null;
+  for (const pattern of doPatterns) {
+    const match = horoscopeText.match(pattern);
+    if (match) { doMatch = match; break; }
+  }
+
+  if (doMatch) {
+    const doContent = doMatch[1].trim().split(/[,\n]/)[0].trim();
+    if (doContent && doContent.length > 0 && doContent.length < 60) {
+      missions.push({
+        type: 'do',
+        content: doContent,
+        originalValue: doContent,
+        bpReward: 5,
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 5. DONT 주의 미션 추출 (5 BP)
+  // ─────────────────────────────────────────────────────────────
+  const dontPatterns = [
+    /^DON'?T:\s*(.+)/im,
+    /^❌\s*(.+)/im,
+  ];
+
+  let dontMatch = null;
+  for (const pattern of dontPatterns) {
+    const match = horoscopeText.match(pattern);
+    if (match) { dontMatch = match; break; }
+  }
+
+  if (dontMatch) {
+    const dontContent = dontMatch[1].trim().split(/[,\n]/)[0].trim();
+    if (dontContent && dontContent.length > 0 && dontContent.length < 60) {
+      missions.push({
+        type: 'dont',
+        content: dontContent,
+        originalValue: dontContent,
+        bpReward: 5,
+      });
+    }
+  }
+
+  // 최대 5개 미션까지 반환 (color/menu/item + do/dont)
+  return missions.slice(0, 5);
 }
 
 // ════════════════════════════════════════════════════════════════

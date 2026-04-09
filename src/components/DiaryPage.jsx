@@ -60,7 +60,7 @@ function stripFollowUp(text) {
   return text.replace(/\[후속질문\].*/s, '').trim();
 }
 
-export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading }) {
+export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, onDiaryComplete }) {
   const { user, form, showToast } = useUserCtx();
   const { saju, sun, today: todayInfo, isApproximate, buildCtx } = useSajuCtx();
   const [mood, setMood] = useState(initialMood || null);
@@ -180,7 +180,11 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
             await client.from('diary_entries').update(entry).eq('id', todayEntry.id).eq('kakao_id', String(user.id));
           } else {
             const { data: inserted } = await client.from('diary_entries').insert(payload).select('id').single();
-            if (inserted?.id) setTodayEntry({ id: inserted.id, ...payload });
+            if (inserted?.id) {
+              setTodayEntry({ id: inserted.id, ...payload });
+              // 새 일기 저장 시 BP 적립 콜백 호출 (하루 1회)
+              onDiaryComplete?.();
+            }
           }
         }
       } catch (e) {

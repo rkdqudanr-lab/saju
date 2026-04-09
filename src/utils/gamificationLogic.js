@@ -8,7 +8,10 @@
 // ════════════════════════════════════════════════════════════════
 export const BP_EARNING_RULES = {
   DAILY_LOGIN: 5,         // 일일 출석
-  MISSION_COMPLETE: 10,   // 미션 완료
+  MISSION_COMPLETE: 10,   // 미션 완료 (색상/음식/아이템)
+  DO_DONT_COMPLETE: 5,    // DO/DONT 미션 완료
+  DIARY_COMPLETE: 5,      // 일기 작성
+  MISSION_MILESTONE: 5,   // 미션 50% 이상 달성 보너스
   FRIEND_SHARE: 3,        // 친구 공유
 };
 
@@ -256,6 +259,8 @@ export const MISSION_TYPE_LABELS = {
   color: { label: '색상 처방', emoji: '🎨' },
   menu: { label: '음식 처방', emoji: '🍽️' },
   item: { label: '라이프 아이템', emoji: '🌿' },
+  do: { label: '오늘의 실천', emoji: '✅' },
+  dont: { label: '오늘의 주의', emoji: '⚠️' },
 };
 
 /**
