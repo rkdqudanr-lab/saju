@@ -15,6 +15,12 @@ import {
   calculateLevelProgress,
 } from '../utils/gamificationLogic.js';
 
+// do/dont 미션은 5 BP, 나머지는 10 BP
+function getMissionBpReward(missionType) {
+  if (missionType === 'do' || missionType === 'dont') return BP_EARNING_RULES.DO_DONT_COMPLETE;
+  return BP_EARNING_RULES.MISSION_COMPLETE;
+}
+
 // ════════════════════════════════════════════════════════════════
 // 유틸 함수
 // ════════════════════════════════════════════════════════════════
@@ -355,8 +361,13 @@ export function useGamification(user, showToast) {
           .eq('id', missionId)
           .eq('kakao_id', String(user.id));
 
-        // BP 획득
-        await earnBP(BP_EARNING_RULES.MISSION_COMPLETE, 'mission', missionId);
+        // 미션 타입 확인 후 BP 획득 (do/dont는 5 BP, 나머지는 10 BP)
+        const completedMission = missions.find(m => m.id === missionId);
+        const bpReward = getMissionBpReward(completedMission?.mission_type);
+        const bpReason = (completedMission?.mission_type === 'do' || completedMission?.mission_type === 'dont')
+          ? 'do_dont_mission'
+          : 'mission';
+        await earnBP(bpReward, bpReason, missionId);
 
         // 미션 목록 새로고침
         await loadTodayMissions(user.id);
@@ -385,6 +396,35 @@ export function useGamification(user, showToast) {
         // 레벨 승격 체크
         await checkLevelPromotion(user.id, newTotalMissions);
 
+        // 미션 50% 달성 마일스톤 보너스 (하루 1회)
+        const today = getTodayDateStr();
+        const { data: allMissions } = await client
+          .from('missions')
+          .select('is_completed')
+          .eq('kakao_id', String(user.id))
+          .eq('date', today);
+
+        if (allMissions && allMissions.length > 0) {
+          const completedCount = allMissions.filter(m => m.is_completed).length;
+          const completionRate = completedCount / allMissions.length;
+
+          if (completionRate >= 0.5) {
+            // 오늘 마일스톤 보너스를 이미 받았는지 확인
+            const { data: milestoneLog } = await client
+              .from('daily_bp_log')
+              .select('id')
+              .eq('kakao_id', String(user.id))
+              .eq('date', today)
+              .eq('reason', 'milestone')
+              .maybeSingle();
+
+            if (!milestoneLog) {
+              await earnBP(BP_EARNING_RULES.MISSION_MILESTONE, 'milestone');
+              if (showToast) showToast(`미션 50% 달성 보너스 +${BP_EARNING_RULES.MISSION_MILESTONE} BP ✨`);
+            }
+          }
+        }
+
         if (showToast) showToast('미션 완료! 🎯');
 
         return { success: true };
@@ -394,6 +434,44 @@ export function useGamification(user, showToast) {
       }
     },
     [user?.id, earnBP, loadTodayMissions, showToast]
+  );
+
+  // ─────────────────────────────────────────────────────────────
+  // 일기 BP 적립 (하루 1회 5 BP)
+  // ─────────────────────────────────────────────────────────────
+  const earnDiaryBP = useCallback(
+    async () => {
+      if (!user?.id) return { success: false };
+
+      try {
+        const authClient = getAuthenticatedClient(user.id);
+        const client = authClient || supabase;
+        const today = getTodayDateStr();
+
+        // 오늘 이미 일기 BP를 받았는지 확인
+        const { data: existingLog } = await client
+          .from('daily_bp_log')
+          .select('id')
+          .eq('kakao_id', String(user.id))
+          .eq('date', today)
+          .eq('reason', 'diary')
+          .maybeSingle();
+
+        if (existingLog) {
+          return { success: false, message: '오늘 이미 일기 BP를 받았어요' };
+        }
+
+        const result = await earnBP(BP_EARNING_RULES.DIARY_COMPLETE, 'diary');
+        if (result.success && showToast) {
+          showToast(`일기 작성 완료! +${BP_EARNING_RULES.DIARY_COMPLETE} BP 🌙`);
+        }
+        return result;
+      } catch (error) {
+        console.error('[별숨] 일기 BP 오류:', error);
+        return { success: false };
+      }
+    },
+    [user?.id, earnBP, showToast]
   );
 
   // ─────────────────────────────────────────────────────────────
@@ -554,6 +632,7 @@ export function useGamification(user, showToast) {
 
     // 함수
     earnBP,
+    earnDiaryBP,
     spendBP,
     blockBadtime,
     completeMission,

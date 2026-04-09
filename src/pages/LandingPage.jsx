@@ -62,6 +62,8 @@ export default function LandingPage({
   onBlockBadtime = null,
   onCompleteMission = null,
   onFreeRecharge = null,
+  onDiaryComplete = null,
+  hasDiaryToday = false,
   isBlockingBadtime = false,
   freeRechargeAvailable = true,
 }) {
@@ -168,6 +170,7 @@ export default function LandingPage({
                               askReview={askDiaryReview} setStep={setStep} embedded={true}
                               diaryReviewResult={diaryReviewResult} diaryReviewLoading={diaryReviewLoading}
                               showToast={showToast}
+                              onDiaryComplete={onDiaryComplete}
                             />
                           )}
                         </Suspense>
@@ -278,14 +281,17 @@ export default function LandingPage({
                             </button>
                           ))}
                         </div>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* ── 미션 현황 (달성 시 보상 느낌으로 하단에 조용히 배치) ── */}
-                  {missions.length > 0 && (
-                    <div style={{ marginTop: 'var(--sp3)' }}>
-                      <MissionDashboard missions={missions} onMissionComplete={onCompleteMission} />
+                        {/* ── 오늘의 미션 (특별기능 바로 아래) ── */}
+                        <div style={{ marginTop: 12 }}>
+                          <MissionDashboard
+                            missions={missions}
+                            onMissionComplete={onCompleteMission}
+                            onDiaryClick={() => setStep(17)}
+                            hasDiaryToday={hasDiaryToday}
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
 
