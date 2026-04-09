@@ -257,40 +257,14 @@ export default function LandingPage({
                         </button>
                       )}
 
-                      {/* ── 특별 기능 바로가기 ── */}
+                      {/* ── 오늘의 미션 ── */}
                       <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6 }}>
-                        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 10, letterSpacing: '.06em' }}>✨ 특별 기능</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                          {[
-                            { icon: '🌙', label: '꿈 해몽', s: 24 },
-                            { icon: '🗓️', label: '택일', s: 25 },
-                            { icon: '📛', label: '이름 풀이', s: 26 },
-                          ].map(m => (
-                            <button
-                              key={m.s}
-                              onClick={() => setStep(m.s)}
-                              style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                                padding: '12px 6px', borderRadius: 'var(--r1)', cursor: 'pointer',
-                                border: '1px solid var(--line)', background: 'var(--bg2)',
-                                color: 'var(--t2)', fontSize: 'var(--xs)', transition: 'all .15s',
-                              }}
-                            >
-                              <span style={{ fontSize: '1.4rem' }}>{m.icon}</span>
-                              <span>{m.label}</span>
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* ── 오늘의 미션 (특별기능 바로 아래) ── */}
-                        <div style={{ marginTop: 12 }}>
-                          <MissionDashboard
-                            missions={missions}
-                            onMissionComplete={onCompleteMission}
-                            onDiaryClick={() => setStep(17)}
-                            hasDiaryToday={hasDiaryToday}
-                          />
-                        </div>
+                        <MissionDashboard
+                          missions={missions}
+                          onMissionComplete={onCompleteMission}
+                          onDiaryClick={() => setStep(17)}
+                          hasDiaryToday={hasDiaryToday}
+                        />
                       </div>
                     </div>
                   )}
