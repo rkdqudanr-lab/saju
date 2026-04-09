@@ -58,7 +58,7 @@ async function saveDailyCacheToSupabase(userId, type, content) {
  * @param {Function} [onLoginRequired] - 로그인 필요 시 호출할 콜백 (카카오 로그인 트리거)
  * @param {Function} [onSessionExpired] - 서버가 401 반환 시 호출할 콜백 (자동 로그아웃 등)
  */
-export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired, onDailyLimitReached, showToast, onSessionExpired) {
+export function useConsultation(buildCtx, formOk, user, consentFlags, responseStyle, onLoginRequired, onDailyLimitReached, showToast, onSessionExpired, onMissionsSaved) {
   const [timeSlot, setTimeSlot] = useState(() => getTimeSlot());
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const loadMsgRef = useRef(null);
@@ -412,7 +412,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           const client = authClient || supabase;
           const today = getTodayDateStr();
 
-          // 2. 미션 생성 및 저장
+          // 2. 미션 생성 및 저장 (이미 존재하는 미션은 무시 — 완료 상태 보호)
           if (gamData.missions && gamData.missions.length > 0) {
             for (const mission of gamData.missions) {
               await client.from('missions').upsert(
@@ -421,12 +421,14 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
                   date: today,
                   mission_type: mission.type,
                   mission_content: mission.content,
-                  bp_reward: 10,
+                  bp_reward: mission.bpReward || 10,
                   is_completed: false,
                 },
-                { onConflict: 'kakao_id,date,mission_type' }
+                { onConflict: 'kakao_id,date,mission_type', ignoreDuplicates: true }
               );
             }
+            // UI 미션 목록 새로고침
+            if (typeof onMissionsSaved === 'function') onMissionsSaved();
           }
 
           // 3. score 저장 (배드타임 유무와 관계없이 항상)
@@ -443,7 +445,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       saveHistoryToSupabase(['오늘 하루 나의 별숨은?'], [ans], timeSlot);
     } catch { /* 에러는 버튼 상태로 처리 */ }
     finally { setDailyLoading(false); }
-  }, [formOk, callApi, dailyCount, dailyLoading, saveHistoryToSupabase, timeSlot, user?.id, onDailyLimitReached]);
+  }, [formOk, callApi, dailyCount, dailyLoading, saveHistoryToSupabase, timeSlot, user?.id, onDailyLimitReached, onMissionsSaved]);
 
   const askReview = useCallback(async (text, prompt) => {
     if (!formOk) { setStep(1); return; }

@@ -123,21 +123,6 @@ export default function App() {
   const sajuCtx = useSajuContext(form, profileWithMeta, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx } = sajuCtx;
 
-  // formOkApprox: 년+월만 있어도 체험 가능하도록 게이트 완화
-  const consultation = useConsultation(buildCtx, formOkApprox, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast, handleSessionExpired);
-  const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
-          answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
-          latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
-          histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
-          qLoadStatus,
-          dailyResult, dailyLoading, dailyCount, DAILY_MAX,
-          diaryReviewResult, diaryReviewLoading,
-          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
-          retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
-          deleteHistoryItem, deleteAllHistoryItems } = consultation;
-
-  const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
-
   // ── 게이미피케이션 시스템 ──
   const gamification = useGamification(user, showToast);
   const {
@@ -183,6 +168,26 @@ export default function App() {
       showToast('미션 완료 중 오류 발생', 'error');
     }
   }, [completeMission, loadTodayMissions, user?.id, showToast]);
+
+  // 미션 저장 완료 후 UI 갱신 콜백
+  const handleMissionsSaved = useCallback(() => {
+    loadTodayMissions(user?.id);
+  }, [loadTodayMissions, user?.id]);
+
+  // formOkApprox: 년+월만 있어도 체험 가능하도록 게이트 완화
+  const consultation = useConsultation(buildCtx, formOkApprox, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast, handleSessionExpired, handleMissionsSaved);
+  const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
+          answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
+          latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
+          histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
+          qLoadStatus,
+          dailyResult, dailyLoading, dailyCount, DAILY_MAX,
+          diaryReviewResult, diaryReviewLoading,
+          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
+          retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
+          deleteHistoryItem, deleteAllHistoryItems } = consultation;
+
+  const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
 
   // 일기 완료 핸들러 (새 일기 저장 시 BP 적립)
   const handleDiaryComplete = useCallback(async () => {
