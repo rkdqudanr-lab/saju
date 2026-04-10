@@ -69,7 +69,8 @@ export default function InquiryPage() {
       .then(({ data }) => {
         setHistory(data ?? []);
         setHistoryLoading(false);
-      });
+      })
+      .catch(() => setHistoryLoading(false));
   }, [user?.id, submitted]);
 
   const canSubmit = category && title.trim() && content.trim() && !isSubmitting;
