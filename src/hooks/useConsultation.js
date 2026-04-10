@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { stripMarkdown, PKGS, TIMING, LOAD_STATES } from "../utils/constants.js";
 import { getAuthToken } from "./useUserProfile.js";
+import { useAppStore } from "../store/useAppStore.js";
 
 // 베타 기간 종료 시 false로 변경 (또는 서버 설정으로 대체)
 const IS_BETA = true;
@@ -70,7 +71,10 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', update); };
   }, []);
 
-  const [step, setStep]                   = useState(0);
+  // step은 Zustand store에서 관리 (BottomNav, Sidebar 등에 props drilling 불필요)
+  const step    = useAppStore((s) => s.step);
+  const setStep = useAppStore((s) => s.setStep);
+
   const [cat, setCat]                     = useState(0);
   const [selQs, setSelQs]                 = useState([]);
   const [diy, setDiy]                     = useState('');

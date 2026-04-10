@@ -1,6 +1,7 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useEffect } from "react";
 import { getTodayInfo, getSaju, ON } from "../utils/saju.js";
 import { getSun, getMoon, getAsc } from "../utils/astrology.js";
+import { useAppStore } from "../store/useAppStore.js";
 
 // 폼 bh 값(소수점 시간, 예: "9.5000")을 정수 [시, 분]으로 변환 (KST 기준)
 function parseBh(noTime, bh) {
@@ -145,6 +146,12 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     c += `2. 답변 시 모호한 표현을 피하고, 구체적인 날짜·방향·행동·감각(음식·향·소리 등) 중 하나를 반드시 포함하세요.\n`;
     return c;
   }, [activeForm, activeSaju, activeSun, activeAge, profile, activeProfileIdx, ageRange]);
+
+  // ── Zustand 스토어에 사주/별자리 데이터 주입 ──────────────────
+  const _setSajuData = useAppStore((s) => s.setSajuData);
+  useEffect(() => {
+    _setSajuData({ saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate });
+  }, [saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate, _setSajuData]);
 
   return { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx };
 }

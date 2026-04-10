@@ -1,6 +1,7 @@
 import { Suspense, useState } from "react";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
+import { useAppStore } from "../store/useAppStore.js";
 import { isTodayAnswered } from "../utils/quiz.js";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import BPDisplay from "../components/BPDisplay.jsx";
@@ -48,17 +49,15 @@ function isNightMode() {
 
 export default function LandingPage({
   otherProfiles,
-  formOk, formOkApprox, isApproximate, profile,
   quiz, quizInput, setQuizInput,
   dailyResult, dailyLoading, dailyCount, DAILY_MAX,
   diaryReviewResult, diaryReviewLoading,
   showDailyCard, setShowDailyCard,
-  setStep, setDiy,
+  setDiy,
   setEditingMyProfile, setShowProfileModal,
   askDailyHoroscope, askDiaryReview, askWeeklyReview, resetDiaryReview,
   handleQuizAnswer, handleQuizSkip,
   DiaryPageLazy,
-  missions = [],
   onBlockBadtime = null,
   onCompleteMission = null,
   onFreeRecharge = null,
@@ -67,9 +66,11 @@ export default function LandingPage({
   isBlockingBadtime = false,
   freeRechargeAvailable = true,
 }) {
-  const { user, form, showToast, kakaoLogin, kakaoLogout } = useUserCtx();
-  const { saju, sun, today, buildCtx } = useSajuCtx();
-  const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 } } = useGamCtx();
+  // store / context에서 직접 읽기 (props drilling 제거)
+  const setStep  = useAppStore((s) => s.setStep);
+  const { user, form, profile, showToast, kakaoLogin, kakaoLogout } = useUserCtx();
+  const { saju, sun, today, buildCtx, formOk, formOkApprox, isApproximate } = useSajuCtx();
+  const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 }, missions = [] } = useGamCtx();
   const nightMode = isNightMode();
   return (
     <div className="page step-fade">

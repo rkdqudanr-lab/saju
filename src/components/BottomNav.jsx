@@ -1,9 +1,16 @@
 /**
  * BottomNav — 하단 고정 내비게이션 바
  * 홈(오늘) / 별숨상담 / 기록 / 마이
+ * props 없이 Zustand store에서 직접 읽는다.
  */
+import { useAppStore } from '../store/useAppStore.js';
 
-export default function BottomNav({ step, setStep, user, formOkApprox }) {
+export default function BottomNav() {
+  const step         = useAppStore((s) => s.step);
+  const setStep      = useAppStore((s) => s.setStep);
+  const user         = useAppStore((s) => s.user);
+  const formOkApprox = useAppStore((s) => s.formOkApprox);
+
   const tabs = [
     { id: 'home',    icon: '⌂',  label: '오늘',   steps: [0, 23] },
     { id: 'consult', icon: '💬', label: '상담',   steps: [2, 3, 4, 5] },
