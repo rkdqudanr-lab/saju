@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { breakAtNatural } from '../utils/constants.js';
 import { BADTIME_THRESHOLD } from '../utils/gamificationLogic.js';
 
@@ -180,7 +181,12 @@ export default function DailyStarCardV2({
   }, [onBlockBadtime, isBlocking]);
 
   return (
-    <div className={`daily-star-card-v2 ${className}`}>
+    <motion.div
+      className={`daily-star-card-v2 ${className}`}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+    >
       {/* 별 파티클 */}
       <span className="dsc-spark dsc-spark-1">✦</span>
       <span className="dsc-spark dsc-spark-2">·</span>
@@ -338,7 +344,7 @@ export default function DailyStarCardV2({
             )}
 
             {!blocked && (
-              <button
+              <motion.button
                 onClick={handleBlockBadtime}
                 disabled={isBlocking || !canBlockBadtime || currentBp < 20}
                 className="dsc-block-btn"
@@ -347,9 +353,10 @@ export default function DailyStarCardV2({
                   color: canBlockBadtime && currentBp >= 20 ? '#fff' : 'var(--t4)',
                   cursor: isBlocking || !canBlockBadtime || currentBp < 20 ? 'not-allowed' : 'pointer',
                 }}
+                whileTap={{ scale: 0.93 }}
               >
                 {isBlocking ? '액막이 발동 중...' : '액막이 발동 (BP -20)'}
-              </button>
+              </motion.button>
             )}
 
             {blocked && (
@@ -373,6 +380,6 @@ export default function DailyStarCardV2({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
