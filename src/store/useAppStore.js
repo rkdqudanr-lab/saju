@@ -51,4 +51,8 @@ export const useAppStore = create((set, get) => ({
 
   setGamificationData: ({ gamificationState, missions }) =>
     set({ gamificationState, missions }),
+
+  // ── 모달 상태 ──────────────────────────────────────────────
+  showUpgradeModal: false,
+  setShowUpgradeModal: (val) => set({ showUpgradeModal: val }),
 }));

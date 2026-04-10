@@ -71,9 +71,11 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', update); };
   }, []);
 
-  // step은 Zustand store에서 관리 (BottomNav, Sidebar 등에 props drilling 불필요)
-  const step    = useAppStore((s) => s.step);
-  const setStep = useAppStore((s) => s.setStep);
+  // step / showUpgradeModal은 Zustand store에서 관리
+  const step               = useAppStore((s) => s.step);
+  const setStep            = useAppStore((s) => s.setStep);
+  const showUpgradeModal   = useAppStore((s) => s.showUpgradeModal);
+  const setShowUpgradeModal = useAppStore((s) => s.setShowUpgradeModal);
 
   const [cat, setCat]                     = useState(0);
   const [selQs, setSelQs]                 = useState([]);
@@ -91,7 +93,6 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   const [reportLoading, setReportLoading] = useState(false);
   const [histItem, setHistItem]           = useState(null);
   const [histItems, setHistItems]         = useState([]);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [qLoadStatus, setQLoadStatus]     = useState([]);
   const [retryMsg, setRetryMsg]           = useState('');
 
@@ -563,7 +564,6 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     chatLeft, maxQ, maxChat, curPkg,
     reportText, reportLoading,
     histItem, setHistItem, histItems, setHistItems,
-    showUpgradeModal, setShowUpgradeModal,
     chatEndRef,
     qLoadStatus,
     callApi, retryMsg,
