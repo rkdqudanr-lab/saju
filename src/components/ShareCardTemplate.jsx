@@ -4,11 +4,54 @@ import { forwardRef } from "react";
  * 인스타그램 1:1 (1080x1080) 카드뉴스 템플릿
  * position: fixed + left: -9999px 로 off-screen에 숨겨두고
  * html2canvas 로 캡처해 이미지로 저장하는 용도.
+ *
+ * props:
+ *   name    - 사용자 이름
+ *   saju    - { il: { g, j } } (horoscope 타입에서 일주 표시)
+ *   summary - 메인 텍스트 요약
+ *   type    - 'horoscope' | 'dream' | 'taegil' (기본값: 'horoscope')
+ *   title   - 커스텀 타이틀 (없으면 type에 따른 기본값 사용)
  */
+
+const CARD_THEMES = {
+  horoscope: {
+    bg:           'linear-gradient(160deg, #0D0B14 0%, #13101E 40%, #1A1628 100%)',
+    accent:       '#E8B048',
+    accentBg:     'rgba(232,176,72,0.12)',
+    accentBorder: 'rgba(232,176,72,0.35)',
+    titleColor:   '#E8B048',
+    barColor:     '#E8B048',
+    defaultTitle: '오늘의 운세',
+    tagline:      '나만의 수호별, 별숨에서 확인하기 ✨',
+  },
+  dream: {
+    bg:           'linear-gradient(160deg, #120A1E 0%, #1A0D2E 45%, #22103A 100%)',
+    accent:       '#C8BEDE',
+    accentBg:     'rgba(200,190,222,0.12)',
+    accentBorder: 'rgba(200,190,222,0.35)',
+    titleColor:   '#C8BEDE',
+    barColor:     '#A78BDA',
+    defaultTitle: '✨ 나의 길몽 리포트',
+    tagline:      '꿈의 메시지, 별숨에서 해석하기 🌙',
+  },
+  taegil: {
+    bg:           'linear-gradient(160deg, #050D1A 0%, #0A1628 45%, #0F1E35 100%)',
+    accent:       '#7B9EC4',
+    accentBg:     'rgba(123,158,196,0.12)',
+    accentBorder: 'rgba(123,158,196,0.35)',
+    titleColor:   '#7B9EC4',
+    barColor:     '#7B9EC4',
+    defaultTitle: '📅 나의 최고의 날',
+    tagline:      '길일(吉日) 찾기, 별숨에서 확인하기 ✦',
+  },
+};
+
 const ShareCardTemplate = forwardRef(function ShareCardTemplate(
-  { name, saju, summary },
+  { name, saju, summary, type = 'horoscope', title },
   ref
 ) {
+  const theme = CARD_THEMES[type] || CARD_THEMES.horoscope;
+  const displayTitle = title || theme.defaultTitle;
   const ilgan = saju?.il?.g || '';
   const ilji  = saju?.il?.j || '';
 
@@ -40,7 +83,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
         height: '1080px',
         overflow: 'hidden',
         fontFamily: 'Pretendard, -apple-system, sans-serif',
-        background: 'linear-gradient(160deg, #0D0B14 0%, #13101E 40%, #1A1628 100%)',
+        background: theme.bg,
         boxSizing: 'border-box',
       }}
     >
@@ -66,7 +109,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
         position: 'absolute',
         top: 0, left: 0, right: 0,
         height: '4px',
-        background: 'linear-gradient(90deg, transparent, #E8B048, transparent)',
+        background: `linear-gradient(90deg, transparent, ${theme.barColor}, transparent)`,
       }} />
 
       {/* 내용 컨테이너 */}
@@ -85,7 +128,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
           <div style={{
             fontSize: '26px',
             letterSpacing: '0.25em',
-            color: '#E8B048',
+            color: theme.accent,
             fontWeight: 600,
             marginBottom: '10px',
           }}>
@@ -94,12 +137,12 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
           <div style={{
             width: '48px',
             height: '1px',
-            background: 'linear-gradient(90deg, transparent, #E8B048, transparent)',
+            background: `linear-gradient(90deg, transparent, ${theme.barColor}, transparent)`,
             margin: '0 auto',
           }} />
         </div>
 
-        {/* 중앙: 닉네임 + 일간, 운세 요약 */}
+        {/* 중앙: 닉네임 + 일간(horoscope only), 메인 텍스트 */}
         <div style={{
           flex: 1,
           display: 'flex',
@@ -126,12 +169,12 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '10px',
-                background: 'rgba(232,176,72,0.12)',
-                border: '1px solid rgba(232,176,72,0.35)',
+                background: theme.accentBg,
+                border: `1px solid ${theme.accentBorder}`,
                 borderRadius: '100px',
                 padding: '10px 28px',
               }}>
-                <span style={{ fontSize: '22px', color: '#E8B048', fontWeight: 600 }}>
+                <span style={{ fontSize: '22px', color: theme.accent, fontWeight: 600 }}>
                   {ilgan}{ilji}
                 </span>
                 <span style={{ fontSize: '18px', color: '#C8BEDE' }}>일주</span>
@@ -143,23 +186,20 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
           <div style={{
             width: '280px',
             height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(232,176,72,0.5), transparent)',
+            background: `linear-gradient(90deg, transparent, ${theme.accentBorder}, transparent)`,
           }} />
 
-          {/* 운세 요약 */}
-          <div style={{
-            maxWidth: '820px',
-            textAlign: 'center',
-          }}>
+          {/* 메인 텍스트 */}
+          <div style={{ maxWidth: '820px', textAlign: 'center' }}>
             <div style={{
               fontSize: '14px',
               letterSpacing: '0.2em',
-              color: '#E8B048',
+              color: theme.titleColor,
               fontWeight: 600,
               marginBottom: '24px',
               textTransform: 'uppercase',
             }}>
-              오늘의 운세
+              {displayTitle}
             </div>
             <p style={{
               fontSize: '34px',
@@ -180,7 +220,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
           <div style={{
             width: '48px',
             height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(232,176,72,0.4), transparent)',
+            background: `linear-gradient(90deg, transparent, ${theme.accentBorder}, transparent)`,
             margin: '0 auto 24px',
           }} />
           <div style={{
@@ -190,7 +230,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
             marginBottom: '10px',
             letterSpacing: '0.02em',
           }}>
-            나만의 수호별, 별숨에서 확인하기 ✨
+            {theme.tagline}
           </div>
           <div style={{
             fontSize: '17px',
@@ -207,7 +247,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
         position: 'absolute',
         bottom: 0, left: 0, right: 0,
         height: '4px',
-        background: 'linear-gradient(90deg, transparent, #E8B048, transparent)',
+        background: `linear-gradient(90deg, transparent, ${theme.barColor}, transparent)`,
       }} />
     </div>
   );

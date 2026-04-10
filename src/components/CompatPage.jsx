@@ -4,6 +4,15 @@ import { getSun } from "../utils/astrology.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
 
+function getCompatTier(score) {
+  if (score >= 90) return { label: '환상의 티키타카', emoji: '✨', color: '#E8B048' };
+  if (score >= 75) return { label: '천생연분에 가까운 두 별', emoji: '💫', color: '#B4963C' };
+  if (score >= 60) return { label: '서로를 성장시키는 빛나는 인연', emoji: '🌱', color: '#5FAD7A' };
+  if (score >= 45) return { label: '창과 방패 — 서로를 단단하게', emoji: '🛡️', color: '#7B9EC4' };
+  if (score >= 30) return { label: '서로가 서로의 브레이크', emoji: '⚖️', color: '#C47A48' };
+  return { label: '도전적이지만 성장하는 관계', emoji: '🔥', color: '#9B4EC4' };
+}
+
 function getDaysInMonth(year, month) {
   if (!month) return 31;
   if (!year || String(year).length < 4) return 31;
@@ -284,6 +293,31 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                 </div>
               ) : (
                 <>
+                  {/* 궁합 티어 배지 */}
+                  {(() => {
+                    const tier = getCompatTier(compatScore);
+                    return (
+                      <div style={{
+                        textAlign: 'center', padding: '14px 0 12px',
+                        borderBottom: '1px solid rgba(180,140,50,0.15)',
+                        marginBottom: 14, animation: 'fadeUp .4s ease',
+                      }}>
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 5, letterSpacing: '.05em' }}>
+                          ❤️ 두 별의 티어
+                        </div>
+                        <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: tier.color, marginBottom: 10 }}>
+                          {tier.emoji} {tier.label}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                          <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>인연 지수</span>
+                          <div className="kizmet-bar" style={{ flex: 1, maxWidth: 160 }}>
+                            <div className="kizmet-fill" style={{ width: `${compatScore}%`, background: `linear-gradient(90deg, ${tier.color}99, ${tier.color})` }} />
+                          </div>
+                          <span style={{ fontSize: 'var(--sm)', color: tier.color, fontWeight: 700 }}>{compatScore}%</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {storyResult.todayVibe && (
                     <div style={{
                       fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--gold)',

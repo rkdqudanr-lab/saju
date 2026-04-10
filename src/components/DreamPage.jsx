@@ -43,7 +43,7 @@ function stripFollowUp(text) {
   return text.replace(/\[후속질문\].*/s, '').trim();
 }
 
-export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, setStep, showToast }) {
+export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, setStep, showToast, onShareCard }) {
   const today = new Date();
   const moonPhase = getMoonPhase(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
@@ -217,6 +217,25 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
                 {mainText}
               </div>
             </div>
+
+            {/* 꿈 해몽 카드 공유 */}
+            {onShareCard && mainText && (
+              <button
+                onClick={() => onShareCard(mainText, form?.name)}
+                style={{
+                  width: '100%', padding: '10px', marginBottom: 12,
+                  borderRadius: 'var(--r1)', border: '1px solid var(--line)',
+                  background: 'var(--bg2)', color: 'var(--t2)',
+                  fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--gold)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
+              >
+                📸 나의 길몽 리포트 카드로 저장
+              </button>
+            )}
 
             {/* 후속 질문 */}
             {followUps.length > 0 && chatHistory.length === 0 && (

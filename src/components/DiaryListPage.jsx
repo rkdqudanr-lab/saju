@@ -11,6 +11,92 @@ const WEATHER_EMOJI = {
   fine_dust: '😷', thunder: '⛈️', wind: '🌬️',
 };
 
+// ── 잔디 심기 스트릭 달력 ──
+function StreakCalendar({ entries }) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // 일요일(0)을 마지막으로 보내는 월요일 시작 offset
+  const firstDow = new Date(year, month, 1).getDay();
+  const startOffset = (firstDow + 6) % 7; // Mon=0 ... Sun=6
+
+  const todayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const doneSet = new Set(entries.map(e => e.date?.slice(0, 10)).filter(Boolean));
+
+  // 연속 스트릭 계산 (오늘부터 거슬러 올라가기)
+  let streak = 0;
+  for (let d = now.getDate(); d >= 1; d--) {
+    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    if (doneSet.has(key)) streak++;
+    else break;
+  }
+
+  // 이번 달 완료 수
+  const thisMonthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const thisMonthCount = entries.filter(e => e.date?.startsWith(thisMonthPrefix)).length;
+
+  // 그리드 셀 (빈칸 + 날짜)
+  const cells = Array(startOffset).fill(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
+
+  return (
+    <div style={{
+      background: 'var(--bg2)', border: '1px solid var(--line)',
+      borderRadius: 'var(--r2)', padding: 16, marginBottom: 20,
+      animation: 'fadeUp .4s ease',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)', letterSpacing: '.05em' }}>
+          ✦ {month + 1}월 일기 기록
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>{thisMonthCount}일 작성</span>
+          {streak > 0 && (
+            <span style={{
+              fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)',
+              background: 'var(--goldf)', padding: '2px 8px', borderRadius: 10,
+              border: '1px solid var(--acc)',
+            }}>
+              🔥 {streak}일 연속!
+            </span>
+          )}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3, marginBottom: 4 }}>
+        {DAY_LABELS.map(d => (
+          <div key={d} style={{ textAlign: 'center', fontSize: 10, color: 'var(--t4)', fontWeight: 600, padding: '2px 0' }}>{d}</div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
+        {cells.map((day, i) => {
+          if (!day) return <div key={`b${i}`} />;
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const done = doneSet.has(dateStr);
+          const isToday = dateStr === todayStr;
+          const isFuture = day > now.getDate();
+          return (
+            <div key={day} style={{
+              aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 6,
+              background: done ? 'var(--goldf)' : isToday ? 'var(--bg3)' : 'transparent',
+              border: isToday ? '1px solid var(--gold)' : '1px solid transparent',
+            }}>
+              {done ? (
+                <span style={{ fontSize: 13 }}>⭐</span>
+              ) : (
+                <span style={{ fontSize: 11, color: isFuture ? 'var(--t4)' : isToday ? 'var(--t1)' : 'var(--t3)', opacity: isFuture ? 0.3 : 1 }}>{day}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function groupByMonth(entries) {
   const groups = {};
   for (const e of entries) {
@@ -98,6 +184,9 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
           </div>
         ) : (
           <>
+            {/* 잔디 스트릭 달력 */}
+            <StreakCalendar entries={entries} />
+
             {/* 월 필터 */}
             {months.length > 1 && (
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 20, scrollbarWidth: 'none' }}>

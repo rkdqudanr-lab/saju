@@ -537,6 +537,77 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     finally { setChatLoading(false); }
   }, [chatInput, chatLoading, chatLeft, selQs, answers, chatHistory, callApi]);
 
+  // ── 채팅 스트리밍 (chat-mode SSE — /api/stream 전용) ──
+  const sendStreamChat = useCallback(async (overrideText) => {
+    const rawText = overrideText ?? chatInput;
+    if (!rawText.trim() || chatLoading) return;
+    if (chatLeft <= 0) { if (typeof window.gtag === 'function') window.gtag('event', 'chat_limit_reached'); setShowUpgradeModal(true); return; }
+    if (typeof window.gtag === 'function') window.gtag('event', 'send_chat');
+    const userMsg = rawText.trim();
+    setChatInput('');
+    // 컨텍스트 구성 (setChatHistory 호출 전, 현재 chatHistory 스냅샷 사용)
+    const prevQAs  = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${answers[i] || ''}`).join('\n\n');
+    const prevChat = chatHistory.map(m => `[${m.role === 'ai' ? '별숨' : '나'}] ${m.text}`).join('\n');
+    const userMessage = `[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
+    // 사용자 메시지 + 스트리밍 플레이스홀더 동시 추가
+    setChatHistory(p => [...p, { role: 'user', text: userMsg }, { role: 'ai', text: '', streaming: true }]);
+    setLatestChatIdx(-1); // 스트리밍 완료 후 재애니메이션 방지
+    setChatLoading(true);
+    try {
+      const token = getAuthToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      let fullContext = buildCtx();
+      const res = await fetch('/api/stream', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          userMessage,
+          context: fullContext,
+          kakaoId: user?.id,
+          responseStyle: responseStyle || 'M',
+          clientHour: new Date().getHours(),
+        }),
+      });
+      if (!res.ok) throw new Error('스트리밍 API 오류');
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let bufStr = '';
+      let accumulated = '';
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        bufStr += decoder.decode(value, { stream: true });
+        const lines = bufStr.split('\n');
+        bufStr = lines.pop() || '';
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data: ')) continue;
+          const raw = trimmed.slice(6);
+          if (raw === '[DONE]') break outer;
+          try {
+            const evt = JSON.parse(raw);
+            if (evt.text) {
+              accumulated += evt.text;
+              setChatHistory(p => p.map((m, i) => i === p.length - 1 ? { ...m, text: accumulated } : m));
+            }
+          } catch { /* 파싱 실패 무시 */ }
+        }
+      }
+      setChatUsed(p => p + 1);
+      setChatHistory(p => p.map((m, i) => i === p.length - 1 ? { ...m, streaming: false } : m));
+    } catch {
+      setChatHistory(p => {
+        const copy = [...p];
+        const last = copy.length - 1;
+        if (copy[last]?.role === 'ai') copy[last] = { role: 'ai', text: '앗, 잠깐 연결이 끊겼어요 🌙 다시 시도해봐요!', streaming: false };
+        return copy;
+      });
+    } finally {
+      setChatLoading(false);
+    }
+  }, [chatInput, chatLoading, chatLeft, selQs, answers, chatHistory, buildCtx, responseStyle, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── 월간 리포트 ──
   const genReport = useCallback(async () => {
     if (!IS_BETA && curPkg.id === 'basic') { setShowUpgradeModal(true); return; }
@@ -574,7 +645,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     resetDiaryReview: useCallback(() => { setDiaryReviewResult(null); }, []),
     retryAnswer,
     handleTypingDone, handleAccToggle,
-    sendChat, genReport,
+    sendChat, sendStreamChat, genReport,
     deleteHistoryItem,
     deleteAllHistoryItems,
     resetSession: useCallback(() => { setChatHistory([]); setChatUsed(0); }, []),
