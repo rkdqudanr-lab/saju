@@ -639,7 +639,9 @@ drop policy if exists "inquiries_insert" on inquiries;
 drop policy if exists "inquiries_select" on inquiries;
 
 create policy "inquiries_insert" on inquiries
-  for insert to anon with check (kakao_id is not null);
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 create policy "inquiries_select" on inquiries
   for select to anon using (
