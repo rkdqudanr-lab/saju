@@ -113,7 +113,6 @@ export default function SettingsPage({
     setSaving(true);
     try {
       setForm(localForm);
-      try { localStorage.setItem('byeolsoom_profile', JSON.stringify(localForm)); } catch {}
       if (user) await saveProfileToSupabase(localForm, user);
       showToast?.('개인정보가 저장됐어요 ✦', 'success');
     } catch {
