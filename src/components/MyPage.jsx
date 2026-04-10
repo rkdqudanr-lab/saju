@@ -7,7 +7,6 @@ import { useState } from 'react';
 import GuardianLevelBadge from './GuardianLevelBadge.jsx';
 import BPDisplay from './BPDisplay.jsx';
 import { useAppStore } from '../store/useAppStore.js';
-import { useUserCtx, useGamCtx, useSajuCtx } from '../context/AppContext.jsx';
 
 function InfoAccordion({ items }) {
   const [openIdx, setOpenIdx] = useState(null);
@@ -93,14 +92,21 @@ function MenuRow({ icon, label, sub, onClick, danger = false }) {
 }
 
 export default function MyPage() {
-  const setStep      = useAppStore((s) => s.setStep);
-  const { user, profile, form, showToast, kakaoLogout } = useUserCtx();
-  const { saju, sun } = useSajuCtx();
-  const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0 }, missions = [] } = useGamCtx();
+  const {
+    user, profile, form,
+    saju, sun,
+    gamificationState,
+    missions,
+    setStep,
+    kakaoLogout,
+    setShowUpgradeModal,
+  } = useAppStore();
 
-  const { currentBp = 0, guardianLevel = 1 } = gamificationState;
-  const nextLevelMissions = missions.filter(m => !m.completed).length;
-  const totalMissions = missions.length || 15;
+  const safeGam = gamificationState ?? { currentBp: 0, guardianLevel: 1, loginStreak: 0 };
+  const safeMissions = missions ?? [];
+  const { currentBp = 0, guardianLevel = 1 } = safeGam;
+  const nextLevelMissions = safeMissions.filter(m => !m.completed).length;
+  const totalMissions = safeMissions.length || 15;
 
   const planLabel = PLAN_LABELS[profile?.plan] ?? PLAN_LABELS.beta;
 

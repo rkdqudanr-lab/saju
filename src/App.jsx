@@ -102,7 +102,9 @@ export default function App() {
   }, []);
 
   // showToast를 Zustand store에 1회 주입 (Context 없이 컴포넌트에서 직접 사용 가능)
-  const _storeSetAuthFns = useAppStore((s) => s.setAuthFns);
+  const _storeSetAuthFns    = useAppStore((s) => s.setAuthFns);
+  const showUpgradeModal    = useAppStore((s) => s.showUpgradeModal);
+  const setShowUpgradeModal = useAppStore((s) => s.setShowUpgradeModal);
   useEffect(() => { _storeSetAuthFns({ showToast }); }, [showToast, _storeSetAuthFns]);
 
   // ── 커스텀 훅 ──
@@ -184,7 +186,7 @@ export default function App() {
   const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
           latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
-          histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
+          histItems, setHistItems, chatEndRef,
           qLoadStatus,
           dailyResult, dailyLoading, dailyCount, DAILY_MAX,
           diaryReviewResult, diaryReviewLoading,
