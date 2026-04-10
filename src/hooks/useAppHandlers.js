@@ -20,7 +20,7 @@ function detectProfileHint(msg, prof) {
 export function useAppHandlers({
   answers, selQs, chatHistory, quiz, quizInput, setQuizInput,
   profile, setProfile, user, saveDailyQuizAnswer, saveSettings,
-  sendChat, _handleTypingDone, curPkg, isDark, today,
+  sendChat, sendStreamChat, _handleTypingDone, curPkg, isDark, today,
   setShareModal, showToast, setStep,
   sun, saju, form,
 }) {
@@ -29,6 +29,8 @@ export function useAppHandlers({
   const [showSubNudge, setShowSubNudge] = useState(false);
   const [cardDataUrl, setCardDataUrl] = useState(null);
   const [cardSummary, setCardSummary] = useState('');
+  const [shareCardType, setShareCardType] = useState('horoscope');
+  const [shareCardName, setShareCardName] = useState('');
   const copyTimer = useRef(null);
   const shareCardRef = useRef(null);
 
@@ -95,8 +97,9 @@ export function useAppHandlers({
   // ── 채팅 전송 (overrideText: 칩 클릭 등 직접 텍스트 전달 가능) ──
   const handleSendChat = useCallback((overrideText) => {
     setProfileNudge(null);
-    sendChat(typeof overrideText === 'string' ? overrideText : undefined);
-  }, [sendChat]);
+    const fn = sendStreamChat || sendChat;
+    fn(typeof overrideText === 'string' ? overrideText : undefined);
+  }, [sendStreamChat, sendChat]);
 
   // ── 전체 복사 ──
   const handleCopyAll = useCallback(() => {
@@ -166,6 +169,48 @@ export function useAppHandlers({
     }
   }, [answers, shareCardRef, setShareModal, showToast]);
 
+  // ── 꿈 해몽 카드 공유 ──
+  const handleShareDreamCard = useCallback(async (resultText, userName) => {
+    const summary = (resultText || '').replace(/\n/g, ' ').slice(0, 120);
+    setShareCardType('dream');
+    setShareCardName(userName || form?.name || '');
+    setCardSummary(summary);
+    await new Promise(r => setTimeout(r, 100));
+    try {
+      showToast?.('카드를 만드는 중이에요... ✨', 'info');
+      const dataUrl = await captureShareCard(shareCardRef);
+      setCardDataUrl(dataUrl);
+      setShareModal({ open: true, title: '꿈 해몽 카드 저장', text: '' });
+    } catch (err) {
+      console.error('[별숨] 꿈 카드 캡처 오류:', err);
+      showToast?.('카드 생성에 실패했어요.', 'error');
+    } finally {
+      setShareCardType('horoscope');
+      setShareCardName('');
+    }
+  }, [shareCardRef, setShareModal, showToast, form?.name]);
+
+  // ── 택일 카드 공유 ──
+  const handleShareTaegilCard = useCallback(async (topDateLabel, eventType, userName) => {
+    const summary = topDateLabel ? `${eventType || ''}에 가장 좋은 날\n${topDateLabel}` : '';
+    setShareCardType('taegil');
+    setShareCardName(userName || form?.name || '');
+    setCardSummary(summary);
+    await new Promise(r => setTimeout(r, 100));
+    try {
+      showToast?.('카드를 만드는 중이에요... ✨', 'info');
+      const dataUrl = await captureShareCard(shareCardRef);
+      setCardDataUrl(dataUrl);
+      setShareModal({ open: true, title: '택일 카드 저장', text: '' });
+    } catch (err) {
+      console.error('[별숨] 택일 카드 캡처 오류:', err);
+      showToast?.('카드 생성에 실패했어요.', 'error');
+    } finally {
+      setShareCardType('horoscope');
+      setShareCardName('');
+    }
+  }, [shareCardRef, setShareModal, showToast, form?.name]);
+
   return {
     copyDone, profileNudge, setProfileNudge, showSubNudge,
     handleTypingDone, handleOnboardingFinish,
@@ -173,6 +218,7 @@ export function useAppHandlers({
     handleSendChat, handleCopyAll,
     shareCard, handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage,
     shareResult, handleShareFortuneCard,
-    shareCardRef, cardDataUrl, cardSummary,
+    handleShareDreamCard, handleShareTaegilCard,
+    shareCardRef, cardDataUrl, cardSummary, shareCardType, shareCardName,
   };
 }

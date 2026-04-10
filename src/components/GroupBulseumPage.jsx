@@ -71,6 +71,15 @@ function calcNodePositions(count, cx, cy, r) {
 const REL_COLOR = { good: '#B4963C', caution: '#C47A48', bad: '#9B4EC4' };
 const REL_LABEL = { good: '좋은 별숨', caution: '주의 별숨', bad: '나쁜 별숨' };
 
+function getCompatTier(score) {
+  if (score >= 90) return { label: '환상의 티키타카', emoji: '✨', color: '#E8B048' };
+  if (score >= 75) return { label: '천생연분에 가까운 두 별', emoji: '💫', color: '#B4963C' };
+  if (score >= 60) return { label: '서로를 성장시키는 빛나는 인연', emoji: '🌱', color: '#5FAD7A' };
+  if (score >= 45) return { label: '창과 방패 — 서로를 단단하게', emoji: '🛡️', color: '#7B9EC4' };
+  if (score >= 30) return { label: '서로가 서로의 브레이크', emoji: '⚖️', color: '#C47A48' };
+  return { label: '도전적이지만 성장하는 관계', emoji: '🔥', color: '#9B4EC4' };
+}
+
 // ── 입력 폼 컴포넌트 ──
 function MemberForm({ onSubmit, title }) {
   const [form, setForm] = useState({ name: '', by: '', bm: '', bd: '', bh: '', gender: '' });
@@ -244,10 +253,35 @@ function DetailPanel({ pair, members, onClose, user }) {
         </div>
         <div style={{
           padding: '8px 12px', background: 'var(--goldf)', borderRadius: 'var(--r1)',
-          fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 16,
+          fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 12,
         }}>
           {REL_LABEL[pair.type]} · 공명 지수 {pair.score}%
         </div>
+        {/* 궁합 티어 배지 */}
+        {(() => {
+          const tier = getCompatTier(pair.score);
+          return (
+            <div style={{
+              padding: '10px 14px', borderRadius: 'var(--r1)',
+              background: `${tier.color}14`, border: `1px solid ${tier.color}44`,
+              marginBottom: 16, textAlign: 'center', animation: 'fadeUp .3s ease',
+            }}>
+              <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: tier.color, marginBottom: 8 }}>
+                {tier.emoji} {tier.label}
+              </div>
+              <div style={{ height: 6, background: 'var(--bg3)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${pair.score}%`,
+                  background: `linear-gradient(90deg, ${tier.color}88, ${tier.color})`,
+                  borderRadius: 3, transition: 'width 1.2s cubic-bezier(.34,1.56,.64,1)',
+                }} />
+              </div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 5 }}>
+                {pair.score}% 공명
+              </div>
+            </div>
+          );
+        })()}
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0', gap: 6 }}>
             {[0, 1, 2].map(i => (

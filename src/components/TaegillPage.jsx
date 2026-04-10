@@ -46,7 +46,7 @@ function scoreToStars(score) {
   return '⭐';
 }
 
-export default function TaegillPage({ form, buildCtx, callApi: callApiProp, showToast }) {
+export default function TaegillPage({ form, buildCtx, callApi: callApiProp, showToast, onShareCard }) {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
@@ -197,16 +197,35 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
 
         {/* 결과 */}
         {result && (
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--line)',
-            borderRadius: 'var(--r1)', padding: '16px', animation: 'fadeUp .4s ease',
-          }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>
-              ✦ 별숨의 택일 분석
+          <div style={{ animation: 'fadeUp .4s ease' }}>
+            <div style={{
+              background: 'var(--card)', border: '1px solid var(--line)',
+              borderRadius: 'var(--r1)', padding: '16px', marginBottom: 12,
+            }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>
+                ✦ 별숨의 택일 분석
+              </div>
+              <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+                {result}
+              </div>
             </div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-              {result}
-            </div>
+            {/* 택일 카드 공유 */}
+            {onShareCard && candidateDates[0] && (
+              <button
+                onClick={() => onShareCard(candidateDates[0].label, eventType, form?.name)}
+                style={{
+                  width: '100%', padding: '10px', borderRadius: 'var(--r1)',
+                  border: '1px solid var(--line)', background: 'var(--bg2)',
+                  color: 'var(--t2)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  transition: 'all .15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--gold)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
+              >
+                📅 나의 최고의 날 카드로 저장
+              </button>
+            )}
           </div>
         )}
       </div>

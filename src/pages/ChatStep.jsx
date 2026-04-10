@@ -33,6 +33,8 @@ export default function ChatStep({
   chatEndRef,
 }) {
   const chips = getContextualChips(chatHistory, selQs);
+  const lastMsg = chatHistory[chatHistory.length - 1];
+  const lastMsgIsStreaming = lastMsg?.streaming === true;
 
   function sendChip(chip) {
     handleSendChat(chip);
@@ -63,12 +65,19 @@ export default function ChatStep({
           <div key={i} className={`chat-msg ${m.role}`}>
             <div className="chat-role">{m.role === 'ai' ? '✦ 별숨' : '나'}</div>
             {m.role === 'ai'
-              ? <ChatBubble text={m.text} isNew={i === latestChatIdx} />
+              ? m.streaming
+                ? m.text
+                  ? <div className="chat-bubble" style={{ whiteSpace: 'pre-line' }}>{m.text}<span className="typing-cursor" /></div>
+                  : <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
+                      <div className="typing-dots"><span /><span /><span /></div>
+                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontStyle: 'italic' }}>별숨이 운명의 궤도를 읽는 중...</span>
+                    </div>
+                : <ChatBubble text={m.text} isNew={i === latestChatIdx} />
               : <div className="chat-bubble">{m.text}</div>
             }
           </div>
         ))}
-        {chatLoading && (
+        {chatLoading && !lastMsgIsStreaming && (
           <div className="chat-msg ai">
             <div className="chat-role">✦ 별숨</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>

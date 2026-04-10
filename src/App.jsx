@@ -192,7 +192,7 @@ export default function App() {
           dailyResult, dailyLoading, dailyCount, DAILY_MAX,
           diaryReviewResult, diaryReviewLoading,
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
-          retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
+          retryAnswer, sendChat, sendStreamChat, genReport, callApi, retryMsg, resetSession,
           deleteHistoryItem, deleteAllHistoryItems } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
@@ -227,11 +227,12 @@ export default function App() {
     handleSendChat, handleCopyAll, shareCard,
     handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage, shareResult,
     handleShareFortuneCard,
-    shareCardRef, cardDataUrl, cardSummary,
+    handleShareDreamCard, handleShareTaegilCard,
+    shareCardRef, cardDataUrl, cardSummary, shareCardType, shareCardName,
   } = useAppHandlers({
     answers, selQs, chatHistory, quiz, quizInput, setQuizInput,
     profile, setProfile, user, saveDailyQuizAnswer, saveSettings,
-    sendChat, _handleTypingDone, curPkg, isDark, today,
+    sendChat, sendStreamChat, _handleTypingDone, curPkg, isDark, today,
     setShareModal, showToast, setStep,
     sun, saju, form,
   });
@@ -401,8 +402,9 @@ export default function App() {
       {/* ── 오프스크린 카드 템플릿 (html2canvas 캡처 대상) ── */}
       <ShareCardTemplate
         ref={shareCardRef}
-        name={form?.name || ''}
-        saju={saju}
+        type={shareCardType}
+        name={shareCardName || form?.name || ''}
+        saju={shareCardType === 'horoscope' ? saju : null}
         summary={cardSummary}
       />
 
@@ -807,6 +809,7 @@ export default function App() {
               callApi={callApi}
               setStep={setStep}
               showToast={showToast}
+              onShareCard={handleShareDreamCard}
             />
           </Suspense>
         )}
@@ -819,6 +822,7 @@ export default function App() {
               buildCtx={buildCtx}
               callApi={callApi}
               showToast={showToast}
+              onShareCard={handleShareTaegilCard}
             />
           </Suspense>
         )}
