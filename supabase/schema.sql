@@ -621,3 +621,32 @@ as $$
     updated_at = now()
   where kakao_id = kid;
 $$;
+
+-- ── inquiries (문의하기) ──────────────────────────────────────────
+create table if not exists inquiries (
+  id         uuid primary key default gen_random_uuid(),
+  kakao_id   text not null,
+  category   text not null,
+  title      text not null,
+  content    text not null,
+  status     text not null default 'pending',
+  created_at timestamptz default now()
+);
+
+alter table inquiries enable row level security;
+
+drop policy if exists "inquiries_insert" on inquiries;
+drop policy if exists "inquiries_select" on inquiries;
+
+create policy "inquiries_insert" on inquiries
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "inquiries_select" on inquiries
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create index if not exists idx_inquiries_kakao
+  on inquiries(kakao_id, created_at desc);
