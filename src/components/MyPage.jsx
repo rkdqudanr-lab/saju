@@ -255,6 +255,12 @@ export default function MyPage() {
           onClick={() => setStep(21)}
         />
         <MenuRow
+          icon="💬"
+          label="문의하기"
+          sub="버그 신고 · 기능 제안 · 고객 지원"
+          onClick={() => setStep(22)}
+        />
+        <MenuRow
           icon="⚙️"
           label="앱 설정"
           sub="다크모드, 응답 스타일, 알림 등"
