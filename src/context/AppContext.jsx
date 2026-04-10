@@ -6,13 +6,16 @@
  * useUserCtx / useSajuCtx / useGamCtx 훅은 동일한 인터페이스를
  * 유지하면서 내부적으로 Zustand 스토어에서 읽는다.
  *
- * 이 파일을 import하는 기존 컴포넌트는 코드 변경 없이 동작한다.
+ * ⚠️ Zustand v5에서 object selector는 매 렌더마다 새 객체를 반환해
+ * 무한 리렌더(React error #185)를 유발한다.
+ * useShallow로 감싸 shallow 비교를 사용한다.
  */
 import { useAppStore } from '../store/useAppStore.js';
+import { useShallow } from 'zustand/shallow';
 
 // ── UserContext shim ─────────────────────────────────────────
 export function useUserCtx() {
-  return useAppStore((s) => ({
+  return useAppStore(useShallow((s) => ({
     user: s.user,
     profile: s.profile,
     form: s.form,
@@ -21,12 +24,12 @@ export function useUserCtx() {
     kakaoLogin: s.kakaoLogin,
     kakaoLogout: s.kakaoLogout,
     saveProfileToSupabase: s.saveProfileToSupabase,
-  }));
+  })));
 }
 
 // ── SajuDataContext shim ─────────────────────────────────────
 export function useSajuCtx() {
-  return useAppStore((s) => ({
+  return useAppStore(useShallow((s) => ({
     saju: s.saju,
     sun: s.sun,
     moon: s.moon,
@@ -36,15 +39,15 @@ export function useSajuCtx() {
     formOk: s.formOk,
     formOkApprox: s.formOkApprox,
     isApproximate: s.isApproximate,
-  }));
+  })));
 }
 
 // ── GamificationContext shim ─────────────────────────────────
 export function useGamCtx() {
-  return useAppStore((s) => ({
+  return useAppStore(useShallow((s) => ({
     gamificationState: s.gamificationState,
     missions: s.missions,
-  }));
+  })));
 }
 
 // 하위 호환 — Context 객체 자체를 import하는 코드가 없도록 정리됐지만,
