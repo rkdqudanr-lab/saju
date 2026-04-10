@@ -29,7 +29,7 @@ export default function SynergyDashboard({
       <div
         style={{
           padding: '20px',
-          backgroundColor: `linear-gradient(135deg, #4A8EC4 0%, #5FAD7A 100%)`,
+          background: `linear-gradient(135deg, #4A8EC4 0%, #5FAD7A 100%)`,
           borderRadius: '12px',
           color: '#fff',
           marginBottom: '20px',

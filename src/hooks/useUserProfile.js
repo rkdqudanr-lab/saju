@@ -398,9 +398,13 @@ export function useUserProfile() {
     setShowOtherProfileModal(true);
   }, [otherProfiles]);
 
-  const saveOtherProfile = useCallback(() => {
+  const saveOtherProfile = useCallback((directProfile) => {
     let newProfiles;
-    if (editingOtherIdx !== null) {
+    if (directProfile) {
+      // CompatPage 등에서 직접 프로필 객체를 전달한 경우 (모달 없이 즉시 저장)
+      if (otherProfiles.length >= 3) return;
+      newProfiles = [...otherProfiles, { ...directProfile }];
+    } else if (editingOtherIdx !== null) {
       newProfiles = otherProfiles.map((item, i) => i === editingOtherIdx ? { ...otherForm } : item);
     } else {
       if (otherProfiles.length >= 3) return;
@@ -409,9 +413,11 @@ export function useUserProfile() {
     setOtherProfiles(newProfiles);
     const currentUser = getAuthUser();
     syncOtherProfilesToSupabase(newProfiles, currentUser);
-    setOtherForm(DEFAULT_OTHER);
-    setEditingOtherIdx(null);
-    setShowOtherProfileModal(false);
+    if (!directProfile) {
+      setOtherForm(DEFAULT_OTHER);
+      setEditingOtherIdx(null);
+      setShowOtherProfileModal(false);
+    }
   }, [otherProfiles, otherForm, editingOtherIdx, syncOtherProfilesToSupabase]);
 
   const saveProfileToSupabase = useCallback(async (currentForm, currentUser) => {

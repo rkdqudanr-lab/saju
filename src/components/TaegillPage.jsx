@@ -87,7 +87,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
     setResult('');
     try {
       const top = candidateDates.slice(0, 6);
-      const prompt = TAEGIL_PROMPT({ eventType, candidateDates: top, sajuCtx: '' });
+      const prompt = TAEGIL_PROMPT({ eventType, candidateDates: top, sajuCtx: buildCtx?.() || '' });
       const text = await callApi(prompt);
       setResult(text);
     } catch {

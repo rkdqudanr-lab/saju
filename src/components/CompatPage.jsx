@@ -104,7 +104,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
     const now = new Date();
     const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
     const ctrl = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 15000);
+    const timeout = setTimeout(() => ctrl.abort(), 28000);
     try {
       const _token = getAuthToken();
       const _headers = { 'Content-Type': 'application/json' };
