@@ -149,31 +149,25 @@ export function useGamification(user, showToast) {
           { onConflict: 'kakao_id,date,reason' }
         );
 
-        // users 테이블의 current_bp 증가
-        const { data: currentUser } = await client
-          .from('users')
-          .select('current_bp')
-          .eq('kakao_id', String(user.id))
-          .maybeSingle();
+        // users + user_gamification 동시 조회
+        const [{ data: currentUser }, { data: gamRow }] = await Promise.all([
+          client.from('users').select('current_bp').eq('kakao_id', String(user.id)).maybeSingle(),
+          client.from('user_gamification').select('total_bp_earned').eq('kakao_id', String(user.id)).maybeSingle(),
+        ]);
 
         const newBp = (currentUser?.current_bp || 0) + amount;
+        const newTotalEarned = (gamRow?.total_bp_earned || 0) + amount;
 
         await client
           .from('users')
           .update({ current_bp: newBp, updated_at: new Date().toISOString() })
           .eq('kakao_id', String(user.id));
 
-        // user_gamification에 누적 기록
-        await client
-          .from('user_gamification')
-          .upsert(
-            {
-              kakao_id: String(user.id),
-              total_bp_earned: amount, // 증분 아님, 이후 트리거로 누적 처리 필요
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: 'kakao_id' }
-          );
+        // user_gamification 누적 합산 upsert
+        await client.from('user_gamification').upsert(
+          { kakao_id: String(user.id), total_bp_earned: newTotalEarned, updated_at: new Date().toISOString() },
+          { onConflict: 'kakao_id' }
+        );
 
         // 로컬 상태 업데이트
         setGamificationState(prev => ({
@@ -222,25 +216,35 @@ export function useGamification(user, showToast) {
           })
           .eq('kakao_id', String(user.id));
 
-        // daily_bp_log에 소비 기록
-        await client.from('daily_bp_log').insert({
-          kakao_id: String(user.id),
-          date: getTodayDateStr(),
-          bp_amount: -cost,
-          reason: 'badtime_block',
-          mission_id: badtimeId,
-        });
+        // daily_bp_log에 소비 기록 (badtimeId별 고유 reason → 같은 날 여러 번 가능)
+        await client.from('daily_bp_log').upsert(
+          {
+            kakao_id: String(user.id),
+            date: getTodayDateStr(),
+            bp_amount: -cost,
+            reason: `badtime_block_${badtimeId}`,
+            mission_id: badtimeId,
+          },
+          { onConflict: 'kakao_id,date,reason' }
+        );
 
-        // user_gamification 업데이트
-        await client
+        // user_gamification 누적 upsert (row 없어도 생성)
+        const { data: gamRow } = await client
           .from('user_gamification')
-          .update({
+          .select('total_bp_spent')
+          .eq('kakao_id', String(user.id))
+          .maybeSingle();
+
+        await client.from('user_gamification').upsert(
+          {
+            kakao_id: String(user.id),
             last_badtime_blocked: new Date().toISOString(),
             badtime_blocks_count: currentState.badtimeBlocksCount + 1,
-            total_bp_spent: cost,
+            total_bp_spent: (gamRow?.total_bp_spent || 0) + cost,
             updated_at: new Date().toISOString(),
-          })
-          .eq('kakao_id', String(user.id));
+          },
+          { onConflict: 'kakao_id' }
+        );
 
         // 로컬 상태 업데이트
         setGamificationState(prev => ({
@@ -382,12 +386,10 @@ export function useGamification(user, showToast) {
 
         const newTotalMissions = (gamData?.total_missions_done || 0) + 1;
 
-        await client
-          .from('user_gamification')
-          .update({
-            total_missions_done: newTotalMissions,
-          })
-          .eq('kakao_id', String(user.id));
+        await client.from('user_gamification').upsert(
+          { kakao_id: String(user.id), total_missions_done: newTotalMissions, updated_at: new Date().toISOString() },
+          { onConflict: 'kakao_id' }
+        );
 
         setGamificationState(prev => ({
           ...prev,
