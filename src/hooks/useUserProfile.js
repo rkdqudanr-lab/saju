@@ -152,6 +152,18 @@ export function useUserProfile() {
           }, { onConflict: 'kakao_id', ignoreDuplicates: false });
           if (upsertErr) throw new Error('사용자 정보 저장에 실패했어요. 다시 로그인해주세요.');
 
+          // 신규/기존 사용자 모두: user_profiles & user_gamification 빈 row 보장
+          await Promise.allSettled([
+            (authClient || supabase).from('user_profiles').upsert(
+              { kakao_id: String(data.id) },
+              { onConflict: 'kakao_id', ignoreDuplicates: true }
+            ),
+            (authClient || supabase).from('user_gamification').upsert(
+              { kakao_id: String(data.id) },
+              { onConflict: 'kakao_id', ignoreDuplicates: true }
+            ),
+          ]);
+
           const { data: saved } = await (authClient || supabase)
             .from('users')
             .select('id, birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
