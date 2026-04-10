@@ -274,8 +274,8 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
         headers: _headers,
         body: JSON.stringify({
           userMessage: `이번 달(${yyyy}년 ${now.getMonth() + 1}월)의 일기 ${entries.length}개를 사주·별자리 관점으로 따뜻하게 요약해줘요. 감정 흐름, 반복된 패턴, 성장한 부분을 짚어주세요.\n\n${entrySummary}`,
-          context: '',
-          isDiaryReview: true,
+          context: buildCtx?.() || '',
+          isChat: true,
           kakaoId: user.id,
           clientHour: now.getHours(),
         }),
