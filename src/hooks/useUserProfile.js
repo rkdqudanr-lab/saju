@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase, getAuthenticatedClient } from '../lib/supabase.js'
+import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
+import { useAppStore } from '../store/useAppStore.js';
 
 const DEFAULT_PROFILE = { partner: '', partnerBy: '', partnerBm: '', partnerBd: '', workplace: '', worryText: '', mbti: '', selfDesc: '' };
 const DEFAULT_FORM    = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
@@ -481,6 +482,21 @@ export function useUserProfile() {
     }
     setShowConsentModal(false);
   }, [consentFlags]);
+
+  // ── Zustand 스토어에 유저/프로필/테마 주입 ──────────────────
+  const _storeSetUser    = useAppStore((s) => s.setUser);
+  const _storeSetProfile = useAppStore((s) => s.setProfile);
+  const _storeSetForm    = useAppStore((s) => s.setForm);
+  const _storeSetIsDark  = useAppStore((s) => s.setIsDark);
+  const _storeSetAuthFns = useAppStore((s) => s.setAuthFns);
+
+  useEffect(() => { _storeSetUser(user); }, [user, _storeSetUser]);
+  useEffect(() => { _storeSetProfile(profile); }, [profile, _storeSetProfile]);
+  useEffect(() => { _storeSetForm(form); }, [form, _storeSetForm]);
+  useEffect(() => { _storeSetIsDark(theme === 'dark'); }, [theme, _storeSetIsDark]);
+  // 함수들은 참조가 안정적이므로 초기 1회 주입 (deps 배열 의도적으로 빔)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { _storeSetAuthFns({ kakaoLogin, kakaoLogout, saveProfileToSupabase }); }, []);
 
   return {
     user, setUser,

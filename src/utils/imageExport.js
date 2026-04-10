@@ -485,3 +485,40 @@ export function saveFortuneCard({ name, sun, saju, today, summary, moodWord, isD
 
   downloadCanvas(canvas, `byeolsoom_fortune_${today.month}${today.day}.png`);
 }
+
+// ─────────────────────────────────────────────────────────────
+//  html2canvas 기반 DOM 캡처 (ShareCardTemplate 전용)
+//  Vercel 서버리스 함수 미사용 — 100% 클라이언트 사이드
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * ShareCardTemplate DOM 노드를 html2canvas로 캡처하여 Base64 dataURL 반환
+ * @param {React.RefObject} domRef  - ShareCardTemplate의 forwardedRef
+ * @returns {Promise<string>}       - 'data:image/png;base64,...'
+ */
+export async function captureShareCard(domRef) {
+  if (!domRef?.current) throw new Error('ShareCardTemplate ref가 없습니다.');
+  const { default: html2canvas } = await import('html2canvas');
+  const canvas = await html2canvas(domRef.current, {
+    useCORS: true,
+    allowTaint: true,
+    scale: 2,
+    width: 1080,
+    height: 1080,
+    backgroundColor: null,
+    logging: false,
+  });
+  return canvas.toDataURL('image/png');
+}
+
+/**
+ * Base64 dataURL을 파일로 다운로드
+ * @param {string} dataUrl
+ * @param {string} filename
+ */
+export function downloadDataUrl(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.download = filename;
+  a.href = dataUrl;
+  a.click();
+}

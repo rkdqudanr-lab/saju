@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
+import { useAppStore } from '../store/useAppStore.js';
 import {
   BP_EARNING_RULES,
   BADTIME_BLOCK_COST,
@@ -620,6 +621,12 @@ export function useGamification(user, showToast) {
       state.loginStreak
     );
   }, [gamificationState]);
+
+  // ── Zustand 스토어에 게이미피케이션 데이터 주입 ──────────────
+  const _setGamData = useAppStore((s) => s.setGamificationData);
+  useEffect(() => {
+    _setGamData({ gamificationState, missions });
+  }, [gamificationState, missions, _setGamData]);
 
   // ─────────────────────────────────────────────────────────────
   // Return

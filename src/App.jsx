@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense, useMemo } from "react";
 
-// context
-import { UserContext, SajuDataContext, GamificationContext } from "./context/AppContext.jsx";
+// store (showToast를 스토어에 주입)
+import { useAppStore } from "./store/useAppStore.js";
 
 // utils
 import { PKGS, TIMING, ANNIVERSARY_PROMPT } from "./utils/constants.js";
@@ -48,6 +48,7 @@ import UpgradeModal        from "./components/UpgradeModal.jsx";
 import OtherProfileModal   from "./components/OtherProfileModal.jsx";
 import InviteModal         from "./components/InviteModal.jsx";
 import ShareModal          from "./components/ShareModal.jsx";
+import ShareCardTemplate   from "./components/ShareCardTemplate.jsx";
 
 // pages
 import ReportStep          from "./pages/ReportStep.jsx";
@@ -99,6 +100,10 @@ export default function App() {
     setToast({ message, type });
     toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
   }, []);
+
+  // showToast를 Zustand store에 1회 주입 (Context 없이 컴포넌트에서 직접 사용 가능)
+  const _storeSetAuthFns = useAppStore((s) => s.setAuthFns);
+  useEffect(() => { _storeSetAuthFns({ showToast }); }, [showToast, _storeSetAuthFns]);
 
   // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
@@ -219,6 +224,7 @@ export default function App() {
     handleSendChat, handleCopyAll, shareCard,
     handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage, shareResult,
     handleShareFortuneCard,
+    shareCardRef, cardDataUrl, cardSummary,
   } = useAppHandlers({
     answers, selQs, chatHistory, quiz, quizInput, setQuizInput,
     profile, setProfile, user, saveDailyQuizAnswer, saveSettings,
@@ -339,19 +345,8 @@ export default function App() {
       .then(({ data }) => setTodayDiaryWritten(!!data)).catch(() => {});
   }, [user?.id]);
 
-  // ── 컨텍스트 값 (useMemo로 레퍼런스 안정화 → 불필요한 리렌더 방지) ──
-  const userCtxValue = useMemo(() => ({
-    user, profile, form, isDark, showToast,
-    kakaoLogin, kakaoLogout, saveProfileToSupabase,
-  }), [user, profile, form, isDark, showToast, kakaoLogin, kakaoLogout, saveProfileToSupabase]);
-
-  const sajuCtxValue = useMemo(() => ({
-    saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate,
-  }), [saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate]);
-
-  const gamCtxValue = useMemo(() => ({
-    gamificationState, missions, earnBP, spendBP,
-  }), [gamificationState, missions, earnBP, spendBP]);
+  // ── Context.Provider는 Zustand 마이그레이션으로 제거됨 ──
+  // useUserCtx / useSajuCtx / useGamCtx → store에서 직접 읽는 shim으로 교체
 
   // ── 카카오 로그인 처리 중 로딩 화면 ──
   if (loginLoading) {
@@ -396,12 +391,17 @@ export default function App() {
   }
 
   return (
-    <UserContext.Provider value={userCtxValue}>
-    <SajuDataContext.Provider value={sajuCtxValue}>
-    <GamificationContext.Provider value={gamCtxValue}>
     <>
       <StarCanvas isDark={isDark} />
       <PWAInstallBanner />
+
+      {/* ── 오프스크린 카드 템플릿 (html2canvas 캡처 대상) ── */}
+      <ShareCardTemplate
+        ref={shareCardRef}
+        name={form?.name || ''}
+        saju={saju}
+        summary={cardSummary}
+      />
 
       {/* ── 토스트 알림 ── */}
       {toast && (
@@ -459,8 +459,8 @@ export default function App() {
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>⌂</button>}
 
-      {/* ── 하단 네비게이션 바 (로그인 여부 무관하게 항상 표시) ── */}
-      <BottomNav step={step} setStep={setStep} user={user} formOkApprox={formOkApprox} />
+      {/* ── 하단 네비게이션 바 (Zustand store에서 step/user/formOkApprox 직접 읽음) ── */}
+      <BottomNav />
 
       <div className="app" id="main-content" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
 
@@ -468,19 +468,17 @@ export default function App() {
         {step === 0 && (
           <LandingPage
             otherProfiles={otherProfiles}
-            formOk={formOk} formOkApprox={formOkApprox} isApproximate={isApproximate} profile={profile}
             quiz={quiz} quizInput={quizInput} setQuizInput={setQuizInput}
             dailyResult={dailyResult} dailyLoading={dailyLoading}
             dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
             diaryReviewResult={diaryReviewResult} diaryReviewLoading={diaryReviewLoading}
             showDailyCard={showDailyCard} setShowDailyCard={setShowDailyCard}
-            setStep={setStep} setDiy={setDiy}
+            setDiy={setDiy}
             setEditingMyProfile={setEditingMyProfile} setShowProfileModal={setShowProfileModal}
             askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview} askWeeklyReview={askWeeklyReview}
             resetDiaryReview={resetDiaryReview}
             handleQuizAnswer={handleQuizAnswer} handleQuizSkip={handleQuizSkip}
             DiaryPageLazy={DiaryPage}
-            missions={missions}
             onBlockBadtime={handleBlockBadtime}
             onCompleteMission={handleCompleteMission}
             onFreeRecharge={handleFreeRecharge}
@@ -827,21 +825,10 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 27: 마이페이지 (내 정보 대시보드) ── */}
+        {/* ── Step 27: 마이페이지 (store에서 직접 읽음) ── */}
         {step === 27 && (
           <Suspense fallback={<PageSpinner />}>
-            <MyPage
-              user={user}
-              form={form}
-              saju={saju}
-              sun={sun}
-              gamificationState={gamificationState}
-              missions={missions}
-              profile={profile}
-              setStep={setStep}
-              kakaoLogout={kakaoLogout}
-              showToast={showToast}
-            />
+            <MyPage />
           </Suspense>
         )}
 
@@ -886,8 +873,9 @@ export default function App() {
       {shareModal.open && (
         <ShareModal
           shareModal={shareModal}
-          onClose={() => setShareModal(s => ({ ...s, open: false }))}
+          onClose={() => { setShareModal(s => ({ ...s, open: false })); }}
           showToast={showToast}
+          cardDataUrl={cardDataUrl}
         />
       )}
 
@@ -902,8 +890,5 @@ export default function App() {
         </Suspense>
       )}
     </>
-    </GamificationContext.Provider>
-    </SajuDataContext.Provider>
-    </UserContext.Provider>
   );
 }

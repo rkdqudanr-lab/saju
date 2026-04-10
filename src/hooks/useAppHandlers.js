@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { parseAccSummary, PKGS, DAILY_QUESTIONS, SIGN_MOOD } from "../utils/constants.js";
-import { saveShareCard, saveProphecyImage, saveCompatImage, saveChatImage, saveFortuneCard } from "../utils/imageExport.js";
+import { saveShareCard, saveProphecyImage, saveCompatImage, saveChatImage, captureShareCard } from "../utils/imageExport.js";
 import { getTodayStr } from "../utils/quiz.js";
 
 function detectProfileHint(msg, prof) {
@@ -27,7 +27,17 @@ export function useAppHandlers({
   const [copyDone, setCopyDone] = useState(false);
   const [profileNudge, setProfileNudge] = useState(null);
   const [showSubNudge, setShowSubNudge] = useState(false);
+  const [cardDataUrl, setCardDataUrl] = useState(null);
+  const [cardSummary, setCardSummary] = useState('');
   const copyTimer = useRef(null);
+  const shareCardRef = useRef(null);
+
+  // answers[0]가 업데이트되면 카드 요약 자동 갱신
+  useEffect(() => {
+    if (!answers[0]) return;
+    const s = parseAccSummary(answers[0]).summary || parseAccSummary(answers[0]).text?.slice(0, 120) || '';
+    setCardSummary(s);
+  }, [answers]);
 
   const IS_BETA = true;
 
@@ -141,22 +151,20 @@ export function useAppHandlers({
     }
   }, [answers, setShareModal]);
 
-  // ── 1:1 운세 공유 카드 저장 ──
-  const handleShareFortuneCard = useCallback(() => {
+  // ── 1:1 운세 공유 카드 저장 (html2canvas DOM 캡처 방식) ──
+  const handleShareFortuneCard = useCallback(async () => {
     if (!answers[0]) return;
     if (typeof window.gtag === 'function') window.gtag('event', 'fortune_card_save');
-    const summaryStr = parseAccSummary(answers[0]).summary || '';
-    const mood = SIGN_MOOD[sun?.n] || {};
-    saveFortuneCard({
-      name: form?.name || '',
-      sun,
-      saju,
-      today,
-      summary: summaryStr,
-      moodWord: mood.word || '신비로운',
-      isDark,
-    });
-  }, [answers, sun, saju, form, today, isDark]);
+    try {
+      showToast?.('카드를 만드는 중이에요... ✨', 'info');
+      const dataUrl = await captureShareCard(shareCardRef);
+      setCardDataUrl(dataUrl);
+      setShareModal({ open: true, title: '카드뉴스 저장', text: '' });
+    } catch (err) {
+      console.error('[별숨] 카드 캡처 오류:', err);
+      showToast?.('카드 생성에 실패했어요. 다시 시도해주세요.', 'error');
+    }
+  }, [answers, shareCardRef, setShareModal, showToast]);
 
   return {
     copyDone, profileNudge, setProfileNudge, showSubNudge,
@@ -165,5 +173,6 @@ export function useAppHandlers({
     handleSendChat, handleCopyAll,
     shareCard, handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage,
     shareResult, handleShareFortuneCard,
+    shareCardRef, cardDataUrl, cardSummary,
   };
 }

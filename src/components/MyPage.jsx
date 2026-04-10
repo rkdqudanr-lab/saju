@@ -6,6 +6,8 @@
 import { useState } from 'react';
 import GuardianLevelBadge from './GuardianLevelBadge.jsx';
 import BPDisplay from './BPDisplay.jsx';
+import { useAppStore } from '../store/useAppStore.js';
+import { useUserCtx, useGamCtx, useSajuCtx } from '../context/AppContext.jsx';
 
 function InfoAccordion({ items }) {
   const [openIdx, setOpenIdx] = useState(null);
@@ -90,18 +92,12 @@ function MenuRow({ icon, label, sub, onClick, danger = false }) {
   );
 }
 
-export default function MyPage({
-  user,
-  form,
-  saju,
-  sun,
-  gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 },
-  missions = [],
-  profile,
-  setStep,
-  kakaoLogout,
-  showToast,
-}) {
+export default function MyPage() {
+  const setStep      = useAppStore((s) => s.setStep);
+  const { user, profile, form, showToast, kakaoLogout } = useUserCtx();
+  const { saju, sun } = useSajuCtx();
+  const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0 }, missions = [] } = useGamCtx();
+
   const { currentBp = 0, guardianLevel = 1 } = gamificationState;
   const nextLevelMissions = missions.filter(m => !m.completed).length;
   const totalMissions = missions.length || 15;
