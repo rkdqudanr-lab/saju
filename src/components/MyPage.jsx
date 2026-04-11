@@ -7,6 +7,7 @@ import { useState } from 'react';
 import GuardianLevelBadge from './GuardianLevelBadge.jsx';
 import BPDisplay from './BPDisplay.jsx';
 import { useAppStore } from '../store/useAppStore.js';
+import { usePushNotification } from '../hooks/usePushNotification.js';
 
 function InfoAccordion({ items }) {
   const [openIdx, setOpenIdx] = useState(null);
@@ -91,6 +92,47 @@ function MenuRow({ icon, label, sub, onClick, danger = false }) {
   );
 }
 
+const NOTIF_ITEMS = [
+  { key: 'daily_horoscope', icon: '🌅', label: '오늘의 별숨', sub: '매일 아침 8시, 오늘의 별 기운 알림' },
+  { key: 'streak_reminder', icon: '🔥', label: '스트릭 알림', sub: '연속 로그인이 끊길 위험할 때 알림' },
+  { key: 'jeolgi_notice',   icon: '🌿', label: '절기 알림', sub: '입춘·하지 등 특별한 날 알림' },
+  { key: 'mission_reminder',icon: '✅', label: '미션 알림', sub: '저녁에 완료 안 한 미션 알림' },
+];
+
+function NotifToggle({ item, value, onChange, disabled }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '13px 0',
+      borderBottom: '1px solid var(--line)',
+    }}>
+      <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 500 }}>{item.label}</div>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 2 }}>{item.sub}</div>
+      </div>
+      <button
+        onClick={() => onChange(item.key)}
+        disabled={disabled}
+        aria-label={value ? '알림 끄기' : '알림 켜기'}
+        style={{
+          width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+          border: 'none', cursor: disabled ? 'default' : 'pointer',
+          background: value ? 'var(--gold)' : 'var(--bg3)',
+          position: 'relative', transition: 'background 0.2s',
+        }}
+      >
+        <div style={{
+          position: 'absolute', top: 3, left: value ? 23 : 3,
+          width: 18, height: 18, borderRadius: '50%',
+          background: '#fff', transition: 'left 0.2s',
+          boxShadow: '0 1px 4px rgba(0,0,0,.15)',
+        }} />
+      </button>
+    </div>
+  );
+}
+
 export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = true }) {
   const {
     user, profile, form,
@@ -101,6 +143,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
     kakaoLogout,
     setShowUpgradeModal,
   } = useAppStore();
+  const { prefs, togglePref, supported: pushSupported, permissionState, loading: notifLoading } = usePushNotification();
 
   const safeGam = gamificationState ?? { currentBp: 0, guardianLevel: 1, loginStreak: 0 };
   const safeMissions = missions ?? [];
@@ -245,6 +288,24 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
           onClick={() => setStep(1)}
         />
         <MenuRow
+          icon="🌌"
+          label="나의 대운 흐름"
+          sub="10년마다 바뀌는 나의 별 기운 타임라인"
+          onClick={() => setStep(30)}
+        />
+        <MenuRow
+          icon="📊"
+          label="나의 별숨 통계"
+          sub="상담 패턴과 AI 인사이트 확인"
+          onClick={() => setStep(28)}
+        />
+        <MenuRow
+          icon="🏛️"
+          label="별숨 광장"
+          sub="오늘의 별 기운을 이웃과 나눠요"
+          onClick={() => setStep(29)}
+        />
+        <MenuRow
           icon="🗓️"
           label="일기 모아보기"
           sub="별숨과 함께한 날들의 기록"
@@ -276,6 +337,39 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             if (typeof kakaoLogout === 'function') kakaoLogout();
           }}
         />
+      </div>
+
+      {/* ── 알림 설정 ── */}
+      <div style={{ padding: '20px 20px 0' }}>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 12 }}>
+          🔔 알림 설정
+        </div>
+        {!pushSupported ? (
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', padding: '8px 0' }}>
+            이 브라우저는 푸시 알림을 지원하지 않아요.
+          </div>
+        ) : permissionState === 'denied' ? (
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.6, padding: '8px 0' }}>
+            브라우저에서 알림이 차단되어 있어요.<br />
+            설정 → 알림에서 별숨 알림을 허용해주세요.
+          </div>
+        ) : (
+          <div>
+            {NOTIF_ITEMS.map(item => (
+              <NotifToggle
+                key={item.key}
+                item={item}
+                value={prefs[item.key]}
+                onChange={togglePref}
+                disabled={notifLoading}
+              />
+            ))}
+            <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 10, lineHeight: 1.6 }}>
+              알림은 기기의 서비스 워커(PWA)를 통해 전송돼요.
+              브라우저를 닫아도 알림을 받을 수 있어요.
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── 버전 표기 ── */}
