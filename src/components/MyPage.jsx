@@ -105,7 +105,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
   const safeGam = gamificationState ?? { currentBp: 0, guardianLevel: 1, loginStreak: 0 };
   const safeMissions = missions ?? [];
   const { currentBp = 0, guardianLevel = 1 } = safeGam;
-  const nextLevelMissions = safeMissions.filter(m => !m.completed).length;
+  const nextLevelMissions = safeMissions.filter(m => !m.is_completed).length;
   const totalMissions = safeMissions.length || 15;
 
   const planLabel = PLAN_LABELS[profile?.plan] ?? PLAN_LABELS.beta;
