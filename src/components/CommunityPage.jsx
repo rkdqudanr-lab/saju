@@ -122,7 +122,7 @@ function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan 
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
+      position: 'fixed', inset: 0, zIndex: 10000,
       background: 'rgba(0,0,0,0.5)',
       display: 'flex', alignItems: 'flex-end',
     }} onClick={onClose}>
@@ -131,7 +131,7 @@ function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan 
           width: '100%', maxWidth: 480, margin: '0 auto',
           background: 'var(--bg1)',
           borderRadius: '20px 20px 0 0',
-          padding: '24px 20px',
+          padding: '24px 20px calc(24px + env(safe-area-inset-bottom, 0px))',
           boxSizing: 'border-box',
         }}
         onClick={e => e.stopPropagation()}
@@ -401,7 +401,7 @@ export default function CommunityPage({ showToast }) {
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-            zIndex: 100,
+            zIndex: 10000,
           }}
           aria-label="글쓰기"
         >
