@@ -138,12 +138,14 @@ export function useGamification(user, showToast) {
         const today = getTodayDateStr();
 
         // daily_bp_log에 기록
+        // 미션 완료 시 reason을 mission_id 포함해 고유하게 만들어 같은 날 여러 미션 로그가 충돌하지 않도록 함
+        const logReason = missionId ? `${reason}_${missionId}` : reason;
         await client.from('daily_bp_log').upsert(
           {
             kakao_id: String(user.id),
             date: today,
             bp_amount: amount,
-            reason,
+            reason: logReason,
             mission_id: missionId,
           },
           { onConflict: 'kakao_id,date,reason' }
@@ -553,7 +555,8 @@ export function useGamification(user, showToast) {
           .maybeSingle();
 
         const today = getTodayDateStr();
-        const lastRechargeDate = userData?.free_bp_recharge_at;
+        // free_bp_recharge_at 컬럼이 timestamptz이므로 앞 10자(날짜)만 비교
+        const lastRechargeDate = userData?.free_bp_recharge_at?.slice(0, 10);
 
         // 이미 오늘 충전했으면 스킵
         if (lastRechargeDate === today) {

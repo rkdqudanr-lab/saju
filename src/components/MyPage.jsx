@@ -91,7 +91,7 @@ function MenuRow({ icon, label, sub, onClick, danger = false }) {
   );
 }
 
-export default function MyPage() {
+export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = true }) {
   const {
     user, profile, form,
     saju, sun,
@@ -105,7 +105,7 @@ export default function MyPage() {
   const safeGam = gamificationState ?? { currentBp: 0, guardianLevel: 1, loginStreak: 0 };
   const safeMissions = missions ?? [];
   const { currentBp = 0, guardianLevel = 1 } = safeGam;
-  const nextLevelMissions = safeMissions.filter(m => !m.completed).length;
+  const nextLevelMissions = safeMissions.filter(m => !m.is_completed).length;
   const totalMissions = safeMissions.length || 15;
 
   const planLabel = PLAN_LABELS[profile?.plan] ?? PLAN_LABELS.beta;
@@ -151,6 +151,8 @@ export default function MyPage() {
           currentBp={currentBp}
           maxBp={100}
           guardianLevel={guardianLevel}
+          onFreeRecharge={onFreeRecharge}
+          freeRechargeAvailable={freeRechargeAvailable}
         />
 
         {/* 현재 플랜 */}
