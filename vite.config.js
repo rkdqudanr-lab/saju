@@ -16,8 +16,6 @@ export default defineConfig({
       manifest: false, // public/manifest.json 직접 사용
       injectManifest: {
         globPatterns: ['**/*.{js,css,svg,png,woff2}'],
-        navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//],
       },
       devOptions: { enabled: false },
     }),
