@@ -159,13 +159,13 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
         });
       }
-    });
+    }).catch(e => console.error('[별숨] 오늘 별숨 캐시 로드 오류:', e));
     loadDailyCacheFromSupabase(user.id, 'diary_review').then(content => {
       if (content) setDiaryReviewResult(content);
-    });
+    }).catch(e => console.error('[별숨] 일기 리뷰 캐시 로드 오류:', e));
     loadDailyCacheFromSupabase(user.id, 'horoscope_count').then(countStr => {
       if (countStr) setDailyCount(parseInt(countStr, 10) || 0);
-    });
+    }).catch(e => console.error('[별숨] 별숨 횟수 캐시 로드 오류:', e));
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── API 호출 (최대 3회 재시도) ──
