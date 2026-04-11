@@ -7,6 +7,81 @@
 import { useState, useEffect } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
+import { saveStatsCard } from '../utils/imageExport.js';
+
+// ── 점수 히트맵 (최근 365일) ──────────────────────────────────
+const SCORE_COLORS = [
+  { min: 0,  max: 0,   color: 'var(--bg3)' },      // no data
+  { min: 1,  max: 29,  color: '#E05A3A' },           // 위험 (붉은)
+  { min: 30, max: 49,  color: '#C08830' },           // 주의 (갈색)
+  { min: 50, max: 69,  color: '#4A8EC4' },           // 보통 (파랑)
+  { min: 70, max: 84,  color: '#5FAD7A' },           // 좋음 (초록)
+  { min: 85, max: 100, color: '#C89030' },           // 최고 (골드)
+];
+
+function getScoreColor(score) {
+  if (!score) return SCORE_COLORS[0].color;
+  return (SCORE_COLORS.find(c => score >= c.min && score <= c.max) || SCORE_COLORS[0]).color;
+}
+
+function ScoreHeatmap({ scores }) {
+  // 오늘 기준 최근 365일 날짜 배열
+  const days = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let i = 364; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  const scoreMap = {};
+  scores.forEach(s => { scoreMap[s.score_date] = s.score; });
+
+  // 7×52 그리드 (52주 × 7일)
+  const weeks = [];
+  for (let w = 0; w < 53; w++) {
+    weeks.push(days.slice(w * 7, w * 7 + 7));
+  }
+
+  const [tooltip, setTooltip] = useState(null);
+  const CELL = 10, GAP = 2;
+
+  return (
+    <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+      <div style={{ display: 'flex', gap: GAP, width: 'fit-content' }}>
+        {weeks.map((week, wi) => (
+          <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: GAP }}>
+            {week.map(date => {
+              const s = scoreMap[date];
+              return (
+                <div
+                  key={date}
+                  title={s ? `${date}: ${s}점` : date}
+                  style={{
+                    width: CELL, height: CELL,
+                    borderRadius: 2,
+                    background: getScoreColor(s),
+                    cursor: s ? 'pointer' : 'default',
+                    flexShrink: 0,
+                  }}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      {/* 범례 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+        <span style={{ fontSize: '10px', color: 'var(--t4)' }}>낮음</span>
+        {SCORE_COLORS.slice(1).map((c, i) => (
+          <div key={i} style={{ width: 10, height: 10, borderRadius: 2, background: c.color }} />
+        ))}
+        <span style={{ fontSize: '10px', color: 'var(--t4)' }}>높음</span>
+      </div>
+    </div>
+  );
+}
 
 // 카테고리 키워드 → 라벨 매핑
 const CAT_KEYWORDS = [
@@ -111,21 +186,24 @@ function BarChart({ data, maxVal, colorVar = 'var(--gold)' }) {
 }
 
 export default function StatsPage({ callApi }) {
-  const { user } = useAppStore();
+  const { user, gamificationState, isDark } = useAppStore();
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
+  const [scores, setScores] = useState([]);
   const [insight, setInsight] = useState('');
   const [insightLoading, setInsightLoading] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
-    loadHistory();
+    const kakaoId = user.kakaoId || user.id;
+    loadHistory(kakaoId);
+    loadScores(kakaoId);
   }, [user]);
 
-  async function loadHistory() {
+  async function loadHistory(kakaoId) {
     setLoading(true);
     try {
-      const kakaoId = user.kakaoId || user.id;
       const client = getAuthenticatedClient(kakaoId);
       const { data, error } = await client
         .from('consultation_history')
@@ -137,6 +215,22 @@ export default function StatsPage({ callApi }) {
       // 조용히 실패
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadScores(kakaoId) {
+    try {
+      const yearAgo = new Date();
+      yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+      const client = getAuthenticatedClient(kakaoId);
+      const { data } = await client
+        .from('daily_scores')
+        .select('score_date, score')
+        .gte('score_date', yearAgo.toISOString().slice(0, 10))
+        .order('score_date', { ascending: true });
+      if (data) setScores(data);
+    } catch {
+      // 조용히 실패
     }
   }
 
@@ -172,6 +266,24 @@ export default function StatsPage({ callApi }) {
 
   const slotData = ['새벽','오전','오후','저녁'].map(s => ({ label: s, value: slotCount[s] }));
   const maxSlot = Math.max(1, ...slotData.map(d => d.value));
+
+  function handleShare() {
+    setSharing(true);
+    try {
+      saveStatsCard({
+        nickname: user?.nickname || '별숨 유저',
+        total,
+        catData,
+        monthData,
+        slotCount,
+        guardianLevel: gamificationState?.guardianLevel ?? 1,
+        currentBp: gamificationState?.currentBp ?? 0,
+        isDark: isDark ?? true,
+      });
+    } finally {
+      setSharing(false);
+    }
+  }
 
   async function handleInsight() {
     if (!user) return;
@@ -213,8 +325,28 @@ export default function StatsPage({ callApi }) {
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
           ✦ 나의 별숨 통계
         </div>
-        <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)' }}>
-          내 별숨 사용 패턴
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)' }}>
+            내 별숨 사용 패턴
+          </div>
+          {total > 0 && (
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              style={{
+                padding: '7px 14px',
+                border: '1px solid var(--line)',
+                borderRadius: 20,
+                background: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--ff)',
+                fontSize: 'var(--xs)',
+                color: 'var(--t3)',
+              }}
+            >
+              {sharing ? '저장 중...' : '📤 공유'}
+            </button>
+          )}
         </div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 6 }}>
           총 <strong style={{ color: 'var(--t1)' }}>{total}번</strong>의 상담 기록을 분석했어요
@@ -265,6 +397,14 @@ export default function StatsPage({ callApi }) {
             <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 12 }}>시간대별 패턴</div>
             <BarChart data={slotData} maxVal={maxSlot} colorVar="#4A8EC4" />
           </div>
+
+          {/* 일별 점수 히트맵 */}
+          {scores.length > 0 && (
+            <div style={{ padding: '20px 20px 0' }}>
+              <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 12 }}>별숨 점수 1년 기록</div>
+              <ScoreHeatmap scores={scores} />
+            </div>
+          )}
 
           {/* AI 인사이트 */}
           <div style={{ padding: '20px 20px 0' }}>

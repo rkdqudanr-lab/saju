@@ -68,6 +68,8 @@ const NameFortunePage          = lazy(() => import("./components/NameFortunePage
 const StatsPage                = lazy(() => import("./components/StatsPage.jsx"));
 const CommunityPage            = lazy(() => import("./components/CommunityPage.jsx"));
 const DaeunPage                = lazy(() => import("./components/DaeunPage.jsx"));
+const AnonCompatPage           = lazy(() => import("./components/AnonCompatPage.jsx"));
+const ShopPage                 = lazy(() => import("./components/ShopPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -94,6 +96,7 @@ export default function App() {
   const [quizInput, setQuizInput] = useState('');
   const [sidebarPrefs, setSidebarPrefs] = useState({ hiddenGroups: [] });
   const [todayDiaryWritten, setTodayDiaryWritten] = useState(null); // null=미확인, true/false
+  const [anonCompatShareData, setAnonCompatShareData] = useState(null);
   const [diaryViewDate, setDiaryViewDate] = useState(null); // null=오늘, 'YYYY-MM-DD'=특정 날짜
   const toastTimer = useRef(null);
   const resultsRef = useRef(null);
@@ -595,6 +598,7 @@ export default function App() {
               user={user}
               otherProfiles={otherProfiles}
               saveOtherProfile={saveOtherProfile}
+              onAnonShare={(data) => { setAnonCompatShareData(data); setStep(32); }}
             />
           </Suspense>
         )}
@@ -863,7 +867,7 @@ export default function App() {
         {/* ── Step 29: 별숨 광장 (커뮤니티 피드) ── */}
         {step === 29 && (
           <Suspense fallback={<PageSpinner />}>
-            <CommunityPage showToast={showToast} />
+            <CommunityPage showToast={showToast} dailyResult={dailyResult} />
           </Suspense>
         )}
 
@@ -876,6 +880,23 @@ export default function App() {
               callApi={callApi}
               buildCtx={buildCtx}
               showToast={showToast}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 31: 별숨 숍 ── */}
+        {step === 31 && (
+          <Suspense fallback={<PageSpinner />}>
+            <ShopPage showToast={showToast} />
+          </Suspense>
+        )}
+
+        {/* ── Step 32: 익명 궁합 광장 ── */}
+        {step === 32 && (
+          <Suspense fallback={<PageSpinner />}>
+            <AnonCompatPage
+              showToast={showToast}
+              shareData={anonCompatShareData}
             />
           </Suspense>
         )}

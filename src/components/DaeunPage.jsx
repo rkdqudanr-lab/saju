@@ -7,6 +7,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { getDaeun, getCurrentDaeunIndex, EL_COLOR } from '../../lib/daeun.js';
 import { useAppStore } from '../store/useAppStore.js';
+import { saveDaeunPDF } from '../utils/imageExport.js';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const CURRENT_AGE_OFFSET = 0; // 현재 나이 계산용
@@ -112,6 +113,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
   const scrollRef = useRef(null);
   const [interpretation, setInterpretation] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pdfSaving, setPdfSaving] = useState(false);
   const [daeunData, setDaeunData] = useState(null);
   const [currentIdx, setCurrentIdx] = useState(0);
 
@@ -187,12 +189,42 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
 
   const currentAge = CURRENT_YEAR - Number(form.by);
 
+  async function handleSavePDF() {
+    setPdfSaving(true);
+    try {
+      await saveDaeunPDF(user?.nickname || '나의별숨');
+    } catch (e) {
+      showToast('PDF 저장에 실패했어요', 'error');
+      console.error(e);
+    } finally {
+      setPdfSaving(false);
+    }
+  }
+
   return (
-    <div className="page step-fade" style={{ paddingBottom: 40 }}>
+    <div id="daeun-report-root" className="page step-fade" style={{ paddingBottom: 40 }}>
       {/* 헤더 */}
       <div style={{ padding: '28px 20px 16px' }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
-          ✦ 나의 대운 흐름
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
+            ✦ 나의 대운 흐름
+          </div>
+          <button
+            onClick={handleSavePDF}
+            disabled={pdfSaving}
+            style={{
+              padding: '6px 12px',
+              border: '1px solid var(--line)',
+              borderRadius: 20,
+              background: 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+              fontSize: 'var(--xs)',
+              color: 'var(--t3)',
+            }}
+          >
+            {pdfSaving ? '저장 중...' : '📄 PDF'}
+          </button>
         </div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.3 }}>
           10년마다 바뀌는<br />나의 별 기운
