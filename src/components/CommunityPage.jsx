@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 
@@ -120,7 +121,7 @@ function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan 
     setSubmitting(false);
   }
 
-  return (
+  return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 10000,
       background: 'rgba(0,0,0,0.5)',
@@ -190,7 +191,8 @@ function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan 
           생년월일은 노출되지 않으며, 별자리·일간 정보만 표시됩니다.
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -273,7 +275,7 @@ export default function CommunityPage({ showToast }) {
       ilgan: myIlgan,
       likes_count: 0,
     });
-    if (error) { showToast('글을 올리지 못했어요', 'error'); return; }
+    if (error) { console.error('[별숨] community_posts insert error:', error); showToast('글을 올리지 못했어요', 'error'); return; }
     setShowWrite(false);
     showToast('별숨 광장에 공유했어요!', 'success');
   }
