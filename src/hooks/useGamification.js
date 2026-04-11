@@ -553,7 +553,8 @@ export function useGamification(user, showToast) {
           .maybeSingle();
 
         const today = getTodayDateStr();
-        const lastRechargeDate = userData?.free_bp_recharge_at;
+        // free_bp_recharge_at 컬럼이 timestamptz이므로 앞 10자(날짜)만 비교
+        const lastRechargeDate = userData?.free_bp_recharge_at?.slice(0, 10);
 
         // 이미 오늘 충전했으면 스킵
         if (lastRechargeDate === today) {

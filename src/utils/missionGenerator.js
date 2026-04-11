@@ -25,10 +25,13 @@ export function generateMissionsFromHoroscope(horoscopeText) {
 
   // ─────────────────────────────────────────────────────────────
   // 1. 색상 추출
+  // 현재 AI 응답 포맷: "색: 하늘색 — 사주·별자리 근거."
+  //   또는 구형 포맷: "오늘의 색: 파란색"
   // ─────────────────────────────────────────────────────────────
   const colorPatterns = [
+    /^색[:\s]+([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,    // 신형: 색: 하늘색 — 이유
+    /^컬러[:\s]+([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,  // 신형(서양): 컬러: 민트그린 — 이유
     /오늘의 색[:\s]+([가-힣0-9a-zA-Z\s]+?)(?:\n|$)/i,
-    /색\s*[=:]\s*([가-힣0-9a-zA-Z\s]+?)(?:\n|$)/i,
     /색상[:\s]+([가-힣0-9a-zA-Z\s]+?)(?:\n|$)/i,
   ];
 
@@ -42,7 +45,7 @@ export function generateMissionsFromHoroscope(horoscopeText) {
   }
 
   if (colorMatch) {
-    const color = colorMatch[1].trim().split(/[,\n]/)[0].trim(); // 첫 번째 항목만
+    const color = colorMatch[1].trim().split(/[,\n]/)[0].trim();
     if (color && color.length > 0 && color.length < 20) {
       missions.push({
         type: 'color',
@@ -55,11 +58,14 @@ export function generateMissionsFromHoroscope(horoscopeText) {
 
   // ─────────────────────────────────────────────────────────────
   // 2. 음식 추출
+  // 현재 AI 응답 포맷: "음식: 한식 + 안 매운 것 + 밥 ▶ 된장찌개 — 이유"
+  //   → ▶ 뒤 구체적 메뉴명을 추출
+  // 구형 포맷: "오늘의 음식: 김치찌개"
   // ─────────────────────────────────────────────────────────────
   const foodPatterns = [
+    /^음식:[^\n]*?▶\s*([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,  // 신형: ▶ 뒤 메뉴명
     /오늘의 음식[:\s]+([가-힣0-9a-zA-Z\s]+?)(?:\n|$)/i,
     /음식[:\s]+([가-힣0-9a-zA-Z\s]+?)(?:\n|$)/i,
-    /음\s*[=:]\s*([가-힣0-9a-zA-Z\s]+?)(?:\n|$)/i,
   ];
 
   let foodMatch = null;
@@ -72,7 +78,7 @@ export function generateMissionsFromHoroscope(horoscopeText) {
   }
 
   if (foodMatch) {
-    const food = foodMatch[1].trim().split(/[,\n]/)[0].trim(); // 첫 번째 항목만
+    const food = foodMatch[1].trim().split(/[,\n]/)[0].trim();
     if (food && food.length > 0 && food.length < 30) {
       missions.push({
         type: 'menu',
@@ -84,9 +90,12 @@ export function generateMissionsFromHoroscope(horoscopeText) {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 3. 라이프 아이템 추출 (해도 좋은 것, 행운의 아이템 등)
+  // 3. 장소/라이프 아이템 추출
+  // 현재 AI 응답 포맷: "장소: 조용한 독립서점 — 이유"
+  // 구형 포맷: "해도 좋은 것", "행운의 아이템" 등
   // ─────────────────────────────────────────────────────────────
   const itemPatterns = [
+    /^장소[:\s]+([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,  // 신형: 장소: 카페 — 이유
     /해도 좋은 것[^\n]*\n([^\n]+)/i,
     /행운의 아이템[:\s]+([^\n]+)/i,
     /오늘의 아이템[:\s]+([^\n]+)/i,
@@ -94,18 +103,21 @@ export function generateMissionsFromHoroscope(horoscopeText) {
   ];
 
   let itemMatch = null;
-  for (const pattern of itemPatterns) {
-    const match = horoscopeText.match(pattern);
+  let isPlace = false;
+  for (let i = 0; i < itemPatterns.length; i++) {
+    const match = horoscopeText.match(itemPatterns[i]);
     if (match) {
       itemMatch = match;
+      isPlace = i === 0; // 첫 번째 패턴이 장소 패턴
       break;
     }
   }
 
   if (itemMatch) {
-    const item = itemMatch[1].trim().split(/[,\n]/)[0].trim(); // 첫 번째 항목만
-    // 이미 "하기"로 끝나면 그대로, 아니면 추가
-    const itemContent = item.endsWith('하기') ? item : `${item}하기`;
+    const item = itemMatch[1].trim().split(/[,\n]/)[0].trim();
+    const itemContent = isPlace
+      ? `${item} 방문하기`
+      : (item.endsWith('하기') ? item : `${item}하기`);
     if (item && item.length > 0 && item.length < 30) {
       missions.push({
         type: 'item',

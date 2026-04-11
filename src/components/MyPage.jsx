@@ -91,7 +91,7 @@ function MenuRow({ icon, label, sub, onClick, danger = false }) {
   );
 }
 
-export default function MyPage() {
+export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = true }) {
   const {
     user, profile, form,
     saju, sun,
@@ -151,6 +151,8 @@ export default function MyPage() {
           currentBp={currentBp}
           maxBp={100}
           guardianLevel={guardianLevel}
+          onFreeRecharge={onFreeRecharge}
+          freeRechargeAvailable={freeRechargeAvailable}
         />
 
         {/* 현재 플랜 */}

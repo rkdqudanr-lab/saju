@@ -326,7 +326,8 @@ export default function App() {
         }
 
         const today = new Date().toISOString().slice(0, 10);
-        const lastRechargeDate = userData.free_bp_recharge_at;
+        // free_bp_recharge_at 컬럼이 timestamptz이므로 앞 10자(날짜)만 비교
+        const lastRechargeDate = userData.free_bp_recharge_at?.slice(0, 10);
         const isAvailable = lastRechargeDate !== today;
 
         setFreeRechargeAvailable(isAvailable);
@@ -842,7 +843,10 @@ export default function App() {
         {/* ── Step 27: 마이페이지 (store에서 직접 읽음) ── */}
         {step === 27 && (
           <Suspense fallback={<PageSpinner />}>
-            <MyPage />
+            <MyPage
+              onFreeRecharge={handleFreeRecharge}
+              freeRechargeAvailable={freeRechargeAvailable}
+            />
           </Suspense>
         )}
 
