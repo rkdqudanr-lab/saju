@@ -42,7 +42,7 @@ export default function ShieldBlockModal({
           right: 0,
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.6)',
-          zIndex: 999,
+          zIndex: 10000,
           animation: 'sbmFadeIn 0.25s ease',
         }}
       />
@@ -59,7 +59,7 @@ export default function ShieldBlockModal({
           padding: '28px 24px 36px',
           maxWidth: '480px',
           width: '100%',
-          zIndex: 1000,
+          zIndex: 10001,
           boxShadow: '0 -8px 40px rgba(0,0,0,0.4)',
           animation: 'sbmSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           border: '1px solid var(--line)',

@@ -201,6 +201,7 @@ export default function CommunityPage({ showToast }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('전체');
+  const [sort, setSort] = useState('최신순'); // '최신순' | '인기순'
   const [showWrite, setShowWrite] = useState(false);
   const [myLikedIds, setMyLikedIds] = useState(new Set());
 
@@ -311,12 +312,17 @@ export default function CommunityPage({ showToast }) {
     showToast('신고가 접수됐어요. 검토 후 조치할게요.', 'info');
   }
 
-  // 필터 적용
-  const filteredPosts = posts.filter(p => {
-    if (filter === '내 별자리') return p.sun_sign && p.sun_sign === mySunSign;
-    if (filter === '내 일간')   return p.ilgan    && p.ilgan    === myIlgan;
-    return true;
-  });
+  // 필터 + 정렬 적용
+  const filteredPosts = posts
+    .filter(p => {
+      if (filter === '내 별자리') return p.sun_sign && p.sun_sign === mySunSign;
+      if (filter === '내 일간')   return p.ilgan    && p.ilgan    === myIlgan;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sort === '인기순') return (b.likes_count || 0) - (a.likes_count || 0);
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 100 }}>
@@ -352,6 +358,30 @@ export default function CommunityPage({ showToast }) {
             }}
           >
             {f}
+          </button>
+        ))}
+      </div>
+
+      {/* 정렬 탭 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px 6px', borderBottom: '1px solid var(--line)' }}>
+        <span style={{ fontSize: '10px', color: 'var(--t4)', flexShrink: 0 }}>정렬</span>
+        {['최신순', '인기순'].map(s => (
+          <button
+            key={s}
+            onClick={() => setSort(s)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 20,
+              border: `1px solid ${sort === s ? 'var(--acc)' : 'var(--line)'}`,
+              background: sort === s ? 'var(--goldf)' : 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+              fontSize: '10px',
+              color: sort === s ? 'var(--gold)' : 'var(--t3)',
+              fontWeight: sort === s ? 700 : 400,
+            }}
+          >
+            {s}
           </button>
         ))}
       </div>

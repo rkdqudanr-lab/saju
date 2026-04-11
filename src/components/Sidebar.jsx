@@ -166,13 +166,6 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   <span className="smi-text">다른 사람의 별숨 추가</span>
                 </button>
               </li>
-              <li>
-                <button className="sidebar-menu-item" onClick={() => { onSettings?.(); onClose(); }}
-                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSettings?.(); onClose(); } }}>
-                  <span className="smi-icon" aria-hidden="true">🛠️</span>
-                  <span className="smi-text">설정</span>
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -190,7 +183,6 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     { icon: '🌟', label: '오늘 하루 나의 별숨', s: 'fortune' },
                     { icon: '📓', label: '나의 하루를 별숨에게', s: 17, badge: todayDiaryWritten === false },
                     { icon: '📚', label: '일기 모아보기', s: 20 },
-                    { icon: '🎴', label: '나의 사주 명함', s: 21 },
                     { icon: '🗓️', label: '별숨 달력', s: 10 },
                   ].map(m => (
                     <li key={m.s}>
@@ -346,13 +338,20 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   >{showStarredOnly ? '⭐' : '☆'}</button>
                 )}
                 {user && histCount > 0 && (
-                  <button
-                    onClick={handleDeleteAll}
-                    onBlur={() => setConfirmDeleteAll(false)}
-                    style={{ background: confirmDeleteAll ? 'var(--rosef)' : 'none', border: confirmDeleteAll ? '1px solid var(--roseacc)' : 'none', cursor: 'pointer', fontSize: 'var(--xs)', color: confirmDeleteAll ? 'var(--rose)' : 'var(--t4)', padding: '2px 6px', borderRadius: 4, transition: 'all .15s' }}
-                    aria-label="전체삭제"
-                    title="지난 이야기 전체삭제"
-                  >{confirmDeleteAll ? '정말요?' : '전체삭제'}</button>
+                  <>
+                    {confirmDeleteAll && (
+                      <span style={{ fontSize: 'var(--xs)', color: 'var(--rose)', whiteSpace: 'nowrap' }}>
+                        통계가 사라져요 ⚠
+                      </span>
+                    )}
+                    <button
+                      onClick={handleDeleteAll}
+                      onBlur={() => setConfirmDeleteAll(false)}
+                      style={{ background: confirmDeleteAll ? 'var(--rosef)' : 'none', border: confirmDeleteAll ? '1px solid var(--roseacc)' : 'none', cursor: 'pointer', fontSize: 'var(--xs)', color: confirmDeleteAll ? 'var(--rose)' : 'var(--t4)', padding: '2px 6px', borderRadius: 4, transition: 'all .15s' }}
+                      aria-label="전체삭제"
+                      title="지난 이야기 전체삭제"
+                    >전체삭제</button>
+                  </>
                 )}
               </div>
             </div>
