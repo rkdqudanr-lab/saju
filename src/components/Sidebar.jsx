@@ -44,7 +44,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [starredIds, setStarredIds] = useState(new Set());
-  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, fortune: true, special: false });
+  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, myinfo: true, fortune: true, special: false });
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [displayLimit, setDisplayLimit] = useState(15);
   const debounceRef = useRef(null);
@@ -226,6 +226,37 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     { icon: '🔮', label: '별숨의 예언', s: 8 },
                     { icon: '✦', label: '별숨의 종합사주', s: 14 },
                     { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
+                  ].map(m => (
+                    <li key={m.s}>
+                      <button
+                        className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                        onClick={() => { onNav(m.s); onClose(); }}
+                        aria-current={step === m.s ? 'page' : undefined}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                      >
+                        <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                        <span className="smi-text">{m.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* ── 나의 별숨 (토글) ── */}
+          {!hiddenGroups.includes('myinfo') && (
+            <div className="sidebar-section">
+              <button className="sidebar-group-header" onClick={() => toggleGroup('myinfo')} aria-expanded={openGroups.myinfo}>
+                <span>나의 별숨</span>
+                <span className="sidebar-group-arrow">{openGroups.myinfo ? '▾' : '▸'}</span>
+              </button>
+              {openGroups.myinfo && (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    { icon: '🌌', label: '나의 대운 흐름', s: 30 },
+                    { icon: '📊', label: '나의 별숨 통계', s: 28 },
+                    { icon: '🏛️', label: '별숨 광장', s: 29 },
                   ].map(m => (
                     <li key={m.s}>
                       <button

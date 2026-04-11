@@ -288,36 +288,6 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
           onClick={() => setStep(1)}
         />
         <MenuRow
-          icon="🌌"
-          label="나의 대운 흐름"
-          sub="10년마다 바뀌는 나의 별 기운 타임라인"
-          onClick={() => setStep(30)}
-        />
-        <MenuRow
-          icon="📊"
-          label="나의 별숨 통계"
-          sub="상담 패턴과 AI 인사이트 확인"
-          onClick={() => setStep(28)}
-        />
-        <MenuRow
-          icon="🏛️"
-          label="별숨 광장"
-          sub="오늘의 별 기운을 이웃과 나눠요"
-          onClick={() => setStep(29)}
-        />
-        <MenuRow
-          icon="🗓️"
-          label="일기 모아보기"
-          sub="별숨과 함께한 날들의 기록"
-          onClick={() => setStep(20)}
-        />
-        <MenuRow
-          icon="🎴"
-          label="사주 명함 카드"
-          sub="나의 사주를 카드로 보관·공유"
-          onClick={() => setStep(21)}
-        />
-        <MenuRow
           icon="💬"
           label="문의하기"
           sub="버그 신고 · 기능 제안 · 고객 지원"
