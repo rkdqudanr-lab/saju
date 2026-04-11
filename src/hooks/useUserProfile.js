@@ -145,9 +145,20 @@ export function useUserProfile() {
 
         if (supabase) {
           const authClient = getAuthenticatedClient(String(data.id));
+
+          // 기존 저장된 사용자 데이터를 먼저 조회 (저장된 닉네임 보존을 위해)
+          const { data: saved } = await (authClient || supabase)
+            .from('users')
+            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
+            .eq('kakao_id', String(data.id))
+            .maybeSingle();
+
+          // 이미 저장된 닉네임이 있으면 유지, 없으면 카카오 프로필 이름 사용
+          const nicknameToSave = saved?.nickname || data.nickname || '별님';
+
           const { error: upsertErr } = await (authClient || supabase).from('users').upsert({
             kakao_id: String(data.id),
-            nickname: data.nickname || '별님',
+            nickname: nicknameToSave,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'kakao_id', ignoreDuplicates: false });
           if (upsertErr) throw new Error('사용자 정보 저장에 실패했어요. 다시 로그인해주세요.');
@@ -163,12 +174,6 @@ export function useUserProfile() {
               { onConflict: 'kakao_id', ignoreDuplicates: true }
             ),
           ]);
-
-          const { data: saved } = await (authClient || supabase)
-            .from('users')
-            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
-            .eq('kakao_id', String(data.id))
-            .maybeSingle();
 
           if (saved?.id) {
             const userDataWithUuid = { ...userData, supabaseId: saved.id };
