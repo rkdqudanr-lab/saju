@@ -65,6 +65,9 @@ const DreamPage                = lazy(() => import("./components/DreamPage.jsx")
 const InquiryPage              = lazy(() => import("./components/InquiryPage.jsx"));
 const TaegillPage              = lazy(() => import("./components/TaegillPage.jsx"));
 const NameFortunePage          = lazy(() => import("./components/NameFortunePage.jsx"));
+const StatsPage                = lazy(() => import("./components/StatsPage.jsx"));
+const CommunityPage            = lazy(() => import("./components/CommunityPage.jsx"));
+const DaeunPage                = lazy(() => import("./components/DaeunPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -461,7 +464,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>⌂</button>}
 
@@ -846,6 +849,33 @@ export default function App() {
             <MyPage
               onFreeRecharge={handleFreeRecharge}
               freeRechargeAvailable={freeRechargeAvailable}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 28: 나의 별숨 통계 ── */}
+        {step === 28 && (
+          <Suspense fallback={<PageSpinner />}>
+            <StatsPage callApi={callApi} />
+          </Suspense>
+        )}
+
+        {/* ── Step 29: 별숨 광장 (커뮤니티 피드) ── */}
+        {step === 29 && (
+          <Suspense fallback={<PageSpinner />}>
+            <CommunityPage showToast={showToast} />
+          </Suspense>
+        )}
+
+        {/* ── Step 30: 나의 대운 흐름 ── */}
+        {step === 30 && (
+          <Suspense fallback={<PageSpinner />}>
+            <DaeunPage
+              form={form}
+              saju={saju}
+              callApi={callApi}
+              buildCtx={buildCtx}
+              showToast={showToast}
             />
           </Suspense>
         )}

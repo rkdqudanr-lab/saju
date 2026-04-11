@@ -27,5 +27,11 @@
   ],
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/push",
+      "schedule": "50 22 * * *"
+    }
   ]
 }

@@ -650,3 +650,85 @@ create policy "inquiries_select" on inquiries
 
 create index if not exists idx_inquiries_kakao
   on inquiries(kakao_id, created_at desc);
+
+-- ================================================================
+-- 신규 기능 마이그레이션 (2025-04-11)
+-- ================================================================
+
+-- ── users 추가 컬럼 (알림 설정) ──────────────────────────────────
+alter table users add column if not exists notification_prefs  jsonb default '{}';
+alter table users add column if not exists push_subscription   jsonb;
+
+-- ── community_posts (별숨 광장 커뮤니티 피드) ────────────────────
+create table if not exists community_posts (
+  id           uuid primary key default gen_random_uuid(),
+  kakao_id     text not null,
+  nickname     text not null,
+  content      text not null check (length(content) <= 200),
+  sun_sign     text,            -- 별자리 (공개용)
+  ilgan        text,            -- 일간 (공개용, 생년월일 미노출)
+  likes_count  integer default 0,
+  created_at   timestamptz default now()
+);
+
+alter table community_posts enable row level security;
+
+drop policy if exists "posts_select" on community_posts;
+drop policy if exists "posts_insert" on community_posts;
+drop policy if exists "posts_update" on community_posts;
+
+-- 읽기: 모든 유저 가능
+create policy "posts_select" on community_posts
+  for select to anon using (true);
+
+-- 쓰기: 본인(kakao_id 헤더 일치) 행만
+create policy "posts_insert" on community_posts
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- 수정(likes_count 업데이트): 누구나 가능 (서버에서 호출)
+create policy "posts_update" on community_posts
+  for update to anon using (true);
+
+create index if not exists idx_community_posts_created
+  on community_posts(created_at desc);
+
+create index if not exists idx_community_posts_sun_sign
+  on community_posts(sun_sign);
+
+create index if not exists idx_community_posts_ilgan
+  on community_posts(ilgan);
+
+-- ── post_reactions (별 하트 공감) ────────────────────────────────
+create table if not exists post_reactions (
+  id        uuid primary key default gen_random_uuid(),
+  post_id   uuid references community_posts(id) on delete cascade,
+  kakao_id  text not null,
+  unique (post_id, kakao_id)
+);
+
+alter table post_reactions enable row level security;
+
+drop policy if exists "reactions_select" on post_reactions;
+drop policy if exists "reactions_insert" on post_reactions;
+drop policy if exists "reactions_delete" on post_reactions;
+
+create policy "reactions_select" on post_reactions
+  for select to anon using (true);
+
+create policy "reactions_insert" on post_reactions
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "reactions_delete" on post_reactions
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create index if not exists idx_post_reactions_post
+  on post_reactions(post_id);
+
+create index if not exists idx_post_reactions_kakao
+  on post_reactions(kakao_id);
