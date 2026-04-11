@@ -552,6 +552,7 @@ export default function SettingsPage({
             {[
               { key: 'today', label: '오늘의 별숨', desc: '홈, 오늘 운세, 일기, 달력' },
               { key: 'consult', label: '별숨 상담', desc: '물어보기, 리포트, 예언, 종합사주 등' },
+              { key: 'myinfo', label: '나의 별숨', desc: '대운 흐름, 별숨 통계, 별숨 광장' },
               { key: 'fortune', label: '운세 & 인연', desc: '궁합, 모임, 기념일, 사주원국' },
               { key: 'special', label: '✨ 특별 기능', desc: '꿈 해몽, 택일, 이름 풀이' },
             ].map(({ key, label, desc }) => {
