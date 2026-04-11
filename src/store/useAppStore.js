@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getTodayInfo } from '../utils/saju.js';
 
 /**
  * 별숨 전역 Zustand 스토어
@@ -29,15 +30,14 @@ export const useAppStore = create((set, get) => ({
   setProfile: (profile) => set({ profile }),
   setForm: (form) => set({ form }),
   setIsDark: (isDark) => set({ isDark }),
-  setAuthFns: ({ showToast, kakaoLogin, kakaoLogout, saveProfileToSupabase }) =>
-    set({ showToast, kakaoLogin, kakaoLogout, saveProfileToSupabase }),
+  setAuthFns: (fns) => set(fns),
 
   // ── 사주 / 별자리 (useSajuContext에서 주입) ──────────────────
   saju: null,
   sun: null,
   moon: null,
   asc: null,
-  today: null,
+  today: getTodayInfo(),
   formOk: false,
   formOkApprox: false,
   isApproximate: false,
