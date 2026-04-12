@@ -26,6 +26,7 @@ import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
 import PWAInstallBanner   from "./components/PWAInstallBanner.jsx";
 import BottomNav          from "./components/BottomNav.jsx";
+import FeatureTour        from "./components/FeatureTour.jsx";
 
 const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
 const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
@@ -36,7 +37,6 @@ const GroupBulseumPage   = lazy(() => import("./components/GroupBulseumPage.jsx"
 const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
 const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
 const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
-const AstrologyPage            = lazy(() => import("./components/AstrologyPage.jsx"));
 const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
 const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
 const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
@@ -84,6 +84,7 @@ function PageSpinner() {
 // ═══════════════════════════════════════════════════════════
 export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
   const [showDailyCard, setShowDailyCard] = useState(true);
@@ -131,6 +132,14 @@ export default function App() {
   const isDark          = theme === 'dark';
   const onboardingDone  = onboarded;
   const quiz            = quizState;
+
+  // ── 피처 투어 트리거 (온보딩 완료 후 step 0 첫 도달 시 1회만) ──
+  useEffect(() => {
+    if (step === 0 && onboardingDone && localStorage.getItem('byeolsoom_tour_v1') !== 'done') {
+      const t = setTimeout(() => setShowTour(true), 700);
+      return () => clearTimeout(t);
+    }
+  }, [step, onboardingDone]);
 
   // lifeStage + qaAnswers를 profile에 병합하여 AI 컨텍스트 빌더에 전달
   const profileWithMeta = { ...profile, lifeStage, qaAnswers: profile.qa_answers || profile.qaAnswers };
@@ -286,7 +295,6 @@ export default function App() {
       import('./components/AnniversaryPage.jsx').catch(() => {});
       import('./components/NatalInterpretationPage.jsx').catch(() => {});
       import('./components/ComprehensivePage.jsx').catch(() => {});
-      import('./components/AstrologyPage.jsx').catch(() => {});
       import('./components/DiaryPage.jsx').catch(() => {});
       import('./components/DiaryListPage.jsx').catch(() => {});
       import('./components/HistoryPage.jsx').catch(() => {});
@@ -406,6 +414,9 @@ export default function App() {
       <StarCanvas isDark={isDark} />
       <PWAInstallBanner />
 
+      {/* ── 피처 투어 (첫 방문 1회만) ── */}
+      {showTour && <FeatureTour onFinish={() => setShowTour(false)} />}
+
       {/* ── 오프스크린 카드 템플릿 (html2canvas 캡처 대상) ── */}
       <ShareCardTemplate
         ref={shareCardRef}
@@ -423,7 +434,7 @@ export default function App() {
       )}
 
       {/* ── 사이드바 (메뉴 버튼 우측 상단에 유지 — 히스토리 검색 등 고급 기능 접근용) ── */}
-      <button className="menu-btn" onClick={() => setShowSidebar(true)} aria-label="메뉴 열기" aria-expanded={showSidebar}>☰</button>
+      <button className="menu-btn" data-tour="menu-btn" onClick={() => setShowSidebar(true)} aria-label="메뉴 열기" aria-expanded={showSidebar}>☰</button>
 
       {showSidebar && (
         <Sidebar
@@ -670,12 +681,14 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 14: 별숨의 종합 사주 ── */}
+        {/* ── Step 14: 종합 분석 (사주 + 점성술 탭 통합) ── */}
         {step === 14 && (
           <Suspense fallback={<PageSpinner />}>
             <ComprehensivePage
               saju={saju}
               sun={sun}
+              moon={moon}
+              asc={asc}
               form={form}
               buildCtx={buildCtx}
               user={user}
@@ -694,19 +707,8 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 16: 별숨의 종합 점성술 ── */}
-        {step === 16 && (
-          <Suspense fallback={<PageSpinner />}>
-            <AstrologyPage
-              sun={sun}
-              moon={moon}
-              asc={asc}
-              form={form}
-              buildCtx={buildCtx}
-              user={user}
-            />
-          </Suspense>
-        )}
+        {/* ── Step 16: 종합 점성술 → step 14(종합 분석)로 리다이렉트 ── */}
+        {step === 16 && (() => { setStep(14); return null; })()}
 
         {/* ── Step 17: 나의 하루를 별숨에게 (일기) ── */}
         {step === 17 && (

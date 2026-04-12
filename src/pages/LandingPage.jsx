@@ -235,13 +235,13 @@ export default function LandingPage({
                           </button>
                         );
                         return (
-                          <>
+                          <div data-tour="daily-card">
                             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 6, marginBottom: 6 }}>
                               ✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일
                               <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
                             </div>
                             {dailyCardContent}
-                          </>
+                          </div>
                         );
                       })()}
 
