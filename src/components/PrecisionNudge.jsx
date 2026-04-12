@@ -11,16 +11,16 @@ const LEVEL_META = {
 export default function PrecisionNudge() {
   const dataPrecision = useAppStore((s) => s.dataPrecision);
   const setStep       = useAppStore((s) => s.setStep);
-  const { total = 0, level = 'low' } = dataPrecision || {};
-
-  if (level === 'high') return null;
-
-  const pct      = Math.min(Math.round((total / MAX_SCORE) * 100), 100);
-  const meta     = LEVEL_META[level] || LEVEL_META.low;
-  const nextPts  = level === 'low' ? 25 - total : 50 - total;
-  const message  = level === 'low'
+  const total   = dataPrecision?.total ?? 0;
+  const level   = dataPrecision?.level ?? 'low';
+  const pct     = Math.min(Math.round((total / MAX_SCORE) * 100), 100);
+  const meta    = LEVEL_META[level] || LEVEL_META.low;
+  const nextPts = level === 'low' ? 25 - total : 50 - total;
+  const message = level === 'low'
     ? '생시(태어난 시간)를 입력하면 분석이 훨씬 깊어져요'
     : '고민 키워드와 인생 단계를 채우면 초정밀 분석이 가능해요';
+
+  if (level === 'high') return null;
 
   return (
     <div
