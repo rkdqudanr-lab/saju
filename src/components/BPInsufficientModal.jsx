@@ -24,9 +24,9 @@ export default function BPInsufficientModal({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const shortage = requiredBp - currentBp;
+
+  if (!isOpen) return null;
 
   return (
     <>

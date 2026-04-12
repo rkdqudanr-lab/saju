@@ -2,13 +2,13 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { stripMarkdown, PKGS, TIMING, LOAD_STATES } from "../utils/constants.js";
 import { getAuthToken } from "./useUserProfile.js";
 import { useAppStore } from "../store/useAppStore.js";
-
-// 베타 기간 종료 시 false로 변경 (또는 서버 설정으로 대체)
-const IS_BETA = true;
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { loadHistory, addHistory, deleteHistory } from "../utils/history.js";
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { parseHoroscopeForGamification } from '../utils/missionGenerator.js';
+
+// 베타 기간 종료 시 false로 변경 (또는 서버 설정으로 대체)
+const IS_BETA = true;
 
 const SLOT_TAG_MAP = { morning: '[오전·100자]', afternoon: '[오후·100자]', evening: '[저녁·100자]', dawn: '[새벽·100자]' };
 const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.';
