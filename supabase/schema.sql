@@ -903,6 +903,14 @@ create table if not exists shop_items (
   is_active   boolean default true
 );
 
+alter table shop_items enable row level security;
+
+drop policy if exists "shop_items_select" on shop_items;
+
+create policy "shop_items_select" on shop_items
+  for select to anon using (true);
+-- INSERT/UPDATE/DELETE 정책 없음 → service_role(마이그레이션)만 변경 가능
+
 -- Feature 9: user_shop_inventory (구매 목록)
 create table if not exists user_shop_inventory (
   kakao_id    text not null,
