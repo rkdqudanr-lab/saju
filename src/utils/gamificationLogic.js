@@ -13,6 +13,7 @@ export const BP_EARNING_RULES = {
   DIARY_COMPLETE: 5,      // 일기 작성
   MISSION_MILESTONE: 5,   // 미션 50% 이상 달성 보너스
   FRIEND_SHARE: 3,        // 친구 공유
+  PWA_INSTALL: 20,        // 앱 설치 완료
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -318,6 +319,52 @@ export function generateLossAversionMessage(score, currentBp) {
   return '✨ 오늘은 모든 시간이 안전해요!';
 }
 
+// ════════════════════════════════════════════════════════════════
+// 함수: BP 차감 (별숨 숍 구매)
+// ════════════════════════════════════════════════════════════════
+/**
+ * BP를 차감하고 daily_bp_log에 기록한다
+ * @param {object} client - getAuthenticatedClient(kakaoId)
+ * @param {string} kakaoId
+ * @param {number} amount - 차감할 BP (양수)
+ * @param {string} reason - 차감 사유 (예: 'SHOP_PURCHASE')
+ * @param {string} note   - 추가 메모 (예: 아이템 이름)
+ * @returns {Promise<{ok: boolean, newBP: number|null}>}
+ */
+export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE', note = '') {
+  try {
+    // 현재 BP 조회
+    const { data: userData } = await client
+      .from('users')
+      .select('current_bp')
+      .eq('kakao_id', String(kakaoId))
+      .single();
+
+    const currentBP = userData?.current_bp ?? 0;
+    if (currentBP < amount) return { ok: false, newBP: currentBP };
+
+    const newBP = currentBP - amount;
+
+    // BP 차감
+    await client
+      .from('users')
+      .update({ current_bp: newBP })
+      .eq('kakao_id', String(kakaoId));
+
+    // 로그 기록
+    await client.from('daily_bp_log').insert({
+      kakao_id: String(kakaoId),
+      bp_amount: -amount,
+      reason,
+      note,
+    }).throwOnError().maybeSingle();
+
+    return { ok: true, newBP };
+  } catch {
+    return { ok: false, newBP: null };
+  }
+}
+
 export default {
   BP_EARNING_RULES,
   BADTIME_BLOCK_COST,
@@ -334,4 +381,5 @@ export default {
   getMissionTypeLabel,
   generateTransformedFortuneMessage,
   generateLossAversionMessage,
+  spendBP,
 };

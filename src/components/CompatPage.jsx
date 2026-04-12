@@ -22,7 +22,7 @@ function getDaysInMonth(year, month) {
 // ═══════════════════════════════════════════════════════════
 //  💞 1대1 별숨 — 두 별의 인연 읽기
 // ═══════════════════════════════════════════════════════════
-export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, shareResult, user, otherProfiles = [], saveOtherProfile }) {
+export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, shareResult, user, otherProfiles = [], saveOtherProfile, onAnonShare }) {
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
   const [storyResult, setStoryResult] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
@@ -377,6 +377,27 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                       onClick={() => shareResult('compat', storyResult.story?.slice(0, 100), `${myForm.name || '나'} × ${partner.name || '상대'}`)}
                     >
                       ↗ 공유하기
+                    </button>
+                  )}
+                  {onAnonShare && storyResult.story && (
+                    <button
+                      style={{
+                        width: '100%', marginTop: 8, padding: 12,
+                        borderRadius: 'var(--r1)', fontSize: 'var(--xs)',
+                        background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+                        color: 'var(--gold)', fontWeight: 700,
+                        fontFamily: 'var(--ff)', cursor: 'pointer',
+                      }}
+                      onClick={() => onAnonShare({
+                        mySunSign: mySun?.s || '',
+                        myIlgan: mySaju?.il?.g || '',
+                        partnerSunSign: partnerSun?.s || '',
+                        partnerIlgan: partnerSaju?.il?.g || '',
+                        compatScore,
+                        compatTier: getCompatTier(compatScore).label,
+                      })}
+                    >
+                      💞 익명 궁합 광장에 공유
                     </button>
                   )}
                 </>

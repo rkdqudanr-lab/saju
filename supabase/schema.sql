@@ -732,3 +732,210 @@ create index if not exists idx_post_reactions_post
 
 create index if not exists idx_post_reactions_kakao
   on post_reactions(kakao_id);
+
+-- ── 신규 기능 마이그레이션 (2026-04-11) ─────────────────────────
+
+-- Feature 3: community_posts 운세 첨부 컬럼 추가
+alter table community_posts add column if not exists fortune_summary text;
+
+-- Feature 1: post_comments (광장 댓글)
+create table if not exists post_comments (
+  id          uuid primary key default gen_random_uuid(),
+  post_id     uuid references community_posts(id) on delete cascade,
+  kakao_id    text not null,
+  nickname    text not null,
+  content     text not null check (char_length(content) <= 100),
+  created_at  timestamptz default now()
+);
+
+create index if not exists idx_post_comments_post_id on post_comments(post_id);
+
+alter table post_comments enable row level security;
+
+drop policy if exists "comments_select" on post_comments;
+drop policy if exists "comments_insert" on post_comments;
+
+create policy "comments_select" on post_comments
+  for select to anon using (true);
+
+create policy "comments_insert" on post_comments
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- Feature 2: post_reports (게시글 신고)
+create table if not exists post_reports (
+  id           uuid primary key default gen_random_uuid(),
+  post_id      uuid references community_posts(id) on delete cascade,
+  reported_by  text not null,
+  reason       text not null,
+  created_at   timestamptz default now(),
+  unique (post_id, reported_by)
+);
+
+alter table post_reports enable row level security;
+
+drop policy if exists "reports_insert" on post_reports;
+
+create policy "reports_insert" on post_reports
+  for insert to anon with check (
+    reported_by = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- Feature 7: daily_scores (일별 사주 점수 이력)
+create table if not exists daily_scores (
+  kakao_id   text not null,
+  score_date date not null,
+  score      integer not null check (score between 0 and 100),
+  primary key (kakao_id, score_date)
+);
+
+alter table daily_scores enable row level security;
+
+drop policy if exists "scores_select" on daily_scores;
+drop policy if exists "scores_upsert" on daily_scores;
+
+create policy "scores_select" on daily_scores
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "scores_upsert" on daily_scores
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- Feature 8: user_follows (광장 팔로우)
+create table if not exists user_follows (
+  follower_kakao_id  text not null,
+  following_kakao_id text not null,
+  created_at         timestamptz default now(),
+  primary key (follower_kakao_id, following_kakao_id)
+);
+
+alter table user_follows enable row level security;
+
+drop policy if exists "follows_select" on user_follows;
+drop policy if exists "follows_insert" on user_follows;
+drop policy if exists "follows_delete" on user_follows;
+
+create policy "follows_select" on user_follows
+  for select to anon using (true);
+
+create policy "follows_insert" on user_follows
+  for insert to anon with check (
+    follower_kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "follows_delete" on user_follows
+  for delete to anon using (
+    follower_kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- Feature 11: anon_compat_posts (익명 궁합 광장)
+create table if not exists anon_compat_posts (
+  id               uuid primary key default gen_random_uuid(),
+  kakao_id         text not null,
+  content          text check (char_length(content) <= 150),
+  my_sun_sign      text,
+  my_ilgan         text,
+  partner_sun_sign text,
+  partner_ilgan    text,
+  compat_score     integer,
+  compat_tier      text,
+  likes_count      integer default 0,
+  created_at       timestamptz default now()
+);
+
+alter table anon_compat_posts enable row level security;
+
+drop policy if exists "acp_select" on anon_compat_posts;
+drop policy if exists "acp_insert" on anon_compat_posts;
+drop policy if exists "acp_update" on anon_compat_posts;
+
+create policy "acp_select" on anon_compat_posts
+  for select to anon using (true);
+
+create policy "acp_insert" on anon_compat_posts
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "acp_update" on anon_compat_posts
+  for update to anon using (true);
+
+-- Feature 11: anon_compat_reactions (공감)
+create table if not exists anon_compat_reactions (
+  id       uuid primary key default gen_random_uuid(),
+  post_id  uuid references anon_compat_posts(id) on delete cascade,
+  kakao_id text not null,
+  unique (post_id, kakao_id)
+);
+
+alter table anon_compat_reactions enable row level security;
+
+drop policy if exists "acr_select" on anon_compat_reactions;
+drop policy if exists "acr_insert" on anon_compat_reactions;
+drop policy if exists "acr_delete" on anon_compat_reactions;
+
+create policy "acr_select" on anon_compat_reactions
+  for select to anon using (true);
+
+create policy "acr_insert" on anon_compat_reactions
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "acr_delete" on anon_compat_reactions
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- Feature 9: shop_items (별숨 숍 아이템)
+create table if not exists shop_items (
+  id          text primary key,
+  name        text not null,
+  description text,
+  category    text not null,
+  bp_cost     integer not null,
+  emoji       text,
+  rarity      text default 'common',
+  is_active   boolean default true
+);
+
+-- Feature 9: user_shop_inventory (구매 목록)
+create table if not exists user_shop_inventory (
+  kakao_id    text not null,
+  item_id     text references shop_items(id),
+  unlocked_at timestamptz default now(),
+  is_equipped boolean default false,
+  primary key (kakao_id, item_id)
+);
+
+alter table user_shop_inventory enable row level security;
+
+drop policy if exists "inv_select" on user_shop_inventory;
+drop policy if exists "inv_insert" on user_shop_inventory;
+
+create policy "inv_select" on user_shop_inventory
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "inv_insert" on user_shop_inventory
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- shop_items 시드 데이터
+insert into shop_items (id, name, description, category, bp_cost, emoji, rarity) values
+  ('theme_rose',      '로즈골드 테마',      '은은한 로즈골드 컬러 테마',          'theme',           50,  '🌹', 'rare'),
+  ('theme_midnight',  '미드나잇 테마',       '짙은 밤의 감성 컬러 테마',           'theme',           50,  '🌌', 'rare'),
+  ('avatar_sun',      '태양 아바타',         '찬란한 태양 아이콘 아바타',           'avatar',          30,  '☀️', 'common'),
+  ('avatar_moon',     '달 아바타',           '신비로운 달 아이콘 아바타',           'avatar',          30,  '🌙', 'common'),
+  ('avatar_star',     '별 아바타',           '반짝이는 별 아이콘 아바타',           'avatar',          30,  '⭐', 'common'),
+  ('special_yearly',  '연간 대운 상세 분석', '올해와 내년 대운 심층 AI 분석',      'special_reading', 100, '🔮', 'legendary'),
+  ('special_nameday', '내 이름의 운명',      '이름 획수·음양오행 심층 분석',       'special_reading', 80,  '📛', 'rare'),
+  ('effect_star',     '별 이펙트 카드',      '공유카드에 별 파티클 이펙트 추가',   'effect',          20,  '✨', 'common'),
+  ('effect_aurora',   '오로라 이펙트 카드',  '공유카드에 오로라 그라디언트 추가',  'effect',          35,  '🌈', 'rare')
+on conflict (id) do nothing;

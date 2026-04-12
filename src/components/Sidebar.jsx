@@ -249,6 +249,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     { icon: '🌌', label: '나의 대운 흐름', s: 30 },
                     { icon: '📊', label: '나의 별숨 통계', s: 28 },
                     { icon: '🏛️', label: '별숨 광장', s: 29 },
+                    { icon: '🛍️', label: '별숨 숍', s: 31 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -278,6 +279,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
                     { icon: '💞', label: '1대1 별숨 (궁합)', s: 7 },
+                    { icon: '🤝', label: '익명 궁합 광장', s: 32 },
                     { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
                     { icon: '🎂', label: '기념일 운세', s: 12 },
                     { icon: '🀄', label: '나의 별숨 (사주원국·별자리)', s: 13 },

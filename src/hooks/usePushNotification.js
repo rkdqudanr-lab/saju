@@ -24,6 +24,7 @@ const DEFAULT_PREFS = {
   streak_reminder: false,
   jeolgi_notice: false,
   mission_reminder: false,
+  birthday_notice: false,
 };
 
 export function usePushNotification() {

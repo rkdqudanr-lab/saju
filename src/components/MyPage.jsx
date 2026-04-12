@@ -97,6 +97,7 @@ const NOTIF_ITEMS = [
   { key: 'streak_reminder', icon: '🔥', label: '스트릭 알림', sub: '연속 로그인이 끊길 위험할 때 알림' },
   { key: 'jeolgi_notice',   icon: '🌿', label: '절기 알림', sub: '입춘·하지 등 특별한 날 알림' },
   { key: 'mission_reminder',icon: '✅', label: '미션 알림', sub: '저녁에 완료 안 한 미션 알림' },
+  { key: 'birthday_notice', icon: '🎂', label: '생일 알림', sub: '내 생일 당일 아침 특별 운세 알림' },
 ];
 
 function NotifToggle({ item, value, onChange, disabled }) {
@@ -292,6 +293,12 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
           label="문의하기"
           sub="버그 신고 · 기능 제안 · 고객 지원"
           onClick={() => setStep(22)}
+        />
+        <MenuRow
+          icon="🏛️"
+          label="별숨 광장"
+          sub="별자리별 오늘 기운 한마디 나누기"
+          onClick={() => setStep(29)}
         />
         <MenuRow
           icon="⚙️"

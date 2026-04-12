@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DailyStarCard from "../components/DailyStarCard.jsx";
 import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
 import OrbitalFrequencyMiniGame from "../components/OrbitalFrequencyMiniGame.jsx";
 import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
 import { detectBadtime } from "../utils/gamificationLogic.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
+import { getAuthenticatedClient } from "../lib/supabase.js";
 
 export default function DailyHoroscopePage({
   today,
@@ -27,6 +28,23 @@ export default function DailyHoroscopePage({
     badtime: null,
   });
   const [activeTab, setActiveTab] = useState('horoscope'); // 'horoscope' | 'game' | 'lucky'
+  const savedScoreDateRef = useRef(null);
+
+  // 일별 점수 저장 (daily_scores 테이블)
+  useEffect(() => {
+    if (!dailyResult?.score || !user) return;
+    const today = new Date().toISOString().slice(0, 10);
+    if (savedScoreDateRef.current === today) return; // 같은 날 중복 방지
+    savedScoreDateRef.current = today;
+    const kakaoId = user.kakaoId || user.id;
+    getAuthenticatedClient(kakaoId)
+      .from('daily_scores')
+      .upsert(
+        { kakao_id: String(kakaoId), score_date: today, score: dailyResult.score },
+        { onConflict: 'kakao_id,score_date' }
+      )
+      .then(({ error }) => { if (error) console.warn('[별숨] daily_scores upsert:', error); });
+  }, [dailyResult?.score, user]);
 
   // 배드타임 감지 및 모달 표시
   useEffect(() => {

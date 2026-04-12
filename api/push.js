@@ -2,8 +2,42 @@
 // 매일 KST 07:50 (UTC 22:50)에 실행됩니다.
 // 환경변수: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT
 //           SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY
+//
+// 알림 종류:
+//   1. daily_horoscope — 오늘의 별숨 한 줄 운세
+//   2. birthday_notice — 생일 당일 특별 운세
+//   3. jeolgi_notice   — 절기 당일 알림
 
 import webpush from 'web-push';
+import { JEOLGI_TABLE } from '../lib/jeolgi.js';
+
+// ─────────────────────────────────────────────────────────────
+//  절기 이름 배열 (JEOLGI_TABLE 인덱스 순서)
+// ─────────────────────────────────────────────────────────────
+const JEOLGI_NAMES = [
+  '입춘', '경칩', '청명', '입하', '망종', '소서',
+  '입추', '백로', '한로', '입동', '대설', '소한',
+];
+
+/**
+ * 오늘이 절기인지 확인하고, 절기명을 반환합니다.
+ * @returns {string|null} 절기명 또는 null
+ */
+function getTodayJeolgi() {
+  const now = new Date();
+  // KST 기준 날짜
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const y = kst.getUTCFullYear();
+  const m = kst.getUTCMonth() + 1;
+  const d = kst.getUTCDate();
+  const table = JEOLGI_TABLE[y];
+  if (!table) return null;
+  for (let i = 0; i < table.length; i++) {
+    const [jm, jd] = table[i];
+    if (jm === m && jd === d) return JEOLGI_NAMES[i] || null;
+  }
+  return null;
+}
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -143,5 +177,56 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(200).json({ sent, expired: expired.length });
+  // ── 생일 알림 ──────────────────────────────────────────────
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const todayMonth = kst.getUTCMonth() + 1;
+  const todayDay   = kst.getUTCDate();
+
+  const birthdayUsers = await supabaseFetch(
+    `users?select=kakao_id,push_subscription,notification_prefs,birth_month,birth_day` +
+    `&notification_prefs->>birthday_notice=eq.true&push_subscription=not.is.null` +
+    `&birth_month=eq.${todayMonth}&birth_day=eq.${todayDay}`,
+  );
+
+  let sentBirthday = 0;
+  if (Array.isArray(birthdayUsers)) {
+    for (const u of birthdayUsers) {
+      let sub;
+      try { sub = typeof u.push_subscription === 'string' ? JSON.parse(u.push_subscription) : u.push_subscription; }
+      catch { continue; }
+      const result = await sendPush(sub, {
+        title: '🎂 생일 축하해요!',
+        body: '오늘은 특별한 날이에요. 별숨이 당신의 생일 운세를 준비했어요 ✦',
+        url: '/',
+        tag: `birthday-${todayMonth}-${todayDay}`,
+      });
+      if (result === true) sentBirthday++;
+    }
+  }
+
+  // ── 절기 알림 ──────────────────────────────────────────────
+  const jeolgiName = getTodayJeolgi();
+  let sentJeolgi = 0;
+  if (jeolgiName) {
+    const jeolgiUsers = await supabaseFetch(
+      `users?select=kakao_id,push_subscription,notification_prefs` +
+      `&notification_prefs->>jeolgi_notice=eq.true&push_subscription=not.is.null`,
+    );
+    if (Array.isArray(jeolgiUsers)) {
+      for (const u of jeolgiUsers) {
+        let sub;
+        try { sub = typeof u.push_subscription === 'string' ? JSON.parse(u.push_subscription) : u.push_subscription; }
+        catch { continue; }
+        const result = await sendPush(sub, {
+          title: `🌿 오늘은 ${jeolgiName}이에요`,
+          body: `계절의 전환점, 별숨이 오늘의 기운을 읽어드려요 ✦`,
+          url: '/',
+          tag: `jeolgi-${jeolgiName}-${kst.getUTCFullYear()}`,
+        });
+        if (result === true) sentJeolgi++;
+      }
+    }
+  }
+
+  return res.status(200).json({ sent, birthday: sentBirthday, jeolgi: sentJeolgi, expired: expired.length });
 }

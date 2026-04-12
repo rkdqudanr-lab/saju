@@ -522,3 +522,168 @@ export function downloadDataUrl(dataUrl, filename) {
   a.href = dataUrl;
   a.click();
 }
+
+// ─────────────────────────────────────────────────────────────
+//  별숨 통계 공유카드 (Canvas 기반, 1080×1350)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * @param {object} p
+ * @param {string} p.nickname
+ * @param {number} p.total          - 총 상담 횟수
+ * @param {Array}  p.catData        - [{label, value}, ...]
+ * @param {Array}  p.monthData      - [{label, value}, ...]  최근 6개월
+ * @param {object} p.slotCount      - {새벽, 오전, 오후, 저녁}
+ * @param {number} p.guardianLevel
+ * @param {number} p.currentBp
+ * @param {boolean} p.isDark
+ */
+// ─────────────────────────────────────────────────────────────
+//  대운 리포트 PDF export (html2canvas → jsPDF)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * DaeunPage DOM을 html2canvas로 캡처해서 PDF로 저장합니다.
+ * DaeunPage 최상위 div에 id="daeun-report-root" 가 있어야 합니다.
+ * @param {string} nickname
+ */
+export async function saveDaeunPDF(nickname) {
+  const el = document.getElementById('daeun-report-root');
+  if (!el) throw new Error('daeun-report-root 요소를 찾을 수 없어요');
+
+  const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ]);
+
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#0D0B14',
+    logging: false,
+  });
+
+  const imgData = canvas.toDataURL('image/png');
+  const A4_W = 210; // mm
+  const imgH = (canvas.height * A4_W) / canvas.width;
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  pdf.addImage(imgData, 'PNG', 0, 0, A4_W, imgH);
+  pdf.save(`별숨_대운리포트_${nickname || '나의별숨'}.pdf`);
+}
+
+export function saveStatsCard({ nickname, total, catData, monthData, slotCount, guardianLevel, currentBp, isDark }) {
+  const PADDING = 72;
+  const { bg, t1, t3 } = getThemeColors(isDark);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = IG_W * SCALE;
+  canvas.height = IG_H * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  // 배경
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, IG_W, IG_H);
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(0, 0, IG_W, 6);
+
+  // 헤더
+  drawHeader(ctx, { gold: GOLD, t3, subtitle: `${nickname}님의 별숨 사용 패턴` }, PADDING);
+
+  let y = 130;
+
+  // ── 총 상담 수 ──
+  ctx.font = `800 80px ${FONT}`;
+  ctx.fillStyle = GOLD;
+  ctx.fillText(String(total), PADDING, y + 70);
+  ctx.font = `400 24px ${FONT}`;
+  ctx.fillStyle = t3;
+  ctx.fillText('번의 별숨 상담', PADDING + ctx.measureText(String(total)).width + 14, y + 54);
+
+  y += 110;
+
+  // ── 구분선 ──
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(IG_W - PADDING, y); ctx.stroke();
+  y += 40;
+
+  // ── 상위 카테고리 ──
+  ctx.font = `700 26px ${FONT}`;
+  ctx.fillStyle = GOLD;
+  ctx.fillText('✦ 가장 많이 물어본 주제', PADDING, y);
+  y += 44;
+
+  const TOP = catData.slice(0, 4);
+  const maxCat = Math.max(1, ...TOP.map(d => d.value));
+  const BAR_MAX_W = IG_W - PADDING * 2 - 180;
+  TOP.forEach(d => {
+    ctx.font = `400 22px ${FONT}`;
+    ctx.fillStyle = t3;
+    ctx.fillText(d.label, PADDING, y);
+    const barW = Math.max(4, (d.value / maxCat) * BAR_MAX_W);
+    roundRect(ctx, PADDING, y + 8, barW, 16, 8);
+    ctx.fillStyle = GOLD;
+    ctx.fill();
+    ctx.font = `700 20px ${FONT}`;
+    ctx.fillStyle = t1;
+    ctx.fillText(`${d.value}회`, PADDING + barW + 12, y + 20);
+    y += 52;
+  });
+
+  y += 10;
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(IG_W - PADDING, y); ctx.stroke();
+  y += 40;
+
+  // ── 시간대 패턴 ──
+  ctx.font = `700 26px ${FONT}`;
+  ctx.fillStyle = GOLD;
+  ctx.fillText('✦ 시간대별 패턴', PADDING, y);
+  y += 44;
+
+  const SLOTS = ['새벽','오전','오후','저녁'];
+  const SLOT_EMOJIS = { 새벽: '🌌', 오전: '🌅', 오후: '☀️', 저녁: '🌙' };
+  const maxSlot = Math.max(1, ...SLOTS.map(s => slotCount[s] || 0));
+  SLOTS.forEach(s => {
+    const v = slotCount[s] || 0;
+    const barW = Math.max(4, (v / maxSlot) * (BAR_MAX_W - 40));
+    ctx.font = `400 22px ${FONT}`;
+    ctx.fillStyle = t3;
+    ctx.fillText(`${SLOT_EMOJIS[s]} ${s}`, PADDING, y);
+    roundRect(ctx, PADDING + 100, y - 16, barW, 14, 7);
+    ctx.fillStyle = '#4A8EC4';
+    ctx.fill();
+    ctx.font = `700 18px ${FONT}`;
+    ctx.fillStyle = t1;
+    ctx.fillText(`${v}회`, PADDING + 100 + barW + 10, y - 4);
+    y += 48;
+  });
+
+  y += 6;
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(IG_W - PADDING, y); ctx.stroke();
+  y += 40;
+
+  // ── 수호자 레벨 & BP ──
+  ctx.font = `700 26px ${FONT}`;
+  ctx.fillStyle = GOLD;
+  ctx.fillText('✦ 별숨 포인트', PADDING, y);
+  y += 44;
+  ctx.font = `800 52px ${FONT}`;
+  ctx.fillStyle = GOLD2;
+  ctx.fillText(`Lv.${guardianLevel}`, PADDING, y);
+  ctx.font = `400 26px ${FONT}`;
+  ctx.fillStyle = t3;
+  ctx.fillText(`수호자 · ${currentBp} BP 보유`, PADDING + 110, y - 8);
+
+  // 하단 브랜딩
+  ctx.font = `400 18px ${FONT}`;
+  ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+  ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
+
+  downloadCanvas(canvas, `byeolsoom_stats_${nickname}.png`);
+}
