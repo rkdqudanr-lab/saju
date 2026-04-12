@@ -25,10 +25,10 @@ export default function ShieldBlockModal({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const canBlock = currentBp >= cost;
   const bpShortage = cost - currentBp;
+
+  if (!isOpen) return null;
 
   return (
     <>
