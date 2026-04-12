@@ -71,11 +71,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     return () => { clearInterval(interval); document.removeEventListener('visibilitychange', update); };
   }, []);
 
-  // step / showUpgradeModal은 Zustand store에서 관리
+  // step / showUpgradeModal / dataPrecision은 Zustand store에서 관리
   const step               = useAppStore((s) => s.step);
   const setStep            = useAppStore((s) => s.setStep);
   const showUpgradeModal   = useAppStore((s) => s.showUpgradeModal);
   const setShowUpgradeModal = useAppStore((s) => s.setShowUpgradeModal);
+  const dataPrecision      = useAppStore((s) => s.dataPrecision);
 
   const [cat, setCat]                     = useState(0);
   const [selQs, setSelQs]                 = useState([]);
@@ -227,6 +228,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             isWeekly:          opts.isWeekly          || false,
             isDaily:           opts.isDaily           || false,
             responseStyle:     style,
+            precision_level:   dataPrecision?.level   || 'low',
             clientHour:        new Date().getHours(),
           }),
         });

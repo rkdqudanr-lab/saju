@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ON } from "../utils/saju.js";
 import { parseAccSummary, breakAtNatural, PKGS, SIGN_MOOD } from "../utils/constants.js";
 import AccItem, { FeedbackBtn } from "../components/AccItem.jsx";
+import PrecisionNudge from "../components/PrecisionNudge.jsx";
 import { useUserCtx } from "../context/AppContext.jsx";
 import { useSajuCtx } from "../context/AppContext.jsx";
 import { useGamCtx } from "../context/AppContext.jsx";
@@ -150,6 +151,8 @@ export default function ResultsStep({
               </div>
             );
           })}
+
+          <PrecisionNudge />
 
           <div className="res-actions">
             {showSubNudge && (

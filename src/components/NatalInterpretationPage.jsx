@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { OC, OE, ON, ILGAN_DESC } from "../utils/saju.js";
+import { useAppStore } from "../store/useAppStore.js";
 
 // ── 오행 테마 ──
 const ELEMENT_THEME = {
@@ -52,9 +53,28 @@ function PillarCards({ saju }) {
   );
 }
 
+const MAX_SCORE = 50;
+const LEVEL_META = {
+  low:  { label: '기본',   color: 'var(--t4)',   bar: '#888' },
+  mid:  { label: '중간',   color: '#6ab187',     bar: '#6ab187' },
+  high: { label: '초정밀', color: 'var(--gold)', bar: 'var(--gold)' },
+};
+const DATA_POINTS = [
+  { key: 'birth_date',     label: '생년월일',         pts: 10, icon: '📅', step: 1 },
+  { key: 'birth_time',     label: '생시 (태어난 시간)', pts: 20, icon: '⏰', step: 1 },
+  { key: 'current_concern',label: '현재 고민 키워드',   pts: 10, icon: '💭', step: 1 },
+  { key: 'life_stage',     label: '인생 단계 선택',    pts: 5,  icon: '🌱', step: 1 },
+  { key: 'other_profile',  label: '다른 사람 정보 추가', pts: 5,  icon: '👥', step: 1 },
+];
+
 // ── 메인 컴포넌트 ──
 export default function NatalInterpretationPage({ saju, sun, moon, asc, form, onGoStep }) {
   const [tab, setTab] = useState(0); // 0: 사주원국, 1: 별자리
+  const dataPrecision = useAppStore((s) => s.dataPrecision);
+  const { total = 0, level = 'low', filled = [] } = dataPrecision || {};
+  const pct      = Math.min(Math.round((total / MAX_SCORE) * 100), 100);
+  const meta     = LEVEL_META[level] || LEVEL_META.low;
+  const filledSet = new Set(filled);
 
   const domEl    = saju?.dom || '목';
   const elTheme  = ELEMENT_THEME[domEl] || ELEMENT_THEME['목'];
@@ -136,6 +156,54 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
               )}
             </div>
           )}
+        </div>
+
+        {/* ── 정밀도 게이지 카드 ── */}
+        <div
+          style={{
+            background: 'var(--bg2)',
+            border: `1px solid ${meta.color}33`,
+            borderRadius: 16,
+            padding: '14px 16px',
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ fontSize: 'var(--xs)', color: meta.color, fontWeight: 700, letterSpacing: '.06em' }}>
+              ✦ 별숨 정밀도
+            </div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+              {total}점 · <span style={{ color: meta.color, fontWeight: 600 }}>{meta.label}</span>
+            </div>
+          </div>
+          <div style={{ height: 5, background: 'var(--bg3)', borderRadius: 3, overflow: 'hidden', marginBottom: 12 }}>
+            <div style={{ width: `${pct}%`, height: '100%', background: meta.bar, borderRadius: 3, transition: 'width .6s ease' }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {DATA_POINTS.map(({ key, label, pts, icon }) => {
+              const done = filledSet.has(key);
+              return (
+                <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: '0.75rem', width: 18, textAlign: 'center', opacity: done ? 1 : 0.4 }}>{icon}</span>
+                  <span style={{ flex: 1, fontSize: 'var(--xs)', color: done ? 'var(--t2)' : 'var(--t4)', textDecoration: done ? 'none' : 'none' }}>
+                    {label}
+                  </span>
+                  {done
+                    ? <span style={{ fontSize: 'var(--xs)', color: meta.color, fontWeight: 600 }}>+{pts}</span>
+                    : <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', opacity: 0.6 }}>+{pts}점</span>
+                  }
+                  {!done && (
+                    <button
+                      onClick={() => onGoStep && onGoStep(1)}
+                      style={{ padding: '3px 8px', background: 'none', border: '1px solid var(--line)', borderRadius: 10, fontSize: '0.6rem', color: 'var(--t4)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+                    >
+                      입력
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* ── 탭 바 ── */}
@@ -294,7 +362,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
             별숨의 종합사주 ✦
           </button>
           <button
-            onClick={() => onGoStep && onGoStep(16)}
+            onClick={() => onGoStep && onGoStep(14)}
             style={{
               flex: 1,
               padding: '14px 10px',

@@ -55,4 +55,9 @@ export const useAppStore = create((set, get) => ({
   // ── 모달 상태 ──────────────────────────────────────────────
   showUpgradeModal: false,
   setShowUpgradeModal: (val) => set({ showUpgradeModal: val }),
+
+  // ── 데이터 정밀도 (useUserProfile에서 주입) ─────────────────
+  // filled: 채워진 데이터 포인트 키 배열
+  dataPrecision: { total: 0, level: 'low', filled: [] },
+  setDataPrecision: (val) => set({ dataPrecision: val }),
 }));

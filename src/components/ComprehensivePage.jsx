@@ -3,6 +3,7 @@ import { ON } from "../utils/saju.js";
 import { stripMarkdown } from "../utils/constants.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
+import PrecisionNudge from "./PrecisionNudge.jsx";
 
 // ── 섹션 파서 ──
 function parseSections(text, tags) {
@@ -352,6 +353,8 @@ export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx
               : <AstroPanel sun={sun} moon={moon} asc={asc} form={form} buildCtx={buildCtx} user={user} />
             }
           </div>
+
+          <PrecisionNudge />
         </div>
       </div>
     </div>

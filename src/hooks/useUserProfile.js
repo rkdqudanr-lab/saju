@@ -506,12 +506,13 @@ export function useUserProfile() {
     setShowConsentModal(false);
   }, [consentFlags]);
 
-  // ── Zustand 스토어에 유저/프로필/테마 주입 ──────────────────
-  const _storeSetUser    = useAppStore((s) => s.setUser);
-  const _storeSetProfile = useAppStore((s) => s.setProfile);
-  const _storeSetForm    = useAppStore((s) => s.setForm);
-  const _storeSetIsDark  = useAppStore((s) => s.setIsDark);
-  const _storeSetAuthFns = useAppStore((s) => s.setAuthFns);
+  // ── Zustand 스토어에 유저/프로필/테마/정밀도 주입 ──────────────
+  const _storeSetUser          = useAppStore((s) => s.setUser);
+  const _storeSetProfile       = useAppStore((s) => s.setProfile);
+  const _storeSetForm          = useAppStore((s) => s.setForm);
+  const _storeSetIsDark        = useAppStore((s) => s.setIsDark);
+  const _storeSetAuthFns       = useAppStore((s) => s.setAuthFns);
+  const _storeSetDataPrecision = useAppStore((s) => s.setDataPrecision);
 
   useEffect(() => { _storeSetUser(user); }, [user, _storeSetUser]);
   useEffect(() => { _storeSetProfile(profile); }, [profile, _storeSetProfile]);
@@ -520,6 +521,19 @@ export function useUserProfile() {
   // 함수들은 참조가 안정적이므로 초기 1회 주입 (deps 배열 의도적으로 빔)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { _storeSetAuthFns({ kakaoLogin, kakaoLogout, saveProfileToSupabase }); }, []);
+
+  // ── 데이터 정밀도 계산 (form/profile/lifeStage/otherProfiles 변경 시 갱신) ──
+  useEffect(() => {
+    let total = 0;
+    const filled = [];
+    if (form?.by && form?.bm && form?.bd)                                          { total += 10; filled.push('birth_date'); }
+    if (form?.bh && !form?.noTime)                                                 { total += 20; filled.push('birth_time'); }
+    if (profile?.worryText && profile.worryText.trim().length >= 3)               { total += 10; filled.push('current_concern'); }
+    if (lifeStage && lifeStage !== 'free')                                         { total += 5;  filled.push('life_stage'); }
+    if (otherProfiles?.length > 0)                                                 { total += 5;  filled.push('other_profile'); }
+    const level = total >= 50 ? 'high' : total >= 25 ? 'mid' : 'low';
+    _storeSetDataPrecision({ total, level, filled });
+  }, [form, profile, lifeStage, otherProfiles, _storeSetDataPrecision]);
 
   return {
     user, setUser,
