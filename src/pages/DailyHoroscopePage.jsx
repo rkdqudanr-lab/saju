@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import DailyStarCard from "../components/DailyStarCard.jsx";
+import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
 import OrbitalFrequencyMiniGame from "../components/OrbitalFrequencyMiniGame.jsx";
 import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
@@ -158,7 +158,7 @@ export default function DailyHoroscopePage({
               </div>
             ) : dailyResult ? (
               <>
-                <DailyStarCard result={dailyResult} />
+                <DailyStarCardV2 result={dailyResult} />
                 {dailyCount < DAILY_MAX ? (
                   <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px', marginTop: 12, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
                     다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})

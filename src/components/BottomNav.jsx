@@ -1,6 +1,6 @@
 /**
  * BottomNav — 하단 고정 내비게이션 바
- * 홈(오늘) / 별숨상담 / 기록 / 마이
+ * 오늘 / 상담 / 성장 / 광장  (4탭)
  * props 없이 Zustand store에서 직접 읽는다.
  */
 import { useAppStore } from '../store/useAppStore.js';
@@ -12,23 +12,19 @@ export default function BottomNav() {
   const formOkApprox = useAppStore((s) => s.formOkApprox);
 
   const tabs = [
-    { id: 'home',    icon: '⌂',  label: '오늘',   steps: [0, 23] },
-    { id: 'consult', icon: '💬', label: '상담',   steps: [2, 3, 4, 5] },
-    { id: 'records', icon: '🗓️', label: '기록',   steps: [9, 10, 17, 20] },
-    { id: 'square',  icon: '🏛️', label: '광장',   steps: [29] },
-    { id: 'my',      icon: '👤', label: '마이',   steps: [1, 19, 27] },
+    { id: 'today',   icon: '⌂',  label: '오늘',  steps: [0, 17, 20, 10, 23], tourId: 'nav-today' },
+    { id: 'consult', icon: '💬', label: '상담',  steps: [2, 3, 4, 5, 6, 8, 14, 24, 25, 26], tourId: 'nav-consult' },
+    { id: 'growth',  icon: '✨', label: '성장',  steps: [13, 30, 7, 12, 1, 19, 27], tourId: 'nav-growth' },
+    { id: 'square',  icon: '🏛️', label: '광장',  steps: [29, 32, 11, 31, 28], tourId: 'nav-square' },
   ];
 
-  const activeId =
-    tabs.find(t => t.steps.includes(step))?.id ??
-    (step === 0 ? 'home' : null);
+  const activeId = tabs.find(t => t.steps.includes(step))?.id ?? 'today';
 
   function handleTabPress(tab) {
-    if (tab.id === 'home')    { setStep(0); return; }
+    if (tab.id === 'today')   { setStep(0); return; }
     if (tab.id === 'consult') { setStep(formOkApprox ? 2 : 1); return; }
-    if (tab.id === 'records') { setStep(user ? 20 : 1); return; }
+    if (tab.id === 'growth')  { setStep(user ? 13 : 1); return; }
     if (tab.id === 'square')  { setStep(user ? 29 : 1); return; }
-    if (tab.id === 'my')      { setStep(user ? 27 : 1); return; }
   }
 
   return (
@@ -50,6 +46,7 @@ export default function BottomNav() {
         return (
           <button
             key={tab.id}
+            data-tour={tab.tourId}
             onClick={() => handleTabPress(tab)}
             aria-label={tab.label}
             style={{

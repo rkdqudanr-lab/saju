@@ -44,11 +44,15 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [starredIds, setStarredIds] = useState(new Set());
-  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, myinfo: true, fortune: true, special: false });
+  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, growth: true, square: false });
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [displayLimit, setDisplayLimit] = useState(15);
   const debounceRef = useRef(null);
-  const hiddenGroups = sidebarPrefs?.hiddenGroups || [];
+  // 기존 키('myinfo','fortune','special') → 새 키('growth','square')로 마이그레이션
+  const rawHidden = sidebarPrefs?.hiddenGroups || [];
+  const hiddenGroups = rawHidden.map(k =>
+    k === 'myinfo' ? 'growth' : k === 'fortune' ? 'growth' : k === 'special' ? 'consult' : k
+  );
   const toggleGroup = (key) => setOpenGroups(p => ({ ...p, [key]: !p[key] }));
 
   // 300ms 디바운스 처리
@@ -213,11 +217,33 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {openGroups.consult && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: '✦', label: '별숨에게 물어보기', s: 1 },
+                    { icon: '✦', label: '별숨에게 물어보기', s: 2 },
                     { icon: '📅', label: '월간 리포트', s: 6 },
                     { icon: '🔮', label: '별숨의 예언', s: 8 },
-                    { icon: '✦', label: '별숨의 종합사주', s: 14 },
-                    { icon: '🌟', label: '별숨의 종합 점성술', s: 16 },
+                    { icon: '📊', label: '종합 분석 (사주·점성술)', s: 14 },
+                  ].map(m => (
+                    <li key={m.s}>
+                      <button
+                        className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
+                        onClick={() => { onNav(m.s); onClose(); }}
+                        aria-current={step === m.s ? 'page' : undefined}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
+                      >
+                        <span className="smi-icon" aria-hidden="true">{m.icon}</span>
+                        <span className="smi-text">{m.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                  {/* 특별 기능 구분선 */}
+                  <li>
+                    <div style={{ margin: '6px var(--sp3) 4px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', paddingTop: 6, whiteSpace: 'nowrap' }}>✨ 특별 기능</span>
+                    </div>
+                  </li>
+                  {[
+                    { icon: '🌙', label: '꿈 해몽', s: 24 },
+                    { icon: '🗓️', label: '택일 (길일 찾기)', s: 25 },
+                    { icon: '📛', label: '이름 풀이 (성명학)', s: 26 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -236,20 +262,20 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
             </div>
           )}
 
-          {/* ── 나의 별숨 (토글) ── */}
-          {!hiddenGroups.includes('myinfo') && (
+          {/* ── 성장 · 나를 알아가기 (토글) ── */}
+          {!hiddenGroups.includes('growth') && (
             <div className="sidebar-section">
-              <button className="sidebar-group-header" onClick={() => toggleGroup('myinfo')} aria-expanded={openGroups.myinfo}>
-                <span>나의 별숨</span>
-                <span className="sidebar-group-arrow">{openGroups.myinfo ? '▾' : '▸'}</span>
+              <button className="sidebar-group-header" onClick={() => toggleGroup('growth')} aria-expanded={openGroups.growth}>
+                <span>성장 · 나를 알아가기</span>
+                <span className="sidebar-group-arrow">{openGroups.growth ? '▾' : '▸'}</span>
               </button>
-              {openGroups.myinfo && (
+              {openGroups.growth && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
+                    { icon: '🀄', label: 'MyBlueprint — 나의 별숨', s: 13 },
                     { icon: '🌌', label: '나의 대운 흐름', s: 30 },
-                    { icon: '📊', label: '나의 별숨 통계', s: 28 },
-                    { icon: '🏛️', label: '별숨 광장', s: 29 },
-                    { icon: '🛍️', label: '별숨 숍', s: 31 },
+                    { icon: '💞', label: '1대1 별숨 (궁합)', s: 7 },
+                    { icon: '🎂', label: '기념일 운세', s: 12 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -268,21 +294,21 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
             </div>
           )}
 
-          {/* ── 운세 & 인연 (토글) ── */}
-          {!hiddenGroups.includes('fortune') && (
+          {/* ── 광장 (토글) ── */}
+          {!hiddenGroups.includes('square') && (
             <div className="sidebar-section">
-              <button className="sidebar-group-header" onClick={() => toggleGroup('fortune')} aria-expanded={openGroups.fortune}>
-                <span>운세 & 인연</span>
-                <span className="sidebar-group-arrow">{openGroups.fortune ? '▾' : '▸'}</span>
+              <button className="sidebar-group-header" onClick={() => toggleGroup('square')} aria-expanded={openGroups.square}>
+                <span>광장</span>
+                <span className="sidebar-group-arrow">{openGroups.square ? '▾' : '▸'}</span>
               </button>
-              {openGroups.fortune && (
+              {openGroups.square && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: '💞', label: '1대1 별숨 (궁합)', s: 7 },
+                    { icon: '🏛️', label: '별숨 광장', s: 29 },
                     { icon: '🤝', label: '익명 궁합 광장', s: 32 },
                     { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
-                    { icon: '🎂', label: '기념일 운세', s: 12 },
-                    { icon: '🀄', label: '나의 별숨 (사주원국·별자리)', s: 13 },
+                    { icon: '🛍️', label: '별숨 숍', s: 31 },
+                    { icon: '📊', label: '나의 별숨 통계', s: 28 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -298,32 +324,6 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   ))}
                 </ul>
               )}
-            </div>
-          )}
-
-          {/* ── 특별 기능 (항상 펼침) ── */}
-          {!hiddenGroups.includes('special') && (
-            <div className="sidebar-section">
-              <div className="sidebar-section-lbl">✨ 특별 기능</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {[
-                  { icon: '🌙', label: '꿈 해몽', s: 24 },
-                  { icon: '🗓️', label: '택일 (길일 찾기)', s: 25 },
-                  { icon: '📛', label: '이름 풀이 (성명학)', s: 26 },
-                ].map(m => (
-                  <li key={m.s}>
-                    <button
-                      className={`sidebar-menu-item ${step === m.s ? 'active' : ''}`}
-                      onClick={() => { onNav(m.s); onClose(); }}
-                      aria-current={step === m.s ? 'page' : undefined}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNav(m.s); onClose(); } }}
-                    >
-                      <span className="smi-icon" aria-hidden="true">{m.icon}</span>
-                      <span className="smi-text">{m.label}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
             </div>
           )}
 
