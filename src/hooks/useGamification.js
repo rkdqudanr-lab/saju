@@ -628,9 +628,11 @@ export function useGamification(user, showToast) {
   }, [gamificationState]);
 
   // ── Zustand 스토어에 게이미피케이션 데이터 주입 ──────────────
-  const _setGamData = useAppStore((s) => s.setGamificationData);
+// ── Zustand 스토어에 게이미피케이션 데이터 주입 ──────────────
   useEffect(() => {
-    _setGamData({ gamificationState, missions });
+    // 💡 최상단 hook(useAppStore) 호출을 제거하고 내부 API로 직접 주입
+    useAppStore.getState().setGamificationData({ gamificationState, missions });
+  }, [gamificationState, missions]);
   }, [gamificationState, missions, _setGamData]);
 
   // ─────────────────────────────────────────────────────────────
