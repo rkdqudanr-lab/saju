@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { getTodayInfo } from '../utils/saju.js';
 
 /**
  * 별숨 전역 Zustand 스토어
