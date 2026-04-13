@@ -20,6 +20,27 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
+  // 👇 여기에 build 옵션을 추가하여 청크(Chunk)를 강제로 분리합니다.
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor'; // React 등 외부 라이브러리 분리
+          }
+          if (id.includes('/src/utils/')) {
+            return 'utils'; // constants.js, saju.js 등 유틸리티 강제 분리
+          }
+          if (id.includes('/src/hooks/')) {
+            return 'hooks'; // 커스텀 훅 강제 분리
+          }
+          if (id.includes('/src/store/')) {
+            return 'store'; // Zustand 상태 관리 분리
+          }
+        }
+      }
+    }
+  },
   server: {
     proxy: {
       // 로컬 개발 시 /api/ask → 직접 Anthropic API로 프록시
