@@ -44,7 +44,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [starredIds, setStarredIds] = useState(new Set());
-  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, growth: true, square: false });
+  const [openGroups, setOpenGroups] = useState({ today: true, consult: true, growth: true, square: true });
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [displayLimit, setDisplayLimit] = useState(15);
   const debounceRef = useRef(null);

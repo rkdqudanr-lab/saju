@@ -297,8 +297,7 @@ export default function StatsPage({ callApi }) {
     ].join('\n');
 
     try {
-      const res = await callApi({
-        userMessage: `나의 별숨 상담 패턴을 분석해줘:\n${summary}`,
+      const res = await callApi(`나의 별숨 상담 패턴을 분석해줘:\n${summary}`, {
         isAnalytics: true,
       });
       setInsight(res?.text || '');

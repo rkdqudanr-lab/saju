@@ -165,8 +165,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     ].filter(Boolean).join('\n');
 
     try {
-      const result = await callApi({
-        userMessage: `나의 대운 흐름을 해설해줘:\n${summary}`,
+      const result = await callApi(`나의 대운 흐름을 해설해줘:\n${summary}`, {
         context: ctx,
         isDaeun: true,
       });
