@@ -59,20 +59,21 @@ export function getMoonPhase(year, month, day) {
   return MOON_PHASES[idx] || MOON_PHASES[0];
 }
 
-export const DIARY_PROMPT = (moonPhaseLabel = null) =>
-  `사용자가 오늘 하루 있었던 일을 솔직하게 적었습니다.
+export function DIARY_PROMPT(moonPhaseLabel = null) {
+  return `사용자가 오늘 하루 있었던 일을 솔직하게 적었습니다.
 사주와 별자리 관점에서 이 상황을 따뜻하고 공감하며 재해석해주세요.
 왜 이런 일이 일어났는지, 어떤 기운이 작용했는지, 앞으로 어떻게 받아들이면 좋을지 이야기해주세요.
 판단하지 말고 별숨의 언어로 위로하고 통찰을 나눠주세요.${moonPhaseLabel ? `\n\n[달의 위상] 오늘은 ${moonPhaseLabel}이에요. 달의 에너지를 해석에 자연스럽게 녹여주세요.` : ''}
 
 응답 마지막에 반드시 아래 형식으로 후속 질문 2개를 제안해주세요. 질문은 반드시 사용자가 별숨에게 묻는 1인칭 형태로 작성해주세요 (예: "~가 궁금해요", "~를 더 알고 싶어요"):
 [후속질문] 질문1 / 질문2`;
+}
 
 // ═══════════════════════════════════════════════════════════
 //  꿈 해몽 프롬프트
 // ═══════════════════════════════════════════════════════════
-export const DREAM_PROMPT = ({ dreamText, dreamMood, dreamTags, moonPhaseLabel }) =>
-  `사용자가 꾼 꿈 내용을 가져왔어요.
+export function DREAM_PROMPT({ dreamText, dreamMood, dreamTags, moonPhaseLabel }) {
+  return `사용자가 꾼 꿈 내용을 가져왔어요.
 ${dreamTags && dreamTags.length > 0 ? `꿈 속 요소: ${dreamTags.join(', ')}` : ''}
 ${dreamMood ? `깨어날 때의 감정: ${dreamMood}` : ''}
 ${moonPhaseLabel ? `오늘의 달 위상: ${moonPhaseLabel}` : ''}
@@ -83,12 +84,13 @@ ${moonPhaseLabel ? `오늘의 달 위상: ${moonPhaseLabel}` : ''}
 
 응답 마지막에 반드시 아래 형식으로 후속 질문 2개를 제안해주세요. 질문은 반드시 사용자가 별숨에게 묻는 1인칭 형태로 작성해주세요 (예: "~가 궁금해요", "~를 더 알고 싶어요"):
 [후속질문] 질문1 / 질문2`;
+}
 
 // ═══════════════════════════════════════════════════════════
 //  택일 프롬프트 (吉日 찾기)
 // ═══════════════════════════════════════════════════════════
-export const TAEGIL_PROMPT = ({ eventType, candidateDates, sajuCtx }) =>
-  `사용자가 중요한 날짜를 고르려고 합니다. 이벤트: ${eventType}
+export function TAEGIL_PROMPT({ eventType, candidateDates, sajuCtx }) {
+  return `사용자가 중요한 날짜를 고르려고 합니다. 이벤트: ${eventType}
 
 후보 날짜들의 사주 정보:
 ${candidateDates.map(d => `• ${d.label}: ${d.sajuDesc}`).join('\n')}
@@ -99,12 +101,13 @@ ${sajuCtx ? `[사용자 사주 정보]\n${sajuCtx}` : ''}
 가장 좋은 날 1~2개를 추천해주세요.
 이유는 오행의 상생·상극, 일간과의 합·충, 절기 기운을 근거로 설명해주세요.
 마지막에 그 날에 특히 하면 좋은 것, 조심할 것 한 가지씩만 간결하게 말해주세요.`;
+}
 
 // ═══════════════════════════════════════════════════════════
 //  이름 풀이 프롬프트 (성명학)
 // ═══════════════════════════════════════════════════════════
-export const NAME_FORTUNE_PROMPT = ({ name, strokes, sounds, sajuCtx }) =>
-  `사용자의 이름을 성명학 관점에서 풀이해주세요.
+export function NAME_FORTUNE_PROMPT({ name, strokes, sounds, sajuCtx }) {
+  return `사용자의 이름을 성명학 관점에서 풀이해주세요.
 
 이름: ${name}
 ${strokes ? `획수 합계: ${strokes}획` : ''}
@@ -115,12 +118,13 @@ ${sajuCtx ? `[사용자 사주 정보]\n${sajuCtx}` : ''}
 이름의 오행 에너지, 사주와의 조화, 이름이 가진 기운이 삶에 어떤 영향을 미치는지 알려주세요.
 성명학적 강점과 보완할 점, 이름이 가진 특별한 의미를 따뜻하게 해석해주세요.
 판단하기보다 이름 속에 담긴 좋은 기운을 발견하는 방향으로 이야기해주세요.`;
+}
 
 // ═══════════════════════════════════════════════════════════
 //  목표별 운세 프롬프트
 // ═══════════════════════════════════════════════════════════
-export const GOAL_FORTUNE_PROMPT = ({ goalType, goalDetail, sajuCtx }) =>
-  `사용자가 구체적인 목표에 대한 운세를 물어왔어요.
+export function GOAL_FORTUNE_PROMPT({ goalType, goalDetail, sajuCtx }) {
+  return `사용자가 구체적인 목표에 대한 운세를 물어왔어요.
 
 목표 유형: ${goalType}
 ${goalDetail ? `상세 내용: ${goalDetail}` : ''}
@@ -131,7 +135,7 @@ ${sajuCtx ? `[사용자 사주 정보]\n${sajuCtx}` : ''}
 무엇을 준비하면 성공 가능성이 높아지는지를 구체적으로 알려주세요.
 응원하되 막연하지 않게, 실질적인 방향을 제시해주세요.
 마지막에 이 목표를 위한 별숨의 조언 한 문장을 '✦ 별숨의 한마디' 형식으로 남겨주세요.`;
-
+}
 // ═══════════════════════════════════════════════════════════
 //  AI 사주사 캐릭터 프롬프트
 // ═══════════════════════════════════════════════════════════
@@ -142,14 +146,15 @@ export const SAJU_MASTER_CHARACTERS = [
   { id: 'friend', name: '별숨이 (AI 친구)', emoji: '⭐', desc: '친근한 나만의 별숨', style: '친구처럼 편하게, 공감하며' },
 ];
 
-export const SAJU_MASTER_PROMPT = (character, sajuCtx) =>
-  `당신은 ${character.name}입니다. ${character.desc}.
+export function SAJU_MASTER_PROMPT(character, sajuCtx) {
+  return `당신은 ${character.name}입니다. ${character.desc}.
 말하는 방식: ${character.style} 이야기해주세요.
 
 ${sajuCtx ? `[상대방의 사주 정보]\n${sajuCtx}` : ''}
 
 사용자의 질문에 캐릭터에 맞는 말투와 스타일로 사주·운세 관점의 조언을 해주세요.
 3~5문장으로 핵심만 전달하고, 마지막에 격려의 한마디를 덧붙여주세요.`;
+}
 
 // ═══════════════════════════════════════════════════════════
 //  사주 강의 콘텐츠
@@ -188,8 +193,8 @@ export const SAJU_LECTURE_CHAPTERS = [
   },
 ];
 
-export const ANNIVERSARY_PROMPT = (type, dateStr, isFuture = false) =>
-  isFuture
+export function ANNIVERSARY_PROMPT(type, dateStr, isFuture = false) {
+  return isFuture
     ? `사용자가 앞으로 다가올 중요한 날짜를 가져왔어요. ${type ? `'${type}'` : '계획 중인 날'} — ${dateStr}입니다.
 이 날의 사주(간지, 오행, 기운)를 바탕으로, 이 날이 어떤 기운을 품고 있는지, 어떻게 활용하면 좋을지 알려주세요.
 "이 날을 선택하신 데는 이유가 있어요"라는 관점으로 따뜻하게 해석하고,
@@ -198,6 +203,7 @@ export const ANNIVERSARY_PROMPT = (type, dateStr, isFuture = false) =>
 이 날의 사주(간지, 오행, 기운)를 바탕으로, 왜 이 날이 특별한지, 어떤 에너지가 담겨 있는지,
 그리고 "이 날을 선택한 이유가 있었군요"라는 관점으로 따뜻하게 해석해주세요.
 결혼, 입사, 시험일 같은 중요한 날이라면 그 기운이 어떻게 작용했는지도 알려주세요.`;
+}
 
 // ═══════════════════════════════════════════════════════════
 //  🧹 마크다운 전처리기 및 요약 파서
