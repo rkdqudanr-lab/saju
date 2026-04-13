@@ -35,6 +35,15 @@ export default function MissionDashboard({
     [onMissionComplete, completingId]
   );
 
+  const completedCount = missions.filter(m => m.is_completed).length;
+  const total = missions.length;
+  const completionPct = Math.round((completedCount / total) * 100);
+  const milestoneReached = completionPct >= 50;
+
+  // 미션을 do/dont와 처방(color/menu/item)으로 분리해서 표시
+  const prescriptions = missions.filter(m => ['color', 'menu', 'item'].includes(m.mission_type));
+  const behavioral = missions.filter(m => ['do', 'dont'].includes(m.mission_type));
+
   if (missions.length === 0) {
     return (
       <div className={`mission-dashboard ${className}`}>
@@ -52,15 +61,6 @@ export default function MissionDashboard({
       </div>
     );
   }
-
-  const completedCount = missions.filter(m => m.is_completed).length;
-  const total = missions.length;
-  const completionPct = Math.round((completedCount / total) * 100);
-  const milestoneReached = completionPct >= 50;
-
-  // 미션을 do/dont와 처방(color/menu/item)으로 분리해서 표시
-  const prescriptions = missions.filter(m => ['color', 'menu', 'item'].includes(m.mission_type));
-  const behavioral = missions.filter(m => ['do', 'dont'].includes(m.mission_type));
 
   function MissionRow({ mission }) {
     const cfg = MISSION_CONFIG[mission.mission_type] || { emoji: '✨', label: '미션', color: 'var(--gold)', bg: 'var(--goldf)' };
