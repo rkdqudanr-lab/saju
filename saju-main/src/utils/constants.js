@@ -1,0 +1,586 @@
+// ── 오늘의 한마디 (날짜 기반 순환) ──
+export const DAILY_WORDS = [
+  "오늘은 오래 미룬 연락 하나를 보내기 좋은 날이에요.",
+  "지금 느끼는 불안은 당신이 그만큼 진심이라는 뜻이에요.",
+  "멈춰있는 것처럼 보여도, 당신은 분명히 자라고 있어요.",
+  "오늘은 결정을 서두르지 않아도 괜찮은 날이에요.",
+  "당신이 지나온 길이 지금 서 있는 곳을 만들었어요.",
+  "작은 용기 하나가 오늘 당신의 하루를 바꿀 수 있어요.",
+  "지금 당신 곁에 있는 사람들은 이유가 있어 거기 있어요.",
+  "오늘은 남의 기준이 아닌 내 기준으로 판단해봐요.",
+  "당신의 섬세함은 약점이 아니라 가장 강한 무기예요.",
+  "기다림도 하나의 선택이에요. 흔들리지 않아도 돼요.",
+  "오늘 하늘의 기운은 새로운 시작을 응원하고 있어요.",
+  "당신이 지금 느끼는 감정, 충분히 그럴 만해요.",
+  "오늘은 조금 느려도 괜찮은 날이에요. 숨 먼저 쉬어요.",
+  "한 발이 작아 보여도, 방향이 맞으면 충분해요.",
+  "당신의 직감은 생각보다 훨씬 정확해요.",
+  "오늘 만나는 인연엔 조금 더 마음을 열어봐요.",
+  "지금 힘든 건 당신이 뭔가를 간절히 원한다는 신호예요.",
+  "완벽하지 않아도 충분히 빛나고 있어요.",
+  "오늘은 비교하지 말고 어제의 나와만 대화해봐요.",
+  "당신이 포기하지 않는 한, 이건 아직 끝이 아니에요.",
+  "오늘의 작은 친절이 내일 당신에게 돌아와요.",
+  "지금 이 순간이 나중엔 가장 빛나는 기억이 될 수 있어요.",
+  "당신은 지금 당신이 생각하는 것보다 훨씬 괜찮아요.",
+  "오늘은 무언가를 내려놓아도 좋은 날이에요.",
+  "새로운 문이 열리기 전엔 늘 복도가 있어요. 지금은 복도예요.",
+  "당신의 기다림은 반드시 의미 있는 형태로 돌아와요.",
+  "오늘 하루의 끝, 스스로에게 수고했다고 말해줘요.",
+  "당신이 선택한 길이 정답이에요. 믿어봐요.",
+  "지금 이 시기는 씨앗을 심는 계절이에요. 조급해하지 않아도 돼요.",
+  "오늘 당신의 별은 조용히, 하지만 분명히 빛나고 있어요.",
+];
+
+export function getDailyWord(d){ return DAILY_WORDS[(d-1)%DAILY_WORDS.length]; }
+
+const MOON_PHASES = [
+  { icon: '🌑', label: '신월' },
+  { icon: '🌒', label: '초승달' },
+  { icon: '🌓', label: '상현달' },
+  { icon: '🌔', label: '상현볼록달' },
+  { icon: '🌕', label: '보름달' },
+  { icon: '🌖', label: '하현볼록달' },
+  { icon: '🌗', label: '하현달' },
+  { icon: '🌘', label: '그믐달' },
+];
+
+/** 달 위상 계산 (기준 신월: 2000-01-06) */
+export function getMoonPhase(year, month, day) {
+  if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
+    return MOON_PHASES[0];
+  }
+  const ref = new Date(2000, 0, 6);
+  const target = new Date(year, month - 1, day);
+  const diffDays = (target - ref) / 86400000;
+  if (isNaN(diffDays)) return MOON_PHASES[0];
+  const phase = ((diffDays % 29.53059) + 29.53059) % 29.53059;
+  const idx = Math.round((phase / 29.53059) * 8) % 8;
+  return MOON_PHASES[idx] || MOON_PHASES[0];
+}
+
+export const DIARY_PROMPT = (moonPhaseLabel = null) =>
+  `사용자가 오늘 하루 있었던 일을 솔직하게 적었습니다.
+사주와 별자리 관점에서 이 상황을 따뜻하고 공감하며 재해석해주세요.
+왜 이런 일이 일어났는지, 어떤 기운이 작용했는지, 앞으로 어떻게 받아들이면 좋을지 이야기해주세요.
+판단하지 말고 별숨의 언어로 위로하고 통찰을 나눠주세요.${moonPhaseLabel ? `\n\n[달의 위상] 오늘은 ${moonPhaseLabel}이에요. 달의 에너지를 해석에 자연스럽게 녹여주세요.` : ''}
+
+응답 마지막에 반드시 아래 형식으로 후속 질문 2개를 제안해주세요:
+[후속질문] 질문1 / 질문2`;
+
+export const ANNIVERSARY_PROMPT = (type, dateStr, isFuture = false) =>
+  isFuture
+    ? `사용자가 앞으로 다가올 중요한 날짜를 가져왔어요. ${type ? `'${type}'` : '계획 중인 날'} — ${dateStr}입니다.
+이 날의 사주(간지, 오행, 기운)를 바탕으로, 이 날이 어떤 기운을 품고 있는지, 어떻게 활용하면 좋을지 알려주세요.
+"이 날을 선택하신 데는 이유가 있어요"라는 관점으로 따뜻하게 해석하고,
+이 날 특히 잘 맞는 행동이나 조심할 점, 준비하면 좋은 것을 구체적으로 말해주세요.`
+    : `사용자가 특별한 날짜를 가져왔어요. ${type ? `'${type}'` : '소중한 날'} — ${dateStr}입니다.
+이 날의 사주(간지, 오행, 기운)를 바탕으로, 왜 이 날이 특별한지, 어떤 에너지가 담겨 있는지,
+그리고 "이 날을 선택한 이유가 있었군요"라는 관점으로 따뜻하게 해석해주세요.
+결혼, 입사, 시험일 같은 중요한 날이라면 그 기운이 어떻게 작용했는지도 알려주세요.`;
+
+// ═══════════════════════════════════════════════════════════
+//  🧹 마크다운 전처리기 및 요약 파서
+// ═══════════════════════════════════════════════════════════
+// 요약 텍스트를 중간 공백 기준으로 자연스럽게 두 줄로 나눠요
+export function breakAtNatural(text) {
+  if (!text || text.length <= 14) return text;
+  const mid = Math.floor(text.length / 2);
+  const leftIdx = text.lastIndexOf(' ', mid);
+  const rightIdx = text.indexOf(' ', mid);
+  if (leftIdx < 0 && rightIdx < 0) return text;
+  let breakIdx;
+  if (leftIdx < 0) breakIdx = rightIdx;
+  else if (rightIdx < 0) breakIdx = leftIdx;
+  else breakIdx = (mid - leftIdx <= rightIdx - mid) ? leftIdx : rightIdx;
+  return text.slice(0, breakIdx) + '\n' + text.slice(breakIdx + 1);
+}
+
+export function stripMarkdown(text){
+  return text
+    .replace(/^#{1,6}\s+/gm,'')
+    .replace(/---+/g,'')
+    .replace(/\*\*(.*?)\*\*/g,'$1')
+    .replace(/\*(.*?)\*/g,'$1')
+    .replace(/^[-•*]\s+/gm,'')
+    .replace(/^\d+\.\s+/gm,'')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
+}
+
+export function parseAccSummary(text) {
+  if (!text) return { summary: '', text: '' };
+
+  // 1순위: [요약] 태그 명시적 파싱 (기존 방식)
+  const tagMatch = text.match(/\[요약\]\s*(.*?)(?:\n|$)/);
+  if (tagMatch) {
+    const summary = tagMatch[1].replace(/^(요약|핵심)[\s:]*/i, '').trim();
+    const restText = text.replace(/\[요약\].*?(?:\n|$)/, '').trim();
+    return { summary, text: restText };
+  }
+
+  // 2순위: 🀄 또는 ✦ 앵커 이전 첫 문장을 요약으로 추출 (신규 구조 대응)
+  const anchorIdx = text.search(/[🀄✦]/);
+  if (anchorIdx > 10) {
+    const beforeAnchor = text.slice(0, anchorIdx).trim();
+    const firstSentence = beforeAnchor.split(/[.!?。]\s*/)[0]?.trim();
+    if (firstSentence && firstSentence.length > 5 && firstSentence.length < 60) {
+      return {
+        summary: firstSentence,
+        text: text.slice(anchorIdx).trim(),
+      };
+    }
+  }
+
+  // 3순위: 첫 줄이 짧으면 요약으로 처리
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length > 1 && lines[0].length < 50) {
+    return { summary: lines[0], text: lines.slice(1).join('\n').trim() };
+  }
+
+  return { summary: '', text };
+}
+
+/** 텍스트 시작이 '요약', '핵심' 등일 경우 첫 글자 대성자(Drop-cap) 제외 */
+export function shouldDropCap(text) {
+  if (!text || text.length < 20) return false;
+  const exclude = ['요약', '핵심', '총평', '결론', '✦', '🀄', '[요약]'];
+  const firstLine = text.split('\n')[0].trim();
+  return !exclude.some(word => firstLine.startsWith(word));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  타이밍 상수 (애니메이션/타이핑 딜레이)
+// ═══════════════════════════════════════════════════════════
+export const TIMING = {
+  typingWord: 130,     // AccItem 기본 타이핑 (단어 간격 ms)
+  typingChat: 40,      // 채팅 버블 타이핑
+  typingReport: 35,    // 리포트 타이핑
+  sampleChar: 28,      // SamplePreview 기본 문자 딜레이
+  samplePunct: 280,    // 문장부호 딜레이 (. ! ?)
+  sampleComma: 120,    // 쉼표 딜레이
+  sampleNewline: 200,  // 개행 딜레이
+  skeletonCycle: 2000, // 스켈레톤 애니메이션 주기
+  toastDuration: 3500, // 토스트 자동 사라짐 (ms)
+};
+
+// ═══════════════════════════════════════════════════════════
+//  데이터
+// ═══════════════════════════════════════════════════════════
+export const PLACES = [
+  {id:'burger',emoji:'🍔',label:'버거킹',hint:'패스트푸드'},
+  {id:'cafe',emoji:'☕',label:'카페',hint:'브런치'},
+  {id:'cvs',emoji:'🏪',label:'편의점',hint:'야식'},
+  {id:'cinema',emoji:'🎬',label:'영화관',hint:'데이트'},
+  {id:'travel',emoji:'✈️',label:'여행',hint:'장거리'},
+  {id:'pub',emoji:'🍺',label:'술집',hint:'밤'},
+  {id:'market',emoji:'🛒',label:'마트',hint:'장보기'},
+];
+
+export const SIGN_MOOD = {
+  '양자리':  {color:'#E8624A',bg:'rgba(232,98,74,.1)',word:'불꽃같은 에너지',emoji:'🔥'},
+  '황소자리': {color:'#7CB87A',bg:'rgba(124,184,122,.1)',word:'포근하고 안정적',emoji:'🌿'},
+  '쌍둥이자리':{color:'#6BBFB5',bg:'rgba(107,191,181,.1)',word:'호기심 가득한',emoji:'💫'},
+  '게자리':  {color:'#6B9EC4',bg:'rgba(107,158,196,.1)',word:'감성이 풍부한',emoji:'🌙'},
+  '사자자리': {color:'#E8B048',bg:'rgba(232,176,72,.1)',word:'당당하게 빛나는',emoji:'✨'},
+  '처녀자리': {color:'#A8C87A',bg:'rgba(168,200,122,.1)',word:'섬세하고 성실한',emoji:'🌾'},
+  '천칭자리': {color:'#C4A8D8',bg:'rgba(196,168,216,.1)',word:'균형잡힌 심미안',emoji:'⚖️'},
+  '전갈자리': {color:'#9B4EC4',bg:'rgba(155,78,196,.1)',word:'깊고 강렬한',emoji:'🔮'},
+  '사수자리': {color:'#E8A048',bg:'rgba(232,160,72,.1)',word:'자유롭고 낙천적',emoji:'🏹'},
+  '염소자리': {color:'#8A8A8A',bg:'rgba(138,138,138,.1)',word:'묵직한 뚝심',emoji:'⛰️'},
+  '물병자리': {color:'#48B4E8',bg:'rgba(72,180,232,.1)',word:'독창적인 시각',emoji:'⚡'},
+  '물고기자리':{color:'#8EC4E8',bg:'rgba(142,196,232,.1)',word:'공감능력이 넘치는',emoji:'🌊'},
+};
+
+export const SAMPLE_ESSAYS = [
+  "물고기자리의 감성과 계수의 섬세함이 만나면, 마음 깊은 곳에서 세상을 느끼는 사람이 돼요. 오늘 느끼는 그 막막함은 사실 변화의 전조예요. 별이 방향을 바꾸는 중이라 잠깐 흔들리는 거예요. 그 흔들림 안에 오히려 답이 있어요...",
+  "사주에 화(火) 기운이 강하게 흐를 때, 사자자리의 태양과 만나면 에너지가 선명해져요. 지금 고민하는 그 선택은 — 사실 이미 마음이 정해진 것 같아요. 두려움이 아닌 설렘으로 읽어봐요. 별이 등을 밀고 있거든요...",
+  "천칭자리의 균형 감각과 기토의 조화로운 기질이 함께 속삭여요. 오늘은 조용히 자신을 돌아보기 좋은 날이에요. 너무 많은 것을 혼자 짊어지지 않아도 괜찮아요. 가볍게 내려놓는 것도 용기예요...",
+];
+
+export const CATS_ALL=[
+  {id:"love",icon:"💕",label:"연애·결혼",qs:["요즘 좋아하는 사람이 생겼는데 먼저 고백해도 될까요?","올해 결혼운이 들어와 있나요?","지금 사귀는 사람과 궁합이 어떤지 궁금해요.","이별 후 너무 힘든데, 새로운 인연이 언제 올까요?","장거리 연애를 계속해도 괜찮을까요?","재혼을 생각하고 있는데, 지금이 맞는 타이밍일까요?"]},
+  {id:"work",icon:"💼",label:"일·커리어",qs:["이직을 고민 중인데 올해 타이밍이 맞을까요?","지금 하는 직무가 제 적성과 잘 맞는지 궁금해요.","직장 상사와의 관계가 힘든데 어떻게 대처해야 할까요?","올해 승진이나 연봉 인상운이 있을까요?","완전히 새로운 분야로 커리어를 바꿔도 될까요?","지금 직장을 그만두고 싶은데 타이밍이 맞는 건지 모르겠어요."]},
+  {id:"money",icon:"💰",label:"돈·재물",qs:["올해 재물운이 언제 가장 크게 들어오나요?","주식이나 부동산 투자를 시작해도 좋은 시기일까요?","자꾸 돈이 새어나가는데 어떻게 막아야 할까요?","부업을 시작하려고 하는데 수익이 날까요?","수입이 들쑥날쑥한데 안정될 시기가 올까요?","큰 지출을 앞두고 있는데 지금이 괜찮은 시기인가요?"]},
+  {id:"health",icon:"🌿",label:"건강",qs:["올해 특별히 조심해야 할 신체 부위가 있나요?","요즘 너무 피곤한데 회복할 수 있는 방향이 있을까요?","수면의 질을 높이려면 어떻게 해야 할까요?","만성적인 피로나 번아웃이 언제쯤 나아질까요?","야간 근무나 불규칙한 생활이 몸에 어떤 영향을 미치고 있나요?"]},
+  {id:"relation",icon:"🫧",label:"인간관계",qs:["주변에 저를 시기하는 사람이 있는 것 같아요. 조심해야 할까요?","오래된 친구와 멀어졌는데 다시 회복될 수 있을까요?","새로운 모임에 나가면 좋은 인연을 맺을 수 있을까요?","직장 동료와의 갈등이 계속되는데 어떻게 대처해야 할까요?","점점 고립되는 것 같은데 사주에서 이유를 찾을 수 있을까요?"]},
+  {id:"future",icon:"🔮",label:"미래·운명",qs:["제 인생에서 가장 큰 전환점은 언제 찾아오나요?","10년 뒤의 저는 어떤 모습으로 살고 있을까요?","올해 제가 가장 집중해야 할 한 가지는 무엇인가요?"]},
+  {id:"study",icon:"📚",label:"학업·시험",qs:["올해 준비 중인 중요한 시험에 합격할 수 있을까요?","어떤 분야를 깊이 공부하는 게 제 사주와 맞을까요?","공부 집중이 안 되는데 어떻게 해야 할까요?","재수·반수를 해도 좋은 결과가 날 수 있을까요?","가족의 기대와 내가 하고 싶은 공부 방향이 달라 힘들어요.","나이가 좀 있는데 새로운 자격증 공부를 시작해도 될까요?"]},
+  {id:"move",icon:"🏠",label:"이사·이동",qs:["올해 이사하기 좋은 달이 언제인가요?","제 기운과 잘 맞는 동네나 집의 방향이 있을까요?","직장을 먼 지역으로 옮겨도 잘 적응할 수 있을까요?"]},
+  {id:"business",icon:"📈",label:"사업·창업",qs:["지금 창업을 시작해도 괜찮은 대운인가요?","어떤 업종이 제 재물운을 가장 잘 끌어올릴까요?","동업을 제안받았는데 함께해도 괜찮을까요?","프리랜서로 독립하려고 하는데 수입이 안정될 수 있을까요?","지점이나 매장을 하나 더 열까 고민 중인데 타이밍이 맞을까요?","주요 거래처와 계약이 성사될 가능성이 있나요?"]},
+  {id:"family",icon:"🏡",label:"가족·부부",qs:["요즘 가족 간의 갈등이 잦은데 언제쯤 평화로워질까요?","자녀와의 관계를 부드럽게 풀려면 제가 어떻게 해야 할까요?","부부 관계를 개선할 수 있는 풍수나 조언이 있을까요?","오랫동안 결혼 생활을 해왔는데 다시 설렐 수 있을까요?","육아와 일을 병행하면서 지쳐있어요. 이 시기가 언제 끝날까요?"]},
+  {id:"contract",icon:"📝",label:"매매·계약",qs:["지금 집이나 부동산을 팔아도 좋은 시기인가요?","곧 큰 계약을 앞두고 있는데 유리하게 성사될까요?","제 인생에 문서운이 들어오는 시기가 언제인가요?","협상을 앞두고 있는데 유리하게 진행될 수 있을까요?","계약하려는 날짜가 좋은 날인지 궁금해요.","거래 상대방이 신뢰할 만한 사람인지 기운으로 볼 수 있을까요?"]},
+  {id:"mind",icon:"🧠",label:"자아·심리",qs:["요즘 너무 무기력한데, 제 사주에 우울한 기운이 있나요?","남들이 모르는 저만의 진짜 강력한 장점은 무엇인가요?","자존감이 많이 떨어졌는데, 저를 위한 힐링 방법이 있을까요?","지금 내가 진짜로 원하는 게 뭔지 모르겠어요.","오랫동안 쌓인 상처가 있는데 언제쯤 치유될 수 있을까요?","내 인생이 맞는 방향으로 가고 있는 건지 확인하고 싶어요."]},
+  {id:"pet",icon:"🐾",label:"반려동물",qs:["우리 집에 새로 온 반려동물과 저의 기운이 잘 맞나요?","반려동물을 입양하려고 하는데 올해 좋은 묘연/견연이 있을까요?"]},
+  {id:"legal",icon:"⚖️",label:"소송·관재",qs:["현재 진행 중인 일이나 소송이 저에게 유리하게 끝날까요?","올해 조심해야 할 구설수나 관재수가 있나요?","오해나 억울한 상황이 해결될 수 있을까요?"]},
+  {id:"hobby",icon:"🎨",label:"취미·적성",qs:["사주에 나타난 저만의 숨겨진 예술적 재능이 있나요?","어떤 취미를 가지면 제 운이 크게 좋아질까요?","부업이나 직업으로 연결될 수 있는 적성이 있을까요?"]},
+  {id:"travel",icon:"✈️",label:"여행·이동",qs:["이번 여행이 잘 될까요? 어떤 점을 주의해야 할까요?","올해 해외 이동에 좋은 방향이나 시기가 있나요?"]},
+  {id:"exercise",icon:"💪",label:"운동·다이어트",qs:["지금 시작하는 운동이나 다이어트가 성과를 낼 수 있을까요?","제 사주에 맞는 운동 유형이 있나요?"]},
+  {id:"interview",icon:"🎯",label:"면접·발표",qs:["중요한 면접이 다가오는데 잘 통과할 수 있을까요?","발표를 앞두고 있는데 이날 제 기운이 어떤가요?","서류 전형을 통과하고 최종 면접까지 왔는데 합격 가능성이 있을까요?","면접에서 항상 긴장이 심한데 극복할 수 있을까요?","오랜 공백 후 다시 취업을 준비 중인데 도전해도 될까요?","이 분야가 아닌 전혀 다른 곳에 지원하려는데 가능성이 있을까요?"]},
+  {id:"dateplan",icon:"🌹",label:"데이트·약속",qs:["좋아하는 사람과의 만남이 잘 될 수 있을까요?","이날 데이트 분위기가 어떨지 알고 싶어요."]},
+  {id:"reconcile",icon:"🤝",label:"화해·재회",qs:["멀어진 사람과 다시 연결될 수 있을까요?","이날 화해 시도가 잘 받아들여질까요?","먼저 연락을 해야 하는데 타이밍이 맞을까요?","재회를 원하는데 다시 시작해도 괜찮은 인연인가요?","오랜 갈등이 있었는데 관계를 회복할 가능성이 있나요?"]},
+  {id:"healing",icon:"💧",label:"이별·회복",qs:["이별 후 너무 힘들어요. 이 아픔이 언제쯤 지나갈까요?","헤어진 사람에 대한 미련을 어떻게 정리할 수 있을까요?","이별 후 혼자인 시간이 길어지고 있는데 괜찮은 걸까요?","나에게 맞지 않았던 인연인지, 아니면 내가 부족했던 건지 알고 싶어요.","이번 이별을 통해 내가 성장할 수 있는 부분이 있을까요?","다시 사랑을 시작할 준비가 된 건지 모르겠어요."]},
+  {id:"purpose",icon:"🌿",label:"사명·의미",qs:["내가 이 세상에서 해야 할 일이 무엇인지 알고 싶어요.","지금 하는 일이 의미 있는 일인지, 사명감을 느끼고 싶어요.","돈보다 의미를 쫓는 선택을 해도 될까요?","사회에 기여하고 싶은데 내 사주에 그런 기질이 있나요?","이 길이 내 인생의 진짜 목적과 맞는 건지 궁금해요.","번아웃 없이 오래 할 수 있는 나만의 일을 어떻게 찾을 수 있을까요?"]}
+];
+
+// 핵심 6개 카테고리
+export const CATS=[
+  CATS_ALL.find(c => c.id === 'love'),
+  CATS_ALL.find(c => c.id === 'work'),
+  CATS_ALL.find(c => c.id === 'money'),
+  CATS_ALL.find(c => c.id === 'health'),
+  CATS_ALL.find(c => c.id === 'relation'),
+  CATS_ALL.find(c => c.id === 'future'),
+];
+
+// 구독 플랜 (2단계)
+// basic: 하루 1개 무료, 오늘의 별숨 불가, 추가 질문 500원
+// premium: 하루 100개, 오늘의 별숨 가능, 월 5,500원
+// 베타 기간에는 기본 설정이 premium (무료 이용)
+export const PLANS=[
+  {id:"basic",isFree:true,e:"✦",n:"기본",p:"무료",q:1,chat:0,dailyStar:false,dailyQ:1,extraQPrice:500},
+  {id:"premium",e:"🌟",n:"별숨 요금제",p:"월 5,500원",q:10,chat:999,dailyStar:true,dailyQ:100,extraQPrice:0,hot:true},
+];
+
+// 하위 호환용 alias
+export const PKGS=PLANS;
+
+export const REVIEWS=[
+  {star:"★★★★★",text:"사주랑 별자리를 같이 봐줘서 너무 좋아요. 글이 진짜 내 얘기 같아서 읽다가 소름 돋았어요",nick:"가을고양이 · 28세"},
+  {star:"★★★★★",text:"베프한테 상담받는 느낌! 전문용어 없이 쉽게 말해줘서 공감이 돼요",nick:"핑크라떼 · 25세"},
+  {star:"★★★★☆",text:"추가 질문도 계속할 수 있어서 더 깊이 파고들 수 있었어요. 진짜 대화하는 느낌",nick:"달밤산책 · 31세"},
+  {star:"★★★★★",text:"글쓰는 방식이 달라요. AI 같지 않고 진짜 누가 써준 것 같은 느낌",nick:"별빛소나기 · 26세"},
+  {star:"★★★★☆",text:"월간 리포트가 생각보다 구체적이에요. 매달 챙겨볼 것 같아요",nick:"새벽세시 · 29세"},
+  {star:"★★★★★",text:"사이 별점 기능이 제일 좋아요. 친구랑 같이 봤는데 둘 다 공감했어요",nick:"달콩이 · 23세"},
+];
+
+export const CHAT_SUGG=["좀 더 자세히 알고 싶어요","언제쯤 변화가 올까요?","어떻게 행동하면 좋을까요?","지금 당장 할 수 있는 게 뭔가요?","불안한 마음이 커요","긍정적인 부분도 알고 싶어요"];
+
+// ═══════════════════════════════════════════════════════════
+//  🌟 별숨에게 나를 알려주기 — 20문 20답
+//  DAILY_QUESTIONS 중 profile 저장에 적합한 20개 선별
+// ═══════════════════════════════════════════════════════════
+export const PROFILE_QUESTIONS_IDS = [
+  'dq_01','dq_02','dq_03','dq_04','dq_05',
+  'dq_06','dq_07','dq_08','dq_09','dq_10',
+  'dq_11','dq_12','dq_13','dq_14','dq_15',
+  'dq_16','dq_17','dq_18','dq_19','dq_20',
+];
+
+// ═══════════════════════════════════════════════════════════
+//  💬 하루 한 질문 — 별숨 100문 100답
+// ═══════════════════════════════════════════════════════════
+export const DAILY_QUESTIONS = [
+  {
+    id: 'dq_01',
+    q: '요즘 어떤 일 하고 있어요?',
+    sub: '직업과 상황을 알면 별이 더 구체적으로 말해줘요',
+    type: 'mixed',
+    placeholder: '직접 입력',
+    chips: ['직장인', '취준생', '프리랜서', '학생', '주부', '사업가', '무직'],
+    field: 'workplace',
+  },
+  {
+    id: 'dq_02',
+    q: 'MBTI가 어떻게 돼요?',
+    sub: '타고난 성격의 별자리와 사주가 함께 읽혀요',
+    type: 'chips',
+    chips: ['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP','모르겠어요'],
+    field: 'mbti',
+  },
+  {
+    id: 'dq_03',
+    q: '지금 가장 마음이 쓰이는 게 뭐예요?',
+    sub: '털어놓으면 별이 더 선명하게 보여요',
+    type: 'text',
+    placeholder: '자유롭게 적어주세요',
+    field: 'worryText',
+  },
+  {
+    id: 'dq_04',
+    q: '지금 연애 상태는요?',
+    sub: '두 별이 만나는 기운도 읽어드릴 수 있어요',
+    type: 'chips',
+    chips: ['연인이 있어요', '솔로예요', '썸 타는 중', '기혼이에요', '이별 후 회복 중', '재혼 고민 중', '복잡해요'],
+    field: null,
+  },
+  {
+    id: 'dq_05',
+    q: '스스로를 한 문장으로 표현하면요?',
+    sub: '당신이 직접 쓴 말이 가장 정확한 나침반이에요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: 'selfDesc',
+  },
+  {
+    id: 'dq_06',
+    q: '요즘 자주 드는 감정이 있나요?',
+    sub: '감정에도 기운이 있어요. 어떤 별이 움직이는지 볼게요',
+    type: 'chips',
+    chips: ['설레는', '불안한', '지친', '무기력한', '기대되는', '외로운', '평온한', '화나는'],
+    field: null,
+  },
+  {
+    id: 'dq_07',
+    q: '아침형이에요, 저녁형이에요?',
+    sub: '시간대별로 기운의 흐름이 달라요',
+    type: 'chips',
+    chips: ['완전 아침형', '아침이 좀 더 편해요', '저녁이 좀 더 편해요', '완전 저녁형', '그때그때 달라요'],
+    field: null,
+  },
+  {
+    id: 'dq_08',
+    q: '요즘 즐겨 하는 취미가 있어요?',
+    sub: '취미 안에 숨겨진 재능이 보여요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_09',
+    q: '인생에서 가장 중요한 가치는요?',
+    sub: '가치관을 알면 지금 선택의 방향이 보여요',
+    type: 'chips',
+    chips: ['사랑·관계', '돈·안정', '성장·도전', '자유·독립', '인정·명예', '건강·균형', '의미·사명'],
+    field: null,
+  },
+  {
+    id: 'dq_10',
+    q: '스트레스 받을 때 어떻게 푸세요?',
+    sub: '해소 방식에서도 사주의 기질이 드러나요',
+    type: 'mixed',
+    placeholder: '또는 직접 적어주세요',
+    chips: ['혼자 있어요', '먹어요', '운동해요', '친구 만나요', '자요', '영상 봐요', '쇼핑해요'],
+    field: null,
+  },
+  {
+    id: 'dq_11',
+    q: '지금 가장 잘 되고 싶은 관계가 있어요?',
+    sub: '관계의 기운이 가장 많이 묻어나는 사람이 있잖아요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_12',
+    q: '올해 가장 이루고 싶은 게 뭐예요?',
+    sub: '소망을 별이 듣고 있어요',
+    type: 'text',
+    placeholder: '크든 작든 괜찮아요',
+    field: null,
+  },
+  {
+    id: 'dq_13',
+    q: '지금 어떤 변화를 원하고 있어요?',
+    sub: '원하는 게 있다는 건 이미 기운이 움직이기 시작했다는 뜻이에요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_14',
+    q: '일 때문에 힘드세요, 사람 때문에 힘드세요?',
+    sub: '사주에서 어떤 기운이 더 큰 파동을 만드는지 보여요',
+    type: 'chips',
+    chips: ['일이 더 힘들어요', '사람이 더 힘들어요', '둘 다요', '요즘은 괜찮아요'],
+    field: null,
+  },
+  {
+    id: 'dq_15',
+    q: '요즘 잠은 잘 자고 있어요?',
+    sub: '수면의 질에도 운의 흐름이 담겨있어요',
+    type: 'chips',
+    chips: ['잘 자요', '자다가 자꾸 깨요', '잠들기가 어려워요', '너무 많이 자요', '잠 잘 시간이 없어요'],
+    field: null,
+  },
+  {
+    id: 'dq_16',
+    q: '가족 중에 요즘 마음 쓰이는 분이 있어요?',
+    sub: '가족의 기운은 나의 대운과 연결돼요',
+    type: 'text',
+    placeholder: '없으면 그냥 넘어가도 돼요',
+    field: null,
+  },
+  {
+    id: 'dq_17',
+    q: '올해 가장 두려운 게 뭐예요?',
+    sub: '두려움을 말하면 별이 더 용감하게 읽어줘요',
+    type: 'text',
+    placeholder: '솔직하게 적어줘도 괜찮아요',
+    field: null,
+  },
+  {
+    id: 'dq_18',
+    q: '당신만의 작은 행운 루틴이 있어요?',
+    sub: '이미 알고 있는 기운을 믿어봐요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_19',
+    q: '요즘 돈 쪽으로 걱정이 있어요?',
+    sub: '재물운의 흐름을 읽을 때 지금 상황을 알면 더 정확해요',
+    type: 'chips',
+    chips: ['많이 걱정돼요', '조금 있어요', '별로 없어요', '오히려 잘 풀리고 있어요'],
+    field: null,
+  },
+  {
+    id: 'dq_20',
+    q: '지금 살고 있는 지역이 어디예요?',
+    sub: '방향과 지역의 기운도 운에 영향을 줘요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_21',
+    q: '혼자 있는 시간이 좋은 편이에요?',
+    sub: '에너지 충전 방식에서 천간의 기질이 보여요',
+    type: 'chips',
+    chips: ['완전 좋아요, 혼자가 편해요', '어느 정도 필요해요', '사람이 있어야 충전돼요', '그때그때 달라요'],
+    field: null,
+  },
+  {
+    id: 'dq_22',
+    q: '가장 친한 사람을 한 단어로 표현하면요?',
+    sub: '가장 가까운 인연의 기운을 참고해요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_23',
+    q: '자주 꾸는 꿈의 이미지가 있어요?',
+    sub: '꿈에 담긴 기운을 같이 읽어드릴게요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_24',
+    q: '지금 후회되는 결정이 하나 있다면요?',
+    sub: '후회도 운의 전환점이 될 수 있어요',
+    type: 'text',
+    placeholder: '말하기 편한 선에서 적어주세요',
+    field: null,
+  },
+  {
+    id: 'dq_25',
+    q: '어떤 사람으로 기억되고 싶어요?',
+    sub: '원하는 모습에서 타고난 별의 방향이 보여요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_26',
+    q: '지금 용기가 필요한 순간이 있어요?',
+    sub: '별숨이 그 용기의 타이밍을 읽어드릴게요',
+    type: 'text',
+    placeholder: '직접 입력',
+    field: null,
+  },
+  {
+    id: 'dq_27',
+    q: '요즘 몸이 보내는 신호가 있나요?',
+    sub: '건강의 기운은 사주와 연결돼 있어요',
+    type: 'mixed',
+    placeholder: '또는 직접 적어주세요',
+    chips: ['자꾸 피곤해요', '소화가 안 돼요', '두통이 있어요', '잘 아파요', '특별히 없어요'],
+    field: null,
+  },
+  {
+    id: 'dq_28',
+    q: '10년 후의 나를 상상해본 적 있어요?',
+    sub: '대운의 흐름 속 당신의 10년을 같이 그려볼게요',
+    type: 'text',
+    placeholder: '어떤 모습이었으면 해요?',
+    field: null,
+  },
+  {
+    id: 'dq_29',
+    q: '별숨에게 가장 먼저 물어보고 싶었던 게 뭐예요?',
+    sub: '솔직할수록 별이 더 잘 들려요',
+    type: 'text',
+    placeholder: '무엇이든 괜찮아요',
+    field: null,
+  },
+  {
+    id: 'dq_30',
+    q: '별숨에게 지금 하고 싶은 말이 있어요?',
+    sub: '무슨 말이든 괜찮아요. 별은 판단하지 않아요',
+    type: 'text',
+    placeholder: '편하게 적어줘요 🌙',
+    field: null,
+  },
+];
+
+export const LOAD_STATES=[
+  {t:"동양의 별과 서양의 별이 함께 당신을 읽고 있어요",s:"잠깐만요 ✦"},
+  {t:"태어난 순간의 기운을 조용히 불러오는 중이에요",s:"조금만 기다려줘요 🌙"},
+  {t:"당신에게 꼭 맞는 이야기를 고르고 있어요",s:"거의 다 왔어요 ✨"},
+  {t:"오늘 당신의 별이 어떤 말을 건네는지 듣고 있어요",s:"잠깐만요 ✦"},
+];
+
+/** 텍스트 파일로 다운로드 */
+export function exportReadingAsTxt(title, text) {
+  if (!text) return;
+  const clean = stripMarkdown(text);
+  const blob = new Blob([clean], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${title || '별숨결과'}_${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/** 사주 명함 카드 이미지로 저장 */
+export function saveSajuNameCard(name, saju, sun) {
+  if (!name || !saju || !sun) return;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 600;
+  canvas.height = 400;
+
+  // 배경
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 테두리
+  ctx.strokeStyle = '#c9a661';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+  // 이름
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 48px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(name, canvas.width / 2, 100);
+
+  // 사주 정보
+  ctx.fillStyle = '#c9a661';
+  ctx.font = '20px sans-serif';
+  ctx.textAlign = 'left';
+  const sajuText = `일주: ${saju.il.g}${saju.il.j} | 기질: ${saju.dom}`;
+  ctx.fillText(sajuText, 60, 200);
+
+  // 별자리
+  const sunText = `${sun.n} (${sun.s})`;
+  ctx.fillText(sunText, 60, 250);
+
+  // PNG로 다운로드
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${name}_사주명함_${new Date().toISOString().slice(0, 10)}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  });
+}

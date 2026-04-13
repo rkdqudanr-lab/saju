@@ -1,0 +1,36 @@
+TypeError: Cannot read properties of null (reading 'month')
+    at LandingPage (http://localhost:5173/src/pages/LandingPage.jsx?t=1776058372258:747:17)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:11548:26)
+    at mountIndeterminateComponent (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:14926:21)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:3699:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:3733:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:19765:15)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:19198:20)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:19137:13)
+
+====
+
+TypeError: Cannot read properties of null (reading 'month')
+    at LandingPage (http://localhost:5173/src/pages/LandingPage.jsx?t=1776058372258:747:17)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:11548:26)
+    at mountIndeterminateComponent (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:14926:21)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:15914:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:3674:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:3699:24)
+    at invokeGuardedCallback (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:3733:39)
+    at beginWork$1 (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:19765:15)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:19198:20)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/chunk-EJTTOCY5.js?v=25313507:19137:13)
+
+====
+
+The above error occurred in the <LandingPage> component:
+
+    at LandingPage (http://localhost:5173/src/pages/LandingPage.jsx?t=1776058372258:76:3)
+    at div
+    at App (http://localhost:5173/src/App.jsx?t=1776058372258:112:41)
+    at ErrorBoundary (http://localhost:5173/src/main.jsx?t=1776058372258:28:5)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.

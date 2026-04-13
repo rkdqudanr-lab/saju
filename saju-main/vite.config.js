@@ -6,24 +6,43 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // injectManifest 전략: src/sw.js를 커스텀 SW로 사용
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.js',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*.png'],
-      manifest: false,
-      injectManifest: {
-        globPatterns: ['**/*.{js,css,svg,png,woff2}'],
+      manifest: false, // public/manifest.json 직접 사용
+      workbox: {
+        // App Shell 캐싱 전략
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        runtimeCaching: [
+          {
+            // API 호출은 네트워크 우선, 실패 시 캐시
+            // 2xx 응답만 캐시 (429 등 오류 응답 캐시 방지)
+            urlPattern: /^\/api\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
+              expiration: { maxEntries: 20, maxAgeSeconds: 3600 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
+            // 폰트/CDN 리소스 캐시
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'cdn-cache',
+              expiration: { maxEntries: 30, maxAgeSeconds: 86400 * 30 },
+            },
+          },
+        ],
       },
       devOptions: { enabled: false },
     }),
   ],
-  build: {
-    sourcemap: true,
-  },
   server: {
     proxy: {
+      // 로컬 개발 시 /api/ask → 직접 Anthropic API로 프록시
+      // (로컬에서는 .env.local의 ANTHROPIC_API_KEY 사용)
       '/api/ask': {
         target: 'https://api.anthropic.com',
         changeOrigin: true,

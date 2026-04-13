@@ -1,0 +1,178 @@
+/* ── Today Intro Page Styles (Premium Reboot) ── */
+
+.today-intro-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  position: relative;
+  background: var(--bg-cosmic);
+  overflow: hidden;
+}
+
+/* 배경 파티클 */
+.today-intro-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star-animation {
+  position: absolute;
+  font-size: 0.8rem;
+  color: var(--gold);
+  opacity: 0.3;
+  animation: dsc-spark 4s ease-in-out infinite;
+}
+
+.star-animation:nth-child(1) { top: 15%; right: 15%; animation-delay: 0s; }
+.star-animation:nth-child(2) { bottom: 20%; left: 10%; animation-delay: 1.5s; font-size: 0.6rem; }
+
+@keyframes dsc-spark {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* 컨텐츠 카드 */
+.today-intro-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 380px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  background: var(--bg-glass-heavy);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 56px 24px 48px;
+  border-radius: var(--r3);
+  border: 0.5px solid var(--line);
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* 코즈믹 오브 애니메이션 */
+.today-intro-icon {
+  margin: 0 auto;
+  width: 120px;
+  height: 120px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.star-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #FFD700 0%, #E8B048 20%, #9B8EC4 55%, #1A1628 100%);
+  border: 0.5px solid rgba(232,176,72,0.4);
+  box-shadow: 0 0 40px rgba(232,176,72,0.25), inset 0 0 20px rgba(255,255,255,0.2);
+  animation: orbPulse 6s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 30px rgba(232,176,72,0.2); }
+  50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 60px rgba(232,176,72,0.4); }
+}
+
+/* 텍스트 스타일링 */
+.today-intro-date {
+  font-size: var(--xxs);
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-family: var(--ff-inter);
+}
+
+.today-intro-message {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-line-1 {
+  font-size: var(--lg);
+  color: var(--t1);
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.message-line-2 {
+  font-size: var(--sm);
+  color: var(--t3);
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 버튼 영역 */
+.today-intro-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.today-intro-btn-know-more {
+  background: var(--gold-grad);
+  color: #000;
+  border: none;
+  border-radius: 14px;
+  padding: 18px;
+  font-weight: 800;
+  font-size: var(--sm);
+  font-family: var(--ff);
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 8px 25px var(--gold-glow);
+}
+
+.today-intro-btn-know-more:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.today-intro-btn-know-more:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.today-intro-btn-later {
+  background: transparent;
+  color: var(--t4);
+  border: 0.5px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  font-size: var(--xs);
+  font-weight: 600;
+  font-family: var(--ff);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.today-intro-btn-later:hover {
+  border-color: var(--t3);
+  color: var(--t2);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 반응형 조정 */
+@media (max-width: 480px) {
+  .today-intro-content {
+    padding: 48px 20px 40px;
+    gap: 28px;
+  }
+}

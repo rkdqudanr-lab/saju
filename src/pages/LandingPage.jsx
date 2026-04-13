@@ -183,7 +183,7 @@ export default function LandingPage({
                             onClick={() => setShowDailyCard(v => !v)}
                             style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '10px 14px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', width: '100%', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                           >
-                            <span>✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일</span>
+                            <span>✦ 오늘 하루 나의 별숨 · {today?.month}월 {today?.day}일</span>
                             <span style={{ fontSize: '0.7em', opacity: 0.6 }}>{showDailyCard ? '▲ 접기' : '▼ 보기'}</span>
                           </button>
                           {showDailyCard && (
@@ -237,7 +237,7 @@ export default function LandingPage({
                         return (
                           <div data-tour="daily-card">
                             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 6, marginBottom: 6 }}>
-                              ✦ 오늘 하루 나의 별숨 · {today.month}월 {today.day}일
+                              ✦ 오늘 하루 나의 별숨 · {today?.month}월 {today?.day}일
                               <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
                             </div>
                             {dailyCardContent}
@@ -247,8 +247,8 @@ export default function LandingPage({
 
                       {/* 별 메시지 */}
                       <div style={{ padding: '14px 0 4px', borderTop: '1px solid var(--line)', marginTop: 6 }}>
-                        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 4, letterSpacing: '.06em' }}>✦ {today.month}월 {today.day}일의 별 메시지</div>
-                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic', lineHeight: 1.75 }}>"{getDailyWord(today.day)}"</div>
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 4, letterSpacing: '.06em' }}>✦ {today?.month}월 {today?.day}일의 별 메시지</div>
+                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic', lineHeight: 1.75 }}>"{getDailyWord(today?.day)}"</div>
                       </div>
 
                       {/* 별숨달력 */}
@@ -347,8 +347,8 @@ export default function LandingPage({
         <div className="inner land-scroll-zone">
           <SamplePreview />
           <div className="daily-word">
-            <div className="daily-label">✦ {today.month}월 {today.day}일의 별 메시지</div>
-            <div className="daily-text">{'"' + getDailyWord(today.day) + '"'}</div>
+            <div className="daily-label">✦ {today?.month}월 {today?.day}일의 별 메시지</div>
+            <div className="daily-text">{'"' + getDailyWord(today?.day) + '"'}</div>
           </div>
           <div className="rev-wrap">
             <div className="rev-track">

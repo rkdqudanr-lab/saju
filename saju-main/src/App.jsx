@@ -1,7 +1,4 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense, useMemo } from "react";
-
-// store (showToast를 스토어에 주입)
-import { useAppStore } from "./store/useAppStore.js";
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 
 // utils
 import { PKGS, TIMING, ANNIVERSARY_PROMPT } from "./utils/constants.js";
@@ -20,22 +17,35 @@ import { supabase, getAuthenticatedClient } from "./lib/supabase.js";
 // analysis cache
 import { loadAnalysisCache, saveAnalysisCache } from "./lib/analysisCache.js";
 
-// components (static)
+// components
 import StarCanvas         from "./components/StarCanvas.jsx";
 import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
 import PWAInstallBanner   from "./components/PWAInstallBanner.jsx";
-import BottomNav          from "./components/BottomNav.jsx";
-import FeatureTour        from "./components/FeatureTour.jsx";
 
-// modal components (static)
+const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
+const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
+const FutureProphecyPage = lazy(() => import("./components/FutureProphecyPage.jsx"));
+const CompatPage         = lazy(() => import("./components/CompatPage.jsx"));
+const SajuCalendar       = lazy(() => import("./components/SajuCalendar.jsx"));
+const GroupBulseumPage   = lazy(() => import("./components/GroupBulseumPage.jsx"));
+const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
+const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
+const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
+const AstrologyPage            = lazy(() => import("./components/AstrologyPage.jsx"));
+const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
+const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
+const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
+const DiaryListPage            = lazy(() => import("./components/DiaryListPage.jsx"));
+const SajuCardPage             = lazy(() => import("./components/SajuCardPage.jsx"));
+
+// modal components
 import UpgradeModal        from "./components/UpgradeModal.jsx";
 import OtherProfileModal   from "./components/OtherProfileModal.jsx";
 import InviteModal         from "./components/InviteModal.jsx";
 import ShareModal          from "./components/ShareModal.jsx";
-import ShareCardTemplate   from "./components/ShareCardTemplate.jsx";
 
-// pages (static)
+// pages
 import ReportStep          from "./pages/ReportStep.jsx";
 import DailyHoroscopePage  from "./pages/DailyHoroscopePage.jsx";
 import ChatStep            from "./pages/ChatStep.jsx";
@@ -43,34 +53,9 @@ import ResultsStep         from "./pages/ResultsStep.jsx";
 import QuestionStep        from "./pages/QuestionStep.jsx";
 import ProfileStep         from "./pages/ProfileStep.jsx";
 import LandingPage         from "./pages/LandingPage.jsx";
+import TodayIntroPage      from "./pages/TodayIntroPage.jsx";
 import TodayDetailPage     from "./pages/TodayDetailPage.jsx";
-
-// lazy-loaded components — ALL const declarations come after ALL static imports
-const ProfileModal             = lazy(() => import("./components/ProfileModal.jsx"));
-const HistoryPage              = lazy(() => import("./components/HistoryPage.jsx"));
-const FutureProphecyPage       = lazy(() => import("./components/FutureProphecyPage.jsx"));
-const CompatPage               = lazy(() => import("./components/CompatPage.jsx"));
-const SajuCalendar             = lazy(() => import("./components/SajuCalendar.jsx"));
-const GroupBulseumPage         = lazy(() => import("./components/GroupBulseumPage.jsx"));
-const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
-const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
-const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
-const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
-const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
-const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
-const DiaryListPage            = lazy(() => import("./components/DiaryListPage.jsx"));
-const SajuCardPage             = lazy(() => import("./components/SajuCardPage.jsx"));
 const SettingsPage             = lazy(() => import("./components/SettingsPage.jsx"));
-const MyPage                   = lazy(() => import("./components/MyPage.jsx"));
-const DreamPage                = lazy(() => import("./components/DreamPage.jsx"));
-const InquiryPage              = lazy(() => import("./components/InquiryPage.jsx"));
-const TaegillPage              = lazy(() => import("./components/TaegillPage.jsx"));
-const NameFortunePage          = lazy(() => import("./components/NameFortunePage.jsx"));
-const StatsPage                = lazy(() => import("./components/StatsPage.jsx"));
-const CommunityPage            = lazy(() => import("./components/CommunityPage.jsx"));
-const DaeunPage                = lazy(() => import("./components/DaeunPage.jsx"));
-const AnonCompatPage           = lazy(() => import("./components/AnonCompatPage.jsx"));
-const ShopPage                 = lazy(() => import("./components/ShopPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -85,10 +70,9 @@ function PageSpinner() {
 // ═══════════════════════════════════════════════════════════
 export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
-  const [showTour, setShowTour] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
-  const [showDailyCard, setShowDailyCard] = useState(true);
+  const [showDailyCard, setShowDailyCard] = useState(false);
   const [anniversaryDate, setAnniversaryDate] = useState('');
   const [anniversaryType, setAnniversaryType] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -98,7 +82,6 @@ export default function App() {
   const [quizInput, setQuizInput] = useState('');
   const [sidebarPrefs, setSidebarPrefs] = useState({ hiddenGroups: [] });
   const [todayDiaryWritten, setTodayDiaryWritten] = useState(null); // null=미확인, true/false
-  const [anonCompatShareData, setAnonCompatShareData] = useState(null);
   const [diaryViewDate, setDiaryViewDate] = useState(null); // null=오늘, 'YYYY-MM-DD'=특정 날짜
   const toastTimer = useRef(null);
   const resultsRef = useRef(null);
@@ -110,16 +93,6 @@ export default function App() {
     toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
   }, []);
 
-  // ── Zustand State (App level) ──
-  const step = useAppStore((s) => s.step);
-  const setStep = useAppStore((s) => s.setStep);
-
-  // showToast를 Zustand store에 1회 주입 (Context 없이 컴포넌트에서 직접 사용 가능)
-  const _storeSetAuthFns    = useAppStore((s) => s.setAuthFns);
-  const showUpgradeModal    = useAppStore((s) => s.showUpgradeModal);
-  const setShowUpgradeModal = useAppStore((s) => s.setShowUpgradeModal);
-  useEffect(() => { _storeSetAuthFns({ showToast }); }, [showToast, _storeSetAuthFns]);
-
   // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
   const { user, profile, setProfile, form, setForm, otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
@@ -127,7 +100,7 @@ export default function App() {
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
           loginLoading, profileSyncing,
-          kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile,
+          kakaoLogin, kakaoLogout, saveOtherProfile,
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
           saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
@@ -138,24 +111,31 @@ export default function App() {
   const onboardingDone  = onboarded;
   const quiz            = quizState;
 
-  // ── 피처 투어 트리거 (온보딩 완료 후 step 0 첫 도달 시 1회만) ──
-  useEffect(() => {
-    if (step === 0 && onboardingDone && localStorage.getItem('byeolsoom_tour_v1') !== 'done') {
-      const t = setTimeout(() => setShowTour(true), 700);
-      return () => clearTimeout(t);
-    }
-  }, [step, onboardingDone]);
-
   // lifeStage + qaAnswers를 profile에 병합하여 AI 컨텍스트 빌더에 전달
   const profileWithMeta = { ...profile, lifeStage, qaAnswers: profile.qa_answers || profile.qaAnswers };
   const sajuCtx = useSajuContext(form, profileWithMeta, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx } = sajuCtx;
 
+  // formOkApprox: 년+월만 있어도 체험 가능하도록 게이트 완화
+  const consultation = useConsultation(buildCtx, formOkApprox, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast);
+  const { timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
+          answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
+          latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
+          histItems, setHistItems, showUpgradeModal, setShowUpgradeModal, chatEndRef,
+          qLoadStatus,
+          dailyResult, dailyLoading, dailyCount, DAILY_MAX,
+          diaryReviewResult, diaryReviewLoading,
+          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
+          retryAnswer, sendChat, genReport, callApi, retryMsg, resetSession,
+          deleteHistoryItem, deleteAllHistoryItems } = consultation;
+
+  const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
+
   // ── 게이미피케이션 시스템 ──
   const gamification = useGamification(user, showToast);
   const {
     gamificationState, missions,
-    earnBP, earnDiaryBP, spendBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP,
+    earnBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP,
   } = gamification;
 
   // 배드타임 액막이 상태
@@ -163,9 +143,6 @@ export default function App() {
 
   // 무료 BP 충전 가능 여부
   const [freeRechargeAvailable, setFreeRechargeAvailable] = useState(true);
-
-  // 오늘 일기 작성 여부 (세션 내 추적)
-  const [hasDiaryToday, setHasDiaryToday] = useState(false);
 
   // 배드타임 액막이 핸들러
   const handleBlockBadtime = useCallback(async () => {
@@ -189,6 +166,7 @@ export default function App() {
     try {
       const result = await completeMission(missionId);
       if (result.success) {
+        showToast('미션 완료! +10 BP 획득 🎯', 'success');
         // 미션 목록 새로고침
         await loadTodayMissions(user?.id);
       }
@@ -196,33 +174,6 @@ export default function App() {
       showToast('미션 완료 중 오류 발생', 'error');
     }
   }, [completeMission, loadTodayMissions, user?.id, showToast]);
-
-  // 미션 저장 완료 후 UI 갱신 콜백
-  const handleMissionsSaved = useCallback(() => {
-    loadTodayMissions(user?.id);
-  }, [loadTodayMissions, user?.id]);
-
-  // formOkApprox: 년+월만 있어도 체험 가능하도록 게이트 완화
-  const consultation = useConsultation(buildCtx, formOkApprox, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast, handleSessionExpired, handleMissionsSaved);
-  const { timeSlot, loadingMsgIdx, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
-          answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
-          latestChatIdx, chatLeft, maxQ, reportText, reportLoading, histItem, setHistItem,
-          histItems, setHistItems, chatEndRef,
-          qLoadStatus,
-          dailyResult, dailyLoading, dailyCount, DAILY_MAX,
-          diaryReviewResult, diaryReviewLoading,
-          addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
-          retryAnswer, sendChat, sendStreamChat, genReport, callApi, retryMsg, resetSession,
-          deleteHistoryItem, deleteAllHistoryItems } = consultation;
-
-  const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
-
-  // 일기 완료 핸들러 (새 일기 저장 시 BP 적립)
-  const handleDiaryComplete = useCallback(async () => {
-    if (!earnDiaryBP) return;
-    const result = await earnDiaryBP();
-    if (result?.success) setHasDiaryToday(true);
-  }, [earnDiaryBP]);
 
   // 무료 BP 충전 핸들러
   const handleFreeRecharge = useCallback(async () => {
@@ -246,15 +197,11 @@ export default function App() {
     handleTypingDone, handleOnboardingFinish, handleQuizAnswer, handleQuizSkip,
     handleSendChat, handleCopyAll, shareCard,
     handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage, shareResult,
-    handleShareFortuneCard,
-    handleShareDreamCard, handleShareTaegilCard,
-    shareCardRef, cardDataUrl, cardSummary, shareCardType, shareCardName,
   } = useAppHandlers({
     answers, selQs, chatHistory, quiz, quizInput, setQuizInput,
     profile, setProfile, user, saveDailyQuizAnswer, saveSettings,
-    sendChat, sendStreamChat, _handleTypingDone, curPkg, isDark, today,
+    sendChat, _handleTypingDone, curPkg, isDark, today,
     setShareModal, showToast, setStep,
-    sun, saju, form,
   });
 
   // ── 모달 열림 시 body 스크롤 잠금 ──
@@ -300,6 +247,7 @@ export default function App() {
       import('./components/AnniversaryPage.jsx').catch(() => {});
       import('./components/NatalInterpretationPage.jsx').catch(() => {});
       import('./components/ComprehensivePage.jsx').catch(() => {});
+      import('./components/AstrologyPage.jsx').catch(() => {});
       import('./components/DiaryPage.jsx').catch(() => {});
       import('./components/DiaryListPage.jsx').catch(() => {});
       import('./components/HistoryPage.jsx').catch(() => {});
@@ -307,9 +255,6 @@ export default function App() {
       import('./components/ProfileModal.jsx').catch(() => {});
       import('./components/OnboardingCards.jsx').catch(() => {});
       import('./components/ConsentModal.jsx').catch(() => {});
-      import('./components/DreamPage.jsx').catch(() => {});
-      import('./components/TaegillPage.jsx').catch(() => {});
-      import('./components/NameFortunePage.jsx').catch(() => {});
     }, 1000);
     return () => clearTimeout(t);
   }, [user]);
@@ -345,8 +290,7 @@ export default function App() {
         }
 
         const today = new Date().toISOString().slice(0, 10);
-        // free_bp_recharge_at 컬럼이 timestamptz이므로 앞 10자(날짜)만 비교
-        const lastRechargeDate = userData.free_bp_recharge_at?.slice(0, 10);
+        const lastRechargeDate = userData.free_bp_recharge_at;
         const isAvailable = lastRechargeDate !== today;
 
         setFreeRechargeAvailable(isAvailable);
@@ -368,9 +312,6 @@ export default function App() {
     client.from('diary_entries').select('id').eq('kakao_id', String(user.id)).eq('date', today).maybeSingle()
       .then(({ data }) => setTodayDiaryWritten(!!data)).catch(() => {});
   }, [user?.id]);
-
-  // ── Context.Provider는 Zustand 마이그레이션으로 제거됨 ──
-  // useUserCtx / useSajuCtx / useGamCtx → store에서 직접 읽는 shim으로 교체
 
   // ── 카카오 로그인 처리 중 로딩 화면 ──
   if (loginLoading) {
@@ -419,18 +360,6 @@ export default function App() {
       <StarCanvas isDark={isDark} />
       <PWAInstallBanner />
 
-      {/* ── 피처 투어 (첫 방문 1회만) ── */}
-      {showTour && <FeatureTour onFinish={() => setShowTour(false)} />}
-
-      {/* ── 오프스크린 카드 템플릿 (html2canvas 캡처 대상) ── */}
-      <ShareCardTemplate
-        ref={shareCardRef}
-        type={shareCardType}
-        name={shareCardName || form?.name || ''}
-        saju={shareCardType === 'horoscope' ? saju : null}
-        summary={cardSummary}
-      />
-
       {/* ── 토스트 알림 ── */}
       {toast && (
         <div role="alert" aria-live="assertive" className={`toast toast-${toast.type}`}>
@@ -438,8 +367,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── 사이드바 (메뉴 버튼 우측 상단에 유지 — 히스토리 검색 등 고급 기능 접근용) ── */}
-      <button className="menu-btn" data-tour="menu-btn" onClick={() => setShowSidebar(true)} aria-label="메뉴 열기" aria-expanded={showSidebar}>☰</button>
+      <button className="menu-btn" onClick={() => setShowSidebar(true)} aria-label="메뉴 열기" aria-expanded={showSidebar}>☰</button>
 
       {showSidebar && (
         <Sidebar
@@ -447,6 +375,7 @@ export default function App() {
           histItems={histItems}
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
+            // 출생정보가 필요한 페이지들: formOkApprox 없으면 step 1로
             const needsForm = [2, 5, 6, 7, 8, 10, 12, 13, 14, 16, 17, 18, 20];
             if (s === 'history' && item) { setHistItem(item); setStep(9); }
             else if (s === 'fortune') { formOkApprox ? setStep(18) : setStep(1); }
@@ -483,35 +412,39 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
+      {step === 22 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>⌂</button>}
 
-      {/* ── 하단 네비게이션 바 (Zustand store에서 step/user/formOkApprox 직접 읽음) ── */}
-      <BottomNav />
-
-      <div className="app" id="main-content" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="app" id="main-content">
 
         {/* ── Step 0: 랜딩 ── */}
         {step === 0 && (
           <LandingPage
+            user={user} form={form} saju={saju} sun={sun} today={today}
             otherProfiles={otherProfiles}
+            formOk={formOk} formOkApprox={formOkApprox} isApproximate={isApproximate} profile={profile}
             quiz={quiz} quizInput={quizInput} setQuizInput={setQuizInput}
             dailyResult={dailyResult} dailyLoading={dailyLoading}
             dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
             diaryReviewResult={diaryReviewResult} diaryReviewLoading={diaryReviewLoading}
             showDailyCard={showDailyCard} setShowDailyCard={setShowDailyCard}
-            setDiy={setDiy}
+            buildCtx={buildCtx}
+            setStep={setStep} setDiy={setDiy}
+            kakaoLogin={kakaoLogin} kakaoLogout={kakaoLogout}
             setEditingMyProfile={setEditingMyProfile} setShowProfileModal={setShowProfileModal}
             askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview} askWeeklyReview={askWeeklyReview}
             resetDiaryReview={resetDiaryReview}
             handleQuizAnswer={handleQuizAnswer} handleQuizSkip={handleQuizSkip}
+            showToast={showToast}
             DiaryPageLazy={DiaryPage}
+            // 게이미피케이션
+            gamificationState={gamificationState}
+            missions={missions}
             onBlockBadtime={handleBlockBadtime}
             onCompleteMission={handleCompleteMission}
             onFreeRecharge={handleFreeRecharge}
-            onDiaryComplete={handleDiaryComplete}
-            hasDiaryToday={hasDiaryToday}
             isBlockingBadtime={isBlockingBadtime}
             freeRechargeAvailable={freeRechargeAvailable}
           />
@@ -565,19 +498,19 @@ export default function App() {
         {/* ── Step 4: 결과 ── */}
         {step === 4 && (
           <ResultsStep
+            form={form} saju={saju} sun={sun} moon={moon} asc={asc} today={today}
             selQs={selQs} answers={answers} openAcc={openAcc} typedSet={typedSet}
             cat={cat} pkg={pkg}
             chatLeft={chatLeft} curPkg={curPkg}
             showSubNudge={showSubNudge}
-            copyDone={copyDone}
-            resultsRef={resultsRef}
+            user={user} copyDone={copyDone}
+            formOk={formOk} resultsRef={resultsRef}
             handleAccToggle={handleAccToggle} handleTypingDone={handleTypingDone} retryAnswer={retryAnswer}
             shareCard={shareCard} handleCopyAll={handleCopyAll} shareResult={shareResult}
-            handleShareFortuneCard={handleShareFortuneCard}
-            spendBP={spendBP}
             setStep={setStep} setSelQs={setSelQs} setDiy={setDiy}
             setShowSidebar={setShowSidebar} setShowUpgradeModal={setShowUpgradeModal}
             kakaoLogin={kakaoLogin} genReport={genReport} resetSession={resetSession}
+            showToast={showToast}
           />
         )}
 
@@ -614,7 +547,6 @@ export default function App() {
               user={user}
               otherProfiles={otherProfiles}
               saveOtherProfile={saveOtherProfile}
-              onAnonShare={(data) => { setAnonCompatShareData(data); setStep(32); }}
             />
           </Suspense>
         )}
@@ -686,14 +618,12 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 14: 종합 분석 (사주 + 점성술 탭 통합) ── */}
+        {/* ── Step 14: 별숨의 종합 사주 ── */}
         {step === 14 && (
           <Suspense fallback={<PageSpinner />}>
             <ComprehensivePage
               saju={saju}
               sun={sun}
-              moon={moon}
-              asc={asc}
               form={form}
               buildCtx={buildCtx}
               user={user}
@@ -712,20 +642,36 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 16: 종합 점성술 → step 14(종합 분석)로 리다이렉트 ── */}
-        {step === 16 && (() => { setStep(14); return null; })()}
+        {/* ── Step 16: 별숨의 종합 점성술 ── */}
+        {step === 16 && (
+          <Suspense fallback={<PageSpinner />}>
+            <AstrologyPage
+              sun={sun}
+              moon={moon}
+              asc={asc}
+              form={form}
+              buildCtx={buildCtx}
+              user={user}
+            />
+          </Suspense>
+        )}
 
         {/* ── Step 17: 나의 하루를 별숨에게 (일기) ── */}
         {step === 17 && (
           <Suspense fallback={<PageSpinner />}>
             <DiaryPage
+              user={user}
+              form={form}
+              saju={saju}
+              sun={sun}
+              buildCtx={buildCtx}
               askReview={askDiaryReview}
               setStep={setStep}
               setDiy={setDiy}
               viewDate={diaryViewDate}
               diaryReviewResult={diaryReviewResult}
               diaryReviewLoading={diaryReviewLoading}
-              onDiaryComplete={handleDiaryComplete}
+              showToast={showToast}
             />
           </Suspense>
         )}
@@ -737,11 +683,6 @@ export default function App() {
             dailyResult={dailyResult} dailyLoading={dailyLoading}
             dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
             askDailyHoroscope={askDailyHoroscope}
-            currentBp={gamificationState?.currentBp || 0}
-            onBlockBadtime={handleBlockBadtime}
-            isBlockingBadtime={isBlockingBadtime}
-            freeRechargeAvailable={freeRechargeAvailable}
-            earnBP={earnBP}
           />
         )}
 
@@ -794,118 +735,24 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 22: 문의하기 ── */}
+        {/* ── Step 22: "오늘의 별숨" 인트로 페이지 ── */}
         {step === 22 && (
-          <Suspense fallback={<PageSpinner />}>
-            <InquiryPage />
-          </Suspense>
+          <TodayIntroPage
+            setStep={setStep}
+            askDailyHoroscope={askDailyHoroscope}
+            dailyLoading={dailyLoading}
+          />
         )}
 
         {/* ── Step 23: "오늘의 별숨" 상세 페이지 ── */}
         {step === 23 && (
           <TodayDetailPage
             dailyResult={dailyResult}
-            dailyLoading={dailyLoading}
             gamificationState={gamificationState}
-            onBlockBadtime={handleBlockBadtime}
+            onBlockBadtime={onBlockBadtime}
             isBlockingBadtime={isBlockingBadtime}
             setStep={setStep}
-            onRefresh={askDailyHoroscope}
           />
-        )}
-
-        {/* ── Step 24: 꿈 해몽 ── */}
-        {step === 24 && (
-          <Suspense fallback={<PageSpinner />}>
-            <DreamPage
-              user={user}
-              form={form}
-              buildCtx={buildCtx}
-              callApi={callApi}
-              setStep={setStep}
-              showToast={showToast}
-              onShareCard={handleShareDreamCard}
-            />
-          </Suspense>
-        )}
-
-        {/* ── Step 25: 택일 (길일 찾기) ── */}
-        {step === 25 && (
-          <Suspense fallback={<PageSpinner />}>
-            <TaegillPage
-              form={form}
-              buildCtx={buildCtx}
-              callApi={callApi}
-              showToast={showToast}
-              onShareCard={handleShareTaegilCard}
-            />
-          </Suspense>
-        )}
-
-        {/* ── Step 26: 이름 풀이 (성명학) ── */}
-        {step === 26 && (
-          <Suspense fallback={<PageSpinner />}>
-            <NameFortunePage
-              form={form}
-              buildCtx={buildCtx}
-              callApi={callApi}
-              showToast={showToast}
-            />
-          </Suspense>
-        )}
-
-        {/* ── Step 27: 마이페이지 (store에서 직접 읽음) ── */}
-        {step === 27 && (
-          <Suspense fallback={<PageSpinner />}>
-            <MyPage
-              onFreeRecharge={handleFreeRecharge}
-              freeRechargeAvailable={freeRechargeAvailable}
-            />
-          </Suspense>
-        )}
-
-        {/* ── Step 28: 나의 별숨 통계 ── */}
-        {step === 28 && (
-          <Suspense fallback={<PageSpinner />}>
-            <StatsPage callApi={callApi} />
-          </Suspense>
-        )}
-
-        {/* ── Step 29: 별숨 광장 (커뮤니티 피드) ── */}
-        {step === 29 && (
-          <Suspense fallback={<PageSpinner />}>
-            <CommunityPage showToast={showToast} dailyResult={dailyResult} />
-          </Suspense>
-        )}
-
-        {/* ── Step 30: 나의 대운 흐름 ── */}
-        {step === 30 && (
-          <Suspense fallback={<PageSpinner />}>
-            <DaeunPage
-              form={form}
-              saju={saju}
-              callApi={callApi}
-              buildCtx={buildCtx}
-              showToast={showToast}
-            />
-          </Suspense>
-        )}
-
-        {/* ── Step 31: 별숨 숍 ── */}
-        {step === 31 && (
-          <Suspense fallback={<PageSpinner />}>
-            <ShopPage showToast={showToast} />
-          </Suspense>
-        )}
-
-        {/* ── Step 32: 익명 궁합 광장 ── */}
-        {step === 32 && (
-          <Suspense fallback={<PageSpinner />}>
-            <AnonCompatPage
-              showToast={showToast}
-              shareData={anonCompatShareData}
-            />
-          </Suspense>
         )}
 
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>
@@ -949,9 +796,8 @@ export default function App() {
       {shareModal.open && (
         <ShareModal
           shareModal={shareModal}
-          onClose={() => { setShareModal(s => ({ ...s, open: false })); }}
+          onClose={() => setShareModal(s => ({ ...s, open: false }))}
           showToast={showToast}
-          cardDataUrl={cardDataUrl}
         />
       )}
 
