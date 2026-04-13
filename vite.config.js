@@ -20,6 +20,29 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
+  // 👇 에러 해결을 위해 추가된 파일 쪼개기(Chunk) 설정
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor'; // 외부 라이브러리 분리
+          }
+          if (id.includes('/src/utils/')) {
+            return 'utils';  // 유틸리티 함수 분리
+          }
+          if (id.includes('/src/hooks/')) {
+            return 'hooks';  // 커스텀 훅 분리
+          }
+          if (id.includes('/src/store/')) {
+            return 'store';  // 전역 상태 분리
+          }
+        }
+      }
+    }
+  },
+  // 👆 여기까지 👆
   server: {
     proxy: {
       // 로컬 개발 시 /api/ask → 직접 Anthropic API로 프록시
