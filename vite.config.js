@@ -7,46 +7,20 @@ export default defineConfig({
     react(),
     VitePWA({
       // injectManifest 전략: src/sw.js를 커스텀 SW로 사용
-      // (Web Push 알림 이벤트 핸들러 포함)
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.js',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*.png'],
-      manifest: false, // public/manifest.json 직접 사용
+      manifest: false,
       injectManifest: {
         globPatterns: ['**/*.{js,css,svg,png,woff2}'],
       },
       devOptions: { enabled: false },
     }),
   ],
-  // 👇 에러 해결을 위해 추가된 파일 쪼개기(Chunk) 설정
-  build: {
-    target: 'esnext',
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            return 'vendor'; // 외부 라이브러리 분리
-          }
-          if (id.includes('/src/utils/')) {
-            return 'utils';  // 유틸리티 함수 분리
-          }
-          if (id.includes('/src/hooks/')) {
-            return 'hooks';  // 커스텀 훅 분리
-          }
-          if (id.includes('/src/store/')) {
-            return 'store';  // 전역 상태 분리
-          }
-        }
-      }
-    }
-  },
-  // 👆 여기까지 👆
   server: {
     proxy: {
-      // 로컬 개발 시 /api/ask → 직접 Anthropic API로 프록시
-      // (로컬에서는 .env.local의 ANTHROPIC_API_KEY 사용)
       '/api/ask': {
         target: 'https://api.anthropic.com',
         changeOrigin: true,
