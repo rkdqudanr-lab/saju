@@ -147,11 +147,11 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     return c;
   }, [activeForm, activeSaju, activeSun, activeAge, profile, activeProfileIdx, ageRange]);
 
-  // ── Zustand 스토어에 사주/별자리 데이터 주입 ──────────────────
-  const _setSajuData = useAppStore((s) => s.setSajuData);
+// ── Zustand 스토어에 사주/별자리 데이터 주입 ──────────────────
+  // 💡 최상단 훅 호출을 제거하고 직접 getState()를 사용합니다.
   useEffect(() => {
-    _setSajuData({ saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate });
-  }, [saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate, _setSajuData]);
+    useAppStore.getState().setSajuData({ saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate });
+  }, [saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate]);
 
   return { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx };
 }
