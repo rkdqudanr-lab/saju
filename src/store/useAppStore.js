@@ -36,7 +36,7 @@ export const useAppStore = create((set, get) => ({
   sun: null,
   moon: null,
   asc: null,
-  today: getTodayInfo(),
+  today: null,
   formOk: false,
   formOkApprox: false,
   isApproximate: false,
