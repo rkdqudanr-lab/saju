@@ -2,12 +2,7 @@ import { create } from 'zustand';
 
 /**
  * 별숨 전역 Zustand 스토어
- *
- * 세 개의 커스텀 훅(useUserProfile, useSajuContext, useGamification)이
- * 각자의 상태를 이 스토어에 주입하고, 컴포넌트들은 이 스토어에서 직접 읽는다.
- *
- * 기존 useUserCtx / useSajuCtx / useGamCtx 훅은 이 스토어의 shim으로
- * 교체되어 기존 컴포넌트 코드를 수정하지 않아도 된다.
+ * 다른 앱 내부 로직(saju.js 등)을 절대 import 하지 마세요! (순환 참조 방지)
  */
 export const useAppStore = create((set, get) => ({
   // ── 라우팅 ──────────────────────────────────────────────────
@@ -20,10 +15,10 @@ export const useAppStore = create((set, get) => ({
   profile: null,
   form: {},
   isDark: true,
-  showToast: null,       // function — App.jsx의 showToast 콜백
-  kakaoLogin: null,      // function
-  kakaoLogout: null,     // function
-  saveProfileToSupabase: null, // function
+  showToast: null,
+  kakaoLogin: null,
+  kakaoLogout: null,
+  saveProfileToSupabase: null,
 
   setUser: (user) => set({ user }),
   setProfile: (profile) => set({ profile }),
@@ -36,7 +31,7 @@ export const useAppStore = create((set, get) => ({
   sun: null,
   moon: null,
   asc: null,
-  today: null,
+  today: null, // 💡 에러의 주범이었던 getTodayInfo() 호출을 없애고 null로 비웠습니다.
   formOk: false,
   formOkApprox: false,
   isApproximate: false,
@@ -56,7 +51,6 @@ export const useAppStore = create((set, get) => ({
   setShowUpgradeModal: (val) => set({ showUpgradeModal: val }),
 
   // ── 데이터 정밀도 (useUserProfile에서 주입) ─────────────────
-  // filled: 채워진 데이터 포인트 키 배열
   dataPrecision: { total: 0, level: 'low', filled: [] },
   setDataPrecision: (val) => set({ dataPrecision: val }),
 }));
