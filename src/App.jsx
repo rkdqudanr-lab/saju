@@ -20,7 +20,7 @@ import { supabase, getAuthenticatedClient } from "./lib/supabase.js";
 // analysis cache
 import { loadAnalysisCache, saveAnalysisCache } from "./lib/analysisCache.js";
 
-// components
+// components (static)
 import StarCanvas         from "./components/StarCanvas.jsx";
 import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
@@ -28,29 +28,14 @@ import PWAInstallBanner   from "./components/PWAInstallBanner.jsx";
 import BottomNav          from "./components/BottomNav.jsx";
 import FeatureTour        from "./components/FeatureTour.jsx";
 
-const ProfileModal       = lazy(() => import("./components/ProfileModal.jsx"));
-const HistoryPage        = lazy(() => import("./components/HistoryPage.jsx"));
-const FutureProphecyPage = lazy(() => import("./components/FutureProphecyPage.jsx"));
-const CompatPage         = lazy(() => import("./components/CompatPage.jsx"));
-const SajuCalendar       = lazy(() => import("./components/SajuCalendar.jsx"));
-const GroupBulseumPage   = lazy(() => import("./components/GroupBulseumPage.jsx"));
-const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
-const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
-const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
-const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
-const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
-const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
-const DiaryListPage            = lazy(() => import("./components/DiaryListPage.jsx"));
-const SajuCardPage             = lazy(() => import("./components/SajuCardPage.jsx"));
-
-// modal components
+// modal components (static)
 import UpgradeModal        from "./components/UpgradeModal.jsx";
 import OtherProfileModal   from "./components/OtherProfileModal.jsx";
 import InviteModal         from "./components/InviteModal.jsx";
 import ShareModal          from "./components/ShareModal.jsx";
 import ShareCardTemplate   from "./components/ShareCardTemplate.jsx";
 
-// pages
+// pages (static)
 import ReportStep          from "./pages/ReportStep.jsx";
 import DailyHoroscopePage  from "./pages/DailyHoroscopePage.jsx";
 import ChatStep            from "./pages/ChatStep.jsx";
@@ -59,6 +44,22 @@ import QuestionStep        from "./pages/QuestionStep.jsx";
 import ProfileStep         from "./pages/ProfileStep.jsx";
 import LandingPage         from "./pages/LandingPage.jsx";
 import TodayDetailPage     from "./pages/TodayDetailPage.jsx";
+
+// lazy-loaded components — ALL const declarations come after ALL static imports
+const ProfileModal             = lazy(() => import("./components/ProfileModal.jsx"));
+const HistoryPage              = lazy(() => import("./components/HistoryPage.jsx"));
+const FutureProphecyPage       = lazy(() => import("./components/FutureProphecyPage.jsx"));
+const CompatPage               = lazy(() => import("./components/CompatPage.jsx"));
+const SajuCalendar             = lazy(() => import("./components/SajuCalendar.jsx"));
+const GroupBulseumPage         = lazy(() => import("./components/GroupBulseumPage.jsx"));
+const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
+const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
+const ComprehensivePage        = lazy(() => import("./components/ComprehensivePage.jsx"));
+const OnboardingCards          = lazy(() => import("./components/OnboardingCards.jsx"));
+const ConsentModal             = lazy(() => import("./components/ConsentModal.jsx"));
+const DiaryPage                = lazy(() => import("./components/DiaryPage.jsx"));
+const DiaryListPage            = lazy(() => import("./components/DiaryListPage.jsx"));
+const SajuCardPage             = lazy(() => import("./components/SajuCardPage.jsx"));
 const SettingsPage             = lazy(() => import("./components/SettingsPage.jsx"));
 const MyPage                   = lazy(() => import("./components/MyPage.jsx"));
 const DreamPage                = lazy(() => import("./components/DreamPage.jsx"));
