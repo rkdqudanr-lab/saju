@@ -31,7 +31,9 @@ function DaeunCard({ period, isCurrent, isNext }) {
         position: 'relative',
         transition: 'all 0.2s ease',
         boxShadow: isCurrent ? `0 4px 16px ${color.bg}` : 'none',
+        cursor: 'pointer',
       }}
+      onClick={period.onClick}
     >
       {isCurrent && (
         <div style={{
@@ -270,12 +272,14 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
               padding: '12px 20px 16px',
               scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch',
+              width: '100%',
+              boxSizing: 'border-box'
             }}
           >
             {daeunData.periods.map((period, idx) => (
               <DaeunCard
                 key={idx}
-                period={period}
+                period={{...period, onClick: () => setCurrentIdx(idx)}}
                 isCurrent={idx === currentIdx}
                 isNext={idx === currentIdx + 1}
               />

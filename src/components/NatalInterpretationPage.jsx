@@ -22,7 +22,7 @@ const PILLAR_META = [
 function PillarCards({ saju }) {
   if (!saju) return null;
   return (
-    <div style={{ overflowX: 'auto', marginBottom: 20, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+    <div style={{ overflowX: 'auto', marginBottom: 20, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', width: '100%' }}>
       <div style={{ display: 'flex', gap: 10, paddingBottom: 4, width: 'max-content' }}>
         {PILLAR_META.map(({ key, label, role, desc }) => {
           const p = saju[key];

@@ -261,7 +261,7 @@ export default function ShopPage({ showToast }) {
     setBuying(true);
     try {
       const client = getAuthenticatedClient(kakaoId);
-      const { ok, newBP } = await spendBP(client, kakaoId, 15, 'GACHA_PULL', '행운 부적 갸차');
+      const { ok, newBP } = await spendBP(client, kakaoId, 15, `GACHA_PULL_${Date.now()}`, '행운 부적 가챠');
       if (!ok) {
         showToast?.('BP가 부족해요', 'error');
         setBuying(false);
@@ -287,9 +287,11 @@ export default function ShopPage({ showToast }) {
   }
 
   const filtered = category === '전체'
-    ? items
+    ? items.filter(i => i.category !== 'talisman')
     : category === '보관함'
-      ? [...items, ...GACHA_CHARMS].filter(i => ownedIds.has(i.id))
+      ? Array.from(ownedIds)
+          .map(id => items.find(i => i.id === id) || GACHA_CHARMS.find(c => c.id === id))
+          .filter(Boolean)
       : category === '부적'
         ? [] // 부적 탭은 뽑기 UI만
         : items.filter(i => i.category === CAT_MAP[category]);
@@ -389,7 +391,7 @@ export default function ShopPage({ showToast }) {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
             gap: 12,
           }}>
             {filtered.map(item => (
