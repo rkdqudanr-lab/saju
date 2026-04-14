@@ -363,91 +363,95 @@ export function useGamification(user, showToast) {
     async (missionId) => {
       if (!user?.id) return { success: false };
 
+      const completedMission = missions.find(m => m.id === missionId);
+      const completedAt = new Date().toISOString();
+
+      // ── 낙관적 UI 업데이트: DB 완료 전 즉시 반영 ──
+      setMissions(prev =>
+        prev.map(m => m.id === missionId ? { ...m, is_completed: true, completed_at: completedAt } : m)
+      );
+      if (showToast) showToast('미션 완료! 🎯');
+
       try {
         const authClient = getAuthenticatedClient(user.id);
         const client = authClient || supabase;
 
-        // missions 테이블 업데이트
-        await client
-          .from('missions')
-          .update({
-            is_completed: true,
-            completed_at: new Date().toISOString(),
-          })
-          .eq('id', missionId)
-          .eq('kakao_id', String(user.id));
-
-        // 미션 타입 확인 후 BP 획득 (do/dont는 5 BP, 나머지는 10 BP)
-        const completedMission = missions.find(m => m.id === missionId);
         const bpReward = getMissionBpReward(completedMission?.mission_type);
         const bpReason = (completedMission?.mission_type === 'do' || completedMission?.mission_type === 'dont')
-          ? 'do_dont_mission'
-          : 'mission';
-        await earnBP(bpReward, bpReason, missionId);
+          ? 'do_dont_mission' : 'mission';
 
-        // 미션 목록 새로고침
-        await loadTodayMissions(user.id);
+        // ── 핵심 경로: DB 업데이트 + BP 적립 병렬 실행 ──
+        await Promise.all([
+          client.from('missions')
+            .update({ is_completed: true, completed_at: completedAt })
+            .eq('id', missionId)
+            .eq('kakao_id', String(user.id)),
+          earnBP(bpReward, bpReason, missionId),
+        ]);
 
-        // 총 미션 완료 수 업데이트
-        const { data: gamData } = await client
-          .from('user_gamification')
-          .select('total_missions_done')
-          .eq('kakao_id', String(user.id))
-          .maybeSingle();
-
-        const newTotalMissions = (gamData?.total_missions_done || 0) + 1;
-
-        await client.from('user_gamification').upsert(
-          { kakao_id: String(user.id), total_missions_done: newTotalMissions, updated_at: new Date().toISOString() },
-          { onConflict: 'kakao_id' }
-        );
-
-        setGamificationState(prev => ({
-          ...prev,
-          totalMissionsCompleted: newTotalMissions,
-        }));
-
-        // 레벨 승격 체크
-        await checkLevelPromotion(user.id, newTotalMissions);
-
-        // 미션 50% 달성 마일스톤 보너스 (하루 1회)
-        const today = getTodayDateStr();
-        const { data: allMissions } = await client
-          .from('missions')
-          .select('is_completed')
-          .eq('kakao_id', String(user.id))
-          .eq('date', today);
-
-        if (allMissions && allMissions.length > 0) {
-          const completedCount = allMissions.filter(m => m.is_completed).length;
-          const completionRate = completedCount / allMissions.length;
-
-          if (completionRate >= 0.5) {
-            // 오늘 마일스톤 보너스를 이미 받았는지 확인
-            const { data: milestoneLog } = await client
-              .from('daily_bp_log')
-              .select('id')
-              .eq('kakao_id', String(user.id))
-              .eq('date', today)
-              .eq('reason', 'milestone')
+        // ── 비핵심 작업: 백그라운드에서 실행 (UI를 블로킹하지 않음) ──
+        const kakaoIdStr = String(user.id);
+        ;(async () => {
+          try {
+            // 게이미피케이션 stats 업데이트 + 레벨 체크
+            const { data: gamData } = await client
+              .from('user_gamification')
+              .select('total_missions_done')
+              .eq('kakao_id', kakaoIdStr)
               .maybeSingle();
 
-            if (!milestoneLog) {
-              await earnBP(BP_EARNING_RULES.MISSION_MILESTONE, 'milestone');
-              if (showToast) showToast(`미션 50% 달성 보너스 +${BP_EARNING_RULES.MISSION_MILESTONE} BP ✨`);
-            }
-          }
-        }
+            const newTotalMissions = (gamData?.total_missions_done || 0) + 1;
 
-        if (showToast) showToast('미션 완료! 🎯');
+            await Promise.all([
+              client.from('user_gamification').upsert(
+                { kakao_id: kakaoIdStr, total_missions_done: newTotalMissions, updated_at: completedAt },
+                { onConflict: 'kakao_id' }
+              ),
+              checkLevelPromotion(user.id, newTotalMissions),
+            ]);
+
+            setGamificationState(prev => ({ ...prev, totalMissionsCompleted: newTotalMissions }));
+
+            // 50% 마일스톤 보너스 체크 (완료 후 로컬 missions 상태 기준)
+            const today = getTodayDateStr();
+            const { data: allMissions } = await client
+              .from('missions')
+              .select('is_completed')
+              .eq('kakao_id', kakaoIdStr)
+              .eq('date', today);
+
+            if (allMissions && allMissions.length > 0) {
+              const completedCount = allMissions.filter(m => m.is_completed).length;
+              if (completedCount / allMissions.length >= 0.5) {
+                const { data: milestoneLog } = await client
+                  .from('daily_bp_log')
+                  .select('id')
+                  .eq('kakao_id', kakaoIdStr)
+                  .eq('date', today)
+                  .eq('reason', 'milestone')
+                  .maybeSingle();
+                if (!milestoneLog) {
+                  await earnBP(BP_EARNING_RULES.MISSION_MILESTONE, 'milestone');
+                  if (showToast) showToast(`미션 50% 달성 보너스 +${BP_EARNING_RULES.MISSION_MILESTONE} BP ✨`);
+                }
+              }
+            }
+          } catch (e) {
+            console.error('[별숨] 미션 완료 후속 처리 오류:', e);
+          }
+        })();
 
         return { success: true };
       } catch (error) {
+        // DB 실패 시 낙관적 업데이트 롤백
+        setMissions(prev =>
+          prev.map(m => m.id === missionId ? { ...m, is_completed: false, completed_at: null } : m)
+        );
         console.error('[별숨] 미션 완료 오류:', error);
         return { success: false };
       }
     },
-    [user?.id, earnBP, loadTodayMissions, showToast, missions]
+    [user?.id, earnBP, checkLevelPromotion, showToast, missions]
   );
 
   // ─────────────────────────────────────────────────────────────

@@ -192,18 +192,14 @@ export default function App() {
     }
   }, [gamificationState.currentBp, blockBadtime, showToast]);
 
-  // 미션 완료 핸들러
+  // 미션 완료 핸들러 — completeMission 내부에서 낙관적 업데이트 처리하므로 여기선 호출만
   const handleCompleteMission = useCallback(async (missionId) => {
     try {
-      const result = await completeMission(missionId);
-      if (result.success) {
-        // 미션 목록 새로고침
-        await loadTodayMissions(user?.id);
-      }
-    } catch (error) {
+      await completeMission(missionId);
+    } catch {
       showToast('미션 완료 중 오류 발생', 'error');
     }
-  }, [completeMission, loadTodayMissions, user?.id, showToast]);
+  }, [completeMission, showToast]);
 
   // 미션 저장 완료 후 UI 갱신 콜백
   const handleMissionsSaved = useCallback(() => {
