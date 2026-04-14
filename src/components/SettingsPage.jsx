@@ -1,4 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
+import { getAuthenticatedClient } from '../lib/supabase.js';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 function getDaysInMonth(year, month) {
   if (!month) return 31;
@@ -98,20 +110,66 @@ export default function SettingsPage({
 
   const handlePushToggle = async (e) => {
     e.stopPropagation();
-    if (!('Notification' in window)) {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
       showToast?.('이 브라우저/기기는 푸시 알림을 지원하지 않아요 🌙', 'error');
       return;
     }
-    if (Notification.permission === 'granted') {
+
+    if (pushEnabled) {
       showToast?.('이미 푸시 알림이 켜져 있어요. 끄려면 브라우저/OS 설정에서 해제해주세요.', 'info');
-    } else {
+      return;
+    }
+
+    try {
       const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        setPushEnabled(true);
-        showToast?.('배드타임 및 운세 알림을 켰어요 ✦', 'success');
-      } else {
+      if (permission !== 'granted') {
         showToast?.('설정에서 푸시 알림 권한을 허용해주세요.', 'error');
+        return;
       }
+
+      // 1) Service Worker Ready
+      const swReg = await navigator.serviceWorker.ready;
+      
+      // 2) Get existing or create new subscription
+      let sub = await swReg.pushManager.getSubscription();
+      if (!sub) {
+        const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+        if (!publicVapidKey) {
+          showToast?.('서버 설정(VAPID Key)이 누락되어 알림을 켤 수 없어요 🌙', 'error');
+          return;
+        }
+        sub = await swReg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+      }
+
+      // 3) Send to Supabase
+      const kakaoId = user?.kakaoId || user?.id;
+      if (kakaoId) {
+        const subJson = sub.toJSON();
+        const client = getAuthenticatedClient(kakaoId);
+        
+        const { error } = await client.from('push_subscriptions').upsert({
+          kakao_id: String(kakaoId),
+          endpoint: subJson.endpoint,
+          p256dh: subJson.keys?.p256dh,
+          auth: subJson.keys?.auth
+        }, { onConflict: 'endpoint' });
+
+        if (error) {
+          console.error("Push save error:", error);
+          showToast?.('알림 정보를 서버에 저장하는데 실패했어요 🌙', 'error');
+          return;
+        }
+      }
+
+      setPushEnabled(true);
+      showToast?.('배드타임 및 운세 알림을 켰어요 ✦', 'success');
+      
+    } catch (err) {
+      console.error(err);
+      showToast?.('알림 설정 중 오류가 발생했어요 🌙', 'error');
     }
   };
 
