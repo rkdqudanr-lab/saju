@@ -207,6 +207,14 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           }
         } catch { /* 이력 주입 실패 시 기본 context 사용 */ }
 
+        // 일일 운세 호출 시 장착된 부적 효과를 context에 주입
+        if (opts.isDaily) {
+          const talisman = useAppStore.getState().equippedTalisman;
+          if (talisman) {
+            fullContext = fullContext + `\n\n[오늘 장착한 부적: ${talisman.name}]\n효과: ${talisman.description}\n→ 이 부적의 기운을 오늘의 운세 해석에 자연스럽게 반영해줘요. 부적 이름을 직접 언급하지 말고 그 효과가 오행·별자리 해석에 녹아들도록 해요.`;
+          }
+        }
+
         const res = await fetch('/api/ask', {
           method: 'POST',
           headers,

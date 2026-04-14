@@ -57,4 +57,8 @@ export const useAppStore = create((set, get) => ({
   // ── 데이터 정밀도 (useUserProfile에서 주입) ─────────────────
   dataPrecision: { total: 0, level: 'low', filled: [] },
   setDataPrecision: (val) => set({ dataPrecision: val }),
+
+  // ── 장착 중인 부적 (LandingPage/ShopPage에서 주입) ────────────
+  equippedTalisman: null,
+  setEquippedTalisman: (val) => set({ equippedTalisman: val }),
 }));

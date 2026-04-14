@@ -147,13 +147,29 @@ function ItemCard({ item, owned, onBuy }) {
 
       {/* 가격 & 버튼 */}
       {owned ? (
-        <div style={{
-          marginTop: 4, padding: '8px 0',
-          textAlign: 'center', fontSize: 'var(--xs)',
-          color: 'var(--gold)', fontWeight: 700,
-        }}>
-          ✦ 보유 중
-        </div>
+        <button
+          onClick={() => item.category === 'talisman' ? onBuy(item) : undefined}
+          style={{
+            marginTop: 4, padding: '9px',
+            textAlign: 'center', fontSize: 'var(--xs)',
+            width: '100%',
+            color: item.category === 'talisman' ? 'var(--gold)' : 'var(--t4)',
+            fontWeight: item.category === 'talisman' ? 700 : 400,
+            cursor: item.category === 'talisman' ? 'pointer' : 'default',
+            border: item.category === 'talisman' ? '1px solid var(--acc)' : '1px solid transparent',
+            borderRadius: 'var(--r1)',
+            background: item.category === 'talisman'
+              ? (item.is_equipped ? 'rgba(232,176,72,0.2)' : 'var(--goldf)')
+              : 'transparent',
+            fontFamily: 'var(--ff)',
+            boxShadow: item.is_equipped ? '0 0 8px rgba(232,176,72,0.4)' : 'none',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {item.category === 'talisman'
+            ? (item.is_equipped ? '✦ 장착 중 (해제)' : '장착하기')
+            : '✦ 보유 중'}
+        </button>
       ) : (
         <button
           onClick={() => onBuy(item)}
@@ -165,6 +181,7 @@ function ItemCard({ item, owned, onBuy }) {
             color: 'var(--gold)', fontWeight: 700,
             fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
             cursor: 'pointer',
+            width: '100%',
           }}
         >
           {item.bp_cost} BP
@@ -184,6 +201,7 @@ export default function ShopPage({ showToast }) {
   const [confirmItem, setConfirmItem] = useState(null);
   const [buying, setBuying] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [equippedId, setEquippedId] = useState(null);
 
   const kakaoId = user?.kakaoId || user?.id;
 
@@ -199,13 +217,24 @@ export default function ShopPage({ showToast }) {
           ? client.from('users').select('current_bp').eq('kakao_id', String(kakaoId)).single()
           : Promise.resolve({ data: null }),
         kakaoId
-          ? client.from('user_shop_inventory').select('item_id').eq('kakao_id', String(kakaoId))
+          ? client.from('user_shop_inventory').select('item_id, is_equipped').eq('kakao_id', String(kakaoId))
           : Promise.resolve({ data: [] }),
       ]);
 
-      setItems(itemsRes.data || []);
+      const allItems = itemsRes.data || [];
+      setItems(allItems);
       setCurrentBP(bpRes.data?.current_bp ?? 0);
       setOwnedIds(new Set((invRes.data || []).map(r => r.item_id)));
+
+      // 장착 중인 부적 감지 — category 기준으로 찾기
+      const talismanItemIds = new Set(allItems.filter(i => i.category === 'talisman').map(i => i.id));
+      const equippedInv = (invRes.data || []).find(r => r.is_equipped && talismanItemIds.has(r.item_id));
+      const equippedItemId = equippedInv?.item_id || null;
+      setEquippedId(equippedItemId);
+      // Zustand store에도 동기화 (LandingPage·useConsultation에서 읽음)
+      useAppStore.getState().setEquippedTalisman(
+        equippedItemId ? (allItems.find(i => i.id === equippedItemId) || null) : null
+      );
     } catch {
       showToast?.('숍 정보를 불러오지 못했어요', 'error');
     } finally {
@@ -283,6 +312,53 @@ export default function ShopPage({ showToast }) {
       showToast?.('뽑기에 실패했어요. 다시 시도해봐요.', 'error');
     } finally {
       setBuying(false);
+    }
+  }
+
+  async function handleEquipTalisman(item) {
+    if (!kakaoId || item.category !== 'talisman') return;
+    try {
+      const client = getAuthenticatedClient(kakaoId);
+      // 부적 장착/해제 토글
+      const isEquipping = equippedId !== item.id;
+      
+      // 부적 아이템 ID 목록 (items state 기준)
+      const talismanItemIds = items.filter(i => i.category === 'talisman').map(i => i.id);
+
+      if (isEquipping) {
+        // 기존 장착된 다른 부적 해제 (category 기반 ID 목록 사용)
+        const othersToUnequip = talismanItemIds.filter(id => id !== item.id);
+        if (othersToUnequip.length > 0) {
+          await client
+            .from('user_shop_inventory')
+            .update({ is_equipped: false })
+            .eq('kakao_id', String(kakaoId))
+            .in('item_id', othersToUnequip);
+        }
+        // 새로 장착
+        await client
+          .from('user_shop_inventory')
+          .update({ is_equipped: true })
+          .eq('kakao_id', String(kakaoId))
+          .eq('item_id', item.id);
+
+        setEquippedId(item.id);
+        useAppStore.getState().setEquippedTalisman(item);
+        showToast?.(`${item.name} 장착 완료! 메인 화면에서 확인해보세요 ✦`, 'success');
+      } else {
+        // 장착 해제
+        await client
+          .from('user_shop_inventory')
+          .update({ is_equipped: false })
+          .eq('kakao_id', String(kakaoId))
+          .eq('item_id', item.id);
+
+        setEquippedId(null);
+        useAppStore.getState().setEquippedTalisman(null);
+        showToast?.(`${item.name} 장착을 해제했어요.`, 'success');
+      }
+    } catch {
+      showToast?.('부적 장착 상태 변경에 실패했어요.', 'error');
     }
   }
 
@@ -397,9 +473,9 @@ export default function ShopPage({ showToast }) {
             {filtered.map(item => (
               <ItemCard
                 key={item.id}
-                item={item}
+                item={{ ...item, is_equipped: equippedId === item.id }}
                 owned={ownedIds.has(item.id)}
-                onBuy={setConfirmItem}
+                onBuy={ownedIds.has(item.id) && item.category === 'talisman' ? () => handleEquipTalisman(item) : setConfirmItem}
               />
             ))}
           </div>

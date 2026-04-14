@@ -1,4 +1,5 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect } from "react";
+import { getAuthenticatedClient } from "../lib/supabase.js";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
@@ -71,7 +72,25 @@ export default function LandingPage({
   const { user, form, profile, showToast, kakaoLogin, kakaoLogout } = useUserCtx();
   const { saju, sun, today, buildCtx, formOk, formOkApprox, isApproximate } = useSajuCtx();
   const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 }, missions = [] } = useGamCtx();
+  const equippedTalisman = useAppStore((s) => s.equippedTalisman);
+  const setEquippedTalisman = useAppStore((s) => s.setEquippedTalisman);
   const nightMode = isNightMode();
+
+  useEffect(() => {
+    if (!user) { setEquippedTalisman(null); return; }
+    const kakaoId = String(user.kakaoId || user.id);
+    const client = getAuthenticatedClient(kakaoId);
+
+    client.from('user_shop_inventory')
+      .select('item_id, is_equipped, shop_items(*)')
+      .eq('kakao_id', kakaoId)
+      .eq('is_equipped', true)
+      .then(({ data }) => {
+        const talisman = (data || []).find(r => r.shop_items?.category === 'talisman');
+        setEquippedTalisman(talisman?.shop_items || null);
+      });
+  }, [user]);
+
   return (
     <div className="page step-fade">
       <div className="land-hero">
@@ -142,6 +161,34 @@ export default function LandingPage({
                   </div>
                 );
               })()}
+              
+              {/* 장착 중인 부적 연출 */}
+              {equippedTalisman && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px', marginTop: 6, marginBottom: 10,
+                  background: 'linear-gradient(135deg, rgba(232,176,72,0.1), rgba(232,176,72,0.02))',
+                  border: '1px solid rgba(232,176,72,0.3)',
+                  borderRadius: 'var(--r1)',
+                  boxShadow: '0 4px 16px rgba(232,176,72,0.15)',
+                  animation: 'dsc-breathe 4s ease-in-out infinite'
+                }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%', background: 'var(--bg2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.2rem', flexShrink: 0,
+                    boxShadow: '0 0 10px rgba(232,176,72,0.5)',
+                    animation: 'floatGently 3s ease-in-out infinite'
+                  }}>
+                    {equippedTalisman.emoji}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 2 }}>✦ 오늘의 부적 효과 적용 중</div>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>{equippedTalisman.name}</div>
+                  </div>
+                </div>
+              )}
+
               {form.by ? (
                 <>
 
