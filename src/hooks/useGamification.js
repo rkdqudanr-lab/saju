@@ -357,7 +357,63 @@ export function useGamification(user, showToast) {
   );
 
   // ─────────────────────────────────────────────────────────────
-  // 6. 미션 완료
+  // 6. 레벨 승격 체크 (completeMission에서 사용하므로 먼저 선언)
+  // ─────────────────────────────────────────────────────────────
+  const checkLevelPromotion = useCallback(
+    async (kakaoId, totalMissions) => {
+      try {
+        const authClient = getAuthenticatedClient(kakaoId);
+        const client = authClient || supabase;
+
+        const { data: gamData } = await client
+          .from('user_gamification')
+          .select('badtime_blocks_count')
+          .eq('kakao_id', String(kakaoId))
+          .maybeSingle();
+
+        const { data: userData } = await client
+          .from('users')
+          .select('guardian_level, login_streak')
+          .eq('kakao_id', String(kakaoId))
+          .maybeSingle();
+
+        const newLevel = calculateLevelPromotion(
+          totalMissions,
+          gamData?.badtime_blocks_count || 0,
+          userData?.login_streak || 0
+        );
+
+        const currentLevel = userData?.guardian_level || 1;
+
+        if (newLevel > currentLevel) {
+          await client
+            .from('users')
+            .update({ guardian_level: newLevel })
+            .eq('kakao_id', String(kakaoId));
+
+          await client.from('guardian_level_history').insert({
+            kakao_id: String(kakaoId),
+            from_level: currentLevel,
+            to_level: newLevel,
+            promotion_reason: 'missions',
+          });
+
+          setGamificationState(prev => ({
+            ...prev,
+            guardianLevel: newLevel,
+          }));
+
+          useAppStore.getState().setGuardianLevelUp({ fromLevel: currentLevel, toLevel: newLevel });
+        }
+      } catch (error) {
+        console.error('[별숨] 레벨 승격 체크 오류:', error);
+      }
+    },
+    [showToast]
+  );
+
+  // ─────────────────────────────────────────────────────────────
+  // 7. 미션 완료
   // ─────────────────────────────────────────────────────────────
   const completeMission = useCallback(
     async (missionId) => {
@@ -490,65 +546,6 @@ export function useGamification(user, showToast) {
       }
     },
     [user?.id, earnBP, showToast]
-  );
-
-  // ─────────────────────────────────────────────────────────────
-  // 7. 레벨 승격 체크
-  // ─────────────────────────────────────────────────────────────
-  const checkLevelPromotion = useCallback(
-    async (kakaoId, totalMissions) => {
-      try {
-        const authClient = getAuthenticatedClient(kakaoId);
-        const client = authClient || supabase;
-
-        const { data: gamData } = await client
-          .from('user_gamification')
-          .select('badtime_blocks_count')
-          .eq('kakao_id', String(kakaoId))
-          .maybeSingle();
-
-        const { data: userData } = await client
-          .from('users')
-          .select('guardian_level, login_streak')
-          .eq('kakao_id', String(kakaoId))
-          .maybeSingle();
-
-        const newLevel = calculateLevelPromotion(
-          totalMissions,
-          gamData?.badtime_blocks_count || 0,
-          userData?.login_streak || 0
-        );
-
-        const currentLevel = userData?.guardian_level || 1;
-
-        if (newLevel > currentLevel) {
-          // 레벨 승격
-          await client
-            .from('users')
-            .update({ guardian_level: newLevel })
-            .eq('kakao_id', String(kakaoId));
-
-          // 승격 이력 기록
-          await client.from('guardian_level_history').insert({
-            kakao_id: String(kakaoId),
-            from_level: currentLevel,
-            to_level: newLevel,
-            promotion_reason: 'missions',
-          });
-
-          setGamificationState(prev => ({
-            ...prev,
-            guardianLevel: newLevel,
-          }));
-
-          // 레벨업 모달 트리거 (Zustand store를 통해 App.jsx에 알림)
-          useAppStore.getState().setGuardianLevelUp({ fromLevel: currentLevel, toLevel: newLevel });
-        }
-      } catch (error) {
-        console.error('[별숨] 레벨 승격 체크 오류:', error);
-      }
-    },
-    [showToast]
   );
 
   // ─────────────────────────────────────────────────────────────
