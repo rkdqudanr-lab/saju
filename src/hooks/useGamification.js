@@ -52,15 +52,16 @@ export function useGamification(user, showToast) {
 
   const [missions, setMissions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const initLoadedRef = useRef(false);
+  const initLoadedRef = useRef(null); // null or last-loaded user ID
 
   // ─────────────────────────────────────────────────────────────
   // 1. 초기화: 로그인 사용자의 게이미피케이션 정보 로드
   // ─────────────────────────────────────────────────────────────
   const initializeGamification = useCallback(async () => {
-    if (!user?.id || initLoadedRef.current) return;
+    // user가 바뀌어도 재초기화 — ref에 마지막 초기화한 userId 저장
+    if (!user?.id || initLoadedRef.current === user.id) return;
 
-    initLoadedRef.current = true;
+    initLoadedRef.current = user.id;
     setIsLoading(true);
 
     try {

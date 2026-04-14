@@ -193,7 +193,8 @@ function ItemCard({ item, owned, onBuy }) {
 
 // ── 메인 페이지 ────────────────────────────────────────────────
 export default function ShopPage({ showToast }) {
-  const { user, setStep } = useAppStore();
+  const user    = useAppStore((s) => s.user);
+  const setStep = useAppStore((s) => s.setStep);
   const [category, setCategory] = useState('전체');
   const [items, setItems] = useState([]);
   const [ownedIds, setOwnedIds] = useState(new Set());
@@ -240,7 +241,7 @@ export default function ShopPage({ showToast }) {
     } finally {
       setLoading(false);
     }
-  }, [kakaoId]);
+  }, [kakaoId, showToast]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
