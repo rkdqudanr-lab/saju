@@ -322,16 +322,6 @@ export default function LandingPage({
                 </span>
                 카카오로 3초 만에 시작하기
               </button>
-              <button 
-                className="kakao-login-full" 
-                onClick={() => {
-                  useAppStore.getState().setUser({ id: 'devbot_001', kakaoId: 'devbot_001', nickname: '로봇개발자', profileImage: '' });
-                  useAppStore.getState().setForm({ name: '로봇개발자', by: '1990', bm: '03', bd: '15', bh: '12', gender: 'F', noTime: false });
-                }} 
-                style={{ fontSize: '1rem', padding: '16px', background: 'var(--acc)', color: 'var(--bg1)', marginTop: 8 }}
-              >
-                🛠 개발/테스트용 임시 로그인
-              </button>
               <button className="land-ghost-link" onClick={() => setStep(1)}>
                 로그인 없이 먼저 체험하기 →
               </button>
