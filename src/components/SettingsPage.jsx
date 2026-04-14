@@ -85,9 +85,35 @@ export default function SettingsPage({
   fontSize: fontSizeProp = 'standard',
   onFontSizeChange,
 }) {
-  const [tab, setTab] = useState(0); // 0: 개인정보, 1: 요금제, 2: 스타일, 3: 메뉴설정
+  const [tab, setTab] = useState(0); // 0: 개인정보, 1: 요금제, 2: 환경설정, 3: 메뉴설정
   const [localForm, setLocalForm] = useState(form || {});
   const [saving, setSaving] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPushEnabled(Notification.permission === 'granted');
+    }
+  }, []);
+
+  const handlePushToggle = async (e) => {
+    e.stopPropagation();
+    if (!('Notification' in window)) {
+      showToast?.('이 브라우저/기기는 푸시 알림을 지원하지 않아요 🌙', 'error');
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      showToast?.('이미 푸시 알림이 켜져 있어요. 끄려면 브라우저/OS 설정에서 해제해주세요.', 'info');
+    } else {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setPushEnabled(true);
+        showToast?.('배드타임 및 운세 알림을 켰어요 ✦', 'success');
+      } else {
+        showToast?.('설정에서 푸시 알림 권한을 허용해주세요.', 'error');
+      }
+    }
+  };
 
   const lifeStage = lifeStageProp || 'free';
   const fontSize = fontSizeProp || 'standard';
@@ -130,7 +156,7 @@ export default function SettingsPage({
 
         {/* ── 탭 ── */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 4 }}>
-          {['개인정보', '요금제', '별숨 스타일', '메뉴 설정'].map((label, i) => (
+          {['개인정보', '요금제', '환경설정', '메뉴 팝업'].map((label, i) => (
             <button
               key={i}
               onClick={() => setTab(i)}
@@ -537,6 +563,26 @@ export default function SettingsPage({
                 }}
               />
               <span className="toggle-label">큰 글씨 모드 {fontSize === 'large' ? '(켜짐)' : '(꺼짐)'}</span>
+            </div>
+          </div>
+        {/* ── Tab 2 추가 섹션: 푸시 알림 설정 ── */}
+        {tab === 2 && (
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
+            <div className="card-title">별숨 푸시 알림</div>
+            <div className="card-sub" style={{ marginBottom: 8 }}>
+              ⚠️ 배드타임 진입, 행운의 시간대 도달 시 알림을 받아보세요.
+            </div>
+            <div className="toggle-row" onClick={handlePushToggle}>
+              <button
+                className={`toggle ${pushEnabled ? 'on' : 'off'}`}
+                role="switch"
+                aria-checked={pushEnabled}
+                aria-label="푸시 알림 켜기"
+                onClick={handlePushToggle}
+              />
+              <span className="toggle-label">
+                기기 알림 허용 {pushEnabled ? '(켜짐)' : '(꺼짐)'}
+              </span>
             </div>
           </div>
         )}

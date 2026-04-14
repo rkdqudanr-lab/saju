@@ -11,8 +11,8 @@ import { spendBP } from '../utils/gamificationLogic.js';
 
 const CAT_MAP_REVERSE = { theme: '테마', avatar: '아바타', special_reading: '특별 상담', effect: '이펙트' };
 
-const CATEGORIES = ['전체', '테마', '아바타', '특별 상담', '이펙트'];
-const CAT_MAP = { '테마': 'theme', '아바타': 'avatar', '특별 상담': 'special_reading', '이펙트': 'effect' };
+const CATEGORIES = ['전체', '테마', '아바타', '특별 상담', '부적', '보관함'];
+const CAT_MAP = { '테마': 'theme', '아바타': 'avatar', '특별 상담': 'special_reading', '부적': 'talisman', '이펙트': 'effect' };
 
 const RARITY_LABEL = { common: '일반', rare: '레어', legendary: '레전더리' };
 const RARITY_COLOR = { common: 'var(--t4)', rare: '#7B9EC4', legendary: '#E8B048' };
@@ -249,9 +249,50 @@ export default function ShopPage({ showToast }) {
     }
   }
 
+  // 가이드용 랜덤 행운 부적 목록
+  const GACHA_CHARMS = [
+    { id: 'talisman_1', category: 'talisman', name: '재입고 금두꺼비', emoji: '🐸', description: '오늘의 재물운 폭발 부적', bp_cost: 15, rarity: 'rare' },
+    { id: 'talisman_2', category: 'talisman', name: '은하수 타로카드', emoji: '🌌', description: '생각지도 못한 인연을 끌어당깁니다', bp_cost: 15, rarity: 'legendary' },
+    { id: 'talisman_3', category: 'talisman', name: '만사형통 부적', emoji: '🧧', description: '모든 일이 막힘 없이 스르륵 풀려요', bp_cost: 15, rarity: 'common' },
+  ];
+
+  async function handleGacha() {
+    if (!kakaoId) { showToast?.('로그인 후 이용 가능해요', 'info'); return; }
+    setBuying(true);
+    try {
+      const client = getAuthenticatedClient(kakaoId);
+      const { ok, newBP } = await spendBP(client, kakaoId, 15, 'GACHA_PULL', '행운 부적 갸차');
+      if (!ok) {
+        showToast?.('BP가 부족해요', 'error');
+        setBuying(false);
+        return;
+      }
+      
+      const wonItem = GACHA_CHARMS[Math.floor(Math.random() * GACHA_CHARMS.length)];
+
+      await client.from('user_shop_inventory').insert({
+        kakao_id: String(kakaoId),
+        item_id: wonItem.id, // Supabase에 없어도 외래키가 없으면 저장 가설
+        is_equipped: false,
+      });
+
+      setCurrentBP(newBP ?? currentBP - 15);
+      setOwnedIds(prev => new Set([...prev, wonItem.id]));
+      showToast?.(`🎉 [${wonItem.name}] 부적 획득 성공! ✦`, 'success');
+    } catch {
+      showToast?.('뽑기에 실패했어요. 다시 시도해봐요.', 'error');
+    } finally {
+      setBuying(false);
+    }
+  }
+
   const filtered = category === '전체'
     ? items
-    : items.filter(i => i.category === CAT_MAP[category]);
+    : category === '보관함'
+      ? [...items, ...GACHA_CHARMS].filter(i => ownedIds.has(i.id))
+      : category === '부적'
+        ? [] // 부적 탭은 뽑기 UI만
+        : items.filter(i => i.category === CAT_MAP[category]);
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
@@ -322,7 +363,25 @@ export default function ShopPage({ showToast }) {
             }} />
             불러오는 중...
           </div>
-        ) : filtered.length === 0 ? (
+        ) : category === '부적' ? (
+          <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--gold)' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🧧</div>
+            <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--gold)', marginBottom: 8 }}>행운 부적 랜덤 뽑기</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 20 }}>15 BP로 하루의 기운을 밝히는 한정판 부적을 수집해보세요!</div>
+            <button
+              onClick={handleGacha}
+              disabled={buying || currentBP < 15}
+              style={{ padding: '14px 28px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, cursor: 'pointer' }}
+            >
+              {buying ? '뽑는 중...' : '✦ 부적 뽑기 (15 BP)'}
+            </button>
+          </div>
+        ) : category === '보관함' && filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🗃️</div>
+            <div style={{ fontSize: 'var(--sm)' }}>아직 수집한 아이템이 없어요</div>
+          </div>
+        ) : filtered.length === 0 && category !== '보관함' ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>🛍️</div>
             <div style={{ fontSize: 'var(--sm)' }}>준비 중인 아이템이에요</div>
