@@ -30,6 +30,7 @@ import FeatureTour        from "./components/FeatureTour.jsx";
 
 // modal components (static)
 import UpgradeModal        from "./components/UpgradeModal.jsx";
+import GuardianLevelUpModal from "./components/GuardianLevelUpModal.jsx";
 import OtherProfileModal   from "./components/OtherProfileModal.jsx";
 import InviteModal         from "./components/InviteModal.jsx";
 import ShareModal          from "./components/ShareModal.jsx";
@@ -71,6 +72,7 @@ const CommunityPage            = lazy(() => import("./components/CommunityPage.j
 const DaeunPage                = lazy(() => import("./components/DaeunPage.jsx"));
 const AnonCompatPage           = lazy(() => import("./components/AnonCompatPage.jsx"));
 const ShopPage                 = lazy(() => import("./components/ShopPage.jsx"));
+const SpecialReadingPage       = lazy(() => import("./components/SpecialReadingPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -161,6 +163,12 @@ export default function App() {
   // 배드타임 액막이 상태
   const [isBlockingBadtime, setIsBlockingBadtime] = useState(false);
 
+  // 수호신 레벨업 모달
+  const guardianLevelUp = useAppStore((s) => s.guardianLevelUp);
+  const setGuardianLevelUp = useAppStore((s) => s.setGuardianLevelUp);
+  const [guardianMessage, setGuardianMessage] = useState('');
+  const [guardianMsgLoading, setGuardianMsgLoading] = useState(false);
+
   // 무료 BP 충전 가능 여부
   const [freeRechargeAvailable, setFreeRechargeAvailable] = useState(true);
 
@@ -216,6 +224,40 @@ export default function App() {
           deleteHistoryItem, deleteAllHistoryItems } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
+
+  // 수호신 레벨업 감지 → AI 메시지 생성
+  useEffect(() => {
+    if (!guardianLevelUp) return;
+    const LEVEL_LABELS = { 1: '초급 액막이사', 2: '중급 액막이사', 3: '고급 액막이사', 4: '마스터 액막이사', 5: '별숨의 수호자' };
+    setGuardianMessage('');
+    setGuardianMsgLoading(true);
+    (async () => {
+      try {
+        const ctx = buildCtx ? buildCtx() : '';
+        const { getAuthToken } = await import('./hooks/useUserProfile.js');
+        const token = getAuthToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            userMessage: `나는 방금 별숨 수호자 시스템에서 ${LEVEL_LABELS[guardianLevelUp.fromLevel]}(Lv${guardianLevelUp.fromLevel})에서 ${LEVEL_LABELS[guardianLevelUp.toLevel]}(Lv${guardianLevelUp.toLevel})로 레벨업했어요. 수호신이 되어 짧고 진심 어린 축하 메시지를 2~3줄로 전해줘요. 너무 격식 있지 않게, 별과 사주의 언어로요.`,
+            context: ctx,
+            kakaoId: user?.id,
+            clientHour: new Date().getHours(),
+            isChat: true,
+          }),
+        });
+        const data = await res.json();
+        setGuardianMessage(data.text || '');
+      } catch {
+        setGuardianMessage('새로운 레벨의 힘이 당신과 함께해요. 더 성장한 모습으로 별을 맞이하세요.');
+      } finally {
+        setGuardianMsgLoading(false);
+      }
+    })();
+  }, [guardianLevelUp]);
 
   // 일기 완료 핸들러 (새 일기 저장 시 BP 적립)
   const handleDiaryComplete = useCallback(async () => {
@@ -483,7 +525,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30 || step === 33) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>⌂</button>}
 
@@ -908,6 +950,16 @@ export default function App() {
           </Suspense>
         )}
 
+        {/* ── Step 33: 특별 상담 (숍 아이템 연결) ── */}
+        {step === 33 && (
+          <Suspense fallback={<PageSpinner />}>
+            <SpecialReadingPage
+              callApi={callApi}
+              showToast={showToast}
+            />
+          </Suspense>
+        )}
+
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>
           ✦ 별숨은 점술 및 오락 목적의 서비스이며, 결과에 대해서는 법적 책임이나 효력을 지지 않습니다.
         </div>
@@ -952,6 +1004,17 @@ export default function App() {
           onClose={() => { setShareModal(s => ({ ...s, open: false })); }}
           showToast={showToast}
           cardDataUrl={cardDataUrl}
+        />
+      )}
+
+      {/* ── 수호신 레벨업 모달 ── */}
+      {guardianLevelUp && (
+        <GuardianLevelUpModal
+          fromLevel={guardianLevelUp.fromLevel}
+          toLevel={guardianLevelUp.toLevel}
+          guardianMessage={guardianMessage}
+          loading={guardianMsgLoading}
+          onClose={() => setGuardianLevelUp(null)}
         />
       )}
 

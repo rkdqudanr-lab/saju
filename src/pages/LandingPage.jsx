@@ -120,6 +120,28 @@ export default function LandingPage({
                   <button onClick={kakaoLogout} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>로그아웃</button>
                 </div>
               </div>
+              {/* 출석 스트릭 위젯 */}
+              {gamificationState.loginStreak >= 1 && (() => {
+                const streak = gamificationState.loginStreak;
+                const nextMilestone = streak < 7 ? 7 : streak < 14 ? 14 : streak < 30 ? 30 : null;
+                const remaining = nextMilestone ? nextMilestone - streak : 0;
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,120,50,.08)', border: '1px solid rgba(255,120,50,.2)', borderRadius: 'var(--r1)', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 16 }}>🔥</span>
+                      <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: '#ff7832' }}>{streak}일 연속 출석</span>
+                    </div>
+                    {nextMilestone && (
+                      <span style={{ fontSize: '11px', color: 'var(--t4)' }}>
+                        +{remaining}일 후 +{nextMilestone === 7 ? 20 : nextMilestone === 14 ? 30 : 50} BP 보너스
+                      </span>
+                    )}
+                    {!nextMilestone && (
+                      <span style={{ fontSize: '11px', color: '#ff7832', fontWeight: 700 }}>최고 기록 도달!</span>
+                    )}
+                  </div>
+                );
+              })()}
               {form.by ? (
                 <>
 

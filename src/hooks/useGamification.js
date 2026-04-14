@@ -303,10 +303,18 @@ export function useGamification(user, showToast) {
         // BP 획득 (일일 로그인 보상)
         await earnBP(bpGain, 'login');
 
+        // 스트릭 마일스톤 보너스 (7/14/30일 연속)
+        const achievedStreak = newStreak > 0 ? newStreak : ((gamificationState.loginStreak || 0) + 1);
+        const STREAK_MILESTONES = { 7: 20, 14: 30, 30: 50 };
+        if (STREAK_MILESTONES[achievedStreak]) {
+          await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);
+          if (showToast) showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');
+        }
+
         // 로컬 상태 업데이트
         setGamificationState(prev => ({
           ...prev,
-          loginStreak: newStreak > 0 ? newStreak : (prev.loginStreak + 1),
+          loginStreak: achievedStreak,
         }));
       } catch (error) {
         console.error('[별숨] 로그인 스트릭 업데이트 오류:', error);
@@ -528,7 +536,8 @@ export function useGamification(user, showToast) {
             guardianLevel: newLevel,
           }));
 
-          if (showToast) showToast(`레벨 업! Lv${newLevel} 달성 🌟`);
+          // 레벨업 모달 트리거 (Zustand store를 통해 App.jsx에 알림)
+          useAppStore.getState().setGuardianLevelUp({ fromLevel: currentLevel, toLevel: newLevel });
         }
       } catch (error) {
         console.error('[별숨] 레벨 승격 체크 오류:', error);

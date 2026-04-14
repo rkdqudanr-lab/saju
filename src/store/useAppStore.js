@@ -50,6 +50,10 @@ export const useAppStore = create((set, get) => ({
   showUpgradeModal: false,
   setShowUpgradeModal: (val) => set({ showUpgradeModal: val }),
 
+  // 수호신 레벨업 이벤트 (null → { fromLevel, toLevel } 로 세팅되면 모달 표시)
+  guardianLevelUp: null,
+  setGuardianLevelUp: (val) => set({ guardianLevelUp: val }),
+
   // ── 데이터 정밀도 (useUserProfile에서 주입) ─────────────────
   dataPrecision: { total: 0, level: 'low', filled: [] },
   setDataPrecision: (val) => set({ dataPrecision: val }),

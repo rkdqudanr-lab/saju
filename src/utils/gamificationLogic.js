@@ -351,13 +351,15 @@ export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE',
       .update({ current_bp: newBP })
       .eq('kakao_id', String(kakaoId));
 
-    // 로그 기록
-    await client.from('daily_bp_log').insert({
-      kakao_id: String(kakaoId),
-      bp_amount: -amount,
-      reason,
-      note,
-    }).throwOnError().maybeSingle();
+    // 로그 기록 (실패해도 구매 자체는 성공으로 처리)
+    try {
+      await client.from('daily_bp_log').insert({
+        kakao_id: String(kakaoId),
+        bp_amount: -amount,
+        reason,
+        note,
+      });
+    } catch { /* 로그 실패는 무시 */ }
 
     return { ok: true, newBP };
   } catch {

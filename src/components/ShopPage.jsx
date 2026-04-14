@@ -9,6 +9,8 @@ import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { spendBP } from '../utils/gamificationLogic.js';
 
+const CAT_MAP_REVERSE = { theme: '테마', avatar: '아바타', special_reading: '특별 상담', effect: '이펙트' };
+
 const CATEGORIES = ['전체', '테마', '아바타', '특별 상담', '이펙트'];
 const CAT_MAP = { '테마': 'theme', '아바타': 'avatar', '특별 상담': 'special_reading', '이펙트': 'effect' };
 
@@ -174,7 +176,7 @@ function ItemCard({ item, owned, onBuy }) {
 
 // ── 메인 페이지 ────────────────────────────────────────────────
 export default function ShopPage({ showToast }) {
-  const { user } = useAppStore();
+  const { user, setStep } = useAppStore();
   const [category, setCategory] = useState('전체');
   const [items, setItems] = useState([]);
   const [ownedIds, setOwnedIds] = useState(new Set());
@@ -234,7 +236,12 @@ export default function ShopPage({ showToast }) {
       setCurrentBP(newBP ?? currentBP - item.bp_cost);
       setOwnedIds(prev => new Set([...prev, item.id]));
       setConfirmItem(null);
-      showToast?.(`${item.name} 구매 완료! ✦`, 'success');
+      if (item.category === 'special_reading') {
+        showToast?.(`${item.name} 구매 완료! 지금 바로 사용하러 가볼까요? ✦`, 'success');
+        setTimeout(() => setStep(33), 800);
+      } else {
+        showToast?.(`${item.name} 구매 완료! ✦`, 'success');
+      }
     } catch {
       showToast?.('구매에 실패했어요. 다시 시도해봐요.', 'error');
     } finally {

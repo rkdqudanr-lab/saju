@@ -418,20 +418,22 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           const client = authClient || supabase;
           const today = getTodayDateStr();
 
-          // 2. 미션 생성 및 저장 (이미 존재하는 미션은 무시 — 완료 상태 보호)
+          // 2. 미션 생성 및 저장 (다시 물어보기 시 오늘 미션 전체 초기화 후 새로 삽입)
           if (gamData.missions && gamData.missions.length > 0) {
+            // 오늘 미션 전체 삭제 후 새로 삽입 (완료 상태 포함 초기화)
+            await client.from('missions')
+              .delete()
+              .eq('kakao_id', String(user.id))
+              .eq('date', today);
             for (const mission of gamData.missions) {
-              await client.from('missions').upsert(
-                {
-                  kakao_id: String(user.id),
-                  date: today,
-                  mission_type: mission.type,
-                  mission_content: mission.content,
-                  bp_reward: mission.bpReward || 10,
-                  is_completed: false,
-                },
-                { onConflict: 'kakao_id,date,mission_type', ignoreDuplicates: true }
-              );
+              await client.from('missions').insert({
+                kakao_id: String(user.id),
+                date: today,
+                mission_type: mission.type,
+                mission_content: mission.content,
+                bp_reward: mission.bpReward || 10,
+                is_completed: false,
+              });
             }
             // UI 미션 목록 새로고침
             if (typeof onMissionsSaved === 'function') onMissionsSaved();
