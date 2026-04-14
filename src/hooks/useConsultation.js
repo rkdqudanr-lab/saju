@@ -453,6 +453,11 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             score: gamData.score,
             ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
           }));
+
+          // 4. 점수 히스토리 캐시 저장 (7일 차트용)
+          if (gamData.score != null) {
+            saveDailyCacheToSupabase(user.id, 'horoscope_score', String(gamData.score)).catch(() => {});
+          }
         } catch (gamErr) {
           console.error('[별숨] 게이미피케이션 처리 오류:', gamErr);
           // 게이미피케이션 오류가 전체 흐름을 막지 않도록 함

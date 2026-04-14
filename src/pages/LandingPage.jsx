@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { getAuthenticatedClient } from "../lib/supabase.js";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
@@ -48,6 +48,46 @@ function isNightMode() {
   return h >= 17 || h < 6;
 }
 
+// 절기 근사 날짜 (월, 일) — 실제와 ±2일 이내
+const JEOLGI_APPROX = [
+  { month: 2,  day: 4,  name: '입춘', meaning: '봄의 기운이 시작돼요' },
+  { month: 3,  day: 6,  name: '경칩', meaning: '봄기운에 만물이 깨어나요' },
+  { month: 4,  day: 5,  name: '청명', meaning: '하늘이 맑고 밝아지는 날이에요' },
+  { month: 5,  day: 6,  name: '입하', meaning: '여름의 기운이 시작돼요' },
+  { month: 6,  day: 6,  name: '망종', meaning: '씨앗을 뿌리기 좋은 때예요' },
+  { month: 7,  day: 7,  name: '소서', meaning: '작은 더위가 찾아왔어요' },
+  { month: 8,  day: 7,  name: '입추', meaning: '가을의 기운이 시작돼요' },
+  { month: 9,  day: 8,  name: '백로', meaning: '이슬이 맺히는 서늘한 때예요' },
+  { month: 10, day: 8,  name: '한로', meaning: '찬 이슬이 내리는 시기예요' },
+  { month: 11, day: 7,  name: '입동', meaning: '겨울의 기운이 시작돼요' },
+  { month: 12, day: 7,  name: '대설', meaning: '큰 눈이 내리는 때예요' },
+  { month: 1,  day: 6,  name: '소한', meaning: '작은 추위가 찾아왔어요' },
+];
+
+// 오늘이 절기 ±3일 이내면 해당 절기 정보 반환
+function getNearbyJeolgi() {
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  const y = now.getFullYear();
+  for (const jg of JEOLGI_APPROX) {
+    const jgDate = new Date(y, jg.month - 1, jg.day);
+    const diffDays = Math.round((jgDate - now) / 86400000);
+    if (diffDays >= -1 && diffDays <= 3) {
+      return { ...jg, diffDays };
+    }
+  }
+  return null;
+}
+
+// 운세 점수 → 색상
+function scoreColor(score) {
+  if (score >= 80) return '#f0b429';
+  if (score >= 60) return '#7ec8e3';
+  if (score >= 40) return '#a0c97b';
+  return '#c9a0dc';
+}
+
 export default function LandingPage({
   otherProfiles,
   quiz, quizInput, setQuizInput,
@@ -75,6 +115,8 @@ export default function LandingPage({
   const equippedTalisman = useAppStore((s) => s.equippedTalisman);
   const setEquippedTalisman = useAppStore((s) => s.setEquippedTalisman);
   const nightMode = isNightMode();
+  const nearbyJeolgi = getNearbyJeolgi();
+  const [scoreHistory, setScoreHistory] = useState([]);
 
   useEffect(() => {
     if (!user) { setEquippedTalisman(null); return; }
@@ -90,6 +132,39 @@ export default function LandingPage({
         setEquippedTalisman(talisman?.shop_items || null);
       });
   }, [user]);
+
+  // 7일 운세 점수 히스토리 로드
+  useEffect(() => {
+    if (!user) { setScoreHistory([]); return; }
+    const kakaoId = String(user.kakaoId || user.id);
+    const client = getAuthenticatedClient(kakaoId);
+    const last7 = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toISOString().slice(0, 10);
+    });
+    client.from('daily_cache')
+      .select('cache_date, content')
+      .eq('kakao_id', kakaoId)
+      .eq('cache_type', 'horoscope_score')
+      .in('cache_date', last7)
+      .then(({ data }) => {
+        const map = {};
+        (data || []).forEach(r => { map[r.cache_date] = Number(r.content); });
+        setScoreHistory(last7.reverse().map(date => ({ date, score: map[date] ?? null })));
+      })
+      .catch(() => {});
+  }, [user]);
+
+  // 오늘 점수 받으면 히스토리에 즉시 반영
+  useEffect(() => {
+    if (!dailyResult?.score) return;
+    const today = new Date().toISOString().slice(0, 10);
+    setScoreHistory(prev => {
+      if (!prev.length) return prev;
+      return prev.map(item => item.date === today ? { ...item, score: dailyResult.score } : item);
+    });
+  }, [dailyResult?.score]);
 
   return (
     <div className="page step-fade">
@@ -118,6 +193,19 @@ export default function LandingPage({
           >
             🚀 프로필 완성률 50% — 생일 일자를 추가하고<br />
             <strong>숨겨진 나의 진짜 별자리를 확인하세요 →</strong>
+          </div>
+        )}
+
+        {/* 절기 배너 */}
+        {nearbyJeolgi && (
+          <div style={{
+            margin: '0 0 12px', padding: '10px 16px',
+            background: 'linear-gradient(135deg, rgba(120,200,120,0.12), rgba(120,200,120,0.04))',
+            border: '1px solid rgba(120,200,120,0.35)',
+            borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: '#7ec88c',
+            lineHeight: 1.7, textAlign: 'center',
+          }}>
+            🌿 {nearbyJeolgi.diffDays <= 0 ? `오늘은 ${nearbyJeolgi.name}이에요` : `${nearbyJeolgi.diffDays}일 후 ${nearbyJeolgi.name}`} — {nearbyJeolgi.meaning}
           </div>
         )}
 
@@ -336,6 +424,52 @@ export default function LandingPage({
                           hasDiaryToday={hasDiaryToday}
                         />
                       </div>
+
+                      {/* ── 타로 카드 바로가기 ── */}
+                      <button
+                        onClick={() => setStep(34)}
+                        style={{
+                          width: '100%', padding: '12px',
+                          background: 'linear-gradient(135deg, rgba(100,80,180,0.15), rgba(100,80,180,0.05))',
+                          border: '1px solid rgba(130,100,220,0.4)',
+                          borderRadius: 'var(--r1)', color: '#a990f0',
+                          fontFamily: 'var(--ff)', fontSize: 'var(--xs)', fontWeight: 700,
+                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        }}
+                      >
+                        🃏 오늘의 타로 별빛 보기
+                      </button>
+
+                      {/* ── 7일 운세 점수 히스토리 ── */}
+                      {scoreHistory.some(s => s.score !== null) && (
+                        <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6 }}>
+                          <div style={{ fontSize: '10px', color: 'var(--t4)', letterSpacing: '.04em', marginBottom: 8 }}>✦ 최근 7일 운세 흐름</div>
+                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 44 }}>
+                            {scoreHistory.map((item, i) => {
+                              const label = item.date.slice(5).replace('-', '/');
+                              const hasScore = item.score !== null;
+                              const barH = hasScore ? Math.max(6, Math.round((item.score / 100) * 36)) : 4;
+                              return (
+                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                                  <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    {hasScore && (
+                                      <div style={{ fontSize: '9px', color: 'var(--t4)', marginBottom: 2 }}>{item.score}</div>
+                                    )}
+                                    <div style={{
+                                      width: '100%', minWidth: 14,
+                                      height: barH,
+                                      background: hasScore ? scoreColor(item.score) : 'var(--line)',
+                                      borderRadius: 3,
+                                      opacity: hasScore ? 1 : 0.4,
+                                    }} />
+                                  </div>
+                                  <div style={{ fontSize: '8.5px', color: 'var(--t4)' }}>{label}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
