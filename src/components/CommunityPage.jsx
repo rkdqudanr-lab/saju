@@ -528,6 +528,8 @@ export default function CommunityPage({ showToast, dailyResult }) {
     loadFollowing();
 
     // Supabase Realtime 구독
+    if (!supabase) return;
+
     const channel = supabase
       .channel('community_posts_feed')
       .on('postgres_changes', {
