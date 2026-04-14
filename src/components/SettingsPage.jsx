@@ -623,6 +623,8 @@ export default function SettingsPage({
               <span className="toggle-label">큰 글씨 모드 {fontSize === 'large' ? '(켜짐)' : '(꺼짐)'}</span>
             </div>
           </div>
+        )}
+
         {/* ── Tab 2 추가 섹션: 푸시 알림 설정 ── */}
         {tab === 2 && (
           <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
