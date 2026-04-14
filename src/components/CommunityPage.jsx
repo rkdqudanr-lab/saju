@@ -13,6 +13,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
+import AnonSynergyModal from './AnonSynergyModal.jsx';
 
 const MAX_CONTENT = 200;
 const MAX_COMMENT = 100;
@@ -134,7 +135,7 @@ function CommentsSection({ postId, myKakaoId, myNickname, showToast }) {
 // ─────────────────────────────────────────────────────────────────
 //  포스트 카드
 // ─────────────────────────────────────────────────────────────────
-function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLike, onReport, onFollow, showToast }) {
+function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLike, onReport, onFollow, onSynergy, showToast }) {
   const liked = myLikedIds.has(post.id);
   const isOther = post.kakao_id !== myKakaoId;
   const isFollowing = followingIds.has(post.kakao_id);
@@ -178,23 +179,42 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
           </div>
         </div>
         {isOther && myKakaoId && (
-          <button
-            onClick={() => onFollow(post.kakao_id)}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 20,
-              border: `1px solid ${isFollowing ? 'var(--line)' : 'var(--acc)'}`,
-              background: isFollowing ? 'none' : 'var(--goldf)',
-              cursor: 'pointer',
-              fontFamily: 'var(--ff)',
-              fontSize: '10px',
-              color: isFollowing ? 'var(--t4)' : 'var(--gold)',
-              fontWeight: isFollowing ? 400 : 700,
-              flexShrink: 0,
-            }}
-          >
-            {isFollowing ? '팔로잉' : '팔로우'}
-          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              onClick={() => onSynergy(post)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 20,
+                border: '1px solid var(--gold)',
+                background: 'var(--goldf)',
+                cursor: 'pointer',
+                fontFamily: 'var(--ff)',
+                fontSize: '10px',
+                color: 'var(--gold)',
+                fontWeight: 700,
+                flexShrink: 0,
+              }}
+            >
+              궁합
+            </button>
+            <button
+              onClick={() => onFollow(post.kakao_id)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 20,
+                border: `1px solid ${isFollowing ? 'var(--line)' : 'var(--acc)'}`,
+                background: isFollowing ? 'none' : 'var(--goldf)',
+                cursor: 'pointer',
+                fontFamily: 'var(--ff)',
+                fontSize: '10px',
+                color: isFollowing ? 'var(--t4)' : 'var(--gold)',
+                fontWeight: isFollowing ? 400 : 700,
+                flexShrink: 0,
+              }}
+            >
+              {isFollowing ? '팔로잉' : '팔로우'}
+            </button>
+          </div>
         )}
       </div>
 
@@ -516,6 +536,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
   const [myLikedIds, setMyLikedIds] = useState(new Set());
   const [followingIds, setFollowingIds] = useState(new Set());
   const [reportTargetId, setReportTargetId] = useState(null);
+  const [selectedSynergyUser, setSelectedSynergyUser] = useState(null);
 
   const kakaoId = user?.kakaoId || user?.id;
   const myNickname = user?.nickname || '별숨 유저';
@@ -775,6 +796,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
               onLike={handleLike}
               onReport={(id) => setReportTargetId(id)}
               onFollow={handleFollow}
+              onSynergy={setSelectedSynergyUser}
               showToast={showToast}
             />
           ))
@@ -824,6 +846,15 @@ export default function CommunityPage({ showToast, dailyResult }) {
         <ReportModal
           onClose={() => setReportTargetId(null)}
           onSubmit={(reason) => handleReport(reportTargetId, reason)}
+        />
+      )}
+
+      {selectedSynergyUser && (
+        <AnonSynergyModal
+          targetUser={selectedSynergyUser}
+          myIlgan={myIlgan}
+          mySunSign={mySunSign}
+          onClose={() => setSelectedSynergyUser(null)}
         />
       )}
     </div>
