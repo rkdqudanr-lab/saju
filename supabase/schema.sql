@@ -937,5 +937,35 @@ insert into shop_items (id, name, description, category, bp_cost, emoji, rarity)
   ('special_yearly',  '연간 대운 상세 분석', '올해와 내년 대운 심층 AI 분석',      'special_reading', 100, '🔮', 'legendary'),
   ('special_nameday', '내 이름의 운명',      '이름 획수·음양오행 심층 분석',       'special_reading', 80,  '📛', 'rare'),
   ('effect_star',     '별 이펙트 카드',      '공유카드에 별 파티클 이펙트 추가',   'effect',          20,  '✨', 'common'),
-  ('effect_aurora',   '오로라 이펙트 카드',  '공유카드에 오로라 그라디언트 추가',  'effect',          35,  '🌈', 'rare')
+  ('effect_aurora',   '오로라 이펙트 카드',  '공유카드에 오로라 그라디언트 추가',  'effect',          35,  '🌈', 'rare'),
+  ('talisman_1',      '재입고 금두꺼비',     '오늘의 재물운 폭발 부적',            'talisman',        15,  '🐸', 'rare'),
+  ('talisman_2',      '은하수 타로카드',     '생각지도 못한 인연을 끌어당깁니다',  'talisman',        15,  '🌌', 'legendary'),
+  ('talisman_3',      '만사형통 부적',       '모든 일이 막힘 없이 스르륵 풀려요',  'talisman',        15,  '🧧', 'common')
 on conflict (id) do nothing;
+
+-- ── push_subscriptions (웹 푸시 알림) ──────────────────────────────────
+create table if not exists push_subscriptions (
+    id uuid default gen_random_uuid() primary key,
+    kakao_id text not null,
+    endpoint text not null,
+    p256dh text not null,
+    auth text not null,
+    created_at timestamptz default now(),
+    unique(endpoint)
+);
+
+alter table push_subscriptions enable row level security;
+
+drop policy if exists "push_insert" on push_subscriptions;
+drop policy if exists "push_select" on push_subscriptions;
+
+create policy "push_insert" on push_subscriptions
+  for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "push_select" on push_subscriptions
+  for select to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
