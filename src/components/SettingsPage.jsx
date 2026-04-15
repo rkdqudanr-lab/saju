@@ -111,7 +111,7 @@ export default function SettingsPage({
   const handlePushToggle = async (e) => {
     e.stopPropagation();
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-      showToast?.('이 브라우저/기기는 푸시 알림을 지원하지 않아요 🌙', 'error');
+      showToast?.('이 브라우저/기기는 푸시 알림을 지원하지 않아요', 'error');
       return;
     }
 
@@ -135,7 +135,7 @@ export default function SettingsPage({
       if (!sub) {
         const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
         if (!publicVapidKey) {
-          showToast?.('서버 설정(VAPID Key)이 누락되어 알림을 켤 수 없어요 🌙', 'error');
+          showToast?.('서버 설정(VAPID Key)이 누락되어 알림을 켤 수 없어요', 'error');
           return;
         }
         sub = await swReg.pushManager.subscribe({
@@ -159,7 +159,7 @@ export default function SettingsPage({
 
         if (error) {
           console.error("Push save error:", error);
-          showToast?.('알림 정보를 서버에 저장하는데 실패했어요 🌙', 'error');
+          showToast?.('알림 정보를 서버에 저장하는데 실패했어요', 'error');
           return;
         }
       }
@@ -169,7 +169,7 @@ export default function SettingsPage({
       
     } catch (err) {
       console.error(err);
-      showToast?.('알림 설정 중 오류가 발생했어요 🌙', 'error');
+      showToast?.('알림 설정 중 오류가 발생했어요', 'error');
     }
   };
 
@@ -200,7 +200,7 @@ export default function SettingsPage({
       if (user) await saveProfileToSupabase(localForm, user);
       showToast?.('개인정보가 저장됐어요 ✦', 'success');
     } catch {
-      showToast?.('저장에 실패했어요. 다시 시도해봐요 🌙', 'error');
+      showToast?.('저장에 실패했어요. 다시 시도해봐요', 'error');
     } finally {
       setSaving(false);
     }
@@ -209,7 +209,7 @@ export default function SettingsPage({
   return (
     <div className="page step-fade" style={{ paddingTop: 56 }}>
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 60 }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.1em', marginBottom: 4 }}>⚙️ 설정</div>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.1em', marginBottom: 4 }}>✦ 설정</div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 20 }}>나의 별숨 설정</div>
 
         {/* ── 탭 ── */}
@@ -398,7 +398,7 @@ export default function SettingsPage({
             ))}
 
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.7, marginTop: 4 }}>
-              정식 출시 시 이메일 또는 카카오 채널로 안내드릴게요 🌙
+              정식 출시 시 이메일 또는 카카오 채널로 안내드릴게요.
             </div>
           </div>
         )}
@@ -458,7 +458,7 @@ export default function SettingsPage({
                           borderRadius: 1,
                         }} />
                       )}
-                      <span style={{ fontSize: '1.2rem' }}>{opt.emoji}</span>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: responseStyle === opt.value ? 'var(--gold)' : 'var(--t4)', letterSpacing: '.04em' }}>{opt.sub}</span>
                       <span style={{
                         fontSize: 'var(--xs)',
                         fontWeight: responseStyle === opt.value ? 700 : 400,
@@ -507,7 +507,7 @@ export default function SettingsPage({
                     border: '1px solid var(--acc)',
                   }}>
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>
-                      {cur?.emoji} 현재: {cur?.label} ({cur?.sub})
+                      ✦ 현재: {cur?.label} ({cur?.sub})
                     </div>
                     {(styleDescriptions[responseStyle] || []).map((line, i) => (
                       <div key={i} style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7, marginBottom: i < 2 ? 4 : 0 }}>
@@ -519,7 +519,7 @@ export default function SettingsPage({
               })()}
 
               <div style={{ marginTop: 16, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7, textAlign: 'center' }}>
-                스타일은 언제든지 변경할 수 있어요 🌙<br />
+                스타일은 언제든지 변경할 수 있어요<br />
                 변경 즉시 다음 답변부터 적용돼요.
               </div>
             </div>
@@ -547,7 +547,7 @@ export default function SettingsPage({
                     }}
                   >
                     <div style={{ fontSize: 'var(--xs)', color: responseStyle === ex.val ? 'var(--gold)' : 'var(--t4)', fontWeight: 600, marginBottom: 5 }}>
-                      {STYLE_OPTIONS.find(s => s.value === ex.val)?.emoji} {STYLE_OPTIONS.find(s => s.value === ex.val)?.label}
+                      {STYLE_OPTIONS.find(s => s.value === ex.val)?.label}
                       {responseStyle === ex.val && ' (현재 선택)'}
                     </div>
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>{ex.text}</div>
@@ -586,7 +586,7 @@ export default function SettingsPage({
                     transition: 'all .2s',
                   }}
                 >
-                  {opt.emoji} {opt.label}
+                  {opt.label}
                 </button>
               ))}
             </div>
