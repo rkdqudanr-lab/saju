@@ -79,7 +79,7 @@ export default function DailyHoroscopePage({
     <div className="page step-fade">
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 40 }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>🌟</div>
+          <div style={{ fontSize: '1.4rem', marginBottom: 8, color: 'var(--gold)' }}>✦</div>
           <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
             오늘 하루 나의 별숨
           </div>

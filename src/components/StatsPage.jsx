@@ -311,7 +311,7 @@ export default function StatsPage({ callApi }) {
   if (!user) {
     return (
       <div className="page" style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)' }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
+        <div style={{ fontSize: '1.6rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
         <div>로그인 후 통계를 볼 수 있어요</div>
       </div>
     );

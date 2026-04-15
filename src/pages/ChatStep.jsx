@@ -44,9 +44,9 @@ export default function ChatStep({
     <div className="chat-page">
       <div className="chat-page-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div className="chat-page-title">💬 별숨과 대화하기</div>
+          <div className="chat-page-title">별숨과 대화하기</div>
           {chatHistory.length > 0 && (
-            <button className="res-top-btn" style={{ flexShrink: 0, marginTop: 2 }} onClick={handleSaveChatImage}>🖼 저장</button>
+            <button className="res-top-btn" style={{ flexShrink: 0, marginTop: 2 }} onClick={handleSaveChatImage}>저장</button>
           )}
         </div>
         <div className="chat-page-sub">

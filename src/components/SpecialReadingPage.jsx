@@ -364,7 +364,7 @@ export default function SpecialReadingPage({ callApi, showToast }) {
       {/* 아이템 미보유 */}
       {!loading && !result && ownedItems !== null && !hasItems && (
         <div style={{ margin: '0 20px', padding: '28px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🔮</div>
+          <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
           <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>
             특별 상담권이 없어요
           </div>

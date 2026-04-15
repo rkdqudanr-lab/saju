@@ -16,7 +16,7 @@ export default function InviteModal({ user, showToast, onClose }) {
                 showToast('초대 링크가 복사됐어요! 친구에게 공유해보세요 ✦', 'success');
                 onClose();
               });
-            }}>📋 초대 링크 복사하기</button>
+            }}>✦ 초대 링크 복사하기</button>
             {navigator.share && (
               <button className="btn-main" style={{ background: 'var(--bg3)', color: 'var(--t1)', marginTop: 8 }} onClick={() => {
                 navigator.share({ title: '별숨 — 사주+별자리 운세', text: '사주와 별자리로 당신의 질문에 답해드려요. 저의 초대 링크로 시작해봐요 ✦', url: `${window.location.origin}?ref=${user.id}` }).catch(() => {});
