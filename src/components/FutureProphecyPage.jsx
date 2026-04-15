@@ -5,13 +5,13 @@ import useWordTyping from "../hooks/useWordTyping.js";
 //  🔮 별숨의 예언 (구 미래의 별숨)
 // ═══════════════════════════════════════════════════════════
 const PERIOD_OPTIONS = [
-  { id: '1일 후', label: '1일 후', desc: '내일의 흐름', emoji: '🌙' },
-  { id: '3일 후', label: '3일 후', desc: '가까운 날들의 기운', emoji: '⭐' },
-  { id: '1개월 후', label: '1개월 후', desc: '가장 가까운 미래', emoji: '🌱' },
-  { id: '3개월 후', label: '3개월 후', desc: '한 계절이 지난 뒤', emoji: '🌸' },
-  { id: '1년 후', label: '1년 후', desc: '일 년이 흐른 자리', emoji: '🍂' },
-  { id: '10년 후', label: '10년 후', desc: '또 다른 나를 만날 때', emoji: '🌌' },
-  { id: '30년 후', label: '30년 후', desc: '인생의 깊은 곳에서', emoji: '✨' },
+  { id: '1일 후', label: '1일 후', desc: '내일의 흐름', emoji: '☽' },
+  { id: '3일 후', label: '3일 후', desc: '가까운 날들의 기운', emoji: '◇' },
+  { id: '1개월 후', label: '1개월 후', desc: '가장 가까운 미래', emoji: '◈' },
+  { id: '3개월 후', label: '3개월 후', desc: '한 계절이 지난 뒤', emoji: '✦' },
+  { id: '1년 후', label: '1년 후', desc: '일 년이 흐른 자리', emoji: '✧' },
+  { id: '10년 후', label: '10년 후', desc: '또 다른 나를 만날 때', emoji: '⊕' },
+  { id: '30년 후', label: '30년 후', desc: '인생의 깊은 곳에서', emoji: '⊛' },
 ];
 
 export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, shareResult, saveImage }) {
@@ -32,7 +32,7 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
       );
       setText(pText);
     } catch {
-      setText('별의 궤도를 읽는 데 실패했어요 🌙\n잠시 후 다시 시도해주세요.');
+      setText('별의 궤도를 읽는 데 실패했어요.\n잠시 후 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
@@ -144,11 +144,11 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
             background: 'radial-gradient(circle at 35% 28%, rgba(232,176,72,.4), rgba(190,110,170,.3), rgba(50,30,90,.6))',
             border: '1px solid rgba(232,176,72,.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '2rem',
+            fontSize: '1.6rem',
             boxShadow: '0 0 32px rgba(232,176,72,.15)',
             animation: 'orbPulse 4s infinite',
           }}>
-            🔮
+            ✦
           </div>
           <div style={{ fontSize: 'var(--xl)', fontWeight: 700, color: 'var(--gold)', marginBottom: 8 }}>
             별숨의 예언

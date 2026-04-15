@@ -219,11 +219,11 @@ function DetailPanel({ pair, members, onClose, user }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'api error');
-      setResult(data.text || '분석을 불러오지 못했어요 🌙');
+      setResult(data.text || '분석을 불러오지 못했어요.');
     } catch (e) {
       if (e?.name === 'AbortError') return; // 언마운트 취소 — 상태 업데이트 생략
       setHasError(true);
-      setResult('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.');
+      setResult('별이 잠시 쉬고 있어요.\n잠시 후 다시 시도해봐요.');
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
