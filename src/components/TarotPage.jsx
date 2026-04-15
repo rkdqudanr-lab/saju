@@ -33,6 +33,54 @@ const MAJOR_ARCANA = [
 ];
 
 const POSITIONS = ['과거 — 지나온 흐름', '현재 — 지금의 기운', '미래 — 다가올 빛'];
+const ROMAN = ['0', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ', 'Ⅺ', 'Ⅻ', 'ⅩⅢ', 'ⅩⅣ', 'ⅩⅤ', 'ⅩⅥ', 'ⅩⅦ', 'ⅩⅧ', 'ⅩⅨ', 'ⅩⅩ', 'ⅩⅪ'];
+
+// 카드 뒷면 만달라 SVG
+function CardBackFace({ posLabel }) {
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, borderRadius: 14,
+      backfaceVisibility: 'hidden',
+      background: 'linear-gradient(160deg, #0d0b1e 0%, #1a1040 50%, #0d0b1e 100%)',
+      border: '1px solid rgba(200,165,80,0.45)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', gap: 0,
+      overflow: 'hidden',
+    }}>
+      {/* 이중 내부 프레임 */}
+      <div style={{ position: 'absolute', inset: 5, border: '1px solid rgba(200,165,80,0.2)', borderRadius: 10, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 8, border: '1px solid rgba(200,165,80,0.1)', borderRadius: 8, pointerEvents: 'none' }} />
+      {/* 만달라 SVG */}
+      <svg width="72" height="72" viewBox="0 0 72 72" style={{ opacity: 0.75, marginBottom: 6 }}>
+        <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(200,165,80,0.35)" strokeWidth="0.6"/>
+        <circle cx="36" cy="36" r="22" fill="none" stroke="rgba(200,165,80,0.25)" strokeWidth="0.6"/>
+        <circle cx="36" cy="36" r="10" fill="none" stroke="rgba(200,165,80,0.4)" strokeWidth="0.6"/>
+        {[0,30,60,90,120,150,180,210,240,270,300,330].map((deg, i) => {
+          const r = deg * Math.PI / 180;
+          return <line key={i} x1={36 + 10 * Math.cos(r)} y1={36 + 10 * Math.sin(r)} x2={36 + 30 * Math.cos(r)} y2={36 + 30 * Math.sin(r)} stroke="rgba(200,165,80,0.3)" strokeWidth="0.6"/>;
+        })}
+        {[0,45,90,135,180,225,270,315].map((deg, i) => {
+          const r = deg * Math.PI / 180;
+          const x = 36 + 22 * Math.cos(r); const y = 36 + 22 * Math.sin(r);
+          return <circle key={i} cx={x} cy={y} r="1.4" fill="rgba(200,165,80,0.6)"/>;
+        })}
+        <circle cx="36" cy="36" r="2.5" fill="rgba(200,165,80,0.9)"/>
+      </svg>
+      {/* 포지션 레이블 */}
+      <div style={{ fontSize: '8.5px', color: 'rgba(200,165,80,0.65)', letterSpacing: '.12em', fontWeight: 600, textTransform: 'uppercase' }}>
+        {posLabel}
+      </div>
+      {/* shimmer 레이어 */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 14,
+        background: 'linear-gradient(105deg, transparent 40%, rgba(255,220,120,0.06) 50%, transparent 60%)',
+        backgroundSize: '200% 100%',
+        animation: 'tarotShimmer 2.4s ease-in-out infinite',
+        pointerEvents: 'none',
+      }} />
+    </div>
+  );
+}
 
 // 오늘 날짜 + userId 기반 시드로 카드 뽑기 (같은 날은 같은 카드)
 function drawCards(userId = 'guest') {
@@ -80,152 +128,183 @@ export default function TarotPage({ callApi, showToast }) {
   }, [cards, callApi, readingLoading]);
 
   return (
-    <div className="page step-fade" style={{ paddingBottom: 60 }}>
-      {/* 헤더 */}
-      <div style={{ padding: '28px 20px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
-          ✦ 별숨 타로
+    <div className="page step-fade" style={{ paddingBottom: 80 }}>
+      <style>{`
+        @keyframes tarotShimmer {
+          0%   { background-position: 200% center; }
+          100% { background-position: -200% center; }
+        }
+        @keyframes tarotGlow {
+          0%, 100% { box-shadow: 0 0 12px rgba(200,165,80,0.25), 0 4px 20px rgba(0,0,0,0.4); }
+          50%       { box-shadow: 0 0 22px rgba(200,165,80,0.45), 0 4px 24px rgba(0,0,0,0.5); }
+        }
+        @keyframes tarotReveal {
+          from { opacity: 0; transform: scale(0.95); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+
+      {/* ── 헤더 ── */}
+      <div style={{ padding: '32px 20px 24px', textAlign: 'center', background: 'linear-gradient(180deg, rgba(13,11,30,0.6) 0%, transparent 100%)' }}>
+        <div style={{ fontSize: '10px', color: 'rgba(200,165,80,0.8)', fontWeight: 700, letterSpacing: '.2em', marginBottom: 8, textTransform: 'uppercase' }}>
+          ✦ &nbsp; B Y E O L S O O M &nbsp; T A R O T &nbsp; ✦
         </div>
-        <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.3, marginBottom: 8 }}>
+        <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.25, marginBottom: 6 }}>
           오늘의 세 별빛
         </div>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7 }}>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.8 }}>
           {allFlipped
-            ? '세 별빛이 모두 열렸어요. 별숨에게 해석을 물어봐요.'
-            : '카드를 눌러 오늘의 별빛을 열어봐요'}
+            ? '세 별빛이 모두 열렸어요 — 별숨에게 해석을 물어봐요'
+            : '카드를 눌러 오늘의 운명을 열어봐요'}
         </div>
       </div>
 
-      {/* 카드 3장 */}
-      <div style={{ display: 'flex', gap: 12, padding: '0 20px', justifyContent: 'center' }}>
+      {/* ── 카드 3장 ── */}
+      <div style={{ display: 'flex', gap: 14, padding: '0 18px', justifyContent: 'center' }}>
         {cards.map((card, idx) => (
           <div
             key={card.id}
             onClick={() => !flipped[idx] && flipCard(idx)}
             style={{
-              flex: 1, maxWidth: 110,
-              aspectRatio: '2/3',
-              borderRadius: 12,
+              flex: 1, maxWidth: 108,
+              aspectRatio: '5/8',
+              borderRadius: 14,
               cursor: flipped[idx] ? 'default' : 'pointer',
-              perspective: 600,
+              perspective: 800,
               position: 'relative',
+              filter: !flipped[idx] ? 'drop-shadow(0 6px 18px rgba(0,0,0,0.55))' : 'none',
+              transition: 'transform 0.15s ease',
             }}
           >
             <div style={{
               width: '100%', height: '100%',
               position: 'relative',
               transformStyle: 'preserve-3d',
-              transition: 'transform 0.5s ease',
+              transition: 'transform 0.65s cubic-bezier(0.4,0,0.2,1)',
               transform: flipped[idx] ? 'rotateY(180deg)' : 'none',
             }}>
-              {/* 앞면(뒤집기 전) */}
+              {/* 뒷면(뒤집기 전) */}
+              <CardBackFace posLabel={POSITIONS[idx].split('—')[0].trim()} />
+
+              {/* 앞면(공개 후) */}
               <div style={{
-                position: 'absolute', inset: 0, borderRadius: 12,
-                backfaceVisibility: 'hidden',
-                background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
-                border: '1px solid var(--acc)',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}>
-                <div style={{ fontSize: 28 }}>✦</div>
-                <div style={{ fontSize: '10px', color: 'var(--acc)', fontWeight: 600 }}>
-                  {POSITIONS[idx].split('—')[0].trim()}
-                </div>
-              </div>
-              {/* 뒷면(뒤집은 후) */}
-              <div style={{
-                position: 'absolute', inset: 0, borderRadius: 12,
+                position: 'absolute', inset: 0, borderRadius: 14,
                 backfaceVisibility: 'hidden',
                 transform: 'rotateY(180deg)',
-                background: 'var(--bg2)',
-                border: '1px solid var(--gold)',
+                background: 'linear-gradient(160deg, #12102a 0%, #1e1a40 60%, #12102a 100%)',
+                border: '1px solid rgba(200,165,80,0.7)',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                padding: '10px 8px', gap: 6, textAlign: 'center',
-                boxShadow: '0 0 16px rgba(232,176,72,0.2)',
+                padding: '10px 8px 12px', gap: 4, textAlign: 'center',
+                animation: flipped[idx] ? 'tarotGlow 3s ease-in-out infinite' : 'none',
+                overflow: 'hidden',
               }}>
-                <div style={{ fontSize: 28 }}>{card.emoji}</div>
-                <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--gold)', lineHeight: 1.2 }}>{card.name}</div>
-                <div style={{ fontSize: '9.5px', color: 'var(--t4)', lineHeight: 1.4 }}>{card.meaning}</div>
+                {/* 이중 내부 프레임 */}
+                <div style={{ position: 'absolute', inset: 5, border: '1px solid rgba(200,165,80,0.2)', borderRadius: 10, pointerEvents: 'none' }} />
+                {/* 로마 숫자 */}
+                <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.6)', letterSpacing: '.12em', fontWeight: 600, marginBottom: 2 }}>
+                  {ROMAN[card.id]}
+                </div>
+                {/* 이모지 */}
+                <div style={{ fontSize: 32, lineHeight: 1, filter: 'drop-shadow(0 0 8px rgba(200,165,80,0.5))' }}>
+                  {card.emoji}
+                </div>
+                {/* 구분선 */}
+                <div style={{ width: '60%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.5), transparent)', margin: '4px 0' }} />
+                {/* 카드명 */}
+                <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(220,190,100,0.95)', lineHeight: 1.2, letterSpacing: '.02em' }}>{card.name}</div>
+                {/* 키워드 */}
+                <div style={{ fontSize: '8.5px', color: 'rgba(180,180,200,0.65)', lineHeight: 1.4, marginTop: 1 }}>{card.meaning}</div>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* 포지션 라벨 */}
-      <div style={{ display: 'flex', gap: 12, padding: '10px 20px 0', justifyContent: 'center' }}>
+      {/* ── 포지션 라벨 ── */}
+      <div style={{ display: 'flex', gap: 14, padding: '10px 18px 0', justifyContent: 'center' }}>
         {POSITIONS.map((pos, i) => (
-          <div key={i} style={{ flex: 1, maxWidth: 110, textAlign: 'center', fontSize: '9.5px', color: 'var(--t4)', lineHeight: 1.4 }}>
-            {pos}
+          <div key={i} style={{ flex: 1, maxWidth: 108, textAlign: 'center' }}>
+            <div style={{ fontSize: '8.5px', color: flipped[i] ? 'rgba(200,165,80,0.75)' : 'var(--t4)', lineHeight: 1.5, fontWeight: flipped[i] ? 700 : 400, transition: 'color 0.4s' }}>
+              {pos.split('—')[0].trim()}
+            </div>
+            <div style={{ fontSize: '8px', color: 'var(--t4)', opacity: 0.6 }}>{pos.split('—')[1]?.trim()}</div>
           </div>
         ))}
       </div>
 
-      {/* 카드 설명 (뒤집힌 것만) */}
+      {/* ── 카드 설명 (뒤집힌 것만) ── */}
       {flipped.some(Boolean) && (
-        <div style={{ margin: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ margin: '24px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {cards.map((card, idx) => flipped[idx] && (
             <div key={card.id} style={{
-              padding: '12px 14px',
-              background: 'var(--bg2)',
-              borderRadius: 'var(--r1)',
-              border: '1px solid var(--line)',
+              padding: '14px 16px',
+              background: 'linear-gradient(135deg, rgba(18,16,42,0.9), rgba(26,22,56,0.7))',
+              borderRadius: 12,
+              border: '1px solid rgba(200,165,80,0.3)',
+              animation: 'tarotReveal 0.4s ease',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 18 }}>{card.emoji}</span>
-                <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)' }}>{card.name}</span>
-                <span style={{ fontSize: '10px', color: 'var(--t4)', marginLeft: 'auto' }}>
-                  {POSITIONS[idx].split('—')[0].trim()}
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(200,165,80,0.1)', border: '1px solid rgba(200,165,80,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                  {card.emoji}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 'var(--xs)', fontWeight: 800, color: 'rgba(220,190,100,0.9)', marginBottom: 1 }}>{card.name}</div>
+                  <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.55)', letterSpacing: '.08em' }}>{POSITIONS[idx].split('—')[0].trim()} &nbsp;·&nbsp; {ROMAN[card.id]}</div>
+                </div>
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--t3)', lineHeight: 1.6 }}>{card.detail}</div>
+              <div style={{ fontSize: '12px', color: 'var(--t2)', lineHeight: 1.75, paddingLeft: 2 }}>{card.detail}</div>
             </div>
           ))}
         </div>
       )}
 
-      {/* AI 해석 버튼 */}
+      {/* ── AI 해석 버튼 ── */}
       {allFlipped && !reading && (
         <div style={{ padding: '20px 20px 0' }}>
           <button
             onClick={askReading}
             disabled={readingLoading}
             style={{
-              width: '100%', padding: '14px',
-              background: 'var(--goldf)',
-              border: '1.5px solid var(--acc)',
-              borderRadius: 'var(--r1)',
-              color: 'var(--gold)', fontWeight: 700,
+              width: '100%', padding: '16px',
+              background: readingLoading ? 'rgba(200,165,80,0.08)' : 'linear-gradient(135deg, rgba(200,165,80,0.18), rgba(200,165,80,0.08))',
+              border: '1px solid rgba(200,165,80,0.5)',
+              borderRadius: 12,
+              color: 'rgba(220,190,100,0.95)', fontWeight: 700,
               fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
               cursor: readingLoading ? 'not-allowed' : 'pointer',
+              letterSpacing: '.02em',
             }}
           >
             {readingLoading ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <span style={{ width: 14, height: 14, border: '2px solid var(--acc)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', display: 'inline-block' }} />
-                별숨이 읽고 있어요...
+                <span style={{ width: 14, height: 14, border: '2px solid rgba(200,165,80,0.3)', borderTopColor: 'rgba(200,165,80,0.9)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', display: 'inline-block' }} />
+                별숨이 별빛을 읽고 있어요...
               </span>
-            ) : '✦ 별숨에게 세 별빛 해석 받기'}
+            ) : '✦ 세 별빛의 흐름 읽어주기'}
           </button>
         </div>
       )}
 
-      {/* AI 해석 결과 */}
+      {/* ── AI 해석 결과 ── */}
       {reading && (
-        <div style={{ margin: '20px 20px 0', padding: '18px 16px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)' }}>
-          <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
-            ✦ 별숨의 타로 해석
+        <div style={{ margin: '20px 20px 0', padding: '20px 18px', background: 'linear-gradient(160deg, rgba(13,11,30,0.95), rgba(20,16,44,0.9))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+            <div style={{ width: 20, height: 1, background: 'rgba(200,165,80,0.5)' }} />
+            <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.8)', fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase' }}>별숨의 타로 해석</div>
+            <div style={{ flex: 1, height: 1, background: 'rgba(200,165,80,0.5)' }} />
           </div>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', lineHeight: 1.85, whiteSpace: 'pre-wrap' }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
             {reading}
           </div>
         </div>
       )}
 
-      {/* 오늘 날짜 안내 */}
-      <div style={{ margin: '16px 20px 0', fontSize: '10px', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.6 }}>
-        오늘의 별빛은 매일 새로 열려요 ✦ 내일 다시 뽑아봐요
+      {/* ── 안내 ── */}
+      <div style={{ margin: '20px 20px 0', padding: '10px 14px', background: 'rgba(200,165,80,0.05)', border: '1px solid rgba(200,165,80,0.12)', borderRadius: 10, textAlign: 'center' }}>
+        <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.7 }}>
+          오늘의 별빛은 매일 자정 새롭게 열려요 ✦
+        </div>
       </div>
     </div>
   );

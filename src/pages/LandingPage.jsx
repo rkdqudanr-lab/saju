@@ -443,19 +443,47 @@ export default function LandingPage({
                         />
                       </div>
 
-                      {/* ── 타로 카드 바로가기 ── */}
+                      {/* ── 타로 카드 위젯 ── */}
                       <button
                         onClick={() => setStep(34)}
                         style={{
-                          width: '100%', padding: '12px',
-                          background: 'linear-gradient(135deg, rgba(100,80,180,0.15), rgba(100,80,180,0.05))',
-                          border: '1px solid rgba(130,100,220,0.4)',
-                          borderRadius: 'var(--r1)', color: '#a990f0',
-                          fontFamily: 'var(--ff)', fontSize: 'var(--xs)', fontWeight: 700,
-                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                          width: '100%', padding: '14px 16px',
+                          background: 'linear-gradient(135deg, rgba(13,11,30,0.9), rgba(20,16,44,0.85))',
+                          border: '1px solid rgba(200,165,80,0.3)',
+                          borderRadius: 12, cursor: 'pointer',
+                          fontFamily: 'var(--ff)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         }}
                       >
-                        🃏 오늘의 타로 별빛 보기
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.6)', fontWeight: 700, letterSpacing: '.14em', marginBottom: 3 }}>✦ &nbsp;BYEOLSOOM TAROT</div>
+                          <div style={{ fontSize: 'var(--xs)', color: 'rgba(220,190,100,0.9)', fontWeight: 700 }}>오늘의 세 별빛 열기</div>
+                          <div style={{ fontSize: '10px', color: 'rgba(180,180,200,0.5)', marginTop: 2 }}>매일 새로운 카드가 기다려요</div>
+                        </div>
+                        {/* 미니 카드 3장 */}
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                          {['-6px', '0px', '6px'].map((ml, i) => (
+                            <div key={i} style={{
+                              width: 24, height: 38, borderRadius: 4,
+                              background: 'linear-gradient(160deg, #0d0b1e, #1a1040)',
+                              border: '1px solid rgba(200,165,80,0.45)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              marginLeft: i === 0 ? 0 : ml,
+                              transform: i === 0 ? 'rotate(-6deg)' : i === 1 ? 'rotate(0deg)' : 'rotate(6deg)',
+                              boxShadow: '0 3px 10px rgba(0,0,0,0.5)',
+                              position: 'relative', overflow: 'hidden',
+                            }}>
+                              <svg width="14" height="14" viewBox="0 0 14 14" style={{ opacity: 0.6 }}>
+                                <circle cx="7" cy="7" r="5.5" fill="none" stroke="rgba(200,165,80,0.6)" strokeWidth="0.5"/>
+                                {[0,60,120,180,240,300].map((deg, j) => {
+                                  const r = deg * Math.PI / 180;
+                                  return <line key={j} x1="7" y1="7" x2={7 + 5.5 * Math.cos(r)} y2={7 + 5.5 * Math.sin(r)} stroke="rgba(200,165,80,0.4)" strokeWidth="0.5"/>;
+                                })}
+                                <circle cx="7" cy="7" r="1" fill="rgba(200,165,80,0.8)"/>
+                              </svg>
+                            </div>
+                          ))}
+                        </div>
                       </button>
 
                       {/* ── 7일 운세 점수 히스토리 ── */}
