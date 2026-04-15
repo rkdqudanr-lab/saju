@@ -62,8 +62,8 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
   };
 
   const handleAnalyze = async () => {
-    if (!dreamText.trim()) { showToast('꿈 내용을 입력해주세요 🌙', 'info'); return; }
-    if (!callApiProp) { showToast('로그인이 필요해요 🌙', 'info'); return; }
+    if (!dreamText.trim()) { showToast('꿈 내용을 입력해주세요', 'info'); return; }
+    if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
     setLoading(true);
     setResult('');
     setFollowUps([]);
@@ -78,7 +78,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
       setResult(text);
       setFollowUps(parseFollowUp(text));
     } catch {
-      showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요 🌙', 'error');
+      showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요', 'error');
     } finally {
       setLoading(false);
     }

@@ -70,7 +70,7 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
 
   const handleAnalyze = async () => {
     if (!name.trim()) { showToast('이름을 입력해주세요 ✦', 'info'); return; }
-    if (!callApiProp) { showToast('로그인이 필요해요 🌙', 'info'); return; }
+    if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
     setLoading(true);
     setResult('');
     try {
@@ -78,7 +78,7 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
       const text = await callApiProp(prompt);
       setResult(text);
     } catch {
-      showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요 🌙', 'error');
+      showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요', 'error');
     } finally {
       setLoading(false);
     }

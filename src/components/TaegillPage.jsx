@@ -82,7 +82,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
   const handleAsk = async () => {
     if (!eventType) { showToast('이벤트 유형을 선택해주세요', 'info'); return; }
     if (!startDate || !endDate) { showToast('날짜 범위를 설정해주세요', 'info'); return; }
-    if (!callApi) { showToast('로그인이 필요해요 🌙', 'info'); return; }
+    if (!callApi) { showToast('로그인이 필요해요', 'info'); return; }
     setLoading(true);
     setResult('');
     try {
@@ -91,7 +91,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
       const text = await callApi(prompt);
       setResult(text);
     } catch {
-      showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요 🌙', 'error');
+      showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요', 'error');
     } finally {
       setLoading(false);
     }

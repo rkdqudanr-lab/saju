@@ -207,7 +207,7 @@ export default function ProfileStep({
               onClick={async () => {
                 if (user) {
                   const ok = await saveProfileToSupabase(form, user);
-                  if (ok === false) { showToast?.('저장에 실패했어요. 다시 시도해봐요 🌙', 'error'); return; }
+                  if (ok === false) { showToast?.('저장에 실패했어요. 다시 시도해봐요', 'error'); return; }
                 }
                 if (editingMyProfile) { setEditingMyProfile(false); }
                 else if (!onboardingDone) { setSelQs([]); setStep(15); }

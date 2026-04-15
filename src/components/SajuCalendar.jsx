@@ -243,7 +243,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
         .select('id').single();
       if (error || !data?.id) {
         setInputText(title); // 텍스트 복원
-        showToast?.('일정 저장에 실패했어요. 다시 시도해봐요 🌙', 'error');
+        showToast?.('일정 저장에 실패했어요. 다시 시도해봐요', 'error');
         return;
       }
       const newEvent = { id: data.id, supabaseId: data.id, title };
@@ -322,7 +322,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
         .from('diary_entries').delete()
         .eq('id', entry.id).eq('kakao_id', String(user.id));
       setDiaryEntries(prev => { const next = { ...prev }; delete next[dateKey]; return next; });
-      showToast?.('일기가 삭제됐어요 🌙', 'info');
+      showToast?.('일기가 삭제됐어요', 'info');
     } catch {
       showToast?.('삭제에 실패했어요...', 'error');
     }

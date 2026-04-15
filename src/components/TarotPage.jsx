@@ -121,7 +121,7 @@ export default function TarotPage({ callApi, showToast }) {
       );
       setReading(ans);
     } catch {
-      showToast?.('별이 잠시 바빠요. 다시 시도해봐요 🌙', 'error');
+      showToast?.('별이 잠시 바빠요. 다시 시도해봐요', 'error');
     } finally {
       setReadingLoading(false);
     }

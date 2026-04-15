@@ -219,7 +219,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
       // 과거 날짜 또는 askReview 없음: 저장 후 읽기 모드로 전환
       setSubmitted(true);
       setIsEditing(false);
-      showToast?.('일기가 저장됐어요 🌙', 'info');
+      showToast?.('일기가 저장됐어요', 'info');
     }
     setIsSubmitting(false);
   };
@@ -230,7 +230,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
     const client = getAuthenticatedClient(user.id) || supabase;
     try {
       await client.from('diary_entries').delete().eq('id', todayEntry.id).eq('kakao_id', String(user.id));
-      showToast?.('일기가 삭제됐어요 🌙', 'info');
+      showToast?.('일기가 삭제됐어요', 'info');
       setStep(20);
     } catch {
       showToast?.('삭제에 실패했어요...', 'error');
@@ -259,7 +259,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
         .order('date');
 
       if (!entries || entries.length < 3) {
-        showToast?.('이달 일기가 3개 이상 있어야 요약할 수 있어요 🌙', 'info');
+        showToast?.('이달 일기가 3개 이상 있어야 요약할 수 있어요', 'info');
         return;
       }
 
