@@ -126,7 +126,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
     return (
       <div className="page">
         <div className="inner" style={{ textAlign: 'center', paddingTop: 40 }}>
-          <div style={{ fontSize: '2rem', marginBottom: 20 }}>🎴</div>
+          <div style={{ fontSize: '1.5rem', marginBottom: 20, color: 'var(--gold)' }}>✦</div>
           <div style={{ fontSize: 'var(--md)', fontWeight: 700, marginBottom: 16 }}>명함 카드 만들기</div>
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginBottom: 20 }}>
             생년월일을 입력해서<br/>당신의 사주 명함을 만들어봐요
@@ -145,7 +145,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
   const handleSave = () => {
     try {
       saveEnhancedSajuCard({ name: displayName, saju, sun, theme, stickerId: selectedSticker });
-      showToast?.('명함 카드가 저장되었어요 🎴', 'info');
+      showToast?.('명함 카드가 저장되었어요', 'success');
     } catch (e) {
       console.error('명함 카드 저장 오류:', e);
       showToast?.('저장에 실패했어요...', 'error');

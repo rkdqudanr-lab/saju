@@ -198,7 +198,7 @@ export default function ProfileStep({
             {sun && (
               <div className="astro-preview">
                 <div className="a-chip">{sun.s} {sun.n}</div>
-                {moon && <div className="a-chip">🌙 달 {moon.n}</div>}
+                {moon && <div className="a-chip">달 {moon.n}</div>}
                 {asc && <div className="a-chip">↑ 상승 {asc.n}</div>}
               </div>
             )}

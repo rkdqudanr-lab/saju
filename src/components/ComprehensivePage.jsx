@@ -247,7 +247,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user }) {
           </div>
           {moon && (
             <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 10, padding: '6px 14px', fontSize: 'var(--xs)', color: 'var(--t2)' }}>
-              <span style={{ marginRight: 4 }}>🌙</span>달 {moon.n}
+              <span style={{ marginRight: 4 }}>☽</span>달 {moon.n}
             </div>
           )}
           {asc && (
