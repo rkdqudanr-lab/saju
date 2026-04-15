@@ -644,8 +644,8 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 .dsc-header-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.5;animation:dsc-spark 2.5s ease-in-out infinite}
 .dsc-header-dot:last-child{animation-delay:1.25s}
 .dsc-title{font-size:var(--xs);font-weight:600;letter-spacing:.14em;color:var(--t3);text-transform:uppercase}
-.dsc-score{text-align:center;font-size:var(--xl);font-weight:700;color:var(--t1);margin-bottom:var(--sp2)}
-.dsc-score strong{font-size:2rem;color:var(--gold);display:inline-block;margin-left:6px}
+.dsc-score{text-align:center;font-size:var(--xs);font-weight:500;color:var(--t4);letter-spacing:.08em;padding:var(--sp3) 0 var(--sp2);margin-bottom:0}
+.dsc-score strong{font-size:1.45rem;font-weight:700;color:var(--gold);display:inline-block;margin-left:5px;letter-spacing:-.01em}
 .dsc-summary{
   text-align:center;font-size:var(--md);font-weight:600;color:var(--t1);
   line-height:1.85;margin-bottom:var(--sp3);padding:0 4px;white-space:pre-wrap;

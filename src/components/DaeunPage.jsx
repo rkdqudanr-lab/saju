@@ -171,7 +171,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
         context: ctx,
         isDaeun: true,
       });
-      setInterpretation(result?.text || '');
+      setInterpretation(typeof result === 'string' ? result : result?.text || '');
     } catch {
       showToast('해설을 불러오지 못했어요. 다시 시도해봐요.', 'error');
     } finally {

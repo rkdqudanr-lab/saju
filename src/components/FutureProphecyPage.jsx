@@ -175,7 +175,7 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
             내가 알고 싶은<br />미래는?
           </div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 10, lineHeight: 1.7 }}>
-            {form?.name ? `${form.name}님의 별이` : '당신의 별이'} 가장 밝게 빛날<br />
+            {(form?.nickname || form?.name) ? `${form.nickname || form.name}님의 별이` : '당신의 별이'} 가장 밝게 빛날<br />
             그 순간을 함께 들여다봐요
           </div>
         </div>

@@ -55,7 +55,7 @@ export default function ResultsStep({
           <div className="res-header">
             <div className="res-av">✦</div>
             <div>
-              <div className="res-name">{form.name ? `${form.name}에게 전하는 별의 이야기` : '오늘 밤 당신에게 전하는 이야기'}</div>
+              <div className="res-name">{(form.nickname || form.name) ? `${form.nickname || form.name}에게 전하는 별의 이야기` : '오늘 밤 당신에게 전하는 이야기'}</div>
               <div className="res-chips">
                 {saju && <div className="res-chip">🀄 {ON[saju.dom]} 기운</div>}
                 {sun && <div className="res-chip">{sun.s} {sun.n}</div>}

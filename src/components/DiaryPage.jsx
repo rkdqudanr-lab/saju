@@ -79,6 +79,8 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [diaryStreak, setDiaryStreak] = useState(0);
+  const [showDirectAsk, setShowDirectAsk] = useState(false);
+  const [directQuestion, setDirectQuestion] = useState('');
 
   const today = new Date().toISOString().slice(0, 10);
   const targetDate = viewDate || today;
@@ -399,26 +401,88 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
                 {/* 후속 질문 브릿지 */}
                 {setDiy && setStep && (() => {
                   const followUps = parseFollowUpQuestions(diaryReviewResult);
-                  if (!followUps.length) return null;
                   return (
                     <div style={{ padding: '0 16px 14px' }}>
-                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8 }}>이 내용으로 더 물어볼게요 →</div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {followUps.map((q, i) => (
-                          <button
-                            key={i}
-                            onClick={() => { setDiy(q); setStep(1); }}
+                      {followUps.length > 0 && (
+                        <>
+                          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8 }}>이 내용으로 더 물어볼게요 →</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                            {followUps.map((q, i) => (
+                              <button
+                                key={i}
+                                onClick={() => { setDiy(q); setStep(1); }}
+                                style={{
+                                  textAlign: 'left', padding: '9px 14px', borderRadius: 'var(--r1)',
+                                  border: '1px solid var(--acc)', background: 'var(--goldf)',
+                                  color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 600,
+                                  fontFamily: 'var(--ff)', cursor: 'pointer',
+                                }}
+                              >
+                                ✦ {q}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                      {/* 직접 물어보기 */}
+                      {!showDirectAsk ? (
+                        <button
+                          onClick={() => setShowDirectAsk(true)}
+                          style={{
+                            width: '100%', padding: '9px 14px', borderRadius: 'var(--r1)',
+                            border: '1px solid var(--line)', background: 'transparent',
+                            color: 'var(--t3)', fontSize: 'var(--xs)', fontWeight: 600,
+                            fontFamily: 'var(--ff)', cursor: 'pointer',
+                          }}
+                        >
+                          ✎ 직접 물어보기
+                        </button>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <textarea
+                            autoFocus
+                            value={directQuestion}
+                            onChange={e => setDirectQuestion(e.target.value)}
+                            placeholder="별숨에게 직접 물어보세요..."
+                            rows={3}
                             style={{
-                              textAlign: 'left', padding: '9px 14px', borderRadius: 'var(--r1)',
-                              border: '1px solid var(--acc)', background: 'var(--goldf)',
-                              color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 600,
-                              fontFamily: 'var(--ff)', cursor: 'pointer',
+                              width: '100%', padding: '10px 12px', borderRadius: 'var(--r1)',
+                              border: '1px solid var(--acc)', background: 'var(--bg2)',
+                              color: 'var(--t1)', fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
+                              resize: 'none', outline: 'none', boxSizing: 'border-box',
                             }}
-                          >
-                            ✦ {q}
-                          </button>
-                        ))}
-                      </div>
+                          />
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              onClick={() => { setShowDirectAsk(false); setDirectQuestion(''); }}
+                              style={{
+                                flex: 1, padding: '8px', borderRadius: 'var(--r1)',
+                                border: '1px solid var(--line)', background: 'transparent',
+                                color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                              }}
+                            >
+                              취소
+                            </button>
+                            <button
+                              onClick={() => {
+                                const q = directQuestion.trim();
+                                if (!q) return;
+                                setDiy(q); setStep(1);
+                              }}
+                              disabled={!directQuestion.trim()}
+                              style={{
+                                flex: 2, padding: '8px', borderRadius: 'var(--r1)',
+                                border: '1px solid var(--acc)', background: 'var(--goldf)',
+                                color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 700,
+                                fontFamily: 'var(--ff)', cursor: directQuestion.trim() ? 'pointer' : 'default',
+                                opacity: directQuestion.trim() ? 1 : 0.5,
+                              }}
+                            >
+                              별숨에게 물어보기 →
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}

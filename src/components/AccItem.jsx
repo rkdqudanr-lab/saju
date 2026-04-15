@@ -95,7 +95,10 @@ export function ChatBubble({text,isNew}){
 //  리포트 타이핑
 // ═══════════════════════════════════════════════════════════
 export function ReportBody({text}){
-  const{shown,done,skipToEnd}=useWordTyping(text,true,TIMING.typingReport);
+  const cleaned = text
+    ? text.replace(/\[점수\]\s*\d+\s*\n?/g,'').replace(/\[요약\].*?(\n|$)/g,'').trim()
+    : text;
+  const{shown,done,skipToEnd}=useWordTyping(cleaned,true,TIMING.typingReport);
   return(
     <div className="report-content">
       {!done&&(

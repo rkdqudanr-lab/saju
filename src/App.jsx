@@ -284,7 +284,7 @@ export default function App() {
     copyDone, profileNudge, setProfileNudge, showSubNudge,
     handleTypingDone, handleOnboardingFinish, handleQuizAnswer, handleQuizSkip,
     handleSendChat, handleCopyAll, shareCard,
-    handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage, shareResult,
+    handleSaveReportImage, handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage, shareResult,
     handleShareFortuneCard,
     handleShareDreamCard, handleShareTaegilCard,
     shareCardRef, cardDataUrl, cardSummary, shareCardType, shareCardName,
@@ -639,6 +639,7 @@ export default function App() {
             form={form} today={today}
             reportText={reportText} reportLoading={reportLoading}
             genReport={genReport} shareCard={shareCard} shareResult={shareResult}
+            saveReportImage={handleSaveReportImage}
           />
         )}
 

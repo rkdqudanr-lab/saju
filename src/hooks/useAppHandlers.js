@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { parseAccSummary, PKGS, DAILY_QUESTIONS, SIGN_MOOD } from "../utils/constants.js";
-import { saveShareCard, saveProphecyImage, saveCompatImage, saveChatImage, captureShareCard } from "../utils/imageExport.js";
+import { saveShareCard, saveReportImage, saveProphecyImage, saveCompatImage, saveChatImage, captureShareCard } from "../utils/imageExport.js";
 import { getTodayStr } from "../utils/quiz.js";
 
 function detectProfileHint(msg, prof) {
@@ -121,6 +121,11 @@ export function useAppHandlers({
     saveShareCard({ idx, q, parsedText, isDark, today });
   }, [selQs, answers, isDark, today]);
 
+  const handleSaveReportImage = useCallback((reportText) => {
+    if (typeof window.gtag === 'function') window.gtag('event', 'report_image_save');
+    saveReportImage({ reportText, isDark, today, name: form?.name });
+  }, [isDark, today, form?.name]);
+
   const handleSaveProphecyImage = useCallback((type, text, period) => {
     saveProphecyImage({ text, period, isDark, today });
   }, [isDark, today]);
@@ -216,7 +221,7 @@ export function useAppHandlers({
     handleTypingDone, handleOnboardingFinish,
     handleQuizAnswer, handleQuizSkip,
     handleSendChat, handleCopyAll,
-    shareCard, handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage,
+    shareCard, handleSaveReportImage, handleSaveProphecyImage, handleSaveCompatImage, handleSaveChatImage,
     shareResult, handleShareFortuneCard,
     handleShareDreamCard, handleShareTaegilCard,
     shareCardRef, cardDataUrl, cardSummary, shareCardType, shareCardName,

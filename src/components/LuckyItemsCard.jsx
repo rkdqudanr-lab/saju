@@ -90,8 +90,37 @@ export function calcLuckyItems(today, saju) {
   return { ohaeng: dayOhaeng, data, luckyNum, word };
 }
 
-export default function LuckyItemsCard({ today, saju }) {
+/** dailyResult.text의 [별숨픽] 섹션에서 항목 추출 */
+function parseSynergyFromResult(text) {
+  if (!text) return null;
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const idx = lines.findIndex(l => l.startsWith('[별숨픽]') || l.startsWith('[별숨 픽]'));
+  if (idx === -1) return null;
+  const end = lines.findIndex((l, i) => i > idx && l.startsWith('['));
+  const section = lines.slice(idx + 1, end === -1 ? undefined : end);
+  const s = { food: '', place: '', color: '', number: '', direction: '' };
+  for (const line of section) {
+    if (line.startsWith('음식:')) s.food = line.replace('음식:', '').split('—')[0].trim();
+    else if (line.startsWith('장소:')) s.place = line.replace('장소:', '').split('—')[0].trim();
+    else if (line.startsWith('색:')) s.color = line.replace('색:', '').split('—')[0].trim();
+    else if (line.startsWith('숫자:')) s.number = line.replace('숫자:', '').trim();
+    else if (line.startsWith('방향:')) s.direction = line.replace('방향:', '').trim();
+  }
+  return (s.food || s.color || s.number) ? s : null;
+}
+
+export default function LuckyItemsCard({ today, saju, dailyResult }) {
   const { ohaeng, data, luckyNum, word } = calcLuckyItems(today, saju);
+
+  // API 결과 우선, 없으면 클라이언트 계산 fallback
+  const apiSynergy = parseSynergyFromResult(dailyResult?.text);
+  const fromApi = !!apiSynergy;
+
+  const displayFood = apiSynergy?.food || data.food.items.join(' · ');
+  const displayColor = apiSynergy?.color || data.color.name;
+  const displayNumber = apiSynergy?.number || String(luckyNum);
+  const displayDirection = apiSynergy?.direction || data.direction.label;
+  const displayPlace = apiSynergy?.place || '';
 
   const Card = ({ title, children }) => (
     <div style={{
@@ -105,19 +134,32 @@ export default function LuckyItemsCard({ today, saju }) {
 
   return (
     <div style={{ animation: 'fadeUp .3s ease' }}>
-      {/* 오늘의 기운 */}
+      {/* 소스 뱃지 */}
+      <div style={{ textAlign: 'center', marginBottom: 14 }}>
+        <span style={{
+          display: 'inline-block', fontSize: '0.65rem', padding: '3px 10px',
+          borderRadius: 20, fontWeight: 600, letterSpacing: '.04em',
+          background: fromApi ? 'var(--goldf)' : 'var(--bg2)',
+          border: `1px solid ${fromApi ? 'var(--acc)' : 'var(--line)'}`,
+          color: fromApi ? 'var(--gold)' : 'var(--t4)',
+        }}>
+          {fromApi ? '✦ 오늘 별숨 결과 기반' : '사주 기반 · 오늘 기운 확인 후 업데이트'}
+        </span>
+      </div>
+
+      {/* 오늘의 기운 헤더 */}
       <div style={{
-        textAlign: 'center', marginBottom: 20,
-        padding: '16px', borderRadius: 'var(--r1)',
-        background: `${data.color.hex}15`,
-        border: `1px solid ${data.color.hex}40`,
+        textAlign: 'center', marginBottom: 16,
+        padding: '14px', borderRadius: 'var(--r1)',
+        background: `${data.color.hex}12`,
+        border: `1px solid ${data.color.hex}35`,
       }}>
-        <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>{data.color.emoji}</div>
+        <div style={{ fontSize: '1.4rem', marginBottom: 4 }}>{data.color.emoji}</div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 2 }}>오늘의 기운</div>
-        <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: data.color.hex }}>
-          {ohaeng}({data.keyword})
+        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: data.color.hex }}>
+          {ohaeng} · {data.keyword}
         </div>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginTop: 8, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginTop: 6, lineHeight: 1.6 }}>
           {word}
         </div>
       </div>
@@ -125,23 +167,20 @@ export default function LuckyItemsCard({ today, saju }) {
       {/* 2×2 그리드 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
         <Card title="🎨 행운의 색">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 22, height: 22, borderRadius: '50%', background: data.color.hex, flexShrink: 0 }} />
-            <span style={{ fontSize: 'var(--sm)', fontWeight: 600, color: 'var(--t1)' }}>
-              {data.color.name}
-            </span>
+          <div style={{ fontSize: 'var(--sm)', fontWeight: 600, color: 'var(--t1)' }}>
+            {displayColor}
           </div>
         </Card>
 
         <Card title="🔢 행운의 숫자">
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--gold)' }}>
-            {luckyNum}
+          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--gold)' }}>
+            {displayNumber}
           </div>
         </Card>
 
-        <Card title={`${data.direction.emoji} 행운의 방향`}>
+        <Card title="🧭 행운의 방향">
           <div style={{ fontSize: 'var(--sm)', fontWeight: 600, color: 'var(--t1)' }}>
-            {data.direction.label}
+            {displayDirection}
           </div>
         </Card>
 
@@ -153,17 +192,22 @@ export default function LuckyItemsCard({ today, saju }) {
       </div>
 
       {/* 음식 추천 */}
-      <Card title={`${data.food.emoji} 오늘 먹으면 좋은 음식`}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-          {data.food.items.map(f => (
-            <span key={f} style={{
-              padding: '3px 10px', borderRadius: 20, fontSize: 'var(--xs)',
-              background: 'var(--goldf)', border: '1px solid var(--acc)',
-              color: 'var(--gold)',
-            }}>{f}</span>
-          ))}
+      <Card title="🍽️ 오늘 먹으면 좋은 음식">
+        <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 500, marginTop: 2 }}>
+          {displayFood}
         </div>
       </Card>
+
+      {/* 장소 (API 결과 있을 때만) */}
+      {displayPlace && (
+        <div style={{
+          marginTop: 10, padding: '10px 14px', borderRadius: 'var(--r1)',
+          background: 'var(--card)', border: '1px solid var(--line)',
+        }}>
+          <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>📍 오늘 가면 좋은 곳 </span>
+          <span style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>{displayPlace}</span>
+        </div>
+      )}
 
       {/* 오늘의 활동 */}
       <div style={{
@@ -175,7 +219,7 @@ export default function LuckyItemsCard({ today, saju }) {
       </div>
 
       <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 14 }}>
-        매일 자정 기준으로 새로워져요 ✦
+        {fromApi ? '오늘 별숨 결과에서 업데이트됐어요 ✦' : '오늘 기운을 먼저 확인하면 더 정확해져요 ✦'}
       </div>
     </div>
   );

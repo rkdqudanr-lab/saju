@@ -516,7 +516,7 @@ export default function LandingPage({
       {/* ── 생일 D-Day 위젯 ── */}
       {user && form.bm && (() => {
         const all = [
-          { label: form.name || '나', bm: form.bm, bd: form.bd },
+          { label: form.nickname || form.name || '나', bm: form.bm, bd: form.bd },
           ...(otherProfiles || []).map(p => ({ label: p.name || '이름없음', bm: p.bm, bd: p.bd })),
         ];
         const cards = all

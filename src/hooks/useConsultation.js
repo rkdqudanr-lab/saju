@@ -234,6 +234,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             isSlot:            opts.isSlot            || false,
             isWeekly:          opts.isWeekly          || false,
             isDaily:           opts.isDaily           || false,
+            isDaeun:           opts.isDaeun           || false,
             responseStyle:     style,
             precision_level:   useAppStore.getState().dataPrecision?.level || 'low',
             clientHour:        new Date().getHours(),

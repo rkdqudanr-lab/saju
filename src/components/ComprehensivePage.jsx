@@ -314,7 +314,7 @@ export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx
               종합 분석
             </div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.6 }}>
-              {form.name || '그대'}의 사주와 별자리를<br />깊이 읽어드려요
+              {form.nickname || form.name || '그대'}의 사주와 별자리를<br />깊이 읽어드려요
             </div>
           </div>
 

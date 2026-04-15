@@ -36,7 +36,7 @@ export default function ProfileStep({
                 <div className="ppc-av">{user?.profileImage ? <img src={user.profileImage} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : '🌙'}</div>
                 <div>
                   <div className="ppc-name">
-                    {form.name || user?.nickname || '나'}
+                    {form.nickname || form.name || user?.nickname || '나'}
                     {saju?.ilganPoetic && <span style={{ marginLeft: 6, fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 400 }}>{saju.ilganPoetic}</span>}
                   </div>
                   <div className="ppc-sub">
@@ -84,7 +84,7 @@ export default function ProfileStep({
             )}
 
             <button className="btn-main" style={{ marginTop: 'var(--sp3)' }} onClick={() => { setSelQs([]); setStep(2); }}>
-              {activeProfileIdx === 0 ? `${form.name || '나'}의 별숨 보기 ✦` : `${otherProfiles[activeProfileIdx - 1]?.name || '이 사람'}의 별숨 보기 ✦`}
+              {activeProfileIdx === 0 ? `${form.nickname || form.name || '나'}의 별숨 보기 ✦` : `${otherProfiles[activeProfileIdx - 1]?.name || '이 사람'}의 별숨 보기 ✦`}
             </button>
           </div>
         )}
@@ -94,8 +94,11 @@ export default function ProfileStep({
             <div className="card-title">{editingMyProfile ? '내 프로필 수정 🌙' : '반가워요 🌙'}</div>
             <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
 
-            <label className="lbl" htmlFor="inp-name">이름 (선택)</label>
-            <input id="inp-name" className="inp" placeholder="뭐라고 불러드릴까요?" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+            <label className="lbl" htmlFor="inp-nickname">별숨 닉네임 (표시이름, 선택)</label>
+            <input id="inp-nickname" className="inp" placeholder="별숨이 부를 이름 (예: 민준이, 달빛)" value={form.nickname || ''} onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))} />
+
+            <label className="lbl" htmlFor="inp-name">실제 이름 (사주 분석용, 선택)</label>
+            <input id="inp-name" className="inp" placeholder="태어날 때 이름 또는 본명" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
 
             <fieldset style={{border:'none',padding:0,margin:0}}>
               <legend className="lbl">생년월일</legend>

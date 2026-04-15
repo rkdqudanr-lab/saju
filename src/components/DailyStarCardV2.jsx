@@ -88,7 +88,7 @@ function parseDailyLines(text) {
   const synergyLines = extractSection('[별숨픽]') || extractSection('[별숨 픽]');
   let synergy = null;
   if (synergyLines && synergyLines.length > 0) {
-    synergy = { food: '', place: '', color: '', summary: '' };
+    synergy = { food: '', place: '', color: '', number: '', direction: '', summary: '' };
     for (const line of synergyLines) {
       if (line.startsWith('음식:') || line.startsWith('🍽️')) {
         synergy.food = line.replace('음식:', '').replace('🍽️', '').trim();
@@ -96,6 +96,10 @@ function parseDailyLines(text) {
         synergy.place = line.replace('장소:', '').replace('📍', '').trim();
       } else if (line.startsWith('색:') || line.startsWith('🎨')) {
         synergy.color = line.replace('색:', '').replace('🎨', '').trim();
+      } else if (line.startsWith('숫자:')) {
+        synergy.number = line.replace('숫자:', '').trim();
+      } else if (line.startsWith('방향:')) {
+        synergy.direction = line.replace('방향:', '').trim();
       } else if (line.startsWith('요약:') || line.startsWith('✨')) {
         synergy.summary = line.replace('요약:', '').replace('✨', '').trim();
       }
@@ -305,6 +309,15 @@ export default function DailyStarCardV2({
                   <div className="dsc-synergy-row">
                     <span className="dsc-synergy-label">🎨</span>
                     <span className="dsc-synergy-value">{synergy.color}</span>
+                  </div>
+                )}
+                {(synergy.number || synergy.direction) && (
+                  <div className="dsc-synergy-row">
+                    <span className="dsc-synergy-label">✦</span>
+                    <span className="dsc-synergy-value" style={{ display: 'flex', gap: 16 }}>
+                      {synergy.number && <span>행운 숫자 <strong style={{ color: 'var(--gold)' }}>{synergy.number}</strong></span>}
+                      {synergy.direction && <span>행운 방향 <strong style={{ color: 'var(--gold)' }}>{synergy.direction}</strong></span>}
+                    </span>
                   </div>
                 )}
                 {synergy.summary && (

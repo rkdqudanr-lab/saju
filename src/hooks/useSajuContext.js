@@ -81,9 +81,14 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     // 이름 sanitization: 프롬프트 인젝션 방지 (대괄호, 줄바꿈, 30자 초과 제거)
     const rawName = af.name || '';
     const safeName = rawName.replace(/[\[\]\n\r]/g, '').slice(0, 30);
+    // 닉네임: AI 응답에서 사용자를 부를 이름 (닉네임 우선, 없으면 이름, 없으면 고객님)
+    const rawNick = af.nickname || af.name || '';
+    const safeNick = rawNick.replace(/[\[\]\n\r]/g, '').slice(0, 20);
     const genderPart = af.gender ? ` · ${af.gender}` : '';
-    let c = `[${safeName || '고객님'} · ${activeAge}세${genderPart}]\n\n`;
-    if (activeProfileIdx > 0) c = `[${safeName || '이 사람'}의 별숨 — 대신 물어봐주는 질문]\n` + c;
+    let c = `[${safeName || safeNick || '고객님'} · ${activeAge}세${genderPart}]\n`;
+    if (safeNick && safeNick !== safeName) c += `호칭: ${safeNick}님으로 불러주세요\n`;
+    c += '\n';
+    if (activeProfileIdx > 0) c = `[${safeName || safeNick || '이 사람'}의 별숨 — 대신 물어봐주는 질문]\n` + c;
 
     if (as_) {
       c += `[사주 기운]\n`;

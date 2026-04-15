@@ -100,7 +100,7 @@ export default function QuestionStep({
               <span style={{ fontSize: '1.1rem' }}>{TIME_CONFIG[timeSlot].emoji}</span>
               <div>
                 <div style={{ fontSize: 'var(--xs)', color: TIME_CONFIG[timeSlot].color, fontWeight: 600, marginBottom: 2 }}>{TIME_CONFIG[timeSlot].label}</div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>{TIME_CONFIG[timeSlot].greeting(activeProfileIdx === 0 ? form.name : otherProfiles[activeProfileIdx - 1]?.name || '')}</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>{TIME_CONFIG[timeSlot].greeting(activeProfileIdx === 0 ? (form.nickname || form.name) : otherProfiles[activeProfileIdx - 1]?.name || '')}</div>
               </div>
             </div>
           </div>

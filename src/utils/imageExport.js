@@ -130,6 +130,82 @@ export function saveShareCard({ idx, q, parsedText, isDark, today }) {
   }
 }
 
+/**
+ * 월간리포트 전용 이미지 저장
+ * 텍스트가 길어도 글씨 크기를 줄여 한 장에 담거나 자동 다중 페이지로 저장
+ */
+export function saveReportImage({ reportText, isDark, today, name }) {
+  const PADDING = 72;
+  const { bg, t1, t3 } = getThemeColors(isDark);
+  const MAX_W = IG_W - PADDING * 2;
+
+  // [점수] [요약] 태그 strip
+  const cleanText = (reportText || '')
+    .replace(/\[점수\]\s*\d+\s*\n?/g, '')
+    .replace(/\[요약\].*?(\n|$)/g, '')
+    .trim();
+
+  const measure = document.createElement('canvas');
+  const mctx = measure.getContext('2d');
+
+  // 텍스트 길이에 따라 폰트 크기 자동 조정 (18~22px)
+  const charCount = cleanText.length;
+  const bodyFontSize = charCount > 1200 ? 18 : charCount > 800 ? 20 : 22;
+  const LINE_H_BODY = bodyFontSize * 1.85;
+
+  const titleText = name ? `${name}님의 ${today.year}년 ${today.month}월 리포트` : `${today.year}년 ${today.month}월 리포트`;
+  const titleLines = wrapText(mctx, titleText, MAX_W, 28, '700');
+  const bodyLines = wrapText(mctx, cleanText, MAX_W, bodyFontSize);
+
+  const HEADER_H = 120;
+  const TITLE_BLOCK_H = titleLines.length * 44 + 50;
+  const FOOTER_H = 60;
+  const DIVIDER_H = 32;
+
+  const contentH = IG_H - HEADER_H - TITLE_BLOCK_H - DIVIDER_H - FOOTER_H;
+  const linesPerPage = Math.max(1, Math.floor(contentH / LINE_H_BODY));
+  const totalPages = Math.ceil(bodyLines.length / linesPerPage) || 1;
+
+  for (let page = 0; page < totalPages; page++) {
+    const pageBodyLines = bodyLines.slice(page * linesPerPage, (page + 1) * linesPerPage);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = IG_W * SCALE;
+    canvas.height = IG_H * SCALE;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(SCALE, SCALE);
+
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, IG_W, IG_H);
+    ctx.fillStyle = GOLD; ctx.fillRect(0, 0, IG_W, 6);
+
+    const subtitle = `별숨 월간리포트 · ${today.month}월${totalPages > 1 ? ` (${page + 1}/${totalPages})` : ''}`;
+    drawHeader(ctx, { gold: GOLD, t3, subtitle }, PADDING);
+
+    let y = HEADER_H;
+    ctx.font = `700 28px ${FONT}`; ctx.fillStyle = t1;
+    titleLines.forEach(line => { ctx.fillText(line, PADDING, y); y += 44; });
+
+    y += 10;
+    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(IG_W - PADDING, y); ctx.stroke();
+    y += DIVIDER_H;
+
+    ctx.font = `400 ${bodyFontSize}px ${FONT}`; ctx.fillStyle = t3;
+    pageBodyLines.forEach(line => {
+      ctx.fillText(line, PADDING, y);
+      y += line === '' ? LINE_H_BODY * 0.5 : LINE_H_BODY;
+    });
+
+    ctx.font = `400 18px ${FONT}`;
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
+
+    const suffix = totalPages > 1 ? `_${page + 1}of${totalPages}` : '';
+    downloadCanvas(canvas, `byeolsoom_report_${today.month}월${suffix}.png`);
+  }
+}
+
 export function saveProphecyImage({ text, period, isDark, today }) {
   const PADDING = 72;
   const { bg, t1, t3 } = getThemeColors(isDark);

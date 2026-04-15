@@ -8,6 +8,179 @@ import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthToken } from '../hooks/useUserProfile.js';
 
+// ── 사주 기반 행운 번호 생성 유틸 ──
+function seededRandom(seed) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(31, h) + seed.charCodeAt(i) | 0;
+  }
+  h = h ^ (h >>> 16);
+  h = Math.imul(h, 0x45d9f3b) | 0;
+  h = h ^ (h >>> 16);
+  return (h >>> 0) / 0xffffffff;
+}
+
+function getLuckyNumberInRange(kakaoId, saju, min, max, dateStr) {
+  const seed = `lucky:${kakaoId}:${saju?.il?.g || ''}${saju?.il?.j || ''}:${dateStr}:${min}:${max}`;
+  const r = seededRandom(seed);
+  return min + Math.floor(r * (max - min + 1));
+}
+
+function getLottoNumbers(kakaoId, saju, dateStr) {
+  const results = [];
+  let i = 0;
+  while (results.length < 6) {
+    const seed = `lotto:${kakaoId}:${saju?.il?.g || ''}${saju?.wol?.g || ''}:${dateStr}:${i++}`;
+    const r = seededRandom(seed);
+    const n = 1 + Math.floor(r * 45);
+    if (!results.includes(n)) results.push(n);
+  }
+  return results.sort((a, b) => a - b);
+}
+
+// ── 행운 번호 미니 컴포넌트 ──
+function LuckyNumberSection({ user, saju }) {
+  const [mode, setMode] = useState(null); // null | 'single' | 'lotto'
+  const [rangeMin, setRangeMin] = useState('1');
+  const [rangeMax, setRangeMax] = useState('100');
+  const [result, setResult] = useState(null);
+  const [lottoResult, setLottoResult] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const kakaoId = user?.kakaoId || user?.id || 'guest';
+
+  const handleSingle = () => {
+    const mn = parseInt(rangeMin, 10);
+    const mx = parseInt(rangeMax, 10);
+    if (isNaN(mn) || isNaN(mx) || mn >= mx) return;
+    setResult(getLuckyNumberInRange(kakaoId, saju, mn, mx, dateStr));
+    setRevealed(false);
+    setTimeout(() => setRevealed(true), 300);
+  };
+
+  const handleLotto = () => {
+    setLottoResult(getLottoNumbers(kakaoId, saju, dateStr));
+    setRevealed(false);
+    setTimeout(() => setRevealed(true), 300);
+  };
+
+  const cardStyle = {
+    background: 'var(--bg2)',
+    borderRadius: 'var(--r2)',
+    border: '1px solid var(--acc)',
+    padding: '20px 16px',
+    marginBottom: 0,
+  };
+
+  return (
+    <div style={{ padding: '0 20px 24px' }}>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
+        ✦ 오늘의 행운 번호
+      </div>
+      <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
+        별숨이 뽑아주는 숫자
+      </div>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.6, marginBottom: 16 }}>
+        오늘의 사주 기운을 담아 행운 번호를 뽑아드려요.
+      </div>
+
+      {/* 모드 선택 */}
+      {!mode && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button
+            onClick={() => setMode('single')}
+            style={{ padding: '14px 16px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--t1)', fontFamily: 'var(--ff)', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <div style={{ fontWeight: 700, fontSize: 'var(--sm)', marginBottom: 2 }}>🎯 숫자 1개 뽑기</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>범위를 지정하면 그 안에서 오늘의 행운 숫자를 뽑아줘요</div>
+          </button>
+          <button
+            onClick={() => { setMode('lotto'); handleLotto(); }}
+            style={{ padding: '14px 16px', background: 'var(--bg2)', border: '1.5px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t1)', fontFamily: 'var(--ff)', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <div style={{ fontWeight: 700, fontSize: 'var(--sm)', marginBottom: 2 }}>🍀 로또 번호 뽑기</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>1~45 범위에서 6개의 오늘의 행운 번호를 뽑아줘요</div>
+          </button>
+        </div>
+      )}
+
+      {/* 숫자 1개 뽑기 */}
+      {mode === 'single' && (
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>최솟값</div>
+              <input
+                type="number" min="0" value={rangeMin}
+                onChange={e => setRangeMin(e.target.value)}
+                className="inp" style={{ marginBottom: 0, textAlign: 'center' }}
+              />
+            </div>
+            <div style={{ color: 'var(--t3)', paddingTop: 20, fontWeight: 700 }}>~</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>최댓값</div>
+              <input
+                type="number" min="1" value={rangeMax}
+                onChange={e => setRangeMax(e.target.value)}
+                className="inp" style={{ marginBottom: 0, textAlign: 'center' }}
+              />
+            </div>
+          </div>
+          {result !== null && revealed && (
+            <div style={{ textAlign: 'center', margin: '16px 0', padding: '20px', background: 'var(--goldf)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>오늘의 행운 숫자</div>
+              <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--gold)', letterSpacing: '-.02em' }}>{result}</div>
+              <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 6 }}>{rangeMin} ~ {rangeMax} 범위 · 오늘 하루 유효</div>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handleSingle} style={{ flex: 1, padding: '12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+              ✦ {result !== null ? '다시 뽑기' : '뽑기'}
+            </button>
+            <button onClick={() => { setMode(null); setResult(null); }} style={{ padding: '12px 16px', background: 'var(--bg1)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontFamily: 'var(--ff)', cursor: 'pointer', fontSize: 'var(--xs)' }}>
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 로또 번호 뽑기 */}
+      {mode === 'lotto' && (
+        <div style={cardStyle}>
+          {lottoResult && revealed && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, textAlign: 'center' }}>오늘의 별숨 로또 번호</div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {lottoResult.map(n => (
+                  <div key={n} style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    background: n <= 10 ? '#f5a623' : n <= 20 ? '#7ed321' : n <= 30 ? '#4a90e2' : n <= 40 ? '#d0021b' : '#9b9b9b',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontWeight: 800, fontSize: '0.9rem',
+                  }}>
+                    {n}
+                  </div>
+                ))}
+              </div>
+              <div style={{ textAlign: 'center', fontSize: '10px', color: 'var(--t4)', marginTop: 8 }}>1~45 범위 6개 · 오늘 하루 유효</div>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handleLotto} style={{ flex: 1, padding: '12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+              🍀 다시 뽑기
+            </button>
+            <button onClick={() => { setMode(null); setLottoResult(null); }} style={{ padding: '12px 16px', background: 'var(--bg1)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontFamily: 'var(--ff)', cursor: 'pointer', fontSize: 'var(--xs)' }}>
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const READING_TYPES = [
   {
     id: 'deep_saju',
@@ -44,7 +217,7 @@ const READING_TYPES = [
 ];
 
 export default function SpecialReadingPage({ callApi, showToast }) {
-  const { user, form, buildCtx, setStep } = useAppStore();
+  const { user, form, saju, buildCtx, setStep } = useAppStore();
   const [ownedItems, setOwnedItems] = useState(null); // null=로딩중
   const [selectedType, setSelectedType] = useState(null);
   const [result, setResult] = useState('');
@@ -133,15 +306,22 @@ export default function SpecialReadingPage({ callApi, showToast }) {
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
-      <div style={{ padding: '28px 20px 16px' }}>
+      <div style={{ padding: '28px 20px 12px' }}>
+        <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.3 }}>
+          별숨 특별 기능
+        </div>
+      </div>
+
+      {/* 행운 번호 섹션 */}
+      <LuckyNumberSection user={user} saju={saju} />
+
+      <div style={{ margin: '0 20px 16px', borderTop: '1px solid var(--line)', paddingTop: 20 }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
           ✦ 특별 상담
         </div>
-        <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.3 }}>
-          별숨 심층 분석
-        </div>
-        <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
-          별숨 숍에서 구매한 특별 상담권으로<br />더 깊이 있는 AI 분석을 받아보세요.
+        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>별숨 심층 분석</div>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
+          별숨 숍에서 구매한 특별 상담권으로 더 깊이 있는 AI 분석을 받아보세요.
         </div>
       </div>
 

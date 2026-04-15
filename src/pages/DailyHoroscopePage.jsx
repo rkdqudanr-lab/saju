@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
-import OrbitalFrequencyMiniGame from "../components/OrbitalFrequencyMiniGame.jsx";
 import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
 import { detectBadtime } from "../utils/gamificationLogic.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
@@ -27,7 +26,7 @@ export default function DailyHoroscopePage({
     isOpen: false,
     badtime: null,
   });
-  const [activeTab, setActiveTab] = useState('horoscope'); // 'horoscope' | 'game' | 'lucky'
+  const [activeTab, setActiveTab] = useState('horoscope'); // 'horoscope' | 'lucky'
   const savedScoreDateRef = useRef(null);
 
   // 일별 점수 저장 (daily_scores 테이블)
@@ -115,22 +114,6 @@ export default function DailyHoroscopePage({
             🌟 오늘의 운세
           </button>
           <button
-            onClick={() => setActiveTab('game')}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === 'game' ? '2px solid var(--gold)' : 'none',
-              color: activeTab === 'game' ? 'var(--gold)' : 'var(--t4)',
-              cursor: 'pointer',
-              fontWeight: activeTab === 'game' ? '600' : '400',
-              fontSize: '13px',
-            }}
-          >
-            🎲 행운 번호
-          </button>
-          <button
             onClick={() => setActiveTab('lucky')}
             style={{
               flex: 1,
@@ -177,19 +160,9 @@ export default function DailyHoroscopePage({
           </>
         )}
 
-        {/* 게임 탭 */}
-        {activeTab === 'game' && (
-          <OrbitalFrequencyMiniGame
-            kakaoId={user?.id}
-            currentBp={currentBp}
-            onEarnBP={earnBP}
-            onUnlock={earnBP}
-          />
-        )}
-
         {/* 행운 아이템 탭 */}
         {activeTab === 'lucky' && (
-          <LuckyItemsCard today={today} saju={saju} />
+          <LuckyItemsCard today={today} saju={saju} dailyResult={dailyResult} />
         )}
       </div>
 

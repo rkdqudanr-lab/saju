@@ -3,7 +3,7 @@ import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 
 const DEFAULT_PROFILE = { partner: '', partnerBy: '', partnerBm: '', partnerBd: '', workplace: '', worryText: '', mbti: '', selfDesc: '' };
-const DEFAULT_FORM    = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
+const DEFAULT_FORM    = { name: '', nickname: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_OTHER   = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_QUIZ    = { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
 
@@ -244,7 +244,7 @@ export function useUserProfile() {
             bd: String(data.birth_day),
             ...(data.birth_hour != null ? { bh: String(parseFloat(data.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
             ...(data.gender    && { gender: data.gender }),
-            ...(data.nickname  && { name: data.nickname }),
+            ...(data.nickname  && { nickname: data.nickname }),
           });
         }
         if (data?.consent_flags) setConsentFlags(data.consent_flags);
@@ -427,7 +427,7 @@ export function useUserProfile() {
 
   const saveProfileToSupabase = useCallback(async (currentForm, currentUser) => {
     if (!supabase || !currentUser?.id) return true;
-    const { by, bm, bd, name, bh, gender, noTime } = currentForm;
+    const { by, bm, bd, name, nickname, bh, gender, noTime } = currentForm;
     if (!by || !bm || !bd) return true;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
@@ -438,7 +438,7 @@ export function useUserProfile() {
         birth_day:   parseInt(bd, 10),
         birth_hour:  !noTime && bh ? (() => { const h = parseFloat(bh); return isNaN(h) || h < 0 || h >= 24 ? null : h; })() : null,
         gender:      gender || null,
-        nickname:    name || currentUser.nickname || '별님',
+        nickname:    nickname || currentUser.nickname || '별님',
         updated_at:  new Date().toISOString(),
       }, { onConflict: 'kakao_id', ignoreDuplicates: false });
       if (error) { console.error('[별숨] 프로필 저장 오류:', error); return false; }
