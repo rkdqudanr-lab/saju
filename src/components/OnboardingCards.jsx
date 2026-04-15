@@ -12,14 +12,14 @@ const FEATURES_CORE = [
     color: "var(--gold)",
   },
   {
-    icon: "🌙",
+    icon: "◈",
     title: "별숨에게 질문하기",
     subtitle: "무엇이든 물어봐요",
     desc: "연애, 직장, 돈, 인생… 당신만의 사주와 별자리를 아는 별숨이 진심으로 답해드려요.",
     color: "var(--lav)",
   },
   {
-    icon: "📋",
+    icon: "◇",
     title: "월간 별숨 리포트",
     subtitle: "이번 달 흐름을 미리 알아요",
     desc: "한 달의 운세 흐름을 미리 읽고 준비하는 사람과, 그냥 흘려보내는 사람은 달라요.",
@@ -28,9 +28,9 @@ const FEATURES_CORE = [
 ];
 
 const FEATURES_MORE = [
-  { icon: "💞", title: "사이 별점", desc: "두 사람의 사주+별자리로 보는 진짜 궁합" },
-  { icon: "📔", title: "별숨 일기", desc: "오늘 있었던 일을 별이 다시 읽어줘요" },
-  { icon: "🌟", title: "종합 사주", desc: "기질·연애·재물·직업·건강을 한 번에" },
+  { icon: "✦", title: "사이 별점", desc: "두 사람의 사주+별자리로 보는 진짜 궁합" },
+  { icon: "◈", title: "별숨 일기", desc: "오늘 있었던 일을 별이 다시 읽어줘요" },
+  { icon: "◇", title: "종합 사주", desc: "기질·연애·재물·직업·건강을 한 번에" },
 ];
 
 // ── 인트로 카드 ──
