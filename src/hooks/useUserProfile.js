@@ -187,9 +187,10 @@ export function useUserProfile() {
               bm: String(saved.birth_month),
               bd: String(saved.birth_day),
               ...(saved.birth_hour != null ? { bh: String(parseFloat(saved.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
-              ...(saved.gender   && { gender: saved.gender }),
-              ...(saved.nickname && { nickname: saved.nickname }),
-              ...(saved.name     && { name: saved.name }),
+              ...(saved.gender && { gender: saved.gender }),
+              // DB nickname이 비어 있으면 카카오 프로필 닉네임으로 fallback
+              nickname: saved.nickname || data.nickname || '별님',
+              ...(saved.name && { name: saved.name }),
             }));
           }
           if (saved?.consent_flags) {
@@ -244,9 +245,10 @@ export function useUserProfile() {
             bm: String(data.birth_month),
             bd: String(data.birth_day),
             ...(data.birth_hour != null ? { bh: String(parseFloat(data.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
-            ...(data.gender    && { gender: data.gender }),
-            ...(data.nickname  && { nickname: data.nickname }),
-            ...(data.name      && { name: data.name }),
+            ...(data.gender && { gender: data.gender }),
+            // DB nickname이 비어 있으면 카카오 user.nickname으로 fallback
+            nickname: data.nickname || user?.nickname || '별님',
+            ...(data.name && { name: data.name }),
           });
         }
         if (data?.consent_flags) setConsentFlags(data.consent_flags);

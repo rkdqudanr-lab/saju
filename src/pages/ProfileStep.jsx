@@ -94,11 +94,16 @@ export default function ProfileStep({
             <div className="card-title">{editingMyProfile ? '내 프로필 수정 🌙' : '반가워요 🌙'}</div>
             <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
 
-            <label className="lbl" htmlFor="inp-nickname">별숨 닉네임 (표시이름, 선택)</label>
-            <input id="inp-nickname" className="inp" placeholder="별숨이 부를 이름 (예: 민준이, 달빛)" value={form.nickname || ''} onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))} />
-
-            <label className="lbl" htmlFor="inp-name">실제 이름 (사주 분석용, 선택)</label>
-            <input id="inp-name" className="inp" placeholder="태어날 때 이름 또는 본명" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 'var(--sp2)' }}>
+              <div>
+                <label className="lbl" htmlFor="inp-nickname" style={{ marginBottom: 4 }}>닉네임 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(표시용)</span></label>
+                <input id="inp-nickname" className="inp" style={{ marginBottom: 0 }} placeholder="예: 민준이, 달빛" value={form.nickname || ''} onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))} />
+              </div>
+              <div>
+                <label className="lbl" htmlFor="inp-name" style={{ marginBottom: 4 }}>본명 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(사주 분석용)</span></label>
+                <input id="inp-name" className="inp" style={{ marginBottom: 0 }} placeholder="태어날 때 이름" value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+            </div>
 
             <fieldset style={{border:'none',padding:0,margin:0}}>
               <legend className="lbl">생년월일</legend>

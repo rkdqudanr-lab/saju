@@ -129,13 +129,25 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
         <div className="sidebar-head">
           <div className="sidebar-logo">✦ byeolsoom</div>
           {user ? (
-            <div className="sidebar-user">
+            <div className="sidebar-user" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {user.profileImage
                 ? <img className="sidebar-av" src={user.profileImage} alt="프로필" />
                 : <div className="sidebar-av-ph">🌙</div>}
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="sidebar-uname">{user.nickname}님</div>
                 <div className="sidebar-usub">별숨과 함께하는 중</div>
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                <button
+                  aria-label="앱 설정"
+                  onClick={() => { onSettings?.(); onClose(); }}
+                  style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, padding: '5px 8px', cursor: 'pointer', fontSize: 14, color: 'var(--t3)', fontFamily: 'var(--ff)' }}
+                >⚙️</button>
+                <button
+                  aria-label="로그아웃"
+                  onClick={() => { onKakaoLogout(); onClose(); }}
+                  style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, padding: '5px 8px', cursor: 'pointer', fontSize: 14, color: 'var(--t3)', fontFamily: 'var(--ff)' }}
+                >🚪</button>
               </div>
             </div>
           ) : (
@@ -441,8 +453,6 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               🔗 친구 초대하기
             </button>
           )}
-          {user && <button className="sidebar-foot-btn" style={{ marginBottom: 8 }} onClick={() => { onSettings?.(); onClose(); }}>⚙️ 앱 설정</button>}
-          {user && <button className="sidebar-foot-btn" onClick={() => { onKakaoLogout(); onClose(); }}>로그아웃</button>}
         </div>
       </nav>
     </>
