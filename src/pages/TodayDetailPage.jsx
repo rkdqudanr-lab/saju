@@ -99,14 +99,16 @@ function WeeklyTrendChart({ kakaoId, todayScore }) {
             ✦ 나의 주간 운세 흐름
           </div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)' }}>
-            {hasTodayScore && yesterdayScore !== null
+            {hasTodayScore && yesterdayVal !== null
               ? <>어제보다 <strong style={{ color: isUp ? '#ff7832' : '#7b9ec4' }}>{isUp ? '상승' : '하락'}세</strong>에 있어요</>
               : '오늘 운세를 확인하면 기록돼요'}
           </div>
         </div>
-        <div style={{ fontSize: 24, lineHeight: 1 }}>
-          {hasTodayScore ? (isUp ? '📈' : '📉') : '🌙'}
-        </div>
+        {hasTodayScore && (
+          <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: isUp ? '#ff7832' : '#7b9ec4', lineHeight: 1 }}>
+            {isUp ? '↑' : '↓'}
+          </div>
+        )}
         {hasTodayScore && <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>{todayVal}점</div>}
       </div>
       <div style={{ position: 'relative', width: '100%', height: 60 }}>
@@ -186,7 +188,7 @@ export default function TodayDetailPage({
           </Suspense>
         ) : (
           <div className="today-detail-empty">
-            <div className="today-detail-empty-icon">🌙</div>
+            <div className="today-detail-empty-icon" style={{ fontSize: '2rem', color: 'var(--t4)', marginBottom: 8 }}>✦</div>
             <div className="today-detail-empty-text">
               운세를 불러오지 못했어요.<br />
               <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>아래 버튼을 눌러 다시 시도해봐요.</span>

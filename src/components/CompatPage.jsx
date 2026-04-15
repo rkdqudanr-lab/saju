@@ -5,12 +5,12 @@ import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
 
 function getCompatTier(score) {
-  if (score >= 90) return { label: '환상의 티키타카', emoji: '✨', color: '#E8B048' };
-  if (score >= 75) return { label: '천생연분에 가까운 두 별', emoji: '💫', color: '#B4963C' };
-  if (score >= 60) return { label: '서로를 성장시키는 빛나는 인연', emoji: '🌱', color: '#5FAD7A' };
-  if (score >= 45) return { label: '창과 방패 — 서로를 단단하게', emoji: '🛡️', color: '#7B9EC4' };
-  if (score >= 30) return { label: '서로가 서로의 브레이크', emoji: '⚖️', color: '#C47A48' };
-  return { label: '도전적이지만 성장하는 관계', emoji: '🔥', color: '#9B4EC4' };
+  if (score >= 90) return { label: '환상의 티키타카', color: '#E8B048' };
+  if (score >= 75) return { label: '천생연분에 가까운 두 별', color: '#B4963C' };
+  if (score >= 60) return { label: '서로를 성장시키는 빛나는 인연', color: '#5FAD7A' };
+  if (score >= 45) return { label: '창과 방패 — 서로를 단단하게', color: '#7B9EC4' };
+  if (score >= 30) return { label: '서로가 서로의 브레이크', color: '#C47A48' };
+  return { label: '도전적이지만 성장하는 관계', color: '#9B4EC4' };
 }
 
 function getDaysInMonth(year, month) {
@@ -156,7 +156,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
       <div className="inner">
         <div className="compat-page">
           <div className="compat-header">
-            <div className="compat-title">1대1 별숨 💞</div>
+            <div className="compat-title">1대1 별숨</div>
             <div className="compat-sub">두 사람의 사주와 별자리 기운으로<br />두 별의 인연을 읽어드려요</div>
           </div>
 
@@ -302,11 +302,11 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                         borderBottom: '1px solid rgba(180,140,50,0.15)',
                         marginBottom: 14, animation: 'fadeUp .4s ease',
                       }}>
-                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 5, letterSpacing: '.05em' }}>
-                          ❤️ 두 별의 티어
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 5, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                          두 별의 공명
                         </div>
                         <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: tier.color, marginBottom: 10 }}>
-                          {tier.emoji} {tier.label}
+                          {tier.label}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
                           <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>인연 지수</span>
@@ -367,7 +367,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                       padding: '10px 14px', fontSize: 'var(--sm)', color: 'var(--t2)',
                       lineHeight: 1.65, borderLeft: '3px solid var(--gold)', marginTop: 4,
                     }}>
-                      💡 {storyResult.tip}
+                      {storyResult.tip}
                     </div>
                   )}
                   {shareResult && storyResult.story && (
@@ -397,7 +397,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                         compatTier: getCompatTier(compatScore).label,
                       })}
                     >
-                      💞 익명 궁합 광장에 공유
+                      ✦ 익명 궁합 광장에 공유
                     </button>
                   )}
                 </>

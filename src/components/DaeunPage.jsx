@@ -182,7 +182,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
   if (!form?.by) {
     return (
       <div className="page" style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)' }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>🌌</div>
+        <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
         <div style={{ fontSize: 'var(--sm)' }}>생년월일을 입력하면 대운 흐름을 볼 수 있어요</div>
       </div>
     );
@@ -224,7 +224,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
               color: 'var(--t3)',
             }}
           >
-            {pdfSaving ? '저장 중...' : '📄 PDF'}
+            {pdfSaving ? '저장 중...' : 'PDF 저장'}
           </button>
         </div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.3 }}>
@@ -260,8 +260,11 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
             color: 'var(--t4)',
             padding: '0 20px',
             marginBottom: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
           }}>
-            ← 스크롤해서 전체 대운 확인
+            <span style={{ opacity: 0.5 }}>← →</span> 전체 대운 확인
           </div>
           <div
             ref={scrollRef}
@@ -307,7 +310,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
               letterSpacing: '.02em',
             }}
           >
-            🌌 AI 대운 해설 보기
+            ✦ 해설 읽기
           </button>
         )}
 
