@@ -46,10 +46,10 @@ export default function ResultsStep({
       <div className="res-wrap" ref={resultsRef} role="region" aria-label="별숨의 답변">
         <div className="res-card">
           <div className="res-top-bar">
-            <button className="res-top-btn" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')).then(() => showToast?.('복사됐어요 📋', 'success')); }}>📋 복사</button>
-            {answers[0] && <button className="res-top-btn" onClick={() => shareCard(0)}>🖼 저장</button>}
-            {answers[0] && <button className="res-top-btn primary" onClick={handleShareFortuneCard}>✦ 카드 저장</button>}
-            {answers[0] && <button className="res-top-btn primary" onClick={() => shareResult('result')}>↗ 공유</button>}
+            <button className="res-top-btn" onClick={() => { navigator.clipboard?.writeText(answers.join('\n\n')).then(() => showToast?.('복사됐어요', 'success')); }}>복사</button>
+            {answers[0] && <button className="res-top-btn" onClick={() => shareCard(0)}>이미지</button>}
+            {answers[0] && <button className="res-top-btn primary" onClick={handleShareFortuneCard}>카드 ✦</button>}
+            {answers[0] && <button className="res-top-btn primary" onClick={() => shareResult('result')}>공유 ↗</button>}
           </div>
 
           <div className="res-header">
@@ -57,11 +57,11 @@ export default function ResultsStep({
             <div>
               <div className="res-name">{(form.nickname || form.name) ? `${form.nickname || form.name}에게 전하는 별의 이야기` : '오늘 밤 당신에게 전하는 이야기'}</div>
               <div className="res-chips">
-                {saju && <div className="res-chip">🀄 {ON[saju.dom]} 기운</div>}
+                {saju && <div className="res-chip">{ON[saju.dom]} 기운</div>}
                 {sun && <div className="res-chip">{sun.s} {sun.n}</div>}
-                {moon && <div className="res-chip">🌙 달 {moon.n}</div>}
+                {moon && <div className="res-chip">달 {moon.n}</div>}
                 {asc && <div className="res-chip">↑ {asc.n}</div>}
-                <div className="res-chip">📅 {today.month}월 {today.day}일</div>
+                <div className="res-chip">{today.month}/{today.day}</div>
               </div>
             </div>
           </div>

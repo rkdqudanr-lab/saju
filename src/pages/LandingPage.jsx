@@ -199,13 +199,21 @@ export default function LandingPage({
         {/* 절기 배너 */}
         {nearbyJeolgi && (
           <div style={{
-            margin: '0 0 12px', padding: '10px 16px',
-            background: 'linear-gradient(135deg, rgba(120,200,120,0.12), rgba(120,200,120,0.04))',
-            border: '1px solid rgba(120,200,120,0.35)',
-            borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: '#7ec88c',
-            lineHeight: 1.7, textAlign: 'center',
+            margin: '0 0 12px', padding: '9px 14px',
+            background: 'var(--goldf)',
+            border: '1px solid var(--acc)',
+            borderRadius: 'var(--r1)',
+            display: 'flex', alignItems: 'center', gap: 8,
           }}>
-            🌿 {nearbyJeolgi.diffDays <= 0 ? `오늘은 ${nearbyJeolgi.name}이에요` : `${nearbyJeolgi.diffDays}일 후 ${nearbyJeolgi.name}`} — {nearbyJeolgi.meaning}
+            <span style={{ fontSize: 14, flexShrink: 0 }}>
+              {nearbyJeolgi.diffDays <= 0 ? '✦' : '◇'}
+            </span>
+            <span style={{ fontSize: 'var(--xs)', color: 'var(--gold)', lineHeight: 1.6 }}>
+              {nearbyJeolgi.diffDays <= 0
+                ? <><strong>오늘은 {nearbyJeolgi.name}</strong> — {nearbyJeolgi.meaning}</>
+                : <><strong>{nearbyJeolgi.diffDays}일 후 {nearbyJeolgi.name}</strong> — {nearbyJeolgi.meaning}</>
+              }
+            </span>
           </div>
         )}
 
@@ -422,14 +430,18 @@ export default function LandingPage({
 
                       {/* 별 메시지 */}
                       <div style={{ padding: '14px 0 4px', borderTop: '1px solid var(--line)', marginTop: 6 }}>
-                        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 4, letterSpacing: '.06em' }}>✦ {today?.month}월 {today?.day}일의 별 메시지</div>
-                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic', lineHeight: 1.75 }}>"{getDailyWord(today?.day)}"</div>
+                        <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+                          {today?.month}월 {today?.day}일의 별 메시지
+                        </div>
+                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontStyle: 'italic', lineHeight: 1.8, paddingLeft: 2 }}>
+                          "{getDailyWord(today?.day)}"
+                        </div>
                       </div>
 
                       {/* 별숨달력 */}
                       {formOk && (
-                        <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', background: 'none', border: '1px solid var(--line)', color: 'var(--t2)' }} onClick={() => setStep(10)}>
-                          🗓️ 별숨달력 ✦
+                        <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '11px', background: 'none', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: 'var(--xs)' }} onClick={() => setStep(10)}>
+                          별숨달력 ✦
                         </button>
                       )}
 

@@ -96,30 +96,32 @@ export default function QuestionStep({
                   })()
               }
             </div>
-            <div style={{ marginTop: 10, padding: '10px 14px', background: TIME_CONFIG[timeSlot].bg, borderRadius: 'var(--r1)', border: `1px solid ${TIME_CONFIG[timeSlot].border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: '1.1rem' }}>{TIME_CONFIG[timeSlot].emoji}</span>
+            <div style={{ marginTop: 10, padding: '11px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: TIME_CONFIG[timeSlot].bg, border: `1px solid ${TIME_CONFIG[timeSlot].border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1rem' }}>
+                {TIME_CONFIG[timeSlot].emoji}
+              </div>
               <div>
-                <div style={{ fontSize: 'var(--xs)', color: TIME_CONFIG[timeSlot].color, fontWeight: 600, marginBottom: 2 }}>{TIME_CONFIG[timeSlot].label}</div>
+                <div style={{ fontSize: 'var(--xs)', color: TIME_CONFIG[timeSlot].color, fontWeight: 700, marginBottom: 2 }}>{TIME_CONFIG[timeSlot].label}</div>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>{TIME_CONFIG[timeSlot].greeting(activeProfileIdx === 0 ? (form.nickname || form.name) : otherProfiles[activeProfileIdx - 1]?.name || '')}</div>
               </div>
             </div>
           </div>
 
           <div className="diy-wrap" style={{ marginBottom: diy.trim() ? 0 : 'var(--sp2)' }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 6, letterSpacing: '.06em' }}>✦ 직접 물어보기</div>
+            <div style={{ fontSize: '10px', color: 'var(--t4)', fontWeight: 600, marginBottom: 8, letterSpacing: '.1em', textTransform: 'uppercase' }}>직접 묻기</div>
             {recentQs.length > 0 && !diy.trim() && (
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>최근 질문</div>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.04em' }}>최근 질문</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {recentQs.map((q) => (
-                    <div key={q} style={{ position: 'relative', display: 'inline-block' }}>
+                    <div key={q} style={{ display: 'inline-flex', alignItems: 'center', borderRadius: 20, border: '1px solid var(--line)', background: 'var(--bg2)', overflow: 'hidden' }}>
                       <button onClick={() => setDiy(q)}
-                        style={{ padding: '4px 18px 4px 10px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t3)', fontSize: 'var(--xs)', cursor: 'pointer', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {q.length > 22 ? q.slice(0, 22) + '…' : q}
+                        style={{ padding: '5px 10px', background: 'none', border: 'none', color: 'var(--t2)', fontSize: 'var(--xs)', cursor: 'pointer', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {q.length > 20 ? q.slice(0, 20) + '…' : q}
                       </button>
                       <button onClick={(e) => handleDeleteRecent(q, e)}
                         aria-label={`"${q}" 삭제`}
-                        style={{ position: 'absolute', top: -5, right: -5, width: 15, height: 15, borderRadius: '50%', background: 'var(--t3)', color: 'var(--bg1)', border: 'none', fontSize: 9, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1 }}>
+                        style={{ padding: '5px 9px', background: 'none', border: 'none', borderLeft: '1px solid var(--line)', color: 'var(--t4)', fontSize: '10px', cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}>
                         ✕
                       </button>
                     </div>
