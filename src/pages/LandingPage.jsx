@@ -191,7 +191,7 @@ export default function LandingPage({
               lineHeight: 1.7, textAlign: 'center', cursor: 'pointer',
             }}
           >
-            🚀 프로필 완성률 50% — 생일 일자를 추가하고<br />
+            ✦ 프로필 완성률 50% — 생일 일자를 추가하고<br />
             <strong>숨겨진 나의 진짜 별자리를 확인하세요 →</strong>
           </div>
         )}
@@ -310,7 +310,7 @@ export default function LandingPage({
                   {nightMode && (
                     <div style={{ marginTop: 'var(--sp2)', display: 'flex', flexDirection: 'column', gap: 'var(--sp2)' }}>
                       <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em' }}>🌙 오늘 하루, 별이 예고한 대로 흘러갔나요?</div>
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em' }}>오늘 하루, 별이 예고한 대로 흘러갔나요?</div>
                         <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', marginTop: 4, lineHeight: 1.6 }}>별숨에게 당신의 밤을 들려주세요</div>
                       </div>
                       {(diaryReviewResult || diaryReviewLoading) ? (
@@ -409,7 +409,7 @@ export default function LandingPage({
                                 다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
                               </button>
                             ) : (
-                              <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙</div>
+                              <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>오늘 별숨을 모두 읽었어요 · 내일 다시 만나요</div>
                             )}
                           </>
                         ) : (
@@ -584,7 +584,7 @@ export default function LandingPage({
         if (cards.length === 0) return null;
         return (
           <div style={{ padding: '0 var(--sp3) var(--sp2)' }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 8, letterSpacing: '.04em' }}>🎂 다가오는 생일</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 8, letterSpacing: '.04em' }}>✦ 다가오는 생일</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {cards.map((c, i) => (
                 <div key={`bday-${i}`} style={{

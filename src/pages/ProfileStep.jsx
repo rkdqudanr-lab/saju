@@ -91,7 +91,7 @@ export default function ProfileStep({
 
         {(!formOk || editingMyProfile) && (
           <div className="card">
-            <div className="card-title">{editingMyProfile ? '내 프로필 수정 🌙' : '반가워요 🌙'}</div>
+            <div className="card-title">{editingMyProfile ? '내 프로필 수정' : '반가워요'}</div>
             <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 'var(--sp2)' }}>
@@ -134,7 +134,7 @@ export default function ProfileStep({
                     fontWeight: !form.noTime ? 700 : 400, transition: 'all var(--trans-fast)',
                   }}
                 >
-                  ⏰ 정확히 알아요
+                  정확히 알아요
                 </button>
                 <button
                   onClick={() => setForm(f => ({ ...f, noTime: true, bh: '' }))}
@@ -147,12 +147,12 @@ export default function ProfileStep({
                     fontWeight: form.noTime ? 700 : 400, transition: 'all var(--trans-fast)',
                   }}
                 >
-                  🤷 잘 모르겠어요
+                  잘 모르겠어요
                 </button>
               </div>
               {form.noTime && (
                 <div style={{ padding: '10px 14px', background: 'var(--lavf)', border: '1px solid var(--lavacc)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>
-                  ✨ 괜찮아요! 시간을 몰라도 별숨이 하루의 중심(낮 12시)을 기준으로 가장 가까운 기운을 읽어드릴게요.
+                  괜찮아요. 시간을 몰라도 별숨이 하루의 중심(낮 12시)을 기준으로 가장 가까운 기운을 읽어드릴게요.
                 </div>
               )}
               {!form.noTime && (
