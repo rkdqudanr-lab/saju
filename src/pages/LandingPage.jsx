@@ -221,6 +221,24 @@ export default function LandingPage({
                   <div className="llc-sub">
                     {form.by && saju ? (saju.ilganPoetic ? `${saju.ilganPoetic}` : '') : '별숨이 당신을 기억해요'}
                   </div>
+                  {dailyResult?.score != null && (
+                    <button
+                      onClick={() => setStep(23)}
+                      style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${scoreColor(dailyResult.score)}44`, borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'var(--ff)' }}
+                    >
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: scoreColor(dailyResult.score), flexShrink: 0, display: 'inline-block' }} />
+                      <span style={{ fontSize: '11px', color: scoreColor(dailyResult.score), fontWeight: 700 }}>오늘 {dailyResult.score}점</span>
+                      <span style={{ fontSize: '10px', color: 'var(--t4)' }}>자세히 →</span>
+                    </button>
+                  )}
+                  {dailyResult == null && !dailyLoading && form.by && (
+                    <button
+                      onClick={askDailyHoroscope}
+                      style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: '1px solid var(--gold)', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'var(--ff)' }}
+                    >
+                      <span style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 700 }}>오늘 별숨 확인하기 ✦</span>
+                    </button>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button onClick={() => { setEditingMyProfile(true); setStep(1); }} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>수정</button>

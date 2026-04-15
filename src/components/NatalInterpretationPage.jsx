@@ -341,7 +341,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
         )}
 
         {/* ── AI 분석으로 이동 버튼 ── */}
-        <div style={{ display: 'flex', gap: 10, marginTop: 28, marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 28, marginBottom: 10 }}>
           <button
             onClick={() => onGoStep && onGoStep(14)}
             style={{
@@ -381,6 +381,25 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
             종합 점성술 🌟
           </button>
         </div>
+
+        {/* ── 사주 명함 카드 버튼 ── */}
+        <button
+          onClick={() => onGoStep && onGoStep(21)}
+          style={{
+            width: '100%',
+            padding: '13px 10px',
+            borderRadius: 'var(--r1)',
+            border: '1px solid var(--line)',
+            background: 'transparent',
+            color: 'var(--t3)',
+            fontSize: 'var(--sm)',
+            fontFamily: 'var(--ff)',
+            cursor: 'pointer',
+            marginBottom: 16,
+          }}
+        >
+          🎴 나만의 사주 명함 카드 만들기
+        </button>
 
         <div style={{ height: 40 }} />
       </div>
