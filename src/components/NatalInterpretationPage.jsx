@@ -146,7 +146,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
               </span>
               {moon && (
                 <span style={{ fontSize: 'var(--xs)', background: 'var(--bg3)', color: 'var(--t3)', borderRadius: 20, padding: '4px 12px' }}>
-                  🌙 달 {moon.n}
+                  달 {moon.n}
                 </span>
               )}
               {asc && (
@@ -310,7 +310,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
                 {moon && (
                   <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 16, padding: '16px 18px', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: '1.4rem' }}>🌙</span>
+                      <span style={{ fontSize: '1.1rem', color: 'var(--t3)' }}>☽</span>
                       <div>
                         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 2 }}>달 별자리 · 감정과 내면</div>
                         <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>{moon.s} {moon.n}</div>
@@ -378,7 +378,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
               lineHeight: 1.4,
             }}
           >
-            종합 점성술 🌟
+            종합 점성술
           </button>
         </div>
 
@@ -398,7 +398,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
             marginBottom: 16,
           }}
         >
-          🎴 나만의 사주 명함 카드 만들기
+          나만의 사주 명함 카드 만들기
         </button>
 
         <div style={{ height: 40 }} />

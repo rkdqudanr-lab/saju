@@ -227,7 +227,7 @@ export default function DailyStarCardV2({
             {saju && (
               <div className="dsc-section dsc-section-east">
                 <div className="dsc-section-header">
-                  <span className="dsc-section-icon">🀄</span>
+                  <span className="dsc-section-icon">易</span>
                   <span className="dsc-section-title-text">동양의 기운 · 사주</span>
                 </div>
                 {saju.sipsin && (
@@ -277,7 +277,7 @@ export default function DailyStarCardV2({
                     )}
                     {astrology.number && (
                       <div className="dsc-astro-chip">
-                        <span>🔢</span>
+                        <span>#</span>
                         <span>{astrology.number}</span>
                       </div>
                     )}
@@ -290,7 +290,7 @@ export default function DailyStarCardV2({
             {synergy && (
               <div className="dsc-section dsc-section-synergy">
                 <div className="dsc-section-header">
-                  <span className="dsc-section-icon">✨</span>
+                  <span className="dsc-section-icon">✦</span>
                   <span className="dsc-section-title-text">별숨 픽 · 오늘의 시너지</span>
                 </div>
                 {synergy.food && (
