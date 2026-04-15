@@ -441,6 +441,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               🔗 친구 초대하기
             </button>
           )}
+          {user && <button className="sidebar-foot-btn" style={{ marginBottom: 8 }} onClick={() => { onSettings?.(); onClose(); }}>⚙️ 앱 설정</button>}
           {user && <button className="sidebar-foot-btn" onClick={() => { onKakaoLogout(); onClose(); }}>로그아웃</button>}
         </div>
       </nav>
