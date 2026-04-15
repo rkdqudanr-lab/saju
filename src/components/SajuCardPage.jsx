@@ -122,7 +122,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
   const [selectedTheme, setSelectedTheme] = useState(defaultThemeKey);
   const [selectedSticker, setSelectedSticker] = useState('none');
 
-  if (!form?.name || !saju || !sun) {
+  if (!saju || !sun) {
     return (
       <div className="page">
         <div className="inner" style={{ textAlign: 'center', paddingTop: 40 }}>
@@ -137,12 +137,14 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
     );
   }
 
+  const displayName = form?.name || form?.nickname || '나';
+
   const theme = ELEMENT_THEMES[selectedTheme] || ELEMENT_THEMES['목'];
   const stickerEmoji = STICKERS.find(s => s.id === selectedSticker)?.emoji || '';
 
   const handleSave = () => {
     try {
-      saveEnhancedSajuCard({ name: form.name, saju, sun, theme, stickerId: selectedSticker });
+      saveEnhancedSajuCard({ name: displayName, saju, sun, theme, stickerId: selectedSticker });
       showToast?.('명함 카드가 저장되었어요 🎴', 'info');
     } catch (e) {
       console.error('명함 카드 저장 오류:', e);
@@ -190,7 +192,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
           </div>
           {/* 이름 */}
           <div style={{ fontSize: '2.2rem', fontWeight: 700, color: '#F0EBF8', lineHeight: 1.1 }}>
-            {form.name}
+            {displayName}
           </div>
           {/* 구분선 */}
           <div style={{ width: 120, height: 1, background: `${theme.accent}60` }} />

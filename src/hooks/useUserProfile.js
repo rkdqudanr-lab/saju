@@ -149,7 +149,7 @@ export function useUserProfile() {
           // 기존 저장된 사용자 데이터를 먼저 조회 (저장된 닉네임 보존을 위해)
           const { data: saved } = await (authClient || supabase)
             .from('users')
-            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
+            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
             .eq('kakao_id', String(data.id))
             .maybeSingle();
 
@@ -188,7 +188,8 @@ export function useUserProfile() {
               bd: String(saved.birth_day),
               ...(saved.birth_hour != null ? { bh: String(parseFloat(saved.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
               ...(saved.gender   && { gender: saved.gender }),
-              ...(saved.nickname && { name: saved.nickname }),
+              ...(saved.nickname && { nickname: saved.nickname }),
+              ...(saved.name     && { name: saved.name }),
             }));
           }
           if (saved?.consent_flags) {
@@ -226,7 +227,7 @@ export function useUserProfile() {
     (async () => {
       const [usersRes, profilesRes, othersRes] = await Promise.allSettled([
         client.from('users')
-          .select('birth_year, birth_month, birth_day, birth_hour, gender, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
+          .select('birth_year, birth_month, birth_day, birth_hour, gender, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
           .eq('kakao_id', String(user.id))
           .maybeSingle(),
         client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).maybeSingle(),
@@ -245,6 +246,7 @@ export function useUserProfile() {
             ...(data.birth_hour != null ? { bh: String(parseFloat(data.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
             ...(data.gender    && { gender: data.gender }),
             ...(data.nickname  && { nickname: data.nickname }),
+            ...(data.name      && { name: data.name }),
           });
         }
         if (data?.consent_flags) setConsentFlags(data.consent_flags);
@@ -438,6 +440,7 @@ export function useUserProfile() {
         birth_day:   parseInt(bd, 10),
         birth_hour:  !noTime && bh ? (() => { const h = parseFloat(bh); return isNaN(h) || h < 0 || h >= 24 ? null : h; })() : null,
         gender:      gender || null,
+        name:        name || null,
         nickname:    nickname || currentUser.nickname || '별님',
         updated_at:  new Date().toISOString(),
       }, { onConflict: 'kakao_id', ignoreDuplicates: false });
