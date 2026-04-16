@@ -244,14 +244,30 @@ export default function SettingsPage({
             <div className="card-title">개인정보 수정</div>
             <div className="card-sub">저장된 생년월일, 이름, 성별을 수정할 수 있어요</div>
 
-            <label className="lbl" htmlFor="set-name">이름 (선택)</label>
-            <input
-              id="set-name"
-              className="inp"
-              placeholder="뭐라고 불러드릴까요?"
-              value={localForm.name || ''}
-              onChange={e => setLocalForm(f => ({ ...f, name: e.target.value }))}
-            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div>
+                <label className="lbl" htmlFor="set-nickname" style={{ marginBottom: 4 }}>닉네임 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(표시용)</span></label>
+                <input
+                  id="set-nickname"
+                  className="inp"
+                  style={{ marginBottom: 0 }}
+                  placeholder="예: 민준이, 달빛"
+                  value={localForm.nickname || ''}
+                  onChange={e => setLocalForm(f => ({ ...f, nickname: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="lbl" htmlFor="set-name" style={{ marginBottom: 4 }}>본명 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(사주 분석용)</span></label>
+                <input
+                  id="set-name"
+                  className="inp"
+                  style={{ marginBottom: 0 }}
+                  placeholder="태어날 때 이름"
+                  value={localForm.name || ''}
+                  onChange={e => setLocalForm(f => ({ ...f, name: e.target.value }))}
+                />
+              </div>
+            </div>
 
             <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
               <legend className="lbl">생년월일</legend>

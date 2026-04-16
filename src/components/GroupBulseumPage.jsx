@@ -80,6 +80,79 @@ function getCompatTier(score) {
   return { label: '도전적이지만 성장하는 관계', emoji: '🔥', color: '#9B4EC4' };
 }
 
+// ── 오행 분포 시각화 ──
+const OHAENG_COLOR = { 목: '#5FAD7A', 화: '#E06040', 토: '#C4A040', 금: '#A09EC4', 수: '#4A90D9' };
+const OHAENG_CHAR  = { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' };
+
+function OhaengBar({ members }) {
+  const total = members.length;
+  if (!total) return null;
+  const counts = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
+  members.forEach(m => { if (m.saju?.dom && counts[m.saju.dom] !== undefined) counts[m.saju.dom]++; });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const dominant = sorted[0];
+  return (
+    <div style={{
+      marginBottom: 16,
+      background: 'var(--bg2)', borderRadius: 'var(--r2)',
+      border: '1px solid var(--line)', padding: '16px 16px 14px',
+    }}>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 14, letterSpacing: '.05em' }}>
+        ✦ 우리 모임의 오행 기운
+      </div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 72 }}>
+        {Object.entries(counts).map(([el, cnt]) => {
+          const pct = total ? (cnt / total) : 0;
+          const color = OHAENG_COLOR[el];
+          const barH = Math.max(4, pct * 52);
+          const isDom = cnt > 0 && cnt === dominant[1];
+          return (
+            <div key={el} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div style={{
+                fontSize: 'var(--xs)', fontWeight: 700,
+                color: cnt > 0 ? 'var(--t1)' : 'var(--t4)',
+                opacity: cnt > 0 ? 1 : 0.4,
+              }}>{cnt}</div>
+              <div style={{ width: '100%', height: barH, borderRadius: '4px 4px 0 0', position: 'relative', overflow: 'visible',
+                background: cnt > 0 ? color : 'var(--bg3)',
+                opacity: cnt > 0 ? 1 : 0.3,
+                transition: 'height 0.7s cubic-bezier(.34,1.56,.64,1)',
+                boxShadow: isDom ? `0 0 12px ${color}66, 0 0 4px ${color}44` : 'none',
+              }} />
+              <div style={{
+                fontSize: 12, fontWeight: 700,
+                color: cnt > 0 ? color : 'var(--t4)',
+                opacity: cnt > 0 ? 1 : 0.4,
+                textShadow: isDom ? `0 0 8px ${color}88` : 'none',
+              }}>
+                {OHAENG_CHAR[el]}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {dominant[1] > 0 && (
+        <div style={{
+          marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line)',
+          fontSize: 'var(--xs)', color: 'var(--t3)', textAlign: 'center', lineHeight: 1.6,
+        }}>
+          이 모임은{' '}
+          <span style={{ color: OHAENG_COLOR[dominant[0]], fontWeight: 700, textShadow: `0 0 8px ${OHAENG_COLOR[dominant[0]]}66` }}>
+            {OHAENG_CHAR[dominant[0]]} {dominant[0]} 기운
+          </span>
+          {' '}이 강해요
+          {sorted[1]?.[1] > 0 && sorted[1][0] !== dominant[0] && (
+            <span style={{ color: 'var(--t4)' }}>
+              {' · '}
+              <span style={{ color: OHAENG_COLOR[sorted[1][0]] }}>{OHAENG_CHAR[sorted[1][0]]}</span> 기운도 함께해요
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── 입력 폼 컴포넌트 ──
 function MemberForm({ onSubmit, title }) {
   const [form, setForm] = useState({ name: '', by: '', bm: '', bd: '', bh: '', gender: '' });
@@ -123,7 +196,7 @@ function MemberForm({ onSubmit, title }) {
 }
 
 // ── 관계도 SVG ──
-function RelationGraph({ members, pairs }) {
+function RelationGraph({ members, pairs, selectedNode, onNodeClick }) {
   const W = 320, H = 300, cx = 160, cy = 150, r = 100;
   const positions = calcNodePositions(members.length, cx, cy, members.length === 1 ? 0 : r);
 
@@ -134,13 +207,16 @@ function RelationGraph({ members, pairs }) {
         const posA = positions[pair.idxA];
         const posB = positions[pair.idxB];
         if (!posA || !posB) return null;
+        const isHighlighted = selectedNode === null || pair.idxA === selectedNode || pair.idxB === selectedNode;
         const color = REL_COLOR[pair.type];
         const strokeWidth = pair.score >= 70 ? 2.5 : pair.score >= 50 ? 1.5 : 1;
         return (
           <line key={i}
             x1={posA.x} y1={posA.y} x2={posB.x} y2={posB.y}
-            stroke={color} strokeWidth={strokeWidth} strokeOpacity={0.7}
+            stroke={color} strokeWidth={strokeWidth}
+            strokeOpacity={isHighlighted ? 0.75 : 0.12}
             strokeDasharray={pair.type === 'bad' ? '4 3' : undefined}
+            style={{ transition: 'stroke-opacity 0.25s' }}
           />
         );
       })}
@@ -148,18 +224,31 @@ function RelationGraph({ members, pairs }) {
       {members.map((m, i) => {
         const pos = positions[i];
         if (!pos) return null;
+        const isSelected = selectedNode === i;
+        const isDimmed = selectedNode !== null && !isSelected;
         return (
-          <g key={i}>
+          <g key={i} style={{ cursor: 'pointer' }} onClick={() => onNodeClick(i)}>
+            <circle cx={pos.x} cy={pos.y} r={28}
+              fill="transparent" />
             <circle cx={pos.x} cy={pos.y} r={26}
-              fill="var(--bg2)" stroke="var(--gold)" strokeWidth={1.5} />
+              fill="var(--bg2)"
+              stroke={isSelected ? '#E8B048' : 'var(--gold)'}
+              strokeWidth={isSelected ? 2.5 : 1.5}
+              opacity={isDimmed ? 0.35 : 1}
+              style={{ transition: 'opacity 0.25s, stroke 0.25s' }}
+            />
             <circle cx={pos.x} cy={pos.y} r={24}
-              fill="rgba(180,140,50,0.06)" />
+              fill={isSelected ? 'rgba(232,176,72,0.12)' : 'rgba(180,140,50,0.06)'}
+              style={{ transition: 'fill 0.25s' }}
+            />
             <text x={pos.x} y={pos.y - 4} textAnchor="middle"
-              fill="var(--t1)" fontSize={11} fontWeight={700} fontFamily="var(--ff)">
+              fill={isDimmed ? 'var(--t4)' : 'var(--t1)'} fontSize={11} fontWeight={700} fontFamily="var(--ff)"
+              style={{ transition: 'fill 0.25s' }}>
               {m.name.slice(0, 3)}
             </text>
             <text x={pos.x} y={pos.y + 10} textAnchor="middle"
-              fill="var(--gold)" fontSize={9} fontFamily="var(--ff)">
+              fill={isDimmed ? 'var(--t5)' : 'var(--gold)'} fontSize={9} fontFamily="var(--ff)"
+              style={{ transition: 'fill 0.25s' }}>
               {m.saju ? ON[m.saju.dom] : ''}
             </text>
           </g>
@@ -235,74 +324,259 @@ function DetailPanel({ pair, members, onClose, user }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const a = members[pair.idxA], b = members[pair.idxB];
+  const tier = getCompatTier(pair.score);
+  const typeColor = REL_COLOR[pair.type];
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)',
       zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      backdropFilter: 'blur(2px)',
     }} onClick={onClose}>
       <div style={{
-        width: '100%', maxWidth: 480,
-        background: 'var(--bg1)', borderRadius: '20px 20px 0 0',
-        padding: '24px 20px 40px', maxHeight: '75vh', overflowY: 'auto',
+        width: '100%', maxWidth: 480, animation: 'fadeUp .3s ease',
+        background: 'var(--bg1)', borderRadius: '24px 24px 0 0',
+        maxHeight: '80vh', overflowY: 'auto',
+        boxShadow: '0 -8px 40px rgba(0,0,0,.4)',
       }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, color: 'var(--t1)', fontSize: 'var(--md)' }}>
-            {a.name} × {b.name} 상세 분석
-          </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', fontSize: 18 }}>✕</button>
+        {/* 핸들 바 */}
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4 }}>
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--line)' }} />
         </div>
+        {/* 그라디언트 헤더 */}
         <div style={{
-          padding: '8px 12px', background: 'var(--goldf)', borderRadius: 'var(--r1)',
-          fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 12,
+          padding: '16px 20px 14px',
+          borderBottom: '1px solid var(--line)',
         }}>
-          {REL_LABEL[pair.type]} · 공명 지수 {pair.score}%
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{
+                fontSize: 'var(--lg)', fontWeight: 700,
+                background: `linear-gradient(135deg, var(--t1), ${tier.color})`,
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                marginBottom: 4,
+              }}>
+                {a.name} × {b.name}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{
+                  padding: '2px 10px', borderRadius: 20,
+                  background: `${typeColor}18`, border: `1px solid ${typeColor}44`,
+                  fontSize: 'var(--xs)', color: typeColor, fontWeight: 700,
+                }}>
+                  {REL_LABEL[pair.type]}
+                </span>
+                <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>공명 {pair.score}%</span>
+              </div>
+            </div>
+            <button onClick={onClose} style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: 'var(--bg2)', border: '1px solid var(--line)',
+              color: 'var(--t3)', cursor: 'pointer', fontSize: 14,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>✕</button>
+          </div>
         </div>
-        {/* 궁합 티어 배지 */}
-        {(() => {
-          const tier = getCompatTier(pair.score);
-          return (
-            <div style={{
-              padding: '10px 14px', borderRadius: 'var(--r1)',
-              background: `${tier.color}14`, border: `1px solid ${tier.color}44`,
-              marginBottom: 16, textAlign: 'center', animation: 'fadeUp .3s ease',
-            }}>
-              <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: tier.color, marginBottom: 8 }}>
+
+        <div style={{ padding: '16px 20px 40px' }}>
+          {/* 궁합 티어 카드 */}
+          <div style={{
+            padding: '14px 16px', borderRadius: 'var(--r2)',
+            background: `linear-gradient(135deg, ${tier.color}10, ${tier.color}06)`,
+            border: `1px solid ${tier.color}30`,
+            marginBottom: 16,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: tier.color }}>
                 {tier.emoji} {tier.label}
               </div>
-              <div style={{ height: 6, background: 'var(--bg3)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%', width: `${pair.score}%`,
-                  background: `linear-gradient(90deg, ${tier.color}88, ${tier.color})`,
-                  borderRadius: 3, transition: 'width 1.2s cubic-bezier(.34,1.56,.64,1)',
-                }} />
-              </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 5 }}>
-                {pair.score}% 공명
+              <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: tier.color }}>
+                {pair.score}%
               </div>
             </div>
-          );
-        })()}
-        {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0', gap: 6 }}>
-            {[0, 1, 2].map(i => (
-              <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)', opacity: 0.6, animation: `orbPulse 1.2s ease-in-out ${i * 0.3}s infinite` }} />
-            ))}
+            <div style={{ height: 5, background: 'rgba(255,255,255,.06)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', width: `${pair.score}%`,
+                background: `linear-gradient(90deg, ${tier.color}60, ${tier.color})`,
+                borderRadius: 3, transition: 'width 1.4s cubic-bezier(.34,1.56,.64,1)',
+                boxShadow: `0 0 8px ${tier.color}66`,
+              }} />
+            </div>
           </div>
-        ) : (
-          <>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
-              {stripMd(result)}
+
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '36px 0', gap: 16 }}>
+              <div style={{ display: 'flex', gap: 7 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', animation: `orbPulse 1.4s ease-in-out ${i * 0.25}s infinite` }} />
+                ))}
+              </div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>별빛으로 읽는 중...</div>
             </div>
-            {hasError && (
-              <button
-                onClick={askDetail}
-                style={{ marginTop: 14, fontSize: 'var(--xs)', color: 'var(--gold)', background: 'none', border: '1px solid var(--gold)', borderRadius: 20, padding: '6px 16px', fontFamily: 'var(--ff)', cursor: 'pointer' }}
-              >
-                다시 불러오기 ↺
-              </button>
-            )}
-          </>
-        )}
+          ) : (
+            <>
+              <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+                {stripMd(result)}
+              </div>
+              {hasError && (
+                <button onClick={askDetail} style={{
+                  marginTop: 16, fontSize: 'var(--xs)', color: 'var(--gold)',
+                  background: 'var(--goldf)', border: '1px solid var(--acc)',
+                  borderRadius: 20, padding: '8px 20px', fontFamily: 'var(--ff)', cursor: 'pointer',
+                }}>
+                  ↺ 다시 불러오기
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── 모임 전체 분석 패널 ──
+function GroupAnalysisPanel({ members, onClose, user }) {
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const abortRef = useRef(null);
+
+  const askGroupAnalysis = async () => {
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setLoading(true);
+    setHasError(false);
+    setResult('');
+    try {
+      const ctx = members.map(m => {
+        let s = `[${m.name}]\n`;
+        if (m.saju) s += `일주: ${m.saju.il.g}${m.saju.il.j} / 기질: ${m.saju.ilganDesc} / ${ON[m.saju.dom]} 기운\n`;
+        if (m.sun) s += `별자리: ${m.sun.s} ${m.sun.n}\n`;
+        return s;
+      }).join('\n');
+      const _token = getAuthToken();
+      const _headers = { 'Content-Type': 'application/json' };
+      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: _headers,
+        body: JSON.stringify({
+          userMessage: `우리 모임 ${members.length}명의 전체 별숨 에너지를 분석해주세요. 이 팀의 집단 기운, 강점, 약점, 주의해야 할 점, 함께할 때 가장 빛나는 순간을 별숨의 언어로 이야기해주세요.`,
+          context: ctx,
+          isGroupAnalysis: true,
+          isChat: true,
+          kakaoId: user?.id || null,
+          clientHour: new Date().getHours(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'api error');
+      setResult(data.text || '분석을 불러오지 못했어요.');
+    } catch (e) {
+      if (e?.name === 'AbortError') return;
+      setHasError(true);
+      setResult('별이 잠시 쉬고 있어요.\n잠시 후 다시 시도해봐요.');
+    } finally {
+      if (!controller.signal.aborted) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    askGroupAnalysis();
+    return () => { if (abortRef.current) abortRef.current.abort(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)',
+      zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      backdropFilter: 'blur(2px)',
+    }} onClick={onClose}>
+      <div style={{
+        width: '100%', maxWidth: 480, animation: 'fadeUp .3s ease',
+        background: 'var(--bg1)', borderRadius: '24px 24px 0 0',
+        maxHeight: '84vh', overflowY: 'auto',
+        boxShadow: '0 -8px 40px rgba(0,0,0,.4)',
+      }} onClick={e => e.stopPropagation()}>
+        {/* 핸들 바 */}
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4 }}>
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--line)' }} />
+        </div>
+        {/* 헤더 */}
+        <div style={{ padding: '14px 20px 14px', borderBottom: '1px solid var(--line)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{
+                fontSize: 'var(--lg)', fontWeight: 700,
+                background: 'linear-gradient(135deg, var(--t1) 0%, var(--gold) 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                marginBottom: 3,
+              }}>
+                우리 모임 전체 별숨
+              </div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+                {members.length}개의 별이 만드는 에너지
+              </div>
+            </div>
+            <button onClick={onClose} style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: 'var(--bg2)', border: '1px solid var(--line)',
+              color: 'var(--t3)', cursor: 'pointer', fontSize: 14,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>✕</button>
+          </div>
+        </div>
+
+        <div style={{ padding: '16px 20px 44px' }}>
+          {/* 멤버 칩들 */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
+            {members.map((m, i) => {
+              const elColor = m.saju?.dom ? OHAENG_COLOR[m.saju.dom] : 'var(--gold)';
+              return (
+                <div key={i} style={{
+                  padding: '4px 12px', borderRadius: 20,
+                  background: m.saju?.dom ? `${OHAENG_COLOR[m.saju.dom]}14` : 'var(--goldf)',
+                  border: `1px solid ${elColor}30`,
+                  fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: 5,
+                }}>
+                  {m.saju?.dom && (
+                    <span style={{ color: elColor, fontSize: 10, fontWeight: 700 }}>{OHAENG_CHAR[m.saju.dom]}</span>
+                  )}
+                  {m.name}
+                </div>
+              );
+            })}
+          </div>
+
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0', gap: 16 }}>
+              <div style={{ display: 'flex', gap: 7 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', animation: `orbPulse 1.4s ease-in-out ${i * 0.25}s infinite` }} />
+                ))}
+              </div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>{members.length}개의 별빛을 읽는 중...</div>
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+                {stripMd(result)}
+              </div>
+              {hasError && (
+                <button onClick={askGroupAnalysis} style={{
+                  marginTop: 16, fontSize: 'var(--xs)', color: 'var(--gold)',
+                  background: 'var(--goldf)', border: '1px solid var(--acc)',
+                  borderRadius: 20, padding: '8px 20px', fontFamily: 'var(--ff)', cursor: 'pointer',
+                }}>
+                  ↺ 다시 불러오기
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -325,7 +599,8 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
   const [codeError, setCodeError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [teamMode, setTeamMode] = useState(false);
+  const [groupAnalysisOpen, setGroupAnalysisOpen] = useState(false);
+  const [selectedNode, setSelectedNode] = useState(null);
 
   // 멤버 사주/별자리 계산
   const enrichedMembers = useMemo(() => members.map(m => {
@@ -455,6 +730,21 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
     setPhase('members');
   };
 
+  // 멤버 삭제
+  const removeMember = async (idx) => {
+    const m = members[idx];
+    const updatedMembers = members.filter((_, i) => i !== idx);
+    setMembers(updatedMembers);
+    if (inviteCode) saveLocalMembers(inviteCode, updatedMembers);
+    try {
+      if (supabase && sessionId && !sessionId.startsWith('local_') && m.id) {
+        await supabase.from('group_members').delete().eq('id', m.id);
+      }
+    } catch (e) {
+      console.error('[GroupBulseum] 멤버 삭제 오류:', e?.message);
+    }
+  };
+
   // 관계도 분류
   const goodPairs = pairs.filter(p => p.type === 'good');
   const cautionPairs = pairs.filter(p => p.type === 'caution');
@@ -465,64 +755,128 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
     return (
       <div className="page">
         <div className="inner">
-          <div style={{ paddingTop: 20 }}>
-            <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🌐</div>
-              <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>
-                우리 모임의 별숨은?
+          <div style={{ paddingTop: 8 }}>
+
+            {/* 히어로 섹션 */}
+            <div style={{ textAlign: 'center', marginBottom: 36, animation: 'fadeUp .5s ease' }}>
+              {/* 오브 장식 */}
+              <div style={{ position: 'relative', width: 88, height: 88, margin: '0 auto 22px' }}>
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  background: 'radial-gradient(circle at 38% 32%, rgba(232,176,72,.5), rgba(155,142,196,.25), transparent)',
+                  animation: 'orbPulse 4s ease-in-out infinite',
+                }} />
+                <div style={{
+                  position: 'absolute', inset: -8, borderRadius: '50%',
+                  border: '1px solid rgba(232,176,72,.22)',
+                  animation: 'orbSpin 14s linear infinite',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: -3, left: '50%', transform: 'translateX(-50%)',
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: 'var(--gold)', boxShadow: '0 0 10px var(--gold), 0 0 20px rgba(232,176,72,.4)',
+                  }} />
+                </div>
+                <div style={{
+                  position: 'absolute', inset: -22, borderRadius: '50%',
+                  border: '1px solid rgba(232,176,72,.07)',
+                  animation: 'orbSpin 24s linear infinite reverse',
+                }}>
+                  <div style={{
+                    position: 'absolute', bottom: -2, right: '22%',
+                    width: 4, height: 4, borderRadius: '50%',
+                    background: 'rgba(155,142,196,.8)', boxShadow: '0 0 7px rgba(155,142,196,.5)',
+                  }} />
+                </div>
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 30,
+                }}>🌐</div>
               </div>
-              <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.8 }}>
-                초대 코드로 모임을 만들고<br />
-                서로의 별숨 관계를 확인해봐요
+
+              <div style={{
+                fontSize: 'var(--xl)', fontWeight: 700, lineHeight: 1.25, marginBottom: 12,
+                background: 'linear-gradient(135deg, var(--t1) 10%, var(--gold) 60%, #C89030 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }}>
+                우리 모임의<br />별숨은?
+              </div>
+              <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.9 }}>
+                초대 코드 하나로 모임을 만들고<br />
+                사주와 별자리로 서로의 궁합을 읽어봐요
               </div>
             </div>
 
+            {/* 새 모임 만들기 */}
             <button
               className="btn-main"
               onClick={createGroup}
               disabled={createLoading}
-              style={{ marginBottom: 12 }}
+              style={{ marginTop: 0, marginBottom: 12 }}
             >
-              {createLoading ? '모임 만드는 중...' : '✦ 새 모임 만들기'}
+              {createLoading ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  {[0,1,2].map(i => (
+                    <span key={i} style={{
+                      width: 6, height: 6, borderRadius: '50%', background: '#0D0B14', display: 'inline-block',
+                      animation: `orbPulse 1.2s ease-in-out ${i * 0.25}s infinite`,
+                    }} />
+                  ))}
+                </span>
+              ) : '✦ 새 모임 만들기'}
             </button>
 
-            <div style={{ position: 'relative', margin: '16px 0', textAlign: 'center' }}>
+            {/* 구분선 */}
+            <div style={{ position: 'relative', margin: '20px 0', textAlign: 'center' }}>
               <div style={{ height: 1, background: 'var(--line)', position: 'absolute', top: '50%', width: '100%' }} />
-              <span style={{ background: 'var(--bg1)', padding: '0 12px', fontSize: 'var(--xs)', color: 'var(--t4)', position: 'relative' }}>또는</span>
+              <span style={{
+                background: 'var(--bg1)', padding: '0 14px', position: 'relative',
+                fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.08em',
+              }}>또는 코드로 참여</span>
             </div>
 
+            {/* 코드 입력 */}
             <div style={{ marginBottom: 8 }}>
               <input
                 className="inp"
-                placeholder="초대 코드 입력 (6자리)"
+                placeholder="A B C 1 2 3"
                 value={codeInput}
                 onChange={e => { setCodeInput(e.target.value.toUpperCase().slice(0, 6)); setCodeError(''); }}
-                style={{ width: '100%', boxSizing: 'border-box', letterSpacing: 6, textAlign: 'center', fontWeight: 700, fontSize: 'var(--md)', marginBottom: 10 }}
+                style={{
+                  letterSpacing: 10, textAlign: 'center', fontWeight: 700,
+                  fontSize: 'var(--lg)', marginBottom: 10,
+                  boxShadow: codeInput.length === 6 ? '0 0 0 3px rgba(232,176,72,.12), inset 0 0 0 1px var(--gold)' : 'none',
+                  transition: 'box-shadow .2s',
+                }}
                 maxLength={6}
               />
-              <button
-                className="btn-main"
-                onClick={joinGroup}
-                disabled={codeInput.length !== 6}
-                style={{ width: '100%' }}
-              >
-                참여
+              <button className="btn-main" onClick={joinGroup} disabled={codeInput.length !== 6} style={{ marginTop: 0 }}>
+                모임 참여하기
               </button>
             </div>
             {codeError && (
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', marginBottom: 8, textAlign: 'center' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', marginBottom: 8, textAlign: 'center', animation: 'fadeUp .2s ease' }}>
                 {codeError}
               </div>
             )}
 
+            {/* 안내 */}
             <div style={{
-              marginTop: 24, padding: '14px 16px', background: 'var(--bg2)',
-              borderRadius: 'var(--r1)', border: '1px solid var(--line)',
-              fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.8,
+              marginTop: 24, padding: '16px 18px', background: 'var(--bg2)',
+              borderRadius: 'var(--r2)', border: '1px solid var(--line)',
+              display: 'flex', flexDirection: 'column', gap: 10,
             }}>
-              ✦ 로그인 없이도 참여할 수 있어요<br />
-              ✦ 이름과 생년월일만 입력하면 돼요<br />
-              ✦ 초대 코드를 공유해서 친구를 불러봐요
+              {[
+                ['✦', '로그인 없이도 참여할 수 있어요'],
+                ['☽', '이름과 생년월일만 입력하면 돼요'],
+                ['◈', '초대 링크로 친구를 바로 불러봐요'],
+              ].map(([ic, txt]) => (
+                <div key={txt} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 'var(--xs)', color: 'var(--t3)' }}>
+                  <span style={{ color: 'var(--gold)', width: 14, textAlign: 'center', flexShrink: 0, fontSize: 10 }}>{ic}</span>
+                  {txt}
+                </div>
+              ))}
             </div>
 
             <button className="res-btn" style={{ width: '100%', marginTop: 16 }} onClick={() => setStep(0)}>
@@ -539,18 +893,36 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
     return (
       <div className="page">
         <div className="inner">
-          <div style={{ paddingTop: 20 }}>
+          <div style={{ paddingTop: 16 }}>
+
+            {/* 초대 코드 프리미엄 카드 */}
             <div style={{
-              textAlign: 'center', marginBottom: 16,
-              padding: '16px', background: 'var(--goldf)',
-              borderRadius: 'var(--r1)', border: '1px solid var(--acc)',
+              textAlign: 'center', marginBottom: 20,
+              padding: '20px 16px',
+              background: 'linear-gradient(145deg, rgba(232,176,72,.1), rgba(232,176,72,.04))',
+              borderRadius: 'var(--r2)', border: '1px solid rgba(232,176,72,.25)',
+              boxShadow: '0 4px 24px rgba(232,176,72,.08), inset 0 1px 0 rgba(232,176,72,.1)',
+              position: 'relative', overflow: 'hidden',
             }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>초대 코드</div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gold)', letterSpacing: 10, marginBottom: 4 }}>
+              {/* 배경 장식 */}
+              <div style={{
+                position: 'absolute', top: -30, right: -30, width: 100, height: 100,
+                borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,176,72,.06), transparent)',
+                pointerEvents: 'none',
+              }} />
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.1em', marginBottom: 8 }}>초대 코드</div>
+              <div style={{
+                fontSize: 34, fontWeight: 700, letterSpacing: 14, marginBottom: 8,
+                background: 'linear-gradient(135deg, var(--gold), #C89030)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                textShadow: 'none',
+              }}>
                 {inviteCode}
               </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 12 }}>
-                현재 {members.length}명 참여 중
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 14 }}>
+                현재{' '}
+                <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{members.length}명</span>
+                {' '}참여 중
               </div>
               <button
                 onClick={() => {
@@ -561,11 +933,12 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
                   });
                 }}
                 style={{
-                  background: linkCopied ? 'var(--acc)' : 'var(--bg1)',
-                  border: '1px solid var(--acc)', borderRadius: 20,
-                  padding: '6px 16px', color: linkCopied ? '#fff' : 'var(--gold)',
-                  fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
-                  fontWeight: 700, transition: 'all .2s',
+                  background: linkCopied ? 'rgba(232,176,72,.25)' : 'var(--bg1)',
+                  border: `1px solid ${linkCopied ? 'var(--gold)' : 'rgba(232,176,72,.3)'}`,
+                  borderRadius: 20, padding: '7px 20px',
+                  color: 'var(--gold)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+                  cursor: 'pointer', fontWeight: 700, transition: 'all .2s',
+                  letterSpacing: '.02em',
                 }}
               >
                 {linkCopied ? '✓ 복사됨!' : '🔗 초대 링크 복사'}
@@ -578,7 +951,11 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
             />
 
             {saveError && (
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', background: 'rgba(200,80,80,0.08)', border: '1px solid rgba(200,80,80,0.2)', borderRadius: 'var(--r1)', padding: '10px 14px', marginTop: 8, lineHeight: 1.6 }}>
+              <div style={{
+                fontSize: 'var(--xs)', color: 'var(--rose)',
+                background: 'var(--rosef)', border: '1px solid var(--roseacc)',
+                borderRadius: 'var(--r1)', padding: '10px 14px', marginTop: 8, lineHeight: 1.6,
+              }}>
                 ⚠️ {saveError}
               </div>
             )}
@@ -589,7 +966,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
                 style={{ width: '100%', marginTop: 12 }}
                 onClick={() => setPhase('members')}
               >
-                참여 멤버 보기 ({members.length}명)
+                참여 멤버 보기 ({members.length}명) →
               </button>
             )}
 
@@ -630,34 +1007,76 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
             </div>
 
             {/* 멤버 카드 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-              {enrichedMembers.map((m, i) => (
-                <div key={i} style={{
-                  padding: '12px 14px', background: 'var(--bg2)',
-                  borderRadius: 'var(--r1)', border: '1px solid var(--line)',
-                  display: 'flex', alignItems: 'center', gap: 12,
-                }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: '50%',
-                    background: 'var(--goldf)', border: '1px solid var(--acc)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 16, fontWeight: 700, color: 'var(--gold)', flexShrink: 0,
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+              {enrichedMembers.map((m, i) => {
+                const elColor = m.saju?.dom ? OHAENG_COLOR[m.saju.dom] : 'var(--gold)';
+                const elChar  = m.saju?.dom ? OHAENG_CHAR[m.saju.dom] : '✦';
+                return (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: 'var(--bg2)', borderRadius: 'var(--r2)',
+                    border: '1px solid var(--line)',
+                    padding: '10px 12px 10px 0',
+                    overflow: 'hidden', position: 'relative',
+                    animation: `fadeUp .3s ease ${i * 0.05}s both`,
                   }}>
-                    {m.name.slice(0, 1)}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: 'var(--t1)', marginBottom: 2 }}>{m.name}</div>
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>
-                      {m.sun && `${m.sun.s} ${m.sun.n} · `}
-                      {m.saju && `${ON[m.saju.dom]} 기운 · ${roleOf(m.saju)}`}
+                    {/* 왼쪽 오행 액센트 바 */}
+                    <div style={{
+                      width: 4, alignSelf: 'stretch', flexShrink: 0,
+                      background: elColor,
+                      borderRadius: '0 2px 2px 0',
+                      boxShadow: `0 0 8px ${elColor}66`,
+                      marginRight: 4,
+                    }} />
+                    {/* 아바타 */}
+                    <div style={{
+                      width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                      background: `${elColor}18`,
+                      border: `1.5px solid ${elColor}44`,
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      gap: 0,
+                    }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', lineHeight: 1.1 }}>
+                        {m.name.slice(0, 1)}
+                      </div>
+                      <div style={{ fontSize: 9, color: elColor, fontWeight: 700, lineHeight: 1 }}>
+                        {elChar}
+                      </div>
                     </div>
+                    {/* 정보 */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: 'var(--t1)', marginBottom: 2, fontSize: 'var(--sm)' }}>
+                        {m.name}
+                      </div>
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {m.sun && <span>{m.sun.s} {m.sun.n}</span>}
+                        {m.sun && m.saju && <span style={{ margin: '0 4px', color: 'var(--line)' }}>·</span>}
+                        {m.saju && <span style={{ color: elColor }}>{roleOf(m.saju)}</span>}
+                      </div>
+                    </div>
+                    {/* 삭제 버튼 */}
+                    <button
+                      onClick={() => removeMember(i)}
+                      style={{
+                        background: 'none', border: 'none', color: 'var(--t4)',
+                        cursor: 'pointer', fontSize: 13, padding: '6px 8px',
+                        borderRadius: 6, flexShrink: 0, transition: 'color 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.color = 'var(--rose)'}
+                      onMouseLeave={e => e.currentTarget.style.color = 'var(--t4)'}
+                      title={`${m.name} 삭제`}
+                    >✕</button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {saveError && (
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', background: 'rgba(200,80,80,0.08)', border: '1px solid rgba(200,80,80,0.2)', borderRadius: 'var(--r1)', padding: '10px 14px', marginBottom: 12, lineHeight: 1.6 }}>
+              <div style={{
+                fontSize: 'var(--xs)', color: 'var(--rose)',
+                background: 'var(--rosef)', border: '1px solid var(--roseacc)',
+                borderRadius: 'var(--r1)', padding: '10px 14px', marginBottom: 12, lineHeight: 1.6,
+              }}>
                 ⚠️ {saveError}
               </div>
             )}
@@ -668,7 +1087,9 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
               onClick={() => setPhase('graph')}
               style={{ marginBottom: 8 }}
             >
-              ✦ 별숨 관계도 보기 ({members.length >= 2 ? `${pairs.length}쌍 분석` : '2명 이상 필요해요'})
+              {members.length >= 2
+                ? `✦ 별숨 관계도 보기 · ${pairs.length}쌍`
+                : '2명 이상 있어야 관계도를 볼 수 있어요'}
             </button>
 
             <button
@@ -694,129 +1115,215 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
       <div className="page">
         <div className="inner">
           <div style={{ paddingTop: 12 }}>
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
-                우리 모임의 별숨 관계도
+
+            {/* 헤더 */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18, gap: 10 }}>
+              <div>
+                <div style={{
+                  fontSize: 'var(--md)', fontWeight: 700, marginBottom: 3,
+                  background: 'linear-gradient(135deg, var(--t1), var(--gold))',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>
+                  별숨 관계도
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontSize: 'var(--xs)', color: 'var(--t4)',
+                    padding: '2px 8px', background: 'var(--bg2)',
+                    borderRadius: 20, border: '1px solid var(--line)',
+                  }}>
+                    {members.length}명 · {pairs.length}쌍
+                  </span>
+                  {selectedNode !== null && (
+                    <span style={{
+                      fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700,
+                      padding: '2px 8px', background: 'var(--goldf)',
+                      borderRadius: 20, border: '1px solid var(--acc)',
+                    }}>
+                      {enrichedMembers[selectedNode]?.name} ×
+                    </span>
+                  )}
+                </div>
               </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-                {members.length}명 · {pairs.length}쌍 분석
-              </div>
+              <button
+                onClick={() => setGroupAnalysisOpen(true)}
+                style={{
+                  padding: '8px 14px', flexShrink: 0,
+                  background: 'linear-gradient(135deg, rgba(232,176,72,.18), rgba(232,176,72,.08))',
+                  border: '1px solid rgba(232,176,72,.35)', borderRadius: 20,
+                  fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)',
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 10px rgba(232,176,72,.12)',
+                  transition: 'all .2s',
+                }}
+              >
+                ⊕ 팀 전체 분석
+              </button>
             </div>
 
-            {/* 관계도 SVG */}
-            <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 'var(--sp2)', marginBottom: 16, border: '1px solid var(--line)' }}>
-              <RelationGraph members={enrichedMembers} pairs={pairs} />
-              {/* 범례 */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 12 }}>
+            {/* 관계도 SVG 카드 */}
+            <div style={{
+              background: 'linear-gradient(145deg, var(--bg2), var(--bg1))',
+              borderRadius: 'var(--r2)', padding: '16px 16px 12px',
+              marginBottom: 14, border: '1px solid var(--line)',
+              boxShadow: '0 4px 20px rgba(0,0,0,.15)',
+            }}>
+              <RelationGraph
+                members={enrichedMembers}
+                pairs={pairs}
+                selectedNode={selectedNode}
+                onNodeClick={i => setSelectedNode(prev => prev === i ? null : i)}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 10 }}>
                 {Object.entries(REL_COLOR).map(([type, color]) => (
-                  <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--xs)', color: 'var(--t3)' }}>
-                    <div style={{ width: 24, height: 2, background: color, borderRadius: 1 }} />
+                  <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+                    <div style={{ width: 20, height: 2, background: color, borderRadius: 1, boxShadow: `0 0 4px ${color}88` }} />
                     {REL_LABEL[type]}
                   </div>
                 ))}
               </div>
+              {selectedNode !== null && (
+                <div style={{ textAlign: 'center', marginTop: 8 }}>
+                  <button onClick={() => setSelectedNode(null)} style={{
+                    fontSize: 'var(--xs)', color: 'var(--t4)', background: 'none',
+                    border: 'none', cursor: 'pointer', textDecoration: 'underline',
+                  }}>
+                    필터 해제
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* 각자의 역할 */}
+            {/* 오행 분포 */}
+            <OhaengBar members={enrichedMembers} />
+
+            {/* 역할 태그 */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.05em' }}>
                 ✦ 별숨의 역할
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {enrichedMembers.map((m, i) => (
-                  <div key={i} style={{
-                    padding: '6px 12px', background: 'var(--bg2)',
-                    borderRadius: 20, border: '1px solid var(--line)',
-                    fontSize: 'var(--xs)', color: 'var(--t2)',
-                  }}>
-                    <span style={{ fontWeight: 700, color: 'var(--t1)' }}>{m.name}</span>
-                    <span style={{ color: 'var(--t4)' }}> — </span>
-                    {roleOf(m.saju)}
-                  </div>
-                ))}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {enrichedMembers.map((m, i) => {
+                  const elColor = m.saju?.dom ? OHAENG_COLOR[m.saju.dom] : 'var(--gold)';
+                  const isActive = selectedNode === i;
+                  return (
+                    <div key={i}
+                      onClick={() => setSelectedNode(prev => prev === i ? null : i)}
+                      style={{
+                        padding: '5px 12px',
+                        background: isActive ? `${elColor}18` : 'var(--bg2)',
+                        borderRadius: 20,
+                        border: `1px solid ${isActive ? elColor + '55' : 'var(--line)'}`,
+                        fontSize: 'var(--xs)', cursor: 'pointer',
+                        transition: 'all .2s',
+                        boxShadow: isActive ? `0 0 8px ${elColor}33` : 'none',
+                      }}>
+                      <span style={{ fontWeight: 700, color: isActive ? elColor : 'var(--t1)' }}>{m.name}</span>
+                      <span style={{ color: 'var(--t4)', margin: '0 4px' }}>—</span>
+                      <span style={{ color: isActive ? elColor : 'var(--t3)' }}>{roleOf(m.saju)}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* 좋은 별숨 쌍 */}
-            {goodPairs.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 'var(--xs)', color: '#B4963C', fontWeight: 700, marginBottom: 8 }}>
-                  🟡 좋은 별숨 ({goodPairs.length}쌍)
-                </div>
-                {goodPairs.map((p, i) => (
-                  <div key={i}
-                    onClick={() => setSelectedPair(p)}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 14px', background: 'var(--bg2)',
-                      borderRadius: 'var(--r1)', border: '1px solid rgba(180,140,50,0.25)',
-                      marginBottom: 6, cursor: 'pointer',
-                    }}>
-                    <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 600 }}>
-                      {enrichedMembers[p.idxA].name} × {enrichedMembers[p.idxB].name}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 'var(--xs)', color: 'var(--gold)' }}>{p.score}%</span>
-                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>더 자세히 →</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* 쌍 목록 */}
+            {(() => {
+              const visiblePairs = selectedNode !== null
+                ? pairs.filter(p => p.idxA === selectedNode || p.idxB === selectedNode)
+                : pairs;
+              const vGood    = visiblePairs.filter(p => p.type === 'good');
+              const vCaution = visiblePairs.filter(p => p.type === 'caution');
+              const vBad     = visiblePairs.filter(p => p.type === 'bad');
 
-            {/* 주의 별숨 쌍 */}
-            {cautionPairs.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 'var(--xs)', color: '#C47A48', fontWeight: 700, marginBottom: 8 }}>
-                  🟠 주의 별숨 ({cautionPairs.length}쌍)
-                </div>
-                {cautionPairs.map((p, i) => (
-                  <div key={i}
+              const PairRow = ({ p, accentColor }) => {
+                const tier = getCompatTier(p.score);
+                return (
+                  <div
                     onClick={() => setSelectedPair(p)}
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 14px', background: 'var(--bg2)',
-                      borderRadius: 'var(--r1)', border: '1px solid rgba(196,122,72,0.25)',
-                      marginBottom: 6, cursor: 'pointer',
-                    }}>
-                    <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 600 }}>
-                      {enrichedMembers[p.idxA].name} × {enrichedMembers[p.idxB].name}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 'var(--xs)', color: '#C47A48' }}>{p.score}%</span>
-                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>더 자세히 →</span>
+                      padding: '12px 14px',
+                      background: 'var(--bg2)', borderRadius: 'var(--r2)',
+                      border: `1px solid ${accentColor}22`,
+                      marginBottom: 7, cursor: 'pointer',
+                      transition: 'border-color .2s, box-shadow .2s',
+                      position: 'relative', overflow: 'hidden',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = `${accentColor}55`; e.currentTarget.style.boxShadow = `0 2px 12px ${accentColor}18`; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = `${accentColor}22`; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    {/* 왼쪽 액센트 */}
+                    <div style={{
+                      position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
+                      background: accentColor, borderRadius: '2px 0 0 2px',
+                      boxShadow: `0 0 6px ${accentColor}55`,
+                    }} />
+                    <div style={{ paddingLeft: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 700 }}>
+                          {enrichedMembers[p.idxA].name}
+                          <span style={{ color: 'var(--t4)', margin: '0 6px', fontWeight: 400 }}>×</span>
+                          {enrichedMembers[p.idxB].name}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{
+                            fontSize: 'var(--xs)', fontWeight: 700,
+                            color: accentColor, padding: '2px 7px',
+                            background: `${accentColor}18`, borderRadius: 10,
+                          }}>{p.score}%</span>
+                          <span style={{ fontSize: 10, color: 'var(--t4)' }}>→</span>
+                        </div>
+                      </div>
+                      {/* 점수 바 */}
+                      <div style={{ height: 3, background: 'rgba(255,255,255,.05)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', width: `${p.score}%`,
+                          background: `linear-gradient(90deg, ${accentColor}55, ${accentColor})`,
+                          borderRadius: 2, transition: 'width 1s ease',
+                        }} />
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 4 }}>
+                        {tier.emoji} {tier.label}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              };
 
-            {/* 나쁜 별숨 쌍 */}
-            {badPairs.length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 'var(--xs)', color: '#9B4EC4', fontWeight: 700, marginBottom: 8 }}>
-                  🔴 나쁜 별숨 ({badPairs.length}쌍)
-                </div>
-                {badPairs.map((p, i) => (
-                  <div key={i}
-                    onClick={() => setSelectedPair(p)}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 14px', background: 'var(--bg2)',
-                      borderRadius: 'var(--r1)', border: '1px solid rgba(155,78,196,0.25)',
-                      marginBottom: 6, cursor: 'pointer',
-                    }}>
-                    <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 600 }}>
-                      {enrichedMembers[p.idxA].name} × {enrichedMembers[p.idxB].name}
+              return (
+                <>
+                  {vGood.length > 0 && (
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 'var(--xs)', color: REL_COLOR.good, fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
+                        🟡 좋은 별숨 ({vGood.length}쌍)
+                      </div>
+                      {vGood.map((p, i) => <PairRow key={i} p={p} accentColor={REL_COLOR.good} />)}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 'var(--xs)', color: '#9B4EC4' }}>{p.score}%</span>
-                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>더 자세히 →</span>
+                  )}
+                  {vCaution.length > 0 && (
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 'var(--xs)', color: REL_COLOR.caution, fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
+                        🟠 주의 별숨 ({vCaution.length}쌍)
+                      </div>
+                      {vCaution.map((p, i) => <PairRow key={i} p={p} accentColor={REL_COLOR.caution} />)}
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  )}
+                  {vBad.length > 0 && (
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 'var(--xs)', color: REL_COLOR.bad, fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
+                        🔴 나쁜 별숨 ({vBad.length}쌍)
+                      </div>
+                      {vBad.map((p, i) => <PairRow key={i} p={p} accentColor={REL_COLOR.bad} />)}
+                    </div>
+                  )}
+                  {visiblePairs.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '24px 0', fontSize: 'var(--sm)', color: 'var(--t4)' }}>
+                      표시할 쌍이 없어요
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             <button
               className="res-btn"
@@ -828,14 +1335,11 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
           </div>
         </div>
 
-        {/* 상세 분석 패널 */}
         {selectedPair && (
-          <DetailPanel
-            pair={selectedPair}
-            members={enrichedMembers}
-            onClose={() => setSelectedPair(null)}
-            user={user}
-          />
+          <DetailPanel pair={selectedPair} members={enrichedMembers} onClose={() => setSelectedPair(null)} user={user} />
+        )}
+        {groupAnalysisOpen && (
+          <GroupAnalysisPanel members={enrichedMembers} onClose={() => setGroupAnalysisOpen(false)} user={user} />
         )}
       </div>
     );

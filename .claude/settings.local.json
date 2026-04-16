@@ -4,7 +4,15 @@
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
       "Bash(git push:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(node -e \"require\\('./lib/prompts/buildSystem/daily_horoscope_gamified.js'\\)\")",
+      "Bash(node --input-type=module -e \"import './lib/prompts/buildSystem/daily_horoscope_gamified.js'\")",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit -m 'Revert FutureProphecyPage to 별숨의 예언 \\(원복\\) *)",
+      "Bash(git commit *)",
+      "Bash(grep *)",
+      "Bash(python3 *)",
+      "Bash(node *)"
     ]
   }
 }
