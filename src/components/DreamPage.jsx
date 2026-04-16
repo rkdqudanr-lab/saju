@@ -100,7 +100,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
       const res = await callApiProp(contextPrompt, { isChat: true });
       setChatHistory(p => [...p, { role: 'assistant', content: res }]);
     } catch {
-      setChatHistory(p => [...p, { role: 'assistant', content: '별이 잠시 쉬고 있어요 🌙' }]);
+      setChatHistory(p => [...p, { role: 'assistant', content: '별이 잠시 쉬고 있어요' }]);
     } finally {
       setChatLoading(false);
     }
@@ -113,7 +113,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
       <div className="inner">
         {/* 헤더 */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: '2rem', marginBottom: 8 }}>🌙</div>
+          <div style={{ fontSize: '1.8rem', marginBottom: 8, color: 'var(--gold)' }}>☽</div>
           <h2 style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>꿈 해몽</h2>
           <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>
             오늘 밤 꾼 꿈을 별숨에게 들려주세요
@@ -200,7 +200,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
             marginBottom: 24,
           }}
         >
-          {loading ? '별숨이 꿈을 읽고 있어요...' : '🌙 꿈 해몽 받기'}
+          {loading ? '별숨이 꿈을 읽고 있어요...' : '☽ 꿈 해몽 받기'}
         </button>
 
         {/* 결과 */}
@@ -211,7 +211,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
               borderRadius: 'var(--r1)', padding: '16px', marginBottom: 16,
             }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>
-                🌙 별숨의 꿈 해몽
+                ☽ 별숨의 꿈 해몽
               </div>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
                 {mainText}

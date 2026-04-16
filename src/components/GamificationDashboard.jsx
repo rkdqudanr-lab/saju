@@ -114,7 +114,7 @@ export default function GamificationDashboard({
                 marginBottom: '12px',
               }}
             >
-              💎 {currentBp}
+              ✦ {currentBp} BP
             </div>
             <button
               onClick={onRechargeFreeBP}
@@ -225,7 +225,7 @@ export default function GamificationDashboard({
                   marginBottom: '4px',
                 }}
               >
-                🎯 {totalMissionsCompleted}
+                ◇ {totalMissionsCompleted}
               </div>
               <div style={{ fontSize: '11px', color: '#999' }}>
                 총 {missions.length}개 진행 중
@@ -288,7 +288,7 @@ export default function GamificationDashboard({
                   marginBottom: '6px',
                 }}
               >
-                <span>🎯 미션</span>
+                <span>◇ 미션</span>
                 <span>
                   {totalMissionsCompleted} / {nextLevelData?.missions}
                 </span>

@@ -22,21 +22,21 @@ function parseSections(text, tags) {
 }
 
 const COMP_SECTIONS = [
-  { tag: '기질', icon: '🌟', title: '타고난 기질' },
-  { tag: '연애', icon: '💫', title: '연애 · 결혼운' },
-  { tag: '재물', icon: '✨', title: '재물운' },
-  { tag: '직업', icon: '🌙', title: '직업 · 적성' },
-  { tag: '건강', icon: '🌿', title: '건강운' },
-  { tag: '올해', icon: '🌊', title: '올해의 흐름' },
+  { tag: '기질', icon: '✦', title: '타고난 기질' },
+  { tag: '연애', icon: '☽', title: '연애 · 결혼운' },
+  { tag: '재물', icon: '◇', title: '재물운' },
+  { tag: '직업', icon: '◈', title: '직업 · 적성' },
+  { tag: '건강', icon: '✧', title: '건강운' },
+  { tag: '올해', icon: '⊕', title: '올해의 흐름' },
 ];
 
 const ASTRO_SECTIONS = [
-  { tag: '태양', icon: '☀️', title: '태양 · 본질적 자아' },
-  { tag: '달',   icon: '🌙', title: '달 · 내면의 감정' },
+  { tag: '태양', icon: '✦', title: '태양 · 본질적 자아' },
+  { tag: '달',   icon: '☽', title: '달 · 내면의 감정' },
   { tag: '상승', icon: '↑',  title: '상승 · 세상에 내보이는 모습' },
-  { tag: '인연', icon: '💫', title: '인연 · 사랑의 패턴' },
-  { tag: '재능', icon: '✨', title: '재능 · 빛나는 분야' },
-  { tag: '흐름', icon: '🌊', title: '올해의 흐름' },
+  { tag: '인연', icon: '☽', title: '인연 · 사랑의 패턴' },
+  { tag: '재능', icon: '✧', title: '재능 · 빛나는 분야' },
+  { tag: '흐름', icon: '⊕', title: '올해의 흐름' },
 ];
 
 function Spinner() {
@@ -155,13 +155,13 @@ function SajuPanel({ saju, sun, form, buildCtx, user }) {
       {loading && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <Spinner />
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 8 }}>별빛을 읽고 있어요... 잠시만 기다려줘요 🌙</div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 8 }}>별빛을 읽고 있어요... 잠시만 기다려줘요</div>
         </div>
       )}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginBottom: 12 }}>별이 잠시 쉬고 있어요 🌙</div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginBottom: 12 }}>별이 잠시 쉬고 있어요</div>
           <button className="res-btn" onClick={fetch_}>다시 시도해봐요</button>
         </div>
       )}
@@ -272,13 +272,13 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user }) {
       {loading && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <Spinner />
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 8 }}>하늘지도를 읽고 있어요... 잠시만 기다려줘요 🌙</div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 8 }}>하늘지도를 읽고 있어요... 잠시만 기다려줘요</div>
         </div>
       )}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginBottom: 12 }}>별이 잠시 쉬고 있어요 🌙</div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginBottom: 12 }}>별이 잠시 쉬고 있어요</div>
           <button className="res-btn" onClick={fetch_}>다시 시도해봐요</button>
         </div>
       )}
@@ -322,7 +322,7 @@ export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx
           <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderRadius: 14, border: '1px solid var(--line)', overflow: 'hidden' }}>
             {[
               { id: 'saju', label: '✦ 사주 분석' },
-              { id: 'astro', label: '🌟 점성술 분석' },
+              { id: 'astro', label: '✦ 점성술 분석' },
             ].map(tab => (
               <button
                 key={tab.id}

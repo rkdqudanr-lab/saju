@@ -50,8 +50,8 @@ export default function GamificationHeader({
           color: color,
         }}
       >
-        <span>💎</span>
-        <span>{currentBp}</span>
+        <span style={{ fontSize: 13 }}>✦</span>
+        <span>{currentBp} BP</span>
       </div>
 
       {/* 레벨 배지 */}
@@ -97,7 +97,7 @@ export default function GamificationHeader({
           color: '#666',
         }}
       >
-        <span>🎯</span>
+        <span style={{ fontSize: 13 }}>◇</span>
         <span>{missionProgress}</span>
       </div>
     </div>

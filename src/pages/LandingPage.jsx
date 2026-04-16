@@ -223,7 +223,7 @@ export default function LandingPage({
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                 {user.profileImage
                   ? <img className="llc-avatar" src={user.profileImage} alt="프로필" />
-                  : <div className="llc-avatar-placeholder">🌙</div>}
+                  : <div className="llc-avatar-placeholder" style={{ color: 'var(--gold)' }}>✦</div>}
                 <div style={{ flex: 1 }}>
                   <div className="llc-name">{user.nickname} <span style={{ color: 'var(--gold)' }}>✦</span></div>
                   <div className="llc-sub">

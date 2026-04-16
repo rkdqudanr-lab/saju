@@ -6,7 +6,7 @@
 import React, { useCallback, useState } from 'react';
 
 const MISSION_CONFIG = {
-  color: { emoji: '🎨', label: '색상 처방', color: 'var(--teal)', bg: 'rgba(95,173,122,0.08)' },
+  color: { emoji: '◇', label: '색상 처방', color: 'var(--teal)', bg: 'rgba(95,173,122,0.08)' },
   menu:  { emoji: '🍽️', label: '음식 처방', color: '#c08830', bg: 'rgba(192,136,48,0.08)' },
   item:  { emoji: '🌿', label: '라이프 아이템', color: '#7B9EC4', bg: 'rgba(123,158,196,0.08)' },
   do:    { emoji: '✅', label: '오늘의 실천', color: '#5FAD7A', bg: 'rgba(95,173,122,0.10)' },
@@ -63,7 +63,7 @@ export default function MissionDashboard({
   }
 
   function MissionRow({ mission }) {
-    const cfg = MISSION_CONFIG[mission.mission_type] || { emoji: '✨', label: '미션', color: 'var(--gold)', bg: 'var(--goldf)' };
+    const cfg = MISSION_CONFIG[mission.mission_type] || { emoji: '✦', label: '미션', color: 'var(--gold)', bg: 'var(--goldf)' };
     const isCompleted = mission.is_completed;
     const isLoading = completingId === mission.id;
 

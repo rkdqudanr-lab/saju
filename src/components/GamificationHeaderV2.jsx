@@ -86,8 +86,8 @@ export default function GamificationHeaderV2({
           color: color,
         }}
       >
-        <span>💎</span>
-        <span>{currentBp}</span>
+        <span style={{ fontSize: 13 }}>✦</span>
+        <span>{currentBp} BP</span>
         <span
           style={{
             fontSize: '10px',
@@ -143,7 +143,7 @@ export default function GamificationHeaderV2({
           color: 'var(--t3)',
         }}
       >
-        <span>🎯</span>
+        <span style={{ fontSize: 13 }}>◇</span>
         <span>{missionProgress}</span>
       </div>
     </div>

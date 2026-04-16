@@ -533,7 +533,7 @@ export default function SettingsPage({
                 {[
                   { val: 'T', text: '지금 당신의 일간 기질이 논리를 앞세우는 경향이 있어, 감정 표현보다 판단이 먼저 나올 수 있어요. 상대방의 감정 언어를 확인하는 대화를 먼저 시도해봐요.' },
                   { val: 'M', text: '마음이 쓰이는 거 느껴져요. 지금 당신의 별은 연결을 원하는데, 방식이 맞지 않아 엇갈리고 있는 것 같아요. 오늘 먼저 솔직하게 이야기 꺼내봐요.' },
-                  { val: 'F', text: '지금 많이 지치셨겠어요. 잘 풀리지 않는 연애 앞에서 스스로를 탓하지 말아요. 별은 지금 당신에게 잠깐 쉬어가도 된다고 속삭이고 있어요 🌙' },
+                  { val: 'F', text: '지금 많이 지치셨겠어요. 잘 풀리지 않는 연애 앞에서 스스로를 탓하지 말아요. 별은 지금 당신에게 잠깐 쉬어가도 된다고 속삭이고 있어요.' },
                 ].map(ex => (
                   <div
                     key={ex.val}
@@ -660,7 +660,7 @@ export default function SettingsPage({
               { key: 'consult', label: '별숨 상담', desc: '물어보기, 리포트, 예언, 종합사주 등' },
               { key: 'myinfo', label: '나의 별숨', desc: '대운 흐름, 별숨 통계, 별숨 광장' },
               { key: 'fortune', label: '운세 & 인연', desc: '궁합, 모임, 기념일, 사주원국' },
-              { key: 'special', label: '✨ 특별 기능', desc: '꿈 해몽, 택일, 이름 풀이' },
+              { key: 'special', label: '✦ 특별 기능', desc: '꿈 해몽, 택일, 이름 풀이' },
             ].map(({ key, label, desc }) => {
               const hidden = (sidebarPrefs?.hiddenGroups || []).includes(key);
               const toggle = () => {
