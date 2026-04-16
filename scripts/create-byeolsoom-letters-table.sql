@@ -41,31 +41,44 @@ CREATE TRIGGER byeolsoom_letters_updated_at_trigger
   FOR EACH ROW EXECUTE FUNCTION update_byeolsoom_letters_updated_at();
 
 -- =====================================================
+-- x-kakao-id 헤더 읽는 헬퍼 함수
+-- =====================================================
+
+CREATE OR REPLACE FUNCTION get_kakao_id()
+RETURNS TEXT AS $$
+BEGIN
+  RETURN (
+    current_setting('request.headers', true)::json->>'x-kakao-id'
+  );
+EXCEPTION WHEN OTHERS THEN
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- =====================================================
 -- RLS (Row Level Security) 정책
--- x-kakao-id 헤더 기반 인증 (기존 앱과 동일 패턴)
 -- =====================================================
 
 ALTER TABLE byeolsoom_letters ENABLE ROW LEVEL SECURITY;
 
--- 누구나 pending 상태 편지 목록은 읽을 수 있다 (매칭용)
--- 단, content는 매칭된 본인만 볼 수 있다
-CREATE POLICY "pending_list_visible" ON byeolsoom_letters
+-- pending 편지 목록 + 본인 편지 읽기
+CREATE POLICY "letters_select" ON byeolsoom_letters
   FOR SELECT
   USING (
     status = 'pending'
-    OR sender_kakao_id = request.header('x-kakao-id')
-    OR recipient_kakao_id = request.header('x-kakao-id')
+    OR sender_kakao_id    = get_kakao_id()
+    OR recipient_kakao_id = get_kakao_id()
   );
 
 -- 본인만 편지 작성 가능
-CREATE POLICY "insert_own_letter" ON byeolsoom_letters
+CREATE POLICY "letters_insert" ON byeolsoom_letters
   FOR INSERT
-  WITH CHECK (sender_kakao_id = request.header('x-kakao-id'));
+  WITH CHECK (sender_kakao_id = get_kakao_id());
 
 -- 본인이 보낸/받은 편지만 업데이트 가능
-CREATE POLICY "update_own_letter" ON byeolsoom_letters
+CREATE POLICY "letters_update" ON byeolsoom_letters
   FOR UPDATE
   USING (
-    sender_kakao_id = request.header('x-kakao-id')
-    OR recipient_kakao_id = request.header('x-kakao-id')
+    sender_kakao_id    = get_kakao_id()
+    OR recipient_kakao_id = get_kakao_id()
   );
