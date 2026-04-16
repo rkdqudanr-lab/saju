@@ -154,10 +154,32 @@ function OhaengBar({ members }) {
 }
 
 // ── 입력 폼 컴포넌트 ──
+const BIRTH_HOURS = ['자시(23-1시)','축시(1-3시)','인시(3-5시)','묘시(5-7시)','진시(7-9시)','사시(9-11시)',
+  '오시(11-13시)','미시(13-15시)','신시(15-17시)','유시(17-19시)','술시(19-21시)','해시(21-23시)'];
+
+function isValidBirthDate(y, m, d) {
+  const year = parseInt(y, 10), month = parseInt(m, 10), day = parseInt(d, 10);
+  if (!year || !month || !day) return false;
+  if (year < 1900 || year > new Date().getFullYear()) return false;
+  const max = new Date(year, month, 0).getDate(); // month는 1-based이므로 month+1의 0일 = month의 마지막일
+  return day >= 1 && day <= max;
+}
+
 function MemberForm({ onSubmit, title }) {
   const [form, setForm] = useState({ name: '', by: '', bm: '', bd: '', bh: '', gender: '' });
-  const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const ok = form.name && form.by && form.bm && form.bd && form.gender;
+  const [dateError, setDateError] = useState('');
+  const upd = (k, v) => { setForm(p => ({ ...p, [k]: v })); setDateError(''); };
+  const trimmedName = form.name.trim();
+  const ok = trimmedName && form.by && form.bm && form.bd && form.gender;
+
+  const handleSubmit = () => {
+    if (!isValidBirthDate(form.by, form.bm, form.bd)) {
+      setDateError('유효하지 않은 날짜예요. 다시 확인해봐요.');
+      return;
+    }
+    onSubmit({ ...form, name: trimmedName });
+  };
+
   return (
     <div style={{ padding: '0 4px' }}>
       <div style={{ fontWeight: 700, color: 'var(--t1)', marginBottom: 16 }}>{title}</div>
@@ -166,20 +188,28 @@ function MemberForm({ onSubmit, title }) {
         <input className="inp" placeholder="출생년도" inputMode="numeric"
           value={form.by} onChange={e => upd('by', e.target.value.replace(/\D/g, '').slice(0, 4))}
           style={{ marginBottom: 0 }} />
-        <select className="inp" value={form.bm} onChange={e => { const nm = e.target.value; const max = getDaysInMonth(form.by, nm); setForm(p => ({ ...p, bm: nm, bd: p.bd && parseInt(p.bd) > max ? '' : p.bd })); }} style={{ marginBottom: 0 }}>
+        <select className="inp" value={form.bm} onChange={e => {
+          const nm = e.target.value;
+          const max = getDaysInMonth(form.by, nm);
+          setForm(p => ({ ...p, bm: nm, bd: p.bd && parseInt(p.bd) > max ? '' : p.bd }));
+          setDateError('');
+        }} style={{ marginBottom: 0 }}>
           <option value="">월</option>{[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}
         </select>
         <select className="inp" value={form.bd} onChange={e => upd('bd', e.target.value)} style={{ marginBottom: 0 }}>
           <option value="">일</option>{[...Array(getDaysInMonth(form.by, form.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}
         </select>
       </div>
+      {dateError && (
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', marginBottom: 8, animation: 'fadeUp .2s ease' }}>
+          {dateError}
+        </div>
+      )}
       <div style={{ marginBottom: 'var(--sp2)' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6 }}>태어난 시간 (모르면 건너뛰어요)</div>
         <select className="inp" value={form.bh} onChange={e => upd('bh', e.target.value)} style={{ marginBottom: 0 }}>
           <option value="">모름</option>
-          {['자시(23-1시)','축시(1-3시)','인시(3-5시)','묘시(5-7시)','진시(7-9시)','사시(9-11시)',
-            '오시(11-13시)','미시(13-15시)','신시(15-17시)','유시(17-19시)','술시(19-21시)','해시(21-23시)']
-            .map((h, i) => <option key={i} value={i * 2 + 0}>{h}</option>)}
+          {BIRTH_HOURS.map((h, i) => <option key={i} value={i * 2}>{h}</option>)}
         </select>
       </div>
       <div className="gender-group" style={{ marginBottom: 'var(--sp2)' }}>
@@ -188,7 +218,7 @@ function MemberForm({ onSubmit, title }) {
             onClick={() => upd('gender', g)}>{g}</button>
         ))}
       </div>
-      <button className="btn-main" disabled={!ok} onClick={() => onSubmit(form)}>
+      <button className="btn-main" disabled={!ok} onClick={handleSubmit}>
         모임에 참여하기 ✦
       </button>
     </div>
@@ -247,7 +277,7 @@ function RelationGraph({ members, pairs, selectedNode, onNodeClick }) {
               {m.name.slice(0, 3)}
             </text>
             <text x={pos.x} y={pos.y + 10} textAnchor="middle"
-              fill={isDimmed ? 'var(--t5)' : 'var(--gold)'} fontSize={9} fontFamily="var(--ff)"
+              fill={isDimmed ? 'var(--t4)' : 'var(--gold)'} fontSize={9} fontFamily="var(--ff)"
               style={{ transition: 'fill 0.25s' }}>
               {m.saju ? ON[m.saju.dom] : ''}
             </text>
@@ -466,6 +496,7 @@ function GroupAnalysisPanel({ members, onClose, user }) {
           userMessage: `우리 모임 ${members.length}명의 전체 별숨 에너지를 분석해주세요. 이 팀의 집단 기운, 강점, 약점, 주의해야 할 점, 함께할 때 가장 빛나는 순간을 별숨의 언어로 이야기해주세요.`,
           context: ctx,
           isGroupAnalysis: true,
+          isFullGroupAnalysis: true,
           isChat: true,
           kakaoId: user?.id || null,
           clientHour: new Date().getHours(),
@@ -626,7 +657,8 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
 
   // localStorage에 멤버 목록 백업
   const saveLocalMembers = (code, memberList) => {
-    try { localStorage.setItem(getGroupLocalKey(code), JSON.stringify(memberList)); } catch {}
+    try { localStorage.setItem(getGroupLocalKey(code), JSON.stringify(memberList)); }
+    catch (e) { console.warn('[GroupBulseum] localStorage 저장 실패 (개인정보 보호 모드?)', e?.message); }
   };
 
   // 새 모임 만들기
@@ -1011,8 +1043,9 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
               {enrichedMembers.map((m, i) => {
                 const elColor = m.saju?.dom ? OHAENG_COLOR[m.saju.dom] : 'var(--gold)';
                 const elChar  = m.saju?.dom ? OHAENG_CHAR[m.saju.dom] : '✦';
+                const mKey = m.id || `${m.name}_${m.birth_year}_${m.birth_month}_${m.birth_day}`;
                 return (
-                  <div key={i} style={{
+                  <div key={mKey} style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     background: 'var(--bg2)', borderRadius: 'var(--r2)',
                     border: '1px solid var(--line)',
@@ -1206,8 +1239,9 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
                 {enrichedMembers.map((m, i) => {
                   const elColor = m.saju?.dom ? OHAENG_COLOR[m.saju.dom] : 'var(--gold)';
                   const isActive = selectedNode === i;
+                  const mKey = m.id || `role_${m.name}_${m.birth_year}_${m.birth_month}_${m.birth_day}`;
                   return (
-                    <div key={i}
+                    <div key={mKey}
                       onClick={() => setSelectedNode(prev => prev === i ? null : i)}
                       style={{
                         padding: '5px 12px',

@@ -106,7 +106,7 @@ async function checkRateLimit(ip) {
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, responseStyle, kakaoId, clientHour, precision_level, gender } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isFullGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, responseStyle, kakaoId, clientHour, precision_level, gender } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -141,6 +141,7 @@ function validateRequest(body) {
       isAstrology: !!isAstrology,
       isProfileQuestion: !!isProfileQuestion,
       isGroupAnalysis: !!isGroupAnalysis,
+      isFullGroupAnalysis: !!isFullGroupAnalysis,
       teamMode: !!(teamMode || isGroupAnalysis),
       isCalendarMonth: !!isCalendarMonth,
       isSlot: !!isSlot,
@@ -185,7 +186,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: '로그인이 필요해요 🌙' });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, responseStyle, precision_level: precisionLevel, clientHour, gender } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isFullGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, responseStyle, precision_level: precisionLevel, clientHour, gender } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
@@ -216,15 +217,23 @@ export default async function handler(req, res) {
 반드시 JSON만 응답하세요: [{"id":"aq_1","q":"질문 내용"},{"id":"aq_2","q":"..."},...]`
     : null;
 
-  // teamMode/isGroupAnalysis: 그룹 관계 분석 전용 시스템 프롬프트
-  const groupAnalysisSystem = (isGroupAnalysis || teamMode)
+  // 그룹 전체 분석 (N명): 팀 집단 에너지 분석 전용
+  const fullGroupSystem = isFullGroupAnalysis
+    ? `당신은 별숨(byeolsoom)이에요. 여러 사람의 사주와 별자리를 읽고 이 모임이 가진 집단 별숨을 따뜻하게 풀어줘요.
+이 팀의 전체 오행 에너지 구성, 집단의 강점, 주의해야 할 취약점, 함께할 때 가장 빛나는 순간, 이 모임에서 각자가 맡게 되는 자연스러운 역할을 별숨의 언어로 이야기해주세요.
+개인을 지목해 평가하지 말고, 모임 전체의 에너지 흐름을 따뜻하고 입체적으로 묘사해주세요.
+마크다운 문법(## --- ** * - 1.) 절대 금지. 소제목 금지. 번호 금지. 섹션 구분선 금지. 모든 텍스트는 일반 텍스트로만.`
+    : null;
+
+  // teamMode/isGroupAnalysis: 두 사람 관계 분석 전용 시스템 프롬프트
+  const groupAnalysisSystem = !isFullGroupAnalysis && (isGroupAnalysis || teamMode)
     ? `당신은 별숨(byeolsoom)이에요. 여러 사람의 사주와 별자리를 읽고 그들의 관계를 따뜻하고 재밌게 분석해줘요.
 두 사람의 관계를 분석할 때는: 좋은 점, 조심해야 할 점, 함께하면 시너지가 나는 상황, 서로에게 필요한 것을 별숨의 언어로 이야기해주세요.
 판단하지 말고, 재밌고 따뜻하게 두 별의 관계를 풀어주세요.
 마크다운 문법(## --- ** * - 1.) 절대 금지. 소제목 금지. 번호 금지. 섹션 구분선 금지. 모든 텍스트는 일반 텍스트로만.`
     : null;
 
-  const systemWithContext = (profileQuestionSystem || groupAnalysisSystem || systemBase)
+  const systemWithContext = (profileQuestionSystem || fullGroupSystem || groupAnalysisSystem || systemBase)
     + (context
       ? `\n\n━━━ 오늘 상담하는 분의 기운 데이터 ━━━\n${context}\n(위 데이터는 취재 노트예요. 이걸 그대로 보여주는 게 아니라, 에세이의 재료로 자연스럽게 녹여요.)`
       : '');
@@ -243,6 +252,7 @@ export default async function handler(req, res) {
     isScenario          ? 2000 :
     isNatal             ? 2500 :
     isZodiac            ? 1200 :
+    isFullGroupAnalysis ? 2200 :
     isGroupAnalysis     ? 1800 :
     isProfileQuestion   ?  800 :
     isDaily             ? 1800 :

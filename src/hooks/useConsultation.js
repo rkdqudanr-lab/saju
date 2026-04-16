@@ -586,6 +586,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           clientHour: new Date().getHours(),
         }),
       });
+      if (res.status === 401) {
+        if (typeof onSessionExpired === 'function') onSessionExpired();
+        if (typeof showToast === 'function') showToast('세션이 만료됐어요. 다시 로그인해주세요 🌙', 'warn');
+        if (typeof onLoginRequired === 'function') onLoginRequired();
+        throw new Error('SESSION_EXPIRED');
+      }
       if (!res.ok) throw new Error('스트리밍 API 오류');
       const reader = res.body.getReader();
       const decoder = new TextDecoder();

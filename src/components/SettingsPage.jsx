@@ -488,7 +488,7 @@ export default function SettingsPage({
                         color: responseStyle === opt.value ? 'var(--gold)' : 'var(--t4)',
                         opacity: 0.8,
                       }}>
-                        {opt.sub}
+                        {opt.desc}
                       </span>
                     </button>
                   ))}
@@ -654,7 +654,7 @@ export default function SettingsPage({
                 role="switch"
                 aria-checked={pushEnabled}
                 aria-label="푸시 알림 켜기"
-                onClick={handlePushToggle}
+                onClick={e => { e.stopPropagation(); handlePushToggle(e); }}
               />
               <span className="toggle-label">
                 기기 알림 허용 {pushEnabled ? '(켜짐)' : '(꺼짐)'}
