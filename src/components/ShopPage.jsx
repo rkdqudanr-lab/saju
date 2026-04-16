@@ -281,9 +281,9 @@ export default function ShopPage({ showToast }) {
 
   // 가이드용 랜덤 행운 부적 목록
   const GACHA_CHARMS = [
-    { id: 'talisman_1', category: 'talisman', name: '재입고 금두꺼비', emoji: '◈', description: '오늘의 재물운 폭발 부적', bp_cost: 15, rarity: 'rare' },
-    { id: 'talisman_2', category: 'talisman', name: '은하수 타로카드', emoji: '◈', description: '생각지도 못한 인연을 끌어당깁니다', bp_cost: 15, rarity: 'legendary' },
-    { id: 'talisman_3', category: 'talisman', name: '만사형통 부적', emoji: '◈', description: '모든 일이 막힘 없이 스르륵 풀려요', bp_cost: 15, rarity: 'common' },
+    { id: 'talisman_1', category: 'talisman', name: '재입고 금두꺼비', emoji: '🐸', description: '오늘의 재물운 폭발 부적', bp_cost: 15, rarity: 'rare' },
+    { id: 'talisman_2', category: 'talisman', name: '은하수 타로카드', emoji: '🌌', description: '생각지도 못한 인연을 끌어당깁니다', bp_cost: 15, rarity: 'legendary' },
+    { id: 'talisman_3', category: 'talisman', name: '만사형통 부적', emoji: '🧧', description: '모든 일이 막힘 없이 스르륵 풀려요', bp_cost: 15, rarity: 'common' },
   ];
 
   async function handleGacha() {
@@ -308,7 +308,7 @@ export default function ShopPage({ showToast }) {
 
       setCurrentBP(newBP ?? currentBP - 15);
       setOwnedIds(prev => new Set([...prev, wonItem.id]));
-      showToast?.(`[${wonItem.name}] 부적 획득 성공! ✦`, 'success');
+      showToast?.(`🎉 [${wonItem.name}] 부적 획득 성공! ✦`, 'success');
     } catch {
       showToast?.('뽑기에 실패했어요. 다시 시도해봐요.', 'error');
     } finally {
@@ -444,7 +444,7 @@ export default function ShopPage({ showToast }) {
           </div>
         ) : category === '부적' ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--gold)' }}>
-            <div style={{ fontSize: 40, marginBottom: 12, color: 'var(--gold)' }}>◈</div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🧧</div>
             <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--gold)', marginBottom: 8 }}>행운 부적 랜덤 뽑기</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 20 }}>15 BP로 하루의 기운을 밝히는 한정판 부적을 수집해보세요!</div>
             <button
@@ -457,12 +457,12 @@ export default function ShopPage({ showToast }) {
           </div>
         ) : category === '보관함' && filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>
-            <div style={{ fontSize: 40, marginBottom: 12, color: 'var(--t4)' }}>◈</div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🗃️</div>
             <div style={{ fontSize: 'var(--sm)' }}>아직 수집한 아이템이 없어요</div>
           </div>
         ) : filtered.length === 0 && category !== '보관함' ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>
-            <div style={{ fontSize: 32, marginBottom: 12, color: 'var(--t4)' }}>◇</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🛍️</div>
             <div style={{ fontSize: 'var(--sm)' }}>준비 중인 아이템이에요</div>
           </div>
         ) : (

@@ -95,7 +95,7 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
                     style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
                     onClick={() => saveImage('prophecy', text, selectedPeriod)}
                   >
-                    ↓ 이미지 저장
+                    🖼 이미지 저장
                   </button>
                 )}
                 {shareResult && (

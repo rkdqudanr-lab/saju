@@ -152,13 +152,13 @@ export function getTodaysLuckyNumber(kakaoId, date = new Date()) {
  */
 export function getRewardMessage(bpReward, isCorrect) {
   if (isCorrect) {
-    return '✦ 완벽한 일치! 운의 선택자가 되셨어요!';
+    return '🎉 완벽한 일치! 운의 선택자가 되셨어요!';
   }
   if (bpReward === 40) {
-    return '✦ 훌륭해요! 별이 당신을 도왔어요!';
+    return '✨ 훌륭해요! 별이 당신을 도왔어요!';
   }
   if (bpReward === 15) {
-    return '✦ 좋아요! 별숨이 반응했어요!';
+    return '🌟 좋아요! 별숨이 반응했어요!';
   }
-  return '☽ 내일 다시 도전해보세요!';
+  return '🌙 내일 다시 도전해보세요!';
 }

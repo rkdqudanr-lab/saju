@@ -64,17 +64,17 @@ const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","
 
 // 운세/일기 표시용 맵
 const MOOD_MAP = {
-  1: { emoji: '↓↓', label: '많이 힘들어요' },
-  2: { emoji: '↓', label: '조금 힘들어요' },
-  3: { emoji: '—', label: '그냥 그래요' },
-  4: { emoji: '↑', label: '좋은 편이에요' },
-  5: { emoji: '↑↑', label: '아주 좋아요' },
+  1: { emoji: '😞', label: '많이 힘들어요' },
+  2: { emoji: '😕', label: '조금 힘들어요' },
+  3: { emoji: '😐', label: '그냥 그래요' },
+  4: { emoji: '🙂', label: '좋은 편이에요' },
+  5: { emoji: '😄', label: '아주 좋아요' },
 };
 const WEATHER_MAP = {
   sunny: '☀️', cloudy: '☁️', rain: '🌧️', snow: '❄️',
-  fine_dust: '◌', thunder: '↯', wind: '≈',
+  fine_dust: '😷', thunder: '⛈️', wind: '🌬️',
 };
-const ENERGY_MAP = { 1: '○', 2: '◔', 3: '◑', 4: '◕', 5: '●' };
+const ENERGY_MAP = { 1: '🪫', 2: '🔋', 3: '🔋', 4: '🔋', 5: '⚡' };
 
 // 오늘 별숨 카드 텍스트 파싱 (달력 내 미리보기용)
 function parseFortuneText(text) {
@@ -90,7 +90,7 @@ function parseFortuneText(text) {
   return { summary, items };
 }
 
-const FORTUNE_ITEM_ICONS = ['◇', '✧', '↗', '✦', '☽'];
+const FORTUNE_ITEM_ICONS = ['🎨', '🌿', '🧭', '✨', '🌙'];
 
 export default function SajuCalendar({ form, setStep, askQuick, user, callApi, showToast, setDiaryViewDate }) {
   const now = new Date();
@@ -360,7 +360,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
       <div className="inner">
         {/* 헤더 */}
         <div style={{ textAlign: 'center', marginBottom: 'var(--sp3)' }}>
-          <div style={{ fontSize: '1.5rem', marginBottom: 4, color: 'var(--gold)' }}>◇</div>
+          <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>🗓️</div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>별숨 달력</h2>
           <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>
             일정을 입력하고 별숨에게 바로 물어봐요
@@ -577,7 +577,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
             {selectedDiary && (
               <div style={{ marginBottom: 14, background: 'var(--bg1)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
                 <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--lav, #9b8ec4)', fontWeight: 700, letterSpacing: '.04em' }}>◇ 나의 하루를 별숨에게</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--lav, #9b8ec4)', fontWeight: 700, letterSpacing: '.04em' }}>📓 나의 하루를 별숨에게</span>
                   {user?.id && (
                     <div style={{ display: 'flex', gap: 2 }}>
                       <button
@@ -619,7 +619,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                   )}
                   {selectedDiary.gratitude && (
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>
-                      ✧ 감사했던 일: {selectedDiary.gratitude}
+                      🌿 감사했던 일: {selectedDiary.gratitude}
                     </div>
                   )}
                   {selectedDiary.tomorrow_goal && (
@@ -651,7 +651,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}
               >
-                ◇ 오늘 하루를 별숨에게 기록하러 가기 →
+                📓 오늘 하루를 별숨에게 기록하러 가기 →
               </button>
             )}
 
@@ -684,7 +684,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                         </>
                       ) : (
                         <>
-                          <span style={{ flex: 1, fontSize: 'var(--sm)', color: 'var(--t1)' }}>◇ {ev.title}</span>
+                          <span style={{ flex: 1, fontSize: 'var(--sm)', color: 'var(--t1)' }}>📅 {ev.title}</span>
                           <button
                             onClick={() => askAboutEvent(ev.title, selectedData.score, selectedData.d)}
                             style={{ background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.15))', border: '1px solid var(--gold)', borderRadius: 20, padding: '5px 12px', fontSize: 'var(--xs)', color: 'var(--gold)', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
@@ -763,7 +763,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                     </div>
                     <div style={{ flex: 1 }}>
                       {dayEvs.map(ev => (
-                        <div key={ev.id} style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 2 }}>◇ {ev.title}</div>
+                        <div key={ev.id} style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 2 }}>📅 {ev.title}</div>
                       ))}
                     </div>
                     <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>›</span>
@@ -790,7 +790,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               onClick={() => setStep(17)}
               style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
             >
-              <span style={{ fontSize: '1rem', color: 'var(--gold)' }}>◇</span>
+              <span style={{ fontSize: '1rem' }}>📓</span>
               <div>
                 <div style={{ fontWeight: 600, marginBottom: 2 }}>오늘 하루를 별숨에게</div>
                 <div style={{ color: 'var(--t4)', fontSize: '0.65rem' }}>일기를 쓰고 별숨의 해석을 들어봐요</div>

@@ -68,9 +68,9 @@ export default function GamificationDashboard({
         }}
       >
         {[
-          { id: 'overview', label: '◇ 개요' },
-          { id: 'progress', label: '↑ 진행도' },
-          { id: 'history', label: '◈ 이력' },
+          { id: 'overview', label: '📊 개요' },
+          { id: 'progress', label: '📈 진행도' },
+          { id: 'history', label: '📋 이력' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -114,7 +114,7 @@ export default function GamificationDashboard({
                 marginBottom: '12px',
               }}
             >
-              ✦ {currentBp} BP
+              💎 {currentBp}
             </div>
             <button
               onClick={onRechargeFreeBP}
@@ -189,7 +189,7 @@ export default function GamificationDashboard({
                   marginBottom: '4px',
                 }}
               >
-                ↑ {loginStreak}
+                🔥 {loginStreak}
               </div>
               <div style={{ fontSize: '11px', color: '#999' }}>
                 {loginStreak}일 연속
@@ -225,7 +225,7 @@ export default function GamificationDashboard({
                   marginBottom: '4px',
                 }}
               >
-                ◇ {totalMissionsCompleted}
+                🎯 {totalMissionsCompleted}
               </div>
               <div style={{ fontSize: '11px', color: '#999' }}>
                 총 {missions.length}개 진행 중
@@ -252,7 +252,7 @@ export default function GamificationDashboard({
                   marginBottom: '4px',
                 }}
               >
-                ◈ {badtimeBlocksCount}
+                🛡️ {badtimeBlocksCount}
               </div>
               <div style={{ fontSize: '11px', color: '#999' }}>
                 배드타임 차단
@@ -288,7 +288,7 @@ export default function GamificationDashboard({
                   marginBottom: '6px',
                 }}
               >
-                <span>◇ 미션</span>
+                <span>🎯 미션</span>
                 <span>
                   {totalMissionsCompleted} / {nextLevelData?.missions}
                 </span>
@@ -323,7 +323,7 @@ export default function GamificationDashboard({
                   marginBottom: '6px',
                 }}
               >
-                <span>◈ 액막이</span>
+                <span>🛡️ 액막이</span>
                 <span>
                   {badtimeBlocksCount} / {nextLevelData?.badtimes}
                 </span>
@@ -358,7 +358,7 @@ export default function GamificationDashboard({
                   marginBottom: '6px',
                 }}
               >
-                <span>↑ 로그인 스트릭</span>
+                <span>🔥 로그인 스트릭</span>
                 <span>
                   {loginStreak} / {nextLevelData?.streak}
                 </span>

@@ -106,7 +106,7 @@ export function useAppHandlers({
     const text = answers.join('\n\n');
     if (!text) return;
     navigator.clipboard?.writeText(text).then(() => {
-      showToast('복사됐어요', 'success');
+      showToast('복사됐어요 📋', 'success');
       if (copyTimer.current) clearTimeout(copyTimer.current);
       setCopyDone(true);
       copyTimer.current = setTimeout(() => setCopyDone(false), 1500);
@@ -164,7 +164,7 @@ export function useAppHandlers({
     if (!answers[0]) return;
     if (typeof window.gtag === 'function') window.gtag('event', 'fortune_card_save');
     try {
-      showToast?.('카드를 만드는 중이에요...', 'info');
+      showToast?.('카드를 만드는 중이에요... ✨', 'info');
       const dataUrl = await captureShareCard(shareCardRef);
       setCardDataUrl(dataUrl);
       setShareModal({ open: true, title: '카드뉴스 저장', text: '' });
@@ -182,7 +182,7 @@ export function useAppHandlers({
     setCardSummary(summary);
     await new Promise(r => setTimeout(r, 100));
     try {
-      showToast?.('카드를 만드는 중이에요...', 'info');
+      showToast?.('카드를 만드는 중이에요... ✨', 'info');
       const dataUrl = await captureShareCard(shareCardRef);
       setCardDataUrl(dataUrl);
       setShareModal({ open: true, title: '꿈 해몽 카드 저장', text: '' });
@@ -203,7 +203,7 @@ export function useAppHandlers({
     setCardSummary(summary);
     await new Promise(r => setTimeout(r, 100));
     try {
-      showToast?.('카드를 만드는 중이에요...', 'info');
+      showToast?.('카드를 만드는 중이에요... ✨', 'info');
       const dataUrl = await captureShareCard(shareCardRef);
       setCardDataUrl(dataUrl);
       setShareModal({ open: true, title: '택일 카드 저장', text: '' });

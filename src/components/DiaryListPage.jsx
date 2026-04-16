@@ -5,10 +5,10 @@ import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 //  📚 일기 모아보기 — 과거 일기 목록 페이지 (Step 20)
 // ═══════════════════════════════════════════════════════════
 
-const MOOD_EMOJI = { 1: '↓↓', 2: '↓', 3: '—', 4: '↑', 5: '↑↑' };
+const MOOD_EMOJI = { 1: '😞', 2: '😕', 3: '😐', 4: '🙂', 5: '😄' };
 const WEATHER_EMOJI = {
   sunny: '☀️', cloudy: '☁️', rain: '🌧️', snow: '❄️',
-  fine_dust: '◌', thunder: '↯', wind: '≈',
+  fine_dust: '😷', thunder: '⛈️', wind: '🌬️',
 };
 
 // ── 잔디 심기 스트릭 달력 ──
@@ -60,7 +60,7 @@ function StreakCalendar({ entries }) {
               background: 'var(--goldf)', padding: '2px 8px', borderRadius: 10,
               border: '1px solid var(--acc)',
             }}>
-              ↑ {streak}일 연속!
+              🔥 {streak}일 연속!
             </span>
           )}
         </div>
@@ -164,7 +164,7 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
       <div className="inner" style={{ paddingTop: 56, paddingBottom: 60 }}>
         {/* 헤더 */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.1em', marginBottom: 4 }}>◈ 일기 모아보기</div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.1em', marginBottom: 4 }}>📚 일기 모아보기</div>
           <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)' }}>나의 별숨 일기</div>
           {entries.length > 0 && (
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 4 }}>
@@ -248,7 +248,7 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
                         )}
                         {entry.gratitude && (
                           <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-                            ✧ {entry.gratitude.slice(0, 40)}{entry.gratitude.length > 40 ? '...' : ''}
+                            🌿 {entry.gratitude.slice(0, 40)}{entry.gratitude.length > 40 ? '...' : ''}
                           </div>
                         )}
                       </div>

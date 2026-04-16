@@ -178,7 +178,7 @@ export function useGamification(user, showToast) {
           currentBp: newBp,
         }));
 
-        if (showToast) showToast(`+${amount} BP 획득!`);
+        if (showToast) showToast(`+${amount} BP 획득! 🎉`);
 
         return { success: true, newBp };
       } catch (error) {
@@ -200,7 +200,7 @@ export function useGamification(user, showToast) {
 
       // BP 부족 체크
       if (currentState.currentBp < cost) {
-        if (showToast) showToast('BP가 부족합니다');
+        if (showToast) showToast('BP가 부족합니다 😢');
         return { success: false, message: 'BP 부족' };
       }
 
@@ -256,7 +256,7 @@ export function useGamification(user, showToast) {
           badtimeBlocksCount: prev.badtimeBlocksCount + 1,
         }));
 
-        if (showToast) showToast(`액막이 발동! -${cost} BP`);
+        if (showToast) showToast(`액막이 발동! -${cost} BP 🛡️`);
 
         return { success: true, newBp };
       } catch (error) {
@@ -309,7 +309,7 @@ export function useGamification(user, showToast) {
         const STREAK_MILESTONES = { 7: 20, 14: 30, 30: 50 };
         if (STREAK_MILESTONES[achievedStreak]) {
           await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);
-          if (showToast) showToast(`${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');
+          if (showToast) showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');
         }
 
         // 로컬 상태 업데이트
@@ -426,7 +426,7 @@ export function useGamification(user, showToast) {
       setMissions(prev =>
         prev.map(m => m.id === missionId ? { ...m, is_completed: true, completed_at: completedAt } : m)
       );
-      if (showToast) showToast('미션 완료!');
+      if (showToast) showToast('미션 완료! 🎯');
 
       try {
         const authClient = getAuthenticatedClient(user.id);
@@ -488,7 +488,7 @@ export function useGamification(user, showToast) {
                   .maybeSingle();
                 if (!milestoneLog) {
                   await earnBP(BP_EARNING_RULES.MISSION_MILESTONE, 'milestone');
-                  if (showToast) showToast(`미션 50% 달성 보너스 +${BP_EARNING_RULES.MISSION_MILESTONE} BP`);
+                  if (showToast) showToast(`미션 50% 달성 보너스 +${BP_EARNING_RULES.MISSION_MILESTONE} BP ✨`);
                 }
               }
             }
@@ -537,7 +537,7 @@ export function useGamification(user, showToast) {
 
         const result = await earnBP(BP_EARNING_RULES.DIARY_COMPLETE, 'diary');
         if (result.success && showToast) {
-          showToast(`일기 작성 완료! +${BP_EARNING_RULES.DIARY_COMPLETE} BP`);
+          showToast(`일기 작성 완료! +${BP_EARNING_RULES.DIARY_COMPLETE} BP 🌙`);
         }
         return result;
       } catch (error) {
@@ -571,7 +571,7 @@ export function useGamification(user, showToast) {
 
         // 이미 오늘 충전했으면 스킵
         if (lastRechargeDate === today) {
-          if (showToast) showToast('내일 다시 충전할 수 있습니다');
+          if (showToast) showToast('내일 다시 충전할 수 있습니다 ⏰');
           return { success: false, message: '일일 1회 제한' };
         }
 

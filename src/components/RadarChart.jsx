@@ -153,7 +153,7 @@ export default function RadarChart({ form, otherProfiles, setStep, onAddOther })
     return (
       <div className="page step-fade">
         <div className="inner" style={{ textAlign: 'center', paddingTop: 60 }}>
-          <div style={{ fontSize: '2rem', marginBottom: 12, color: 'var(--t4)' }}>◈</div>
+          <div style={{ fontSize: '2rem', marginBottom: 12 }}>🕸️</div>
           <div style={{ color: 'var(--t2)' }}>먼저 나의 생년월일을 입력해야 해요</div>
           <button className="btn-main" style={{ marginTop: 20, width: 'auto', padding: '12px 32px' }} onClick={() => setStep(1)}>프로필 입력하기 ✦</button>
         </div>
@@ -165,14 +165,14 @@ export default function RadarChart({ form, otherProfiles, setStep, onAddOther })
     <div className="page step-fade">
       <div className="inner">
         <div style={{ textAlign: 'center', marginBottom: 'var(--sp3)' }}>
-          <div style={{ fontSize: '1.5rem', marginBottom: 4, color: 'var(--gold)' }}>◈</div>
+          <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>🕸️</div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>나의 궁합 레이더</h2>
           <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>사주 오행으로 보는 5가지 궁합 영역</p>
         </div>
 
         {validOthers.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)' }}>
-            <div style={{ fontSize: '1.5rem', marginBottom: 10, color: 'var(--t4)' }}>◇</div>
+            <div style={{ fontSize: '1.5rem', marginBottom: 10 }}>👥</div>
             <div style={{ color: 'var(--t2)', fontSize: 'var(--sm)', marginBottom: 16 }}>등록된 지인이 없어요<br />상대방을 추가하면 레이더가 그려져요</div>
             <button className="btn-main" style={{ width: 'auto', padding: '12px 28px' }} onClick={onAddOther}>+ 지인 추가하기</button>
           </div>

@@ -77,7 +77,7 @@ export default function SynergyDashboard({
             textAlign: 'center',
           }}
         >
-          ◇ 미션 ({missions.length})
+          📬 미션 ({missions.length})
         </button>
         <button
           onClick={() => setActiveTab('stats')}
@@ -94,7 +94,7 @@ export default function SynergyDashboard({
             textAlign: 'center',
           }}
         >
-          ◇ 통계
+          📊 통계
         </button>
       </div>
 

@@ -779,7 +779,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
           </div>
         ) : filteredPosts.length === 0 ? (
           <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--t3)' }}>
-            <div style={{ fontSize: 32, marginBottom: 12, color: 'var(--t4)' }}>◈</div>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🌌</div>
             <div style={{ fontSize: 'var(--sm)' }}>
               {filter === '전체' ? '아직 글이 없어요. 첫 번째 별숨을 나눠보세요!' : '해당 필터에 맞는 글이 없어요.'}
             </div>

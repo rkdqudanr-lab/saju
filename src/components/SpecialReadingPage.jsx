@@ -93,14 +93,14 @@ function LuckyNumberSection({ user, saju }) {
             onClick={() => setMode('single')}
             style={{ padding: '14px 16px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--t1)', fontFamily: 'var(--ff)', cursor: 'pointer', textAlign: 'left' }}
           >
-            <div style={{ fontWeight: 700, fontSize: 'var(--sm)', marginBottom: 2 }}>✦ 숫자 1개 뽑기</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--sm)', marginBottom: 2 }}>🎯 숫자 1개 뽑기</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>범위를 지정하면 그 안에서 오늘의 행운 숫자를 뽑아줘요</div>
           </button>
           <button
             onClick={() => { setMode('lotto'); handleLotto(); }}
             style={{ padding: '14px 16px', background: 'var(--bg2)', border: '1.5px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t1)', fontFamily: 'var(--ff)', cursor: 'pointer', textAlign: 'left' }}
           >
-            <div style={{ fontWeight: 700, fontSize: 'var(--sm)', marginBottom: 2 }}>✦ 로또 번호 뽑기</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--sm)', marginBottom: 2 }}>🍀 로또 번호 뽑기</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>1~45 범위에서 6개의 오늘의 행운 번호를 뽑아줘요</div>
           </button>
         </div>
@@ -169,7 +169,7 @@ function LuckyNumberSection({ user, saju }) {
           )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleLotto} style={{ flex: 1, padding: '12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-              ✦ 다시 뽑기
+              🍀 다시 뽑기
             </button>
             <button onClick={() => { setMode(null); setLottoResult(null); }} style={{ padding: '12px 16px', background: 'var(--bg1)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontFamily: 'var(--ff)', cursor: 'pointer', fontSize: 'var(--xs)' }}>
               취소
@@ -184,7 +184,7 @@ function LuckyNumberSection({ user, saju }) {
 const READING_TYPES = [
   {
     id: 'deep_saju',
-    emoji: '易',
+    emoji: '🔮',
     title: '심층 사주 분석',
     desc: '타고난 사주 8자를 전체적으로 심층 분석해요. 인생 흐름, 강점과 약점, 앞으로의 방향을 짚어드려요.',
     flag: { isReport: true, responseStyle: 'F', precision_level: 'high' },
@@ -192,7 +192,7 @@ const READING_TYPES = [
   },
   {
     id: 'life_fortune',
-    emoji: '◇',
+    emoji: '🌟',
     title: '평생 대운 흐름',
     desc: '10년 단위 대운의 흐름을 AI가 풀어드려요. 언제 기회가 오고 언제 조심해야 하는지 알 수 있어요.',
     flag: { isDaeun: true, responseStyle: 'F', precision_level: 'high' },
@@ -200,7 +200,7 @@ const READING_TYPES = [
   },
   {
     id: 'comprehensive',
-    emoji: '✦',
+    emoji: '✨',
     title: '사주 × 별자리 종합 분석',
     desc: '동양 사주와 서양 별자리를 함께 읽어 더 깊은 자기 이해를 드려요.',
     flag: { isComprehensive: true, responseStyle: 'F', precision_level: 'high' },
@@ -208,7 +208,7 @@ const READING_TYPES = [
   },
   {
     id: 'yearly',
-    emoji: '◇',
+    emoji: '📅',
     title: '올해 운세 심층 분석',
     desc: '올해 연도의 운세를 월별로 상세히 분석해드려요. 중요한 시점과 기회를 미리 파악하세요.',
     flag: { isWeekly: true, responseStyle: 'F', precision_level: 'high' },
@@ -397,7 +397,7 @@ export default function SpecialReadingPage({ callApi, showToast }) {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {ownedItems.map(item => (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--bg1)', borderRadius: 20, border: '1px solid var(--acc)' }}>
-                  <span style={{ fontSize: 16 }}>{item.shop_items?.emoji || '◈'}</span>
+                  <span style={{ fontSize: 16 }}>{item.shop_items?.emoji || '🔮'}</span>
                   <span style={{ fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 600 }}>{item.shop_items?.name || '특별 상담권'}</span>
                 </div>
               ))}

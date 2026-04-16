@@ -127,7 +127,7 @@ export default function DailyHoroscopePage({
               fontSize: '13px',
             }}
           >
-            ✦ 행운 아이템
+            🍀 행운 아이템
           </button>
         </div>
 

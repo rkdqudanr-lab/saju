@@ -6,11 +6,11 @@
 import React, { useCallback, useState } from 'react';
 
 const MISSION_CONFIG = {
-  color: { emoji: '◇', label: '색상 처방', color: 'var(--teal)', bg: 'rgba(95,173,122,0.08)' },
-  menu:  { emoji: '◇', label: '음식 처방', color: '#c08830', bg: 'rgba(192,136,48,0.08)' },
-  item:  { emoji: '✧', label: '라이프 아이템', color: '#7B9EC4', bg: 'rgba(123,158,196,0.08)' },
-  do:    { emoji: '◈', label: '오늘의 실천', color: '#5FAD7A', bg: 'rgba(95,173,122,0.10)' },
-  dont:  { emoji: '△', label: '오늘의 주의', color: '#E08830', bg: 'rgba(224,136,48,0.10)' },
+  color: { emoji: '🎨', label: '색상 처방', color: 'var(--teal)', bg: 'rgba(95,173,122,0.08)' },
+  menu:  { emoji: '🍽️', label: '음식 처방', color: '#c08830', bg: 'rgba(192,136,48,0.08)' },
+  item:  { emoji: '🌿', label: '라이프 아이템', color: '#7B9EC4', bg: 'rgba(123,158,196,0.08)' },
+  do:    { emoji: '✅', label: '오늘의 실천', color: '#5FAD7A', bg: 'rgba(95,173,122,0.10)' },
+  dont:  { emoji: '⚠️', label: '오늘의 주의', color: '#E08830', bg: 'rgba(224,136,48,0.10)' },
 };
 
 export default function MissionDashboard({
@@ -63,7 +63,7 @@ export default function MissionDashboard({
   }
 
   function MissionRow({ mission }) {
-    const cfg = MISSION_CONFIG[mission.mission_type] || { emoji: '✦', label: '미션', color: 'var(--gold)', bg: 'var(--goldf)' };
+    const cfg = MISSION_CONFIG[mission.mission_type] || { emoji: '✨', label: '미션', color: 'var(--gold)', bg: 'var(--goldf)' };
     const isCompleted = mission.is_completed;
     const isLoading = completingId === mission.id;
 
@@ -156,7 +156,7 @@ export default function MissionDashboard({
             marginTop: 6, fontSize: '11px', color: 'var(--teal)', fontWeight: 600,
             display: 'flex', alignItems: 'center', gap: 4,
           }}>
-            ✦ 50% 달성 보너스 +5 BP 지급!
+            🎉 50% 달성 보너스 +5 BP 지급!
           </div>
         )}
       </div>
@@ -198,7 +198,7 @@ export default function MissionDashboard({
               fontFamily: 'var(--ff)',
             }}
           >
-            <span style={{ fontSize: '16px', color: 'var(--gold)' }}>◇</span>
+            <span style={{ fontSize: '16px' }}>📓</span>
             <div style={{ flex: 1, textAlign: 'left' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold)' }}>오늘 일기를 쓰면 +5 BP</div>
               <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 1 }}>별숨에게 오늘 하루를 들려주세요</div>
@@ -213,7 +213,7 @@ export default function MissionDashboard({
             fontSize: '12px', color: '#5FAD7A', fontWeight: 600,
             display: 'flex', alignItems: 'center', gap: 6,
           }}>
-            ◇ 오늘 일기 작성 완료 · +5 BP 적립됨
+            📓 오늘 일기 작성 완료 · +5 BP 적립됨
           </div>
         )}
       </div>

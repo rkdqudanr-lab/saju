@@ -72,12 +72,12 @@ const REL_COLOR = { good: '#B4963C', caution: '#C47A48', bad: '#9B4EC4' };
 const REL_LABEL = { good: '좋은 별숨', caution: '주의 별숨', bad: '나쁜 별숨' };
 
 function getCompatTier(score) {
-  if (score >= 90) return { label: '환상의 티키타카', emoji: '✦', color: '#E8B048' };
-  if (score >= 75) return { label: '천생연분에 가까운 두 별', emoji: '☽', color: '#B4963C' };
-  if (score >= 60) return { label: '서로를 성장시키는 빛나는 인연', emoji: '↑', color: '#5FAD7A' };
-  if (score >= 45) return { label: '창과 방패 — 서로를 단단하게', emoji: '◈', color: '#7B9EC4' };
-  if (score >= 30) return { label: '서로가 서로의 브레이크', emoji: '♎', color: '#C47A48' };
-  return { label: '도전적이지만 성장하는 관계', emoji: '△', color: '#9B4EC4' };
+  if (score >= 90) return { label: '환상의 티키타카', emoji: '✨', color: '#E8B048' };
+  if (score >= 75) return { label: '천생연분에 가까운 두 별', emoji: '💫', color: '#B4963C' };
+  if (score >= 60) return { label: '서로를 성장시키는 빛나는 인연', emoji: '🌱', color: '#5FAD7A' };
+  if (score >= 45) return { label: '창과 방패 — 서로를 단단하게', emoji: '🛡️', color: '#7B9EC4' };
+  if (score >= 30) return { label: '서로가 서로의 브레이크', emoji: '⚖️', color: '#C47A48' };
+  return { label: '도전적이지만 성장하는 관계', emoji: '🔥', color: '#9B4EC4' };
 }
 
 // ── 입력 폼 컴포넌트 ──
@@ -467,7 +467,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
         <div className="inner">
           <div style={{ paddingTop: 20 }}>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: 12, color: 'var(--gold)' }}>⊕</div>
+              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🌐</div>
               <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>
                 우리 모임의 별숨은?
               </div>
@@ -568,7 +568,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
                   fontWeight: 700, transition: 'all .2s',
                 }}
               >
-                {linkCopied ? '✓ 복사됨!' : '↗ 초대 링크 복사'}
+                {linkCopied ? '✓ 복사됨!' : '🔗 초대 링크 복사'}
               </button>
             </div>
 
@@ -579,7 +579,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
 
             {saveError && (
               <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', background: 'rgba(200,80,80,0.08)', border: '1px solid rgba(200,80,80,0.2)', borderRadius: 'var(--r1)', padding: '10px 14px', marginTop: 8, lineHeight: 1.6 }}>
-                △ {saveError}
+                ⚠️ {saveError}
               </div>
             )}
 
@@ -619,7 +619,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
                   borderRadius: 20, fontSize: 'var(--xs)', fontWeight: 700, color: teamMode ? '#fff' : 'var(--t3)',
                   cursor: 'pointer', transition: 'all 0.2s'
                 }}>
-                  {teamMode ? '⊕ 팀 모드' : '두 명'}
+                  {teamMode ? '👥 팀 모드' : '두 명'}
                 </button>
                 <div style={{
                   fontSize: 'var(--xs)', color: 'var(--gold)',
@@ -658,7 +658,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
 
             {saveError && (
               <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)', background: 'rgba(200,80,80,0.08)', border: '1px solid rgba(200,80,80,0.2)', borderRadius: 'var(--r1)', padding: '10px 14px', marginBottom: 12, lineHeight: 1.6 }}>
-                △ {saveError}
+                ⚠️ {saveError}
               </div>
             )}
 
@@ -741,7 +741,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
             {goodPairs.length > 0 && (
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 'var(--xs)', color: '#B4963C', fontWeight: 700, marginBottom: 8 }}>
-                  ◇ 좋은 별숨 ({goodPairs.length}쌍)
+                  🟡 좋은 별숨 ({goodPairs.length}쌍)
                 </div>
                 {goodPairs.map((p, i) => (
                   <div key={i}
@@ -768,7 +768,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
             {cautionPairs.length > 0 && (
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 'var(--xs)', color: '#C47A48', fontWeight: 700, marginBottom: 8 }}>
-                  △ 주의 별숨 ({cautionPairs.length}쌍)
+                  🟠 주의 별숨 ({cautionPairs.length}쌍)
                 </div>
                 {cautionPairs.map((p, i) => (
                   <div key={i}
@@ -795,7 +795,7 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
             {badPairs.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 'var(--xs)', color: '#9B4EC4', fontWeight: 700, marginBottom: 8 }}>
-                  △ 나쁜 별숨 ({badPairs.length}쌍)
+                  🔴 나쁜 별숨 ({badPairs.length}쌍)
                 </div>
                 {badPairs.map((p, i) => (
                   <div key={i}

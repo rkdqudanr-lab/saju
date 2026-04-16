@@ -23,14 +23,14 @@ function getDaysInMonth(year, month) {
 // ═══════════════════════════════════════════════════════════
 
 const LIFE_STAGE_OPTIONS = [
-  { value: 'jobseek', label: '취업 준비 중', emoji: '◈' },
-  { value: 'dating', label: '연애 중', emoji: '◇' },
-  { value: 'healing', label: '이별 후 회복 중', emoji: '◇' },
-  { value: 'employed', label: '직장인', emoji: '◈' },
-  { value: 'business', label: '사업 운영 중', emoji: '↑' },
-  { value: 'student', label: '학업·시험 준비 중', emoji: '◈' },
-  { value: 'parenting', label: '육아 중', emoji: '◇' },
-  { value: 'reentry', label: '경력 재진입 준비 중', emoji: '↗' },
+  { value: 'jobseek', label: '취업 준비 중', emoji: '📋' },
+  { value: 'dating', label: '연애 중', emoji: '💕' },
+  { value: 'healing', label: '이별 후 회복 중', emoji: '💧' },
+  { value: 'employed', label: '직장인', emoji: '💼' },
+  { value: 'business', label: '사업 운영 중', emoji: '📈' },
+  { value: 'student', label: '학업·시험 준비 중', emoji: '📚' },
+  { value: 'parenting', label: '육아 중', emoji: '🏡' },
+  { value: 'reentry', label: '경력 재진입 준비 중', emoji: '🌱' },
   { value: 'free', label: '자유 선택 (기본)', emoji: '✦' },
 ];
 
@@ -40,21 +40,21 @@ const STYLE_OPTIONS = [
     label: '분석형',
     sub: 'T형',
     desc: '논리적이고 구체적인 분석 중심',
-    emoji: '◈',
+    emoji: '🧠',
   },
   {
     value: 'M',
     label: '균형형',
     sub: '중간형',
     desc: '분석과 공감을 균형 있게',
-    emoji: '◇',
+    emoji: '⚖️',
   },
   {
     value: 'F',
     label: '공감형',
     sub: 'F형',
     desc: '따뜻하고 감성적인 위로 중심',
-    emoji: '✧',
+    emoji: '🌸',
   },
 ];
 
@@ -533,7 +533,7 @@ export default function SettingsPage({
                 {[
                   { val: 'T', text: '지금 당신의 일간 기질이 논리를 앞세우는 경향이 있어, 감정 표현보다 판단이 먼저 나올 수 있어요. 상대방의 감정 언어를 확인하는 대화를 먼저 시도해봐요.' },
                   { val: 'M', text: '마음이 쓰이는 거 느껴져요. 지금 당신의 별은 연결을 원하는데, 방식이 맞지 않아 엇갈리고 있는 것 같아요. 오늘 먼저 솔직하게 이야기 꺼내봐요.' },
-                  { val: 'F', text: '지금 많이 지치셨겠어요. 잘 풀리지 않는 연애 앞에서 스스로를 탓하지 말아요. 별은 지금 당신에게 잠깐 쉬어가도 된다고 속삭이고 있어요.' },
+                  { val: 'F', text: '지금 많이 지치셨겠어요. 잘 풀리지 않는 연애 앞에서 스스로를 탓하지 말아요. 별은 지금 당신에게 잠깐 쉬어가도 된다고 속삭이고 있어요 🌙' },
                 ].map(ex => (
                   <div
                     key={ex.val}
@@ -630,7 +630,7 @@ export default function SettingsPage({
           <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
             <div className="card-title">별숨 푸시 알림</div>
             <div className="card-sub" style={{ marginBottom: 8 }}>
-              △ 배드타임 진입, 행운의 시간대 도달 시 알림을 받아보세요.
+              ⚠️ 배드타임 진입, 행운의 시간대 도달 시 알림을 받아보세요.
             </div>
             <div className="toggle-row" onClick={handlePushToggle}>
               <button
@@ -660,7 +660,7 @@ export default function SettingsPage({
               { key: 'consult', label: '별숨 상담', desc: '물어보기, 리포트, 예언, 종합사주 등' },
               { key: 'myinfo', label: '나의 별숨', desc: '대운 흐름, 별숨 통계, 별숨 광장' },
               { key: 'fortune', label: '운세 & 인연', desc: '궁합, 모임, 기념일, 사주원국' },
-              { key: 'special', label: '✦ 특별 기능', desc: '꿈 해몽, 택일, 이름 풀이' },
+              { key: 'special', label: '✨ 특별 기능', desc: '꿈 해몽, 택일, 이름 풀이' },
             ].map(({ key, label, desc }) => {
               const hidden = (sidebarPrefs?.hiddenGroups || []).includes(key);
               const toggle = () => {
@@ -687,7 +687,7 @@ export default function SettingsPage({
               );
             })}
             <div style={{ marginTop: 8, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7 }}>
-              메뉴를 숨겨도 직접 URL 이동은 가능해요
+              메뉴를 숨겨도 직접 URL 이동은 가능해요 🌙
             </div>
           </div>
         )}

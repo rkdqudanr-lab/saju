@@ -32,7 +32,7 @@ const TOUR_STEPS = [
   {
     selector: 'nav-square',
     arrowDir: 'bottom',
-    title: '함께하는 별숨',
+    title: '함께하는 별숨 🏛️',
     desc: '다른 분들의 별숨 이야기를 나눠봐요.',
   },
 ];

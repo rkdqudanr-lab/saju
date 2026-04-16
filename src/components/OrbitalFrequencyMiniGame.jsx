@@ -161,7 +161,7 @@ export default function OrbitalFrequencyMiniGame({
       }}
     >
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <div style={{ fontSize: '32px', marginBottom: '8px', color: '#4A8EC4' }}>◈</div>
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎲</div>
         <h3
           style={{
             fontSize: '16px',
@@ -225,7 +225,7 @@ export default function OrbitalFrequencyMiniGame({
                       fontWeight: '700',
                     }}
                   >
-                    ◈
+                    🔒
                   </div>
                 ) : (
                   // 해제된 상태
@@ -267,7 +267,7 @@ export default function OrbitalFrequencyMiniGame({
                         opacity: currentBp >= 5 ? 1 : 0.5,
                       }}
                     >
-                      ◈ 5BP
+                      🔓 5BP
                     </button>
                   </>
                 )}

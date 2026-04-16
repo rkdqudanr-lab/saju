@@ -53,7 +53,7 @@ export default function SocialSynergyMission({
               letterSpacing: '0.05em',
             }}
           >
-            ◇ 받은 미션 ({pendingMissions.length})
+            📬 받은 미션 ({pendingMissions.length})
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {pendingMissions.map(mission => (

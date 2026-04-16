@@ -86,8 +86,8 @@ export default function GamificationHeaderV2({
           color: color,
         }}
       >
-        <span style={{ fontSize: 13 }}>✦</span>
-        <span>{currentBp} BP</span>
+        <span>💎</span>
+        <span>{currentBp}</span>
         <span
           style={{
             fontSize: '10px',
@@ -96,7 +96,7 @@ export default function GamificationHeaderV2({
             opacity: 0.8,
           }}
         >
-          ◷ {timeUntilRecharge}
+          ⏰ {timeUntilRecharge}
         </span>
       </div>
 
@@ -127,7 +127,7 @@ export default function GamificationHeaderV2({
             color: 'var(--rose)',
           }}
         >
-          <span style={{ fontSize: 13 }}>↑</span>
+          <span>🔥</span>
           <span>{loginStreak}일</span>
         </div>
       )}
@@ -143,7 +143,7 @@ export default function GamificationHeaderV2({
           color: 'var(--t3)',
         }}
       >
-        <span style={{ fontSize: 13 }}>◇</span>
+        <span>🎯</span>
         <span>{missionProgress}</span>
       </div>
     </div>

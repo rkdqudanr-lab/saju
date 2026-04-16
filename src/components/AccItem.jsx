@@ -11,8 +11,8 @@ export function FeedbackBtn({qIdx}){
   return(
     <div className="fb-wrap" role="group" aria-label="피드백">
       <span className="fb-label">이 이야기가 도움이 됐나요?</span>
-      <button className="fb-btn" aria-label="도움이 됐어요" onClick={()=>setSel('up')}>✦</button>
-      <button className="fb-btn" aria-label="아쉬워요" onClick={()=>setSel('down')}>△</button>
+      <button className="fb-btn" aria-label="도움이 됐어요" onClick={()=>setSel('up')}>👍</button>
+      <button className="fb-btn" aria-label="아쉬워요" onClick={()=>setSel('down')}>👎</button>
     </div>
   );
 }

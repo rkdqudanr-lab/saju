@@ -2,19 +2,19 @@ import { useState } from "react";
 
 // ── 오행 테마 정의 ──
 const ELEMENT_THEMES = {
-  목: { label: '목(木) — 봄의 기운', bg1: '#0D1A0D', bg2: '#1A2E1A', accent: '#4CAF7D', border: '#2E6B3E', emoji: '↑' },
-  화: { label: '화(火) — 열정의 기운', bg1: '#1A0D0D', bg2: '#2E1A1A', accent: '#E85050', border: '#8B2020', emoji: '↑' },
-  토: { label: '토(土) — 중심의 기운', bg1: '#1A1408', bg2: '#2E2410', accent: '#D4A027', border: '#7A5C10', emoji: '◇' },
-  금: { label: '금(金) — 단단한 기운', bg1: '#141418', bg2: '#222228', accent: '#C0C0D0', border: '#7878A0', emoji: '◈' },
-  수: { label: '수(水) — 지혜의 기운', bg1: '#080D1A', bg2: '#10182E', accent: '#4A7EC4', border: '#1A3A8B', emoji: '◇' },
+  목: { label: '목(木) — 봄의 기운', bg1: '#0D1A0D', bg2: '#1A2E1A', accent: '#4CAF7D', border: '#2E6B3E', emoji: '🌿' },
+  화: { label: '화(火) — 열정의 기운', bg1: '#1A0D0D', bg2: '#2E1A1A', accent: '#E85050', border: '#8B2020', emoji: '🔥' },
+  토: { label: '토(土) — 중심의 기운', bg1: '#1A1408', bg2: '#2E2410', accent: '#D4A027', border: '#7A5C10', emoji: '🌾' },
+  금: { label: '금(金) — 단단한 기운', bg1: '#141418', bg2: '#222228', accent: '#C0C0D0', border: '#7878A0', emoji: '⚔️' },
+  수: { label: '수(水) — 지혜의 기운', bg1: '#080D1A', bg2: '#10182E', accent: '#4A7EC4', border: '#1A3A8B', emoji: '🌊' },
 };
 
 const STICKERS = [
   { id: 'none', emoji: '∅', label: '없음' },
-  { id: 'star', emoji: '✦', label: '별' },
-  { id: 'moon', emoji: '☽', label: '달' },
-  { id: 'flower', emoji: '✿', label: '꽃' },
-  { id: 'sparkle', emoji: '✧', label: '반짝' },
+  { id: 'star', emoji: '⭐', label: '별' },
+  { id: 'moon', emoji: '🌙', label: '달' },
+  { id: 'flower', emoji: '🌸', label: '꽃' },
+  { id: 'sparkle', emoji: '✨', label: '반짝' },
 ];
 
 function drawRoundRect(ctx, x, y, w, h, r) {
@@ -92,7 +92,7 @@ function saveEnhancedSajuCard({ name, saju, sun, theme, stickerId }) {
 
   // 스티커 (canvas는 이모지 직접 지원)
   if (stickerId && stickerId !== 'none') {
-    const stickerEmoji = { star: '✦', moon: '☽', flower: '✿', sparkle: '✧' }[stickerId] || '';
+    const stickerEmoji = { star: '⭐', moon: '🌙', flower: '🌸', sparkle: '✨' }[stickerId] || '';
     ctx.font = '52px sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(stickerEmoji, 862, 80);
@@ -156,7 +156,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
     <div className="page">
       <div className="inner" style={{ paddingTop: 20 }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: '2rem', marginBottom: 10, color: 'var(--gold)' }}>◈</div>
+          <div style={{ fontSize: '2rem', marginBottom: 10 }}>🎴</div>
           <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
             나의 사주 명함
           </div>
@@ -262,7 +262,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
         {/* 액션 버튼 */}
         <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
           <button className="up-btn" onClick={handleSave}>
-            ◈ 명함 카드 저장
+            🎴 명함 카드 저장
           </button>
           <button className="res-btn" onClick={() => setStep(0)}>
             ← 홈으로

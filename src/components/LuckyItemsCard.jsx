@@ -9,42 +9,42 @@ const JI_OHAENG  = ['水','土','木','木','土','火','火','土','金','金',
 
 const OHAENG_DATA = {
   木: {
-    color:     { name: '초록·청록', hex: '#5B9B5E', emoji: '✧' },
+    color:     { name: '초록·청록', hex: '#5B9B5E', emoji: '🌿' },
     number:    [3, 8],
-    direction: { label: '동쪽', emoji: '→' },
-    food:      { items: ['나물', '새싹채소', '녹차', '브로콜리'], emoji: '◇' },
+    direction: { label: '동쪽', emoji: '🧭' },
+    food:      { items: ['나물', '새싹채소', '녹차', '브로콜리'], emoji: '🥦' },
     activity:  '산책이나 가벼운 스트레칭',
     keyword:   '성장과 시작',
   },
   火: {
-    color:     { name: '빨강·주황', hex: '#E8624A', emoji: '△' },
+    color:     { name: '빨강·주황', hex: '#E8624A', emoji: '🔴' },
     number:    [2, 7],
-    direction: { label: '남쪽', emoji: '↓' },
-    food:      { items: ['고추', '토마토', '붉은 과일', '쌈채소'], emoji: '◇' },
+    direction: { label: '남쪽', emoji: '🧭' },
+    food:      { items: ['고추', '토마토', '붉은 과일', '쌈채소'], emoji: '🍅' },
     activity:  '밝은 장소에서 사람들 만나기',
     keyword:   '열정과 표현',
   },
   土: {
-    color:     { name: '황금·베이지', hex: '#C8A84B', emoji: '◇' },
+    color:     { name: '황금·베이지', hex: '#C8A84B', emoji: '🟡' },
     number:    [5, 10],
-    direction: { label: '중앙', emoji: '⊕' },
-    food:      { items: ['고구마', '감자', '된장국', '잡곡밥'], emoji: '◇' },
+    direction: { label: '중앙', emoji: '🧭' },
+    food:      { items: ['고구마', '감자', '된장국', '잡곡밥'], emoji: '🍠' },
     activity:  '집 정리나 계획 세우기',
     keyword:   '안정과 신뢰',
   },
   金: {
-    color:     { name: '흰색·은색', hex: '#8A9BB8', emoji: '◇' },
+    color:     { name: '흰색·은색', hex: '#8A9BB8', emoji: '⚪' },
     number:    [4, 9],
-    direction: { label: '서쪽', emoji: '←' },
-    food:      { items: ['무', '도라지', '배', '흰살 생선'], emoji: '◇' },
+    direction: { label: '서쪽', emoji: '🧭' },
+    food:      { items: ['무', '도라지', '배', '흰살 생선'], emoji: '🐟' },
     activity:  '결단이 필요한 일 처리하기',
     keyword:   '결단과 집중',
   },
   水: {
-    color:     { name: '검정·남색', hex: '#4A6B8A', emoji: '∿' },
+    color:     { name: '검정·남색', hex: '#4A6B8A', emoji: '🔵' },
     number:    [1, 6],
-    direction: { label: '북쪽', emoji: '↑' },
-    food:      { items: ['검은콩', '미역', '블루베리', '해산물'], emoji: '◇' },
+    direction: { label: '북쪽', emoji: '🧭' },
+    food:      { items: ['검은콩', '미역', '블루베리', '해산물'], emoji: '🦑' },
     activity:  '혼자만의 사색이나 독서',
     keyword:   '지혜와 흐름',
   },
@@ -166,25 +166,25 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
 
       {/* 2×2 그리드 */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-        <Card title="◇ 행운의 색">
+        <Card title="🎨 행운의 색">
           <div style={{ fontSize: 'var(--sm)', fontWeight: 600, color: 'var(--t1)' }}>
             {displayColor}
           </div>
         </Card>
 
-        <Card title="✦ 행운의 숫자">
+        <Card title="🔢 행운의 숫자">
           <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--gold)' }}>
             {displayNumber}
           </div>
         </Card>
 
-        <Card title="↗ 행운의 방향">
+        <Card title="🧭 행운의 방향">
           <div style={{ fontSize: 'var(--sm)', fontWeight: 600, color: 'var(--t1)' }}>
             {displayDirection}
           </div>
         </Card>
 
-        <Card title="✧ 오늘의 키워드">
+        <Card title="🌿 오늘의 키워드">
           <div style={{ fontSize: 'var(--xs)', fontWeight: 600, color: 'var(--t1)' }}>
             {data.keyword}
           </div>
@@ -192,7 +192,7 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
       </div>
 
       {/* 음식 추천 */}
-      <Card title="◇ 오늘 먹으면 좋은 음식">
+      <Card title="🍽️ 오늘 먹으면 좋은 음식">
         <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 500, marginTop: 2 }}>
           {displayFood}
         </div>
@@ -204,7 +204,7 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
           marginTop: 10, padding: '10px 14px', borderRadius: 'var(--r1)',
           background: 'var(--card)', border: '1px solid var(--line)',
         }}>
-          <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>◈ 오늘 가면 좋은 곳 </span>
+          <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>📍 오늘 가면 좋은 곳 </span>
           <span style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>{displayPlace}</span>
         </div>
       )}

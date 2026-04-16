@@ -33,7 +33,7 @@ export default function ProfileStep({
 
             <div className={`profile-pick-card ${activeProfileIdx === 0 ? 'active' : ''}`} onClick={() => setActiveProfileIdx(0)}>
               <div className="ppc-left">
-                <div className="ppc-av">{user?.profileImage ? <img src={user.profileImage} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : <span style={{ color: 'var(--gold)' }}>✦</span>}</div>
+                <div className="ppc-av">{user?.profileImage ? <img src={user.profileImage} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : '🌙'}</div>
                 <div>
                   <div className="ppc-name">
                     {form.nickname || form.name || user?.nickname || '나'}

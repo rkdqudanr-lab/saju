@@ -147,7 +147,7 @@ function parseDailyLines(text) {
 }
 
 // ── 구형 포맷용 아이콘/색상 ──
-const LEGACY_ICONS = ['◇', '◇', '✧', '✦', '☽'];
+const LEGACY_ICONS = ['🎨', '🍽️', '🌿', '✨', '🌙'];
 const LEGACY_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
 
 export default function DailyStarCardV2({
@@ -271,7 +271,7 @@ export default function DailyStarCardV2({
                   <div className="dsc-astro-chips">
                     {astrology.color && (
                       <div className="dsc-astro-chip">
-                        <span>◇</span>
+                        <span>🎨</span>
                         <span>{astrology.color}</span>
                       </div>
                     )}
@@ -295,19 +295,19 @@ export default function DailyStarCardV2({
                 </div>
                 {synergy.food && (
                   <div className="dsc-synergy-row">
-                    <span className="dsc-synergy-label">◇</span>
+                    <span className="dsc-synergy-label">🍽️</span>
                     <span className="dsc-synergy-value">{synergy.food}</span>
                   </div>
                 )}
                 {synergy.place && (
                   <div className="dsc-synergy-row">
-                    <span className="dsc-synergy-label">◈</span>
+                    <span className="dsc-synergy-label">📍</span>
                     <span className="dsc-synergy-value">{synergy.place}</span>
                   </div>
                 )}
                 {synergy.color && (
                   <div className="dsc-synergy-row">
-                    <span className="dsc-synergy-label">◇</span>
+                    <span className="dsc-synergy-label">🎨</span>
                     <span className="dsc-synergy-value">{synergy.color}</span>
                   </div>
                 )}
@@ -350,7 +350,7 @@ export default function DailyStarCardV2({
         {/* 배드타임 섹션 */}
         {hasBadtime && (
           <div className="dsc-badtime">
-            <div className="dsc-badtime-title">△ 배드타임 감지</div>
+            <div className="dsc-badtime-title">⚠️ 배드타임 감지</div>
 
             {badtime.symptom && (
               <div className="dsc-badtime-symptom">악운: {badtime.symptom}</div>
