@@ -319,8 +319,8 @@ export default function OrbitalFrequencyMiniGame({
               marginBottom: '16px',
             }}
           >
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              {gameState.reward === 200 ? '🎉' : gameState.reward >= 40 ? '✨' : gameState.reward > 0 ? '🌟' : '🌙'}
+            <div style={{ fontSize: '2rem', marginBottom: '12px', color: 'var(--gold)' }}>
+              {gameState.reward === 200 ? '⊛' : gameState.reward >= 40 ? '◈' : gameState.reward > 0 ? '✦' : '◇'}
             </div>
             <div
               style={{

@@ -118,7 +118,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
     setHistItems([]);
   };
 
-  const SLOT_EMOJI = { morning: '🌅', afternoon: '✦', evening: '🌙', dawn: '🌌' };
+  const SLOT_EMOJI = { morning: '🌅', afternoon: '✦', evening: '☽', dawn: '✦' };
   const histCount = histItems.length;
   const histNearLimit = histCount >= 25;
 
@@ -132,7 +132,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
             <div className="sidebar-user" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {user.profileImage
                 ? <img className="sidebar-av" src={user.profileImage} alt="프로필" />
-                : <div className="sidebar-av-ph">🌙</div>}
+                : <div className="sidebar-av-ph">✦</div>}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="sidebar-uname">{user.nickname}님</div>
                 <div className="sidebar-usub">별숨과 함께하는 중</div>

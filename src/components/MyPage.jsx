@@ -164,7 +164,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
           {user?.profileImage
             ? <img src={user.profileImage} alt="프로필" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} />
-            : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, border: '2px solid var(--line)' }}>🌙</div>
+            : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: 'var(--gold)', border: '2px solid var(--line)' }}>✦</div>
           }
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 3 }}>
@@ -215,11 +215,11 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             title: '별숨 포인트 쌓는 방법',
             content: (
               <div style={{ paddingTop: 8 }}>
-                <BpGuideRow icon="🌙" text="매일 첫 로그인" bp="+5 BP" />
+                <BpGuideRow icon="✦" text="매일 첫 로그인" bp="+5 BP" />
                 <BpGuideRow icon="🎨" text="색상 처방 · 음식 처방 · 라이프 아이템 미션 완료" bp="+10 BP" />
                 <BpGuideRow icon="✅" text="오늘의 실천 DO 미션 완료" bp="+5 BP" />
                 <BpGuideRow icon="⚠️" text="오늘의 주의 DONT 미션 완료" bp="+5 BP" />
-                <BpGuideRow icon="🎯" text="하루 미션 50% 이상 달성 보너스" bp="+5 BP" />
+                <BpGuideRow icon="◇" text="하루 미션 50% 이상 달성 보너스" bp="+5 BP" />
                 <BpGuideRow icon="📓" text="오늘 일기 작성" bp="+5 BP" />
                 <div style={{ marginTop: 8, fontSize: '11px', color: 'var(--t4)', lineHeight: 1.6 }}>
                   미션은 매일 오늘의 별숨 기운을 확인하면 자동 생성돼요.
@@ -265,7 +265,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>🔮</span>
+                  <span style={{ fontSize: 18, flexShrink: 0, color: 'var(--t3)' }}>◈</span>
                   <div>
                     <div style={{ fontWeight: 600, color: 'var(--t1)' }}>프리미엄 상담 — 준비 중</div>
                     <div style={{ marginTop: 2 }}>별숨 포인트로 심화 사주·별자리 상담을 이용할 수 있어요.</div>
@@ -283,11 +283,11 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
       {/* ── 나의 성장 메뉴 ── */}
       <div style={{ padding: '16px 20px 0' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>✦ 나의 별숨</div>
-        <MenuRow icon="🌟" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달·상승 별자리 해석" onClick={() => setStep(13)} />
+        <MenuRow icon="✦" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달·상승 별자리 해석" onClick={() => setStep(13)} />
         <MenuRow icon="🌊" label="나의 대운 흐름" sub="10년 단위 대운 사이클 분석" onClick={() => setStep(30)} />
         <MenuRow icon="🎴" label="사주 명함 카드" sub="나만의 사주 명함 만들기" onClick={() => setStep(21)} />
-        <MenuRow icon="🔮" label="별숨 타로" sub="타로 카드로 보는 오늘의 메시지" onClick={() => setStep(34)} />
-        <MenuRow icon="📊" label="나의 별숨 통계" sub="운세 흐름·상담 패턴 분석" onClick={() => setStep(28)} />
+        <MenuRow icon="◈" label="별숨 타로" sub="타로 카드로 보는 오늘의 메시지" onClick={() => setStep(34)} />
+        <MenuRow icon="◇" label="나의 별숨 통계" sub="운세 흐름·상담 패턴 분석" onClick={() => setStep(28)} />
       </div>
 
       {/* ── 메뉴 리스트 ── */}
@@ -312,7 +312,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
           onClick={() => setStep(19)}
         />
         <MenuRow
-          icon="💬"
+          icon="✧"
           label="문의하기"
           sub="버그 신고 · 기능 제안 · 고객 지원"
           onClick={() => setStep(22)}

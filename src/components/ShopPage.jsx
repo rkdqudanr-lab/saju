@@ -389,7 +389,7 @@ export default function ShopPage({ showToast }) {
             borderRadius: 20,
             border: '1px solid var(--acc)',
           }}>
-            <span style={{ fontSize: '14px' }}>⭐</span>
+            <span style={{ fontSize: '14px', color: 'var(--gold)' }}>✦</span>
             <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)' }}>
               {currentBP} BP
             </span>

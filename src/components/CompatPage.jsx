@@ -54,7 +54,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
     const already = otherProfiles.some(
       o => o.by === partner.by && o.bm === partner.bm && o.bd === partner.bd
     );
-    if (already) { setSavedMsg('이미 저장된 사람이에요 🌙'); setTimeout(() => setSavedMsg(''), 2500); return; }
+    if (already) { setSavedMsg('이미 저장된 사람이에요'); setTimeout(() => setSavedMsg(''), 2500); return; }
     saveOtherProfile?.({ ...partner, noTime: true });
     setSavedMsg('별숨 목록에 저장했어요 ✦'); setTimeout(() => setSavedMsg(''), 2500);
   }, [partner, otherProfiles, saveOtherProfile]);
@@ -141,7 +141,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
       console.error('[CompatPage] fetch error:', fetchErr?.message);
       setStoryResult({
         todayVibe: '',
-        story: '두 사람의 이야기를 불러오는 데 실패했어요. 잠시 후 다시 시도해봐요 🌙',
+        story: '두 사람의 이야기를 불러오는 데 실패했어요. 잠시 후 다시 시도해봐요.',
         moments: [], tip: '', chemistry: ''
       });
     } finally {

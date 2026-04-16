@@ -47,7 +47,7 @@ function scoreBg(score) {
 }
 
 function scoreLabel(score) {
-  if (score >= 85) return '최고의 날 ✨';
+  if (score >= 85) return '최고의 날 ✦';
   if (score >= 68) return '좋은 날';
   if (score >= 50) return '무난한 날';
   if (score >= 38) return '조심할 날';
@@ -347,7 +347,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
       );
       setMonthlyResult(result);
     } catch {
-      setMonthlyResult('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.');
+      setMonthlyResult('별이 잠시 쉬고 있어요\n잠시 후 다시 시도해봐요.');
     } finally {
       setMonthlyLoading(false);
     }
@@ -734,7 +734,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               </div>
               {!user?.id && (
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 6 }}>
-                  로그인하면 일정이 저장돼요 🌙
+                  로그인하면 일정이 저장돼요
                 </div>
               )}
             </div>
@@ -776,7 +776,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
 
         {eventDays.length === 0 && !selected && (
           <div style={{ marginTop: 'var(--sp4)', textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--sm)', lineHeight: 1.8 }}>
-            날짜를 눌러 일정을 입력하면<br />별숨에게 바로 물어볼 수 있어요 🌙
+            날짜를 눌러 일정을 입력하면<br />별숨에게 바로 물어볼 수 있어요
           </div>
         )}
 
@@ -812,7 +812,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               onClick={() => setStep(2)}
               style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
             >
-              <span style={{ fontSize: '1rem' }}>🔮</span>
+              <span style={{ fontSize: '1rem', color: 'var(--t3)' }}>◈</span>
               <div>
                 <div style={{ fontWeight: 600, marginBottom: 2 }}>별숨에게 질문하기</div>
                 <div style={{ color: 'var(--t4)', fontSize: '0.65rem' }}>궁금한 것을 직접 물어봐요</div>
