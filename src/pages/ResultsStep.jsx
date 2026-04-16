@@ -230,6 +230,7 @@ export default function ResultsStep({
             <div className="feature-guide">
               <div className="feature-guide-title">✦ 별숨의 다른 기능들</div>
               <div className="feature-guide-grid">
+                <button className="fg-card" onClick={() => setStep(35)}><span className="fg-icon" style={{ fontSize: 18 }}>✉</span><div className="fg-info"><div className="fg-name">별숨편지</div><div className="fg-desc">기운 맞는 익명의 누군가에게 편지 쓰고 받기</div></div></button>
                 <button className="fg-card" onClick={() => setStep(7)}><span className="fg-icon" style={{ fontSize: 18 }}>✦</span><div className="fg-info"><div className="fg-name">사이 별점</div><div className="fg-desc">두 사람의 사주+별자리로 관계 시나리오 읽기</div></div></button>
                 <button className="fg-card" onClick={() => setStep(8)}><span className="fg-icon" style={{ fontSize: 18 }}>◈</span><div className="fg-info"><div className="fg-name">별숨의 예언</div><div className="fg-desc">1개월~30년 후의 나에게 전하는 예언</div></div></button>
                 <button className="fg-card" onClick={() => setStep(6)}><span className="fg-icon" style={{ fontSize: 18 }}>◇</span><div className="fg-info"><div className="fg-name">월간 리포트</div><div className="fg-desc">이달의 연애·재물·직업·건강 에세이</div></div></button>

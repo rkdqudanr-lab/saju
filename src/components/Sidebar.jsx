@@ -317,6 +317,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
                     { icon: '🏛️', label: '별숨 광장', s: 29 },
+                    { icon: '✉', label: '별숨편지', s: 35 },
                     { icon: '🤝', label: '익명 궁합 광장', s: 32 },
                     { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
                     { icon: '🛍️', label: '별숨 숍', s: 31 },
