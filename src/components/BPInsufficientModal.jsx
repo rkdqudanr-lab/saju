@@ -149,7 +149,7 @@ export default function BPInsufficientModal({
               }}
             >
               <div style={{ fontSize: '12px', color: '#2D6B2D', fontWeight: '600', marginBottom: '4px' }}>
-                💚 무료 BP 충전 가능!
+                ✦ 무료 BP 충전 가능!
               </div>
               <div style={{ fontSize: '11px', color: '#4A7C4A', lineHeight: 1.4 }}>
                 레벨에 따라 {Math.ceil(shortage / 5)} 이상의 BP를 무료로 충전할 수 있어요.
@@ -166,7 +166,7 @@ export default function BPInsufficientModal({
               }}
             >
               <div style={{ fontSize: '12px', color: '#E05A3A', fontWeight: '600', marginBottom: '4px' }}>
-                ⏰ 무료 충전 대기 중
+                ◷ 무료 충전 대기 중
               </div>
               <div style={{ fontSize: '11px', color: '#C44A6A', lineHeight: 1.4 }}>
                 다음 무료 충전까지 {freeRechargeTimeRemaining || '수 시간'} 남았어요.

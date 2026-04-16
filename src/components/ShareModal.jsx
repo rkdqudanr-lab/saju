@@ -41,7 +41,7 @@ export default function ShareModal({ shareModal, onClose, showToast, cardDataUrl
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button className="btn-main" onClick={handleSaveImage}>
-                📥 이미지로 저장하기
+                ↓ 이미지로 저장하기
               </button>
               <button
                 className="btn-main"
@@ -71,7 +71,7 @@ export default function ShareModal({ shareModal, onClose, showToast, cardDataUrl
               {shareModal.text}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button className="btn-main" onClick={() => { navigator.clipboard?.writeText(shareModal.text).then(() => showToast?.('복사됐어요! 친구에게 붙여넣기 해주세요 💌', 'success')); onClose(); }}>
+              <button className="btn-main" onClick={() => { navigator.clipboard?.writeText(shareModal.text).then(() => showToast?.('복사됐어요! 친구에게 붙여넣기 해주세요', 'success')); onClose(); }}>
                 텍스트 복사하기
               </button>
               <button className="btn-main" style={{ background: 'var(--bg3)', color: 'var(--t1)' }} onClick={() => { navigator.clipboard?.writeText(window.location.origin).then(() => showToast?.('별숨 링크가 복사됐어요! 친구에게 공유해주세요 ✦', 'success')); onClose(); }}>

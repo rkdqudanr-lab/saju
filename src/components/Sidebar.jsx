@@ -118,7 +118,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
     setHistItems([]);
   };
 
-  const SLOT_EMOJI = { morning: '🌅', afternoon: '✦', evening: '☽', dawn: '✦' };
+  const SLOT_EMOJI = { morning: '✦', afternoon: '✦', evening: '☽', dawn: '✦' };
   const histCount = histItems.length;
   const histNearLimit = histCount >= 25;
 
@@ -147,7 +147,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   aria-label="로그아웃"
                   onClick={() => { onKakaoLogout(); onClose(); }}
                   style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, padding: '5px 8px', cursor: 'pointer', fontSize: 14, color: 'var(--t3)', fontFamily: 'var(--ff)' }}
-                >🚪</button>
+                >←</button>
               </div>
             </div>
           ) : (
@@ -178,7 +178,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               <li>
                 <button className="sidebar-menu-item" onClick={() => { onAddOther && onAddOther(); onClose(); }}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAddOther && onAddOther(); onClose(); } }}>
-                  <span className="smi-icon" aria-hidden="true">👥</span>
+                  <span className="smi-icon" aria-hidden="true">◇</span>
                   <span className="smi-text">다른 사람의 별숨 추가</span>
                 </button>
               </li>
@@ -195,11 +195,11 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {openGroups.today && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: '🏠', label: '홈', s: 0 },
+                    { icon: '⌂', label: '홈', s: 0 },
                     { icon: '✦', label: '오늘 하루 나의 별숨', s: 'fortune' },
-                    { icon: '📓', label: '나의 하루를 별숨에게', s: 17, badge: todayDiaryWritten === false },
-                    { icon: '📚', label: '일기 모아보기', s: 20 },
-                    { icon: '🗓️', label: '별숨 달력', s: 10 },
+                    { icon: '◇', label: '나의 하루를 별숨에게', s: 17, badge: todayDiaryWritten === false },
+                    { icon: '◈', label: '일기 모아보기', s: 20 },
+                    { icon: '◇', label: '별숨 달력', s: 10 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -230,7 +230,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
                     { icon: '✦', label: '별숨에게 물어보기', s: 2 },
-                    { icon: '📅', label: '월간 리포트', s: 6 },
+                    { icon: '◇', label: '월간 리포트', s: 6 },
                     { icon: '◈', label: '별숨의 예언', s: 8 },
                     { icon: '◇', label: '종합 분석 (사주·점성술)', s: 14 },
                   ].map(m => (
@@ -254,8 +254,8 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   </li>
                   {[
                     { icon: '☽', label: '꿈 해몽', s: 24 },
-                    { icon: '🗓️', label: '택일 (길일 찾기)', s: 25 },
-                    { icon: '📛', label: '이름 풀이 (성명학)', s: 26 },
+                    { icon: '◇', label: '택일 (길일 찾기)', s: 25 },
+                    { icon: '◈', label: '이름 풀이 (성명학)', s: 26 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -287,7 +287,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     { icon: '易', label: 'MyBlueprint — 나의 별숨', s: 13 },
                     { icon: '◈', label: '나의 대운 흐름', s: 30 },
                     { icon: '✦', label: '1대1 별숨 (궁합)', s: 7 },
-                    { icon: '🎂', label: '기념일 운세', s: 12 },
+                    { icon: '◇', label: '기념일 운세', s: 12 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -316,11 +316,11 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {openGroups.square && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: '🏛️', label: '별숨 광장', s: 29 },
+                    { icon: '◈', label: '별숨 광장', s: 29 },
                     { icon: '✉', label: '별숨편지', s: 35 },
-                    { icon: '◈', label: '익명 궁합 광장', s: 32 },
-                    { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
-                    { icon: '🛍️', label: '별숨 숍', s: 31 },
+                    { icon: '◇', label: '익명 궁합 광장', s: 32 },
+                    { icon: '⊕', label: '우리 모임의 별숨은?', s: 11 },
+                    { icon: '◇', label: '별숨 숍', s: 31 },
                     { icon: '◇', label: '나의 별숨 통계', s: 28 },
                   ].map(m => (
                     <li key={m.s}>
@@ -379,7 +379,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               <div style={{ padding: '0 var(--sp3) 8px' }}>
                 <input
                   className="hist-search-inp"
-                  placeholder="🔍  지난 이야기 검색..."
+                  placeholder="◇  지난 이야기 검색..."
                   value={rawSearch}
                   onChange={e => handleSearchChange(e.target.value)}
                   aria-label="기록 검색"
@@ -406,7 +406,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
             {filtered.length === 0 ? (
               <div className="sidebar-empty">
                 {search || dateFilter !== 'all'
-                  ? '검색 결과가 없어요 🔍'
+                  ? '검색 결과가 없어요'
                   : '아직 별숨과 나눈 이야기가 없어요\n첫 질문을 던져봐요'}
               </div>
             ) : (
@@ -451,7 +451,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
         <div className="sidebar-foot">
           {user && onInvite && (
             <button className="sidebar-foot-btn" style={{ background: 'rgba(255,215,0,.08)', border: '1px solid var(--gold)', color: 'var(--gold)', marginBottom: 8 }} onClick={() => { onInvite(); onClose(); }}>
-              🔗 친구 초대하기
+              ↗ 친구 초대하기
             </button>
           )}
         </div>

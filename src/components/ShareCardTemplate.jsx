@@ -41,7 +41,7 @@ const CARD_THEMES = {
     accentBorder: 'rgba(123,158,196,0.35)',
     titleColor:   '#7B9EC4',
     barColor:     '#7B9EC4',
-    defaultTitle: '📅 나의 최고의 날',
+    defaultTitle: '◇ 나의 최고의 날',
     tagline:      '길일(吉日) 찾기, 별숨에서 확인하기 ✦',
   },
 };

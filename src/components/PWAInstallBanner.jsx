@@ -102,7 +102,7 @@ export default function PWAInstallBanner() {
         gap: 12,
       }}
     >
-      <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>📲</div>
+      <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2, color: 'var(--gold)' }}>↓</div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 3 }}>
           별숨을 앱으로 저장해요

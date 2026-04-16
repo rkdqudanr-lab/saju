@@ -96,7 +96,7 @@ export default function GamificationHeaderV2({
             opacity: 0.8,
           }}
         >
-          ⏰ {timeUntilRecharge}
+          ◷ {timeUntilRecharge}
         </span>
       </div>
 
@@ -127,7 +127,7 @@ export default function GamificationHeaderV2({
             color: 'var(--rose)',
           }}
         >
-          <span>🔥</span>
+          <span style={{ fontSize: 13 }}>↑</span>
           <span>{loginStreak}일</span>
         </div>
       )}

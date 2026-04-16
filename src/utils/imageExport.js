@@ -721,7 +721,7 @@ export function saveStatsCard({ nickname, total, catData, monthData, slotCount, 
   y += 44;
 
   const SLOTS = ['새벽','오전','오후','저녁'];
-  const SLOT_EMOJIS = { 새벽: '🌌', 오전: '🌅', 오후: '☀️', 저녁: '🌙' };
+  const SLOT_EMOJIS = { 새벽: '✦', 오전: '✦', 오후: '☀️', 저녁: '☽' };
   const maxSlot = Math.max(1, ...SLOTS.map(s => slotCount[s] || 0));
   SLOTS.forEach(s => {
     const v = slotCount[s] || 0;

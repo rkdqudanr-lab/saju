@@ -62,7 +62,7 @@ export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoadin
         {/* 메인 메시지 */}
         <div className="today-intro-message">
           <p className="today-intro-msg-main">별숨이 오늘을 읽고 있어요</p>
-          <p className="today-intro-msg-sub">사주와 별자리로 오늘 하루를 함께 바라봐요 💫</p>
+          <p className="today-intro-msg-sub">사주와 별자리로 오늘 하루를 함께 바라봐요</p>
         </div>
 
         {/* 에러 메시지 */}

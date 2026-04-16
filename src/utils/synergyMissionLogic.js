@@ -28,11 +28,11 @@ export function generateSynergyMission(user1Saju, user2Saju, compatScore) {
     if (nextElement === user2Saju.dom || nextElement === user1Saju.dom) {
       missions.push({
         type: 'meal',
-        icon: '🍽️',
+        icon: '◇',
         title: '혼합 오행 식사하기',
         description: `${user1Saju.dom} 기운과 ${user2Saju.dom} 기운을 조화시키는 음식을 함께 먹어봐요`,
         reward: 30,
-        emoji: '🍱',
+        emoji: '◇',
       });
     }
   }
@@ -41,41 +41,41 @@ export function generateSynergyMission(user1Saju, user2Saju, compatScore) {
   if (compatScore >= 70) {
     missions.push({
       type: 'chat',
-      icon: '💬',
+      icon: '◇',
       title: '깊은 대화 나누기',
       description: '서로 최근에 한 일이나 느낌을 깊게 나눠봐요',
       reward: 30,
-      emoji: '💭',
+      emoji: '◇',
     });
   }
 
   // 시간 기반 미션 (특정 시간에 연락)
   missions.push({
     type: 'timing',
-    icon: '⏰',
+    icon: '◷',
     title: '럭키타임에 연락하기',
     description: '오후 2시에 서로에게 응원의 메시지를 보내봐요',
     reward: 30,
-    emoji: '📱',
+    emoji: '◇',
   });
 
   // 임의의 재미있는 미션
   const funMissions = [
     {
       type: 'fun',
-      icon: '🎭',
+      icon: '◈',
       title: '호칭 바꿔 부르기',
       description: '평소와 다른 호칭으로 불러보며 분위기를 바꿔봐요',
       reward: 30,
-      emoji: '😄',
+      emoji: '◈',
     },
     {
       type: 'fun',
-      icon: '📸',
+      icon: '◇',
       title: '함께한 순간 기록하기',
       description: '함께 있는 모습을 사진으로 담아봐요',
       reward: 30,
-      emoji: '📷',
+      emoji: '◇',
     },
   ];
 

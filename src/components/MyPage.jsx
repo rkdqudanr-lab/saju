@@ -93,11 +93,11 @@ function MenuRow({ icon, label, sub, onClick, danger = false }) {
 }
 
 const NOTIF_ITEMS = [
-  { key: 'daily_horoscope', icon: '🌅', label: '오늘의 별숨', sub: '매일 아침 8시, 오늘의 별 기운 알림' },
-  { key: 'streak_reminder', icon: '🔥', label: '스트릭 알림', sub: '연속 로그인이 끊길 위험할 때 알림' },
-  { key: 'jeolgi_notice',   icon: '🌿', label: '절기 알림', sub: '입춘·하지 등 특별한 날 알림' },
-  { key: 'mission_reminder',icon: '✅', label: '미션 알림', sub: '저녁에 완료 안 한 미션 알림' },
-  { key: 'birthday_notice', icon: '🎂', label: '생일 알림', sub: '내 생일 당일 아침 특별 운세 알림' },
+  { key: 'daily_horoscope', icon: '✦', label: '오늘의 별숨', sub: '매일 아침 8시, 오늘의 별 기운 알림' },
+  { key: 'streak_reminder', icon: '◈', label: '스트릭 알림', sub: '연속 로그인이 끊길 위험할 때 알림' },
+  { key: 'jeolgi_notice',   icon: '✧', label: '절기 알림', sub: '입춘·하지 등 특별한 날 알림' },
+  { key: 'mission_reminder',icon: '◇', label: '미션 알림', sub: '저녁에 완료 안 한 미션 알림' },
+  { key: 'birthday_notice', icon: '◇', label: '생일 알림', sub: '내 생일 당일 아침 특별 운세 알림' },
 ];
 
 function NotifToggle({ item, value, onChange, disabled }) {
@@ -216,11 +216,11 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             content: (
               <div style={{ paddingTop: 8 }}>
                 <BpGuideRow icon="✦" text="매일 첫 로그인" bp="+5 BP" />
-                <BpGuideRow icon="🎨" text="색상 처방 · 음식 처방 · 라이프 아이템 미션 완료" bp="+10 BP" />
-                <BpGuideRow icon="✅" text="오늘의 실천 DO 미션 완료" bp="+5 BP" />
-                <BpGuideRow icon="⚠️" text="오늘의 주의 DONT 미션 완료" bp="+5 BP" />
+                <BpGuideRow icon="◇" text="색상 처방 · 음식 처방 · 라이프 아이템 미션 완료" bp="+10 BP" />
+                <BpGuideRow icon="◈" text="오늘의 실천 DO 미션 완료" bp="+5 BP" />
+                <BpGuideRow icon="△" text="오늘의 주의 DONT 미션 완료" bp="+5 BP" />
                 <BpGuideRow icon="◇" text="하루 미션 50% 이상 달성 보너스" bp="+5 BP" />
-                <BpGuideRow icon="📓" text="오늘 일기 작성" bp="+5 BP" />
+                <BpGuideRow icon="◇" text="오늘 일기 작성" bp="+5 BP" />
                 <div style={{ marginTop: 8, fontSize: '11px', color: 'var(--t4)', lineHeight: 1.6 }}>
                   미션은 매일 오늘의 별숨 기운을 확인하면 자동 생성돼요.
                 </div>
@@ -228,7 +228,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             ),
           },
           {
-            icon: '🛡️',
+            icon: '◈',
             title: '액막이란? · 수호자 시스템',
             content: (
               <div style={{ paddingTop: 8, fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.8 }}>
@@ -253,12 +253,12 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             ),
           },
           {
-            icon: '💫',
+            icon: '◇',
             title: '별숨 포인트 사용법',
             content: (
               <div style={{ paddingTop: 8, fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.8 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>🛡️</span>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>◈</span>
                   <div>
                     <div style={{ fontWeight: 600, color: 'var(--t1)' }}>액막이 발동 — 20 BP</div>
                     <div style={{ marginTop: 2 }}>점수 50 미만인 날, 나쁜 기운을 막아드려요.</div>
@@ -284,8 +284,8 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
       <div style={{ padding: '16px 20px 0' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>✦ 나의 별숨</div>
         <MenuRow icon="✦" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달·상승 별자리 해석" onClick={() => setStep(13)} />
-        <MenuRow icon="🌊" label="나의 대운 흐름" sub="10년 단위 대운 사이클 분석" onClick={() => setStep(30)} />
-        <MenuRow icon="🎴" label="사주 명함 카드" sub="나만의 사주 명함 만들기" onClick={() => setStep(21)} />
+        <MenuRow icon="◇" label="나의 대운 흐름" sub="10년 단위 대운 사이클 분석" onClick={() => setStep(30)} />
+        <MenuRow icon="◈" label="사주 명함 카드" sub="나만의 사주 명함 만들기" onClick={() => setStep(21)} />
         <MenuRow icon="◈" label="별숨 타로" sub="타로 카드로 보는 오늘의 메시지" onClick={() => setStep(34)} />
         <MenuRow icon="◇" label="나의 별숨 통계" sub="운세 흐름·상담 패턴 분석" onClick={() => setStep(28)} />
       </div>
@@ -294,13 +294,13 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
       <div style={{ padding: '8px 20px 0' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>설정 및 기타</div>
         <MenuRow
-          icon="📝"
+          icon="✎"
           label="내 사주 정보 수정"
           sub="생년월일·시간 등 기본 정보 변경"
           onClick={() => setStep(1)}
         />
         <MenuRow
-          icon="🏛️"
+          icon="◈"
           label="별숨 광장"
           sub="별자리별 오늘 기운 한마디 나누기"
           onClick={() => setStep(29)}
@@ -318,7 +318,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
           onClick={() => setStep(22)}
         />
         <MenuRow
-          icon="🚪"
+          icon="←"
           label="로그아웃"
           danger
           onClick={() => {

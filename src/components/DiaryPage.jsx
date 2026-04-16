@@ -10,11 +10,11 @@ import { useUserCtx, useSajuCtx } from "../context/AppContext.jsx";
 // ═══════════════════════════════════════════════════════════
 
 const MOOD_OPTIONS = [
-  { value: 1, emoji: '😞', label: '많이 힘들어요' },
-  { value: 2, emoji: '😕', label: '조금 힘들어요' },
-  { value: 3, emoji: '😐', label: '그냥 그래요' },
-  { value: 4, emoji: '🙂', label: '좋은 편이에요' },
-  { value: 5, emoji: '😄', label: '아주 좋아요' },
+  { value: 1, emoji: '↓↓', label: '많이 힘들어요' },
+  { value: 2, emoji: '↓', label: '조금 힘들어요' },
+  { value: 3, emoji: '—', label: '그냥 그래요' },
+  { value: 4, emoji: '↑', label: '좋은 편이에요' },
+  { value: 5, emoji: '↑↑', label: '아주 좋아요' },
 ];
 
 const WEATHER_OPTIONS = [
@@ -22,17 +22,17 @@ const WEATHER_OPTIONS = [
   { value: 'cloudy', emoji: '☁️', label: '흐림' },
   { value: 'rain', emoji: '🌧️', label: '비' },
   { value: 'snow', emoji: '❄️', label: '눈' },
-  { value: 'fine_dust', emoji: '😷', label: '미세먼지' },
-  { value: 'thunder', emoji: '⛈️', label: '천둥번개' },
-  { value: 'wind', emoji: '🌬️', label: '바람' },
+  { value: 'fine_dust', emoji: '◌', label: '미세먼지' },
+  { value: 'thunder', emoji: '↯', label: '천둥번개' },
+  { value: 'wind', emoji: '≈', label: '바람' },
 ];
 
 const ENERGY_OPTIONS = [
-  { value: 1, emoji: '🪫', label: '방전' },
-  { value: 2, emoji: '🔋', label: '낮음' },
-  { value: 3, emoji: '🔋', label: '보통' },
-  { value: 4, emoji: '🔋', label: '좋음' },
-  { value: 5, emoji: '⚡', label: '가득!' },
+  { value: 1, emoji: '○', label: '방전' },
+  { value: 2, emoji: '◔', label: '낮음' },
+  { value: 3, emoji: '◑', label: '보통' },
+  { value: 4, emoji: '◕', label: '좋음' },
+  { value: 5, emoji: '●', label: '가득!' },
 ];
 
 function Section({ title, children }) {
@@ -313,7 +313,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
     <div style={{ paddingTop: 8, paddingBottom: embedded ? 16 : 40 }}>
       {/* 헤더 */}
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>📓</div>
+        <div style={{ fontSize: '1.8rem', marginBottom: 8, color: 'var(--gold)' }}>◇</div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
           나의 하루를 별숨에게
         </div>
@@ -326,7 +326,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
       {!isPastEntry && diaryStreak >= 2 && (
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,120,50,.12)', border: '1px solid rgba(255,120,50,.3)', borderRadius: 20, padding: '5px 14px', fontSize: 'var(--xs)', color: '#ff7832', fontWeight: 700 }}>
-            🔥 {diaryStreak}일 연속 기록 중!
+            ↑ {diaryStreak}일 연속 기록 중!
           </span>
         </div>
       )}
@@ -511,16 +511,16 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
       {/* 해석 후 연결 버튼 */}
       {!isPastEntry && diaryReviewResult && !diaryReviewLoading && !embedded && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(10)}>🗓️ 별숨달력에서 보기</button>
-          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(20)}>📚 일기 모아보기</button>
+          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(10)}>◇ 별숨달력에서 보기</button>
+          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(20)}>◈ 일기 모아보기</button>
         </div>
       )}
 
       {/* 수정 / 삭제 / 홈 */}
       <div style={{ display: 'flex', gap: 8 }}>
-        <button className="res-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✏️ 수정하기</button>
+        <button className="res-btn" style={{ flex: 1 }} onClick={() => setIsEditing(true)}>✎ 수정하기</button>
         {todayEntry?.id && (
-          <button className="res-btn" style={{ flex: 1, color: 'var(--rose)' }} onClick={handleDelete}>🗑️ 삭제하기</button>
+          <button className="res-btn" style={{ flex: 1, color: 'var(--rose)' }} onClick={handleDelete}>✕ 삭제하기</button>
         )}
         {!embedded && <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(isPastEntry ? 20 : 0)}>{isPastEntry ? '← 목록으로' : '← 홈으로'}</button>}
       </div>
@@ -550,7 +550,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
     <div style={{ paddingTop: 8, paddingBottom: embedded ? 16 : 40 }}>
           {/* 헤더 */}
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>📓</div>
+            <div style={{ fontSize: '1.8rem', marginBottom: 8, color: 'var(--gold)' }}>◇</div>
             <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
               나의 하루를 별숨에게
             </div>
@@ -562,7 +562,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
           {diaryStreak >= 2 && (
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,120,50,.12)', border: '1px solid rgba(255,120,50,.3)', borderRadius: 20, padding: '5px 14px', fontSize: 'var(--xs)', color: '#ff7832', fontWeight: 700 }}>
-                🔥 {diaryStreak}일 연속 기록 중!
+                ↑ {diaryStreak}일 연속 기록 중!
               </span>
             </div>
           )}
@@ -650,7 +650,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
           <Section title="오늘 감사했던 일">
             <input
               className="inp"
-              placeholder="작은 것도 괜찮아요 🌿"
+              placeholder="작은 것도 괜찮아요"
               value={gratitude}
               onChange={e => setGratitude(e.target.value)}
               style={{ marginBottom: 0 }}
@@ -730,7 +730,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
                     style={{ flex: 1 }}
                     onClick={() => setStep(10)}
                   >
-                    🗓️ 별숨달력에서 보기
+                    ◇ 별숨달력에서 보기
                   </button>
                   <button
                     className="res-btn"

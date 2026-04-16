@@ -7,14 +7,14 @@ import { TAEGIL_PROMPT } from "../utils/constants.js";
 // ═══════════════════════════════════════════════════════════
 
 const EVENT_TYPES = [
-  { key: '결혼·혼인신고', emoji: '💍' },
-  { key: '이사·입주', emoji: '🏠' },
-  { key: '개업·창업', emoji: '🎊' },
-  { key: '면접·시험', emoji: '📋' },
-  { key: '계약·서명', emoji: '📝' },
-  { key: '여행·출발', emoji: '✈️' },
-  { key: '수술·치료', emoji: '🏥' },
-  { key: '고백·프로포즈', emoji: '💌' },
+  { key: '결혼·혼인신고', emoji: '◇' },
+  { key: '이사·입주', emoji: '◇' },
+  { key: '개업·창업', emoji: '↑' },
+  { key: '면접·시험', emoji: '◈' },
+  { key: '계약·서명', emoji: '◇' },
+  { key: '여행·출발', emoji: '↗' },
+  { key: '수술·치료', emoji: '✧' },
+  { key: '고백·프로포즈', emoji: '◇' },
 ];
 
 // 천간·지지 이름
@@ -41,9 +41,9 @@ function getDateSajuDesc(y, m, d) {
 }
 
 function scoreToStars(score) {
-  if (score >= 1) return '⭐⭐⭐⭐⭐';
-  if (score === 0) return '⭐⭐⭐';
-  return '⭐';
+  if (score >= 1) return '✦✦✦✦✦';
+  if (score === 0) return '✦✦✦';
+  return '✦';
 }
 
 export default function TaegillPage({ form, buildCtx, callApi: callApiProp, showToast, onShareCard }) {
@@ -102,7 +102,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
       <div className="inner">
         {/* 헤더 */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: '2rem', marginBottom: 8 }}>🗓️</div>
+          <div style={{ fontSize: '2rem', marginBottom: 8, color: 'var(--gold)' }}>◇</div>
           <h2 style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>택일 — 길일 찾기</h2>
           <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>
             중요한 날, 별숨이 가장 좋은 날을 골라드릴게요
@@ -159,7 +159,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
         {candidateDates.length > 0 && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 10 }}>
-              📋 분석 대상 날짜 ({candidateDates.length}일) — 사주 기운 순
+              ◇ 분석 대상 날짜 ({candidateDates.length}일) — 사주 기운 순
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {candidateDates.slice(0, 6).map((d, i) => (
@@ -170,7 +170,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
                   border: `1px solid ${i === 0 ? 'var(--acc)' : 'var(--line)'}`,
                 }}>
                   <span style={{ fontSize: 'var(--xs)', color: i === 0 ? 'var(--gold)' : 'var(--t2)' }}>
-                    {i === 0 && '🥇 '}{d.label}
+                    {i === 0 && '✦ '}{d.label}
                   </span>
                   <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>
                     {d.sajuDesc} {scoreToStars(d.score)}
@@ -192,7 +192,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
             fontWeight: 700, fontSize: 'var(--sm)', border: 'none', marginBottom: 24,
           }}
         >
-          {loading ? '별숨이 길일을 찾고 있어요...' : '🗓️ 길일 분석 받기'}
+          {loading ? '별숨이 길일을 찾고 있어요...' : '✦ 길일 분석 받기'}
         </button>
 
         {/* 결과 */}
@@ -223,7 +223,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--gold)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
               >
-                📅 나의 최고의 날 카드로 저장
+                ◇ 나의 최고의 날 카드로 저장
               </button>
             )}
           </div>

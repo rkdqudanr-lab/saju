@@ -23,14 +23,14 @@ function getDaysInMonth(year, month) {
 // ═══════════════════════════════════════════════════════════
 
 const LIFE_STAGE_OPTIONS = [
-  { value: 'jobseek', label: '취업 준비 중', emoji: '📋' },
-  { value: 'dating', label: '연애 중', emoji: '💕' },
-  { value: 'healing', label: '이별 후 회복 중', emoji: '💧' },
-  { value: 'employed', label: '직장인', emoji: '💼' },
-  { value: 'business', label: '사업 운영 중', emoji: '📈' },
-  { value: 'student', label: '학업·시험 준비 중', emoji: '📚' },
-  { value: 'parenting', label: '육아 중', emoji: '🏡' },
-  { value: 'reentry', label: '경력 재진입 준비 중', emoji: '🌱' },
+  { value: 'jobseek', label: '취업 준비 중', emoji: '◈' },
+  { value: 'dating', label: '연애 중', emoji: '◇' },
+  { value: 'healing', label: '이별 후 회복 중', emoji: '◇' },
+  { value: 'employed', label: '직장인', emoji: '◈' },
+  { value: 'business', label: '사업 운영 중', emoji: '↑' },
+  { value: 'student', label: '학업·시험 준비 중', emoji: '◈' },
+  { value: 'parenting', label: '육아 중', emoji: '◇' },
+  { value: 'reentry', label: '경력 재진입 준비 중', emoji: '↗' },
   { value: 'free', label: '자유 선택 (기본)', emoji: '✦' },
 ];
 
@@ -40,21 +40,21 @@ const STYLE_OPTIONS = [
     label: '분석형',
     sub: 'T형',
     desc: '논리적이고 구체적인 분석 중심',
-    emoji: '🧠',
+    emoji: '◈',
   },
   {
     value: 'M',
     label: '균형형',
     sub: '중간형',
     desc: '분석과 공감을 균형 있게',
-    emoji: '⚖️',
+    emoji: '◇',
   },
   {
     value: 'F',
     label: '공감형',
     sub: 'F형',
     desc: '따뜻하고 감성적인 위로 중심',
-    emoji: '🌸',
+    emoji: '✧',
   },
 ];
 
@@ -630,7 +630,7 @@ export default function SettingsPage({
           <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
             <div className="card-title">별숨 푸시 알림</div>
             <div className="card-sub" style={{ marginBottom: 8 }}>
-              ⚠️ 배드타임 진입, 행운의 시간대 도달 시 알림을 받아보세요.
+              △ 배드타임 진입, 행운의 시간대 도달 시 알림을 받아보세요.
             </div>
             <div className="toggle-row" onClick={handlePushToggle}>
               <button
@@ -687,7 +687,7 @@ export default function SettingsPage({
               );
             })}
             <div style={{ marginTop: 8, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7 }}>
-              메뉴를 숨겨도 직접 URL 이동은 가능해요 🌙
+              메뉴를 숨겨도 직접 URL 이동은 가능해요
             </div>
           </div>
         )}

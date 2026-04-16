@@ -59,7 +59,7 @@ class ErrorBoundary extends React.Component {
       // 그 외 오류: 재시작 버튼 표시
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'sans-serif', color: '#888', gap: 12 }}>
-          <div style={{ fontSize: 40 }}>🌙</div>
+          <div style={{ fontSize: 40, color: '#b4963c' }}>☽</div>
           <div style={{ fontSize: 16 }}>별숨이 잠시 쉬고 있어요</div>
           <button onClick={() => window.location.reload()} style={{ marginTop: 8, padding: '8px 20px', border: '1px solid #ccc', borderRadius: 8, background: 'transparent', cursor: 'pointer', fontSize: 14 }}>
             다시 시작하기

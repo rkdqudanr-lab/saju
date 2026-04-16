@@ -8,9 +8,9 @@ import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 
 const CATEGORIES = [
-  { value: 'bug', label: '🐛 버그 신고' },
-  { value: 'feature', label: '💡 기능 제안' },
-  { value: 'payment', label: '💳 결제 문의' },
+  { value: 'bug', label: '◇ 버그 신고' },
+  { value: 'feature', label: '✦ 기능 제안' },
+  { value: 'payment', label: '◈ 결제 문의' },
   { value: 'other', label: '기타' },
 ];
 
@@ -122,7 +122,7 @@ export default function InquiryPage() {
             marginBottom: 20,
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: 22, marginBottom: 6 }}>✅</div>
+            <div style={{ fontSize: 22, marginBottom: 6, color: 'var(--teal)' }}>◈</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 600 }}>문의가 접수되었어요!</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 4 }}>
               검토 후 최대한 빠르게 답변드릴게요.

@@ -11,7 +11,7 @@ import { parseHoroscopeForGamification } from '../utils/missionGenerator.js';
 const IS_BETA = true;
 
 const SLOT_TAG_MAP = { morning: '[오전·100자]', afternoon: '[오후·100자]', evening: '[저녁·100자]', dawn: '[새벽·100자]' };
-const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.';
+const ERR_MSG = '별이 잠시 쉬고 있어요\n잠시 후 다시 시도해봐요.';
 export const DAILY_MAX = 3;
 
 function getTodayDateStr() {
@@ -235,6 +235,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             isWeekly:          opts.isWeekly          || false,
             isDaily:           opts.isDaily           || false,
             isDaeun:           opts.isDaeun           || false,
+            gender:            useAppStore.getState().form?.gender || null,
             responseStyle:     style,
             precision_level:   useAppStore.getState().dataPrecision?.level || 'low',
             clientHour:        new Date().getHours(),
@@ -244,7 +245,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
         if (res.status === 401) {
           setRetryMsg('');
           if (typeof onSessionExpired === 'function') onSessionExpired();
-          if (typeof showToast === 'function') showToast('세션이 만료됐어요. 다시 로그인해주세요 🌙', 'warn');
+          if (typeof showToast === 'function') showToast('세션이 만료됐어요. 다시 로그인해주세요', 'warn');
           if (typeof onLoginRequired === 'function') onLoginRequired();
           throw new Error('SESSION_EXPIRED');
         }
@@ -365,7 +366,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     );
     stopLoadingMsg();
     const newAnswers = results.map((r, i) =>
-      r.status === 'fulfilled' ? r.value : `Q${i + 1} 답변을 불러오지 못했어요 🌙\n잠시 후 다시 시도해봐요.`
+      r.status === 'fulfilled' ? r.value : `Q${i + 1} 답변을 불러오지 못했어요\n잠시 후 다시 시도해봐요.`
     );
     setAnswers(newAnswers);
     saveHistoryToSupabase(selQs, newAnswers, timeSlot);
@@ -550,7 +551,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       const aiText = await callApi(fullMsg, { isChat: true });
       setChatUsed(p => p + 1); // 성공 시에만 카운트 증가
       setChatHistory(p => { const updated = [...p, { role: 'ai', text: aiText }]; setLatestChatIdx(updated.length - 1); return updated; });
-    } catch { setChatHistory(p => [...p, { role: 'ai', text: '앗, 잠깐 연결이 끊겼어요 🌙 다시 시도해봐요!' }]); }
+    } catch { setChatHistory(p => [...p, { role: 'ai', text: '앗, 잠깐 연결이 끊겼어요. 다시 시도해봐요!' }]); }
     finally { setChatLoading(false); }
   }, [chatInput, chatLoading, chatLeft, selQs, answers, chatHistory, callApi]);
 
@@ -617,7 +618,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       setChatHistory(p => {
         const copy = [...p];
         const last = copy.length - 1;
-        if (copy[last]?.role === 'ai') copy[last] = { role: 'ai', text: '앗, 잠깐 연결이 끊겼어요 🌙 다시 시도해봐요!', streaming: false };
+        if (copy[last]?.role === 'ai') copy[last] = { role: 'ai', text: '앗, 잠깐 연결이 끊겼어요. 다시 시도해봐요!', streaming: false };
         return copy;
       });
     } finally {
@@ -633,7 +634,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     try {
       const text = await callApi('[요청] 이번 달 종합 운세 리포트', { isReport: true });
       setReportText(text);
-    } catch { setReportText('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!'); }
+    } catch { setReportText('별이 잠시 쉬고 있어요\n잠시 후 다시 시도해봐요!'); }
     finally { setReportLoading(false); }
   }, [callApi, curPkg]);
 

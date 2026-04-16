@@ -6,29 +6,29 @@ import { getMoonPhase, DREAM_PROMPT } from "../utils/constants.js";
 // ═══════════════════════════════════════════════════════════
 
 const DREAM_MOODS = [
-  { value: '행복한', emoji: '😊' },
-  { value: '불안한', emoji: '😰' },
-  { value: '무서운', emoji: '😨' },
-  { value: '슬픈', emoji: '😢' },
-  { value: '설레는', emoji: '🥰' },
-  { value: '혼란스러운', emoji: '😵' },
-  { value: '평온한', emoji: '😌' },
-  { value: '기묘한', emoji: '🤔' },
+  { value: '행복한', emoji: '◇' },
+  { value: '불안한', emoji: '△' },
+  { value: '무서운', emoji: '△' },
+  { value: '슬픈', emoji: '◇' },
+  { value: '설레는', emoji: '✦' },
+  { value: '혼란스러운', emoji: '◈' },
+  { value: '평온한', emoji: '✧' },
+  { value: '기묘한', emoji: '◈' },
 ];
 
 const DREAM_TAGS = [
-  { value: '사람', emoji: '👤' },
-  { value: '물·바다', emoji: '🌊' },
-  { value: '하늘·구름', emoji: '☁️' },
-  { value: '동물', emoji: '🐾' },
-  { value: '죽음', emoji: '💀' },
-  { value: '쫓기는', emoji: '🏃' },
-  { value: '날아다니는', emoji: '🕊️' },
-  { value: '돈·재물', emoji: '💰' },
-  { value: '불', emoji: '🔥' },
-  { value: '가족', emoji: '👨‍👩‍👧' },
-  { value: '집', emoji: '🏠' },
-  { value: '시험·학교', emoji: '📚' },
+  { value: '사람', emoji: '◇' },
+  { value: '물·바다', emoji: '∿' },
+  { value: '하늘·구름', emoji: '◇' },
+  { value: '동물', emoji: '◇' },
+  { value: '죽음', emoji: '◇' },
+  { value: '쫓기는', emoji: '→' },
+  { value: '날아다니는', emoji: '↑' },
+  { value: '돈·재물', emoji: '◇' },
+  { value: '불', emoji: '△' },
+  { value: '가족', emoji: '◇' },
+  { value: '집', emoji: '◇' },
+  { value: '시험·학교', emoji: '◈' },
 ];
 
 /** [후속질문] 태그 파싱 */
@@ -233,14 +233,14 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--gold)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
               >
-                📸 나의 길몽 리포트 카드로 저장
+                ↓ 나의 길몽 리포트 카드로 저장
               </button>
             )}
 
             {/* 후속 질문 */}
             {followUps.length > 0 && chatHistory.length === 0 && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 8 }}>💬 더 궁금한 점이 있나요?</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 8 }}>◇ 더 궁금한 점이 있나요?</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {followUps.map((q, i) => (
                     <button

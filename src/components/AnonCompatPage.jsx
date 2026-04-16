@@ -23,11 +23,11 @@ function timeSince(ts) {
 
 function getCompatTier(score) {
   if (score >= 90) return { label: '환상의 티키타카', emoji: '✦', color: '#E8B048' };
-  if (score >= 75) return { label: '천생연분에 가까운 두 별', emoji: '💫', color: '#B4963C' };
-  if (score >= 60) return { label: '서로를 성장시키는 인연', emoji: '🌱', color: '#5FAD7A' };
-  if (score >= 45) return { label: '창과 방패', emoji: '🛡️', color: '#7B9EC4' };
-  if (score >= 30) return { label: '서로가 서로의 브레이크', emoji: '⚖️', color: '#C47A48' };
-  return { label: '도전적 성장 관계', emoji: '🔥', color: '#9B4EC4' };
+  if (score >= 75) return { label: '천생연분에 가까운 두 별', emoji: '☽', color: '#B4963C' };
+  if (score >= 60) return { label: '서로를 성장시키는 인연', emoji: '↑', color: '#5FAD7A' };
+  if (score >= 45) return { label: '창과 방패', emoji: '◈', color: '#7B9EC4' };
+  if (score >= 30) return { label: '서로가 서로의 브레이크', emoji: '♎', color: '#C47A48' };
+  return { label: '도전적 성장 관계', emoji: '△', color: '#9B4EC4' };
 }
 
 // ── 공유 모달 ──────────────────────────────────────────────────
@@ -217,7 +217,7 @@ function CompatCard({ post, myKakaoId, onLike, liked }) {
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: '18px' }}>{liked ? '💛' : '🤍'}</span>
+          <span style={{ fontSize: '18px', color: liked ? 'var(--gold)' : 'var(--t4)' }}>{liked ? '♥' : '♡'}</span>
           <span style={{ fontSize: '11px', color: liked ? 'var(--gold)' : 'var(--t4)', fontWeight: 600 }}>
             {post.likes_count || 0}
           </span>

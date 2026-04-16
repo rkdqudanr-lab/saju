@@ -180,14 +180,14 @@ export default function App() {
   // 배드타임 액막이 핸들러
   const handleBlockBadtime = useCallback(async () => {
     if (!gamificationState.currentBp || gamificationState.currentBp < 20) {
-      showToast('BP가 부족합니다 😢', 'error');
+      showToast('BP가 부족합니다', 'error');
       return;
     }
     setIsBlockingBadtime(true);
     try {
       const result = await blockBadtime('badtime_1', 20);
       if (result.success) {
-        showToast('액막이 발동! 악운을 긍정적으로 바꿨어요 ✨', 'success');
+        showToast('액막이 발동! 악운을 긍정적으로 바꿨어요', 'success');
       }
     } finally {
       setIsBlockingBadtime(false);
@@ -269,10 +269,10 @@ export default function App() {
     try {
       const result = await rechargeFreeBP();
       if (result.success) {
-        showToast(`+${result.recharged} BP 충전! 🔋`, 'success');
+        showToast(`+${result.recharged} BP 충전!`, 'success');
         setFreeRechargeAvailable(false); // 충전 완료 후 상태 업데이트
       } else if (result.message === '일일 1회 제한') {
-        showToast('내일 다시 충전할 수 있습니다 ⏰', 'info');
+        showToast('내일 다시 충전할 수 있습니다', 'info');
       }
     } catch (error) {
       showToast('BP 충전 중 오류 발생', 'error');
@@ -423,7 +423,7 @@ export default function App() {
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>별숨이 당신을 맞이하고 있어요</div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요 🌙</div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
@@ -444,7 +444,7 @@ export default function App() {
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>별숨 로그인 중</div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요 🌙</div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
@@ -510,7 +510,7 @@ export default function App() {
 
       {step >= 1 && user && (
         <div className="user-chip" onClick={() => setShowProfileModal(true)} title="내 정보 수정" style={{ cursor: 'pointer' }}>
-          {user.profileImage ? <img src={user.profileImage} alt="프로필" /> : <span style={{ fontSize: '1rem' }}>🌙</span>}
+          {user.profileImage ? <img src={user.profileImage} alt="프로필" /> : <span style={{ fontSize: '1rem', color: 'var(--gold)' }}>✦</span>}
           <span>{user.nickname}</span>
         </div>
       )}

@@ -14,7 +14,7 @@ export function getTimeSlot(){
 export const TIME_CONFIG={
   morning:{
     label:'오늘을 여는 별숨',
-    emoji:'🌅',
+    emoji:'✦',
     color:'#E8B048',
     bg:'rgba(232,176,72,.08)',
     border:'rgba(232,176,72,.2)',
@@ -38,7 +38,7 @@ export const TIME_CONFIG={
   },
   evening:{
     label:'오늘을 마무리하는 별숨',
-    emoji:'🌙',
+    emoji:'☽',
     color:'#9B8EC4',
     bg:'rgba(155,142,196,.08)',
     border:'rgba(155,142,196,.2)',
@@ -50,7 +50,7 @@ export const TIME_CONFIG={
   },
   dawn:{
     label:'별이 가장 선명한 시간',
-    emoji:'🌌',
+    emoji:'✦',
     color:'#6BBFB5',
     bg:'rgba(107,191,181,.06)',
     border:'rgba(107,191,181,.15)',

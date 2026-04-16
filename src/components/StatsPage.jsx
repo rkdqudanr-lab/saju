@@ -343,7 +343,7 @@ export default function StatsPage({ callApi }) {
                 color: 'var(--t3)',
               }}
             >
-              {sharing ? '저장 중...' : '📤 공유'}
+              {sharing ? '저장 중...' : '↑ 공유'}
             </button>
           )}
         </div>
@@ -358,7 +358,7 @@ export default function StatsPage({ callApi }) {
         </div>
       ) : total === 0 ? (
         <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
+          <div style={{ fontSize: 32, marginBottom: 12, color: 'var(--t4)' }}>◇</div>
           <div style={{ fontSize: 'var(--sm)' }}>아직 상담 기록이 없어요.<br />첫 상담을 시작해보세요!</div>
         </div>
       ) : (

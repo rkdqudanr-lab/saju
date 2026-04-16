@@ -209,7 +209,7 @@ export function useUserProfile() {
         }
       } catch (err) {
         console.error('[별숨] 카카오 code 오류:', err);
-        setLoginError('카카오 로그인에 실패했어요. 다시 시도해봐요 🌙');
+        setLoginError('카카오 로그인에 실패했어요. 다시 시도해봐요');
       } finally {
         setLoginLoading(false);
       }
@@ -362,9 +362,9 @@ export function useUserProfile() {
   const kakaoLogin = useCallback(() => {
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
     if (!JS_KEY) { setLoginError('카카오 앱 키가 설정되지 않았어요.'); return; }
-    if (!window.Kakao) { setLoginError('카카오 SDK를 불러오지 못했어요 🌙'); return; }
+    if (!window.Kakao) { setLoginError('카카오 SDK를 불러오지 못했어요'); return; }
     if (!window.Kakao.isInitialized()) {
-      try { window.Kakao.init(JS_KEY); } catch { setLoginError('카카오 초기화에 실패했어요 🌙'); return; }
+      try { window.Kakao.init(JS_KEY); } catch { setLoginError('카카오 초기화에 실패했어요'); return; }
     }
     setLoginError('');
     try {

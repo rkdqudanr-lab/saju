@@ -117,7 +117,7 @@ export default function ResultsStep({
                       />
                     </div>
                     <div className="answer-unlock-overlay">
-                      <div className="unlock-icon">🔒</div>
+                      <div className="unlock-icon">◈</div>
                       <div className="unlock-title">Q{i + 1} 이야기가 잠겨있어요</div>
                       <div className="unlock-desc">별 포인트 {UNLOCK_COST}개로 열기 · 현재 {gamificationState?.currentBp || 0}BP</div>
                       <button className="unlock-bp-btn" onClick={() => handleUnlock(i)}>
@@ -180,19 +180,19 @@ export default function ResultsStep({
             <div className="action-grid" style={{ marginBottom: 'var(--sp2)' }}>
               {['love', 'family', 'relation'].includes(cat?.id ?? '') ? (
                 <div className="action-card compat" onClick={() => setStep(7)}>
-                  <div className="action-card-icon">💞</div>
+                  <div className="action-card-icon">◈</div>
                   <div className="action-card-title">우리가 만나면</div>
                   <div className="action-card-sub">두 사람의 별이 만나는 시나리오</div>
                 </div>
               ) : (
                 <div className="action-card" style={{ borderColor: 'var(--tealacc)' }} onClick={() => setStep(6)}>
-                  <div className="action-card-icon">📜</div>
+                  <div className="action-card-icon">◈</div>
                   <div className="action-card-title">{cat?.label || '심층'} 심층 분석</div>
                   <div className="action-card-sub">이 분야만 깊게 파고들기</div>
                 </div>
               )}
               <div className="action-card letter" onClick={() => setStep(8)}>
-                <div className="action-card-icon">🔮</div>
+                <div className="action-card-icon">◈</div>
                 <div className="action-card-title">별숨의 예언</div>
                 <div className="action-card-sub">시간이 흐른 뒤의 나의 예언</div>
               </div>
@@ -200,7 +200,7 @@ export default function ResultsStep({
 
             {!user && (
               <div className="kakao-nudge">
-                <span style={{ fontSize: '1.1rem' }}>🌙</span>
+                <span style={{ fontSize: '1.1rem', color: 'var(--gold)' }}>✦</span>
                 <span className="kakao-nudge-text">로그인하면 연인 운세 · 직장 맞춤 · 내 기록이 모두 저장돼요</span>
                 <button className="kakao-btn" style={{ width: 'auto', padding: '6px 14px', fontSize: 'var(--xs)' }} onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }}>카카오 로그인</button>
               </div>
@@ -219,7 +219,7 @@ export default function ResultsStep({
             </div>
 
             <div className="kakao-channel-remind">
-              <div className="kcr-icon">💌</div>
+              <div className="kcr-icon">✉</div>
               <div className="kcr-body">
                 <div className="kcr-title">내일 별숨 받기</div>
                 <div className="kcr-desc">카카오 채널을 추가하면 매주 나만의 운세를 받을 수 있어요</div>
@@ -237,7 +237,7 @@ export default function ResultsStep({
                 <button className="fg-card" onClick={() => setStep(5)}><span className="fg-icon" style={{ fontSize: 18 }}>✧</span><div className="fg-info"><div className="fg-name">별숨에게 더 물어보기</div><div className="fg-desc">답변 기반 후속 상담 채팅</div></div></button>
                 <button className="fg-card" onClick={() => setShowSidebar(true)}><span className="fg-icon" style={{ fontSize: 18 }}>≡</span><div className="fg-info"><div className="fg-name">지난 이야기</div><div className="fg-desc">내가 별숨에 물었던 모든 질문 기록</div></div></button>
                 <button className="fg-card" onClick={handleCopyAll}>
-                  <span className="fg-icon">{copyDone ? '✅' : '📋'}</span>
+                  <span className="fg-icon">{copyDone ? '✓' : '⎘'}</span>
                   <div className="fg-info">
                     <div className="fg-name">전체 복사</div>
                     <div className="fg-desc">{copyDone ? '복사됐어요!' : '오늘 받은 모든 답변 클립보드 복사'}</div>

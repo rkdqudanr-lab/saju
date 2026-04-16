@@ -2,18 +2,18 @@ import { useState, useMemo } from "react";
 import { getSaju, CG, JJ, CGH, JJH, OC, ON, ILGAN_DESC } from "../utils/saju.js";
 
 const ANNIVERSARY_TYPES = [
-  { key: "결혼기념일", emoji: "💍" },
-  { key: "시험일",     emoji: "📚" },
-  { key: "입사일",     emoji: "💼" },
-  { key: "생일",       emoji: "🎂" },
+  { key: "결혼기념일", emoji: "◇" },
+  { key: "시험일",     emoji: "◈" },
+  { key: "입사일",     emoji: "◈" },
+  { key: "생일",       emoji: "✦" },
   { key: "직접입력",   emoji: "✦" },
 ];
 
 const FUTURE_TYPES = [
-  { key: "면접·시험일", emoji: "🎯" },
-  { key: "계약·서류일", emoji: "📝" },
-  { key: "결혼 후보일", emoji: "💍" },
-  { key: "여행·이동일", emoji: "✈️" },
+  { key: "면접·시험일", emoji: "◈" },
+  { key: "계약·서류일", emoji: "◇" },
+  { key: "결혼 후보일", emoji: "◇" },
+  { key: "여행·이동일", emoji: "↗" },
   { key: "직접입력",    emoji: "✦" },
 ];
 
@@ -201,7 +201,7 @@ export default function AnniversaryPage({
             onClick={handleAskAI}
             style={{ marginBottom: 'var(--sp3)' }}
           >
-            {loading ? '별이 기운을 읽는 중 🌙' : (isFutureMode ? '✦ 이 날의 기운 미리보기' : '✦ AI 해석 받기')}
+            {loading ? '별이 기운을 읽는 중...' : (isFutureMode ? '✦ 이 날의 기운 미리보기' : '✦ AI 해석 받기')}
           </button>
         )}
 

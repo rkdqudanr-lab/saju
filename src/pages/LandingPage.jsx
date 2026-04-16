@@ -261,7 +261,7 @@ export default function LandingPage({
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,120,50,.08)', border: '1px solid rgba(255,120,50,.2)', borderRadius: 'var(--r1)', marginBottom: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 16 }}>🔥</span>
+                      <span style={{ fontSize: 16 }}>↑</span>
                       <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: '#ff7832' }}>{streak}일 연속 출석</span>
                     </div>
                     {nextMilestone && (
@@ -317,7 +317,7 @@ export default function LandingPage({
                         <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
                           <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span>📓</span>
+                              <span style={{ color: 'var(--gold)' }}>◇</span>
                               <span style={{ fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 700 }}>별숨의 오늘 해석</span>
                             </div>
                             {diaryReviewResult && !diaryReviewLoading && (
@@ -595,7 +595,7 @@ export default function LandingPage({
                 }}>
                   <span style={{ fontWeight: 700 }}>{c.label}</span>
                   <span style={{ marginLeft: 8, color: c.dday === 0 ? 'var(--gold)' : c.dday <= 7 ? '#e07' : 'var(--t4)' }}>
-                    {c.dday === 0 ? '🎂 오늘이에요!' : `D-${c.dday}`}
+                    {c.dday === 0 ? '✦ 오늘이에요!' : `D-${c.dday}`}
                   </span>
                 </div>
               ))}

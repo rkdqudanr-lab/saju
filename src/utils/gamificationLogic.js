@@ -101,7 +101,7 @@ export function detectBadtime(score, horoscopeText = '') {
     detected: true,
     cost: BADTIME_BLOCK_COST.DEFAULT,
     symptom: symptom.substring(0, 30), // 최대 30자
-    reward: '악운을 피할 수 있어요 🛡️',
+    reward: '악운을 피할 수 있어요',
   };
 }
 
@@ -257,11 +257,11 @@ export function getBPGaugeColor(currentBp, level) {
 // 함수: 미션 타입별 설명
 // ════════════════════════════════════════════════════════════════
 export const MISSION_TYPE_LABELS = {
-  color: { label: '색상 처방', emoji: '🎨' },
-  menu: { label: '음식 처방', emoji: '🍽️' },
-  item: { label: '라이프 아이템', emoji: '🌿' },
-  do: { label: '오늘의 실천', emoji: '✅' },
-  dont: { label: '오늘의 주의', emoji: '⚠️' },
+  color: { label: '색상 처방', emoji: '◇' },
+  menu: { label: '음식 처방', emoji: '◇' },
+  item: { label: '라이프 아이템', emoji: '✧' },
+  do: { label: '오늘의 실천', emoji: '◈' },
+  dont: { label: '오늘의 주의', emoji: '△' },
 };
 
 /**
@@ -270,7 +270,7 @@ export const MISSION_TYPE_LABELS = {
  * @returns {Object} { label, emoji }
  */
 export function getMissionTypeLabel(type) {
-  return MISSION_TYPE_LABELS[type] || { label: '미션', emoji: '✨' };
+  return MISSION_TYPE_LABELS[type] || { label: '미션', emoji: '✦' };
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -294,7 +294,7 @@ export function generateTransformedFortuneMessage(badtimeSymptom) {
   };
 
   const positive = transformations[badtimeSymptom] || '긍정적 기운';
-  return `별숨이 ${badtimeSymptom}을(를) ${positive}으로 바꿨어요 ✨`;
+  return `별숨이 ${badtimeSymptom}을(를) ${positive}으로 바꿨어요`;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -308,15 +308,15 @@ export function generateTransformedFortuneMessage(badtimeSymptom) {
  */
 export function generateLossAversionMessage(score, currentBp) {
   if (score < 30) {
-    return '⚠️ 심각한 악운이 감지되었어요. 지금 액막이를 발동하세요!';
+    return '△ 심각한 악운이 감지되었어요. 지금 액막이를 발동하세요!';
   }
   if (score < BADTIME_THRESHOLD) {
     if (currentBp >= BADTIME_BLOCK_COST.DEFAULT) {
-      return '⚠️ 악운이 감지되었어요. 액막이로 운명을 바꿀 수 있습니다.';
+      return '△ 악운이 감지되었어요. 액막이로 운명을 바꿀 수 있습니다.';
     }
-    return '⚠️ 악운이 감지되었어요. BP를 충전하고 액막이를 발동하세요.';
+    return '△ 악운이 감지되었어요. BP를 충전하고 액막이를 발동하세요.';
   }
-  return '✨ 오늘은 모든 시간이 안전해요!';
+  return '✦ 오늘은 모든 시간이 안전해요!';
 }
 
 // ════════════════════════════════════════════════════════════════

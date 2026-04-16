@@ -92,7 +92,7 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
       <div className="inner">
         {/* 헤더 */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: '2rem', marginBottom: 8 }}>📛</div>
+          <div style={{ fontSize: '2rem', marginBottom: 8, color: 'var(--gold)' }}>◈</div>
           <h2 style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>이름 풀이</h2>
           <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>
             이름 속에 담긴 기운을 별숨이 읽어드릴게요
@@ -183,7 +183,7 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
             transition: 'all .2s',
           }}
         >
-          {loading ? '이름 속 기운을 읽는 중...' : '📛 이름 풀이 받기'}
+          {loading ? '이름 속 기운을 읽는 중...' : '✦ 이름 풀이 받기'}
         </button>
 
         {/* 결과 */}

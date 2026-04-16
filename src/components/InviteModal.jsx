@@ -2,7 +2,7 @@ export default function InviteModal({ user, showToast, onClose }) {
   return (
     <div className="upgrade-modal-bg" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
-        <div style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: 6 }}>🔗</div>
+        <div style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: 6, color: 'var(--gold)' }}>↗</div>
         <div className="upgrade-modal-title">친구 초대하기</div>
         <div className="upgrade-modal-sub">친구가 첫 상담을 완료하면<br />무료 채팅 1회를 드려요 ✦</div>
         {user ? (

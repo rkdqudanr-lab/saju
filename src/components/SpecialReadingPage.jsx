@@ -100,7 +100,7 @@ function LuckyNumberSection({ user, saju }) {
             onClick={() => { setMode('lotto'); handleLotto(); }}
             style={{ padding: '14px 16px', background: 'var(--bg2)', border: '1.5px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t1)', fontFamily: 'var(--ff)', cursor: 'pointer', textAlign: 'left' }}
           >
-            <div style={{ fontWeight: 700, fontSize: 'var(--sm)', marginBottom: 2 }}>🍀 로또 번호 뽑기</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--sm)', marginBottom: 2 }}>✦ 로또 번호 뽑기</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>1~45 범위에서 6개의 오늘의 행운 번호를 뽑아줘요</div>
           </button>
         </div>
@@ -169,7 +169,7 @@ function LuckyNumberSection({ user, saju }) {
           )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleLotto} style={{ flex: 1, padding: '12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-              🍀 다시 뽑기
+              ✦ 다시 뽑기
             </button>
             <button onClick={() => { setMode(null); setLottoResult(null); }} style={{ padding: '12px 16px', background: 'var(--bg1)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontFamily: 'var(--ff)', cursor: 'pointer', fontSize: 'var(--xs)' }}>
               취소
@@ -208,7 +208,7 @@ const READING_TYPES = [
   },
   {
     id: 'yearly',
-    emoji: '📅',
+    emoji: '◇',
     title: '올해 운세 심층 분석',
     desc: '올해 연도의 운세를 월별로 상세히 분석해드려요. 중요한 시점과 기회를 미리 파악하세요.',
     flag: { isWeekly: true, responseStyle: 'F', precision_level: 'high' },

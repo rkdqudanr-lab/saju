@@ -17,7 +17,7 @@ const EXTRA_MESSAGES = [
 
 /** 질문별 로딩 상태 인디케이터 */
 function QStatusDot({ status, label }) {
-  const icon = status === 'done' ? '✅' : status === 'error' ? '❌' : '⏳';
+  const icon = status === 'done' ? '◈' : status === 'error' ? '△' : '◷';
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 4 }}>
       <span>{icon}</span>

@@ -81,7 +81,7 @@ export default function GamificationHeader({
             color: '#E05A3A',
           }}
         >
-          <span>🔥</span>
+          <span style={{ fontSize: 13 }}>↑</span>
           <span>{loginStreak}일</span>
         </div>
       )}
