@@ -23,11 +23,11 @@ const LEVEL_COLORS = {
 };
 
 const LEVEL_EMOJIS = {
-  1: '⭐',
-  2: '🌟',
-  3: '💫',
-  4: '✨',
-  5: '🌠',
+  1: '✦',
+  2: '◇',
+  3: '◈',
+  4: '✧',
+  5: '⊛',
 };
 
 export default function GuardianLevelUpModal({ fromLevel, toLevel, guardianMessage, loading, onClose }) {
@@ -39,7 +39,7 @@ export default function GuardianLevelUpModal({ fromLevel, toLevel, guardianMessa
   }, []);
 
   const color = LEVEL_COLORS[toLevel] || '#B8A035';
-  const emoji = LEVEL_EMOJIS[toLevel] || '✨';
+  const emoji = LEVEL_EMOJIS[toLevel] || '✦';
   const label = LEVEL_LABELS[toLevel] || '';
 
   return createPortal(
@@ -68,7 +68,7 @@ export default function GuardianLevelUpModal({ fromLevel, toLevel, guardianMessa
         onClick={e => e.stopPropagation()}
       >
         {/* 별 이펙트 */}
-        <div style={{ fontSize: 48, marginBottom: 8, lineHeight: 1 }}>{emoji}</div>
+        <div style={{ fontSize: '2.4rem', marginBottom: 8, lineHeight: 1, color }}>{emoji}</div>
 
         {/* 레벨 뱃지 */}
         <div style={{

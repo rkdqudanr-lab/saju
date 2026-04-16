@@ -14,19 +14,19 @@ const TOUR_STEPS = [
   {
     selector: 'daily-card',
     arrowDir: 'top',
-    title: '매일 오늘의 별숨 🌟',
+    title: '매일 오늘의 별숨',
     desc: '매일 아침 오늘 하루의 기운을 확인해요.',
   },
   {
     selector: 'nav-consult',
     arrowDir: 'bottom', // 툴팁이 타겟 위에 표시 (화살표는 아래를 가리킴)
-    title: '별숨에게 물어봐요 💬',
+    title: '별숨에게 물어봐요',
     desc: '연애, 직장, 돈… 사주와 별자리를 아는 별숨이 답해드려요.',
   },
   {
     selector: 'nav-growth',
     arrowDir: 'bottom',
-    title: '나를 채워봐요 ✨',
+    title: '나를 채워봐요',
     desc: '정보를 더 채울수록 별숨의 분석이 더 깊어져요.',
   },
   {

@@ -104,7 +104,7 @@ export default function ShieldBlockModal({
           >
             {symptom
               ? symptom
-              : '오늘 조금 무거운 기운이 감돌고 있어요.\n별숨의 기운 정화가 도움이 될 거예요 ✨'}
+              : '오늘 조금 무거운 기운이 감돌고 있어요.\n별숨의 기운 정화가 도움이 될 거예요'}
           </p>
         </div>
 
@@ -169,7 +169,7 @@ export default function ShieldBlockModal({
           >
             {freeRechargeAvailable ? (
               <div>
-                <strong>✨ 오늘치 별의 에너지를 받아볼까요?</strong>
+                <strong>✦ 오늘치 별의 에너지를 받아볼까요?</strong>
                 <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t2)' }}>
                   별숨 포인트(BP)로 나의 별에게 맑은 기운을 선물할 수 있어요.
                   무료 충전 후 기운을 정화해보세요.
@@ -209,7 +209,7 @@ export default function ShieldBlockModal({
                   transition: 'opacity .2s',
                 }}
               >
-                {isBlocking ? '정화 중...' : '✨ 기운 정화하기'}
+                {isBlocking ? '정화 중...' : '✦ 기운 정화하기'}
               </button>
               <button
                 onClick={onClose}

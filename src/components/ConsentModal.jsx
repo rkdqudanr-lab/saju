@@ -20,7 +20,7 @@ export default function ConsentModal({ flags, setFlags, onConfirm }) {
       <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
 
         {/* 헤더 */}
-        <div style={{ textAlign: 'center', fontSize: '1.4rem', marginBottom: 6 }}>🌙</div>
+        <div style={{ textAlign: 'center', fontSize: '1.2rem', marginBottom: 6, color: 'var(--gold)' }}>✦</div>
         <div className="upgrade-modal-title" style={{ marginBottom: 4 }}>
           별숨이 당신을 더 깊이 알수록<br />별풀이가 더 정확해져요
         </div>

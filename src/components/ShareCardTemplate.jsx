@@ -22,7 +22,7 @@ const CARD_THEMES = {
     titleColor:   '#E8B048',
     barColor:     '#E8B048',
     defaultTitle: '오늘의 운세',
-    tagline:      '나만의 수호별, 별숨에서 확인하기 ✨',
+    tagline:      '나만의 수호별, 별숨에서 확인하기 ✦',
   },
   dream: {
     bg:           'linear-gradient(160deg, #120A1E 0%, #1A0D2E 45%, #22103A 100%)',
@@ -31,8 +31,8 @@ const CARD_THEMES = {
     accentBorder: 'rgba(200,190,222,0.35)',
     titleColor:   '#C8BEDE',
     barColor:     '#A78BDA',
-    defaultTitle: '✨ 나의 길몽 리포트',
-    tagline:      '꿈의 메시지, 별숨에서 해석하기 🌙',
+    defaultTitle: '나의 길몽 리포트',
+    tagline:      '꿈의 메시지, 별숨에서 해석하기',
   },
   taegil: {
     bg:           'linear-gradient(160deg, #050D1A 0%, #0A1628 45%, #0F1E35 100%)',

@@ -11,7 +11,7 @@ const CATEGORIES = [
   { value: 'bug', label: '🐛 버그 신고' },
   { value: 'feature', label: '💡 기능 제안' },
   { value: 'payment', label: '💳 결제 문의' },
-  { value: 'other', label: '💬 기타' },
+  { value: 'other', label: '기타' },
 ];
 
 const STATUS_LABELS = {
@@ -102,7 +102,7 @@ export default function InquiryPage() {
       {/* ── 헤더 ── */}
       <div style={{ padding: '28px 20px 20px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 6 }}>
-          💬 문의하기
+          문의하기
         </div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7 }}>
           버그 신고, 기능 제안, 결제 문의 등 무엇이든 남겨주세요.

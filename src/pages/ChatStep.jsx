@@ -58,7 +58,7 @@ export default function ChatStep({
         {chatHistory.length === 0 && (
           <div style={{ color: 'var(--t4)', fontSize: 'var(--sm)', textAlign: 'center', padding: 'var(--sp4) var(--sp3)' }}>
             <div style={{ fontSize: '2rem', marginBottom: 12 }}>✦</div>
-            더 궁금한 게 있으면 자유롭게 물어봐요 🌙
+            더 궁금한 게 있으면 자유롭게 물어봐요
           </div>
         )}
         {chatHistory.map((m, i) => (
@@ -144,7 +144,7 @@ export default function ChatStep({
         )}
         <div className="chat-inp-row">
           <input className="chat-inp"
-            placeholder={chatLeft > 0 ? '더 궁금한 게 있어요? 🌙' : '채팅을 모두 사용했어요'}
+            placeholder={chatLeft > 0 ? '더 궁금한 게 있어요?' : '채팅을 모두 사용했어요'}
             value={chatInput}
             onChange={e => setChatInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}

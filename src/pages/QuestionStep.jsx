@@ -130,7 +130,7 @@ export default function QuestionStep({
               </div>
             )}
             <textarea className="diy-inp"
-              placeholder="직접 묻고 싶은 게 있어요? 자유롭게 써봐요 🌙"
+              placeholder="직접 묻고 싶은 게 있어요? 자유롭게 써봐요"
               maxLength={200} value={diy} onChange={e => setDiy(e.target.value)} />
             <div className="diy-row"><span className="hint">{diy.length}/200</span></div>
             {diy.trim() && (
@@ -192,7 +192,7 @@ export default function QuestionStep({
               <div className="q-stat">
                 {selQs.length === 0 && '질문을 하나 이상 골라봐요'}
                 {selQs.length > 0 && selQs.length < maxQ && <><strong>{maxQ - selQs.length}개</strong> 더 고를 수 있어요</>}
-                {selQs.length === maxQ && <><strong>준비 완료!</strong> 두 별이 읽어드릴게요 🌟</>}
+                {selQs.length === maxQ && <><strong>준비 완료!</strong> 두 별이 읽어드릴게요</>}
               </div>
               <button ref={askBtnRef} className="btn-main" disabled={!selQs.length} onClick={askClaude}>
                 {selQs.length === 0 ? '질문을 먼저 골라봐요' : `✦ 두 별에게 물어보기 (${selQs.length}개)`}

@@ -68,7 +68,7 @@ export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoadin
         {/* 에러 메시지 */}
         {error && (
           <div className="today-intro-error" role="alert">
-            별이 잠시 쉬고 있어요 🌙<br />
+            별이 잠시 쉬고 있어요<br />
             잠시 후 다시 시도해봐요.
           </div>
         )}

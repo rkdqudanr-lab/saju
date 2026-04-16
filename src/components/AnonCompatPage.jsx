@@ -22,7 +22,7 @@ function timeSince(ts) {
 }
 
 function getCompatTier(score) {
-  if (score >= 90) return { label: '환상의 티키타카', emoji: '✨', color: '#E8B048' };
+  if (score >= 90) return { label: '환상의 티키타카', emoji: '✦', color: '#E8B048' };
   if (score >= 75) return { label: '천생연분에 가까운 두 별', emoji: '💫', color: '#B4963C' };
   if (score >= 60) return { label: '서로를 성장시키는 인연', emoji: '🌱', color: '#5FAD7A' };
   if (score >= 45) return { label: '창과 방패', emoji: '🛡️', color: '#7B9EC4' };
@@ -381,7 +381,7 @@ export default function AnonCompatPage({ showToast, shareData }) {
               cursor: 'pointer',
             }}
           >
-            💞 내 궁합 결과 익명 공유하기
+            ✦ 내 궁합 결과 익명 공유하기
           </button>
         </div>
       )}
@@ -416,7 +416,7 @@ export default function AnonCompatPage({ showToast, shareData }) {
       <div style={{ padding: '0 20px' }}>
         {posts.length === 0 && !loading && (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>💞</div>
+            <div style={{ fontSize: '1.4rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
             <div style={{ fontSize: 'var(--sm)' }}>아직 공유된 궁합이 없어요</div>
             <div style={{ fontSize: 'var(--xs)', marginTop: 6 }}>첫 번째로 나의 인연을 공유해봐요</div>
           </div>

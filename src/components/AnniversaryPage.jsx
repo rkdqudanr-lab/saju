@@ -63,7 +63,7 @@ export default function AnniversaryPage({
       const result = await callApi(prompt + (ctx ? `\n\n[나의 사주 정보]\n${ctx}` : ''));
       setInterpretation(result);
     } catch {
-      setInterpretation('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!');
+      setInterpretation('별이 잠시 쉬고 있어요\n잠시 후 다시 시도해봐요');
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ export default function AnniversaryPage({
     <div className="page step-fade">
       <div className="inner">
         <div style={{ textAlign: 'center', marginBottom: 'var(--sp3)' }}>
-          <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{isFutureMode ? '🔮' : '🎂'}</div>
+          <div style={{ fontSize: '1.1rem', marginBottom: 4, color: 'var(--gold)' }}>{isFutureMode ? '◈' : '✦'}</div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>
             {isFutureMode ? '미래 날짜 점보기' : '기념일 운세'}
           </h2>

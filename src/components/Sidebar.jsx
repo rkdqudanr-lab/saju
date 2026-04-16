@@ -196,7 +196,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
                     { icon: '🏠', label: '홈', s: 0 },
-                    { icon: '🌟', label: '오늘 하루 나의 별숨', s: 'fortune' },
+                    { icon: '✦', label: '오늘 하루 나의 별숨', s: 'fortune' },
                     { icon: '📓', label: '나의 하루를 별숨에게', s: 17, badge: todayDiaryWritten === false },
                     { icon: '📚', label: '일기 모아보기', s: 20 },
                     { icon: '🗓️', label: '별숨 달력', s: 10 },
@@ -231,8 +231,8 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   {[
                     { icon: '✦', label: '별숨에게 물어보기', s: 2 },
                     { icon: '📅', label: '월간 리포트', s: 6 },
-                    { icon: '🔮', label: '별숨의 예언', s: 8 },
-                    { icon: '📊', label: '종합 분석 (사주·점성술)', s: 14 },
+                    { icon: '◈', label: '별숨의 예언', s: 8 },
+                    { icon: '◇', label: '종합 분석 (사주·점성술)', s: 14 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -249,11 +249,11 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   {/* 특별 기능 구분선 */}
                   <li>
                     <div style={{ margin: '6px var(--sp3) 4px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', paddingTop: 6, whiteSpace: 'nowrap' }}>✨ 특별 기능</span>
+                      <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', paddingTop: 6, whiteSpace: 'nowrap' }}>✦ 특별 기능</span>
                     </div>
                   </li>
                   {[
-                    { icon: '🌙', label: '꿈 해몽', s: 24 },
+                    { icon: '☽', label: '꿈 해몽', s: 24 },
                     { icon: '🗓️', label: '택일 (길일 찾기)', s: 25 },
                     { icon: '📛', label: '이름 풀이 (성명학)', s: 26 },
                   ].map(m => (
@@ -284,9 +284,9 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {openGroups.growth && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: '🀄', label: 'MyBlueprint — 나의 별숨', s: 13 },
-                    { icon: '🌌', label: '나의 대운 흐름', s: 30 },
-                    { icon: '💞', label: '1대1 별숨 (궁합)', s: 7 },
+                    { icon: '易', label: 'MyBlueprint — 나의 별숨', s: 13 },
+                    { icon: '◈', label: '나의 대운 흐름', s: 30 },
+                    { icon: '✦', label: '1대1 별숨 (궁합)', s: 7 },
                     { icon: '🎂', label: '기념일 운세', s: 12 },
                   ].map(m => (
                     <li key={m.s}>
@@ -320,7 +320,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     { icon: '🤝', label: '익명 궁합 광장', s: 32 },
                     { icon: '🌐', label: '우리 모임의 별숨은?', s: 11 },
                     { icon: '🛍️', label: '별숨 숍', s: 31 },
-                    { icon: '📊', label: '나의 별숨 통계', s: 28 },
+                    { icon: '◇', label: '나의 별숨 통계', s: 28 },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -349,7 +349,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--xs)', color: showStarredOnly ? 'var(--gold)' : 'var(--t4)', padding: '2px 4px', borderRadius: 4 }}
                     aria-pressed={showStarredOnly}
                     aria-label="즐겨찾기만 보기"
-                  >{showStarredOnly ? '⭐' : '☆'}</button>
+                  >{showStarredOnly ? '★' : '☆'}</button>
                 )}
                 {user && histCount > 0 && (
                   <>
@@ -406,7 +406,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               <div className="sidebar-empty">
                 {search || dateFilter !== 'all'
                   ? '검색 결과가 없어요 🔍'
-                  : '아직 별숨과 나눈 이야기가 없어요 🌙\n첫 질문을 던져봐요'}
+                  : '아직 별숨과 나눈 이야기가 없어요\n첫 질문을 던져봐요'}
               </div>
             ) : (
               <>
@@ -426,7 +426,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                         onClick={e => toggleStar(h.id, e)}
                         aria-label={starredIds.has(h.id) ? '즐겨찾기 해제' : '즐겨찾기 추가'}
                         style={{ position: 'absolute', right: 28, top: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--xs)', padding: '2px 4px', color: starredIds.has(h.id) ? 'var(--gold)' : 'var(--t4)' }}
-                      >{starredIds.has(h.id) ? '⭐' : '☆'}</button>
+                      >{starredIds.has(h.id) ? '★' : '☆'}</button>
                     )}
                     <button
                       className="shi-del"

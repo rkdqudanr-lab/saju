@@ -214,7 +214,7 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
         marginTop: 10, padding: '10px 14px', borderRadius: 'var(--r1)',
         background: 'var(--card)', border: '1px solid var(--line)',
       }}>
-        <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>✨ 오늘 하면 좋은 것 </span>
+        <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>✦ 오늘 하면 좋은 것 </span>
         <span style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>{data.activity}</span>
       </div>
 

@@ -167,7 +167,7 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 16, flexShrink: 0,
         }}>
-          🌙
+          ✦
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>
@@ -277,7 +277,7 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
             color: showComments ? 'var(--t1)' : 'var(--t3)',
           }}
         >
-          💬 {showComments ? '닫기' : '댓글'}
+          {showComments ? '닫기' : '댓글'}
         </button>
         {post.kakao_id !== myKakaoId && (
           <button
