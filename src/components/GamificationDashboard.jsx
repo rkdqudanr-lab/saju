@@ -425,7 +425,7 @@ export default function GamificationDashboard({
           }}
         >
           <div>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📋</div>
+            <div style={{ fontSize: '1.4rem', marginBottom: '8px', color: 'var(--t4)' }}>✦</div>
             <div>곧 상세 이력이 추가됩니다</div>
           </div>
         </div>
