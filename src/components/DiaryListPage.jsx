@@ -85,7 +85,7 @@ function StreakCalendar({ entries }) {
               border: isToday ? '1px solid var(--gold)' : '1px solid transparent',
             }}>
               {done ? (
-                <span style={{ fontSize: 13 }}>⭐</span>
+                <span style={{ fontSize: 13, color: 'var(--gold)' }}>★</span>
               ) : (
                 <span style={{ fontSize: 11, color: isFuture ? 'var(--t4)' : isToday ? 'var(--t1)' : 'var(--t3)', opacity: isFuture ? 0.3 : 1 }}>{day}</span>
               )}
@@ -175,9 +175,9 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
 
         {entries.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--t4)' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>📓</div>
+            <div style={{ fontSize: '1.6rem', marginBottom: 16, color: 'var(--t4)' }}>✦</div>
             <div style={{ fontSize: 'var(--md)', fontWeight: 600, marginBottom: 8 }}>아직 일기가 없어요</div>
-            <div style={{ fontSize: 'var(--sm)', marginBottom: 20, lineHeight: 1.7 }}>오늘의 하루를 별숨에게 처음 전해봐요 🌙</div>
+            <div style={{ fontSize: 'var(--sm)', marginBottom: 20, lineHeight: 1.7 }}>오늘의 하루를 별숨에게 처음 전해봐요</div>
             <button className="btn-main" onClick={() => setStep(17)} style={{ maxWidth: 200 }}>
               오늘 일기 쓰기 ✦
             </button>

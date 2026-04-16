@@ -111,7 +111,7 @@ export default function DailyHoroscopePage({
               fontSize: '13px',
             }}
           >
-            🌟 오늘의 운세
+            오늘의 운세
           </button>
           <button
             onClick={() => setActiveTab('lucky')}
@@ -148,7 +148,7 @@ export default function DailyHoroscopePage({
                   </button>
                 ) : (
                   <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 12 }}>
-                    오늘 별숨을 모두 읽었어요 · 내일 다시 만나요 🌙
+                    오늘 별숨을 모두 읽었어요 · 내일 다시 만나요
                   </div>
                 )}
               </>

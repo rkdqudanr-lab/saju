@@ -66,12 +66,13 @@ export default function BPInsufficientModal({
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <div
             style={{
-              fontSize: '48px',
+              fontSize: '2rem',
               marginBottom: '12px',
+              color: 'var(--gold)',
               animation: 'bounce 1s ease-in-out infinite',
             }}
           >
-            💎
+            ✦
           </div>
           <h2
             style={{
@@ -183,7 +184,7 @@ export default function BPInsufficientModal({
             }}
           >
             <div style={{ fontSize: '12px', color: '#2D2D6B', fontWeight: '600', marginBottom: '4px' }}>
-              🎯 미션 완료로 획득
+              ◇ 미션 완료로 획득
             </div>
             <div style={{ fontSize: '11px', color: '#4A4A7C', lineHeight: 1.4 }}>
               일일 미션을 완료하면 +10 BP를 획득할 수 있어요.
