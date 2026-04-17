@@ -106,7 +106,7 @@ async function checkRateLimit(ip) {
  */
 function validateRequest(body) {
   if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isFullGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, responseStyle, kakaoId, clientHour, precision_level, gender } = body;
+  const { userMessage, context, isChat, isReport, isLetter, isProphecy, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isFullGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, responseStyle, kakaoId, clientHour, precision_level, gender } = body;
 
   if (typeof userMessage !== 'string' || !userMessage.trim()) {
     return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
@@ -133,6 +133,7 @@ function validateRequest(body) {
       isChat: !!isChat,
       isReport: !!isReport,
       isLetter: !!isLetter,
+      isProphecy: !!isProphecy,
       isScenario: !!isScenario,
       isStory: !!isStory,
       isNatal: !!isNatal,
@@ -186,7 +187,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: '로그인이 필요해요 🌙' });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isFullGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, responseStyle, precision_level: precisionLevel, clientHour, gender } = validation.data;
+  const { userMessage, context, isChat, isReport, isLetter, isProphecy, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isFullGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, responseStyle, precision_level: precisionLevel, clientHour, gender } = validation.data;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
@@ -206,7 +207,7 @@ export default async function handler(req, res) {
     today, season, categoryHint, endingHint, timeHorizon,
     userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision,
     categoryExample, isNatal, isZodiac, isComprehensive, isAstrology, responseStyle, isSlot, isWeekly, isDaily,
-    isDaeun, isAnalytics, precisionLevel, gender
+    isDaeun, isAnalytics, precisionLevel, gender, isProphecy
   );
 
   // isProfileQuestion: 프로필 맞춤 질문 생성 전용 시스템 프롬프트
@@ -247,6 +248,7 @@ export default async function handler(req, res) {
     isAstrology         ? 3500 :
     isReport            ? 2500 :
     isCalendarMonth     ? 2000 :
+    isProphecy          ? 1200 :
     isLetter            ? 1500 :
     isStory             ? 3000 :
     isScenario          ? 2000 :

@@ -225,6 +225,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             isChat:            opts.isChat            || false,
             isReport:          opts.isReport          || false,
             isLetter:          opts.isLetter          || false,
+            isProphecy:        opts.isProphecy        || false,
             isStory:           opts.isStory           || false,
             isScenario:        opts.isScenario        || false,
             isNatal:           opts.isNatal           || false,

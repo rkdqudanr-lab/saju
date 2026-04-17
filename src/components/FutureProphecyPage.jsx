@@ -27,8 +27,8 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
     setPhase('result');
     try {
       const pText = await callApi(
-        `[요청] ${period} 시점의 미래에 대해 사주와 점성술을 기반으로 한 따뜻하고 통찰력 있는 예언 편지를 작성해주세요. "별숨이 전하는 이야기"라는 느낌으로 구체적이고 시적으로 써주세요. 존댓말을 사용해주세요.`,
-        { isLetter: true }
+        `[예언 요청] 지금으로부터 ${period} 뒤의 미래를 사주와 점성술로 읽어주세요.`,
+        { isProphecy: true }
       );
       setText(pText);
     } catch {
