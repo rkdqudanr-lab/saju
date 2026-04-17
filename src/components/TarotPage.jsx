@@ -94,6 +94,8 @@ export default function TarotPage({ callApi, showToast }) {
   const [imgErrors, setImgErrors]   = useState({});
   const [reading, setReading]       = useState('');
   const [readingLoading, setReadingLoading] = useState(false);
+  const [modalCard, setModalCard]   = useState(null);   // 확대 보기 카드
+  const [modalMode, setModalMode]   = useState('image'); // 'image' | 'detail'
   const timerRef = useRef([]);
 
   const pickedCards = picks.map(i => deck[i]);
@@ -457,16 +459,19 @@ export default function TarotPage({ callApi, showToast }) {
         <>
           <div style={{ display: 'flex', gap: 12, padding: '0 20px', justifyContent: 'center' }}>
             {pickedCards.map((card, idx) => (
-              <div key={card.id} style={{
-                flex: 1, maxWidth: 82, aspectRatio: '5/8', borderRadius: 10,
-                border: '1px solid rgba(200,165,80,0.7)',
-                background: 'linear-gradient(160deg, #12102a 0%, #1e1a40 60%, #12102a 100%)',
-                overflow: 'hidden',
-                display: 'flex', flexDirection: 'column',
-                animation: `tarotReveal 0.55s cubic-bezier(.34,1.56,.64,1) ${idx * 140}ms both`,
-                boxShadow: '0 0 22px rgba(200,165,80,0.22), 0 8px 32px rgba(0,0,0,0.4)',
-                position: 'relative',
-              }}>
+              <div key={card.id}
+                onClick={() => { setModalCard(card); setModalMode('image'); }}
+                style={{
+                  flex: 1, maxWidth: 82, aspectRatio: '5/8', borderRadius: 10,
+                  border: '1px solid rgba(200,165,80,0.7)',
+                  background: 'linear-gradient(160deg, #12102a 0%, #1e1a40 60%, #12102a 100%)',
+                  overflow: 'hidden',
+                  display: 'flex', flexDirection: 'column',
+                  animation: `tarotReveal 0.55s cubic-bezier(.34,1.56,.64,1) ${idx * 140}ms both`,
+                  boxShadow: '0 0 22px rgba(200,165,80,0.22), 0 8px 32px rgba(0,0,0,0.4)',
+                  position: 'relative',
+                  cursor: 'pointer',
+                }}>
                 <div style={{ position: 'absolute', inset: 4, border: '1px solid rgba(200,165,80,0.15)', borderRadius: 10, pointerEvents: 'none', zIndex: 1 }} />
                 <div style={{ fontSize: '8px', color: 'rgba(200,165,80,0.55)', textAlign: 'center', padding: '6px 0 3px', letterSpacing: '.1em', zIndex: 2 }}>{ROMAN[card.id]}</div>
                 {imgErrors[card.id]
@@ -568,6 +573,88 @@ export default function TarotPage({ callApi, showToast }) {
           오늘의 별빛은 매일 자정 새롭게 열려요 ✦
         </div>
       </div>
+
+      {/* ══════════════════════════════════════
+          카드 확대 모달
+      ══════════════════════════════════════ */}
+      {modalCard && (
+        <div
+          onClick={() => setModalCard(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(6,4,18,0.88)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px 28px',
+            animation: 'tarotReveal 0.22s ease',
+          }}
+        >
+          {/* 닫기 버튼 */}
+          <button
+            onClick={e => { e.stopPropagation(); setModalCard(null); }}
+            style={{
+              position: 'absolute', top: 20, right: 20,
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'rgba(200,165,80,0.12)',
+              border: '1px solid rgba(200,165,80,0.4)',
+              color: 'rgba(220,190,100,0.9)', fontSize: 18,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', fontFamily: 'var(--ff)',
+            }}
+          >✕</button>
+
+          {/* 카드 + 설명 컨테이너 */}
+          <div
+            onClick={e => { e.stopPropagation(); setModalMode(m => m === 'image' ? 'detail' : 'image'); }}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 18, width: '100%', maxWidth: 280, cursor: 'pointer',
+            }}
+          >
+            {/* 카드 이미지 */}
+            <div style={{
+              width: 160, borderRadius: 14,
+              border: '1px solid rgba(200,165,80,0.65)',
+              overflow: 'hidden',
+              boxShadow: '0 0 40px rgba(200,165,80,0.28), 0 16px 48px rgba(0,0,0,0.6)',
+              background: 'linear-gradient(160deg, #12102a 0%, #1e1a40 60%, #12102a 100%)',
+              flexShrink: 0,
+            }}>
+              <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.55)', textAlign: 'center', padding: '8px 0 4px', letterSpacing: '.12em' }}>
+                {ROMAN[modalCard.id]}
+              </div>
+              {imgErrors[modalCard.id]
+                ? <div style={{ width: '100%', aspectRatio: '5/8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56 }}>{modalCard.emoji}</div>
+                : <img src={modalCard.img} alt={modalCard.name} style={{ width: 'calc(100% - 12px)', margin: '0 6px 6px', aspectRatio: '5/8', objectFit: 'cover', borderRadius: 8, display: 'block' }} />
+              }
+            </div>
+
+            {/* 카드 이름 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: 'rgba(220,190,100,0.95)', marginBottom: 4 }}>{modalCard.name}</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.6)' }}>{modalCard.meaning}</div>
+            </div>
+
+            {/* 상세 설명 (두 번째 탭) */}
+            {modalMode === 'detail' && (
+              <div style={{
+                background: 'rgba(18,16,42,0.9)',
+                border: '1px solid rgba(200,165,80,0.25)',
+                borderRadius: 12, padding: '16px 18px',
+                width: '100%',
+                animation: 'tarotReveal 0.25s ease',
+              }}>
+                <div style={{ fontSize: 'var(--sm)', color: 'rgba(230,222,248,0.95)', lineHeight: 1.85, textAlign: 'center' }}>
+                  {modalCard.detail}
+                </div>
+              </div>
+            )}
+
+            <div style={{ fontSize: '10px', color: 'rgba(200,165,80,0.35)', letterSpacing: '.04em' }}>
+              {modalMode === 'image' ? '한 번 더 누르면 설명을 볼 수 있어요' : '다시 누르면 카드만 볼 수 있어요'}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
