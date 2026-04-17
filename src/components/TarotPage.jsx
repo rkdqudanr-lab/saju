@@ -7,31 +7,31 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 
-const W = 'https://upload.wikimedia.org/wikipedia/commons/thumb';
+const FP = 'https://commons.wikimedia.org/wiki/Special:FilePath';
 
 const MAJOR_ARCANA = [
-  { id: 0,  name: '광대',        emoji: '🌀', meaning: '새 시작, 순수한 모험심',    detail: '두려움 없이 새로운 길로 나서는 자유로운 영혼이에요.',          img: `${W}/1/10/RWS_Tarot_00_Fool.jpg/180px-RWS_Tarot_00_Fool.jpg` },
-  { id: 1,  name: '마법사',      emoji: '🔮', meaning: '집중력, 창조적 의지',       detail: '손에 쥔 도구를 활용해 원하는 것을 현실로 만들 수 있어요.',    img: `${W}/e/e8/RWS_Tarot_01_Magician.jpg/180px-RWS_Tarot_01_Magician.jpg` },
-  { id: 2,  name: '여사제',      emoji: '📖', meaning: '직관, 신비, 내면의 지혜',   detail: '말하지 않아도 이미 알고 있어요. 내면의 소리를 믿어봐요.',     img: `${W}/8/88/RWS_Tarot_02_High_Priestess.jpg/180px-RWS_Tarot_02_High_Priestess.jpg` },
-  { id: 3,  name: '여황제',      emoji: '🌸', meaning: '풍요, 창조성, 모성',        detail: '씨앗을 뿌리면 반드시 꽃이 피는 때예요. 풍요가 흘러들어요.',  img: `${W}/d/d2/RWS_Tarot_03_Empress.jpg/180px-RWS_Tarot_03_Empress.jpg` },
-  { id: 4,  name: '황제',        emoji: '👑', meaning: '질서, 안정, 리더십',        detail: '체계를 세우고 단단하게 지키는 힘이 필요한 시기예요.',          img: `${W}/c/c3/RWS_Tarot_04_Emperor.jpg/180px-RWS_Tarot_04_Emperor.jpg` },
-  { id: 5,  name: '교황',        emoji: '⛪', meaning: '전통, 지혜, 조언',          detail: '신뢰할 수 있는 스승이나 전통적인 방법에서 답을 찾아봐요.',    img: `${W}/8/8d/RWS_Tarot_05_Hierophant.jpg/180px-RWS_Tarot_05_Hierophant.jpg` },
-  { id: 6,  name: '연인',        emoji: '💞', meaning: '선택, 사랑, 조화',          detail: '마음 깊은 곳의 끌림을 따라 선택하는 순간이에요.',             img: `${W}/3/3a/RWS_Tarot_06_Lovers.jpg/180px-RWS_Tarot_06_Lovers.jpg` },
-  { id: 7,  name: '전차',        emoji: '⚔️', meaning: '의지, 승리, 통제',         detail: '앞으로만 나아가요. 집중과 결단이 승리를 만들어요.',            img: `${W}/9/9b/RWS_Tarot_07_Chariot.jpg/180px-RWS_Tarot_07_Chariot.jpg` },
-  { id: 8,  name: '힘',          emoji: '🦁', meaning: '내면의 힘, 인내, 용기',     detail: '거칠고 강한 것도 부드러운 사랑으로 다스릴 수 있어요.',        img: `${W}/f/f5/RWS_Tarot_08_Strength.jpg/180px-RWS_Tarot_08_Strength.jpg` },
-  { id: 9,  name: '은둔자',      emoji: '🕯️', meaning: '성찰, 고독, 내면 탐색',    detail: '혼자만의 시간이 빛이 되는 때예요. 깊이 들여다봐요.',          img: `${W}/4/4d/RWS_Tarot_09_Hermit.jpg/180px-RWS_Tarot_09_Hermit.jpg` },
-  { id: 10, name: '운명의 바퀴', emoji: '🎡', meaning: '변화, 전환점, 운명',        detail: '삶이 새로운 국면으로 접어들고 있어요. 흐름을 타봐요.',        img: `${W}/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg/180px-RWS_Tarot_10_Wheel_of_Fortune.jpg` },
-  { id: 11, name: '정의',        emoji: '⚖️', meaning: '균형, 공정, 원인과 결과',  detail: '진실된 행동이 공정한 결과로 돌아오는 시기예요.',              img: `${W}/e/e0/RWS_Tarot_11_Justice.jpg/180px-RWS_Tarot_11_Justice.jpg` },
-  { id: 12, name: '매달린 자',   emoji: '🙃', meaning: '희생, 기다림, 새 시각',     detail: '잠시 멈추고 다른 관점으로 바라보는 지혜가 필요해요.',         img: `${W}/2/2b/RWS_Tarot_12_Hanged_Man.jpg/180px-RWS_Tarot_12_Hanged_Man.jpg` },
-  { id: 13, name: '죽음',        emoji: '🌑', meaning: '변환, 끝과 새 시작',        detail: '두려운 끝이 아니에요. 낡은 것이 떠나고 새것이 들어와요.',    img: `${W}/d/d7/RWS_Tarot_13_Death.jpg/180px-RWS_Tarot_13_Death.jpg` },
-  { id: 14, name: '절제',        emoji: '🌊', meaning: '균형, 조화, 인내',          detail: '서두르지 않아도 돼요. 조화롭게 섞이면 완성돼요.',             img: `${W}/f/f8/RWS_Tarot_14_Temperance.jpg/180px-RWS_Tarot_14_Temperance.jpg` },
-  { id: 15, name: '악마',        emoji: '🔗', meaning: '집착, 속박, 욕망',          detail: '스스로 만든 사슬임을 알아채는 순간 자유로워져요.',             img: `${W}/5/55/RWS_Tarot_15_Devil.jpg/180px-RWS_Tarot_15_Devil.jpg` },
-  { id: 16, name: '탑',          emoji: '⚡', meaning: '갑작스런 변화, 해방',       detail: '흔들리는 것은 처음부터 불안정했기 때문이에요. 재건할 기회예요.', img: `${W}/5/53/RWS_Tarot_16_Tower.jpg/180px-RWS_Tarot_16_Tower.jpg` },
-  { id: 17, name: '별',          emoji: '⭐', meaning: '희망, 영감, 치유',          detail: '어두운 밤에도 별은 빛나요. 희망을 놓지 마세요.',              img: `${W}/d/db/RWS_Tarot_17_Star.jpg/180px-RWS_Tarot_17_Star.jpg` },
-  { id: 18, name: '달',          emoji: '🌙', meaning: '무의식, 환상, 불확실성',    detail: '모든 게 뚜렷하지 않아도 괜찮아요. 안개 속을 천천히 걸어봐요.', img: `${W}/7/7f/RWS_Tarot_18_Moon.jpg/180px-RWS_Tarot_18_Moon.jpg` },
-  { id: 19, name: '태양',        emoji: '☀️', meaning: '기쁨, 성공, 활력',         detail: '따뜻하게 빛나는 때예요. 자신 있게 앞으로 나서봐요.',          img: `${W}/1/17/RWS_Tarot_19_Sun.jpg/180px-RWS_Tarot_19_Sun.jpg` },
-  { id: 20, name: '심판',        emoji: '🎺', meaning: '각성, 부활, 소환',          detail: '내 안의 진짜 목소리가 깨어나고 있어요. 응답해봐요.',           img: `${W}/d/dd/RWS_Tarot_20_Judgement.jpg/180px-RWS_Tarot_20_Judgement.jpg` },
-  { id: 21, name: '세계',        emoji: '🌍', meaning: '완성, 통합, 성취',          detail: '하나의 사이클이 완성되는 시점이에요. 충분히 이뤄냈어요.',     img: `${W}/f/ff/RWS_Tarot_21_World.jpg/180px-RWS_Tarot_21_World.jpg` },
+  { id: 0,  name: '광대',        emoji: '🌀', meaning: '새 시작, 순수한 모험심',    detail: '두려움 없이 새로운 길로 나서는 자유로운 영혼이에요.',          img: `${FP}/RWS_Tarot_00_Fool.jpg` },
+  { id: 1,  name: '마법사',      emoji: '🔮', meaning: '집중력, 창조적 의지',       detail: '손에 쥔 도구를 활용해 원하는 것을 현실로 만들 수 있어요.',    img: `${FP}/RWS_Tarot_01_Magician.jpg` },
+  { id: 2,  name: '여사제',      emoji: '📖', meaning: '직관, 신비, 내면의 지혜',   detail: '말하지 않아도 이미 알고 있어요. 내면의 소리를 믿어봐요.',     img: `${FP}/RWS_Tarot_02_High_Priestess.jpg` },
+  { id: 3,  name: '여황제',      emoji: '🌸', meaning: '풍요, 창조성, 모성',        detail: '씨앗을 뿌리면 반드시 꽃이 피는 때예요. 풍요가 흘러들어요.',  img: `${FP}/RWS_Tarot_03_Empress.jpg` },
+  { id: 4,  name: '황제',        emoji: '👑', meaning: '질서, 안정, 리더십',        detail: '체계를 세우고 단단하게 지키는 힘이 필요한 시기예요.',          img: `${FP}/RWS_Tarot_04_Emperor.jpg` },
+  { id: 5,  name: '교황',        emoji: '⛪', meaning: '전통, 지혜, 조언',          detail: '신뢰할 수 있는 스승이나 전통적인 방법에서 답을 찾아봐요.',    img: `${FP}/RWS_Tarot_05_Hierophant.jpg` },
+  { id: 6,  name: '연인',        emoji: '💞', meaning: '선택, 사랑, 조화',          detail: '마음 깊은 곳의 끌림을 따라 선택하는 순간이에요.',             img: `${FP}/RWS_Tarot_06_Lovers.jpg` },
+  { id: 7,  name: '전차',        emoji: '⚔️', meaning: '의지, 승리, 통제',         detail: '앞으로만 나아가요. 집중과 결단이 승리를 만들어요.',            img: `${FP}/RWS_Tarot_07_Chariot.jpg` },
+  { id: 8,  name: '힘',          emoji: '🦁', meaning: '내면의 힘, 인내, 용기',     detail: '거칠고 강한 것도 부드러운 사랑으로 다스릴 수 있어요.',        img: `${FP}/RWS_Tarot_08_Strength.jpg` },
+  { id: 9,  name: '은둔자',      emoji: '🕯️', meaning: '성찰, 고독, 내면 탐색',    detail: '혼자만의 시간이 빛이 되는 때예요. 깊이 들여다봐요.',          img: `${FP}/RWS_Tarot_09_Hermit.jpg` },
+  { id: 10, name: '운명의 바퀴', emoji: '🎡', meaning: '변화, 전환점, 운명',        detail: '삶이 새로운 국면으로 접어들고 있어요. 흐름을 타봐요.',        img: `${FP}/RWS_Tarot_10_Wheel_of_Fortune.jpg` },
+  { id: 11, name: '정의',        emoji: '⚖️', meaning: '균형, 공정, 원인과 결과',  detail: '진실된 행동이 공정한 결과로 돌아오는 시기예요.',              img: `${FP}/RWS_Tarot_11_Justice.jpg` },
+  { id: 12, name: '매달린 자',   emoji: '🙃', meaning: '희생, 기다림, 새 시각',     detail: '잠시 멈추고 다른 관점으로 바라보는 지혜가 필요해요.',         img: `${FP}/RWS_Tarot_12_Hanged_Man.jpg` },
+  { id: 13, name: '죽음',        emoji: '🌑', meaning: '변환, 끝과 새 시작',        detail: '두려운 끝이 아니에요. 낡은 것이 떠나고 새것이 들어와요.',    img: `${FP}/RWS_Tarot_13_Death.jpg` },
+  { id: 14, name: '절제',        emoji: '🌊', meaning: '균형, 조화, 인내',          detail: '서두르지 않아도 돼요. 조화롭게 섞이면 완성돼요.',             img: `${FP}/RWS_Tarot_14_Temperance.jpg` },
+  { id: 15, name: '악마',        emoji: '🔗', meaning: '집착, 속박, 욕망',          detail: '스스로 만든 사슬임을 알아채는 순간 자유로워져요.',             img: `${FP}/RWS_Tarot_15_Devil.jpg` },
+  { id: 16, name: '탑',          emoji: '⚡', meaning: '갑작스런 변화, 해방',       detail: '흔들리는 것은 처음부터 불안정했기 때문이에요. 재건할 기회예요.', img: `${FP}/RWS_Tarot_16_Tower.jpg` },
+  { id: 17, name: '별',          emoji: '⭐', meaning: '희망, 영감, 치유',          detail: '어두운 밤에도 별은 빛나요. 희망을 놓지 마세요.',              img: `${FP}/RWS_Tarot_17_Star.jpg` },
+  { id: 18, name: '달',          emoji: '🌙', meaning: '무의식, 환상, 불확실성',    detail: '모든 게 뚜렷하지 않아도 괜찮아요. 안개 속을 천천히 걸어봐요.', img: `${FP}/RWS_Tarot_18_Moon.jpg` },
+  { id: 19, name: '태양',        emoji: '☀️', meaning: '기쁨, 성공, 활력',         detail: '따뜻하게 빛나는 때예요. 자신 있게 앞으로 나서봐요.',          img: `${FP}/RWS_Tarot_19_Sun.jpg` },
+  { id: 20, name: '심판',        emoji: '🎺', meaning: '각성, 부활, 소환',          detail: '내 안의 진짜 목소리가 깨어나고 있어요. 응답해봐요.',           img: `${FP}/RWS_Tarot_20_Judgement.jpg` },
+  { id: 21, name: '세계',        emoji: '🌍', meaning: '완성, 통합, 성취',          detail: '하나의 사이클이 완성되는 시점이에요. 충분히 이뤄냈어요.',     img: `${FP}/RWS_Tarot_21_World.jpg` },
 ];
 
 const POSITIONS = ['과거 — 지나온 흐름', '현재 — 지금의 기운', '미래 — 다가올 빛'];
@@ -356,7 +356,7 @@ export default function TarotPage({ callApi, showToast }) {
                     {card ? (
                       imgErrors[card.id]
                         ? <div style={{ fontSize: 26 }}>{card.emoji}</div>
-                        : <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                        : <img src={card.img} alt={card.name} referrerPolicy="no-referrer" onError={() => handleImgError(card.id)}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     ) : (
                       <div style={{ fontSize: '16px', color: 'rgba(200,165,80,0.18)' }}>✦</div>
@@ -476,7 +476,7 @@ export default function TarotPage({ callApi, showToast }) {
                 <div style={{ fontSize: '8px', color: 'rgba(200,165,80,0.55)', textAlign: 'center', padding: '6px 0 3px', letterSpacing: '.1em', zIndex: 2 }}>{ROMAN[card.id]}</div>
                 {imgErrors[card.id]
                   ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, zIndex: 2 }}>{card.emoji}</div>
-                  : <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                  : <img src={card.img} alt={card.name} referrerPolicy="no-referrer" onError={() => handleImgError(card.id)}
                       style={{ flex: 1, width: 'calc(100% - 10px)', margin: '0 5px', objectFit: 'cover', borderRadius: 6, minHeight: 0, zIndex: 2 }} />
                 }
                 <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.4), transparent)', margin: '4px 8px', zIndex: 2 }} />
@@ -506,7 +506,7 @@ export default function TarotPage({ callApi, showToast }) {
                 <div style={{ flexShrink: 0, width: 52, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,165,80,0.4)' }}>
                   {imgErrors[card.id]
                     ? <div style={{ width: 52, height: 83, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{card.emoji}</div>
-                    : <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                    : <img src={card.img} alt={card.name} referrerPolicy="no-referrer" onError={() => handleImgError(card.id)}
                         style={{ width: '100%', aspectRatio: '5/8', objectFit: 'cover', display: 'block' }} />
                   }
                 </div>
@@ -624,7 +624,7 @@ export default function TarotPage({ callApi, showToast }) {
               </div>
               {imgErrors[modalCard.id]
                 ? <div style={{ width: '100%', aspectRatio: '5/8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56 }}>{modalCard.emoji}</div>
-                : <img src={modalCard.img} alt={modalCard.name} style={{ width: 'calc(100% - 12px)', margin: '0 6px 6px', aspectRatio: '5/8', objectFit: 'cover', borderRadius: 8, display: 'block' }} />
+                : <img src={modalCard.img} alt={modalCard.name} referrerPolicy="no-referrer" style={{ width: 'calc(100% - 12px)', margin: '0 6px 6px', aspectRatio: '5/8', objectFit: 'cover', borderRadius: 8, display: 'block' }} />
               }
             </div>
 
