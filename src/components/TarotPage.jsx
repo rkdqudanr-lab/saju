@@ -4,7 +4,7 @@
  * step 34
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 
 const RWS_THUMB = 'https://upload.wikimedia.org/wikipedia/commons/thumb';
@@ -49,26 +49,82 @@ function shuffleDeck(userId = 'guest') {
   });
 }
 
-// 22장 부채꼴 각도: -42° ~ +42°
-const FAN_ANGLES = Array.from({ length: 22 }, (_, i) => -42 + i * (84 / 21));
+// 22장 부채꼴: -66° ~ +66° (더 넓게)
+const FAN_ANGLES = Array.from({ length: 22 }, (_, i) => -66 + i * (132 / 21));
+
+// 섞기 시 날아다니는 카드 궤적 5종
+const SHUFFLE_ARCS = [
+  { tx1: -75, ty1: -55, r1: -14, tx2:  55, ty2: -80, r2:  18, delay: 0   },
+  { tx1:  70, ty1: -45, r1:  12, tx2: -60, ty2: -70, r2: -16, delay: 200 },
+  { tx1: -40, ty1: -75, r1: -20, tx2:  80, ty2: -40, r2:  10, delay: 100 },
+  { tx1:  50, ty1: -65, r1:  16, tx2: -80, ty2: -50, r2: -12, delay: 300 },
+  { tx1: -65, ty1: -35, r1: -10, tx2:  45, ty2: -90, r2:  22, delay: 150 },
+];
+
+// 카드 뒷면 SVG 패턴
+function CardBack({ opacity = 1 }) {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 58 92" style={{ opacity, position: 'absolute', inset: 0 }}>
+      <rect width="58" height="92" rx="8" fill="url(#cardBg)" />
+      <defs>
+        <linearGradient id="cardBg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#0d0b1e" />
+          <stop offset="50%" stopColor="#1a1040" />
+          <stop offset="100%" stopColor="#0d0b1e" />
+        </linearGradient>
+      </defs>
+      <circle cx="29" cy="46" r="22" fill="none" stroke="rgba(200,165,80,0.45)" strokeWidth="0.6"/>
+      <circle cx="29" cy="46" r="14" fill="none" stroke="rgba(200,165,80,0.28)" strokeWidth="0.5"/>
+      <circle cx="29" cy="46" r="6"  fill="none" stroke="rgba(200,165,80,0.45)" strokeWidth="0.5"/>
+      {[0,45,90,135,180,225,270,315].map((deg, j) => {
+        const r = deg * Math.PI / 180;
+        return <line key={j}
+          x1={29 + 6 * Math.cos(r)} y1={46 + 6 * Math.sin(r)}
+          x2={29 + 22 * Math.cos(r)} y2={46 + 22 * Math.sin(r)}
+          stroke="rgba(200,165,80,0.2)" strokeWidth="0.5"/>;
+      })}
+      <circle cx="29" cy="46" r="2" fill="rgba(200,165,80,0.85)"/>
+      {/* corner ornaments */}
+      <text x="4" y="11" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif">✦</text>
+      <text x="47" y="88" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif" textAnchor="middle">✦</text>
+    </svg>
+  );
+}
 
 export default function TarotPage({ callApi, showToast }) {
   const user = useAppStore((s) => s.user);
   const deck = useRef(shuffleDeck(user?.id)).current;
 
-  // 'idle' | 'spread' | 'done'
+  // 'idle' | 'shuffling' | 'spread' | 'done'
   const [phase, setPhase]         = useState('idle');
-  const [picks, setPicks]         = useState([]);       // deck index 배열 (최대 3)
-  const [spreading, setSpreading] = useState(false);    // 팬 오픈 애니
+  const [picks, setPicks]         = useState([]);
+  const [fanReady, setFanReady]   = useState(false);   // 팬 오픈 완료 여부
+  const [hoveredIdx, setHoveredIdx] = useState(null);
   const [imgErrors, setImgErrors] = useState({});
   const [reading, setReading]     = useState('');
   const [readingLoading, setReadingLoading] = useState(false);
+  const timerRef = useRef([]);
 
-  const pickedCards = picks.map((i) => deck[i]);
+  const pickedCards = picks.map(i => deck[i]);
+
+  // 타이머 정리
+  useEffect(() => () => timerRef.current.forEach(clearTimeout), []);
+
+  function addTimer(fn, ms) {
+    const t = setTimeout(fn, ms);
+    timerRef.current.push(t);
+    return t;
+  }
 
   function handleSpread() {
-    setSpreading(true);
-    setTimeout(() => setPhase('spread'), 50);
+    setPhase('shuffling');
+    setFanReady(false);
+    // 섞기 애니 1500ms → 팬 열기
+    addTimer(() => {
+      setPhase('spread');
+      // 22장 × 30ms stagger + 600ms 여유 = 팬 완전히 열림
+      addTimer(() => setFanReady(true), 22 * 30 + 600);
+    }, 1500);
   }
 
   function handlePick(deckIdx) {
@@ -76,12 +132,12 @@ export default function TarotPage({ callApi, showToast }) {
     const next = [...picks, deckIdx];
     setPicks(next);
     if (next.length === 3) {
-      setTimeout(() => setPhase('done'), 500);
+      addTimer(() => setPhase('done'), 500);
     }
   }
 
   function handleImgError(cardId) {
-    setImgErrors((prev) => ({ ...prev, [cardId]: true }));
+    setImgErrors(prev => ({ ...prev, [cardId]: true }));
   }
 
   const askReading = useCallback(async () => {
@@ -106,25 +162,82 @@ export default function TarotPage({ callApi, showToast }) {
   return (
     <div className="page step-fade" style={{ paddingBottom: 80 }}>
       <style>{`
+        /* ── 카드 shimmer ── */
         @keyframes tarotShimmer {
-          0%   { background-position: 200% center; }
-          100% { background-position: -200% center; }
+          0%   { transform: translateX(-120%); }
+          100% { transform: translateX(220%); }
         }
-        @keyframes tarotGlow {
-          0%, 100% { box-shadow: 0 0 12px rgba(200,165,80,0.25), 0 4px 20px rgba(0,0,0,0.4); }
-          50%       { box-shadow: 0 0 22px rgba(200,165,80,0.45), 0 4px 24px rgba(0,0,0,0.5); }
-        }
-        @keyframes tarotReveal {
-          from { opacity: 0; transform: scale(0.95); }
-          to   { opacity: 1; transform: scale(1); }
-        }
+        /* ── 덱 부유 ── */
         @keyframes deckFloat {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-6px); }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33%       { transform: translateY(-7px) rotate(-1.5deg); }
+          66%       { transform: translateY(-4px) rotate(1deg); }
         }
-        @keyframes fanOpen {
-          from { opacity: 0; transform: translateX(-50%) rotate(0deg) scaleY(0.6); }
-          to   { opacity: 1; }
+        /* ── 덱 섞기 bounce ── */
+        @keyframes deckBounce {
+          0%,100% { transform: translateY(0) scale(1); }
+          20%     { transform: translateY(-10px) scale(1.03) rotate(-2deg); }
+          40%     { transform: translateY(-4px) scale(0.98) rotate(1.5deg); }
+          60%     { transform: translateY(-8px) scale(1.02) rotate(-1deg); }
+          80%     { transform: translateY(-2px) scale(0.99) rotate(2deg); }
+        }
+        /* ── 섞기 카드 궤적 ── */
+        @keyframes shuffleArc0 {
+          0%   { opacity:0; transform:translate(0,0) rotate(0deg) scale(0.8); }
+          12%  { opacity:1; }
+          45%  { transform:translate(-75px,-55px) rotate(-14deg) scale(1.06); }
+          88%  { opacity:1; transform:translate(55px,-80px) rotate(18deg) scale(0.95); }
+          100% { opacity:0; transform:translate(4px,4px) rotate(3deg) scale(0.82); }
+        }
+        @keyframes shuffleArc1 {
+          0%   { opacity:0; transform:translate(0,0) rotate(0deg) scale(0.8); }
+          12%  { opacity:1; }
+          45%  { transform:translate(70px,-45px) rotate(12deg) scale(1.04); }
+          88%  { opacity:1; transform:translate(-60px,-70px) rotate(-16deg) scale(0.93); }
+          100% { opacity:0; transform:translate(-6px,6px) rotate(-4deg) scale(0.84); }
+        }
+        @keyframes shuffleArc2 {
+          0%   { opacity:0; transform:translate(0,0) rotate(0deg) scale(0.75); }
+          15%  { opacity:1; }
+          50%  { transform:translate(-40px,-75px) rotate(-20deg) scale(1.08); }
+          85%  { opacity:1; transform:translate(80px,-40px) rotate(10deg) scale(0.9); }
+          100% { opacity:0; transform:translate(8px,-2px) rotate(6deg) scale(0.8); }
+        }
+        @keyframes shuffleArc3 {
+          0%   { opacity:0; transform:translate(0,0) rotate(0deg) scale(0.82); }
+          14%  { opacity:1; }
+          48%  { transform:translate(50px,-65px) rotate(16deg) scale(1.05); }
+          86%  { opacity:1; transform:translate(-80px,-50px) rotate(-12deg) scale(0.94); }
+          100% { opacity:0; transform:translate(-5px,5px) rotate(-2deg) scale(0.83); }
+        }
+        @keyframes shuffleArc4 {
+          0%   { opacity:0; transform:translate(0,0) rotate(0deg) scale(0.78); }
+          16%  { opacity:1; }
+          52%  { transform:translate(-65px,-35px) rotate(-10deg) scale(1.07); }
+          84%  { opacity:1; transform:translate(45px,-90px) rotate(22deg) scale(0.92); }
+          100% { opacity:0; transform:translate(2px,8px) rotate(5deg) scale(0.81); }
+        }
+        /* ── 팬 카드 등장 (child div 스케일+페이드) ── */
+        @keyframes fanCardIn {
+          0%   { opacity:0; transform:scaleY(0.15) scaleX(0.7) translateY(18px); filter:blur(5px); }
+          50%  { filter:blur(0); }
+          75%  { transform:scaleY(1.05) scaleX(1.02) translateY(-3px); }
+          100% { opacity:1; transform:scaleY(1) scaleX(1) translateY(0); }
+        }
+        /* ── 팬 카드 미세 흔들림 (fanReady 후) ── */
+        @keyframes fanIdle {
+          0%,100% { transform:translateY(0px); }
+          50%     { transform:translateY(-4px); }
+        }
+        /* ── 선택된 카드 등장 ── */
+        @keyframes tarotReveal {
+          from { opacity:0; transform:scale(0.88) translateY(10px); }
+          to   { opacity:1; transform:scale(1) translateY(0); }
+        }
+        /* ── 파티클 반짝임 ── */
+        @keyframes sparkle {
+          0%,100% { opacity:0; transform:scale(0) rotate(0deg); }
+          50%     { opacity:1; transform:scale(1) rotate(180deg); }
         }
       `}</style>
 
@@ -136,12 +249,13 @@ export default function TarotPage({ callApi, showToast }) {
         <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.25, marginBottom: 6 }}>
           오늘의 세 별빛
         </div>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.8 }}>
-          {phase === 'idle' && '마음을 비우고, 끌리는 카드를 골라봐요'}
-          {phase === 'spread' && (picks.length < 3
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.8, minHeight: 22, transition: 'opacity .4s' }}>
+          {phase === 'idle'      && '마음을 비우고, 끌리는 카드를 골라봐요'}
+          {phase === 'shuffling' && '별숨이 오늘의 패를 섞고 있어요...'}
+          {phase === 'spread'    && (picks.length < 3
             ? `${picks.length}/3장 골랐어요 — ${['첫 번째', '두 번째', '세 번째'][picks.length]} 카드를 골라봐요`
             : '세 별빛이 모였어요...')}
-          {phase === 'done' && '세 별빛이 모두 열렸어요 — 별숨에게 해석을 물어봐요'}
+          {phase === 'done'      && '세 별빛이 모두 열렸어요 — 별숨에게 해석을 물어봐요'}
         </div>
       </div>
 
@@ -149,32 +263,21 @@ export default function TarotPage({ callApi, showToast }) {
           IDLE — 덱 미리보기 + 버튼
       ══════════════════════════════════════ */}
       {phase === 'idle' && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32, padding: '16px 20px 0' }}>
-          {/* 덱 스택 애니메이션 */}
-          <div style={{ position: 'relative', width: 80, height: 128, animation: 'deckFloat 3s ease-in-out infinite' }}>
-            {[12, 8, 4, 0].map((offset, i) => (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 36, padding: '16px 20px 0' }}>
+          {/* 덱 스택 */}
+          <div style={{ position: 'relative', width: 80, height: 128, animation: 'deckFloat 4s ease-in-out infinite' }}>
+            {[14, 9, 4, 0].map((offset, i) => (
               <div key={i} style={{
                 position: 'absolute',
-                left: offset / 2, top: offset / 2,
+                left: -offset / 3, top: offset / 2,
                 width: 80, height: 128,
                 borderRadius: 10,
                 background: 'linear-gradient(160deg, #0d0b1e 0%, #1a1040 50%, #0d0b1e 100%)',
-                border: '1px solid rgba(200,165,80,0.4)',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
-                opacity: 1 - i * 0.12,
+                border: `1px solid rgba(200,165,80,${0.5 - i * 0.1})`,
+                boxShadow: `0 ${4 + i * 2}px ${16 + i * 4}px rgba(0,0,0,${0.55 - i * 0.08})`,
+                opacity: 1 - i * 0.1,
               }}>
-                {i === 0 && (
-                  <svg width="100%" height="100%" viewBox="0 0 80 128" style={{ opacity: 0.55 }}>
-                    <circle cx="40" cy="64" r="28" fill="none" stroke="rgba(200,165,80,0.5)" strokeWidth="0.7"/>
-                    <circle cx="40" cy="64" r="18" fill="none" stroke="rgba(200,165,80,0.35)" strokeWidth="0.7"/>
-                    <circle cx="40" cy="64" r="7"  fill="none" stroke="rgba(200,165,80,0.5)" strokeWidth="0.7"/>
-                    {[0,30,60,90,120,150,180,210,240,270,300,330].map((deg, j) => {
-                      const r = deg * Math.PI / 180;
-                      return <line key={j} x1={40+7*Math.cos(r)} y1={64+7*Math.sin(r)} x2={40+28*Math.cos(r)} y2={64+28*Math.sin(r)} stroke="rgba(200,165,80,0.28)" strokeWidth="0.6"/>;
-                    })}
-                    <circle cx="40" cy="64" r="2.5" fill="rgba(200,165,80,0.9)"/>
-                  </svg>
-                )}
+                {i === 0 && <CardBack opacity={0.6} />}
               </div>
             ))}
           </div>
@@ -183,15 +286,18 @@ export default function TarotPage({ callApi, showToast }) {
           <button
             onClick={handleSpread}
             style={{
-              padding: '16px 40px',
-              background: 'linear-gradient(135deg, rgba(200,165,80,0.22), rgba(200,165,80,0.10))',
-              border: '1px solid rgba(200,165,80,0.55)',
-              borderRadius: 14,
+              padding: '16px 44px',
+              background: 'linear-gradient(135deg, rgba(200,165,80,0.22), rgba(200,165,80,0.08))',
+              border: '1px solid rgba(200,165,80,0.6)',
+              borderRadius: 50,
               color: 'rgba(220,190,100,0.95)', fontWeight: 700,
               fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
-              cursor: 'pointer', letterSpacing: '.04em',
-              boxShadow: '0 0 24px rgba(200,165,80,0.12)',
+              cursor: 'pointer', letterSpacing: '.06em',
+              boxShadow: '0 0 28px rgba(200,165,80,0.14), inset 0 1px 0 rgba(255,220,120,0.12)',
+              transition: 'all .2s',
             }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 40px rgba(200,165,80,0.28), inset 0 1px 0 rgba(255,220,120,0.18)'; e.currentTarget.style.borderColor = 'rgba(200,165,80,0.9)'; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 28px rgba(200,165,80,0.14), inset 0 1px 0 rgba(255,220,120,0.12)'; e.currentTarget.style.borderColor = 'rgba(200,165,80,0.6)'; }}
           >
             ✦ 카드 펼치기
           </button>
@@ -199,12 +305,80 @@ export default function TarotPage({ callApi, showToast }) {
       )}
 
       {/* ══════════════════════════════════════
+          SHUFFLING — 섞기 애니메이션
+      ══════════════════════════════════════ */}
+      {phase === 'shuffling' && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px 0', position: 'relative' }}>
+          <div style={{ position: 'relative', width: 120, height: 160 }}>
+            {/* 덱 본체 — bounce */}
+            <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', animation: 'deckBounce 1.5s ease-in-out infinite', zIndex: 5 }}>
+              {[8, 5, 2, 0].map((off, i) => (
+                <div key={i} style={{
+                  position: 'absolute',
+                  left: -40 - off / 2, top: -64 - off / 2,
+                  width: 80, height: 128,
+                  borderRadius: 10,
+                  background: 'linear-gradient(160deg, #0d0b1e 0%, #1a1040 50%, #0d0b1e 100%)',
+                  border: `1px solid rgba(200,165,80,${0.5 - i * 0.09})`,
+                  boxShadow: `0 4px 20px rgba(0,0,0,0.6)`,
+                  opacity: 1 - i * 0.1,
+                }}>
+                  {i === 0 && <CardBack opacity={0.55} />}
+                </div>
+              ))}
+            </div>
+
+            {/* 날아다니는 카드 5장 */}
+            {SHUFFLE_ARCS.map((arc, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'absolute',
+                  left: '50%', top: '50%',
+                  marginLeft: -29, marginTop: -46,
+                  width: 58, height: 92,
+                  borderRadius: 9,
+                  zIndex: 10 + i,
+                  animation: `shuffleArc${i} 0.48s cubic-bezier(.4,0,.2,1) ${arc.delay}ms both`,
+                  pointerEvents: 'none',
+                }}
+              >
+                <CardBack opacity={0.9} />
+                {/* shimmer */}
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: 9,
+                  overflow: 'hidden', pointerEvents: 'none',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: 0, bottom: 0, width: '40%',
+                    background: 'linear-gradient(105deg, transparent, rgba(255,220,120,0.18), transparent)',
+                    animation: 'tarotShimmer 1.2s ease-in-out infinite',
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 파티클 */}
+          {[...Array(6)].map((_, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              left: `${20 + i * 12}%`, top: `${30 + (i % 3) * 20}%`,
+              fontSize: '8px', color: 'rgba(200,165,80,0.7)',
+              animation: `sparkle ${0.8 + i * 0.2}s ease-in-out ${i * 180}ms infinite`,
+              pointerEvents: 'none',
+            }}>✦</div>
+          ))}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════
           SPREAD — 3 슬롯 + 팬 스프레드
       ══════════════════════════════════════ */}
       {phase === 'spread' && (
-        <div>
+        <div style={{ width: '100%' }}>
           {/* 선택 슬롯 3개 */}
-          <div style={{ display: 'flex', gap: 12, padding: '0 24px', justifyContent: 'center', marginBottom: 8 }}>
+          <div style={{ display: 'flex', gap: 12, padding: '0 24px', justifyContent: 'center', marginBottom: 12 }}>
             {POSITIONS.map((pos, i) => {
               const card = picks[i] !== undefined ? deck[picks[i]] : null;
               return (
@@ -212,29 +386,26 @@ export default function TarotPage({ callApi, showToast }) {
                   <div style={{
                     width: '100%', aspectRatio: '5/8',
                     borderRadius: 10,
-                    border: card ? '1px solid rgba(200,165,80,0.6)' : '1.5px dashed rgba(200,165,80,0.25)',
-                    background: card ? 'none' : 'rgba(200,165,80,0.04)',
+                    border: card ? '1px solid rgba(200,165,80,0.7)' : '1.5px dashed rgba(200,165,80,0.22)',
+                    background: card ? 'none' : 'rgba(200,165,80,0.03)',
                     overflow: 'hidden',
-                    transition: 'border 0.3s',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    animation: card ? 'tarotReveal 0.4s ease' : 'none',
+                    transition: 'border .3s, box-shadow .3s',
+                    boxShadow: card ? '0 0 14px rgba(200,165,80,0.2)' : 'none',
+                    animation: card ? 'tarotReveal 0.45s cubic-bezier(.34,1.56,.64,1)' : 'none',
                   }}>
                     {card ? (
                       imgErrors[card.id] ? (
-                        <div style={{ fontSize: 24 }}>{card.emoji}</div>
+                        <div style={{ fontSize: 26 }}>{card.emoji}</div>
                       ) : (
-                        <img
-                          src={card.img}
-                          alt={card.name}
-                          onError={() => handleImgError(card.id)}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                        />
+                        <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       )
                     ) : (
-                      <div style={{ fontSize: '18px', color: 'rgba(200,165,80,0.2)' }}>✦</div>
+                      <div style={{ fontSize: '16px', color: 'rgba(200,165,80,0.18)' }}>✦</div>
                     )}
                   </div>
-                  <div style={{ fontSize: '8px', color: card ? 'rgba(200,165,80,0.7)' : 'var(--t4)', fontWeight: card ? 700 : 400, textAlign: 'center', lineHeight: 1.4, transition: 'color 0.3s' }}>
+                  <div style={{ fontSize: '8px', color: card ? 'rgba(200,165,80,0.75)' : 'var(--t4)', fontWeight: card ? 700 : 400, textAlign: 'center', lineHeight: 1.4, transition: 'color .3s' }}>
                     {pos.split('—')[0].trim()}
                   </div>
                 </div>
@@ -242,61 +413,72 @@ export default function TarotPage({ callApi, showToast }) {
             })}
           </div>
 
-          {/* 팬 스프레드 */}
-          <div style={{ position: 'relative', height: 210, width: '100%', marginTop: 16 }}>
+          {/* 팬 스프레드 — 더 넓고 높게 */}
+          <div style={{ position: 'relative', height: 300, width: '100%', overflow: 'visible' }}>
             {deck.map((card, i) => {
-              const isPicked = picks.includes(i);
-              const angle = FAN_ANGLES[i];
+              const isPicked   = picks.includes(i);
+              const isHovered  = hoveredIdx === i;
+              const angle      = FAN_ANGLES[i];
+              const liftY      = isHovered && !isPicked ? -20 : 0;
+
               return (
                 <div
                   key={card.id}
                   onClick={() => handlePick(i)}
+                  onMouseEnter={() => !isPicked && picks.length < 3 && setHoveredIdx(i)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  onTouchStart={() => !isPicked && picks.length < 3 && setHoveredIdx(i)}
+                  onTouchEnd={() => setHoveredIdx(null)}
                   style={{
                     position: 'absolute',
                     left: '50%',
-                    bottom: 20,
-                    width: 54,
-                    height: 86,
-                    transform: `translateX(-50%) rotate(${angle}deg)`,
+                    bottom: 24,
+                    width: 58,
+                    height: 92,
+                    transform: `translateX(-50%) rotate(${angle}deg) translateY(${liftY}px)`,
                     transformOrigin: '50% 100%',
-                    zIndex: isPicked ? 0 : i + 1,
+                    zIndex: isHovered ? 50 : (isPicked ? 0 : i + 1),
                     cursor: isPicked || picks.length >= 3 ? 'default' : 'pointer',
-                    opacity: isPicked ? 0.15 : 1,
-                    transition: 'opacity 0.35s ease, transform 0.35s ease',
-                    animation: spreading ? `fanOpen 0.5s ease ${i * 18}ms both` : 'none',
+                    opacity: isPicked ? 0.12 : 1,
+                    transition: 'opacity .35s ease, transform .28s cubic-bezier(.34,1.56,.64,1)',
                     borderRadius: 9,
-                    overflow: 'hidden',
                   }}
                 >
-                  {/* 카드 뒷면 */}
+                  {/* 카드 본체 — fanCardIn 애니 */}
                   <div style={{
                     width: '100%', height: '100%',
-                    background: 'linear-gradient(160deg, #0d0b1e 0%, #1a1040 50%, #0d0b1e 100%)',
-                    border: `1px solid rgba(200,165,80,${isPicked ? 0.1 : 0.45})`,
                     borderRadius: 9,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: `1px solid rgba(200,165,80,${isHovered ? 0.85 : isPicked ? 0.08 : 0.42})`,
+                    boxShadow: isHovered
+                      ? '0 0 22px rgba(200,165,80,0.5), 0 8px 32px rgba(0,0,0,0.5)'
+                      : '0 2px 8px rgba(0,0,0,0.35)',
                     overflow: 'hidden',
                     position: 'relative',
+                    transition: 'border-color .25s, box-shadow .25s',
+                    animation: fanReady && !isPicked
+                      ? `fanIdle ${2.8 + (i % 5) * 0.4}s ease-in-out ${(i % 7) * 0.3}s infinite`
+                      : `fanCardIn 0.55s cubic-bezier(.34,1.56,.64,1) ${i * 30}ms both`,
                   }}>
-                    <svg width="36" height="36" viewBox="0 0 36 36" style={{ opacity: isPicked ? 0.2 : 0.65 }}>
-                      <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(200,165,80,0.4)" strokeWidth="0.6"/>
-                      <circle cx="18" cy="18" r="8"  fill="none" stroke="rgba(200,165,80,0.25)" strokeWidth="0.6"/>
-                      <circle cx="18" cy="18" r="3"  fill="none" stroke="rgba(200,165,80,0.4)" strokeWidth="0.6"/>
-                      {[0,45,90,135,180,225,270,315].map((deg, j) => {
-                        const rad = deg * Math.PI / 180;
-                        return <line key={j} x1={18+3*Math.cos(rad)} y1={18+3*Math.sin(rad)} x2={18+14*Math.cos(rad)} y2={18+14*Math.sin(rad)} stroke="rgba(200,165,80,0.25)" strokeWidth="0.5"/>;
-                      })}
-                      <circle cx="18" cy="18" r="1.5" fill="rgba(200,165,80,0.8)"/>
-                    </svg>
-                    {/* shimmer */}
+                    <CardBack opacity={isPicked ? 0.3 : isHovered ? 0.75 : 0.65} />
+                    {/* shimmer sweep */}
                     {!isPicked && (
                       <div style={{
-                        position: 'absolute', inset: 0,
-                        background: 'linear-gradient(105deg, transparent 40%, rgba(255,220,120,0.07) 50%, transparent 60%)',
-                        backgroundSize: '200% 100%',
-                        animation: 'tarotShimmer 2.4s ease-in-out infinite',
+                        position: 'absolute', inset: 0, borderRadius: 9,
+                        overflow: 'hidden', pointerEvents: 'none',
+                      }}>
+                        <div style={{
+                          position: 'absolute', top: 0, bottom: 0, width: '35%',
+                          background: 'linear-gradient(105deg, transparent, rgba(255,220,120,0.09), transparent)',
+                          animation: `tarotShimmer ${2.6 + (i % 4) * 0.5}s ease-in-out ${i * 80}ms infinite`,
+                        }} />
+                      </div>
+                    )}
+                    {/* hover glow overlay */}
+                    {isHovered && (
+                      <div style={{
+                        position: 'absolute', inset: 0, borderRadius: 9,
+                        background: 'linear-gradient(160deg, rgba(200,165,80,0.12), rgba(200,165,80,0.04))',
                         pointerEvents: 'none',
-                        borderRadius: 9,
                       }} />
                     )}
                   </div>
@@ -305,8 +487,8 @@ export default function TarotPage({ callApi, showToast }) {
             })}
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: 10, fontSize: '10px', color: 'var(--t4)' }}>
-            카드에 손을 대고 직감에 따라 골라봐요
+          <div style={{ textAlign: 'center', marginTop: 8, fontSize: '10px', color: 'var(--t4)', letterSpacing: '.04em' }}>
+            직감이 이끄는 카드를 골라봐요
           </div>
         </div>
       )}
@@ -327,11 +509,11 @@ export default function TarotPage({ callApi, showToast }) {
                 background: 'linear-gradient(160deg, #12102a 0%, #1e1a40 60%, #12102a 100%)',
                 overflow: 'hidden',
                 display: 'flex', flexDirection: 'column',
-                animation: `tarotReveal 0.5s ease ${idx * 120}ms both`,
-                boxShadow: '0 0 18px rgba(200,165,80,0.2)',
+                animation: `tarotReveal 0.55s cubic-bezier(.34,1.56,.64,1) ${idx * 140}ms both`,
+                boxShadow: '0 0 22px rgba(200,165,80,0.22), 0 8px 32px rgba(0,0,0,0.4)',
                 position: 'relative',
               }}>
-                <div style={{ position: 'absolute', inset: 4, border: '1px solid rgba(200,165,80,0.18)', borderRadius: 10, pointerEvents: 'none', zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 4, border: '1px solid rgba(200,165,80,0.15)', borderRadius: 10, pointerEvents: 'none', zIndex: 1 }} />
                 <div style={{ fontSize: '8px', color: 'rgba(200,165,80,0.55)', textAlign: 'center', padding: '6px 0 3px', letterSpacing: '.1em', zIndex: 2 }}>
                   {ROMAN[card.id]}
                 </div>
@@ -340,12 +522,8 @@ export default function TarotPage({ callApi, showToast }) {
                     {card.emoji}
                   </div>
                 ) : (
-                  <img
-                    src={card.img}
-                    alt={card.name}
-                    onError={() => handleImgError(card.id)}
-                    style={{ flex: 1, width: 'calc(100% - 10px)', margin: '0 5px', objectFit: 'cover', borderRadius: 6, minHeight: 0, zIndex: 2 }}
-                  />
+                  <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                    style={{ flex: 1, width: 'calc(100% - 10px)', margin: '0 5px', objectFit: 'cover', borderRadius: 6, minHeight: 0, zIndex: 2 }} />
                 )}
                 <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.4), transparent)', margin: '4px 8px', zIndex: 2 }} />
                 <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(220,190,100,0.9)', textAlign: 'center', padding: '0 4px 8px', zIndex: 2 }}>{card.name}</div>
@@ -370,32 +548,28 @@ export default function TarotPage({ callApi, showToast }) {
             {pickedCards.map((card, idx) => (
               <div key={card.id} style={{
                 padding: '14px 14px',
-                background: 'linear-gradient(135deg, rgba(18,16,42,0.9), rgba(26,22,56,0.7))',
+                background: 'linear-gradient(135deg, rgba(18,16,42,0.92), rgba(26,22,56,0.75))',
                 borderRadius: 12,
                 border: '1px solid rgba(200,165,80,0.3)',
-                animation: `tarotReveal 0.4s ease ${idx * 100 + 300}ms both`,
+                animation: `tarotReveal 0.45s ease ${idx * 100 + 350}ms both`,
                 display: 'flex', gap: 14, alignItems: 'flex-start',
               }}>
-                <div style={{ flexShrink: 0, width: 62, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(200,165,80,0.4)', background: 'rgba(200,165,80,0.05)' }}>
+                <div style={{ flexShrink: 0, width: 62, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(200,165,80,0.4)' }}>
                   {imgErrors[card.id] ? (
                     <div style={{ width: 62, height: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
                       {card.emoji}
                     </div>
                   ) : (
-                    <img
-                      src={card.img}
-                      alt={card.name}
-                      onError={() => handleImgError(card.id)}
-                      style={{ width: '100%', aspectRatio: '5/8', objectFit: 'cover', display: 'block' }}
-                    />
+                    <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                      style={{ width: '100%', aspectRatio: '5/8', objectFit: 'cover', display: 'block' }} />
                   )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 3 }}>
-                    <div style={{ fontSize: 'var(--xs)', fontWeight: 800, color: 'rgba(220,190,100,0.9)' }}>{card.name}</div>
+                    <div style={{ fontSize: 'var(--xs)', fontWeight: 800, color: 'rgba(220,190,100,0.92)' }}>{card.name}</div>
                     <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.45)', letterSpacing: '.08em' }}>{ROMAN[card.id]}</div>
                   </div>
-                  <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.6)', marginBottom: 6, letterSpacing: '.04em' }}>
+                  <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.65)', marginBottom: 6, letterSpacing: '.04em' }}>
                     {POSITIONS[idx].split('—')[0].trim()} &nbsp;·&nbsp; {POSITIONS[idx].split('—')[1]?.trim()}
                   </div>
                   <div style={{ fontSize: '10px', color: 'rgba(210,185,245,0.95)', fontWeight: 600, marginBottom: 5 }}>{card.meaning}</div>
@@ -413,13 +587,17 @@ export default function TarotPage({ callApi, showToast }) {
                 disabled={readingLoading}
                 style={{
                   width: '100%', padding: '16px',
-                  background: readingLoading ? 'rgba(200,165,80,0.08)' : 'linear-gradient(135deg, rgba(200,165,80,0.18), rgba(200,165,80,0.08))',
-                  border: '1px solid rgba(200,165,80,0.5)',
-                  borderRadius: 12,
+                  background: readingLoading
+                    ? 'rgba(200,165,80,0.07)'
+                    : 'linear-gradient(135deg, rgba(200,165,80,0.18), rgba(200,165,80,0.07))',
+                  border: '1px solid rgba(200,165,80,0.52)',
+                  borderRadius: 50,
                   color: 'rgba(220,190,100,0.95)', fontWeight: 700,
                   fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
                   cursor: readingLoading ? 'not-allowed' : 'pointer',
-                  letterSpacing: '.02em',
+                  letterSpacing: '.04em',
+                  boxShadow: readingLoading ? 'none' : '0 0 24px rgba(200,165,80,0.1)',
+                  transition: 'all .2s',
                 }}
               >
                 {readingLoading ? (
@@ -434,13 +612,13 @@ export default function TarotPage({ callApi, showToast }) {
 
           {/* AI 해석 결과 */}
           {reading && (
-            <div style={{ margin: '20px 20px 0', padding: '20px 18px', background: 'linear-gradient(160deg, rgba(13,11,30,0.95), rgba(20,16,44,0.9))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)' }}>
+            <div style={{ margin: '20px 20px 0', padding: '20px 18px', background: 'linear-gradient(160deg, rgba(13,11,30,0.96), rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
                 <div style={{ width: 20, height: 1, background: 'rgba(200,165,80,0.5)' }} />
-                <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.8)', fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase' }}>별숨의 타로 해석</div>
+                <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.85)', fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase' }}>별숨의 타로 해석</div>
                 <div style={{ flex: 1, height: 1, background: 'rgba(200,165,80,0.5)' }} />
               </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'rgba(238, 232, 252, 0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
                 {reading}
               </div>
             </div>
@@ -449,7 +627,7 @@ export default function TarotPage({ callApi, showToast }) {
       )}
 
       {/* ── 안내 ── */}
-      <div style={{ margin: '20px 20px 0', padding: '10px 14px', background: 'rgba(200,165,80,0.05)', border: '1px solid rgba(200,165,80,0.12)', borderRadius: 10, textAlign: 'center' }}>
+      <div style={{ margin: '20px 20px 0', padding: '10px 14px', background: 'rgba(200,165,80,0.04)', border: '1px solid rgba(200,165,80,0.1)', borderRadius: 10, textAlign: 'center' }}>
         <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.7 }}>
           오늘의 별빛은 매일 자정 새롭게 열려요 ✦
         </div>
