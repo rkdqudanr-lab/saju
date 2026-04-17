@@ -256,6 +256,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     { icon: '☽', label: '꿈 해몽', s: 24 },
                     { icon: '🗓️', label: '택일 (길일 찾기)', s: 25 },
                     { icon: '📛', label: '이름 풀이 (성명학)', s: 26 },
+                    { icon: '🃏', label: '별숨 타로', s: 34 },
                   ].map(m => (
                     <li key={m.s}>
                       <button

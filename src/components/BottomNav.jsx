@@ -13,7 +13,7 @@ export default function BottomNav() {
 
   const tabs = [
     { id: 'today',   icon: '⌂',  label: '오늘',  steps: [0, 17, 20, 10, 23], tourId: 'nav-today' },
-    { id: 'consult', icon: '✦', label: '상담',  steps: [2, 3, 4, 5, 6, 8, 14, 24, 25, 26], tourId: 'nav-consult' },
+    { id: 'consult', icon: '✦', label: '상담',  steps: [2, 3, 4, 5, 6, 8, 14, 24, 25, 26, 34], tourId: 'nav-consult' },
     { id: 'growth',  icon: '◈', label: '성장',  steps: [13, 30, 7, 12, 1, 19, 27, 34, 21, 28], tourId: 'nav-growth' },
     { id: 'square',  icon: '🏛️', label: '광장',  steps: [29, 32, 11, 31, 28, 33, 35], tourId: 'nav-square' },
   ];
