@@ -7,29 +7,32 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 
+// Wikimedia Commons 공개도메인 라이더-웨이트 이미지 (1910년 출판, 저작권 만료)
+const RWS_BASE = 'https://upload.wikimedia.org/wikipedia/commons';
+
 const MAJOR_ARCANA = [
-  { id: 0,  name: '광대',    emoji: '🌀', meaning: '새 시작, 순수한 모험심', detail: '두려움 없이 새로운 길로 나서는 자유로운 영혼이에요.' },
-  { id: 1,  name: '마법사',  emoji: '🔮', meaning: '집중력, 창조적 의지', detail: '손에 쥔 도구를 활용해 원하는 것을 현실로 만들 수 있어요.' },
-  { id: 2,  name: '여사제',  emoji: '📖', meaning: '직관, 신비, 내면의 지혜', detail: '말하지 않아도 이미 알고 있어요. 내면의 소리를 믿어봐요.' },
-  { id: 3,  name: '여황제',  emoji: '🌸', meaning: '풍요, 창조성, 모성', detail: '씨앗을 뿌리면 반드시 꽃이 피는 때예요. 풍요가 흘러들어요.' },
-  { id: 4,  name: '황제',    emoji: '👑', meaning: '질서, 안정, 리더십', detail: '체계를 세우고 단단하게 지키는 힘이 필요한 시기예요.' },
-  { id: 5,  name: '교황',    emoji: '⛪', meaning: '전통, 지혜, 조언', detail: '신뢰할 수 있는 스승이나 전통적인 방법에서 답을 찾아봐요.' },
-  { id: 6,  name: '연인',    emoji: '💞', meaning: '선택, 사랑, 조화', detail: '마음 깊은 곳의 끌림을 따라 선택하는 순간이에요.' },
-  { id: 7,  name: '전차',    emoji: '⚔️', meaning: '의지, 승리, 통제', detail: '앞으로만 나아가요. 집중과 결단이 승리를 만들어요.' },
-  { id: 8,  name: '힘',      emoji: '🦁', meaning: '내면의 힘, 인내, 용기', detail: '거칠고 강한 것도 부드러운 사랑으로 다스릴 수 있어요.' },
-  { id: 9,  name: '은둔자',  emoji: '🕯️', meaning: '성찰, 고독, 내면 탐색', detail: '혼자만의 시간이 빛이 되는 때예요. 깊이 들여다봐요.' },
-  { id: 10, name: '운명의 바퀴', emoji: '🎡', meaning: '변화, 전환점, 운명', detail: '삶이 새로운 국면으로 접어들고 있어요. 흐름을 타봐요.' },
-  { id: 11, name: '정의',    emoji: '⚖️', meaning: '균형, 공정, 원인과 결과', detail: '진실된 행동이 공정한 결과로 돌아오는 시기예요.' },
-  { id: 12, name: '매달린 자', emoji: '🙃', meaning: '희생, 기다림, 새 시각', detail: '잠시 멈추고 다른 관점으로 바라보는 지혜가 필요해요.' },
-  { id: 13, name: '죽음',    emoji: '🌑', meaning: '변환, 끝과 새 시작', detail: '두려운 끝이 아니에요. 낡은 것이 떠나고 새것이 들어와요.' },
-  { id: 14, name: '절제',    emoji: '🌊', meaning: '균형, 조화, 인내', detail: '서두르지 않아도 돼요. 조화롭게 섞이면 완성돼요.' },
-  { id: 15, name: '악마',    emoji: '🔗', meaning: '집착, 속박, 욕망', detail: '스스로 만든 사슬임을 알아채는 순간 자유로워져요.' },
-  { id: 16, name: '탑',      emoji: '⚡', meaning: '갑작스런 변화, 해방', detail: '흔들리는 것은 처음부터 불안정했기 때문이에요. 재건할 기회예요.' },
-  { id: 17, name: '별',      emoji: '⭐', meaning: '희망, 영감, 치유', detail: '어두운 밤에도 별은 빛나요. 희망을 놓지 마세요.' },
-  { id: 18, name: '달',      emoji: '🌙', meaning: '무의식, 환상, 불확실성', detail: '모든 게 뚜렷하지 않아도 괜찮아요. 안개 속을 천천히 걸어봐요.' },
-  { id: 19, name: '태양',    emoji: '☀️', meaning: '기쁨, 성공, 활력', detail: '따뜻하게 빛나는 때예요. 자신 있게 앞으로 나서봐요.' },
-  { id: 20, name: '심판',    emoji: '🎺', meaning: '각성, 부활, 소환', detail: '내 안의 진짜 목소리가 깨어나고 있어요. 응답해봐요.' },
-  { id: 21, name: '세계',    emoji: '🌍', meaning: '완성, 통합, 성취', detail: '하나의 사이클이 완성되는 시점이에요. 충분히 이뤄냈어요.' },
+  { id: 0,  name: '광대',           emoji: '🌀', meaning: '새 시작, 순수한 모험심',    detail: '두려움 없이 새로운 길로 나서는 자유로운 영혼이에요.',   img: `${RWS_BASE}/1/10/RWS_Tarot_00_Fool.jpg` },
+  { id: 1,  name: '마법사',         emoji: '🔮', meaning: '집중력, 창조적 의지',       detail: '손에 쥔 도구를 활용해 원하는 것을 현실로 만들 수 있어요.', img: `${RWS_BASE}/e/e8/RWS_Tarot_01_Magician.jpg` },
+  { id: 2,  name: '여사제',         emoji: '📖', meaning: '직관, 신비, 내면의 지혜',   detail: '말하지 않아도 이미 알고 있어요. 내면의 소리를 믿어봐요.',  img: `${RWS_BASE}/8/88/RWS_Tarot_02_High_Priestess.jpg` },
+  { id: 3,  name: '여황제',         emoji: '🌸', meaning: '풍요, 창조성, 모성',        detail: '씨앗을 뿌리면 반드시 꽃이 피는 때예요. 풍요가 흘러들어요.', img: `${RWS_BASE}/d/d2/RWS_Tarot_03_Empress.jpg` },
+  { id: 4,  name: '황제',           emoji: '👑', meaning: '질서, 안정, 리더십',        detail: '체계를 세우고 단단하게 지키는 힘이 필요한 시기예요.',       img: `${RWS_BASE}/c/c3/RWS_Tarot_04_Emperor.jpg` },
+  { id: 5,  name: '교황',           emoji: '⛪', meaning: '전통, 지혜, 조언',          detail: '신뢰할 수 있는 스승이나 전통적인 방법에서 답을 찾아봐요.',  img: `${RWS_BASE}/8/8d/RWS_Tarot_05_Hierophant.jpg` },
+  { id: 6,  name: '연인',           emoji: '💞', meaning: '선택, 사랑, 조화',          detail: '마음 깊은 곳의 끌림을 따라 선택하는 순간이에요.',           img: `${RWS_BASE}/3/3a/TheLovers.jpg` },
+  { id: 7,  name: '전차',           emoji: '⚔️', meaning: '의지, 승리, 통제',         detail: '앞으로만 나아가요. 집중과 결단이 승리를 만들어요.',          img: `${RWS_BASE}/9/9b/RWS_Tarot_07_Chariot.jpg` },
+  { id: 8,  name: '힘',             emoji: '🦁', meaning: '내면의 힘, 인내, 용기',     detail: '거칠고 강한 것도 부드러운 사랑으로 다스릴 수 있어요.',      img: `${RWS_BASE}/f/f5/RWS_Tarot_08_Strength.jpg` },
+  { id: 9,  name: '은둔자',         emoji: '🕯️', meaning: '성찰, 고독, 내면 탐색',    detail: '혼자만의 시간이 빛이 되는 때예요. 깊이 들여다봐요.',        img: `${RWS_BASE}/4/4d/RWS_Tarot_09_Hermit.jpg` },
+  { id: 10, name: '운명의 바퀴',    emoji: '🎡', meaning: '변화, 전환점, 운명',        detail: '삶이 새로운 국면으로 접어들고 있어요. 흐름을 타봐요.',      img: `${RWS_BASE}/3/3c/RWS_Tarot_10_Wheel_of_Fortune.jpg` },
+  { id: 11, name: '정의',           emoji: '⚖️', meaning: '균형, 공정, 원인과 결과',  detail: '진실된 행동이 공정한 결과로 돌아오는 시기예요.',            img: `${RWS_BASE}/e/e0/RWS_Tarot_11_Justice.jpg` },
+  { id: 12, name: '매달린 자',      emoji: '🙃', meaning: '희생, 기다림, 새 시각',     detail: '잠시 멈추고 다른 관점으로 바라보는 지혜가 필요해요.',       img: `${RWS_BASE}/2/2b/RWS_Tarot_12_Hanged_Man.jpg` },
+  { id: 13, name: '죽음',           emoji: '🌑', meaning: '변환, 끝과 새 시작',        detail: '두려운 끝이 아니에요. 낡은 것이 떠나고 새것이 들어와요.',  img: `${RWS_BASE}/d/d7/RWS_Tarot_13_Death.jpg` },
+  { id: 14, name: '절제',           emoji: '🌊', meaning: '균형, 조화, 인내',          detail: '서두르지 않아도 돼요. 조화롭게 섞이면 완성돼요.',           img: `${RWS_BASE}/f/f8/RWS_Tarot_14_Temperance.jpg` },
+  { id: 15, name: '악마',           emoji: '🔗', meaning: '집착, 속박, 욕망',          detail: '스스로 만든 사슬임을 알아채는 순간 자유로워져요.',           img: `${RWS_BASE}/5/55/RWS_Tarot_15_Devil.jpg` },
+  { id: 16, name: '탑',             emoji: '⚡', meaning: '갑작스런 변화, 해방',       detail: '흔들리는 것은 처음부터 불안정했기 때문이에요. 재건할 기회예요.', img: `${RWS_BASE}/5/53/RWS_Tarot_16_Tower.jpg` },
+  { id: 17, name: '별',             emoji: '⭐', meaning: '희망, 영감, 치유',          detail: '어두운 밤에도 별은 빛나요. 희망을 놓지 마세요.',            img: `${RWS_BASE}/d/db/RWS_Tarot_17_Star.jpg` },
+  { id: 18, name: '달',             emoji: '🌙', meaning: '무의식, 환상, 불확실성',    detail: '모든 게 뚜렷하지 않아도 괜찮아요. 안개 속을 천천히 걸어봐요.', img: `${RWS_BASE}/7/7f/RWS_Tarot_18_Moon.jpg` },
+  { id: 19, name: '태양',           emoji: '☀️', meaning: '기쁨, 성공, 활력',         detail: '따뜻하게 빛나는 때예요. 자신 있게 앞으로 나서봐요.',        img: `${RWS_BASE}/1/17/RWS_Tarot_19_Sun.jpg` },
+  { id: 20, name: '심판',           emoji: '🎺', meaning: '각성, 부활, 소환',          detail: '내 안의 진짜 목소리가 깨어나고 있어요. 응답해봐요.',         img: `${RWS_BASE}/d/dd/RWS_Tarot_20_Judgement.jpg` },
+  { id: 21, name: '세계',           emoji: '🌍', meaning: '완성, 통합, 성취',          detail: '하나의 사이클이 완성되는 시점이에요. 충분히 이뤄냈어요.',   img: `${RWS_BASE}/f/ff/RWS_Tarot_21_World.jpg` },
 ];
 
 const POSITIONS = ['과거 — 지나온 흐름', '현재 — 지금의 기운', '미래 — 다가올 빛'];
@@ -47,10 +50,8 @@ function CardBackFace({ posLabel }) {
       alignItems: 'center', justifyContent: 'center', gap: 0,
       overflow: 'hidden',
     }}>
-      {/* 이중 내부 프레임 */}
       <div style={{ position: 'absolute', inset: 5, border: '1px solid rgba(200,165,80,0.2)', borderRadius: 10, pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', inset: 8, border: '1px solid rgba(200,165,80,0.1)', borderRadius: 8, pointerEvents: 'none' }} />
-      {/* 만달라 SVG */}
       <svg width="72" height="72" viewBox="0 0 72 72" style={{ opacity: 0.75, marginBottom: 6 }}>
         <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(200,165,80,0.35)" strokeWidth="0.6"/>
         <circle cx="36" cy="36" r="22" fill="none" stroke="rgba(200,165,80,0.25)" strokeWidth="0.6"/>
@@ -66,11 +67,9 @@ function CardBackFace({ posLabel }) {
         })}
         <circle cx="36" cy="36" r="2.5" fill="rgba(200,165,80,0.9)"/>
       </svg>
-      {/* 포지션 레이블 */}
       <div style={{ fontSize: '8.5px', color: 'rgba(200,165,80,0.65)', letterSpacing: '.12em', fontWeight: 600, textTransform: 'uppercase' }}>
         {posLabel}
       </div>
-      {/* shimmer 레이어 */}
       <div style={{
         position: 'absolute', inset: 0, borderRadius: 14,
         background: 'linear-gradient(105deg, transparent 40%, rgba(255,220,120,0.06) 50%, transparent 60%)',
@@ -99,13 +98,18 @@ export default function TarotPage({ callApi, showToast }) {
   const user = useAppStore((s) => s.user);
   const cards = useRef(drawCards(user?.id)).current;
 
-  const [flipped, setFlipped]     = useState([false, false, false]);
-  const [reading, setReading]     = useState('');
+  const [flipped, setFlipped]         = useState([false, false, false]);
+  const [imgErrors, setImgErrors]     = useState({});
+  const [reading, setReading]         = useState('');
   const [readingLoading, setReadingLoading] = useState(false);
   const allFlipped = flipped.every(Boolean);
 
   function flipCard(idx) {
     setFlipped(prev => prev.map((v, i) => i === idx ? true : v));
+  }
+
+  function handleImgError(cardId) {
+    setImgErrors(prev => ({ ...prev, [cardId]: true }));
   }
 
   const askReading = useCallback(async () => {
@@ -194,27 +198,42 @@ export default function TarotPage({ callApi, showToast }) {
                 background: 'linear-gradient(160deg, #12102a 0%, #1e1a40 60%, #12102a 100%)',
                 border: '1px solid rgba(200,165,80,0.7)',
                 display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                padding: '10px 8px 12px', gap: 4, textAlign: 'center',
+                alignItems: 'center',
+                padding: '6px 6px 8px', gap: 0, textAlign: 'center',
                 animation: flipped[idx] ? 'tarotGlow 3s ease-in-out infinite' : 'none',
                 overflow: 'hidden',
               }}>
                 {/* 이중 내부 프레임 */}
-                <div style={{ position: 'absolute', inset: 5, border: '1px solid rgba(200,165,80,0.2)', borderRadius: 10, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', inset: 4, border: '1px solid rgba(200,165,80,0.2)', borderRadius: 10, pointerEvents: 'none', zIndex: 1 }} />
                 {/* 로마 숫자 */}
-                <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.6)', letterSpacing: '.12em', fontWeight: 600, marginBottom: 2 }}>
+                <div style={{ fontSize: '8px', color: 'rgba(200,165,80,0.6)', letterSpacing: '.12em', fontWeight: 600, marginBottom: 3, zIndex: 2 }}>
                   {ROMAN[card.id]}
                 </div>
-                {/* 이모지 */}
-                <div style={{ fontSize: 32, lineHeight: 1, filter: 'drop-shadow(0 0 8px rgba(200,165,80,0.5))' }}>
-                  {card.emoji}
-                </div>
+                {/* 카드 이미지 (또는 이모지 폴백) */}
+                {imgErrors[card.id] ? (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, lineHeight: 1, filter: 'drop-shadow(0 0 8px rgba(200,165,80,0.5))', zIndex: 2 }}>
+                    {card.emoji}
+                  </div>
+                ) : (
+                  <img
+                    src={card.img}
+                    alt={card.name}
+                    onError={() => handleImgError(card.id)}
+                    style={{
+                      flex: 1,
+                      width: 'calc(100% - 10px)',
+                      objectFit: 'cover',
+                      borderRadius: 6,
+                      display: 'block',
+                      minHeight: 0,
+                      zIndex: 2,
+                    }}
+                  />
+                )}
                 {/* 구분선 */}
-                <div style={{ width: '60%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.5), transparent)', margin: '4px 0' }} />
+                <div style={{ width: '70%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.5), transparent)', margin: '5px 0 4px', zIndex: 2 }} />
                 {/* 카드명 */}
-                <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(220,190,100,0.95)', lineHeight: 1.2, letterSpacing: '.02em' }}>{card.name}</div>
-                {/* 키워드 */}
-                <div style={{ fontSize: '8.5px', color: 'rgba(180,180,200,0.65)', lineHeight: 1.4, marginTop: 1 }}>{card.meaning}</div>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(220,190,100,0.95)', lineHeight: 1.2, letterSpacing: '.02em', zIndex: 2 }}>{card.name}</div>
               </div>
             </div>
           </div>
@@ -238,22 +257,40 @@ export default function TarotPage({ callApi, showToast }) {
         <div style={{ margin: '24px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {cards.map((card, idx) => flipped[idx] && (
             <div key={card.id} style={{
-              padding: '14px 16px',
+              padding: '14px 14px',
               background: 'linear-gradient(135deg, rgba(18,16,42,0.9), rgba(26,22,56,0.7))',
               borderRadius: 12,
               border: '1px solid rgba(200,165,80,0.3)',
               animation: 'tarotReveal 0.4s ease',
+              display: 'flex', gap: 14, alignItems: 'flex-start',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(200,165,80,0.1)', border: '1px solid rgba(200,165,80,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                  {card.emoji}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 'var(--xs)', fontWeight: 800, color: 'rgba(220,190,100,0.9)', marginBottom: 1 }}>{card.name}</div>
-                  <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.55)', letterSpacing: '.08em' }}>{POSITIONS[idx].split('—')[0].trim()} &nbsp;·&nbsp; {ROMAN[card.id]}</div>
-                </div>
+              {/* 카드 이미지 썸네일 */}
+              <div style={{ flexShrink: 0, width: 62, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(200,165,80,0.4)', background: 'rgba(200,165,80,0.05)' }}>
+                {imgErrors[card.id] ? (
+                  <div style={{ width: 62, height: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
+                    {card.emoji}
+                  </div>
+                ) : (
+                  <img
+                    src={card.img}
+                    alt={card.name}
+                    onError={() => handleImgError(card.id)}
+                    style={{ width: '100%', aspectRatio: '5/8', objectFit: 'cover', display: 'block' }}
+                  />
+                )}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--t2)', lineHeight: 1.75, paddingLeft: 2 }}>{card.detail}</div>
+              {/* 설명 텍스트 */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 3 }}>
+                  <div style={{ fontSize: 'var(--xs)', fontWeight: 800, color: 'rgba(220,190,100,0.9)' }}>{card.name}</div>
+                  <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.45)', letterSpacing: '.08em' }}>{ROMAN[card.id]}</div>
+                </div>
+                <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.6)', marginBottom: 6, letterSpacing: '.04em' }}>
+                  {POSITIONS[idx].split('—')[0].trim()} &nbsp;·&nbsp; {POSITIONS[idx].split('—')[1]?.trim()}
+                </div>
+                <div style={{ fontSize: '10px', color: 'rgba(180,160,220,0.8)', fontWeight: 600, marginBottom: 5 }}>{card.meaning}</div>
+                <div style={{ fontSize: '12px', color: 'var(--t2)', lineHeight: 1.75 }}>{card.detail}</div>
+              </div>
             </div>
           ))}
         </div>
