@@ -371,20 +371,13 @@ export default function TarotPage({ callApi, showToast }) {
           {/* 구분선 */}
           <div style={{ margin: '0 20px 14px', height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.25), transparent)' }} />
 
-          {/* 가로 스크롤 카드 라인업 */}
-          <div
-            className="tarot-lineup"
-            style={{
-              display: 'flex',
-              gap: 10,
-              padding: '12px 24px 20px',
-              overflowX: 'auto',
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
-              cursor: 'grab',
-              alignItems: 'flex-end',  /* 호버 시 위로 솟도록 하단 정렬 */
-            }}
-          >
+          {/* 4열 그리드 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 10,
+            padding: '4px 16px 20px',
+          }}>
             {deck.map((card, i) => {
               const isPicked  = picks.includes(i);
               const isHovered = hoveredIdx === i;
@@ -399,21 +392,17 @@ export default function TarotPage({ callApi, showToast }) {
                   onTouchStart={() => canPick && setHoveredIdx(i)}
                   onTouchEnd={() => setHoveredIdx(null)}
                   style={{
-                    flexShrink: 0,
-                    width: 62, height: 98,
-                    scrollSnapAlign: 'center',
+                    aspectRatio: '5/8',
                     borderRadius: 10,
                     border: `1.5px solid rgba(200,165,80,${isHovered ? 0.9 : isPicked ? 0.08 : 0.38})`,
                     boxShadow: isHovered
-                      ? '0 0 24px rgba(200,165,80,0.55), 0 10px 28px rgba(0,0,0,0.45)'
-                      : isPicked
-                        ? 'none'
-                        : '0 3px 10px rgba(0,0,0,0.35)',
+                      ? '0 0 20px rgba(200,165,80,0.5), 0 8px 24px rgba(0,0,0,0.45)'
+                      : isPicked ? 'none' : '0 3px 10px rgba(0,0,0,0.3)',
                     opacity: isPicked ? 0.2 : 1,
-                    cursor: canPick ? 'pointer' : isPicked ? 'default' : 'not-allowed',
-                    transform: isHovered ? 'translateY(-18px) scale(1.07)' : 'translateY(0) scale(1)',
-                    transition: 'transform .25s cubic-bezier(.34,1.56,.64,1), opacity .3s, border-color .2s, box-shadow .2s',
-                    animation: `lineCardIn 0.5s cubic-bezier(.34,1.56,.64,1) ${i * 28}ms both`,
+                    cursor: canPick ? 'pointer' : 'default',
+                    transform: isHovered ? 'translateY(-10px) scale(1.06)' : 'translateY(0) scale(1)',
+                    transition: 'transform .22s cubic-bezier(.34,1.56,.64,1), opacity .3s, border-color .2s, box-shadow .2s',
+                    animation: `lineCardIn 0.45s cubic-bezier(.34,1.56,.64,1) ${i * 35}ms both`,
                     position: 'relative',
                     overflow: 'hidden',
                   }}
@@ -440,7 +429,7 @@ export default function TarotPage({ callApi, showToast }) {
                     }} />
                   )}
 
-                  {/* 선택됨 체크 */}
+                  {/* 선택됨 */}
                   {isPicked && (
                     <div style={{
                       position: 'absolute', inset: 0, borderRadius: 10,
@@ -455,9 +444,8 @@ export default function TarotPage({ callApi, showToast }) {
             })}
           </div>
 
-          {/* 스크롤 힌트 */}
           <div style={{ textAlign: 'center', fontSize: '10px', color: 'var(--t4)', letterSpacing: '.04em', paddingBottom: 4 }}>
-            ← 스크롤하며 끌리는 카드를 눌러봐요 →
+            끌리는 카드를 3장 골라봐요
           </div>
         </div>
       )}
