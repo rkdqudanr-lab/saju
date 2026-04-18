@@ -343,7 +343,7 @@ export default function TarotPage({ callApi, showToast }) {
             {POSITIONS.map((pos, i) => {
               const card = picks[i] !== undefined ? deck[picks[i]] : null;
               return (
-                <div key={i} style={{ flex: 1, maxWidth: 72, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <div key={i} style={{ flex: 1, maxWidth: 58, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <div style={{
                     width: '100%', aspectRatio: '5/8', borderRadius: 10,
                     border: card ? '1px solid rgba(200,165,80,0.7)' : '1.5px dashed rgba(200,165,80,0.22)',
@@ -374,12 +374,12 @@ export default function TarotPage({ callApi, showToast }) {
           {/* 구분선 */}
           <div style={{ margin: '0 20px 14px', height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.25), transparent)' }} />
 
-          {/* 4열 그리드 */}
+          {/* 5열 그리드 */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 8,
-            padding: '4px 20px 20px',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: 6,
+            padding: '4px 16px 16px',
           }}>
             {deck.map((card, i) => {
               const isPicked  = picks.includes(i);
@@ -458,12 +458,12 @@ export default function TarotPage({ callApi, showToast }) {
       ══════════════════════════════════════ */}
       {phase === 'done' && (
         <>
-          <div style={{ display: 'flex', gap: 12, padding: '0 20px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 10, padding: '0 20px', justifyContent: 'center' }}>
             {pickedCards.map((card, idx) => (
               <div key={card.id}
                 onClick={() => { setModalCard(card); setModalMode('image'); }}
                 style={{
-                  flex: 1, maxWidth: 82, aspectRatio: '5/8', borderRadius: 10,
+                  flex: 1, maxWidth: 66, aspectRatio: '5/8', borderRadius: 10,
                   border: '1px solid rgba(200,165,80,0.7)',
                   background: 'linear-gradient(160deg, #12102a 0%, #1e1a40 60%, #12102a 100%)',
                   overflow: 'hidden',
@@ -486,9 +486,9 @@ export default function TarotPage({ callApi, showToast }) {
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: 12, padding: '8px 20px 0', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 10, padding: '8px 20px 0', justifyContent: 'center' }}>
             {POSITIONS.map((pos, i) => (
-              <div key={i} style={{ flex: 1, maxWidth: 82, textAlign: 'center' }}>
+              <div key={i} style={{ flex: 1, maxWidth: 66, textAlign: 'center' }}>
                 <div style={{ fontSize: '8.5px', color: 'rgba(200,165,80,0.75)', fontWeight: 700, lineHeight: 1.5 }}>{pos.split('—')[0].trim()}</div>
                 <div style={{ fontSize: '8px', color: 'var(--t4)', opacity: 0.6 }}>{pos.split('—')[1]?.trim()}</div>
               </div>
@@ -504,9 +504,9 @@ export default function TarotPage({ callApi, showToast }) {
                 animation: `tarotReveal 0.45s ease ${idx * 100 + 350}ms both`,
                 display: 'flex', gap: 14, alignItems: 'flex-start',
               }}>
-                <div style={{ flexShrink: 0, width: 52, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,165,80,0.4)' }}>
+                <div style={{ flexShrink: 0, width: 44, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,165,80,0.4)' }}>
                   {imgErrors[card.id]
-                    ? <div style={{ width: 52, height: 83, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{card.emoji}</div>
+                    ? <div style={{ width: 44, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{card.emoji}</div>
                     : <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
                         style={{ width: '100%', aspectRatio: '5/8', objectFit: 'cover', display: 'block' }} />
                   }
