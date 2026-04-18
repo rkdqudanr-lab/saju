@@ -379,7 +379,7 @@ export default function TarotPage({ callApi, showToast }) {
             display: 'grid',
             gridTemplateColumns: 'repeat(5, 1fr)',
             gap: 6,
-            padding: '4px 16px 16px',
+            padding: '4px 20px 16px',
           }}>
             {deck.map((card, i) => {
               const isPicked  = picks.includes(i);
