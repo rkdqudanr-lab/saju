@@ -519,8 +519,8 @@ export default function TarotPage({ callApi, showToast }) {
                   <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.65)', marginBottom: 6, letterSpacing: '.04em' }}>
                     {POSITIONS[idx].split('—')[0].trim()} &nbsp;·&nbsp; {POSITIONS[idx].split('—')[1]?.trim()}
                   </div>
-                  <div style={{ fontSize: '10px', color: 'rgba(210,185,245,0.95)', fontWeight: 600, marginBottom: 5 }}>{card.meaning}</div>
-                  <div style={{ fontSize: '12px', color: 'rgba(230,222,248,0.9)', lineHeight: 1.75 }}>{card.detail}</div>
+                  <div style={{ fontSize: '10px', color: 'rgba(210,185,245,0.95)', fontWeight: 600, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.meaning}</div>
+                  <div style={{ fontSize: '11px', color: 'rgba(230,222,248,0.9)', lineHeight: 1.7, wordBreak: 'keep-all' }}>{card.detail}</div>
                 </div>
               </div>
             ))}

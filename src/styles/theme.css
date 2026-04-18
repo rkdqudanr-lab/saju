@@ -27,7 +27,7 @@
 [data-font="large"]{
   --xl:2rem;--lg:1.3rem;--md:1.075rem;--sm:0.9375rem;--xs:0.8125rem;
 }
-html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:100svh;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s}
+html,body{background:var(--bg);color:var(--t1);font-family:var(--ff);min-height:100svh;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s;word-break:keep-all;overflow-wrap:break-word}
 ::-webkit-scrollbar{width:0;height:0}
 
 /* ══ 접근성 (AX) ══ */
