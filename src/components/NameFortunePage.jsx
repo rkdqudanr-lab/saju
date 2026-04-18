@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { NAME_FORTUNE_PROMPT } from "../utils/constants.js";
+import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  📛 이름 풀이 — 성명학으로 이름 속 기운 읽기
@@ -86,6 +87,8 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
 
   // 오행별 색상
   const OHAENG_COLOR = { 木:'#7CB87A', 火:'#E8624A', 土:'#C8A84B', 金:'#8A9BB8', 水:'#6B9EC4' };
+
+  if (loading) return <FeatureLoadingScreen type="name" />;
 
   return (
     <div className="page step-fade">

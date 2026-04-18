@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getMoonPhase, DREAM_PROMPT } from "../utils/constants.js";
+import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  🌙 꿈 해몽 — 별숨이 꿈을 읽어요
@@ -108,6 +109,8 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
 
   const mainText = stripFollowUp(result);
 
+  if (loading) return <FeatureLoadingScreen type="dream" />;
+
   return (
     <div className="page step-fade">
       <div className="inner">
@@ -200,7 +203,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
             marginBottom: 24,
           }}
         >
-          {loading ? '별숨이 꿈을 읽고 있어요...' : '🌙 꿈 해몽 받기'}
+          🌙 꿈 해몽 받기
         </button>
 
         {/* 결과 */}

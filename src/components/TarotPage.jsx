@@ -6,6 +6,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
+import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 
 const MAJOR_ARCANA = [
   { id: 0,  name: '광대',        emoji: '🌀', meaning: '새 시작, 순수한 모험심',    detail: '두려움 없이 새로운 길로 나서는 자유로운 영혼이에요.',          img: '/tarot/ar00.jpg' },
@@ -139,6 +140,8 @@ export default function TarotPage({ callApi, showToast }) {
       setReadingLoading(false);
     }
   }, [pickedCards, callApi, readingLoading]);
+
+  if (readingLoading) return <FeatureLoadingScreen type="tarot" />;
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 80 }}>
@@ -523,30 +526,22 @@ export default function TarotPage({ callApi, showToast }) {
             ))}
           </div>
 
-          {!reading && (
+          {!reading && !readingLoading && (
             <div style={{ padding: '20px 20px 0' }}>
               <button
                 onClick={askReading}
-                disabled={readingLoading}
                 style={{
                   width: '100%', padding: '16px',
-                  background: readingLoading ? 'rgba(200,165,80,0.07)' : 'linear-gradient(135deg, rgba(200,165,80,0.18), rgba(200,165,80,0.07))',
+                  background: 'linear-gradient(135deg, rgba(200,165,80,0.18), rgba(200,165,80,0.07))',
                   border: '1px solid rgba(200,165,80,0.52)', borderRadius: 50,
                   color: 'rgba(220,190,100,0.95)', fontWeight: 700,
                   fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
-                  cursor: readingLoading ? 'not-allowed' : 'pointer',
-                  letterSpacing: '.04em',
-                  boxShadow: readingLoading ? 'none' : '0 0 24px rgba(200,165,80,0.1)',
+                  cursor: 'pointer', letterSpacing: '.04em',
+                  boxShadow: '0 0 24px rgba(200,165,80,0.1)',
                   transition: 'all .2s',
                 }}
               >
-                {readingLoading
-                  ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                      <span style={{ width: 14, height: 14, border: '2px solid rgba(200,165,80,0.3)', borderTopColor: 'rgba(200,165,80,0.9)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', display: 'inline-block' }} />
-                      별숨이 별빛을 읽고 있어요...
-                    </span>
-                  : '✦ 세 별빛의 흐름 읽어주기'
-                }
+                ✦ 세 별빛의 흐름 읽어주기
               </button>
             </div>
           )}

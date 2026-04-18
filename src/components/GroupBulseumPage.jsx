@@ -3,6 +3,7 @@ import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { supabase } from "../lib/supabase.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
+import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 
 function getDaysInMonth(year, month) {
   if (!month) return 31;
@@ -356,6 +357,9 @@ function DetailPanel({ pair, members, onClose, user }) {
   const a = members[pair.idxA], b = members[pair.idxB];
   const tier = getCompatTier(pair.score);
   const typeColor = REL_COLOR[pair.type];
+
+  if (loading) return <FeatureLoadingScreen type="group" />;
+
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)',
@@ -433,30 +437,17 @@ function DetailPanel({ pair, members, onClose, user }) {
             </div>
           </div>
 
-          {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '36px 0', gap: 16 }}>
-              <div style={{ display: 'flex', gap: 7 }}>
-                {[0, 1, 2].map(i => (
-                  <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', animation: `orbPulse 1.4s ease-in-out ${i * 0.25}s infinite` }} />
-                ))}
-              </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>별빛으로 읽는 중...</div>
-            </div>
-          ) : (
-            <>
-              <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
-                {stripMd(result)}
-              </div>
-              {hasError && (
-                <button onClick={askDetail} style={{
-                  marginTop: 16, fontSize: 'var(--xs)', color: 'var(--gold)',
-                  background: 'var(--goldf)', border: '1px solid var(--acc)',
-                  borderRadius: 20, padding: '8px 20px', fontFamily: 'var(--ff)', cursor: 'pointer',
-                }}>
-                  ↺ 다시 불러오기
-                </button>
-              )}
-            </>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+            {stripMd(result)}
+          </div>
+          {hasError && (
+            <button onClick={askDetail} style={{
+              marginTop: 16, fontSize: 'var(--xs)', color: 'var(--gold)',
+              background: 'var(--goldf)', border: '1px solid var(--acc)',
+              borderRadius: 20, padding: '8px 20px', fontFamily: 'var(--ff)', cursor: 'pointer',
+            }}>
+              ↺ 다시 불러오기
+            </button>
           )}
         </div>
       </div>
@@ -518,6 +509,8 @@ function GroupAnalysisPanel({ members, onClose, user }) {
     askGroupAnalysis();
     return () => { if (abortRef.current) abortRef.current.abort(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading) return <FeatureLoadingScreen type="group" />;
 
   return (
     <div style={{
@@ -582,30 +575,17 @@ function GroupAnalysisPanel({ members, onClose, user }) {
             })}
           </div>
 
-          {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0', gap: 16 }}>
-              <div style={{ display: 'flex', gap: 7 }}>
-                {[0, 1, 2].map(i => (
-                  <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', animation: `orbPulse 1.4s ease-in-out ${i * 0.25}s infinite` }} />
-                ))}
-              </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>{members.length}개의 별빛을 읽는 중...</div>
-            </div>
-          ) : (
-            <>
-              <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
-                {stripMd(result)}
-              </div>
-              {hasError && (
-                <button onClick={askGroupAnalysis} style={{
-                  marginTop: 16, fontSize: 'var(--xs)', color: 'var(--gold)',
-                  background: 'var(--goldf)', border: '1px solid var(--acc)',
-                  borderRadius: 20, padding: '8px 20px', fontFamily: 'var(--ff)', cursor: 'pointer',
-                }}>
-                  ↺ 다시 불러오기
-                </button>
-              )}
-            </>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+            {stripMd(result)}
+          </div>
+          {hasError && (
+            <button onClick={askGroupAnalysis} style={{
+              marginTop: 16, fontSize: 'var(--xs)', color: 'var(--gold)',
+              background: 'var(--goldf)', border: '1px solid var(--acc)',
+              borderRadius: 20, padding: '8px 20px', fontFamily: 'var(--ff)', cursor: 'pointer',
+            }}>
+              ↺ 다시 불러오기
+            </button>
           )}
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
@@ -150,6 +151,8 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
       setStoryLoading(false);
     }
   };
+
+  if (storyLoading) return <FeatureLoadingScreen type="compat" />;
 
   return (
     <div className="page">

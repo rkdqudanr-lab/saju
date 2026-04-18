@@ -4,6 +4,7 @@ import { stripMarkdown } from "../utils/constants.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
 import PrecisionNudge from "./PrecisionNudge.jsx";
+import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 
 // ── 섹션 파서 ──
 function parseSections(text, tags) {
@@ -152,12 +153,7 @@ function SajuPanel({ saju, sun, form, buildCtx, user }) {
         </button>
       )}
 
-      {loading && (
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <Spinner />
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 8 }}>별빛을 읽고 있어요... 잠시만 기다려줘요 🌙</div>
-        </div>
-      )}
+      {loading && <FeatureLoadingScreen type="comprehensive" />}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -269,12 +265,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user }) {
         </button>
       )}
 
-      {loading && (
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <Spinner />
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 8 }}>하늘지도를 읽고 있어요... 잠시만 기다려줘요 🌙</div>
-        </div>
-      )}
+      {loading && <FeatureLoadingScreen type="comprehensive" />}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>

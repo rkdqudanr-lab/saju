@@ -208,7 +208,8 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
       const context = `[오늘의 기분: ${moodLabel}] [날씨: ${weatherLabel}] [에너지: ${energyLabel}]${gratitude ? `\n[감사한 일: ${gratitude}]` : ''}${tomorrowGoal ? `\n[내일 목표: ${tomorrowGoal}]` : ''}${ilganInfo}${todayDateInfo}${timeDefense}`;
       const [ty, tm, td] = targetDate.split('-').map(Number);
       const moonPhase = getMoonPhase(ty, tm, td);
-      askReview(`${context}\n\n${content.trim()}`, DIARY_PROMPT(moonPhase.label));
+      const rs = form?.responseStyle || 'M';
+      askReview(`${context}\n\n${content.trim()}`, DIARY_PROMPT(moonPhase.label, rs));
       setSubmitted(true);
       setIsEditing(false);
       // 임베디드 모드: 저장 후 전체 페이지로 이동해서 결과 보여주기
@@ -778,6 +779,38 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
           )}
         </div>
   );
+
+  // 저장 후 AI 해석 로딩 중 → 풀스크린 로딩 화면
+  if (!embedded && submitted && diaryReviewLoading && !diaryReviewResult && !isEditing) {
+    return (
+      <div className="page">
+        <div className="inner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', gap: 24 }}>
+          <div style={{ position: 'relative', width: 72, height: 72 }}>
+            <div style={{
+              width: 72, height: 72,
+              border: '3px solid var(--line)',
+              borderTopColor: 'var(--gold)',
+              borderRadius: '50%',
+              animation: 'orbSpin 1.2s linear infinite',
+            }} />
+            <div style={{
+              position: 'absolute', top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              fontSize: '1.6rem',
+            }}>✦</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 10 }}>
+              별숨이 오늘 하루를 읽고 있어요
+            </div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.8 }}>
+              사주와 별자리로<br />오늘의 기운을 분석하는 중이에요
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // 제출 완료 + 편집 모드 아닌 경우 → 뷰 모드
   const activeContent = (!embedded && submitted && !isEditing) ? viewContent : pageContent;

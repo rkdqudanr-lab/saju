@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthToken } from '../hooks/useUserProfile.js';
+import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 
 // ── 사주 기반 행운 번호 생성 유틸 ──
 function seededRandom(seed) {
@@ -304,6 +305,8 @@ export default function SpecialReadingPage({ callApi, showToast }) {
 
   const hasItems = ownedItems && ownedItems.length > 0;
 
+  if (loading) return <FeatureLoadingScreen type="special" />;
+
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
       <div style={{ padding: '28px 20px 12px' }}>
@@ -349,15 +352,6 @@ export default function SpecialReadingPage({ callApi, showToast }) {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* 로딩 */}
-      {loading && (
-        <div style={{ margin: '20px', padding: '24px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', textAlign: 'center' }}>
-          <div style={{ width: 32, height: 32, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontWeight: 600 }}>{selectedType?.title} 분석 중</div>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 4 }}>별숨이 깊이 읽고 있어요...</div>
         </div>
       )}
 

@@ -1,5 +1,6 @@
 import { ReportBody } from "../components/AccItem.jsx";
 import { exportReadingAsTxt } from "../utils/constants.js";
+import FeatureLoadingScreen from "../components/FeatureLoadingScreen.jsx";
 
 export default function ReportStep({
   form, today,
@@ -24,14 +25,7 @@ export default function ReportStep({
             </button>
           </div>
         ) : reportLoading ? (
-          <div style={{ textAlign: 'center', padding: 'var(--sp5)', color: 'var(--t3)', fontSize: 'var(--sm)' }}>
-            <div className="load-orb-wrap">
-              <div className="load-orb">
-                <div className="load-orb-core" /><div className="load-orb-ring" /><div className="load-orb-ring2" />
-              </div>
-            </div>
-            별의 움직임을 분석하여<br />심층 리포트를 작성하고 있습니다...
-          </div>
+          <FeatureLoadingScreen type="report" />
         ) : (
           <>
             <ReportBody text={reportText} />

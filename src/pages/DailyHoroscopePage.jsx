@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
 import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
+import FeatureLoadingScreen from "../components/FeatureLoadingScreen.jsx";
 import { detectBadtime } from "../utils/gamificationLogic.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { getAuthenticatedClient } from "../lib/supabase.js";
@@ -75,6 +76,11 @@ export default function DailyHoroscopePage({
     }
   };
 
+  // 로딩 중 → 풀스크린 로딩 화면
+  if (dailyLoading) {
+    return <FeatureLoadingScreen type="daily" />;
+  }
+
   return (
     <div className="page step-fade">
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 40 }}>
@@ -134,12 +140,7 @@ export default function DailyHoroscopePage({
         {/* 운세 탭 */}
         {activeTab === 'horoscope' && (
           <>
-            {dailyLoading ? (
-              <div className="dsc-loading-btn">
-                <span>별숨이 오늘을 읽고 있어요</span>
-                <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
-              </div>
-            ) : dailyResult ? (
+            {dailyResult ? (
               <>
                 <DailyStarCardV2 result={dailyResult} />
                 {dailyCount < DAILY_MAX ? (

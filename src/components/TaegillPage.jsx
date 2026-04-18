@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { getSaju } from "../utils/saju.js";
 import { TAEGIL_PROMPT } from "../utils/constants.js";
+import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  🗓️ 택일 — 중요한 날, 별숨이 골라드릴게요
@@ -96,6 +97,8 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
       setLoading(false);
     }
   };
+
+  if (loading) return <FeatureLoadingScreen type="taegil" />;
 
   return (
     <div className="page step-fade">

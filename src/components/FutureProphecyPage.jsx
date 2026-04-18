@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import useWordTyping from "../hooks/useWordTyping.js";
+import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  🔮 별숨의 예언 (구 미래의 별숨)
@@ -44,6 +45,8 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
   };
 
   // ── 결과 화면 ──
+  if (phase === 'result' && loading) return <FeatureLoadingScreen type="prophecy" />;
+
   if (phase === 'result') {
     const period = PERIOD_OPTIONS.find(p => p.id === selectedPeriod) || PERIOD_OPTIONS[0];
     return (
@@ -63,21 +66,9 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 16, fontWeight: 600 }}>
                 ✦ {period.label}의 예언
               </div>
-              {loading ? (
-                <div style={{ textAlign: 'center', padding: 'var(--sp4) 0', color: 'var(--t3)', fontSize: 'var(--sm)' }}>
-                  <div className="load-orb-wrap" style={{ marginTop: 0, marginBottom: 'var(--sp2)', transform: 'scale(0.8)' }}>
-                    <div className="load-orb">
-                      <div className="load-orb-core" />
-                      <div className="load-orb-ring" />
-                    </div>
-                  </div>
-                  시간의 장막을 걷어내는 중...
-                </div>
-              ) : (
-                <div className="letter-content" style={{ padding: 0 }}>
-                  <p>{shown}{!done && <span className="typing-cursor" />}</p>
-                </div>
-              )}
+              <div className="letter-content" style={{ padding: 0 }}>
+                <p>{shown}{!done && <span className="typing-cursor" />}</p>
+              </div>
             </div>
           </div>
 
