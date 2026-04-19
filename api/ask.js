@@ -282,6 +282,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model: model,
           max_tokens: maxTokens,
+          // 일일 운세는 낮은 temperature로 점수·아이템 일관성 향상
+          ...(isDaily ? { temperature: 0.3 } : {}),
           system: [
             {
               type: "text",

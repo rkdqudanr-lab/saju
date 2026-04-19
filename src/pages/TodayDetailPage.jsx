@@ -1,4 +1,4 @@
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import DailyStarCardV2 from '../components/DailyStarCardV2.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
@@ -134,12 +134,35 @@ function WeeklyTrendChart({ kakaoId, todayScore }) {
   );
 }
 
+// 정화 재점 오버레이 컴포넌트
+function PurifyOverlay({ visible }) {
+  if (!visible) return null;
+  return (
+    <div className="purify-overlay" aria-hidden="true">
+      <div className="purify-orb">
+        <div className="purify-orb-core" />
+        <div className="purify-ring purify-ring-1" />
+        <div className="purify-ring purify-ring-2" />
+        <div className="purify-ring purify-ring-3" />
+      </div>
+      <div className="purify-sparks">
+        {['✦','·','✦','·','✦','·'].map((s, i) => (
+          <span key={i} className={`purify-spark purify-spark-${i + 1}`}>{s}</span>
+        ))}
+      </div>
+      <div className="purify-text">정화 중...</div>
+    </div>
+  );
+}
+
 /**
  * TodayDetailPage - "오늘 하루 나의 별숨" 운세 상세 페이지
  */
 export default function TodayDetailPage({
   dailyResult,
   dailyLoading,
+  dailyCount = 0,
+  DAILY_MAX = 3,
   gamificationState,
   onBlockBadtime = null,
   isBlockingBadtime,
@@ -148,9 +171,30 @@ export default function TodayDetailPage({
 }) {
   const user = useAppStore(s => s.user);
   const kakaoId = user?.kakaoId || user?.id;
+  const [isPurifying, setIsPurifying] = useState(false);
+
+  const handlePurify = useCallback(async () => {
+    if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
+    setIsPurifying(true);
+    // 애니메이션 최소 1.2초 보장
+    const animPromise = new Promise(r => setTimeout(r, 1200));
+    try {
+      await Promise.all([onRefresh?.(), animPromise]);
+    } catch {
+      await animPromise;
+    } finally {
+      setIsPurifying(false);
+    }
+  }, [isPurifying, dailyLoading, dailyCount, DAILY_MAX, onRefresh]);
+
+  const canPurify = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
+  const remaining = DAILY_MAX - dailyCount;
 
   return (
     <div className="today-detail-container">
+      {/* 정화 애니메이션 오버레이 */}
+      <PurifyOverlay visible={isPurifying} />
+
       {/* 헤더 */}
       <div className="today-detail-header">
         <button
@@ -161,18 +205,12 @@ export default function TodayDetailPage({
           ←
         </button>
         <span className="today-detail-title">오늘 하루 나의 별숨</span>
-        <button
-          className="today-detail-refresh-btn"
-          onClick={onRefresh}
-          aria-label="새로 불러오기"
-          disabled={dailyLoading}
-        >
-          {dailyLoading ? '…' : '↻'}
-        </button>
+        {/* 헤더 우측 빈 공간 (레이아웃 균형) */}
+        <div style={{ width: 40 }} />
       </div>
 
       {/* 메인 카드 영역 */}
-      <div className="today-detail-content">
+      <div className={`today-detail-content${isPurifying ? ' today-detail-content--blurred' : ''}`}>
         {dailyLoading && !dailyResult ? (
           <PageSpinner />
         ) : dailyResult ? (
@@ -213,8 +251,28 @@ export default function TodayDetailPage({
           className="today-detail-btn-home"
           onClick={() => setStep(0)}
         >
-          홈으로 돌아가기
+          홈으로
         </button>
+
+        {/* 정화 재점 버튼 — 결과가 있고 횟수 남아있을 때만 표시 */}
+        {dailyResult && (
+          canPurify ? (
+            <button
+              className="today-detail-btn-purify"
+              onClick={handlePurify}
+              disabled={!canPurify}
+              aria-label={`정화 재점 (${remaining}회 남음)`}
+            >
+              <span className="purify-btn-icon">✦</span>
+              정화 재점
+              <span className="purify-btn-count">{remaining}/{DAILY_MAX}</span>
+            </button>
+          ) : dailyCount >= DAILY_MAX ? (
+            <div className="today-detail-repoint-limit">
+              오늘 재점 완료 · 내일 새로 만나요
+            </div>
+          ) : null
+        )}
       </div>
     </div>
   );

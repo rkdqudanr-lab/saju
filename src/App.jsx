@@ -847,6 +847,8 @@ export default function App() {
           <TodayDetailPage
             dailyResult={dailyResult}
             dailyLoading={dailyLoading}
+            dailyCount={dailyCount}
+            DAILY_MAX={DAILY_MAX}
             gamificationState={gamificationState}
             onBlockBadtime={handleBlockBadtime}
             isBlockingBadtime={isBlockingBadtime}
