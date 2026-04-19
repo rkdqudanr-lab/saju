@@ -557,6 +557,6 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     sendChat, genReport,
     deleteHistoryItem,
     deleteAllHistoryItems,
-    resetSession: useCallback(() => { setChatHistory([]); setChatUsed(0); }, []),
+    resetSession: useCallback(() => { setChatHistory([]); setChatUsed(0); setSelQs([]); setDiy(''); setAnswers([]); }, []),
   };
 }
