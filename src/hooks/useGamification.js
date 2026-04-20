@@ -150,7 +150,7 @@ export function useGamification(user, showToast) {
             reason: logReason,
             mission_id: missionId,
           },
-          { onConflict: 'kakao_id,date,reason' }
+          { onConflict: 'kakao_id,date,reason', ignoreDuplicates: true }
         );
 
         // users + user_gamification 동시 조회
@@ -229,7 +229,7 @@ export function useGamification(user, showToast) {
             reason: `badtime_block_${badtimeId}`,
             mission_id: badtimeId,
           },
-          { onConflict: 'kakao_id,date,reason' }
+          { onConflict: 'kakao_id,date,reason', ignoreDuplicates: true }
         );
 
         // user_gamification 누적 upsert (row 없어도 생성)

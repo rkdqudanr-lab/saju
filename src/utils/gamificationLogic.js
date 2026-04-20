@@ -383,7 +383,6 @@ export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE',
         kakao_id: String(kakaoId),
         bp_amount: -amount,
         reason,
-        note,
       });
     } catch { /* 로그 실패는 무시 */ }
 
