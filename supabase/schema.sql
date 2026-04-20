@@ -676,6 +676,7 @@ alter table community_posts enable row level security;
 drop policy if exists "posts_select" on community_posts;
 drop policy if exists "posts_insert" on community_posts;
 drop policy if exists "posts_update" on community_posts;
+drop policy if exists "posts_delete" on community_posts;
 
 -- 읽기: 모든 유저 가능
 create policy "posts_select" on community_posts
@@ -690,6 +691,12 @@ create policy "posts_insert" on community_posts
 -- 수정(likes_count 업데이트): 누구나 가능 (서버에서 호출)
 create policy "posts_update" on community_posts
   for update to anon using (true);
+
+-- 삭제: 본인(kakao_id 헤더 일치) 행만
+create policy "posts_delete" on community_posts
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 create index if not exists idx_community_posts_created
   on community_posts(created_at desc);

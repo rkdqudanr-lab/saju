@@ -174,7 +174,7 @@ function CommentsSection({ postId, myKakaoId, myNickname, showToast }) {
 // ─────────────────────────────────────────────────────────────────
 //  포스트 카드
 // ─────────────────────────────────────────────────────────────────
-function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLike, onReport, onFollow, onSynergy, showToast }) {
+function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLike, onReport, onFollow, onSynergy, onEdit, onDelete, showToast }) {
   const liked = myLikedIds.has(post.id);
   const isOther = post.kakao_id !== myKakaoId;
   const isFollowing = followingIds.has(post.kakao_id);
@@ -232,7 +232,7 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
             &nbsp;·&nbsp;{timeLabel}
           </div>
         </div>
-        {isOther && myKakaoId && (
+        {myKakaoId && (isOther ? (
           <div style={{ display: 'flex', gap: 6 }}>
             <button
               onClick={() => onSynergy(post)}
@@ -269,7 +269,42 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
               {isFollowing ? '팔로잉' : '팔로우'}
             </button>
           </div>
-        )}
+        ) : (
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              onClick={() => onEdit(post)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 20,
+                border: '1px solid var(--line)',
+                background: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--ff)',
+                fontSize: '10px',
+                color: 'var(--t3)',
+                flexShrink: 0,
+              }}
+            >
+              수정
+            </button>
+            <button
+              onClick={() => onDelete(post.id)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 20,
+                border: '1px solid var(--line)',
+                background: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--ff)',
+                fontSize: '10px',
+                color: '#e05a3a',
+                flexShrink: 0,
+              }}
+            >
+              삭제
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* 운세 첨부 배지 */}
@@ -615,6 +650,121 @@ function ReportModal({ onClose, onSubmit }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+//  글 수정 모달
+// ─────────────────────────────────────────────────────────────────
+function EditPostModal({ post, onClose, onSubmit }) {
+  const { topic: initialTopic, text: initialText } = parseTopic(post.content);
+  const [content, setContent] = useState(initialText || '');
+  const [topic, setTopic] = useState(initialTopic?.value || '');
+  const [submitting, setSubmitting] = useState(false);
+  const textRef = useRef(null);
+
+  useEffect(() => { textRef.current?.focus(); }, []);
+
+  async function handleSubmit() {
+    if (!content.trim()) return;
+    setSubmitting(true);
+    const finalContent = topic ? `[${topic}] ${content.trim()}` : content.trim();
+    await onSubmit(post.id, finalContent);
+    setSubmitting(false);
+  }
+
+  return createPortal(
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10000,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex', alignItems: 'flex-end',
+    }} onClick={onClose}>
+      <div
+        style={{
+          width: '100%', maxWidth: 480, margin: '0 auto',
+          background: 'var(--bg1)',
+          borderRadius: '20px 20px 0 0',
+          padding: '24px 20px calc(24px + env(safe-area-inset-bottom, 0px))',
+          boxSizing: 'border-box',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 14 }}>
+          게시글 수정
+        </div>
+        <textarea
+          ref={textRef}
+          value={content}
+          onChange={e => setContent(e.target.value.slice(0, MAX_CONTENT))}
+          rows={4}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            padding: '12px', borderRadius: 'var(--r1)',
+            border: '1.5px solid var(--line)',
+            background: 'var(--bg2)',
+            fontFamily: 'var(--ff)', fontSize: 'var(--sm)',
+            color: 'var(--t1)', resize: 'none',
+            lineHeight: 1.7, outline: 'none',
+          }}
+        />
+        <div style={{ textAlign: 'right', fontSize: '11px', color: 'var(--t4)', marginTop: 4 }}>
+          {content.length}/{MAX_CONTENT}
+        </div>
+
+        {/* 토픽 태그 선택 */}
+        <div style={{ marginTop: 12, marginBottom: 2 }}>
+          <div style={{ fontSize: '11px', color: 'var(--t4)', marginBottom: 6 }}>토픽 (선택)</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {TOPICS.map(t => (
+              <button
+                key={t.value}
+                onClick={() => setTopic(prev => prev === t.value ? '' : t.value)}
+                style={{
+                  padding: '4px 10px', borderRadius: 14, fontSize: '11px', cursor: 'pointer',
+                  border: `1px solid ${topic === t.value ? 'var(--gold)' : 'var(--line)'}`,
+                  background: topic === t.value ? 'var(--goldf)' : 'var(--bg2)',
+                  color: topic === t.value ? 'var(--gold)' : 'var(--t3)',
+                  fontFamily: 'var(--ff)',
+                  transition: 'all .12s',
+                }}
+              >
+                {t.emoji} {t.value}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1, padding: '13px',
+              border: '1px solid var(--line)', borderRadius: 'var(--r1)',
+              background: 'none', cursor: 'pointer',
+              fontFamily: 'var(--ff)', fontSize: 'var(--sm)', color: 'var(--t3)',
+            }}
+          >
+            취소
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!content.trim() || submitting}
+            style={{
+              flex: 2, padding: '13px',
+              border: 'none', borderRadius: 'var(--r1)',
+              background: content.trim() ? 'var(--gold)' : 'var(--bg3)',
+              cursor: content.trim() ? 'pointer' : 'default',
+              fontFamily: 'var(--ff)', fontSize: 'var(--sm)',
+              color: content.trim() ? '#fff' : 'var(--t4)',
+              fontWeight: 700,
+            }}
+          >
+            {submitting ? '저장 중...' : '수정 완료'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
 //  메인 페이지
 // ─────────────────────────────────────────────────────────────────
 export default function CommunityPage({ showToast, dailyResult }) {
@@ -627,6 +777,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
   const [myLikedIds, setMyLikedIds] = useState(new Set());
   const [followingIds, setFollowingIds] = useState(new Set());
   const [reportTargetId, setReportTargetId] = useState(null);
+  const [editTarget, setEditTarget] = useState(null); // post object to edit
   const [selectedSynergyUser, setSelectedSynergyUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [topicFilter, setTopicFilter] = useState('');
@@ -788,6 +939,32 @@ export default function CommunityPage({ showToast, dailyResult }) {
     } else {
       showToast('신고가 접수됐어요. 검토 후 조치할게요.', 'info');
     }
+  }
+
+  async function handleEditPost(postId, newContent) {
+    if (!kakaoId) return;
+    const client = getAuthenticatedClient(kakaoId);
+    const { error } = await client.from('community_posts')
+      .update({ content: newContent })
+      .eq('id', postId)
+      .eq('kakao_id', String(kakaoId));
+    if (error) { showToast('수정하지 못했어요', 'error'); return; }
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: newContent } : p));
+    setEditTarget(null);
+    showToast('게시글을 수정했어요', 'success');
+  }
+
+  async function handleDeletePost(postId) {
+    if (!kakaoId) return;
+    if (!window.confirm('이 게시글을 삭제할까요?')) return;
+    const client = getAuthenticatedClient(kakaoId);
+    const { error } = await client.from('community_posts')
+      .delete()
+      .eq('id', postId)
+      .eq('kakao_id', String(kakaoId));
+    if (error) { showToast('삭제하지 못했어요', 'error'); return; }
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    showToast('게시글을 삭제했어요', 'success');
   }
 
   // 필터 + 정렬 적용
@@ -963,6 +1140,8 @@ export default function CommunityPage({ showToast, dailyResult }) {
               onReport={(id) => setReportTargetId(id)}
               onFollow={handleFollow}
               onSynergy={setSelectedSynergyUser}
+              onEdit={setEditTarget}
+              onDelete={handleDeletePost}
               showToast={showToast}
             />
           ))
@@ -1012,6 +1191,14 @@ export default function CommunityPage({ showToast, dailyResult }) {
         <ReportModal
           onClose={() => setReportTargetId(null)}
           onSubmit={(reason) => handleReport(reportTargetId, reason)}
+        />
+      )}
+
+      {editTarget && (
+        <EditPostModal
+          post={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSubmit={handleEditPost}
         />
       )}
 
