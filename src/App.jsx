@@ -21,6 +21,7 @@ import { supabase, getAuthenticatedClient } from "./lib/supabase.js";
 import { loadAnalysisCache, saveAnalysisCache } from "./lib/analysisCache.js";
 
 // components (static)
+import Icon              from "./components/Icon.jsx";
 import StarCanvas         from "./components/StarCanvas.jsx";
 import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
@@ -524,12 +525,12 @@ export default function App() {
         </button>
       )}
 
-      {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}>←</button>}
-      {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}>←</button>}
-      {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}>←</button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30 || step === 33 || step === 34 || step === 35 || step === 39) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}>←</button>}
-      {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}>←</button>}
-      {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}>⌂</button>}
+      {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30 || step === 33 || step === 34 || step === 35 || step === 39) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}><Icon name="home" size={18} color="currentColor" /></button>}
 
       {/* ── 하단 네비게이션 바 (Zustand store에서 step/user/formOkApprox 직접 읽음) ── */}
       <BottomNav />
