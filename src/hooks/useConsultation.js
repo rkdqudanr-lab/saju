@@ -600,6 +600,23 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     finally { setChatLoading(false); }
   }, [chatInput, chatLoading, chatLeft, selQs, answers, chatHistory, callApi]);
 
+  // ── 채팅 컨텍스트 압축 (히스토리가 길어질 때 오래된 메시지 요약) ──
+  function compressChatHistory(history) {
+    if (history.length <= 6) {
+      // 6개 이하 — 전부 원문 유지
+      return history.map(m => `[${m.role === 'ai' ? '별숨' : '나'}] ${m.text}`).join('\n');
+    }
+    // 최근 6개(3턴)는 원문 유지, 이전 메시지는 요약(70자 이내로 자르기)
+    const recent  = history.slice(-6);
+    const older   = history.slice(0, -6);
+    const summary = older
+      .filter(m => m.role === 'ai') // AI 답변만 요약 보존
+      .map(m => m.text.slice(0, 70).replace(/\n/g, ' '))
+      .join(' / ');
+    const recentText = recent.map(m => `[${m.role === 'ai' ? '별숨' : '나'}] ${m.text}`).join('\n');
+    return `[이전 대화 요약] ${summary || '(없음)'}\n\n[최근 대화]\n${recentText}`;
+  }
+
   // ── 채팅 스트리밍 (chat-mode SSE — /api/stream 전용) ──
   const sendStreamChat = useCallback(async (overrideText) => {
     const rawText = overrideText ?? chatInput;
@@ -608,9 +625,9 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (typeof window.gtag === 'function') window.gtag('event', 'send_chat');
     const userMsg = rawText.trim();
     setChatInput('');
-    // 컨텍스트 구성 (setChatHistory 호출 전, 현재 chatHistory 스냅샷 사용)
-    const prevQAs  = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${answers[i] || ''}`).join('\n\n');
-    const prevChat = chatHistory.map(m => `[${m.role === 'ai' ? '별숨' : '나'}] ${m.text}`).join('\n');
+    // 컨텍스트 구성 — 긴 히스토리는 압축해서 토큰 절감
+    const prevQAs  = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${(answers[i] || '').slice(0, 150)}`).join('\n\n');
+    const prevChat = compressChatHistory(chatHistory);
     const userMessage = `[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
     // 사용자 메시지 + 스트리밍 플레이스홀더 동시 추가
     setChatHistory(p => [...p, { role: 'user', text: userMsg }, { role: 'ai', text: '', streaming: true }]);

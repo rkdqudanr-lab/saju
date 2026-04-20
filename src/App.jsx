@@ -75,6 +75,7 @@ const ShopPage                 = lazy(() => import("./components/ShopPage.jsx"))
 const SpecialReadingPage       = lazy(() => import("./components/SpecialReadingPage.jsx"));
 const TarotPage                = lazy(() => import("./components/TarotPage.jsx"));
 const ByeolsoomLetterPage      = lazy(() => import("./components/ByeolsoomLetterPage.jsx"));
+const YearlyReportPage         = lazy(() => import("./components/YearlyReportPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -159,7 +160,7 @@ export default function App() {
   const gamification = useGamification(user, showToast);
   const {
     gamificationState, missions,
-    earnBP, earnDiaryBP, spendBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP,
+    earnBP, earnDiaryBP, spendBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP, freezeStreak,
   } = gamification;
 
   // 배드타임 액막이 상태
@@ -903,6 +904,7 @@ export default function App() {
             <MyPage
               onFreeRecharge={handleFreeRecharge}
               freeRechargeAvailable={freeRechargeAvailable}
+              onFreezeStreak={freezeStreak}
             />
           </Suspense>
         )}
@@ -964,7 +966,7 @@ export default function App() {
         {/* ── Step 34: 별숨 타로 ── */}
         {step === 34 && (
           <Suspense fallback={<PageSpinner />}>
-            <TarotPage callApi={callApi} showToast={showToast} />
+            <TarotPage callApi={callApi} buildCtx={buildCtx} showToast={showToast} />
           </Suspense>
         )}
 
@@ -972,6 +974,20 @@ export default function App() {
         {step === 35 && (
           <Suspense fallback={<PageSpinner />}>
             <ByeolsoomLetterPage showToast={showToast} />
+          </Suspense>
+        )}
+
+        {/* ── Step 36: 연간 종합 리포트 ── */}
+        {step === 36 && (
+          <Suspense fallback={<PageSpinner />}>
+            <YearlyReportPage
+              form={form}
+              buildCtx={buildCtx}
+              showToast={showToast}
+              spendBP={spendBP}
+              currentBp={gamificationState?.currentBp || 0}
+              setStep={setStep}
+            />
           </Suspense>
         )}
 

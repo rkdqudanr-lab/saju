@@ -81,36 +81,38 @@ function DailyAnim() {
 
 // ── 2. 타로 (tarot) — 카드 3장 + 빛 스윕 ─────────────────
 function TarotAnim() {
-  const cardStyle = (rot, delay) => ({
+  const cardBase = (delay, idx) => ({
     width: 46, height: 72,
     borderRadius: 7,
     background: 'linear-gradient(135deg,#1a1030,#2d1f50)',
     border: '1px solid rgba(232,176,72,.35)',
-    transform: `rotate(${rot}deg)`,
     position: 'relative',
     overflow: 'hidden',
-    animation: `fl-float ${2.4 + Math.abs(rot) * 0.05}s ease-in-out infinite`,
+    animation: `fl-float ${2.4 + idx * 0.2}s ease-in-out infinite`,
     animationDelay: `${delay}s`,
     boxShadow: '0 4px 16px rgba(0,0,0,.4)',
   });
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 90 }}>
       {[[-9, 0], [0, 0.3], [9, 0.15]].map(([rot, delay], i) => (
-        <div key={i} style={cardStyle(rot, delay)}>
-          {/* 카드 뒷면 별 문양 */}
-          <div style={{
-            position: 'absolute', inset: 0, display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            fontSize: i === 1 ? '1.3rem' : '1rem',
-            color: 'rgba(232,176,72,.5)',
-          }}>✦</div>
-          {/* 빛 스윕 */}
-          <div style={{
-            position: 'absolute', top: 0, bottom: 0, width: '40%',
-            background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)',
-            animation: `fl-card-shimmer ${2 + i * 0.5}s ease-in-out infinite`,
-            animationDelay: `${i * 0.7}s`,
-          }} />
+        /* 회전 래퍼를 분리해야 fl-float 애니메이션이 rotate를 덮어쓰지 않음 */
+        <div key={i} style={{ transform: `rotate(${rot}deg)` }}>
+          <div style={cardBase(delay, i)}>
+            {/* 카드 뒷면 별 문양 */}
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              fontSize: i === 1 ? '1.3rem' : '1rem',
+              color: 'rgba(232,176,72,.5)',
+            }}>✦</div>
+            {/* 빛 스윕 */}
+            <div style={{
+              position: 'absolute', top: 0, bottom: 0, width: '40%',
+              background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)',
+              animation: `fl-card-shimmer ${2 + i * 0.5}s ease-in-out infinite`,
+              animationDelay: `${i * 0.7}s`,
+            }} />
+          </div>
         </div>
       ))}
     </div>
@@ -262,12 +264,13 @@ function ProphecyAnim() {
         <path d="M20,68 L25,55 L30,68 Z" fill="rgba(232,176,72,.35)"
           style={{ animation: 'fl-glow-soft 1.5s ease-in-out infinite', animationDelay: '.5s' }} />
       </svg>
-      {/* 회전하는 별 */}
+      {/* 회전하는 별 — 컨테이너 중심(35px, 45px)을 pivot으로 22px 반경 궤도 */}
       <div style={{
-        position: 'absolute', top: -10, right: 0,
-        fontSize: '.7rem', color: 'var(--gold)',
-        animation: 'fl-orbit 3s linear infinite',
-      }}>✦</div>
+        position: 'absolute', top: '50%', left: '50%',
+        animation: 'fl-orbit-rev 3s linear infinite',
+      }}>
+        <div style={{ fontSize: '.7rem', color: 'var(--gold)', marginTop: -6, marginLeft: -6 }}>✦</div>
+      </div>
     </div>
   );
 }
@@ -429,16 +432,16 @@ function GroupAnim() {
   return (
     <div style={{ position: 'relative', width: 100, height: 100 }}>
       {members.map(({ x, y, color, size }, i) => (
+        /* transform 대신 left/top으로 위치를 잡아야 fl-float 애니메이션이 덮어쓰지 않음 */
         <div key={i} style={{
           position: 'absolute',
-          top: '50%', left: '50%',
+          left: 50 + x - size / 2,
+          top: 50 + y - size / 2,
           width: size, height: size,
-          marginTop: -size / 2, marginLeft: -size / 2,
           borderRadius: '50%', background: color,
           boxShadow: `0 0 8px ${color}`,
           animation: `fl-float ${1.8 + i * 0.3}s ease-in-out infinite`,
           animationDelay: `${i * 0.2}s`,
-          transform: `translate(${x}px, ${y}px)`,
         }} />
       ))}
       {/* 중심 별 */}

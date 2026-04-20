@@ -4,6 +4,7 @@ import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
+import { RELATION_TYPES } from "./OtherProfileModal.jsx";
 
 function getCompatTier(score) {
   if (score >= 90) return { label: '환상의 티키타카', color: '#E8B048' };
@@ -171,13 +172,24 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
               <div style={{ marginBottom: 10 }}>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 6 }}>저장된 사람</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {otherProfiles.map((p, i) => (
-                    <button key={`saved-${i}`}
-                      onClick={() => setPartner({ name: p.name || '', by: p.by || '', bm: p.bm || '', bd: p.bd || '', gender: p.gender || '' })}
-                      style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid var(--acc)', background: 'var(--goldf)', color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--ff)' }}>
-                      ✦ {p.name || '이름없음'} ({p.by}년)
-                    </button>
-                  ))}
+                  {otherProfiles.map((p, i) => {
+                    const rel = RELATION_TYPES.find(r => r.value === p.relation);
+                    const isSelected = partner.by === p.by && partner.bm === p.bm && partner.bd === p.bd;
+                    return (
+                      <button key={`saved-${i}`}
+                        onClick={() => setPartner({ name: p.name || '', by: p.by || '', bm: p.bm || '', bd: p.bd || '', gender: p.gender || '' })}
+                        style={{
+                          padding: '5px 12px', borderRadius: 20,
+                          border: `1px solid ${isSelected ? 'var(--gold)' : 'var(--acc)'}`,
+                          background: isSelected ? 'var(--gold)' : 'var(--goldf)',
+                          color: isSelected ? '#fff' : 'var(--gold)',
+                          fontSize: 'var(--xs)', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--ff)',
+                          transition: 'all .15s',
+                        }}>
+                        {rel ? rel.emoji : '✦'} {p.name || '이름없음'} ({p.by}년)
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

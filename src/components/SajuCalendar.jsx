@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { CATS_ALL, breakAtNatural } from "../utils/constants.js";
+import { calcBiorhythm, BIORHYTHM_CHANNELS, toBarWidth, getBiorhythmStatus, BIORHYTHM_STATUS_LABEL } from "../utils/biorhythm.js";
 
 // ─────────────────────────────────────────────
 // 일진 점수 계산 (5단계 색상)
@@ -27,6 +28,38 @@ function getDayScore(saju, userIlji) {
   if (max >= 5) score -= 10;
   if (userIlji && UNLUCKY_CLASH[userIlji] === ilji) score -= 15;
   return Math.max(0, Math.min(100, score));
+}
+
+// ─────────────────────────────────────────────
+// 길일 카테고리 뱃지 (결혼/계약/이사/여행)
+// ─────────────────────────────────────────────
+const AUSPICIOUS_STEMS = new Set(['갑', '병', '임']);   // 양기 강한 천간
+const AUSPICIOUS_BRANCHES = new Set(['자', '오', '묘', '유']); // 사정위(四正位)
+const STABLE_BRANCHES = new Set(['인', '신', '사', '해']); // 역마살 — 이동 길일
+
+/** 점수 + 지지 조합으로 길일 카테고리 배열 반환 */
+function getLuckyCategories(saju, score) {
+  if (!saju || score < 65) return [];
+  const { ilgan, ilji } = saju;
+  const categories = [];
+
+  // 결혼 길일: 양간 + 사정위 지지 + 점수 80+
+  if (score >= 80 && AUSPICIOUS_STEMS.has(ilgan) && AUSPICIOUS_BRANCHES.has(ilji)) {
+    categories.push({ label: '결혼', emoji: '💍', color: '#E8B048' });
+  }
+  // 계약/거래 길일: 양간 + 점수 75+
+  if (score >= 75 && AUSPICIOUS_STEMS.has(ilgan)) {
+    categories.push({ label: '계약', emoji: '📝', color: '#5FAD7A' });
+  }
+  // 이사 길일: 역마지지(인신사해) + 점수 70+
+  if (score >= 70 && STABLE_BRANCHES.has(ilji)) {
+    categories.push({ label: '이사', emoji: '🏠', color: '#4A9EFF' });
+  }
+  // 여행 길일: 역마지지 또는 점수 75+
+  if (score >= 75 || (score >= 65 && STABLE_BRANCHES.has(ilji))) {
+    categories.push({ label: '여행', emoji: '✈️', color: '#7B6CF6' });
+  }
+  return categories;
 }
 
 // 5단계 색상 시스템
@@ -528,23 +561,98 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               {viewMonth}월 {selectedData.d}일 ({WEEKDAYS[new Date(viewYear, viewMonth - 1, selectedData.d).getDay()]}요일)
             </div>
 
-            {selectedData.saju && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, padding: '12px 14px', background: 'var(--bg3)', borderRadius: 'var(--r1)', border: `2px solid ${scoreColor(selectedData.score)}44` }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>
-                    일진: <strong style={{ color: 'var(--gold)' }}>{selectedData.saju.il.gh}{selectedData.saju.il.jh}</strong>
-                    &nbsp;·&nbsp;{selectedData.saju.ilganDesc || `${ON[selectedData.saju.dom]} 기운`}
+            {selectedData.saju && (() => {
+              // 생체리듬 계산 (생년월일이 있을 때만)
+              const biorhythm = form?.by && form?.bm && form?.bd
+                ? calcBiorhythm(
+                    new Date(+form.by, +form.bm - 1, +form.bd),
+                    new Date(viewYear, viewMonth - 1, selectedData.d)
+                  )
+                : null;
+
+              return (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: biorhythm ? 8 : 14, padding: '12px 14px', background: 'var(--bg3)', borderRadius: 'var(--r1)', border: `2px solid ${scoreColor(selectedData.score)}44` }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>
+                        일진: <strong style={{ color: 'var(--gold)' }}>{selectedData.saju.il.gh}{selectedData.saju.il.jh}</strong>
+                        &nbsp;·&nbsp;{selectedData.saju.ilganDesc || `${ON[selectedData.saju.dom]} 기운`}
+                      </div>
+                      <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        나의 사주 기운&nbsp;
+                        <strong style={{ color: scoreColor(selectedData.score), fontSize: '1.3rem' }}>{selectedData.score}점</strong>
+                        <span style={{ fontSize: 'var(--xs)', color: scoreColor(selectedData.score), fontWeight: 600, background: `${scoreColor(selectedData.score)}22`, padding: '2px 8px', borderRadius: 10 }}>
+                          {scoreLabel(selectedData.score)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    나의 사주 기운&nbsp;
-                    <strong style={{ color: scoreColor(selectedData.score), fontSize: '1.3rem' }}>{selectedData.score}점</strong>
-                    <span style={{ fontSize: 'var(--xs)', color: scoreColor(selectedData.score), fontWeight: 600, background: `${scoreColor(selectedData.score)}22`, padding: '2px 8px', borderRadius: 10 }}>
-                      {scoreLabel(selectedData.score)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
+
+                  {/* 길일 카테고리 뱃지 */}
+                  {(() => {
+                    const cats = getLuckyCategories(selectedData.saju, selectedData.score);
+                    return cats.length > 0 ? (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                        {cats.map(c => (
+                          <span key={c.label} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 3,
+                            padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                            background: c.color + '22', border: `1px solid ${c.color}66`, color: c.color,
+                          }}>
+                            {c.emoji} {c.label} 길일
+                          </span>
+                        ))}
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {/* 생체리듬 오버레이 */}
+                  {biorhythm && (
+                    <div style={{ marginBottom: 14, padding: '10px 14px', background: 'var(--bg3)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
+                      <div style={{ fontSize: 10, color: 'var(--t4)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 8 }}>
+                        ◈ 생체리듬
+                      </div>
+                      {BIORHYTHM_CHANNELS.map(ch => {
+                        const val = biorhythm[ch.key];
+                        const status = getBiorhythmStatus(val);
+                        const barW = toBarWidth(val);
+                        return (
+                          <div key={ch.key} style={{ marginBottom: 6 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                              <span style={{ fontSize: 11, color: 'var(--t3)' }}>{ch.emoji} {ch.label}</span>
+                              <span style={{
+                                fontSize: 10, fontWeight: 600,
+                                color: status === 'high' ? ch.color : status === 'low' ? 'var(--rose)' : status === 'critical' ? 'var(--t4)' : 'var(--t3)',
+                              }}>
+                                {BIORHYTHM_STATUS_LABEL[status]}{status === 'critical' ? ' ⚡' : ''}
+                              </span>
+                            </div>
+                            {/* 중앙 기준 바 (0 = 50% 위치) */}
+                            <div style={{ position: 'relative', height: 5, background: 'var(--line)', borderRadius: 3, overflow: 'hidden' }}>
+                              {/* 중앙선 */}
+                              <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: 'var(--t5)', opacity: 0.5 }} />
+                              {val >= 0 ? (
+                                <div style={{
+                                  position: 'absolute', left: '50%', top: 0, bottom: 0,
+                                  width: `${(val / 100) * 50}%`,
+                                  background: ch.color, borderRadius: '0 3px 3px 0',
+                                }} />
+                              ) : (
+                                <div style={{
+                                  position: 'absolute', right: `${50 + (val / 100) * 50}%`, top: 0, bottom: 0,
+                                  left: `${50 + (val / 100) * 50}%`,
+                                  background: 'var(--rose)', borderRadius: '3px 0 0 3px',
+                                }} />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* ── 오늘 하루 나의 별숨 기록 ── */}
             {selectedFortune && (() => {

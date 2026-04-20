@@ -11,6 +11,7 @@ import {
   BADTIME_BLOCK_COST,
   FREE_BP_RECHARGE,
   GUARDIAN_LEVEL_THRESHOLDS,
+  STREAK_FREEZE_COST,
   calculateLevelPromotion,
   calculateLoginStreak,
   calculateLevelProgress,
@@ -626,6 +627,47 @@ export function useGamification(user, showToast) {
   );
 
   // ─────────────────────────────────────────────────────────────
+  // 9-B. 스트릭 프리즈 (BP 소비로 끊김 1회 방지)
+  // ─────────────────────────────────────────────────────────────
+  const freezeStreak = useCallback(async () => {
+    if (!user?.id) return { success: false, message: '로그인이 필요해요' };
+    if (gamificationState.currentBp < STREAK_FREEZE_COST) {
+      return { success: false, message: `BP가 부족해요 (필요: ${STREAK_FREEZE_COST} BP)` };
+    }
+    if (gamificationState.loginStreak < 2) {
+      return { success: false, message: '스트릭이 2일 이상일 때 프리즈할 수 있어요' };
+    }
+
+    try {
+      const authClient = getAuthenticatedClient(user.id);
+      const client = authClient || supabase;
+
+      const newBp = gamificationState.currentBp - STREAK_FREEZE_COST;
+
+      await Promise.all([
+        // BP 차감
+        client.from('users')
+          .update({ current_bp: newBp, updated_at: new Date().toISOString() })
+          .eq('kakao_id', String(user.id)),
+        // 프리즈 사용 로그
+        client.from('daily_bp_log').insert({
+          kakao_id: String(user.id),
+          date: getTodayDateStr(),
+          bp_amount: -STREAK_FREEZE_COST,
+          reason: 'streak_freeze',
+        }).catch(() => {}),
+      ]);
+
+      setGamificationState(prev => ({ ...prev, currentBp: newBp }));
+      if (showToast) showToast(`❄️ 스트릭 프리즈 발동! ${STREAK_FREEZE_COST} BP 소비`);
+      return { success: true, newBp };
+    } catch (error) {
+      console.error('[별숨] 스트릭 프리즈 오류:', error);
+      return { success: false, message: '네트워크 오류' };
+    }
+  }, [user?.id, gamificationState.currentBp, gamificationState.loginStreak, showToast]);
+
+  // ─────────────────────────────────────────────────────────────
   // 10. 레벨 진행도 계산
   // ─────────────────────────────────────────────────────────────
   const getLevelProgress = useCallback(() => {
@@ -663,6 +705,7 @@ export function useGamification(user, showToast) {
     rechargeFreeBP,
     getLevelProgress,
     checkLevelPromotion,
+    freezeStreak,
 
     // 유틸
     getTodayDateStr,

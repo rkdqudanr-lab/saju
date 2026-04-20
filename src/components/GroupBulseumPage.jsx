@@ -226,13 +226,79 @@ function MemberForm({ onSubmit, title }) {
   );
 }
 
+// ── 노드별 에너지 점수 계산 (페어 점수 합산 평균) ──
+function calcNodeEnergy(members, pairs) {
+  const totals = members.map(() => ({ sum: 0, count: 0 }));
+  pairs.forEach(p => {
+    totals[p.idxA].sum += p.score; totals[p.idxA].count++;
+    totals[p.idxB].sum += p.score; totals[p.idxB].count++;
+  });
+  return totals.map(t => t.count ? Math.round(t.sum / t.count) : 50);
+}
+
+// ── 팀 케미 요약 카드 ──
+function TeamChemiSummary({ members, pairs }) {
+  if (pairs.length < 1) return null;
+  const sorted = [...pairs].sort((a, b) => b.score - a.score);
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+  const bestTier = getCompatTier(best.score);
+  const worstTier = getCompatTier(worst.score);
+  return (
+    <div style={{
+      display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14,
+    }}>
+      {/* 베스트 케미 */}
+      <div style={{
+        padding: '10px 12px', borderRadius: 'var(--r1)',
+        background: `${bestTier.color}10`, border: `1px solid ${bestTier.color}30`,
+      }}>
+        <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 4 }}>✨ 베스트 케미</div>
+        <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: bestTier.color, marginBottom: 2 }}>
+          {members[best.idxA]?.name} × {members[best.idxB]?.name}
+        </div>
+        <div style={{ fontSize: '11px', color: bestTier.color, fontWeight: 700 }}>{best.score}%</div>
+      </div>
+      {/* 주의 케미 */}
+      <div style={{
+        padding: '10px 12px', borderRadius: 'var(--r1)',
+        background: `${worstTier.color}10`, border: `1px solid ${worstTier.color}30`,
+      }}>
+        <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 4 }}>⚖️ 주의 케미</div>
+        <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: worstTier.color, marginBottom: 2 }}>
+          {members[worst.idxA]?.name} × {members[worst.idxB]?.name}
+        </div>
+        <div style={{ fontSize: '11px', color: worstTier.color, fontWeight: 700 }}>{worst.score}%</div>
+      </div>
+    </div>
+  );
+}
+
 // ── 관계도 SVG ──
 function RelationGraph({ members, pairs, selectedNode, onNodeClick }) {
   const W = 320, H = 300, cx = 160, cy = 150, r = 100;
   const positions = calcNodePositions(members.length, cx, cy, members.length === 1 ? 0 : r);
+  const energies = calcNodeEnergy(members, pairs);
+  const maxE = Math.max(...energies, 50);
+  const minE = Math.min(...energies, 50);
+
+  // 에너지 → 반지름 (18~30px)
+  function nodeRadius(i) {
+    const range = maxE - minE;
+    const norm = range > 0 ? (energies[i] - minE) / range : 0.5;
+    return 18 + Math.round(norm * 12);
+  }
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', maxWidth: 360, margin: '0 auto' }}>
+      <defs>
+        {/* 좋은 연결 글로우 필터 */}
+        <filter id="glow-edge">
+          <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
+          <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+
       {/* 엣지 */}
       {pairs.map((pair, i) => {
         const posA = positions[pair.idxA];
@@ -241,46 +307,66 @@ function RelationGraph({ members, pairs, selectedNode, onNodeClick }) {
         const isHighlighted = selectedNode === null || pair.idxA === selectedNode || pair.idxB === selectedNode;
         const color = REL_COLOR[pair.type];
         const strokeWidth = pair.score >= 70 ? 2.5 : pair.score >= 50 ? 1.5 : 1;
+        const isGood = pair.type === 'good';
         return (
           <line key={i}
             x1={posA.x} y1={posA.y} x2={posB.x} y2={posB.y}
             stroke={color} strokeWidth={strokeWidth}
-            strokeOpacity={isHighlighted ? 0.75 : 0.12}
+            strokeOpacity={isHighlighted ? (isGood ? 0.85 : 0.65) : 0.12}
             strokeDasharray={pair.type === 'bad' ? '4 3' : undefined}
+            filter={isGood && isHighlighted ? 'url(#glow-edge)' : undefined}
             style={{ transition: 'stroke-opacity 0.25s' }}
-          />
+          >
+            {/* 좋은 연결에 맥박 애니메이션 */}
+            {isGood && isHighlighted && (
+              <animate attributeName="stroke-opacity" values="0.85;0.35;0.85" dur="2s" repeatCount="indefinite" />
+            )}
+          </line>
         );
       })}
+
       {/* 노드 */}
       {members.map((m, i) => {
         const pos = positions[i];
         if (!pos) return null;
         const isSelected = selectedNode === i;
         const isDimmed = selectedNode !== null && !isSelected;
+        const nr = nodeRadius(i);
+        const domColor = m.saju?.dom ? OHAENG_COLOR[m.saju.dom] : '#B4963C';
         return (
           <g key={i} style={{ cursor: 'pointer' }} onClick={() => onNodeClick(i)}>
-            <circle cx={pos.x} cy={pos.y} r={28}
+            {/* 선택 시 외부 링 */}
+            {isSelected && (
+              <circle cx={pos.x} cy={pos.y} r={nr + 5}
+                fill="none" stroke="#E8B048" strokeWidth={1.5} strokeOpacity={0.5}
+              >
+                <animate attributeName="r" values={`${nr+4};${nr+7};${nr+4}`} dur="1.5s" repeatCount="indefinite" />
+              </circle>
+            )}
+            <circle cx={pos.x} cy={pos.y} r={nr + 2}
               fill="transparent" />
-            <circle cx={pos.x} cy={pos.y} r={26}
-              fill="var(--bg2)"
-              stroke={isSelected ? '#E8B048' : 'var(--gold)'}
+            <circle cx={pos.x} cy={pos.y} r={nr}
+              fill={isSelected ? `${domColor}20` : 'var(--bg2)'}
+              stroke={isSelected ? domColor : `${domColor}88`}
               strokeWidth={isSelected ? 2.5 : 1.5}
-              opacity={isDimmed ? 0.35 : 1}
-              style={{ transition: 'opacity 0.25s, stroke 0.25s' }}
-            />
-            <circle cx={pos.x} cy={pos.y} r={24}
-              fill={isSelected ? 'rgba(232,176,72,0.12)' : 'rgba(180,140,50,0.06)'}
-              style={{ transition: 'fill 0.25s' }}
+              opacity={isDimmed ? 0.3 : 1}
+              style={{ transition: 'opacity 0.25s, r 0.4s' }}
             />
             <text x={pos.x} y={pos.y - 4} textAnchor="middle"
-              fill={isDimmed ? 'var(--t4)' : 'var(--t1)'} fontSize={11} fontWeight={700} fontFamily="var(--ff)"
+              fill={isDimmed ? 'var(--t4)' : 'var(--t1)'} fontSize={Math.max(9, nr * 0.42)} fontWeight={700} fontFamily="var(--ff)"
               style={{ transition: 'fill 0.25s' }}>
               {m.name.slice(0, 3)}
             </text>
-            <text x={pos.x} y={pos.y + 10} textAnchor="middle"
-              fill={isDimmed ? 'var(--t4)' : 'var(--gold)'} fontSize={9} fontFamily="var(--ff)"
+            <text x={pos.x} y={pos.y + 9} textAnchor="middle"
+              fill={isDimmed ? 'var(--t4)' : domColor} fontSize={8} fontFamily="var(--ff)"
               style={{ transition: 'fill 0.25s' }}>
               {m.saju ? ON[m.saju.dom] : ''}
+            </text>
+            {/* 에너지 수치 */}
+            <text x={pos.x} y={pos.y + nr + 13} textAnchor="middle"
+              fill={isDimmed ? 'var(--t4)' : 'var(--t3)'} fontSize={8} fontFamily="var(--ff)"
+              opacity={isDimmed ? 0.3 : 0.8}>
+              {energies[i]}%
             </text>
           </g>
         );
@@ -1206,6 +1292,11 @@ export default function GroupBulseumPage({ form, saju, sun, setStep, initialCode
                 </div>
               )}
             </div>
+
+            {/* 팀 케미 요약 */}
+            {pairs.length >= 2 && (
+              <TeamChemiSummary members={enrichedMembers} pairs={pairs} />
+            )}
 
             {/* 오행 분포 */}
             <OhaengBar members={enrichedMembers} />

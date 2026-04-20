@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { ChatBubble } from "../components/AccItem.jsx";
 
 // 대화 맥락 기반 스마트 추천 질문 칩
@@ -6,7 +7,6 @@ function getContextualChips(chatHistory, selQs) {
   const lastAiMsg = [...chatHistory].reverse().find(m => m.role === 'ai');
 
   if (!hasHistory) {
-    // 첫 진입 — 운세 결과 기반 추천
     return ['그럼 조심해야 할 건 뭐야?', '언제쯤 좋아질까?', '자세히 설명해줘'];
   }
 
@@ -23,6 +23,49 @@ function getContextualChips(chatHistory, selQs) {
   return ['좀 더 자세히 알고 싶어요', '어떻게 행동하면 좋을까요?', '긍정적인 부분도 알고 싶어요'];
 }
 
+// Web Speech API 지원 여부 확인
+const isSpeechSupported = () =>
+  typeof window !== 'undefined' &&
+  ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+/** 음성 입력 훅 */
+function useVoiceInput(onResult) {
+  const [listening, setListening] = useState(false);
+  const [unsupported, setUnsupported] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const start = useCallback(() => {
+    if (!isSpeechSupported()) { setUnsupported(true); return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'ko-KR';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+
+    rec.onstart = () => setListening(true);
+    rec.onend   = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    rec.onresult = (e) => {
+      const transcript = e.results[0]?.[0]?.transcript ?? '';
+      if (transcript) onResult(transcript);
+    };
+
+    recognitionRef.current = rec;
+    rec.start();
+  }, [onResult]);
+
+  const stop = useCallback(() => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  }, []);
+
+  const toggle = useCallback(() => {
+    listening ? stop() : start();
+  }, [listening, start, stop]);
+
+  return { listening, unsupported, toggle };
+}
+
 export default function ChatStep({
   chatHistory, chatInput, setChatInput, chatLoading,
   chatLeft, latestChatIdx,
@@ -35,6 +78,10 @@ export default function ChatStep({
   const chips = getContextualChips(chatHistory, selQs);
   const lastMsg = chatHistory[chatHistory.length - 1];
   const lastMsgIsStreaming = lastMsg?.streaming === true;
+
+  const { listening, unsupported, toggle: toggleVoice } = useVoiceInput((text) => {
+    setChatInput(prev => (prev ? prev + ' ' + text : text));
+  });
 
   function sendChip(chip) {
     handleSendChat(chip);
@@ -114,7 +161,7 @@ export default function ChatStep({
             채팅을 모두 사용했어요 · 새 상담을 시작하거나 업그레이드하세요
           </div>
         )}
-        {/* ── 스마트 추천 질문 칩 (Quick Reply Chips) ── */}
+        {/* 스마트 추천 질문 칩 */}
         {chatLeft > 0 && !chatLoading && (
           <div style={{ overflowX: 'auto', padding: '8px 16px 4px', display: 'flex', gap: 8, scrollbarWidth: 'none' }}>
             {chips.map((chip, i) => (
@@ -122,17 +169,10 @@ export default function ChatStep({
                 key={i}
                 onClick={() => sendChip(chip)}
                 style={{
-                  flexShrink: 0,
-                  padding: '6px 14px',
-                  borderRadius: 20,
-                  border: '1px solid var(--line)',
-                  background: 'var(--bg2)',
-                  color: 'var(--t2)',
-                  fontSize: 'var(--xs)',
-                  fontFamily: 'var(--ff)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all var(--trans-fast)',
+                  flexShrink: 0, padding: '6px 14px', borderRadius: 20,
+                  border: '1px solid var(--line)', background: 'var(--bg2)',
+                  color: 'var(--t2)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+                  cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all var(--trans-fast)',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.color = 'var(--gold)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
@@ -144,14 +184,57 @@ export default function ChatStep({
         )}
         <div className="chat-inp-row">
           <input className="chat-inp"
-            placeholder={chatLeft > 0 ? '더 궁금한 게 있어요?' : '채팅을 모두 사용했어요'}
+            placeholder={chatLeft > 0 ? (listening ? '말씀해보세요...' : '더 궁금한 게 있어요?') : '채팅을 모두 사용했어요'}
             value={chatInput}
             onChange={e => setChatInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
             disabled={chatLeft <= 0 || chatLoading} />
+
+          {/* 음성 입력 버튼 */}
+          {!unsupported && chatLeft > 0 && (
+            <button
+              onClick={toggleVoice}
+              disabled={chatLoading}
+              title={listening ? '녹음 중지' : '음성으로 입력'}
+              style={{
+                flexShrink: 0,
+                width: 36, height: 36,
+                borderRadius: '50%',
+                border: listening ? '2px solid var(--rose)' : '1px solid var(--line)',
+                background: listening ? 'rgba(224,90,58,0.12)' : 'var(--bg2)',
+                color: listening ? 'var(--rose)' : 'var(--t3)',
+                fontSize: 16,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: chatLoading ? 'not-allowed' : 'pointer',
+                transition: 'all .2s ease',
+                animation: listening ? 'mic-pulse 1.2s ease-in-out infinite' : 'none',
+              }}
+            >
+              {listening ? '⏹' : '🎤'}
+            </button>
+          )}
+
           <button className="chat-send" onClick={handleSendChat} disabled={!chatInput.trim() || chatLeft <= 0 || chatLoading}>✦</button>
         </div>
+
+        {/* 음성 입력 상태 표시 */}
+        {listening && (
+          <div style={{
+            padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8,
+            fontSize: 'var(--xs)', color: 'var(--rose)',
+          }}>
+            <span style={{ animation: 'mic-pulse 1.2s ease-in-out infinite', display: 'inline-block' }}>●</span>
+            <span>듣고 있어요 — 말씀을 마치면 자동으로 입력돼요</span>
+          </div>
+        )}
       </div>
+
+      <style>{`
+        @keyframes mic-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.15); }
+        }
+      `}</style>
     </div>
   );
 }

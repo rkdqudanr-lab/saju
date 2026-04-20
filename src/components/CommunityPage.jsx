@@ -19,8 +19,46 @@ import { getCommunityShowSaju } from './SettingsPage.jsx';
 const MAX_CONTENT = 200;
 const MAX_COMMENT = 100;
 
-const FILTERS = ['전체', '팔로잉', '내 별자리', '내 일간'];
+const FILTERS = ['전체', '내 글', '팔로잉', '내 별자리', '내 일간'];
 const REPORT_REASONS = ['부적절한 내용', '스팸·광고', '혐오 발언', '기타'];
+
+const TOPICS = [
+  { value: '연애', emoji: '💕' },
+  { value: '재물', emoji: '💰' },
+  { value: '커리어', emoji: '💼' },
+  { value: '건강', emoji: '🌿' },
+  { value: '꿈', emoji: '🌙' },
+  { value: '일상', emoji: '☀️' },
+  { value: '고민', emoji: '🤔' },
+  { value: '행운', emoji: '✦' },
+];
+
+// 일간 → 오행 색상 매핑
+const ILGAN_OHAENG = {
+  갑: '목', 을: '목', 병: '화', 정: '화', 무: '토',
+  기: '토', 경: '금', 신: '금', 임: '수', 계: '수',
+};
+const OHAENG_COLOR = { 목: '#5FAD7A', 화: '#E06040', 토: '#C4A040', 금: '#A09EC4', 수: '#4A90D9' };
+
+function getIlganColor(ilgan) {
+  const oh = ILGAN_OHAENG[ilgan];
+  return oh ? OHAENG_COLOR[oh] : 'var(--gold)';
+}
+
+/** content에서 [토픽] 태그 파싱 */
+function parseTopic(content) {
+  if (!content) return { topic: null, text: content };
+  const m = content.match(/^\[([^\]]+)\]\s*/);
+  if (!m) return { topic: null, text: content };
+  const found = TOPICS.find(t => t.value === m[1]);
+  if (!found) return { topic: null, text: content };
+  return { topic: found, text: content.slice(m[0].length) };
+}
+
+/** 인기글 기준 */
+function isHotPost(post) {
+  return (post.likes_count || 0) >= 5;
+}
 
 // ─────────────────────────────────────────────────────────────────
 //  댓글 섹션
@@ -150,25 +188,40 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
     return `${Math.floor(diff / 1440)}일 전`;
   })();
 
+  const avatarColor = getIlganColor(post.ilgan);
+  const { topic, text: postText } = parseTopic(post.content);
+  const hot = isHotPost(post);
+
   return (
     <div style={{
       background: 'var(--bg1)',
-      border: '1px solid var(--line)',
+      border: `1px solid ${hot ? 'rgba(232,176,72,.35)' : 'var(--line)'}`,
       borderRadius: 'var(--r2, 16px)',
       padding: '16px 16px 12px',
       display: 'flex',
       flexDirection: 'column',
       gap: 8,
     }}>
+      {/* 인기글 배지 */}
+      {hot && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          fontSize: '10px', fontWeight: 700, color: '#E06040',
+          marginBottom: -4,
+        }}>
+          🔥 인기 게시글
+        </div>
+      )}
       {/* 상단: 아바타 + 별자리/일간 + 팔로우 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{
           width: 32, height: 32, borderRadius: '50%',
-          background: 'var(--bg3)',
+          background: `${avatarColor}22`,
+          border: `2px solid ${avatarColor}66`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 16, flexShrink: 0,
+          fontSize: 14, flexShrink: 0, color: avatarColor, fontWeight: 700,
         }}>
-          ✦
+          {post.ilgan ? post.ilgan : '✦'}
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>
@@ -234,6 +287,18 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
         </div>
       )}
 
+      {/* 토픽 태그 */}
+      {topic && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '2px 10px', borderRadius: 12,
+          background: 'var(--bg3)', border: '1px solid var(--line)',
+          fontSize: '10px', color: 'var(--t2)', fontWeight: 600,
+          width: 'fit-content',
+        }}>
+          {topic.emoji} {topic.value}
+        </div>
+      )}
       {/* 본문 */}
       <div style={{
         fontSize: 'var(--sm)',
@@ -241,7 +306,7 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
         lineHeight: 1.7,
         wordBreak: 'break-all',
       }}>
-        {post.content}
+        {postText}
       </div>
 
       {/* 하단: 좋아요 + 댓글 + 신고 */}
@@ -317,6 +382,7 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
 // ─────────────────────────────────────────────────────────────────
 function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan, dailyResult }) {
   const [content, setContent] = useState('');
+  const [topic, setTopic] = useState('');
   const [attachFortune, setAttachFortune] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const textRef = useRef(null);
@@ -330,7 +396,8 @@ function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan,
   async function handleSubmit() {
     if (!content.trim()) return;
     setSubmitting(true);
-    await onSubmit(content.trim(), attachFortune && fortuneSummary ? fortuneSummary : null);
+    const finalContent = topic ? `[${topic}] ${content.trim()}` : content.trim();
+    await onSubmit(finalContent, attachFortune && fortuneSummary ? fortuneSummary : null);
     setSubmitting(false);
   }
 
@@ -371,6 +438,29 @@ function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan,
         />
         <div style={{ textAlign: 'right', fontSize: '11px', color: 'var(--t4)', marginTop: 4 }}>
           {content.length}/{MAX_CONTENT}
+        </div>
+
+        {/* 토픽 태그 선택 */}
+        <div style={{ marginTop: 12, marginBottom: 2 }}>
+          <div style={{ fontSize: '11px', color: 'var(--t4)', marginBottom: 6 }}>토픽 (선택)</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {TOPICS.map(t => (
+              <button
+                key={t.value}
+                onClick={() => setTopic(prev => prev === t.value ? '' : t.value)}
+                style={{
+                  padding: '4px 10px', borderRadius: 14, fontSize: '11px', cursor: 'pointer',
+                  border: `1px solid ${topic === t.value ? 'var(--gold)' : 'var(--line)'}`,
+                  background: topic === t.value ? 'var(--goldf)' : 'var(--bg2)',
+                  color: topic === t.value ? 'var(--gold)' : 'var(--t3)',
+                  fontFamily: 'var(--ff)',
+                  transition: 'all .12s',
+                }}
+              >
+                {t.emoji} {t.value}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 운세 첨부 옵션 */}
@@ -538,6 +628,8 @@ export default function CommunityPage({ showToast, dailyResult }) {
   const [followingIds, setFollowingIds] = useState(new Set());
   const [reportTargetId, setReportTargetId] = useState(null);
   const [selectedSynergyUser, setSelectedSynergyUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [topicFilter, setTopicFilter] = useState('');
 
   const kakaoId = user?.kakaoId || user?.id;
   const myNickname = user?.nickname || '별숨 유저';
@@ -701,10 +793,24 @@ export default function CommunityPage({ showToast, dailyResult }) {
   // 필터 + 정렬 적용
   const filteredPosts = posts
     .filter(p => {
+      if (filter === '내 글')     return p.kakao_id === String(kakaoId);
       if (filter === '팔로잉')    return followingIds.has(p.kakao_id) || p.kakao_id === String(kakaoId);
       if (filter === '내 별자리') return p.sun_sign && p.sun_sign === mySunSign;
       if (filter === '내 일간')   return p.ilgan    && p.ilgan    === myIlgan;
       return true;
+    })
+    .filter(p => {
+      if (topicFilter) {
+        const { topic } = parseTopic(p.content);
+        return topic?.value === topicFilter;
+      }
+      return true;
+    })
+    .filter(p => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (p.content || '').toLowerCase().includes(q) ||
+             (p.nickname || '').toLowerCase().includes(q);
     })
     .sort((a, b) => {
       if (sort === '인기순') return (b.likes_count || 0) - (a.likes_count || 0);
@@ -769,6 +875,64 @@ export default function CommunityPage({ showToast, dailyResult }) {
             }}
           >
             {s}
+          </button>
+        ))}
+      </div>
+
+      {/* 검색 바 */}
+      <div style={{ padding: '8px 20px', borderBottom: '1px solid var(--line)' }}>
+        <div style={{ position: 'relative' }}>
+          <span style={{
+            position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+            fontSize: '12px', color: 'var(--t4)', pointerEvents: 'none',
+          }}>🔍</span>
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="내용 또는 닉네임 검색"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '7px 10px 7px 28px',
+              borderRadius: 20, border: '1px solid var(--line)',
+              background: 'var(--bg2)', color: 'var(--t1)',
+              fontFamily: 'var(--ff)', fontSize: '12px', outline: 'none',
+            }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{
+              position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: '12px', color: 'var(--t4)', padding: 2,
+            }}>✕</button>
+          )}
+        </div>
+      </div>
+
+      {/* 토픽 필터 */}
+      <div style={{ display: 'flex', gap: 6, padding: '8px 20px', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid var(--line)' }}>
+        <button
+          onClick={() => setTopicFilter('')}
+          style={{
+            padding: '4px 12px', borderRadius: 14, fontSize: '10px', cursor: 'pointer', flexShrink: 0,
+            border: `1px solid ${!topicFilter ? 'var(--gold)' : 'var(--line)'}`,
+            background: !topicFilter ? 'var(--goldf)' : 'none',
+            color: !topicFilter ? 'var(--gold)' : 'var(--t3)',
+            fontFamily: 'var(--ff)', fontWeight: !topicFilter ? 700 : 400,
+          }}
+        >전체</button>
+        {TOPICS.map(t => (
+          <button
+            key={t.value}
+            onClick={() => setTopicFilter(prev => prev === t.value ? '' : t.value)}
+            style={{
+              padding: '4px 10px', borderRadius: 14, fontSize: '10px', cursor: 'pointer', flexShrink: 0,
+              border: `1px solid ${topicFilter === t.value ? 'var(--gold)' : 'var(--line)'}`,
+              background: topicFilter === t.value ? 'var(--goldf)' : 'none',
+              color: topicFilter === t.value ? 'var(--gold)' : 'var(--t3)',
+              fontFamily: 'var(--ff)', fontWeight: topicFilter === t.value ? 700 : 400,
+            }}
+          >
+            {t.emoji} {t.value}
           </button>
         ))}
       </div>

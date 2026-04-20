@@ -8,6 +8,7 @@ import GuardianLevelBadge from './GuardianLevelBadge.jsx';
 import BPDisplay from './BPDisplay.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { usePushNotification } from '../hooks/usePushNotification.js';
+import { getStreakTier, getNextStreakMilestone, STREAK_FREEZE_COST } from '../utils/gamificationLogic.js';
 
 function InfoAccordion({ items }) {
   const [openIdx, setOpenIdx] = useState(null);
@@ -134,7 +135,7 @@ function NotifToggle({ item, value, onChange, disabled }) {
   );
 }
 
-export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = true }) {
+export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = true, onFreezeStreak = null }) {
   const {
     user, profile, form,
     saju, sun,
@@ -148,7 +149,11 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
 
   const safeGam = gamificationState ?? { currentBp: 0, guardianLevel: 1, loginStreak: 0 };
   const safeMissions = missions ?? [];
-  const { currentBp = 0, guardianLevel = 1 } = safeGam;
+  const { currentBp = 0, guardianLevel = 1, loginStreak = 0 } = safeGam;
+  const streakTier = getStreakTier(loginStreak);
+  const nextMilestone = getNextStreakMilestone(loginStreak);
+  const [showFreezeConfirm, setShowFreezeConfirm] = useState(false);
+  const [freezing, setFreezing] = useState(false);
   const nextLevelMissions = safeMissions.filter(m => !m.is_completed).length;
   const totalMissions = safeMissions.length || 15;
 
@@ -198,6 +203,80 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
           onFreeRecharge={onFreeRecharge}
           freeRechargeAvailable={freeRechargeAvailable}
         />
+
+        {/* 스트릭 위젯 */}
+        {loginStreak > 0 && (
+          <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--bg3)', borderRadius: 'var(--r1)', border: `1px solid ${streakTier.color}44` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 18, filter: `drop-shadow(0 0 5px ${streakTier.glow})` }}>{streakTier.emoji}</span>
+                <span style={{ fontSize: 'var(--sm)', fontWeight: 700, color: streakTier.color }}>{loginStreak}일 연속</span>
+                <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', background: 'var(--bg2)', padding: '1px 6px', borderRadius: 8 }}>{streakTier.label}</span>
+              </div>
+              {onFreezeStreak && loginStreak >= 2 && (
+                <button
+                  onClick={() => setShowFreezeConfirm(true)}
+                  disabled={currentBp < STREAK_FREEZE_COST}
+                  style={{
+                    background: 'none', border: `1px solid ${currentBp >= STREAK_FREEZE_COST ? 'var(--t4)' : 'var(--line)'}`,
+                    borderRadius: 8, padding: '3px 8px', fontSize: 11,
+                    color: currentBp >= STREAK_FREEZE_COST ? 'var(--t2)' : 'var(--t5)',
+                    cursor: currentBp >= STREAK_FREEZE_COST ? 'pointer' : 'not-allowed',
+                    opacity: currentBp >= STREAK_FREEZE_COST ? 1 : 0.4,
+                    fontFamily: 'var(--ff)',
+                  }}
+                >
+                  ❄️ 프리즈 {STREAK_FREEZE_COST}BP
+                </button>
+              )}
+            </div>
+            {/* 마일스톤 진행 바 */}
+            {nextMilestone && (
+              <>
+                <div style={{ height: 3, background: 'var(--line)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${Math.min(100, Math.round((loginStreak / nextMilestone) * 100))}%`,
+                    background: `linear-gradient(90deg, ${streakTier.color}88, ${streakTier.color})`,
+                    borderRadius: 2, transition: 'width .4s ease',
+                  }} />
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--t5)', marginTop: 3, textAlign: 'right' }}>
+                  {nextMilestone}일 달성까지 {nextMilestone - loginStreak}일 · 보너스 {nextMilestone === 7 ? 20 : nextMilestone === 14 ? 30 : 50} BP
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* 스트릭 프리즈 확인 모달 */}
+        {showFreezeConfirm && (
+          <div
+            onClick={() => setShowFreezeConfirm(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ background: 'var(--bg2)', borderRadius: 16, padding: '24px 20px', width: 'min(320px, 88vw)', textAlign: 'center', border: '1px solid var(--line)' }}
+            >
+              <div style={{ fontSize: 32, marginBottom: 8 }}>❄️</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>스트릭 프리즈</div>
+              <div style={{ fontSize: 13, color: 'var(--t3)', lineHeight: 1.5, marginBottom: 20 }}>
+                {STREAK_FREEZE_COST} BP를 소비해 내일 로그인하지 않아도<br />{loginStreak}일 스트릭을 유지해요.
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => setShowFreezeConfirm(false)} style={{ flex: 1, padding: 10, borderRadius: 10, background: 'var(--bg3)', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: 13, cursor: 'pointer', fontFamily: 'var(--ff)' }}>취소</button>
+                <button
+                  onClick={async () => { setFreezing(true); await onFreezeStreak?.(); setFreezing(false); setShowFreezeConfirm(false); }}
+                  disabled={freezing}
+                  style={{ flex: 1, padding: 10, borderRadius: 10, background: 'linear-gradient(135deg,#4A9EFF,#7B6CF6)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: freezing ? .6 : 1, fontFamily: 'var(--ff)' }}
+                >
+                  {freezing ? '발동 중...' : `발동 (${STREAK_FREEZE_COST} BP)`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 현재 플랜 */}
         <div style={{ marginTop: 8, padding: '10px 14px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

@@ -7,6 +7,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
+import { useStreamResponse } from '../hooks/useStreamResponse.js';
 
 const MAJOR_ARCANA = [
   { id: 0,  name: '광대',        emoji: '🌀', meaning: '새 시작, 순수한 모험심',    detail: '두려움 없이 새로운 길로 나서는 자유로운 영혼이에요.',          img: '/tarot/ar00.jpg' },
@@ -83,7 +84,7 @@ function CardBack({ opacity = 1 }) {
   );
 }
 
-export default function TarotPage({ callApi, showToast }) {
+export default function TarotPage({ callApi, buildCtx, showToast }) {
   const user = useAppStore((s) => s.user);
   const deck = useRef(shuffleDeck(user?.id)).current;
 
@@ -91,11 +92,11 @@ export default function TarotPage({ callApi, showToast }) {
   const [picks, setPicks]           = useState([]);
   const [hoveredIdx, setHoveredIdx] = useState(null);
   const [imgErrors, setImgErrors]   = useState({});
-  const [reading, setReading]       = useState('');
-  const [readingLoading, setReadingLoading] = useState(false);
   const [modalCard, setModalCard]   = useState(null);   // 확대 보기 카드
   const [modalMode, setModalMode]   = useState('image'); // 'image' | 'detail'
   const timerRef = useRef([]);
+
+  const { streamText, isStreaming, streamError, startStream, resetStream } = useStreamResponse();
 
   const pickedCards = picks.map(i => deck[i]);
 
@@ -123,25 +124,18 @@ export default function TarotPage({ callApi, showToast }) {
   }
 
   const askReading = useCallback(async () => {
-    if (readingLoading) return;
-    setReadingLoading(true);
-    try {
-      const cardDesc = pickedCards
-        .map((c, i) => `${POSITIONS[i]}: [${c.name}] ${c.meaning}`)
-        .join('\n');
-      const ans = await callApi(
-        `[타로 3장 뽑기 결과]\n${cardDesc}\n\n위 3장의 타로 카드를 내 사주와 별자리 맥락에서 읽어줘요. 각 카드가 지금 내 상황에서 어떤 의미인지, 세 카드를 연결해서 하나의 흐름으로 이야기해줘요.`,
-        { isChat: true }
-      );
-      setReading(ans);
-    } catch {
-      showToast?.('별이 잠시 바빠요. 다시 시도해봐요', 'error');
-    } finally {
-      setReadingLoading(false);
-    }
-  }, [pickedCards, callApi, readingLoading]);
-
-  if (readingLoading) return <FeatureLoadingScreen type="tarot" />;
+    if (isStreaming) return;
+    resetStream();
+    const cardDesc = pickedCards
+      .map((c, i) => `${POSITIONS[i]}: [${c.name}] ${c.meaning}`)
+      .join('\n');
+    await startStream({
+      userMessage: `[타로 3장 뽑기 결과]\n${cardDesc}\n\n위 3장의 타로 카드를 내 사주와 별자리 맥락에서 읽어줘요. 각 카드가 지금 내 상황에서 어떤 의미인지, 세 카드를 연결해서 하나의 흐름으로 이야기해줘요.`,
+      context: buildCtx?.() || '',
+      isChat: true,
+      clientHour: new Date().getHours(),
+    });
+  }, [pickedCards, buildCtx, isStreaming, startStream, resetStream]);
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 80 }}>
@@ -526,7 +520,7 @@ export default function TarotPage({ callApi, showToast }) {
             ))}
           </div>
 
-          {!reading && !readingLoading && (
+          {!streamText && !isStreaming && (
             <div style={{ padding: '20px 20px 0' }}>
               <button
                 onClick={askReading}
@@ -546,16 +540,27 @@ export default function TarotPage({ callApi, showToast }) {
             </div>
           )}
 
-          {reading && (
+          {/* 스트리밍 로딩 인디케이터 */}
+          {isStreaming && !streamText && (
+            <div style={{ margin: '20px 20px 0', padding: '20px 18px', background: 'linear-gradient(160deg, rgba(13,11,30,0.96), rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.2)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="typing-dots"><span /><span /><span /></div>
+              <span style={{ fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.7)', fontStyle: 'italic' }}>별빛을 읽는 중...</span>
+            </div>
+          )}
+
+          {(streamText || streamError) && (
             <div style={{ margin: '20px 20px 0', padding: '20px 18px', background: 'linear-gradient(160deg, rgba(13,11,30,0.96), rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
                 <div style={{ width: 20, height: 1, background: 'rgba(200,165,80,0.5)' }} />
                 <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.85)', fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase' }}>별숨의 타로 해석</div>
                 <div style={{ flex: 1, height: 1, background: 'rgba(200,165,80,0.5)' }} />
               </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
-                {reading}
-              </div>
+              {streamError
+                ? <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)' }}>{streamError}</div>
+                : <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
+                    {streamText}{isStreaming && <span className="typing-cursor" />}
+                  </div>
+              }
             </div>
           )}
         </>

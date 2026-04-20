@@ -4,6 +4,14 @@ function getDaysInMonth(year, month) {
   return new Date(parseInt(year), parseInt(month), 0).getDate();
 }
 
+export const RELATION_TYPES = [
+  { value: 'lover',   label: '연인',   emoji: '💕' },
+  { value: 'family',  label: '가족',   emoji: '🏠' },
+  { value: 'friend',  label: '친구',   emoji: '🤝' },
+  { value: 'coworker',label: '동료',   emoji: '💼' },
+  { value: 'other',   label: '기타',   emoji: '✦' },
+];
+
 export default function OtherProfileModal({
   editingOtherIdx, setEditingOtherIdx,
   otherForm, setOtherForm,
@@ -15,6 +23,29 @@ export default function OtherProfileModal({
       <div className="other-modal" onClick={e => e.stopPropagation()}>
         <div className="other-modal-title">{editingOtherIdx !== null ? '다른 사람 정보 수정' : '다른 사람의 별숨 추가'}</div>
         <div className="other-modal-sub">{editingOtherIdx !== null ? '저장된 정보를 수정해요' : '가족, 친구, 연인의 생년월일을 입력하면\n그 사람의 별숨을 대신 물어볼 수 있어요'}</div>
+
+        {/* 관계 타입 */}
+        <div style={{ marginBottom: 'var(--sp2)' }}>
+          <div className="lbl" style={{ marginBottom: 6 }}>관계</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {RELATION_TYPES.map(r => (
+              <button
+                key={r.value}
+                onClick={() => setOtherForm(f => ({ ...f, relation: r.value }))}
+                style={{
+                  padding: '5px 12px', borderRadius: 20, border: '1px solid',
+                  borderColor: otherForm.relation === r.value ? 'var(--gold)' : 'var(--line)',
+                  background: otherForm.relation === r.value ? 'var(--goldf)' : 'var(--bg3)',
+                  color: otherForm.relation === r.value ? 'var(--gold)' : 'var(--t3)',
+                  fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                  transition: 'all .15s ease',
+                }}
+              >
+                {r.emoji} {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <label className="lbl" htmlFor="other-name">이름</label>
         <input id="other-name" className="inp" placeholder="누구의 별숨인가요?" value={otherForm.name} onChange={e => setOtherForm(f => ({ ...f, name: e.target.value }))} />

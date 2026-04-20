@@ -231,6 +231,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   {[
                     { icon: '✦', label: '별숨에게 물어보기', s: 2 },
                     { icon: '📅', label: '월간 리포트', s: 6 },
+                    { icon: '🗓️', label: '연간 종합 리포트', s: 36 },
                     { icon: '◈', label: '별숨의 예언', s: 8 },
                     { icon: '◇', label: '종합 분석 (사주·점성술)', s: 14 },
                   ].map(m => (

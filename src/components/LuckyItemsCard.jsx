@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 // ═══════════════════════════════════════════════════════════
 //  🍀 오늘의 행운 아이템 — 사주·절기 기반 결정론적 계산
 // ═══════════════════════════════════════════════════════════
@@ -109,7 +111,140 @@ function parseSynergyFromResult(text) {
   return (s.food || s.color || s.number) ? s : null;
 }
 
+/** Canvas API로 공유 카드 PNG 생성 */
+function generateShareCard({ ohaeng, data, luckyNum, word, displayColor, displayNumber, displayDirection, displayFood, todayStr }) {
+  return new Promise((resolve) => {
+    const W = 720, H = 960;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    const hex = data.color.hex;
+
+    // 배경
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#0d0b1e');
+    grad.addColorStop(0.5, '#1a1040');
+    grad.addColorStop(1, '#0d0b1e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // 별 장식
+    ctx.fillStyle = 'rgba(200,165,80,0.15)';
+    for (let i = 0; i < 60; i++) {
+      const x = Math.random() * W, y = Math.random() * H, r = Math.random() * 1.5 + 0.5;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // 상단 타이틀
+    ctx.fillStyle = 'rgba(200,165,80,0.85)';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✦ 별숨 오늘의 키워드', W / 2, 80);
+
+    ctx.fillStyle = 'rgba(200,165,80,0.4)';
+    ctx.font = '18px sans-serif';
+    ctx.fillText(todayStr, W / 2, 115);
+
+    // 오행 원
+    ctx.beginPath();
+    ctx.arc(W / 2, 220, 80, 0, Math.PI * 2);
+    ctx.fillStyle = hex + '22';
+    ctx.fill();
+    ctx.strokeStyle = hex + '88';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = hex;
+    ctx.font = 'bold 44px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(data.color.emoji, W / 2, 235);
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillStyle = 'rgba(238,232,252,0.95)';
+    ctx.fillText(`${ohaeng} · ${data.keyword}`, W / 2, 280);
+
+    // 키워드 박스들
+    const items = [
+      { label: '행운의 색', val: displayColor, emoji: '🎨' },
+      { label: '행운의 숫자', val: displayNumber, emoji: '🔢' },
+      { label: '행운의 방향', val: displayDirection, emoji: '🧭' },
+      { label: '오늘의 음식', val: displayFood.slice(0, 14), emoji: '🍽️' },
+    ];
+
+    items.forEach((item, i) => {
+      const col = i % 2, row = Math.floor(i / 2);
+      const x = col === 0 ? 80 : W / 2 + 20;
+      const y = 340 + row * 130;
+      const bw = W / 2 - 100, bh = 100;
+
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      roundRect(ctx, x, y, bw, bh, 14);
+      ctx.fillStyle = 'rgba(200,165,80,0.2)';
+      ctx.strokeStyle = 'rgba(200,165,80,0.3)';
+      ctx.lineWidth = 1;
+      roundRect(ctx, x, y, bw, bh, 14, true);
+
+      ctx.fillStyle = 'rgba(200,165,80,0.7)';
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${item.emoji} ${item.label}`, x + 14, y + 28);
+
+      ctx.fillStyle = 'rgba(238,232,252,0.95)';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(item.val, x + 14, y + 68);
+    });
+
+    // 오늘의 말
+    ctx.fillStyle = 'rgba(200,165,80,0.7)';
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    const maxWidth = W - 80;
+    wrapText(ctx, `"${word}"`, W / 2, 640, maxWidth, 28);
+
+    // 하단 워터마크
+    ctx.fillStyle = 'rgba(200,165,80,0.4)';
+    ctx.font = '18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('byeolsoom.com ✦', W / 2, H - 50);
+
+    resolve(canvas.toDataURL('image/png'));
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r, stroke = false) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fill();
+  if (stroke) ctx.stroke();
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split('');
+  let line = '';
+  let cy = y;
+  for (const ch of words) {
+    const testLine = line + ch;
+    if (ctx.measureText(testLine).width > maxWidth && line !== '') {
+      ctx.fillText(line, x, cy);
+      line = ch;
+      cy += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, cy);
+}
+
 export default function LuckyItemsCard({ today, saju, dailyResult }) {
+  const [sharing, setSharing] = useState(false);
   const { ohaeng, data, luckyNum, word } = calcLuckyItems(today, saju);
 
   // API 결과 우선, 없으면 클라이언트 계산 fallback
@@ -221,6 +356,45 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
       <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 14 }}>
         {fromApi ? '오늘 별숨 결과에서 업데이트됐어요 ✦' : '오늘 기운을 먼저 확인하면 더 정확해져요 ✦'}
       </div>
+
+      {/* 카드 공유 버튼 */}
+      <button
+        onClick={async () => {
+          setSharing(true);
+          try {
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
+            const dataUrl = await generateShareCard({
+              ohaeng, data, luckyNum, word,
+              displayColor, displayNumber, displayDirection, displayFood,
+              todayStr,
+            });
+            // 네이티브 공유 API 시도, 없으면 다운로드
+            if (navigator.share && navigator.canShare?.({ files: [] })) {
+              const blob = await (await fetch(dataUrl)).blob();
+              const file = new File([blob], `byeolsoom_${todayStr}.png`, { type: 'image/png' });
+              await navigator.share({ files: [file], title: '별숨 오늘의 키워드' });
+            } else {
+              const a = document.createElement('a');
+              a.href = dataUrl;
+              a.download = `byeolsoom_${todayStr}.png`;
+              a.click();
+            }
+          } catch { /* 공유 취소 무시 */ }
+          finally { setSharing(false); }
+        }}
+        disabled={sharing}
+        style={{
+          marginTop: 14, width: '100%', padding: '11px',
+          borderRadius: 'var(--r1)', border: '1px solid var(--acc)',
+          background: 'var(--goldf)', color: 'var(--gold)',
+          fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)',
+          cursor: sharing ? 'wait' : 'pointer',
+          opacity: sharing ? 0.7 : 1, transition: 'opacity .2s',
+        }}
+      >
+        {sharing ? '카드 생성 중...' : '✦ 오늘의 별숨 카드 공유하기'}
+      </button>
     </div>
   );
 }

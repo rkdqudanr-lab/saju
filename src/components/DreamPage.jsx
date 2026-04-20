@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getMoonPhase, DREAM_PROMPT } from "../utils/constants.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
+import { useStreamResponse } from "../hooks/useStreamResponse.js";
 
 // ═══════════════════════════════════════════════════════════
 //  🌙 꿈 해몽 — 별숨이 꿈을 읽어요
@@ -51,12 +52,20 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
   const [dreamText, setDreamText] = useState('');
   const [mood, setMood] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
-  const [result, setResult] = useState('');
-  const [loading, setLoading] = useState(false);
   const [followUps, setFollowUps] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
+
+  const { streamText: result, isStreaming: loading, streamError, startStream, resetStream } = useStreamResponse();
+
+  // 스트리밍 완료 후 후속 질문 파싱
+  useEffect(() => {
+    if (!loading && result) {
+      const fus = parseFollowUp(result);
+      if (fus.length) setFollowUps(fus);
+    }
+  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleTag = (tag) => {
     setSelectedTags(p => p.includes(tag) ? p.filter(t => t !== tag) : [...p, tag]);
@@ -65,24 +74,21 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
   const handleAnalyze = async () => {
     if (!dreamText.trim()) { showToast('꿈 내용을 입력해주세요', 'info'); return; }
     if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
-    setLoading(true);
-    setResult('');
+    resetStream();
     setFollowUps([]);
-    try {
-      const prompt = DREAM_PROMPT({
-        dreamText,
-        dreamMood: mood,
-        dreamTags: selectedTags,
-        moonPhaseLabel: moonPhase.label,
-      }) + `\n\n[꿈 내용]\n${dreamText}`;
-      const text = await callApiProp(prompt);
-      setResult(text);
-      setFollowUps(parseFollowUp(text));
-    } catch {
-      showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요', 'error');
-    } finally {
-      setLoading(false);
-    }
+    const prompt = DREAM_PROMPT({
+      dreamText,
+      dreamMood: mood,
+      dreamTags: selectedTags,
+      moonPhaseLabel: moonPhase.label,
+    }) + `\n\n[꿈 내용]\n${dreamText}`;
+    await startStream({
+      userMessage: prompt,
+      context: buildCtx?.() || '',
+      isChat: true,
+      clientHour: new Date().getHours(),
+    });
+    // 스트리밍 완료 후 후속 질문 파싱 (result가 업데이트된 시점에 처리)
   };
 
   const handleFollowUp = async (q) => {
@@ -109,7 +115,8 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
 
   const mainText = stripFollowUp(result);
 
-  if (loading) return <FeatureLoadingScreen type="dream" />;
+  // 결과 없이 로딩 시작된 경우에만 풀페이지 로딩 표시
+  if (loading && !result) return <FeatureLoadingScreen type="dream" />;
 
   return (
     <div className="page step-fade">
@@ -217,7 +224,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
                 🌙 별숨의 꿈 해몽
               </div>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-                {mainText}
+                {mainText}{loading && <span className="typing-cursor" />}
               </div>
             </div>
 

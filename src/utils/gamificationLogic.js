@@ -195,6 +195,32 @@ export function calculateLevelProgress(currentLevel, totalMissions, badtimeBlock
 }
 
 // ════════════════════════════════════════════════════════════════
+// 스트릭 프리즈 비용 및 마일스톤 정의
+// ════════════════════════════════════════════════════════════════
+
+/** BP 소비로 스트릭 1회 끊김 방지 */
+export const STREAK_FREEZE_COST = 15;
+
+/** 스트릭 구간별 색상 및 타이틀 */
+export const STREAK_TIERS = [
+  { min: 30, color: '#B8A035', glow: 'rgba(184,160,53,0.4)',  label: '전설',  emoji: '⭐' },
+  { min: 14, color: '#7B6CF6', glow: 'rgba(123,108,246,0.4)', label: '고수',  emoji: '💜' },
+  { min: 7,  color: '#4A9EFF', glow: 'rgba(74,158,255,0.4)',  label: '연속',  emoji: '🔵' },
+  { min: 1,  color: '#E05A3A', glow: 'rgba(224,90,58,0.35)',  label: '시작',  emoji: '🔥' },
+];
+
+/** 다음 마일스톤 계산 */
+export function getNextStreakMilestone(streak) {
+  const milestones = [7, 14, 30];
+  return milestones.find(m => m > streak) ?? null;
+}
+
+/** 스트릭 구간 정보 반환 */
+export function getStreakTier(streak) {
+  return STREAK_TIERS.find(t => streak >= t.min) ?? STREAK_TIERS[STREAK_TIERS.length - 1];
+}
+
+// ════════════════════════════════════════════════════════════════
 // 함수: 로그인 스트릭 업데이트 로직
 // ════════════════════════════════════════════════════════════════
 /**
