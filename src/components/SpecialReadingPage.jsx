@@ -233,7 +233,7 @@ export default function SpecialReadingPage({ callApi, showToast }) {
       const client = getAuthenticatedClient(kakaoId);
       const { data } = await client
         .from('user_shop_inventory')
-        .select('id, item_id, is_equipped, shop_items(name, description, emoji, category)')
+        .select('item_id, is_equipped, shop_items(name, description, emoji, category)')
         .eq('kakao_id', String(kakaoId))
         .eq('is_equipped', false);
       const specials = (data || []).filter(r => r.shop_items?.category === 'special_reading');
