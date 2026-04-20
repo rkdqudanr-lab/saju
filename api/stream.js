@@ -5,43 +5,9 @@
 import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "../lib/prompts/utils.js";
 import { getCategoryHint, pickEndingHint, getCategoryExample } from "../lib/prompts/hints.js";
 import { buildSystem } from "../lib/prompts/buildSystem/index.js";
-import { verifyJWT } from "../lib/jwt.js";
+import { verifyUser } from "../lib/auth.js";
 
-// ── 사용자 인증 (ask.js와 동일 로직) ──
-async function verifyUser(req) {
-  const jwtSecret = process.env.JWT_SECRET;
-  const authHeader = req.headers['authorization'] || req.headers['Authorization'] || '';
-  if (authHeader.startsWith('Bearer ')) {
-    const token = authHeader.slice(7);
-    if (jwtSecret) {
-      const payload = verifyJWT(token, jwtSecret);
-      if (payload?.sub) return { ok: true, kakaoId: payload.sub };
-      return { ok: false };
-    }
-    console.warn('[별숨:stream] JWT_SECRET 없음 — Bearer 토큰 형식 검증만 수행');
-  }
-  const kakaoId = req.body?.kakaoId;
-  if (!kakaoId) return { ok: false };
-  if (!/^\d{1,20}$/.test(String(kakaoId))) return { ok: false };
 
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (supabaseUrl && supabaseKey) {
-    try {
-      const res = await fetch(
-        `${supabaseUrl}/rest/v1/users?select=kakao_id&kakao_id=eq.${encodeURIComponent(String(kakaoId))}&limit=1`,
-        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
-      );
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) return { ok: true, kakaoId };
-      return { ok: false };
-    } catch (e) {
-      console.error('[별숨:stream] verifyUser 오류:', e?.message);
-      return { ok: false };
-    }
-  }
-  return { ok: true, kakaoId };
-}
 
 // ── IP 레이트 리미팅 ──
 async function checkRateLimit(ip) {
@@ -66,20 +32,7 @@ async function checkRateLimit(ip) {
   } catch { return { ok: true }; }
 }
 
-// ── 마크다운 제거 (ask.js의 stripMarkdown과 동일 패턴) ──
-function stripMarkdown(text) {
-  if (!text) return '';
-  return text
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/`{1,3}[^`]*`{1,3}/g, '')
-    .replace(/^[-*+]\s+/gm, '')
-    .replace(/^\d+\.\s+/gm, '')
-    .replace(/^---+$/gm, '')
-    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
-    .trim();
-}
+
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });

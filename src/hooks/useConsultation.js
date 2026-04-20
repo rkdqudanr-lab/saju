@@ -105,6 +105,13 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   const [diaryReviewResult, setDiaryReviewResult] = useState(null);
   const [diaryReviewLoading, setDiaryReviewLoading] = useState(false);
 
+  const streamAbortRef = useRef(null);
+  useEffect(() => {
+    return () => {
+      if (streamAbortRef.current) streamAbortRef.current.abort();
+    };
+  }, []);
+
   const chatEndRef = useRef(null);
   const curPkg   = PKGS.find(p => p.id === pkg) || PKGS[1];
   const maxQ     = curPkg.q;
@@ -634,6 +641,10 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     setLatestChatIdx(-1); // 스트리밍 완료 후 재애니메이션 방지
     setChatLoading(true);
     try {
+      if (streamAbortRef.current) streamAbortRef.current.abort();
+      streamAbortRef.current = new AbortController();
+      const signal = streamAbortRef.current.signal;
+
       const token = getAuthToken();
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -641,6 +652,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       const res = await fetch('/api/stream', {
         method: 'POST',
         headers,
+        signal,
         body: JSON.stringify({
           userMessage,
           context: fullContext,
@@ -661,6 +673,10 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       let bufStr = '';
       let accumulated = '';
       outer: while (true) {
+        if (signal.aborted) {
+          reader.cancel();
+          break;
+        }
         const { done, value } = await reader.read();
         if (done) break;
         bufStr += decoder.decode(value, { stream: true });
@@ -680,9 +696,12 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           } catch { /* 파싱 실패 무시 */ }
         }
       }
-      setChatUsed(p => p + 1);
-      setChatHistory(p => p.map((m, i) => i === p.length - 1 ? { ...m, streaming: false } : m));
-    } catch {
+      if (!signal.aborted) {
+        setChatUsed(p => p + 1);
+        setChatHistory(p => p.map((m, i) => i === p.length - 1 ? { ...m, streaming: false } : m));
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') return;
       setChatHistory(p => {
         const copy = [...p];
         const last = copy.length - 1;

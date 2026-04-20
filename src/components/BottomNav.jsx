@@ -1,6 +1,6 @@
 /**
  * BottomNav — 하단 고정 내비게이션 바
- * 오늘 / 상담 / 성장 / 광장 / 설정 (5탭)
+ * 별숨질문 / 상담 / 별숨성장 / 별숨광장 / 별숨설정 (5탭)
  * 각 탭 클릭 시 서브메뉴 드로어가 위로 펼쳐짐
  * props 없이 Zustand store에서 직접 읽는다.
  */
@@ -11,7 +11,7 @@ import { useAppStore } from '../store/useAppStore.js';
 // ── 각 탭의 서브메뉴 정의 ──────────────────────────────────────
 const MENU_GROUPS = {
   today: {
-    label: '오늘의 별숨',
+    label: '별숨질문',
     items: [
       { icon: '🏠', label: '홈', step: 0 },
       { icon: '✦', label: '오늘 하루 나의 별숨', step: 18 },
@@ -31,39 +31,47 @@ const MENU_GROUPS = {
       { icon: '📆', label: '택일', step: 25 },
       { icon: '✍️', label: '이름 풀이', step: 26 },
       { icon: '🃏', label: '별숨 타로', step: 34 },
+      { icon: '🌊', label: '대운 흐름', step: 30 },
+      { icon: '💑', label: '궁합', step: 7 },
+      { icon: '🎂', label: '기념일 운세', step: 12 },
     ],
   },
   growth: {
-    label: '성장',
+    label: '별숨성장',
     items: [
+      { icon: '🌱', label: '별숨성장 대시보드', step: 37 },
       { icon: '📊', label: '나의 별숨', step: 13 },
-      { icon: '🌊', label: '대운 흐름', step: 30 },
-      { icon: '💑', label: '궁합', step: 7 },
-      { icon: '👥', label: '우리 모임의 별숨', step: 11 },
-      { icon: '🎂', label: '기념일 운세', step: 12 },
       { icon: '📈', label: '별숨 통계', step: 28 },
-      { icon: '🌟', label: '마이페이지', step: 27 },
-      { icon: '🎴', label: '사주 명함 카드', step: 21 },
     ],
   },
   square: {
-    label: '광장',
+    label: '별숨광장',
     items: [
       { icon: '🏛️', label: '별숨 광장', step: 29 },
       { icon: '💘', label: '익명 궁합 광장', step: 32 },
+      { icon: '👥', label: '우리 모임의 별숨', step: 11 },
       { icon: '⚡', label: '특별 상담', step: 33 },
       { icon: '✉️', label: '별숨편지', step: 35 },
+    ],
+  },
+  settings: {
+    label: '별숨설정',
+    items: [
+      { icon: '🌟', label: '마이페이지', step: 27 },
+      { icon: '⚙️', label: '설정', step: 19 },
+      { icon: '🛍️', label: '별숨샵', step: 31 },
+      { icon: '🎁', label: '내 아이템', step: 38 },
     ],
   },
 };
 
 // 각 탭에서 활성으로 표시할 step 목록
 const TAB_STEPS = {
-  today:   [0, 17, 18, 20, 10, 23],
-  consult: [2, 3, 4, 5, 6, 8, 14, 24, 25, 26, 34],
-  growth:  [13, 30, 7, 12, 1, 27, 21, 28],
-  square:  [29, 32, 11, 31, 33, 35],
-  settings:[19],
+  today:    [0, 17, 18, 20, 10, 23],
+  consult:  [2, 3, 4, 5, 6, 7, 8, 12, 14, 24, 25, 26, 30, 34],
+  growth:   [13, 28, 37],
+  square:   [11, 29, 32, 33, 35],
+  settings: [19, 27, 31, 38],
 };
 
 // ── 서브메뉴 드로어 ─────────────────────────────────────────────

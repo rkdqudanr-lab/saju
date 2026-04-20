@@ -600,6 +600,95 @@ export function downloadDataUrl(dataUrl, filename) {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  별숨 명함 공유카드 (Canvas 기반, 900×600)
+// ─────────────────────────────────────────────────────────────
+export function saveEnhancedSajuCard({ name, saju, sun, theme, stickerId }) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 900;
+  canvas.height = 600;
+  const ctx = canvas.getContext('2d');
+
+  // 배경 그라디언트
+  const bgGrad = ctx.createLinearGradient(0, 0, 900, 600);
+  bgGrad.addColorStop(0, theme.bg1);
+  bgGrad.addColorStop(1, theme.bg2);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 900, 600);
+
+  // 테두리
+  ctx.strokeStyle = theme.border;
+  ctx.lineWidth = 4;
+  roundRect(ctx, 16, 16, 868, 568, 20);
+  ctx.stroke();
+
+  // 상단 악센트 바
+  const accentGrad = ctx.createLinearGradient(16, 0, 884, 0);
+  accentGrad.addColorStop(0, 'transparent');
+  accentGrad.addColorStop(0.5, theme.accent);
+  accentGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = accentGrad;
+  ctx.fillRect(16, 16, 868, 5);
+
+  // 브랜드 로고
+  ctx.font = '500 22px Pretendard, sans-serif';
+  ctx.fillStyle = theme.accent;
+  ctx.textAlign = 'center';
+  ctx.fillText('✦ 별숨', 450, 80);
+
+  // 이름
+  ctx.font = 'bold 68px Pretendard, sans-serif';
+  ctx.fillStyle = '#F0EBF8';
+  ctx.textAlign = 'center';
+  ctx.fillText(name, 450, 210);
+
+  // 구분선
+  ctx.beginPath();
+  ctx.moveTo(270, 240);
+  ctx.lineTo(630, 240);
+  ctx.strokeStyle = theme.accent + '60';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // 사주 정보
+  ctx.font = '600 28px Pretendard, sans-serif';
+  ctx.fillStyle = theme.accent;
+  ctx.textAlign = 'center';
+  ctx.fillText(`${saju.il.g}${saju.il.j} · ${saju.dom} 기운`, 450, 300);
+
+  // 별자리
+  ctx.font = '400 22px Pretendard, sans-serif';
+  ctx.fillStyle = 'rgba(240,235,248,0.55)';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${sun.n} (${sun.s})`, 450, 345);
+
+  // 스티커 (canvas는 이모지 직접 지원)
+  if (stickerId && stickerId !== 'none') {
+    const stickerEmoji = { star: '⭐', moon: '🌙', flower: '🌸', sparkle: '✨' }[stickerId] || '';
+    ctx.font = '52px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(stickerEmoji, 862, 80);
+  }
+
+  // 하단 브랜딩
+  ctx.font = '400 16px Pretendard, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.textAlign = 'left';
+  ctx.fillText('byeolsoom.com', 50, 565);
+
+  // 다운로드
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}_사주명함_${dateStr}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
 //  별숨 통계 공유카드 (Canvas 기반, 1080×1350)
 // ─────────────────────────────────────────────────────────────
 
