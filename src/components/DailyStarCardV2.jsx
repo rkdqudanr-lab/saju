@@ -18,6 +18,7 @@ function parseDailyLines(text) {
     saju: null,       // 동양의 기운
     astrology: null,  // 서양의 하늘
     synergy: null,    // 별숨픽
+    categories: null, // 카테고리 운세 (종합/애정/금전/직장)
     badtime: null,
     closingAdvice: '',
     // 구형 아이템 fallback
@@ -84,6 +85,30 @@ function parseDailyLines(text) {
     }
   }
 
+  // ── [카테고리 운세] ──
+  const categoryLines = extractSection('[카테고리 운세]');
+  let categories = null;
+  if (categoryLines && categoryLines.length > 0) {
+    categories = { overall: null, love: null, money: null, work: null };
+    const parseStarLine = (line, prefix) => {
+      const raw = line.replace(prefix, '').trim();
+      const parts = raw.split('—');
+      const stars = parseInt(parts[0].trim(), 10);
+      const desc = parts[1]?.trim() || '';
+      return { stars: isNaN(stars) ? null : Math.min(5, Math.max(1, stars)), desc };
+    };
+    for (const line of categoryLines) {
+      if (line.startsWith('종합운:')) categories.overall = parseStarLine(line, '종합운:');
+      else if (line.startsWith('애정운:')) categories.love = parseStarLine(line, '애정운:');
+      else if (line.startsWith('금전운:')) categories.money = parseStarLine(line, '금전운:');
+      else if (line.startsWith('직장운:')) categories.work = parseStarLine(line, '직장운:');
+    }
+    // 모두 null이면 categories를 null로
+    if (!categories.overall && !categories.love && !categories.money && !categories.work) {
+      categories = null;
+    }
+  }
+
   // ── [별숨픽] ──
   const synergyLines = extractSection('[별숨픽]') || extractSection('[별숨 픽]');
   let synergy = null;
@@ -143,7 +168,7 @@ function parseDailyLines(text) {
     }
   }
 
-  return { score, summary, saju, astrology, synergy, badtime, closingAdvice, items };
+  return { score, summary, saju, astrology, synergy, categories, badtime, closingAdvice, items };
 }
 
 // ── 구형 포맷용 아이콘/색상 ──
@@ -166,6 +191,7 @@ export default function DailyStarCardV2({
     saju,
     astrology,
     synergy,
+    categories,
     badtime,
     closingAdvice,
     items,
@@ -217,6 +243,55 @@ export default function DailyStarCardV2({
         {/* 요약 */}
         {summary && (
           <div className="dsc-summary">{breakAtNatural(summary)}</div>
+        )}
+
+        {/* ── 카테고리 운세 (종합/애정/금전/직장) ── */}
+        {categories && (
+          <div style={{
+            background: 'var(--bg2)',
+            border: '1px solid var(--line)',
+            borderRadius: 'var(--r2)',
+            padding: '16px',
+            marginBottom: 16,
+          }}>
+            <div style={{
+              fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)',
+              letterSpacing: '.06em', marginBottom: 12,
+            }}>
+              ✦ 오늘의 운세
+            </div>
+            {[
+              { key: 'overall', label: '종합운', icon: '⭐' },
+              { key: 'love',    label: '애정운', icon: '💕' },
+              { key: 'money',   label: '금전운', icon: '💰' },
+              { key: 'work',    label: '직장운', icon: '💼' },
+            ].map(({ key, label, icon }) => {
+              const cat = categories[key];
+              if (!cat) return null;
+              const stars = cat.stars || 0;
+              return (
+                <div key={key} style={{ marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                    <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', minWidth: 44 }}>{label}</span>
+                    <span style={{ letterSpacing: 2, fontSize: 13 }}>
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <span key={i} style={{ color: i < stars ? 'var(--gold)' : 'var(--line)', lineHeight: 1 }}>★</span>
+                      ))}
+                    </span>
+                  </div>
+                  {cat.desc && (
+                    <div style={{
+                      fontSize: '11px', color: 'var(--t3)', lineHeight: 1.5,
+                      paddingLeft: 30, wordBreak: 'keep-all',
+                    }}>
+                      {cat.desc}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {isNewFormat ? (
@@ -293,6 +368,29 @@ export default function DailyStarCardV2({
                   <span className="dsc-section-icon">✦</span>
                   <span className="dsc-section-title-text">별숨 픽 · 오늘의 시너지</span>
                 </div>
+                {/* 행운 요약 칩 (물건/숫자/색상) */}
+                {(synergy.color || synergy.number) && (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {synergy.color && (
+                      <span style={{
+                        padding: '4px 10px', borderRadius: 20,
+                        background: 'var(--goldf)', border: '1px solid var(--acc)',
+                        fontSize: '11px', color: 'var(--gold)', fontWeight: 700,
+                      }}>
+                        행운의 색상: {synergy.color.split('—')[0].trim()}
+                      </span>
+                    )}
+                    {synergy.number && (
+                      <span style={{
+                        padding: '4px 10px', borderRadius: 20,
+                        background: 'var(--goldf)', border: '1px solid var(--acc)',
+                        fontSize: '11px', color: 'var(--gold)', fontWeight: 700,
+                      }}>
+                        행운의 숫자: {synergy.number}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {synergy.food && (
                   <div className="dsc-synergy-row">
                     <span className="dsc-synergy-label">🍽️</span>

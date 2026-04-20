@@ -220,6 +220,18 @@ function LetterDetailModal({ letter, myKakaoId, onClose, onReplyDone, showToast 
   );
 }
 
+// 오늘이 월요일인지 확인
+function isTodayMonday() {
+  return new Date().getDay() === 1; // 0=일, 1=월
+}
+
+// 다음 월요일까지 남은 일수
+function getDaysUntilMonday() {
+  const day = new Date().getDay();
+  const diff = day === 0 ? 1 : (8 - day); // 일요일이면 1일, 나머지는 (8-day)
+  return diff === 7 ? 0 : diff;
+}
+
 // ── 메인 컴포넌트 ──
 export default function ByeolsoomLetterPage({ showToast }) {
   const user = useAppStore(s => s.user);
@@ -236,6 +248,8 @@ export default function ByeolsoomLetterPage({ showToast }) {
   const [loading, setLoading] = useState(false);
   const [openLetter, setOpenLetter] = useState(null);
   const [hasSent, setHasSent] = useState(false); // 편지 보낸 적 있는지 (게이트)
+  const isMonday = isTodayMonday();
+  const daysUntilMonday = getDaysUntilMonday();
 
   const myKakaoId = user?.kakaoId;
   const mySunSign = sun?.n || null;
@@ -280,6 +294,67 @@ export default function ByeolsoomLetterPage({ showToast }) {
   useEffect(() => {
     if (myKakaoId) loadLetters();
   }, [loadLetters, myKakaoId]);
+
+  // 월요일 자동 매칭: 월요일 아침에 접속하면 내 pending 편지 매칭 시도
+  useEffect(() => {
+    if (!myKakaoId || !isMonday) return;
+    const lastMatchKey = `byeolsoom_letter_monday_match_${myKakaoId}_${new Date().toISOString().slice(0, 10)}`;
+    if (sessionStorage.getItem(lastMatchKey)) return; // 오늘 이미 실행
+    sessionStorage.setItem(lastMatchKey, '1');
+
+    // 잠시 후 실행 (loadLetters 완료 대기)
+    const timer = setTimeout(async () => {
+      try {
+        const client = getAuthenticatedClient(myKakaoId);
+        // 내 pending 편지 조회
+        const { data: myPending } = await client
+          .from('byeolsoom_letters')
+          .select('*')
+          .eq('sender_kakao_id', myKakaoId)
+          .eq('status', 'pending')
+          .is('recipient_kakao_id', null)
+          .limit(5);
+
+        if (!myPending || myPending.length === 0) return;
+
+        for (const myLetter of myPending) {
+          const genderFilter = myLetter.gender_pref === '상관없음' ? null : myLetter.gender_pref;
+          let query = supabase
+            .from('byeolsoom_letters')
+            .select('*')
+            .eq('status', 'pending')
+            .neq('sender_kakao_id', myKakaoId)
+            .is('recipient_kakao_id', null);
+          if (myLetter.sender_gender) {
+            query = query.or(`gender_pref.eq.${myLetter.sender_gender},gender_pref.eq.상관없음`);
+          }
+          const { data: candidates } = await query.limit(30);
+          if (!candidates || candidates.length === 0) continue;
+
+          let best = null, bestScore = -1;
+          for (const c of candidates) {
+            if (genderFilter && c.sender_gender && c.sender_gender !== genderFilter) continue;
+            const score = (myLetter.sender_dom && c.sender_dom)
+              ? calcCompatScore(myLetter.sender_dom, c.sender_dom) : 70;
+            if (score > bestScore) { bestScore = score; best = c; }
+          }
+          if (!best) continue;
+
+          await client.from('byeolsoom_letters')
+            .update({ recipient_kakao_id: myKakaoId, status: 'matched', compat_score: bestScore })
+            .eq('id', best.id);
+          await client.from('byeolsoom_letters')
+            .update({ recipient_kakao_id: best.sender_kakao_id, status: 'matched', compat_score: bestScore })
+            .eq('id', myLetter.id);
+        }
+        await loadLetters();
+        showToast('✦ 이번 주 별숨편지가 도착했어요! 받은 편지함을 확인해봐요', 'success');
+      } catch (e) {
+        console.error('[별숨편지] 월요일 자동 매칭 오류:', e);
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [myKakaoId, isMonday, loadLetters, showToast]);
 
   // 편지 보내기 + 매칭 시도
   const sendLetter = async () => {
@@ -394,6 +469,31 @@ export default function ByeolsoomLetterPage({ showToast }) {
             기운이 맞는 익명의 누군가에게 편지를 써요<br />
             내가 먼저 써야 누군가의 편지를 받을 수 있어요
           </p>
+        </div>
+
+        {/* 주간 배달 안내 배너 */}
+        <div style={{
+          padding: '12px 16px',
+          borderRadius: 'var(--r1)',
+          background: isMonday ? 'var(--goldf)' : 'var(--bg2)',
+          border: `1px solid ${isMonday ? 'var(--acc)' : 'var(--line)'}`,
+          marginBottom: 20,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 10,
+        }}>
+          <span style={{ fontSize: 18, flexShrink: 0 }}>{isMonday ? '✉️' : '📅'}</span>
+          <div>
+            <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: isMonday ? 'var(--gold)' : 'var(--t2)', marginBottom: 2 }}>
+              {isMonday ? '오늘은 편지 배달의 날이에요 ✦' : '별숨편지는 매주 월요일 아침에 배달돼요'}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>
+              {isMonday
+                ? '이번 주 기운이 맞는 편지를 확인해봐요. 받은 편지함을 열어보세요.'
+                : `월요일부터 금요일 사이에 편지를 쓰면 다음 월요일에 전달돼요.${daysUntilMonday > 0 ? ` 다음 배달까지 ${daysUntilMonday}일 남았어요.` : ''}`
+              }
+            </div>
+          </div>
         </div>
 
         {/* 로그인 필요 */}

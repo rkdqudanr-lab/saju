@@ -1,96 +1,296 @@
 /**
  * BottomNav — 하단 고정 내비게이션 바
- * 오늘 / 상담 / 성장 / 광장  (4탭)
+ * 오늘 / 상담 / 성장 / 광장 / 설정 (5탭)
+ * 각 탭 클릭 시 서브메뉴 드로어가 위로 펼쳐짐
  * props 없이 Zustand store에서 직접 읽는다.
  */
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppStore } from '../store/useAppStore.js';
+
+// ── 각 탭의 서브메뉴 정의 ──────────────────────────────────────
+const MENU_GROUPS = {
+  today: {
+    label: '오늘의 별숨',
+    items: [
+      { icon: '🏠', label: '홈', step: 0 },
+      { icon: '✦', label: '오늘 하루 나의 별숨', step: 18 },
+      { icon: '📓', label: '나의 하루를 별숨에게', step: 17 },
+      { icon: '📚', label: '일기 모아보기', step: 20 },
+      { icon: '🗓️', label: '별숨 달력', step: 10 },
+    ],
+  },
+  consult: {
+    label: '별숨 상담',
+    items: [
+      { icon: '✦', label: '별숨에게 물어보기', step: 2 },
+      { icon: '📅', label: '월간 리포트', step: 6 },
+      { icon: '◈', label: '별숨의 예언', step: 8 },
+      { icon: '◇', label: '종합 분석', step: 14 },
+      { icon: '🌙', label: '꿈 해몽', step: 24 },
+      { icon: '📆', label: '택일', step: 25 },
+      { icon: '✍️', label: '이름 풀이', step: 26 },
+      { icon: '🃏', label: '별숨 타로', step: 34 },
+    ],
+  },
+  growth: {
+    label: '성장',
+    items: [
+      { icon: '📊', label: '나의 별숨', step: 13 },
+      { icon: '🌊', label: '대운 흐름', step: 30 },
+      { icon: '💑', label: '궁합', step: 7 },
+      { icon: '👥', label: '우리 모임의 별숨', step: 11 },
+      { icon: '🎂', label: '기념일 운세', step: 12 },
+      { icon: '📈', label: '별숨 통계', step: 28 },
+      { icon: '🌟', label: '마이페이지', step: 27 },
+      { icon: '🎴', label: '사주 명함 카드', step: 21 },
+    ],
+  },
+  square: {
+    label: '광장',
+    items: [
+      { icon: '🏛️', label: '별숨 광장', step: 29 },
+      { icon: '💘', label: '익명 궁합 광장', step: 32 },
+      { icon: '⚡', label: '특별 상담', step: 33 },
+      { icon: '✉️', label: '별숨편지', step: 35 },
+    ],
+  },
+};
+
+// 각 탭에서 활성으로 표시할 step 목록
+const TAB_STEPS = {
+  today:   [0, 17, 18, 20, 10, 23],
+  consult: [2, 3, 4, 5, 6, 8, 14, 24, 25, 26, 34],
+  growth:  [13, 30, 7, 12, 1, 27, 21, 28],
+  square:  [29, 32, 11, 31, 33, 35],
+  settings:[19],
+};
+
+// ── 서브메뉴 드로어 ─────────────────────────────────────────────
+function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
+  const group = MENU_GROUPS[groupId];
+  if (!group) return null;
+
+  // 로그인 필요 step
+  const requiresLogin = new Set([2, 6, 8, 13, 14, 17, 18, 20, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35]);
+
+  const handleNav = (item) => {
+    let targetStep = item.step;
+    if (requiresLogin.has(targetStep) && !user) {
+      targetStep = 1; // 로그인 페이지로
+    }
+    if (targetStep === 2 && !formOkApprox) {
+      targetStep = 1;
+    }
+    onNav(targetStep);
+    onClose();
+  };
+
+  return createPortal(
+    <>
+      {/* 백드롭 */}
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9990,
+          background: 'rgba(0,0,0,0.45)',
+        }}
+      />
+      {/* 드로어 */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 'calc(57px + max(env(safe-area-inset-bottom), 16px))',
+          left: 0, right: 0,
+          zIndex: 9991,
+          maxWidth: 480,
+          margin: '0 auto',
+          background: 'var(--bg1)',
+          borderRadius: '20px 20px 0 0',
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.25)',
+          padding: '16px 0 8px',
+          animation: 'slideUpDrawer 0.22s ease',
+        }}
+      >
+        {/* 핸들 바 */}
+        <div style={{
+          width: 40, height: 4, borderRadius: 2,
+          background: 'var(--line)',
+          margin: '0 auto 14px',
+        }} />
+        {/* 섹션 제목 */}
+        <div style={{
+          fontSize: 'var(--xs)', fontWeight: 700,
+          color: 'var(--gold)', letterSpacing: '.06em',
+          padding: '0 20px', marginBottom: 10,
+        }}>
+          ✦ {group.label}
+        </div>
+        {/* 메뉴 아이템 - 2열 그리드 */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 4,
+          padding: '0 12px',
+          maxHeight: '50vh',
+          overflowY: 'auto',
+        }}>
+          {group.items.map((item) => (
+            <button
+              key={item.step}
+              onClick={() => handleNav(item)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '12px 14px',
+                border: '1px solid var(--line)',
+                borderRadius: 'var(--r1)',
+                background: 'var(--bg2)',
+                cursor: 'pointer',
+                fontFamily: 'var(--ff)',
+                textAlign: 'left',
+                transition: 'all .12s',
+              }}
+            >
+              <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ fontSize: 'var(--xs)', color: 'var(--t1)', lineHeight: 1.3, wordBreak: 'keep-all' }}>
+                {item.label}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div style={{ height: 8 }} />
+      </div>
+    </>,
+    document.body
+  );
+}
 
 export default function BottomNav() {
   const step         = useAppStore((s) => s.step);
   const setStep      = useAppStore((s) => s.setStep);
   const user         = useAppStore((s) => s.user);
   const formOkApprox = useAppStore((s) => s.formOkApprox);
+  const [openDrawer, setOpenDrawer] = useState(null); // null | 'today' | 'consult' | 'growth' | 'square'
+
+  // step 변경 시 드로어 닫기
+  useEffect(() => { setOpenDrawer(null); }, [step]);
 
   const tabs = [
-    { id: 'today',   icon: '⌂',  label: '오늘',  steps: [0, 17, 20, 10, 23], tourId: 'nav-today' },
-    { id: 'consult', icon: '✦', label: '상담',  steps: [2, 3, 4, 5, 6, 8, 14, 24, 25, 26, 34], tourId: 'nav-consult' },
-    { id: 'growth',  icon: '◈', label: '성장',  steps: [13, 30, 7, 12, 1, 19, 27, 34, 21, 28], tourId: 'nav-growth' },
-    { id: 'square',  icon: '🏛️', label: '광장',  steps: [29, 32, 11, 31, 28, 33, 35], tourId: 'nav-square' },
+    { id: 'today',    icon: '⌂',   label: '오늘',  hasDrawer: true },
+    { id: 'consult',  icon: '✦',  label: '상담',  hasDrawer: true },
+    { id: 'growth',   icon: '◈',  label: '성장',  hasDrawer: true },
+    { id: 'square',   icon: '🏛️', label: '광장',  hasDrawer: true },
+    { id: 'settings', icon: '⚙️', label: '설정',  hasDrawer: false },
   ];
 
-  const activeId = tabs.find(t => t.steps.includes(step))?.id ?? 'today';
+  const activeId = (() => {
+    for (const [id, steps] of Object.entries(TAB_STEPS)) {
+      if (steps.includes(step)) return id;
+    }
+    return 'today';
+  })();
 
   function handleTabPress(tab) {
-    if (tab.id === 'today')   { setStep(0); return; }
-    if (tab.id === 'consult') { setStep(formOkApprox ? 2 : 1); return; }
-    if (tab.id === 'growth')  { setStep(user ? 27 : 1); return; }
-    if (tab.id === 'square')  { setStep(user ? 29 : 1); return; }
+    if (tab.id === 'settings') {
+      setOpenDrawer(null);
+      setStep(user ? 19 : 1);
+      return;
+    }
+    // 드로어 토글
+    if (openDrawer === tab.id) {
+      setOpenDrawer(null);
+    } else {
+      setOpenDrawer(tab.id);
+    }
   }
 
   return (
-    <nav
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 9999,
-        background: 'var(--bg1)',
-        borderTop: '1px solid var(--line)',
-        display: 'flex',
-        paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
-      }}
-    >
-      {tabs.map(tab => {
-        const isActive = activeId === tab.id;
-        return (
-          <button
-            key={tab.id}
-            data-tour={tab.tourId}
-            onClick={() => handleTabPress(tab)}
-            aria-label={tab.label}
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 3,
-              padding: '10px 4px 8px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'opacity var(--trans-fast)',
-              opacity: isActive ? 1 : 0.55,
-            }}
-          >
-            <span style={{ fontSize: 20, lineHeight: 1 }}>{tab.icon}</span>
-            <span
+    <>
+      {/* 서브메뉴 드로어 */}
+      {openDrawer && (
+        <MenuDrawer
+          groupId={openDrawer}
+          onClose={() => setOpenDrawer(null)}
+          onNav={(s) => setStep(s)}
+          user={user}
+          formOkApprox={formOkApprox}
+        />
+      )}
+
+      <nav
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 9999,
+          background: 'var(--bg1)',
+          borderTop: '1px solid var(--line)',
+          display: 'flex',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
+        }}
+      >
+        {tabs.map(tab => {
+          const isActive = activeId === tab.id || openDrawer === tab.id;
+          return (
+            <button
+              key={tab.id}
+              data-tour={`nav-${tab.id}`}
+              onClick={() => handleTabPress(tab)}
+              aria-label={tab.label}
               style={{
-                fontSize: 'var(--xs)',
-                fontFamily: 'var(--ff)',
-                fontWeight: isActive ? 700 : 400,
-                color: isActive ? 'var(--gold)' : 'var(--t3)',
-                letterSpacing: '.02em',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 3,
+                padding: '10px 4px 8px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'opacity var(--trans-fast)',
+                opacity: isActive ? 1 : 0.55,
+                position: 'relative',
               }}
             >
-              {tab.label}
-            </span>
-            {isActive && (
+              <span style={{ fontSize: 20, lineHeight: 1 }}>{tab.icon}</span>
               <span
                 style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  width: 32,
-                  height: 2,
-                  background: 'var(--gold)',
-                  borderRadius: 2,
+                  fontSize: 'var(--xs)',
+                  fontFamily: 'var(--ff)',
+                  fontWeight: isActive ? 700 : 400,
+                  color: isActive ? 'var(--gold)' : 'var(--t3)',
+                  letterSpacing: '.02em',
                 }}
-              />
-            )}
-          </button>
-        );
-      })}
-    </nav>
+              >
+                {tab.label}
+              </span>
+              {isActive && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    width: 32,
+                    height: 2,
+                    background: 'var(--gold)',
+                    borderRadius: 2,
+                  }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      <style>{`
+        @keyframes slideUpDrawer {
+          from { transform: translateY(100%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+      `}</style>
+    </>
   );
 }

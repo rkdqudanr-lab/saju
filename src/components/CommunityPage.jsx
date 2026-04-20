@@ -14,6 +14,7 @@ import { createPortal } from 'react-dom';
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import AnonSynergyModal from './AnonSynergyModal.jsx';
+import { getCommunityShowSaju } from './SettingsPage.jsx';
 
 const MAX_CONTENT = 200;
 const MAX_COMMENT = 100;
@@ -636,13 +637,14 @@ export default function CommunityPage({ showToast, dailyResult }) {
 
   async function handleSubmitPost(content, fortuneSummary) {
     if (!kakaoId) { showToast('로그인이 필요해요', 'info'); return; }
+    const showSaju = getCommunityShowSaju();
     const client = getAuthenticatedClient(kakaoId);
     const { error } = await client.from('community_posts').insert({
       kakao_id: String(kakaoId),
       nickname: myNickname,
       content,
-      sun_sign: mySunSign,
-      ilgan: myIlgan,
+      sun_sign: showSaju ? mySunSign : null,
+      ilgan: showSaju ? myIlgan : null,
       likes_count: 0,
       fortune_summary: fortuneSummary || null,
     });

@@ -279,6 +279,9 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (loadMsgRef.current) { clearInterval(loadMsgRef.current); loadMsgRef.current = null; }
   }, []);
 
+  // 플랜별 기록 저장 한도 (free: 10, premium: 100)
+  const HISTORY_LIMIT = { free: 10, premium: 100 };
+
   // ── Supabase 상담기록 저장 ──
   const saveHistoryToSupabase = useCallback(async (questions, answersArr, slot) => {
     if (!supabase) return;
@@ -289,8 +292,50 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       let supabaseUserId = user?.supabaseId || null;
       if (!supabaseUserId) {
         const authClient = getAuthenticatedClient(kakaoId);
-        const { data: userRow } = await (authClient || supabase).from('users').select('id').eq('kakao_id', String(kakaoId)).maybeSingle();
+        const { data: userRow } = await (authClient || supabase).from('users').select('id, plan').eq('kakao_id', String(kakaoId)).maybeSingle();
         supabaseUserId = userRow?.id || null;
+        // 플랜 확인 및 기록 수 제한 체크
+        const plan = userRow?.plan || 'free';
+        const limit = HISTORY_LIMIT[plan] ?? HISTORY_LIMIT.free;
+        if (supabaseUserId) {
+          const authClient2 = getAuthenticatedClient(kakaoId);
+          const { count } = await (authClient2 || supabase)
+            .from('consultation_history')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', supabaseUserId);
+          if (count !== null && count >= limit) {
+            if (typeof showToast === 'function') {
+              showToast(
+                plan === 'premium'
+                  ? `기록이 ${limit}개 한도에 도달했어요. 오래된 기록을 삭제해봐요.`
+                  : `무료 플랜은 기록을 ${limit}개까지 저장할 수 있어요. 프리미엄으로 업그레이드하면 100개까지 저장돼요.`,
+                'info'
+              );
+            }
+            return;
+          }
+        }
+      } else {
+        // supabaseUserId 이미 있는 경우 플랜/한도 체크
+        const authClient = getAuthenticatedClient(kakaoId);
+        const { data: userRow } = await (authClient || supabase).from('users').select('plan').eq('kakao_id', String(kakaoId)).maybeSingle();
+        const plan = userRow?.plan || 'free';
+        const limit = HISTORY_LIMIT[plan] ?? HISTORY_LIMIT.free;
+        const { count } = await (authClient || supabase)
+          .from('consultation_history')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', supabaseUserId);
+        if (count !== null && count >= limit) {
+          if (typeof showToast === 'function') {
+            showToast(
+              plan === 'premium'
+                ? `기록이 ${limit}개 한도에 도달했어요. 오래된 기록을 삭제해봐요.`
+                : `무료 플랜은 기록을 ${limit}개까지 저장할 수 있어요. 프리미엄으로 업그레이드하면 100개까지 저장돼요.`,
+              'info'
+            );
+          }
+          return;
+        }
       }
       if (!supabaseUserId) return;
       const authClient = getAuthenticatedClient(kakaoId);

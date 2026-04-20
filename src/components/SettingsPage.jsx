@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { getAuthenticatedClient } from '../lib/supabase.js';
+import { getAuthenticatedClient, supabase } from '../lib/supabase.js';
+
+// 광장 사주 정보 공개 설정 로컬 저장
+const COMMUNITY_SAJU_KEY = 'byeolsoom_community_show_saju';
+export function getCommunityShowSaju() {
+  try { return localStorage.getItem(COMMUNITY_SAJU_KEY) !== 'false'; } catch { return true; }
+}
+function setCommunityShowSaju(val) {
+  try { localStorage.setItem(COMMUNITY_SAJU_KEY, val ? 'true' : 'false'); } catch {}
+}
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -101,6 +110,8 @@ export default function SettingsPage({
   const [localForm, setLocalForm] = useState(form || {});
   const [saving, setSaving] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [communityShowSaju, setCommunityShowSajuState] = useState(getCommunityShowSaju);
+  const [nicknameError, setNicknameError] = useState('');
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -194,11 +205,33 @@ export default function SettingsPage({
       showToast?.('생년월일을 모두 입력해줘요', 'error');
       return;
     }
+    // 닉네임 중복 검사
+    const newNickname = (localForm.nickname || '').trim();
+    if (newNickname && supabase && user) {
+      setNicknameError('');
+      try {
+        const kakaoId = user?.kakaoId || user?.id;
+        const { data: existing } = await supabase
+          .from('users')
+          .select('kakao_id')
+          .eq('nickname', newNickname)
+          .neq('kakao_id', String(kakaoId))
+          .limit(1);
+        if (existing && existing.length > 0) {
+          setNicknameError('이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해봐요.');
+          showToast?.('이미 사용 중인 닉네임이에요', 'error');
+          return;
+        }
+      } catch {
+        // 검사 실패는 저장 진행
+      }
+    }
     setSaving(true);
     try {
-      setForm(localForm);
-      if (user) await saveProfileToSupabase(localForm, user);
+      setForm({ ...localForm, nickname: newNickname || localForm.nickname });
+      if (user) await saveProfileToSupabase({ ...localForm, nickname: newNickname || localForm.nickname }, user);
       showToast?.('개인정보가 저장됐어요 ✦', 'success');
+      setNicknameError('');
     } catch {
       showToast?.('저장에 실패했어요. 다시 시도해봐요', 'error');
     } finally {
@@ -250,11 +283,16 @@ export default function SettingsPage({
                 <input
                   id="set-nickname"
                   className="inp"
-                  style={{ marginBottom: 0 }}
+                  style={{ marginBottom: 0, borderColor: nicknameError ? 'var(--rose, #e05c7a)' : undefined }}
                   placeholder="예: 민준이, 달빛"
                   value={localForm.nickname || ''}
-                  onChange={e => setLocalForm(f => ({ ...f, nickname: e.target.value }))}
+                  onChange={e => { setLocalForm(f => ({ ...f, nickname: e.target.value })); setNicknameError(''); }}
                 />
+                {nicknameError && (
+                  <div style={{ fontSize: '10px', color: 'var(--rose, #e05c7a)', marginTop: 4, lineHeight: 1.4 }}>
+                    {nicknameError}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="lbl" htmlFor="set-name" style={{ marginBottom: 4 }}>본명 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(사주 분석용)</span></label>
@@ -659,6 +697,36 @@ export default function SettingsPage({
               <span className="toggle-label">
                 기기 알림 허용 {pushEnabled ? '(켜짐)' : '(꺼짐)'}
               </span>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 2 추가 섹션: 광장 공개 설정 ── */}
+        {tab === 2 && (
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
+            <div className="card-title">광장 공개 설정</div>
+            <div className="card-sub" style={{ marginBottom: 8 }}>
+              별숨 광장에 글을 쓸 때 나의 사주 정보를 보이게 할지 설정해요.
+            </div>
+            <div className="toggle-row" style={{ cursor: 'pointer' }} onClick={() => {
+              const next = !communityShowSaju;
+              setCommunityShowSajuState(next);
+              setCommunityShowSaju(next);
+              showToast?.(next ? '별자리·일간 정보를 표시해요 ✦' : '별자리·일간 정보를 숨겼어요', 'success');
+            }}>
+              <button
+                className={`toggle ${communityShowSaju ? 'on' : 'off'}`}
+                role="switch"
+                aria-checked={communityShowSaju}
+                aria-label="광장에서 사주 정보 표시"
+                onClick={e => { e.stopPropagation(); const next = !communityShowSaju; setCommunityShowSajuState(next); setCommunityShowSaju(next); showToast?.(next ? '별자리·일간 정보를 표시해요 ✦' : '별자리·일간 정보를 숨겼어요', 'success'); }}
+              />
+              <span className="toggle-label">
+                내 별자리·일간(일주) 정보 표시 {communityShowSaju ? '(켜짐)' : '(꺼짐)'}
+              </span>
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.5, marginTop: 4 }}>
+              꺼두면 광장에서 별자리·일간 정보 없이 닉네임만 표시돼요.
             </div>
           </div>
         )}
