@@ -76,6 +76,8 @@ const SpecialReadingPage       = lazy(() => import("./components/SpecialReadingP
 const TarotPage                = lazy(() => import("./components/TarotPage.jsx"));
 const ByeolsoomLetterPage      = lazy(() => import("./components/ByeolsoomLetterPage.jsx"));
 const YearlyReportPage         = lazy(() => import("./components/YearlyReportPage.jsx"));
+const GrowthDashboardPage      = lazy(() => import("./components/GrowthDashboardPage.jsx"));
+const ItemInventoryPage        = lazy(() => import("./components/ItemInventoryPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -988,6 +990,22 @@ export default function App() {
               currentBp={gamificationState?.currentBp || 0}
               setStep={setStep}
             />
+          </Suspense>
+        )}
+
+        {/* ── Step 37: 별숨성장 대시보드 ── */}
+        {step === 37 && (
+          <Suspense fallback={<PageSpinner />}>
+            <GrowthDashboardPage
+              onRechargeFreeBP={handleFreeRecharge}
+            />
+          </Suspense>
+        )}
+
+        {/* ── Step 38: 내 아이템 ── */}
+        {step === 38 && (
+          <Suspense fallback={<PageSpinner />}>
+            <ItemInventoryPage showToast={showToast} />
           </Suspense>
         )}
 
