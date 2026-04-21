@@ -392,6 +392,7 @@ alter table daily_cache enable row level security;
 drop policy if exists "daily_cache_insert" on daily_cache;
 drop policy if exists "daily_cache_select" on daily_cache;
 drop policy if exists "daily_cache_update" on daily_cache;
+drop policy if exists "daily_cache_delete" on daily_cache;
 
 create policy "daily_cache_insert" on daily_cache
   for insert to anon with check (kakao_id is not null);
@@ -405,6 +406,12 @@ create policy "daily_cache_update" on daily_cache
   for update to anon
   using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
   with check (kakao_id is not null);
+
+-- 오늘 발동 해제 등 삭제에 필요
+create policy "daily_cache_delete" on daily_cache
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 -- ── daily_cache 오래된 레코드 자동 삭제 함수 ─────────────────────────
 -- Supabase 대시보드 > Database > Extensions 에서 pg_cron 활성화 후 사용
@@ -812,6 +819,13 @@ create policy "scores_upsert" on daily_scores
     kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
   );
 
+-- upsert(on conflict do update)에 update policy도 필요
+drop policy if exists "scores_update" on daily_scores;
+create policy "scores_update" on daily_scores
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
+
 -- Feature 8: user_follows (광장 팔로우)
 create table if not exists user_follows (
   follower_kakao_id  text not null,
@@ -911,9 +925,10 @@ create table if not exists shop_items (
 );
 
 -- Feature 9: user_shop_inventory (구매 목록)
+-- item_id: FK 없음 — 가챠 아이템(gachaItems.js 로컬 풀)도 저장하므로 shop_items 참조 제거
 create table if not exists user_shop_inventory (
   kakao_id    text not null,
-  item_id     text references shop_items(id),
+  item_id     text not null,
   unlocked_at timestamptz default now(),
   is_equipped boolean default false,
   primary key (kakao_id, item_id)
@@ -923,6 +938,8 @@ alter table user_shop_inventory enable row level security;
 
 drop policy if exists "inv_select" on user_shop_inventory;
 drop policy if exists "inv_insert" on user_shop_inventory;
+drop policy if exists "inv_update" on user_shop_inventory;
+drop policy if exists "inv_delete" on user_shop_inventory;
 
 create policy "inv_select" on user_shop_inventory
   for select to anon using (
@@ -931,6 +948,18 @@ create policy "inv_select" on user_shop_inventory
 
 create policy "inv_insert" on user_shop_inventory
   for insert to anon with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- 장착/해제(is_equipped 토글)에 필요
+create policy "inv_update" on user_shop_inventory
+  for update to anon
+  using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (kakao_id is not null);
+
+-- 합성 시 아이템 소비에 필요
+create policy "inv_delete" on user_shop_inventory
+  for delete to anon using (
     kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
   );
 
@@ -975,4 +1004,10 @@ create policy "push_select" on push_subscriptions
   for select to anon using (
     kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
   );
+
+-- ================================================================
+-- 관리자용: BP 수동 지급 (SQL Editor에서 실행)
+-- current_bp는 users 테이블에 있음 (user_gamification 아님)
+-- ================================================================
+-- update users set current_bp = current_bp + 500 where kakao_id = '여기에_카카오ID';
 
