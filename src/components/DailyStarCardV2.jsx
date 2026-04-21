@@ -368,29 +368,6 @@ export default function DailyStarCardV2({
                   <span className="dsc-section-icon">✦</span>
                   <span className="dsc-section-title-text">별숨 픽 · 오늘의 시너지</span>
                 </div>
-                {/* 행운 요약 칩 (물건/숫자/색상) */}
-                {(synergy.color || synergy.number) && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                    {synergy.color && (
-                      <span style={{
-                        padding: '4px 10px', borderRadius: 20,
-                        background: 'var(--goldf)', border: '1px solid var(--acc)',
-                        fontSize: '11px', color: 'var(--gold)', fontWeight: 700,
-                      }}>
-                        행운의 색상: {synergy.color.split('—')[0].trim()}
-                      </span>
-                    )}
-                    {synergy.number && (
-                      <span style={{
-                        padding: '4px 10px', borderRadius: 20,
-                        background: 'var(--goldf)', border: '1px solid var(--acc)',
-                        fontSize: '11px', color: 'var(--gold)', fontWeight: 700,
-                      }}>
-                        행운의 숫자: {synergy.number}
-                      </span>
-                    )}
-                  </div>
-                )}
                 {synergy.food && (
                   <div className="dsc-synergy-row">
                     <span className="dsc-synergy-label">🍽️</span>
@@ -409,13 +386,16 @@ export default function DailyStarCardV2({
                     <span className="dsc-synergy-value">{synergy.color}</span>
                   </div>
                 )}
-                {(synergy.number || synergy.direction) && (
+                {synergy.number && (
                   <div className="dsc-synergy-row">
                     <span className="dsc-synergy-label">✦</span>
-                    <span className="dsc-synergy-value" style={{ display: 'flex', gap: 16 }}>
-                      {synergy.number && <span>행운 숫자 <strong style={{ color: 'var(--gold)' }}>{synergy.number}</strong></span>}
-                      {synergy.direction && <span>행운 방향 <strong style={{ color: 'var(--gold)' }}>{synergy.direction}</strong></span>}
-                    </span>
+                    <span className="dsc-synergy-value">행운 숫자 <strong style={{ color: 'var(--gold)' }}>{synergy.number}</strong></span>
+                  </div>
+                )}
+                {synergy.direction && (
+                  <div className="dsc-synergy-row">
+                    <span className="dsc-synergy-label">↗</span>
+                    <span className="dsc-synergy-value">행운 방향 <strong style={{ color: 'var(--gold)' }}>{synergy.direction}</strong></span>
                   </div>
                 )}
                 {synergy.summary && (

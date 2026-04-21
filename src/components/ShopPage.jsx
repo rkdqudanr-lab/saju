@@ -443,17 +443,56 @@ export default function ShopPage({ showToast }) {
             불러오는 중...
           </div>
         ) : category === '부적' ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--gold)' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🧧</div>
-            <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--gold)', marginBottom: 8 }}>행운 부적 랜덤 뽑기</div>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 20 }}>15 BP로 하루의 기운을 밝히는 한정판 부적을 수집해보세요!</div>
-            <button
-              onClick={handleGacha}
-              disabled={buying || currentBP < 15}
-              style={{ padding: '14px 28px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, cursor: 'pointer' }}
-            >
-              {buying ? '뽑는 중...' : '✦ 부적 뽑기 (15 BP)'}
-            </button>
+          <div style={{
+            borderRadius: 'var(--r2)', overflow: 'hidden',
+            background: 'linear-gradient(135deg, #1a1040 0%, #0d0b20 60%, #1a0a2e 100%)',
+            border: '1px solid rgba(232,176,72,.35)',
+            position: 'relative',
+          }}>
+            {/* 배경 별빛 */}
+            {[...Array(6)].map((_, i) => (
+              <div key={i} style={{
+                position: 'absolute',
+                top: `${15 + (i * 15) % 70}%`,
+                left: `${8 + (i * 19) % 85}%`,
+                width: 3, height: 3, borderRadius: '50%',
+                background: 'rgba(232,176,72,.5)',
+                animation: `floatGently ${2 + i % 2}s ease infinite ${i * 0.4}s`,
+              }} />
+            ))}
+            <div style={{ position: 'relative', padding: '28px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: 40, marginBottom: 10, animation: 'floatGently 3s ease infinite' }}>🌌</div>
+              <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: '#fff', marginBottom: 6 }}>별숨 가챠 뽑기</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.6)', marginBottom: 6, lineHeight: 1.6 }}>
+                조각 · 희귀 · 전설 등급의 아이템을 뽑아<br />수집하고 합성해요
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 18, fontSize: '11px' }}>
+                <span style={{ color: '#9CA3AF' }}>조각 70%</span>
+                <span style={{ color: 'rgba(255,255,255,.3)' }}>·</span>
+                <span style={{ color: '#7B9EC4' }}>희귀 25%</span>
+                <span style={{ color: 'rgba(255,255,255,.3)' }}>·</span>
+                <span style={{ color: '#E8B048' }}>전설 5%</span>
+              </div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.4)', padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(255,255,255,.1)' }}>
+                  1회 · 10 BP
+                </div>
+                <div style={{ fontSize: '11px', color: 'rgba(232,176,72,.7)', padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(232,176,72,.3)' }}>
+                  10연 · 90 BP · 희귀 보장
+                </div>
+              </div>
+              <button
+                onClick={() => setStep(40)}
+                style={{
+                  marginTop: 18, padding: '13px 32px',
+                  background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+                  borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
+                  fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                }}
+              >
+                ✦ 뽑기 하러 가기
+              </button>
+            </div>
           </div>
         ) : category === '보관함' && filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>

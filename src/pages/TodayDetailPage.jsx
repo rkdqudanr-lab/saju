@@ -254,25 +254,6 @@ export default function TodayDetailPage({
           홈으로
         </button>
 
-        {/* 정화 재점 버튼 — 결과가 있고 횟수 남아있을 때만 표시 */}
-        {dailyResult && (
-          canPurify ? (
-            <button
-              className="today-detail-btn-purify"
-              onClick={handlePurify}
-              disabled={!canPurify}
-              aria-label={`정화 재점 (${remaining}회 남음)`}
-            >
-              <span className="purify-btn-icon">✦</span>
-              정화 재점
-              <span className="purify-btn-count">{remaining}/{DAILY_MAX}</span>
-            </button>
-          ) : dailyCount >= DAILY_MAX ? (
-            <div className="today-detail-repoint-limit">
-              오늘 재점 완료 · 내일 새로 만나요
-            </div>
-          ) : null
-        )}
       </div>
     </div>
   );

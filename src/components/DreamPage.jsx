@@ -103,7 +103,8 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
     setChatLoading(true);
     setChatHistory(p => [...p, { role: 'user', content: msg }]);
     try {
-      const contextPrompt = `[꿈 해몽 맥락]\n꿈: ${dreamText}\n해몽: ${stripFollowUp(result)}\n\n[후속 질문]\n${msg}`;
+      const prevHistory = chatHistory.map(m => `${m.role === 'user' ? '유저' : '별숨'}: ${m.content}`).join('\n');
+      const contextPrompt = `[시스템 지시: 친근한 채팅 스타일로 2~4문장 이내 짧게 답변해요. 격식 없이 편하게.]\n[꿈 맥락]\n꿈: ${dreamText}\n해몽: ${stripFollowUp(result)}${prevHistory ? `\n[이전 대화]\n${prevHistory}` : ''}\n\n[질문]\n${msg}`;
       const res = await callApiProp(contextPrompt, { isChat: true });
       setChatHistory(p => [...p, { role: 'assistant', content: res }]);
     } catch {

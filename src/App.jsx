@@ -80,6 +80,7 @@ const YearlyReportPage         = lazy(() => import("./components/YearlyReportPag
 const GrowthDashboardPage      = lazy(() => import("./components/GrowthDashboardPage.jsx"));
 const ItemInventoryPage        = lazy(() => import("./components/ItemInventoryPage.jsx"));
 const LottoPage                = lazy(() => import("./components/LottoPage.jsx"));
+const GachaPage                = lazy(() => import("./components/GachaPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -528,7 +529,7 @@ export default function App() {
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30 || step === 33 || step === 34 || step === 35 || step === 39) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30 || step === 33 || step === 34 || step === 35 || step === 39 || step === 40) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}><Icon name="home" size={18} color="currentColor" /></button>}
 
@@ -768,6 +769,7 @@ export default function App() {
               askReview={askDiaryReview}
               setStep={setStep}
               setDiy={setDiy}
+              callApi={callApi}
               viewDate={diaryViewDate}
               diaryReviewResult={diaryReviewResult}
               diaryReviewLoading={diaryReviewLoading}
@@ -1007,7 +1009,7 @@ export default function App() {
         {/* ── Step 38: 내 아이템 ── */}
         {step === 38 && (
           <Suspense fallback={<PageSpinner />}>
-            <ItemInventoryPage showToast={showToast} />
+            <ItemInventoryPage showToast={showToast} callApi={callApi} />
           </Suspense>
         )}
 
@@ -1015,6 +1017,13 @@ export default function App() {
         {step === 39 && (
           <Suspense fallback={<PageSpinner />}>
             <LottoPage />
+          </Suspense>
+        )}
+
+        {/* ── Step 40: 별숨 뽑기 (가챠) ── */}
+        {step === 40 && (
+          <Suspense fallback={<PageSpinner />}>
+            <GachaPage showToast={showToast} />
           </Suspense>
         )}
 

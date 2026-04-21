@@ -363,28 +363,27 @@ export default function AnonCompatPage({ showToast, shareData }) {
         </div>
       </div>
 
-      {/* 공유 버튼 (shareData 있을 때) */}
-      {shareData && (
-        <div style={{ padding: '0 20px 16px' }}>
-          <button
-            onClick={() => {
-              if (!kakaoId) { showToast?.('로그인 후 공유할 수 있어요', 'info'); return; }
-              setShowShareModal(true);
-            }}
-            style={{
-              width: '100%', padding: '13px',
-              background: 'var(--goldf)',
-              border: '1.5px solid var(--acc)',
-              borderRadius: 'var(--r1)',
-              color: 'var(--gold)', fontWeight: 700,
-              fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
-              cursor: 'pointer',
-            }}
-          >
-            ✦ 내 궁합 결과 익명 공유하기
-          </button>
-        </div>
-      )}
+      {/* 공유 버튼 */}
+      <div style={{ padding: '0 20px 16px' }}>
+        <button
+          onClick={() => {
+            if (!kakaoId) { showToast?.('로그인 후 공유할 수 있어요', 'info'); return; }
+            if (!shareData) { showToast?.('먼저 궁합을 확인한 후 공유할 수 있어요 ✦', 'info'); return; }
+            setShowShareModal(true);
+          }}
+          style={{
+            width: '100%', padding: '13px',
+            background: shareData ? 'var(--goldf)' : 'var(--bg2)',
+            border: `1.5px solid ${shareData ? 'var(--acc)' : 'var(--line)'}`,
+            borderRadius: 'var(--r1)',
+            color: shareData ? 'var(--gold)' : 'var(--t4)', fontWeight: 700,
+            fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
+            cursor: 'pointer',
+          }}
+        >
+          {shareData ? '✦ 내 궁합 결과 익명 공유하기' : '궁합 확인 후 이곳에서 공유할 수 있어요'}
+        </button>
+      </div>
 
       {/* 필터 탭 */}
       <div style={{

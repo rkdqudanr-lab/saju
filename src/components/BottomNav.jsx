@@ -45,6 +45,7 @@ const MENU_GROUPS = {
       { icon: 'star',               label: '나의 별숨',         step: 13 },
       { icon: 'chart-pie',          label: '별숨 통계',         step: 28 },
       { icon: 'shopping-bag',       label: '별숨샵',            step: 31 },
+      { icon: 'sparkles',           label: '별숨 뽑기',         step: 40 },
       { icon: 'gift',               label: '내 아이템',         step: 38 },
     ],
   },
@@ -71,7 +72,7 @@ const MENU_GROUPS = {
 const TAB_STEPS = {
   today:    [0, 17, 18, 20, 10, 23],
   consult:  [2, 3, 4, 5, 6, 7, 8, 12, 14, 24, 25, 26, 30, 34, 39],
-  growth:   [13, 28, 31, 37, 38],
+  growth:   [13, 28, 31, 37, 38, 40],
   square:   [11, 29, 32, 33, 35],
   settings: [19, 27],
 };

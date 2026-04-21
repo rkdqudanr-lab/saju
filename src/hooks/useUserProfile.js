@@ -24,6 +24,15 @@ function setAuthToken(token) {
     else { localStorage.removeItem('byeolsoom_jwt'); }
   } catch {}
 }
+export function getKeepLogin() {
+  try { return localStorage.getItem('byeolsoom_keep_login') === 'true'; } catch { return false; }
+}
+export function setKeepLogin(val) {
+  try {
+    if (val) { localStorage.setItem('byeolsoom_keep_login', 'true'); }
+    else { localStorage.removeItem('byeolsoom_keep_login'); }
+  } catch {}
+}
 
 // ── JWT 만료 여부 확인 (client-side, 서명 검증 없이 exp만 체크) ──
 export function isJwtExpired(token) {
@@ -43,11 +52,12 @@ export function isJwtExpired(token) {
 
 export function useUserProfile() {
   // 앱 시작 시 JWT 만료 여부 확인: 만료됐으면 저장된 user/token 모두 정리
+  // 단, 로그인 유지하기가 켜져 있으면 만료 체크를 건너뜀 (서버 401 시 자동 로그아웃)
   const [user, setUser] = useState(() => {
     const storedUser = getAuthUser();
     if (!storedUser) return null;
     const token = getAuthToken();
-    if (token && isJwtExpired(token)) {
+    if (token && isJwtExpired(token) && !getKeepLogin()) {
       try { localStorage.removeItem('byeolsoom_user'); } catch {}
       try { localStorage.removeItem('byeolsoom_jwt'); } catch {}
       return null;

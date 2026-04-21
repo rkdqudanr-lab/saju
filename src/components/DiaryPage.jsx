@@ -60,7 +60,7 @@ function stripFollowUp(text) {
   return text.replace(/\[후속질문\].*/s, '').trim();
 }
 
-export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, onDiaryComplete }) {
+export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDate, initialContent, initialMood, initialWeather, initialEnergy, embedded, diaryReviewResult, diaryReviewLoading, onDiaryComplete }) {
   const { user, form, showToast } = useUserCtx();
   const { saju, sun, today: todayInfo, isApproximate, buildCtx } = useSajuCtx();
   const [mood, setMood] = useState(initialMood || null);
@@ -81,6 +81,8 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
   const [diaryStreak, setDiaryStreak] = useState(0);
   const [showDirectAsk, setShowDirectAsk] = useState(false);
   const [directQuestion, setDirectQuestion] = useState('');
+  const [followUpHistory, setFollowUpHistory] = useState([]);
+  const [followUpLoading, setFollowUpLoading] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
   const targetDate = viewDate || today;
@@ -400,23 +402,64 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
                   {stripFollowUp(diaryReviewResult)}
                 </div>
                 {/* 후속 질문 브릿지 */}
-                {setDiy && setStep && (() => {
+                {(() => {
                   const followUps = parseFollowUpQuestions(diaryReviewResult);
+                  const handleFollowUpAsk = async (q) => {
+                    if (!callApi || followUpLoading) return;
+                    setFollowUpLoading(true);
+                    setFollowUpHistory(prev => [...prev, { role: 'user', content: q }]);
+                    try {
+                      const prevHistory = followUpHistory.map(m => `${m.role === 'user' ? '유저' : '별숨'}: ${m.content}`).join('\n');
+                      const contextPrompt = `[시스템 지시: 친근한 채팅 스타일로 2~4문장 이내 짧게 답변해요. 격식 없이 편하게.]\n[일기 맥락]\n${content}\n[별숨 해석 요약]\n${stripFollowUp(diaryReviewResult)}${prevHistory ? `\n[이전 대화]\n${prevHistory}` : ''}\n\n[질문]\n${q}`;
+                      const res = await callApi(contextPrompt, { isChat: true });
+                      setFollowUpHistory(prev => [...prev, { role: 'assistant', content: res }]);
+                    } catch {
+                      setFollowUpHistory(prev => [...prev, { role: 'assistant', content: '별이 잠시 쉬고 있어요 🌙' }]);
+                    } finally {
+                      setFollowUpLoading(false);
+                    }
+                  };
                   return (
                     <div style={{ padding: '0 16px 14px' }}>
-                      {followUps.length > 0 && (
+                      {/* 후속 질문 채팅 히스토리 */}
+                      {followUpHistory.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+                          {followUpHistory.map((msg, i) => (
+                            <div key={i} style={{
+                              padding: '9px 12px', borderRadius: 'var(--r1)',
+                              background: msg.role === 'user' ? 'var(--goldf)' : 'var(--bg2)',
+                              border: `1px solid ${msg.role === 'user' ? 'var(--acc)' : 'var(--line)'}`,
+                              fontSize: 'var(--xs)', color: msg.role === 'user' ? 'var(--gold)' : 'var(--t2)',
+                              lineHeight: 1.7, alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                              maxWidth: '90%', whiteSpace: 'pre-line',
+                            }}>
+                              {msg.content}
+                            </div>
+                          ))}
+                          {followUpLoading && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--t4)', fontSize: 'var(--xs)' }}>
+                              <div style={{ width: 12, height: 12, border: '2px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', flexShrink: 0 }} />
+                              별숨이 답하고 있어요...
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* 제안 질문 버튼 */}
+                      {followUps.length > 0 && followUpHistory.length === 0 && (
                         <>
-                          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8 }}>이 내용으로 더 물어볼게요 →</div>
+                          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8 }}>별숨에게 더 물어볼게요 →</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
                             {followUps.map((q, i) => (
                               <button
                                 key={i}
-                                onClick={() => { setDiy(q); setStep(1); }}
+                                onClick={() => handleFollowUpAsk(q)}
+                                disabled={followUpLoading}
                                 style={{
                                   textAlign: 'left', padding: '9px 14px', borderRadius: 'var(--r1)',
                                   border: '1px solid var(--acc)', background: 'var(--goldf)',
                                   color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 600,
-                                  fontFamily: 'var(--ff)', cursor: 'pointer',
+                                  fontFamily: 'var(--ff)', cursor: followUpLoading ? 'default' : 'pointer',
+                                  opacity: followUpLoading ? 0.5 : 1,
                                 }}
                               >
                                 ✦ {q}
@@ -436,7 +479,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
                             fontFamily: 'var(--ff)', cursor: 'pointer',
                           }}
                         >
-                          ✎ 직접 물어보기
+                          ✎ 별숨에게 직접 물어보기
                         </button>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -468,9 +511,11 @@ export default function DiaryPage({ askReview, setStep, setDiy, viewDate, initia
                               onClick={() => {
                                 const q = directQuestion.trim();
                                 if (!q) return;
-                                setDiy(q); setStep(1);
+                                setShowDirectAsk(false);
+                                setDirectQuestion('');
+                                handleFollowUpAsk(q);
                               }}
-                              disabled={!directQuestion.trim()}
+                              disabled={!directQuestion.trim() || followUpLoading}
                               style={{
                                 flex: 2, padding: '8px', borderRadius: 'var(--r1)',
                                 border: '1px solid var(--acc)', background: 'var(--goldf)',

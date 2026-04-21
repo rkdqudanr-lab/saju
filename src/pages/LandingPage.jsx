@@ -4,6 +4,7 @@ import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/const
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
 import { isTodayAnswered } from "../utils/quiz.js";
+import { getKeepLogin, setKeepLogin } from "../hooks/useUserProfile.js";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
@@ -114,6 +115,7 @@ export default function LandingPage({
   const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 }, missions = [] } = useGamCtx();
   const equippedTalisman = useAppStore((s) => s.equippedTalisman);
   const setEquippedTalisman = useAppStore((s) => s.setEquippedTalisman);
+  const [keepLogin, setKeepLoginState] = useState(getKeepLogin());
   const nightMode = isNightMode();
   const nearbyJeolgi = getNearbyJeolgi();
   const [scoreHistory, setScoreHistory] = useState([]);
@@ -225,7 +227,7 @@ export default function LandingPage({
                   ? <img className="llc-avatar" src={user.profileImage} alt="프로필" />
                   : <div className="llc-avatar-placeholder">🌙</div>}
                 <div style={{ flex: 1 }}>
-                  <div className="llc-name">{user.nickname} <span style={{ color: 'var(--gold)' }}>✦</span></div>
+                  <div className="llc-name">{form.nickname || user.nickname} <span style={{ color: 'var(--gold)' }}>✦</span></div>
                   <div className="llc-sub">
                     {form.by && saju ? (saju.ilganPoetic ? `${saju.ilganPoetic}` : '') : '별숨이 당신을 기억해요'}
                   </div>
@@ -404,13 +406,6 @@ export default function LandingPage({
                               canBlockBadtime={onBlockBadtime != null}
                               currentBp={gamificationState.currentBp}
                             />
-                            {dailyCount < DAILY_MAX ? (
-                              <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginTop: 8, background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)' }} onClick={askDailyHoroscope}>
-                                다시 물어보기 ✦ ({dailyCount}/{DAILY_MAX})
-                              </button>
-                            ) : (
-                              <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>오늘 별숨을 모두 읽었어요 · 내일 다시 만나요</div>
-                            )}
                           </>
                         ) : (
                           <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '18px', fontSize: 'var(--md)', fontWeight: 700 }} onClick={askDailyHoroscope}>
@@ -454,49 +449,6 @@ export default function LandingPage({
                           hasDiaryToday={hasDiaryToday}
                         />
                       </div>
-
-                      {/* ── 타로 카드 위젯 ── */}
-                      <button
-                        onClick={() => setStep(34)}
-                        style={{
-                          width: '100%', padding: '14px 16px',
-                          background: 'linear-gradient(135deg, rgba(13,11,30,0.9), rgba(20,16,44,0.85))',
-                          border: '1px solid rgba(200,165,80,0.3)',
-                          borderRadius: 12, cursor: 'pointer',
-                          fontFamily: 'var(--ff)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        }}
-                      >
-                        <div style={{ textAlign: 'left' }}>
-                          <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.6)', fontWeight: 700, letterSpacing: '.14em', marginBottom: 3 }}>✦ &nbsp;BYEOLSOOM TAROT</div>
-                          <div style={{ fontSize: 'var(--xs)', color: 'rgba(220,190,100,0.9)', fontWeight: 700 }}>오늘의 세 별빛 열기</div>
-                          <div style={{ fontSize: '10px', color: 'rgba(180,180,200,0.5)', marginTop: 2 }}>매일 새로운 카드가 기다려요</div>
-                        </div>
-                        {/* 미니 카드 3장 */}
-                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                          {['-6px', '0px', '6px'].map((ml, i) => (
-                            <div key={i} style={{
-                              width: 24, height: 38, borderRadius: 4,
-                              background: 'linear-gradient(160deg, #0d0b1e, #1a1040)',
-                              border: '1px solid rgba(200,165,80,0.45)',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              marginLeft: i === 0 ? 0 : ml,
-                              transform: i === 0 ? 'rotate(-6deg)' : i === 1 ? 'rotate(0deg)' : 'rotate(6deg)',
-                              boxShadow: '0 3px 10px rgba(0,0,0,0.5)',
-                              position: 'relative', overflow: 'hidden',
-                            }}>
-                              <svg width="14" height="14" viewBox="0 0 14 14" style={{ opacity: 0.6 }}>
-                                <circle cx="7" cy="7" r="5.5" fill="none" stroke="rgba(200,165,80,0.6)" strokeWidth="0.5"/>
-                                {[0,60,120,180,240,300].map((deg, j) => {
-                                  const r = deg * Math.PI / 180;
-                                  return <line key={j} x1="7" y1="7" x2={7 + 5.5 * Math.cos(r)} y2={7 + 5.5 * Math.sin(r)} stroke="rgba(200,165,80,0.4)" strokeWidth="0.5"/>;
-                                })}
-                                <circle cx="7" cy="7" r="1" fill="rgba(200,165,80,0.8)"/>
-                              </svg>
-                            </div>
-                          ))}
-                        </div>
-                      </button>
 
                       {/* ── 7일 운세 점수 히스토리 ── */}
                       {scoreHistory.some(s => s.score !== null) && (
@@ -561,6 +513,28 @@ export default function LandingPage({
                 </span>
                 카카오로 3초 만에 시작하기
               </button>
+              {/* 로그인 유지하기 토글 */}
+              <div
+                onClick={() => { const next = !keepLogin; setKeepLoginState(next); setKeepLogin(next); }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', padding: '2px 0' }}
+              >
+                <div style={{
+                  width: 36, height: 20, borderRadius: 10,
+                  background: keepLogin ? 'var(--gold)' : 'var(--bg3)',
+                  position: 'relative', transition: 'background .2s', flexShrink: 0,
+                  border: '1px solid var(--line)',
+                }}>
+                  <div style={{
+                    position: 'absolute', top: 2, left: keepLogin ? 17 : 2,
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: '#fff', transition: 'left .2s',
+                    boxShadow: '0 1px 3px rgba(0,0,0,.3)',
+                  }} />
+                </div>
+                <span style={{ fontSize: 'var(--xs)', color: keepLogin ? 'var(--gold)' : 'var(--t4)' }}>
+                  로그인 유지하기
+                </span>
+              </div>
               <button className="land-ghost-link" onClick={() => setStep(1)}>
                 로그인 없이 먼저 체험하기 →
               </button>
