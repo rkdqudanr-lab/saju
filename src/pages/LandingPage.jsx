@@ -161,11 +161,17 @@ export default function LandingPage({
         const talisman = equipped.find(r => r.category === 'talisman');
         setEquippedTalisman(talisman || null);
 
-        // 오늘 발동 기운 복원 (localStorage → Zustand, Supabase 부적보다 우선)
-        const todayKey = `byeolsoom_daily_act_${new Date().toISOString().slice(0, 10)}`;
-        const dailyActId = localStorage.getItem(todayKey);
-        if (dailyActId) {
-          const activatedItem = findItem(dailyActId);
+        // 오늘 발동 기운 복원 (Supabase daily_cache → Zustand, 부적보다 우선)
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const { data: dailyActData } = await safeClient
+          .from('daily_cache')
+          .select('content')
+          .eq('kakao_id', kakaoId)
+          .eq('cache_date', todayStr)
+          .eq('cache_type', 'daily_activation')
+          .maybeSingle();
+        if (dailyActData?.content) {
+          const activatedItem = findItem(dailyActData.content);
           if (activatedItem) setEquippedTalisman(activatedItem);
         }
         

@@ -499,22 +499,59 @@ export default function ItemInventoryPage({ showToast, callApi }) {
   const [showSynth, setShowSynth] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
 
-  // 오늘 발동 — localStorage per-day
-  const todayKey = `byeolsoom_daily_act_${new Date().toISOString().slice(0, 10)}`;
-  const [dailyActId, setDailyActId] = useState(() => localStorage.getItem(todayKey) || null);
+  // 오늘 발동 — Supabase daily_cache (cache_type: 'daily_activation')
+  const today = new Date().toISOString().slice(0, 10);
+  const [dailyActId, setDailyActId] = useState(null);
 
-  function handleDailyActivate(item) {
+  // 마운트 시 오늘 발동 내역 로드
+  useEffect(() => {
+    if (!kakaoId) return;
+    const client = getAuthenticatedClient(kakaoId);
+    client.from('daily_cache')
+      .select('content')
+      .eq('kakao_id', String(kakaoId))
+      .eq('cache_date', today)
+      .eq('cache_type', 'daily_activation')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.content) {
+          setDailyActId(data.content);
+          import('../utils/gachaItems.js').then(m => {
+            const item = m.findItem(data.content);
+            if (item) useAppStore.getState().setEquippedTalisman(item);
+          });
+        }
+      })
+      .catch(() => {});
+  }, [kakaoId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleDailyActivate(item) {
+    if (!kakaoId) return;
     const isActive = dailyActId && (dailyActId === item.id || dailyActId === item.id.split('::')[0]);
-    if (isActive) {
-      localStorage.removeItem(todayKey);
-      setDailyActId(null);
-      useAppStore.getState().setEquippedTalisman(null);
-      showToast?.('오늘 발동을 해제했어요.', 'info');
-    } else {
-      localStorage.setItem(todayKey, item.id);
-      setDailyActId(item.id);
-      useAppStore.getState().setEquippedTalisman(item);
-      showToast?.(`${item.emoji} ${item.name} 오늘 발동! 재생성하면 별숨에 반영돼요 ✦`, 'success');
+    const client = getAuthenticatedClient(kakaoId);
+    try {
+      if (isActive) {
+        await client.from('daily_cache')
+          .delete()
+          .eq('kakao_id', String(kakaoId))
+          .eq('cache_date', today)
+          .eq('cache_type', 'daily_activation');
+        setDailyActId(null);
+        useAppStore.getState().setEquippedTalisman(null);
+        showToast?.('오늘 발동을 해제했어요.', 'info');
+      } else {
+        await client.from('daily_cache').upsert({
+          kakao_id: String(kakaoId),
+          cache_date: today,
+          cache_type: 'daily_activation',
+          content: item.id,
+        }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        setDailyActId(item.id);
+        useAppStore.getState().setEquippedTalisman(item);
+        showToast?.(`${item.emoji} ${item.name} 오늘 발동! 재생성하면 별숨에 반영돼요 ✦`, 'success');
+      }
+    } catch {
+      showToast?.('처리 중 오류가 발생했어요', 'error');
     }
   }
 
