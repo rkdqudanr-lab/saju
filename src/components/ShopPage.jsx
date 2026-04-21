@@ -11,8 +11,8 @@ import { spendBP } from '../utils/gamificationLogic.js';
 
 const CAT_MAP_REVERSE = { theme: '테마', avatar: '아바타', special_reading: '특별 상담', effect: '이펙트' };
 
-const CATEGORIES = ['전체', '테마', '아바타', '특별 상담', '부적', '보관함'];
-const CAT_MAP = { '테마': 'theme', '아바타': 'avatar', '특별 상담': 'special_reading', '부적': 'talisman', '이펙트': 'effect' };
+const CATEGORIES = ['전체', '테마', '아바타', '특별 상담', '이펙트', '보관함'];
+const CAT_MAP = { '테마': 'theme', '아바타': 'avatar', '특별 상담': 'special_reading', '이펙트': 'effect' };
 
 const RARITY_LABEL = { common: '일반', rare: '레어', legendary: '레전더리' };
 const RARITY_COLOR = { common: 'var(--t4)', rare: '#7B9EC4', legendary: '#E8B048' };
@@ -148,17 +148,17 @@ function ItemCard({ item, owned, onBuy }) {
       {/* 가격 & 버튼 */}
       {owned ? (
         <button
-          onClick={() => item.category === 'talisman' ? onBuy(item) : undefined}
+          onClick={() => (item.category === 'theme' || item.category === 'avatar' || item.category === 'effect') ? onBuy(item) : undefined}
           style={{
             marginTop: 4, padding: '9px',
             textAlign: 'center', fontSize: 'var(--xs)',
             width: '100%',
-            color: item.category === 'talisman' ? 'var(--gold)' : 'var(--t4)',
-            fontWeight: item.category === 'talisman' ? 700 : 400,
-            cursor: item.category === 'talisman' ? 'pointer' : 'default',
-            border: item.category === 'talisman' ? '1px solid var(--acc)' : '1px solid transparent',
+            color: (item.category === 'theme' || item.category === 'avatar' || item.category === 'effect') ? 'var(--gold)' : 'var(--t4)',
+            fontWeight: (item.category === 'theme' || item.category === 'avatar' || item.category === 'effect') ? 700 : 400,
+            cursor: (item.category === 'theme' || item.category === 'avatar' || item.category === 'effect') ? 'pointer' : 'default',
+            border: (item.category === 'theme' || item.category === 'avatar' || item.category === 'effect') ? '1px solid var(--acc)' : '1px solid transparent',
             borderRadius: 'var(--r1)',
-            background: item.category === 'talisman'
+            background: (item.category === 'theme' || item.category === 'avatar' || item.category === 'effect')
               ? (item.is_equipped ? 'rgba(232,176,72,0.2)' : 'var(--goldf)')
               : 'transparent',
             fontFamily: 'var(--ff)',
@@ -166,7 +166,7 @@ function ItemCard({ item, owned, onBuy }) {
             transition: 'all 0.2s ease',
           }}
         >
-          {item.category === 'talisman'
+          {(item.category === 'theme' || item.category === 'avatar' || item.category === 'effect')
             ? (item.is_equipped ? '✦ 장착 중 (해제)' : '장착하기')
             : '✦ 보유 중'}
         </button>
@@ -202,7 +202,7 @@ export default function ShopPage({ showToast }) {
   const [confirmItem, setConfirmItem] = useState(null);
   const [buying, setBuying] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [equippedId, setEquippedId] = useState(null);
+  const [equippedIds, setEquippedIds] = useState({ theme: null, avatar: null, effect: null });
 
   const kakaoId = user?.kakaoId || user?.id;
 
@@ -223,19 +223,26 @@ export default function ShopPage({ showToast }) {
       ]);
 
       const allItems = itemsRes.data || [];
-      setItems(allItems);
+      const userInv = invRes.data || [];
+      setItems(allItems.filter(i => i.category !== 'talisman')); // 부적 제거
       setCurrentBP(bpRes.data?.current_bp ?? 0);
-      setOwnedIds(new Set((invRes.data || []).map(r => r.item_id)));
+      setOwnedIds(new Set(userInv.map(r => r.item_id)));
 
-      // 장착 중인 부적 감지 — category 기준으로 찾기
-      const talismanItemIds = new Set(allItems.filter(i => i.category === 'talisman').map(i => i.id));
-      const equippedInv = (invRes.data || []).find(r => r.is_equipped && talismanItemIds.has(r.item_id));
-      const equippedItemId = equippedInv?.item_id || null;
-      setEquippedId(equippedItemId);
-      // Zustand store에도 동기화 (LandingPage·useConsultation에서 읽음)
-      useAppStore.getState().setEquippedTalisman(
-        equippedItemId ? (allItems.find(i => i.id === equippedItemId) || null) : null
-      );
+      // 장착 중인 아이템 감지 (카테고리별로 1개씩)
+      const equippedMap = { theme: null, avatar: null, effect: null };
+      const equippedItemsFromDB = userInv.filter(r => r.is_equipped).map(r => r.item_id);
+      for (const eid of equippedItemsFromDB) {
+        const itemObj = allItems.find(i => i.id === eid);
+        if (itemObj && equippedMap[itemObj.category] === null) {
+          equippedMap[itemObj.category] = eid;
+        }
+      }
+      setEquippedIds(equippedMap);
+      
+      // Zustand Store 초기화 연동
+      const store = useAppStore.getState();
+      store.setEquippedTheme?.(allItems.find(i => i.id === equippedMap.theme) || null);
+      store.setEquippedAvatar?.(allItems.find(i => i.id === equippedMap.avatar) || null);
     } catch {
       showToast?.('숍 정보를 불러오지 못했어요', 'error');
     } finally {
@@ -279,56 +286,17 @@ export default function ShopPage({ showToast }) {
     }
   }
 
-  // 가이드용 랜덤 행운 부적 목록
-  const GACHA_CHARMS = [
-    { id: 'talisman_1', category: 'talisman', name: '재입고 금두꺼비', emoji: '🐸', description: '오늘의 재물운 폭발 부적', bp_cost: 15, rarity: 'rare' },
-    { id: 'talisman_2', category: 'talisman', name: '은하수 타로카드', emoji: '🌌', description: '생각지도 못한 인연을 끌어당깁니다', bp_cost: 15, rarity: 'legendary' },
-    { id: 'talisman_3', category: 'talisman', name: '만사형통 부적', emoji: '🧧', description: '모든 일이 막힘 없이 스르륵 풀려요', bp_cost: 15, rarity: 'common' },
-  ];
-
-  async function handleGacha() {
-    if (!kakaoId) { showToast?.('로그인 후 이용 가능해요', 'info'); return; }
-    setBuying(true);
+  async function handleEquipItem(item) {
+    if (!kakaoId) return;
+    const cat = item.category; // 'theme', 'avatar', 'effect'
+    const isEquipping = equippedIds[cat] !== item.id;
     try {
       const client = getAuthenticatedClient(kakaoId);
-      const { ok, newBP } = await spendBP(client, kakaoId, 15, `GACHA_PULL_${Date.now()}`, '행운 부적 가챠');
-      if (!ok) {
-        showToast?.('BP가 부족해요', 'error');
-        setBuying(false);
-        return;
-      }
       
-      const wonItem = GACHA_CHARMS[Math.floor(Math.random() * GACHA_CHARMS.length)];
-
-      await client.from('user_shop_inventory').insert({
-        kakao_id: String(kakaoId),
-        item_id: wonItem.id, // Supabase에 없어도 외래키가 없으면 저장 가설
-        is_equipped: false,
-      });
-
-      setCurrentBP(newBP ?? currentBP - 15);
-      setOwnedIds(prev => new Set([...prev, wonItem.id]));
-      showToast?.(`🎉 [${wonItem.name}] 부적 획득 성공! ✦`, 'success');
-    } catch {
-      showToast?.('뽑기에 실패했어요. 다시 시도해봐요.', 'error');
-    } finally {
-      setBuying(false);
-    }
-  }
-
-  async function handleEquipTalisman(item) {
-    if (!kakaoId || item.category !== 'talisman') return;
-    try {
-      const client = getAuthenticatedClient(kakaoId);
-      // 부적 장착/해제 토글
-      const isEquipping = equippedId !== item.id;
-      
-      // 부적 아이템 ID 목록 (items state 기준)
-      const talismanItemIds = items.filter(i => i.category === 'talisman').map(i => i.id);
+      const categoryItemIds = items.filter(i => i.category === cat).map(i => i.id);
 
       if (isEquipping) {
-        // 기존 장착된 다른 부적 해제 (category 기반 ID 목록 사용)
-        const othersToUnequip = talismanItemIds.filter(id => id !== item.id);
+        const othersToUnequip = categoryItemIds.filter(id => id !== item.id);
         if (othersToUnequip.length > 0) {
           await client
             .from('user_shop_inventory')
@@ -336,42 +304,40 @@ export default function ShopPage({ showToast }) {
             .eq('kakao_id', String(kakaoId))
             .in('item_id', othersToUnequip);
         }
-        // 새로 장착
         await client
           .from('user_shop_inventory')
           .update({ is_equipped: true })
           .eq('kakao_id', String(kakaoId))
           .eq('item_id', item.id);
 
-        setEquippedId(item.id);
-        useAppStore.getState().setEquippedTalisman(item);
-        showToast?.(`${item.name} 장착 완료! 메인 화면에서 확인해보세요 ✦`, 'success');
+        setEquippedIds(prev => ({ ...prev, [cat]: item.id }));
+        if (cat === 'theme') useAppStore.getState().setEquippedTheme(item);
+        if (cat === 'avatar') useAppStore.getState().setEquippedAvatar(item);
+        showToast?.(`${item.name} 장착 완료! ✦`, 'success');
       } else {
-        // 장착 해제
         await client
           .from('user_shop_inventory')
           .update({ is_equipped: false })
           .eq('kakao_id', String(kakaoId))
           .eq('item_id', item.id);
 
-        setEquippedId(null);
-        useAppStore.getState().setEquippedTalisman(null);
+        setEquippedIds(prev => ({ ...prev, [cat]: null }));
+        if (cat === 'theme') useAppStore.getState().setEquippedTheme(null);
+        if (cat === 'avatar') useAppStore.getState().setEquippedAvatar(null);
         showToast?.(`${item.name} 장착을 해제했어요.`, 'success');
       }
     } catch {
-      showToast?.('부적 장착 상태 변경에 실패했어요.', 'error');
+      showToast?.('장착 상태 변경에 실패했어요.', 'error');
     }
   }
 
   const filtered = category === '전체'
-    ? items.filter(i => i.category !== 'talisman')
+    ? items.filter(i => i.category !== 'special_reading')
     : category === '보관함'
       ? Array.from(ownedIds)
-          .map(id => items.find(i => i.id === id) || GACHA_CHARMS.find(c => c.id === id))
+          .map(id => items.find(i => i.id === id))
           .filter(Boolean)
-      : category === '부적'
-        ? [] // 부적 탭은 뽑기 UI만
-        : items.filter(i => i.category === CAT_MAP[category]);
+      : items.filter(i => i.category === CAT_MAP[category]);
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
@@ -442,58 +408,6 @@ export default function ShopPage({ showToast }) {
             }} />
             불러오는 중...
           </div>
-        ) : category === '부적' ? (
-          <div style={{
-            borderRadius: 'var(--r2)', overflow: 'hidden',
-            background: 'linear-gradient(135deg, #1a1040 0%, #0d0b20 60%, #1a0a2e 100%)',
-            border: '1px solid rgba(232,176,72,.35)',
-            position: 'relative',
-          }}>
-            {/* 배경 별빛 */}
-            {[...Array(6)].map((_, i) => (
-              <div key={i} style={{
-                position: 'absolute',
-                top: `${15 + (i * 15) % 70}%`,
-                left: `${8 + (i * 19) % 85}%`,
-                width: 3, height: 3, borderRadius: '50%',
-                background: 'rgba(232,176,72,.5)',
-                animation: `floatGently ${2 + i % 2}s ease infinite ${i * 0.4}s`,
-              }} />
-            ))}
-            <div style={{ position: 'relative', padding: '28px 20px', textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 10, animation: 'floatGently 3s ease infinite' }}>🌌</div>
-              <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: '#fff', marginBottom: 6 }}>별숨 가챠 뽑기</div>
-              <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.6)', marginBottom: 6, lineHeight: 1.6 }}>
-                조각 · 희귀 · 전설 등급의 아이템을 뽑아<br />수집하고 합성해요
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 18, fontSize: '11px' }}>
-                <span style={{ color: '#9CA3AF' }}>조각 70%</span>
-                <span style={{ color: 'rgba(255,255,255,.3)' }}>·</span>
-                <span style={{ color: '#7B9EC4' }}>희귀 25%</span>
-                <span style={{ color: 'rgba(255,255,255,.3)' }}>·</span>
-                <span style={{ color: '#E8B048' }}>전설 5%</span>
-              </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.4)', padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(255,255,255,.1)' }}>
-                  1회 · 10 BP
-                </div>
-                <div style={{ fontSize: '11px', color: 'rgba(232,176,72,.7)', padding: '6px 12px', borderRadius: 20, border: '1px solid rgba(232,176,72,.3)' }}>
-                  10연 · 90 BP · 희귀 보장
-                </div>
-              </div>
-              <button
-                onClick={() => setStep(40)}
-                style={{
-                  marginTop: 18, padding: '13px 32px',
-                  background: 'var(--goldf)', border: '1.5px solid var(--acc)',
-                  borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
-                  fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
-                }}
-              >
-                ✦ 뽑기 하러 가기
-              </button>
-            </div>
-          </div>
         ) : category === '보관함' && filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🗃️</div>
@@ -513,9 +427,9 @@ export default function ShopPage({ showToast }) {
             {filtered.map(item => (
               <ItemCard
                 key={item.id}
-                item={{ ...item, is_equipped: equippedId === item.id }}
+                item={{ ...item, is_equipped: equippedIds[item.category] === item.id }}
                 owned={ownedIds.has(item.id)}
-                onBuy={ownedIds.has(item.id) && item.category === 'talisman' ? () => handleEquipTalisman(item) : setConfirmItem}
+                onBuy={ownedIds.has(item.id) && (item.category === 'theme' || item.category === 'avatar' || item.category === 'effect') ? () => handleEquipItem(item) : setConfirmItem}
               />
             ))}
           </div>

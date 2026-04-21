@@ -324,13 +324,13 @@ function ItemPreview({ pool, gradeConfig, gradeOrder, probTable }) {
         {previewBodies.map(item => (
           <div key={item.bodyId} style={{
             background: 'var(--bg2)', border: `1px solid ${cfg.border}`,
-            borderRadius: 12, padding: '10px 6px', textAlign: 'center',
+            borderRadius: 12, padding: '16px 8px', textAlign: 'center',
           }}>
-            <div style={{ fontSize: 22, marginBottom: 4 }}>{item.emoji}</div>
-            <div style={{ fontSize: '10px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 3 }}>
+            <div style={{ fontSize: 24, marginBottom: 6 }}>{item.emoji}</div>
+            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 4, wordBreak: 'keep-all' }}>
               {item.bodyName}
             </div>
-            <div style={{ fontSize: '9px', color: cfg.color }}>{item.effectLabel}</div>
+            <div style={{ fontSize: '10px', color: cfg.color, wordBreak: 'keep-all' }}>{item.effectLabel}</div>
           </div>
         ))}
       </div>
@@ -478,6 +478,7 @@ export default function GachaPage({ showToast }) {
               color: tab === t.key ? 'var(--gold)' : 'var(--t3)',
               fontWeight: tab === t.key ? 700 : 400,
               fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+              whiteSpace: 'nowrap', wordBreak: 'keep-all',
               transition: 'all .18s',
               outline: tab === t.key ? '1px solid var(--acc)' : 'none',
             }}

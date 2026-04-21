@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { loadHistory, deleteHistory } from "../utils/history.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
+import { useAppStore } from "../store/useAppStore.js";
 import Icon from "./Icon.jsx";
 
 // ═══════════════════════════════════════════════════════════
@@ -55,6 +56,8 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
     k === 'myinfo' ? 'growth' : k === 'fortune' ? 'growth' : k === 'special' ? 'consult' : k
   );
   const toggleGroup = (key) => setOpenGroups(p => ({ ...p, [key]: !p[key] }));
+
+  const equippedAvatar = useAppStore(s => s.equippedAvatar);
 
   // 300ms 디바운스 처리
   const handleSearchChange = useCallback((val) => {
@@ -131,9 +134,11 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
           <div className="sidebar-logo">✦ byeolsoom</div>
           {user ? (
             <div className="sidebar-user" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {user.profileImage
-                ? <img className="sidebar-av" src={user.profileImage} alt="프로필" />
-                : <div className="sidebar-av-ph"><Icon name="user-circle" size={28} color="var(--gold)" /></div>}
+              {equippedAvatar
+                ? <div className="sidebar-av-ph" style={{ fontSize: '1.4rem' }}>{equippedAvatar.emoji}</div>
+                : user.profileImage
+                  ? <img className="sidebar-av" src={user.profileImage} alt="프로필" />
+                  : <div className="sidebar-av-ph"><Icon name="user-circle" size={28} color="var(--gold)" /></div>}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="sidebar-uname">{user.nickname}님</div>
                 <div className="sidebar-usub">별숨과 함께하는 중</div>

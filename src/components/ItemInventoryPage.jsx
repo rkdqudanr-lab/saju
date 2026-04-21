@@ -415,30 +415,13 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse }) {
       )}
 
       {/* 액션 버튼 */}
-      {isTalisman && (
+      {isGachaItem && (
         <button
           onClick={() => onToggleEquip(item)}
           disabled={toggling}
           style={{
             marginTop: 'auto', padding: '8px',
-            background: item.is_equipped ? 'rgba(232,176,72,.15)' : 'var(--goldf)',
-            border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)',
-            color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)',
-            fontFamily: 'var(--ff)', cursor: toggling ? 'not-allowed' : 'pointer',
-            opacity: toggling ? 0.6 : 1, width: '100%', transition: 'all .2s ease',
-          }}
-        >
-          {toggling ? '처리 중...' : item.is_equipped ? '✦ 장착 해제' : '장착하기'}
-        </button>
-      )}
-
-      {!isTalisman && (
-        <button
-          onClick={() => onToggleEquip(item)}
-          disabled={toggling}
-          style={{
-            marginTop: 'auto', padding: '8px',
-            background: item.is_equipped ? 'rgba(126,200,164,.15)' : (cfg?.bg || 'var(--bg3)'),
+            background: item.is_equipped ? 'rgba(232,176,72,.15)' : (cfg?.bg || 'var(--bg3)'),
             border: `1.5px solid ${item.is_equipped ? 'var(--acc)' : (cfg?.border || 'var(--line)')}`,
             borderRadius: 'var(--r1)',
             color: item.is_equipped ? 'var(--gold)' : (cfg?.color || 'var(--t3)'),
@@ -446,7 +429,21 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse }) {
             cursor: toggling ? 'not-allowed' : 'pointer', width: '100%', transition: 'all .15s',
           }}
         >
-          {toggling ? '처리 중...' : item.is_equipped ? '✦ 장착 해제' : '장착하기'}
+          {toggling ? '처리 중...' : item.is_equipped ? '✦ 메인 기운 해제' : '메인 기운 장착'}
+        </button>
+      )}
+
+      {!isGachaItem && (
+        <button
+          onClick={() => onUse(item)}
+          style={{
+            marginTop: 'auto', padding: '8px',
+            background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+            borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
+            fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', width: '100%',
+          }}
+        >
+          ✦ 사용하기
         </button>
       )}
     </div>
@@ -466,7 +463,7 @@ export default function ItemInventoryPage({ showToast, callApi }) {
   const [showSynth, setShowSynth] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
 
-  const CATEGORIES = ['전체', '🌌 우주', '☯️ 사주', '부적', '기타'];
+  const CATEGORIES = ['전체', '🌌 우주', '☯️ 사주', '기타'];
 
   const loadInventory = useCallback(async () => {
     if (!kakaoId) return;
@@ -506,43 +503,34 @@ export default function ItemInventoryPage({ showToast, callApi }) {
     setToggling(item.id);
     try {
       const client = getAuthenticatedClient(kakaoId);
-      const isSaju = String(item.id).startsWith('saju_');
       const isGachaItem = !!item.grade;
       const newEquipped = !item.is_equipped;
 
+      if (!isGachaItem) {
+        showToast?.('이 아이템은 장착할 수 없어요.', 'error');
+        return;
+      }
+
       if (newEquipped) {
-        // 우주 1슬롯, 사주 1슬롯 분리 장착
-        if (isGachaItem || item.category === 'talisman') {
-          const targetsToUnequip = items.filter(i => {
-            if (!i.is_equipped) return false;
-            if (item.category === 'talisman' && i.category === 'talisman') return true;
-            if (isGachaItem && !!i.grade && String(i.id).startsWith('saju_') === isSaju) return true;
-            return false;
-          });
-          
-          for (const t of targetsToUnequip) {
-            await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', t.id);
-          }
+        // 단일 메인 기운 슬롯: 다른 장착된 가챠 아이템 전부 해제
+        const targetsToUnequip = items.filter(i => i.is_equipped && !!i.grade);
+        
+        for (const t of targetsToUnequip) {
+          await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', t.id);
         }
         
         await client.from('user_shop_inventory').update({ is_equipped: true }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
-        
-        if (item.category === 'talisman') {
-           useAppStore.getState().setEquippedTalisman(item);
-        }
-        showToast?.(`${item.name} 장착됐어요 ✦`, 'success');
+        useAppStore.getState().setEquippedSajuItem(item);
+        showToast?.(`[${item.name}] 기운을 장착했어요! ✦`, 'success');
       } else {
         await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
-        if (item.category === 'talisman') {
-           useAppStore.getState().setEquippedTalisman(null);
-        }
-        showToast?.('착용을 해제했어요', 'info');
+        useAppStore.getState().setEquippedSajuItem(null);
+        showToast?.('기운 착용을 해제했어요.', 'info');
       }
       setItems(prev => prev.map(i => {
         if (i.id === item.id) return { ...i, is_equipped: newEquipped };
-        if (newEquipped && i.is_equipped) {
-           if (item.category === 'talisman' && i.category === 'talisman') return { ...i, is_equipped: false };
-           if (isGachaItem && !!i.grade && String(i.id).startsWith('saju_') === isSaju) return { ...i, is_equipped: false };
+        if (newEquipped && i.is_equipped && !!i.grade) {
+           return { ...i, is_equipped: false }; // 다른 가챠템 해제 반영
         }
         return i;
       }));
@@ -561,11 +549,10 @@ export default function ItemInventoryPage({ showToast, callApi }) {
     if (category === '전체')    return items;
     if (category === '🌌 우주') return items.filter(i => GRADE_ORDER.includes(i.grade));
     if (category === '☯️ 사주') return items.filter(i => SAJU_GRADE_ORDER.includes(i.grade));
-    if (category === '부적')    return items.filter(i => i.category === 'talisman');
     return shopItems; // 기타
   })();
 
-  const equippedTalisman = items.find(i => i.category === 'talisman' && i.is_equipped);
+  const equippedSajuItem = useAppStore(s => s.equippedSajuItem);
 
   // 합성 가능 여부 (우주 + 사주 통합)
   const gradeCountMap = {};
@@ -588,9 +575,9 @@ export default function ItemInventoryPage({ showToast, callApi }) {
           </div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
             보유 {items.length}개
-            {equippedTalisman && (
+            {equippedSajuItem && (
               <span style={{ marginLeft: 8, color: 'var(--gold)', fontWeight: 600 }}>
-                · {equippedTalisman.emoji} {equippedTalisman.name} 장착 중
+                · {equippedSajuItem.emoji} {equippedSajuItem.name}의 기운
               </span>
             )}
           </div>

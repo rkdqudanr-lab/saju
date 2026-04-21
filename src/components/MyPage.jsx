@@ -144,6 +144,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
     setStep,
     kakaoLogout,
     setShowUpgradeModal,
+    equippedAvatar,
   } = useAppStore();
   const { prefs, togglePref, supported: pushSupported, permissionState, loading: notifLoading } = usePushNotification();
 
@@ -167,9 +168,11 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
       {/* ── 헤더 ── */}
       <div style={{ padding: '28px 20px 20px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-          {user?.profileImage
-            ? <img src={user.profileImage} alt="프로필" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} />
-            : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: 'var(--gold)', border: '2px solid var(--line)' }}>✦</div>
+          {equippedAvatar
+            ? <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', border: '2px solid var(--gold)', boxShadow: '0 0 10px rgba(232,176,72,.2)' }}>{equippedAvatar.emoji}</div>
+            : user?.profileImage
+              ? <img src={user.profileImage} alt="프로필" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} />
+              : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: 'var(--gold)', border: '2px solid var(--line)' }}>✦</div>
           }
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 3 }}>

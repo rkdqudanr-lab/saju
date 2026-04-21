@@ -123,6 +123,8 @@ export default function App() {
   // ── Zustand State (App level) ──
   const step = useAppStore((s) => s.step);
   const setStep = useAppStore((s) => s.setStep);
+  const equippedTheme = useAppStore((s) => s.equippedTheme);
+  const equippedAvatar = useAppStore((s) => s.equippedAvatar);
 
   // showToast를 Zustand store에 1회 주입 (Context 없이 컴포넌트에서 직접 사용 가능)
   const _storeSetAuthFns    = useAppStore((s) => s.setAuthFns);
@@ -326,6 +328,32 @@ export default function App() {
 
   // ── 테마 ──
   useEffect(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }, [isDark]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (equippedTheme?.effect) {
+      // 테마 아이템의 effect 필드에 정의된 CSS 변수 적용
+      // 구조 예시: { "--acc": "#FFCF70", "--gold": "#E8B048", "--bg1": "#0d0b14" }
+      try {
+        const vars = typeof equippedTheme.effect === 'string' ? JSON.parse(equippedTheme.effect) : equippedTheme.effect;
+        Object.entries(vars).forEach(([key, value]) => {
+          root.style.setProperty(key, value);
+        });
+      } catch (e) {
+        console.error('테마 파싱 에러:', e);
+      }
+    } else {
+      // 장착 해제 시 인라인 속성 제거 (index.css 원본 복구)
+      root.style.removeProperty('--acc');
+      root.style.removeProperty('--gold');
+      root.style.removeProperty('--goldf');
+      root.style.removeProperty('--golda');
+      root.style.removeProperty('--bg1');
+      root.style.removeProperty('--bg2');
+      root.style.removeProperty('--bg3');
+    }
+  }, [equippedTheme]);
+
   const toggleDark = useCallback(() => {
     saveSettings({ theme: isDark ? 'light' : 'dark' });
   }, [isDark, saveSettings]);
@@ -516,7 +544,13 @@ export default function App() {
 
       {step >= 1 && user && (
         <div className="user-chip" onClick={() => setShowProfileModal(true)} title="내 정보 수정" style={{ cursor: 'pointer' }}>
-          {user.profileImage ? <img src={user.profileImage} alt="프로필" /> : <span style={{ fontSize: '1rem' }}>🌙</span>}
+          {equippedAvatar ? (
+            <div style={{ fontSize: '1.2rem', lineHeight: 1 }}>{equippedAvatar.emoji}</div>
+          ) : user.profileImage ? (
+            <img src={user.profileImage} alt="프로필" />
+          ) : (
+            <span style={{ fontSize: '1rem' }}>🌙</span>
+          )}
           <span>{user.nickname}</span>
         </div>
       )}

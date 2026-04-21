@@ -115,6 +115,9 @@ export default function LandingPage({
   const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 }, missions = [] } = useGamCtx();
   const equippedTalisman = useAppStore((s) => s.equippedTalisman);
   const setEquippedTalisman = useAppStore((s) => s.setEquippedTalisman);
+  const setEquippedTheme = useAppStore((s) => s.setEquippedTheme);
+  const setEquippedAvatar = useAppStore((s) => s.setEquippedAvatar);
+  const setEquippedSajuItem = useAppStore((s) => s.setEquippedSajuItem);
   const [keepLogin, setKeepLoginState] = useState(getKeepLogin());
   const nightMode = isNightMode();
   const nearbyJeolgi = getNearbyJeolgi();
@@ -140,10 +143,22 @@ export default function LandingPage({
         }).filter(Boolean);
         
         useAppStore.getState().setEquippedItems?.(equipped);
+        // 부적(하위호환 유지용)
         const talisman = equipped.find(r => r.category === 'talisman');
         setEquippedTalisman(talisman || null);
+        
+        // 커스텀 장착 파츠
+        const theme = equipped.find(r => r.category === 'theme');
+        setEquippedTheme(theme || null);
+        
+        const avatar = equipped.find(r => r.category === 'avatar');
+        setEquippedAvatar(avatar || null);
+        
+        // 인벤토리 별숨 뽑기(우주/사주) 기운 장착 (category가 등급을 의미하거나, grade 속성 보유)
+        const gachaItem = equipped.find(r => ['space', 'saju'].includes(r.system) || r.grade);
+        setEquippedSajuItem(gachaItem || null);
       });
-  }, [user]);
+  }, [user, setEquippedTalisman, setEquippedTheme, setEquippedAvatar, setEquippedSajuItem]);
 
   // 7일 운세 점수 히스토리 로드
   useEffect(() => {
