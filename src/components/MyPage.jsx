@@ -354,7 +354,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                   </div>
                 </div>
                 <div style={{ marginTop: 8, fontSize: '11px', color: 'var(--t4)' }}>
-                  포인트는 최대 100 BP까지 보유할 수 있어요. 꾸준히 미션을 완료해 쌓아두세요.
+                  꾸준히 미션을 완료하고 BP를 쌓아두세요.
                 </div>
               </div>
             ),
