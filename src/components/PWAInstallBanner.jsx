@@ -47,7 +47,7 @@ export default function PWAInstallBanner() {
     const installHandler = () => {
       setShow(false);
       localStorage.setItem('byeolsoom_pwa_dismissed', 'permanent');
-      showToast?.('앱 설치 완료! 다음 접속 시 +20 BM이 적립돼요 ✦', 'success');
+      showToast?.('앱 설치 완료! 다음 접속 시 +20 BP가 적립돼요 ✦', 'success');
     };
     window.addEventListener('appinstalled', installHandler);
 
@@ -63,7 +63,7 @@ export default function PWAInstallBanner() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       localStorage.setItem('byeolsoom_pwa_dismissed', 'permanent');
-      showToast?.('설치해줘서 고마워요! +20 BM 적립 예정 ✦', 'success');
+      showToast?.('설치해줘서 고마워요! +20 BP 적립 예정 ✦', 'success');
     }
     setShow(false);
     setDeferredPrompt(null);
@@ -121,7 +121,7 @@ export default function PWAInstallBanner() {
           fontWeight: 700,
           marginBottom: 10,
         }}>
-          ✦ 설치 완료 시 +20 BM 지급
+          ✦ 설치 완료 시 +20 BP 지급
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button

@@ -153,7 +153,7 @@ export default function SynergyDashboard({
               }}
             >
               <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>
-                획득한 BM
+                획득한 BP
               </div>
               <div
                 style={{
@@ -182,7 +182,7 @@ export default function SynergyDashboard({
             <div style={{ fontWeight: '600', marginBottom: '8px' }}>✦ 시너지 미션 안내</div>
             <ul style={{ margin: '0', paddingLeft: '20px' }}>
               <li>매일 새로운 미션이 추가돼요</li>
-              <li>미션을 완료하면 쌍방 모두에게 BM이 지급돼요</li>
+              <li>미션을 완료하면 쌍방 모두에게 BP가 지급돼요</li>
               <li>7일 내에 완료하지 않으면 미션이 만료돼요</li>
             </ul>
           </div>

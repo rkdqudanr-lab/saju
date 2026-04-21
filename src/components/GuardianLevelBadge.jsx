@@ -101,7 +101,7 @@ export default function GuardianLevelBadge({
           marginTop: '8px',
           textAlign: 'center',
         }}>
-          최고 레벨 달성! 주간 보너스 100 BM 획득
+          최고 레벨 달성! 주간 보너스 100 BP 획득
         </div>
       )}
     </div>

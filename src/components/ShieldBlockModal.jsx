@@ -123,14 +123,14 @@ export default function ShieldBlockModal({
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>보유 BM</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>보유 BP</div>
               <div style={{ fontSize: 'var(--xl)', fontWeight: 700, color: 'var(--lav)' }}>
                 ✦ {currentBp}
               </div>
             </div>
             <div style={{ color: 'var(--t4)', fontSize: 'var(--sm)' }}>→</div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>정화에 필요한 BM</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>정화에 필요한 BP</div>
               <div style={{ fontSize: 'var(--xl)', fontWeight: 700, color: 'var(--gold)' }}>
                 ✦ {cost}
               </div>
@@ -148,7 +148,7 @@ export default function ShieldBlockModal({
                 textAlign: 'center',
               }}
             >
-              BM이 {bpShortage}개 더 있으면 정화할 수 있어요
+              BP가 {bpShortage}개 더 있으면 정화할 수 있어요
             </div>
           )}
         </div>
@@ -177,7 +177,7 @@ export default function ShieldBlockModal({
               </div>
             ) : (
               <div>
-                <strong>✦ 미션을 완료하면 BM이 쌓여요</strong>
+                <strong>✦ 미션을 완료하면 BP가 쌓여요</strong>
                 <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t2)' }}>
                   다음 무료 충전까지 {freeRechargeTimeRemaining || '조금'} 남았어요.
                   오늘의 미션을 완료하거나 내일 다시 시도해보세요.

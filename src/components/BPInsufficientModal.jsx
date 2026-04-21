@@ -82,7 +82,7 @@ export default function BPInsufficientModal({
               margin: '0 0 8px 0',
             }}
           >
-            BM이 부족해요
+            BP가 부족해요
           </h2>
           <p
             style={{
@@ -92,7 +92,7 @@ export default function BPInsufficientModal({
               lineHeight: 1.5,
             }}
           >
-            질문하기 위해서는 {requiredBp} BM이 필요합니다
+            질문하기 위해서는 {requiredBp} BP이 필요합니다
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export default function BPInsufficientModal({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <div>
-              <div style={{ color: '#999', marginBottom: '4px' }}>현재 BM</div>
+              <div style={{ color: '#999', marginBottom: '4px' }}>현재 BP</div>
               <div style={{ fontSize: '18px', fontWeight: '700', color: '#4A8EC4' }}>
                 {currentBp}
               </div>
@@ -117,7 +117,7 @@ export default function BPInsufficientModal({
               →
             </div>
             <div>
-              <div style={{ color: '#999', marginBottom: '4px' }}>필요 BM</div>
+              <div style={{ color: '#999', marginBottom: '4px' }}>필요 BP</div>
               <div style={{ fontSize: '18px', fontWeight: '700', color: '#E05A3A' }}>
                 {requiredBp}
               </div>
@@ -149,10 +149,10 @@ export default function BPInsufficientModal({
               }}
             >
               <div style={{ fontSize: '12px', color: '#2D6B2D', fontWeight: '600', marginBottom: '4px' }}>
-                💚 무료 BM 충전 가능!
+                💚 무료 BP 충전 가능!
               </div>
               <div style={{ fontSize: '11px', color: '#4A7C4A', lineHeight: 1.4 }}>
-                레벨에 따라 {Math.ceil(shortage / 5)} 이상의 BM을 무료로 충전할 수 있어요.
+                레벨에 따라 {Math.ceil(shortage / 5)} 이상의 BP를 무료로 충전할 수 있어요.
               </div>
             </div>
           ) : (
@@ -187,7 +187,7 @@ export default function BPInsufficientModal({
               ◇ 미션 완료로 획득
             </div>
             <div style={{ fontSize: '11px', color: '#4A4A7C', lineHeight: 1.4 }}>
-              일일 미션을 완료하면 +10 BM을 획득할 수 있어요.
+              일일 미션을 완료하면 +10 BP을 획득할 수 있어요.
             </div>
           </div>
         </div>

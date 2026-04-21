@@ -181,9 +181,9 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
             fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700,
             marginBottom: 20,
           }}>
-            ⭐ {YEARLY_COST} BM 차감
+            ⭐ {YEARLY_COST} BP 차감
             <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', fontWeight: 400 }}>
-              (보유: {currentBp ?? 0} BM)
+              (보유: {currentBp ?? 0} BP)
             </span>
           </div>
 
@@ -210,7 +210,7 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
           )}
           {user?.id && currentBp < YEARLY_COST && (
             <p style={{ fontSize: 'var(--xs)', color: 'var(--rose)', marginTop: 10 }}>
-              BM이 부족해요. 미션을 완료하거나 출석 체크로 BM을 모아보세요.
+              BP가 부족해요. 미션을 완료하거나 출석 체크로 BP를 모아보세요.
             </p>
           )}
         </div>

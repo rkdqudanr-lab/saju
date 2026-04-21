@@ -104,7 +104,7 @@ export default function GamificationDashboard({
             }}
           >
             <div style={{ fontSize: '12px', color: '#999', marginBottom: '8px' }}>
-              현재 BM
+              현재 BP
             </div>
             <div
               style={{
@@ -130,7 +130,7 @@ export default function GamificationDashboard({
                 fontWeight: '600',
               }}
             >
-              무료 BM 충전 (+{freeRechargeAmount})
+              무료 BP 충전 (+{freeRechargeAmount})
             </button>
           </div>
 
@@ -401,7 +401,7 @@ export default function GamificationDashboard({
                 <strong>레벨:</strong> {currentLevelData?.label}
               </div>
               <div style={{ marginTop: '8px' }}>
-                <strong>무료 충전:</strong> +{freeRechargeAmount} BM (1회/일)
+                <strong>무료 충전:</strong> +{freeRechargeAmount} BP (1회/일)
               </div>
             </div>
           </div>

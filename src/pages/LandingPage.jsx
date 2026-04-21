@@ -316,7 +316,7 @@ export default function LandingPage({
                     </div>
                     {nextMilestone && (
                       <span style={{ fontSize: '11px', color: 'var(--t4)' }}>
-                        +{remaining}일 후 +100 BM 보너스
+                        +{remaining}일 후 +100 BP 보너스
                       </span>
                     )}
                     {!nextMilestone && (
@@ -681,12 +681,12 @@ export default function LandingPage({
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7, marginBottom: 18 }}>
               {(() => {
                 const s = gamificationState.loginStreak;
-                if (s === 7) return '✦ 7일 달성 보너스 +100 BM을 받았어요!';
-                if (s === 14) return '✦ 14일 달성 보너스 +100 BM을 받았어요!';
-                if (s === 21) return '✦ 21일 달성 보너스 +100 BM을 받았어요!';
+                if (s === 7) return '✦ 7일 달성 보너스 +100 BP을 받았어요!';
+                if (s === 14) return '✦ 14일 달성 보너스 +100 BP을 받았어요!';
+                if (s === 21) return '✦ 21일 달성 보너스 +100 BP을 받았어요!';
                 const next = s < 7 ? 7 : s < 14 ? 14 : s < 21 ? 21 : null;
                 return next
-                  ? `앞으로 ${next - s}일 더 출석하면 +100 BM 보너스를 받아요`
+                  ? `앞으로 ${next - s}일 더 출석하면 +100 BP 보너스를 받아요`
                   : `21일을 넘었어요! 대단한 출석왕이에요 🌟`;
               })()}
             </div>

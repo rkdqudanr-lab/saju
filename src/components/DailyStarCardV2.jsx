@@ -458,7 +458,7 @@ export default function DailyStarCardV2({
 
             {(!canBlockBadtime || currentBp < 20) && (
               <div className="dsc-bp-hint">
-                BM을 충전하거나 미션을 완료하면 액막이를 발동할 수 있습니다
+                BP를 충전하거나 미션을 완료하면 액막이를 발동할 수 있습니다
               </div>
             )}
           </div>

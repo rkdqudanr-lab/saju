@@ -289,7 +289,7 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
                 <span style={{ width: 10, height: 10, border: `2px solid ${accentColor}40`, borderTopColor: accentColor, borderRadius: '50%', animation: 'orbSpin .7s linear infinite', display: 'inline-block' }} />
                 뽑는 중...
               </span>
-            ) : <>✦ 1회 뽑기<br /><span style={{ fontSize: '11px', fontWeight: 400 }}>{cost1} BM</span></>}
+            ) : <>✦ 1회 뽑기<br /><span style={{ fontSize: '11px', fontWeight: 400 }}>{cost1} BP</span></>}
           </button>
           <button onClick={() => onPull(10)} disabled={!!pulling || !canAfford10} style={{
             flex: 1.4, padding: '12px 6px', borderRadius: 'var(--r1)',
@@ -309,7 +309,7 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
               <>
                 <span style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent)', animation: canAfford10 ? 'gacha-shine 2.5s ease infinite' : 'none' }} />
                 ✦ 10연 뽑기<br />
-                <span style={{ fontSize: '11px' }}>{cost10} BM</span>
+                <span style={{ fontSize: '11px' }}>{cost10} BP</span>
                 <span style={{ display: 'block', fontSize: '10px', color: guarantee10Label.color, marginTop: 2 }}>{guarantee10Label.text}</span>
               </>
             )}
@@ -518,12 +518,12 @@ function BuyModal({ item, currentBP, onConfirm, onClose, buying }) {
           <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>{item.name}</div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 12 }}>{item.description}</div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--goldf)', borderRadius: 20, border: '1px solid var(--acc)' }}>
-            <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--gold)' }}>{item.bp_cost} BM</span>
+            <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--gold)' }}>{item.bp_cost} BP</span>
           </div>
         </div>
         <div style={{ padding: '12px', background: 'var(--bg2)', borderRadius: 'var(--r1)', marginBottom: 16, textAlign: 'center', fontSize: 'var(--xs)', color: canAfford ? 'var(--t3)' : 'var(--rose)' }}>
-          현재 보유 BM: <strong style={{ color: canAfford ? 'var(--t1)' : 'var(--rose)' }}>{currentBP} BM</strong>
-          {!canAfford && <div style={{ marginTop: 4, color: 'var(--rose)' }}>BM이 {item.bp_cost - currentBP} 부족해요</div>}
+          현재 보유 BP: <strong style={{ color: canAfford ? 'var(--t1)' : 'var(--rose)' }}>{currentBP} BP</strong>
+          {!canAfford && <div style={{ marginTop: 4, color: 'var(--rose)' }}>BP가 {item.bp_cost - currentBP} 부족해요</div>}
         </div>
         <button onClick={onConfirm} disabled={!canAfford || buying} style={{
           width: '100%', padding: '13px', background: canAfford ? 'var(--goldf)' : 'var(--bg3)',
@@ -531,7 +531,7 @@ function BuyModal({ item, currentBP, onConfirm, onClose, buying }) {
           color: canAfford ? 'var(--gold)' : 'var(--t4)', fontWeight: 700, fontSize: 'var(--sm)',
           fontFamily: 'var(--ff)', cursor: canAfford ? 'pointer' : 'not-allowed', marginBottom: 8,
         }}>
-          {buying ? '구매 중...' : canAfford ? `✦ 구매하기 (${item.bp_cost} BM)` : 'BM 부족'}
+          {buying ? '구매 중...' : canAfford ? `✦ 구매하기 (${item.bp_cost} BP)` : 'BM 부족'}
         </button>
         <button onClick={onClose} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
           취소
@@ -608,12 +608,12 @@ export default function ShopPage({ showToast }) {
   async function doPullSpirit(count) {
     if (!kakaoId) { showToast?.('로그인 후 이용 가능해요', 'info'); return; }
     const cost = count === 1 ? SPIRIT_COST_1 : SPIRIT_COST_10;
-    if (currentBP < cost) { showToast?.(`BM이 부족해요 (필요: ${cost} BM)`, 'error'); return; }
+    if (currentBP < cost) { showToast?.(`BP가 부족해요 (필요: ${cost} BP)`, 'error'); return; }
     setPulling(count === 1 ? 'single' : '10');
     try {
       const client = getAuthenticatedClient(kakaoId);
       const { ok, newBP } = await spendBP(client, kakaoId, cost, `GACHA_SPIRIT_${spiritTab}_${count}_${Date.now()}`, `${spiritTab === 'saju' ? '사주' : '우주'} 기운 ${count}회`);
-      if (!ok) { showToast?.('BM이 부족해요', 'error'); return; }
+      if (!ok) { showToast?.('BP가 부족해요', 'error'); return; }
       const pulled = spiritTab === 'saju'
         ? (count === 1 ? [pullOneSaju()] : pull10Saju())
         : (count === 1 ? [pullOne()]     : pull10());
@@ -631,7 +631,7 @@ export default function ShopPage({ showToast }) {
   async function doPullShop(category, count) {
     if (!kakaoId) { showToast?.('로그인 후 이용 가능해요', 'info'); return; }
     const cost = count === 1 ? SHOP_COST_1 : SHOP_COST_10;
-    if (currentBP < cost) { showToast?.(`BM이 부족해요 (필요: ${cost} BM)`, 'error'); return; }
+    if (currentBP < cost) { showToast?.(`BP가 부족해요 (필요: ${cost} BP)`, 'error'); return; }
     const poolMap = { theme: THEME_POOL, avatar: AVATAR_POOL, effect: EFFECT_POOL };
     const pool = poolMap[category] || [];
     if (!pool.length) return;
@@ -923,7 +923,7 @@ export default function ShopPage({ showToast }) {
                       padding: '8px', width: '100%', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
                       borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
                       fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
-                    }}>{item.bp_cost} BM</button>
+                    }}>{item.bp_cost} BP</button>
                   </div>
                 ))}
               </div>
@@ -968,7 +968,7 @@ export default function ShopPage({ showToast }) {
 
       {/* BP 획득 안내 */}
       <div style={{ margin: '20px 20px 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', fontSize: '11px', color: 'var(--t4)', lineHeight: 1.7 }}>
-        <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 5 }}>✦ BM 획득 방법</div>
+        <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 5 }}>✦ BP 획득 방법</div>
         일일 출석 +5 · 미션 완료 +10 · 일기 작성 +5 · 앱 설치 +20 · 친구 공유 +3
       </div>
 

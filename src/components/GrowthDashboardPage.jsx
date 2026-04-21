@@ -262,7 +262,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
 
       {/* 활동 통계 */}
       <div style={{ padding: '12px 20px 0', display: 'flex', gap: 8 }}>
-        <ActivityCard icon="💎" label="보유 BM" value={currentBp} color="var(--gold)" />
+        <ActivityCard icon="💎" label="보유 BP" value={currentBp} color="var(--gold)" />
         <ActivityCard icon="✅" label="완료 미션" value={totalMissionsCompleted} color="#5FAD7A" />
         <ActivityCard icon="📓" label="오늘 미션" value={`${completedToday}/${safeMissions.length}`} color="#4A8EC4" />
       </div>
@@ -280,7 +280,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
             fontFamily: 'var(--ff)', cursor: 'pointer',
           }}
         >
-          ✦ 무료 BM 충전 (+{freeRecharge} BM) · 하루 1회
+          ✦ 무료 BP 충전 (+{freeRecharge} BP) · 하루 1회
         </button>
       </div>
 

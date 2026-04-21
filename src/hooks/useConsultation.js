@@ -8,7 +8,7 @@ import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { parseHoroscopeForGamification } from '../utils/missionGenerator.js';
 import { spendBP as spendBPUtil } from '../utils/gamificationLogic.js';
 
-const BM_COST_PER_ASK = 10; // BM cost per question (베타 기간)
+const BM_COST_PER_ASK = 10; // BP cost per question (베타 기간)
 
 // 베타 기간 종료 시 false로 변경 (또는 서버 설정으로 대체)
 const IS_BETA = true;
@@ -415,18 +415,18 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   const askClaude = useCallback(async () => {
     if (!selQs.length) return;
 
-    // BM 차감 (로그인 사용자: 질문 개수 × 10 BM)
+    // BP 차감 (로그인 사용자: 질문 개수 × 10 BP)
     if (user?.id) {
       const totalCost = selQs.length * BM_COST_PER_ASK;
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < totalCost) {
-        if (showToast) showToast(`BM이 부족해요 (필요: ${totalCost} BM, 보유: ${currentBm} BM)`, 'error');
+        if (showToast) showToast(`BP가 부족해요 (필요: ${totalCost} BP, 보유: ${currentBm} BP)`, 'error');
         return;
       }
       const authClient = getAuthenticatedClient(user.id);
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, totalCost, 'ASK_CLAUDE');
       if (!ok) {
-        if (showToast) showToast(`BM이 부족해요`, 'error');
+        if (showToast) showToast(`BP가 부족해요`, 'error');
         return;
       }
       const cur = useAppStore.getState().gamificationState || {};
@@ -461,17 +461,17 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (typeof window.gtag === 'function') window.gtag('event', 'ask_quick', { question: q.slice(0, 30) });
     if (!formOk) { setSelQs([q.trim()]); setStep(1); return; }
 
-    // BM 차감 (로그인 사용자만)
+    // BP 차감 (로그인 사용자만)
     if (user?.id) {
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
-        if (showToast) showToast(`BM이 부족해요 (필요: ${BM_COST_PER_ASK} BM, 보유: ${currentBm} BM)`, 'error');
+        if (showToast) showToast(`BP가 부족해요 (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, 'error');
         return;
       }
       const authClient = getAuthenticatedClient(user.id);
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, BM_COST_PER_ASK, 'ASK_QUICK');
       if (!ok) {
-        if (showToast) showToast(`BM이 부족해요`, 'error');
+        if (showToast) showToast(`BP가 부족해요`, 'error');
         return;
       }
       const cur = useAppStore.getState().gamificationState || {};
@@ -504,17 +504,17 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (!formOk) { setStep(1); return; }
     if (dailyLoading) return; // 중복 호출 방지 (레이스 컨디션 가드)
 
-    // BM 차감 (로그인 사용자만)
+    // BP 차감 (로그인 사용자만)
     if (user?.id) {
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
-        if (showToast) showToast(`BM이 부족해요 (필요: ${BM_COST_PER_ASK} BM, 보유: ${currentBm} BM)`, 'error');
+        if (showToast) showToast(`BP가 부족해요 (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, 'error');
         return;
       }
       const authClient = getAuthenticatedClient(user.id);
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, BM_COST_PER_ASK, 'DAILY_HOROSCOPE');
       if (!ok) {
-        if (showToast) showToast(`BM이 부족해요`, 'error');
+        if (showToast) showToast(`BP가 부족해요`, 'error');
         return;
       }
       // 스토어 즉시 업데이트

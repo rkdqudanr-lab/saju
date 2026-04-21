@@ -267,7 +267,7 @@ export default function OrbitalFrequencyMiniGame({
                         opacity: currentBp >= 5 ? 1 : 0.5,
                       }}
                     >
-                      🔓 5BM
+                      🔓 5BP
                     </button>
                   </>
                 )}
@@ -285,7 +285,7 @@ export default function OrbitalFrequencyMiniGame({
               marginTop: '28px',
             }}
           >
-            각 번호 잠금 해제: 5 BM
+            각 번호 잠금 해제: 5 BP
           </div>
 
           {/* 제출 버튼 */}
@@ -350,7 +350,7 @@ export default function OrbitalFrequencyMiniGame({
                   color: '#5FAD7A',
                 }}
               >
-                + {gameState.reward} BM
+                + {gameState.reward} BP
               </div>
             )}
           </div>

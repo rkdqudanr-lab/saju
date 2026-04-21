@@ -919,7 +919,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
         .eq('id', postId);
       setMyLikedIds(prev => new Set([...prev, postId]));
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes_count: (p.likes_count || 0) + 1 } : p));
-      showToast('+5 BM 적립! 공감해줘서 고마워요', 'success');
+      showToast('+5 BP 적립! 공감해줘서 고마워요', 'success');
     }
   }
 
