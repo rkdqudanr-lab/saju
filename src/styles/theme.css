@@ -289,7 +289,7 @@ select.inp option{background:var(--bg2)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* ══ 추가질문 STEP 5 (고정 레이아웃) ══ */
-.chat-page{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--bg);z-index:1;animation:fadeUp .5s ease}
+.chat-page{position:fixed;top:0;bottom:calc(57px + max(env(safe-area-inset-bottom,0px),16px));left:50%;transform:translateX(-50%);width:100%;max-width:500px;display:flex;flex-direction:column;background:var(--bg);z-index:1;animation:fadeUp .5s ease}
 .chat-page-header{padding:72px var(--sp3) var(--sp2);border-bottom:1px solid var(--line);background:var(--bg1);flex-shrink:0}
 .chat-page-title{font-size:var(--lg);font-weight:600;color:var(--t1);margin-bottom:4px}
 .chat-page-sub{font-size:var(--xs);color:var(--t3)}

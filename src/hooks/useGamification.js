@@ -180,7 +180,7 @@ export function useGamification(user, showToast) {
           currentBp: newBp,
         }));
 
-        if (showToast) showToast(`+${amount} BP 획득! 🎉`);
+        if (showToast && reason !== 'first_login' && reason !== `streak_milestone_7` && reason !== `streak_milestone_14` && reason !== `streak_milestone_21`) showToast(`+${amount} BM 획득! 🎉`);
 
         return { success: true, newBp };
       } catch (error) {
@@ -202,7 +202,7 @@ export function useGamification(user, showToast) {
 
       // BP 부족 체크
       if (currentState.currentBp < cost) {
-        if (showToast) showToast('BP가 부족합니다 😢');
+        if (showToast) showToast('BM이 부족합니다 😢');
         return { success: false, message: 'BP 부족' };
       }
 
@@ -258,7 +258,7 @@ export function useGamification(user, showToast) {
           badtimeBlocksCount: prev.badtimeBlocksCount + 1,
         }));
 
-        if (showToast) showToast(`액막이 발동! -${cost} BP 🛡️`);
+        if (showToast) showToast(`액막이 발동! -${cost} BM 🛡️`);
 
         return { success: true, newBp };
       } catch (error) {
@@ -303,15 +303,23 @@ export function useGamification(user, showToast) {
             .eq('kakao_id', String(kakaoId));
         }
 
-        // BP 획득 (일일 로그인 보상)
-        await earnBP(bpGain, 'login');
+        // 최초 로그인 보너스 (last_login_date가 null이면 첫 가입)
+        if (!lastLoginDateStr) {
+          await earnBP(BP_EARNING_RULES.FIRST_LOGIN, 'first_login');
+          if (showToast) showToast(`🎉 별숨에 오신 것을 환영해요! +${BP_EARNING_RULES.FIRST_LOGIN} BM 지급!`, 'success');
+        }
 
-        // 스트릭 마일스톤 보너스 (7/14/30일 연속)
+        // BP 획득 (일일 로그인 보상)
+        if (lastLoginDateStr) {
+          await earnBP(bpGain, 'login');
+        }
+
+        // 스트릭 마일스톤 보너스 (7/14/21일 연속 → 100 BM 보너스)
         const achievedStreak = newStreak > 0 ? newStreak : ((gamificationState.loginStreak || 0) + 1);
-        const STREAK_MILESTONES = { 7: 20, 14: 30, 30: 50 };
+        const STREAK_MILESTONES = { 7: 100, 14: 100, 21: 100 };
         if (STREAK_MILESTONES[achievedStreak]) {
           await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);
-          if (showToast) showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');
+          if (showToast) showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BM 보너스!`, 'success');
         }
 
         // 로컬 상태 업데이트
@@ -539,7 +547,7 @@ export function useGamification(user, showToast) {
 
         const result = await earnBP(BP_EARNING_RULES.DIARY_COMPLETE, 'diary');
         if (result.success && showToast) {
-          showToast(`일기 작성 완료! +${BP_EARNING_RULES.DIARY_COMPLETE} BP 🌙`);
+          showToast(`일기 작성 완료! +${BP_EARNING_RULES.DIARY_COMPLETE} BM 🌙`);
         }
         return result;
       } catch (error) {
@@ -660,7 +668,7 @@ export function useGamification(user, showToast) {
       ]);
 
       setGamificationState(prev => ({ ...prev, currentBp: newBp }));
-      if (showToast) showToast(`❄️ 스트릭 프리즈 발동! ${STREAK_FREEZE_COST} BP 소비`);
+      if (showToast) showToast(`❄️ 스트릭 프리즈 발동! ${STREAK_FREEZE_COST} BM 소비`);
       return { success: true, newBp };
     } catch (error) {
       console.error('[별숨] 스트릭 프리즈 오류:', error);

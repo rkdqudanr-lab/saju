@@ -278,13 +278,13 @@ export default function App() {
     try {
       const result = await rechargeFreeBP();
       if (result.success) {
-        showToast(`+${result.recharged} BP 충전! 🔋`, 'success');
+        showToast(`+${result.recharged} BM 충전! 🔋`, 'success');
         setFreeRechargeAvailable(false); // 충전 완료 후 상태 업데이트
       } else if (result.message === '일일 1회 제한') {
         showToast('내일 다시 충전할 수 있습니다 ⏰', 'info');
       }
     } catch (error) {
-      showToast('BP 충전 중 오류 발생', 'error');
+      showToast('BM 충전 중 오류 발생', 'error');
     }
   }, [rechargeFreeBP, showToast]);
 

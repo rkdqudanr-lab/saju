@@ -229,7 +229,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                     fontFamily: 'var(--ff)',
                   }}
                 >
-                  ❄️ 프리즈 {STREAK_FREEZE_COST}BP
+                  ❄️ 프리즈 {STREAK_FREEZE_COST}BM
                 </button>
               )}
             </div>
@@ -245,7 +245,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                   }} />
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--t5)', marginTop: 3, textAlign: 'right' }}>
-                  {nextMilestone}일 달성까지 {nextMilestone - loginStreak}일 · 보너스 {nextMilestone === 7 ? 20 : nextMilestone === 14 ? 30 : 50} BP
+                  {nextMilestone}일 달성까지 {nextMilestone - loginStreak}일 · 보너스 100 BM
                 </div>
               </>
             )}
@@ -265,7 +265,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
               <div style={{ fontSize: 32, marginBottom: 8 }}>❄️</div>
               <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>스트릭 프리즈</div>
               <div style={{ fontSize: 13, color: 'var(--t3)', lineHeight: 1.5, marginBottom: 20 }}>
-                {STREAK_FREEZE_COST} BP를 소비해 내일 로그인하지 않아도<br />{loginStreak}일 스트릭을 유지해요.
+                {STREAK_FREEZE_COST} BM을 소비해 내일 로그인하지 않아도<br />{loginStreak}일 스트릭을 유지해요.
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={() => setShowFreezeConfirm(false)} style={{ flex: 1, padding: 10, borderRadius: 10, background: 'var(--bg3)', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: 13, cursor: 'pointer', fontFamily: 'var(--ff)' }}>취소</button>
@@ -274,7 +274,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                   disabled={freezing}
                   style={{ flex: 1, padding: 10, borderRadius: 10, background: 'linear-gradient(135deg,#4A9EFF,#7B6CF6)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: freezing ? .6 : 1, fontFamily: 'var(--ff)' }}
                 >
-                  {freezing ? '발동 중...' : `발동 (${STREAK_FREEZE_COST} BP)`}
+                  {freezing ? '발동 중...' : `발동 (${STREAK_FREEZE_COST} BM)`}
                 </button>
               </div>
             </div>
@@ -297,12 +297,12 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             title: '별숨 포인트 쌓는 방법',
             content: (
               <div style={{ paddingTop: 8 }}>
-                <BpGuideRow icon="✦" text="매일 첫 로그인" bp="+5 BP" />
-                <BpGuideRow icon="🎨" text="색상 처방 · 음식 처방 · 라이프 아이템 미션 완료" bp="+10 BP" />
-                <BpGuideRow icon="✅" text="오늘의 실천 DO 미션 완료" bp="+5 BP" />
-                <BpGuideRow icon="⚠️" text="오늘의 주의 DONT 미션 완료" bp="+5 BP" />
-                <BpGuideRow icon="◇" text="하루 미션 50% 이상 달성 보너스" bp="+5 BP" />
-                <BpGuideRow icon="📓" text="오늘 일기 작성" bp="+5 BP" />
+                <BpGuideRow icon="✦" text="매일 첫 로그인" bp="+5 BM" />
+                <BpGuideRow icon="🎨" text="색상 처방 · 음식 처방 · 라이프 아이템 미션 완료" bp="+10 BM" />
+                <BpGuideRow icon="✅" text="오늘의 실천 DO 미션 완료" bp="+5 BM" />
+                <BpGuideRow icon="⚠️" text="오늘의 주의 DONT 미션 완료" bp="+5 BM" />
+                <BpGuideRow icon="◇" text="하루 미션 50% 이상 달성 보너스" bp="+5 BM" />
+                <BpGuideRow icon="📓" text="오늘 일기 작성" bp="+5 BM" />
                 <div style={{ marginTop: 8, fontSize: '11px', color: 'var(--t4)', lineHeight: 1.6 }}>
                   미션은 매일 오늘의 별숨 기운을 확인하면 자동 생성돼요.
                 </div>
@@ -319,7 +319,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                   나쁜 기운을 막고 하루를 보호해드려요.
                 </p>
                 <p style={{ margin: '0 0 8px' }}>
-                  액막이 발동에는 <strong style={{ color: 'var(--gold)' }}>20 BP</strong>가 소모돼요.
+                  액막이 발동에는 <strong style={{ color: 'var(--gold)' }}>20 BM</strong>이 소모돼요.
                   별숨픽 처방(색상·음식·장소)을 통해 부정적 기운을 긍정적 기운으로 전환해드려요.
                 </p>
                 <p style={{ margin: '0 0 8px' }}>
@@ -342,7 +342,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
                   <span style={{ fontSize: 18, flexShrink: 0 }}>🛡️</span>
                   <div>
-                    <div style={{ fontWeight: 600, color: 'var(--t1)' }}>액막이 발동 — 20 BP</div>
+                    <div style={{ fontWeight: 600, color: 'var(--t1)' }}>액막이 발동 — 20 BM</div>
                     <div style={{ marginTop: 2 }}>점수 50 미만인 날, 나쁜 기운을 막아드려요.</div>
                   </div>
                 </div>
@@ -354,7 +354,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                   </div>
                 </div>
                 <div style={{ marginTop: 8, fontSize: '11px', color: 'var(--t4)' }}>
-                  포인트는 최대 100 BP까지 보유할 수 있어요. 꾸준히 미션을 완료해 쌓아두세요.
+                  포인트는 최대 100 BM까지 보유할 수 있어요. 꾸준히 미션을 완료해 쌓아두세요.
                 </div>
               </div>
             ),

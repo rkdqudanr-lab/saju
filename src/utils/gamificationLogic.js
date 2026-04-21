@@ -7,7 +7,8 @@
 // BP 획득 규칙
 // ════════════════════════════════════════════════════════════════
 export const BP_EARNING_RULES = {
-  DAILY_LOGIN: 5,         // 일일 출석
+  DAILY_LOGIN: 5,         // 일일 출석 (기본)
+  FIRST_LOGIN: 50,        // 최초 로그인 보너스
   MISSION_COMPLETE: 10,   // 미션 완료 (색상/음식/아이템)
   DO_DONT_COMPLETE: 5,    // DO/DONT 미션 완료
   DIARY_COMPLETE: 5,      // 일기 작성

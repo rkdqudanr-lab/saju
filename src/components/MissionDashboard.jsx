@@ -115,7 +115,7 @@ export default function MissionDashboard({
           fontSize: '12px', fontWeight: 700, flexShrink: 0,
           color: isCompleted ? 'var(--t4)' : cfg.color,
         }}>
-          {isCompleted ? '✓' : `+${mission.bp_reward} BP`}
+          {isCompleted ? '✓' : `+${mission.bp_reward} BM`}
         </div>
       </div>
     );
@@ -156,7 +156,7 @@ export default function MissionDashboard({
             marginTop: 6, fontSize: '11px', color: 'var(--teal)', fontWeight: 600,
             display: 'flex', alignItems: 'center', gap: 4,
           }}>
-            🎉 50% 달성 보너스 +5 BP 지급!
+            🎉 50% 달성 보너스 +5 BM 지급!
           </div>
         )}
       </div>
@@ -200,7 +200,7 @@ export default function MissionDashboard({
           >
             <span style={{ fontSize: '16px' }}>📓</span>
             <div style={{ flex: 1, textAlign: 'left' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold)' }}>오늘 일기를 쓰면 +5 BP</div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold)' }}>오늘 일기를 쓰면 +5 BM</div>
               <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 1 }}>별숨에게 오늘 하루를 들려주세요</div>
             </div>
             <span style={{ fontSize: '12px', color: 'var(--acc)', fontWeight: 700 }}>→</span>
@@ -213,7 +213,7 @@ export default function MissionDashboard({
             fontSize: '12px', color: '#5FAD7A', fontWeight: 600,
             display: 'flex', alignItems: 'center', gap: 6,
           }}>
-            📓 오늘 일기 작성 완료 · +5 BP 적립됨
+            📓 오늘 일기 작성 완료 · +5 BM 적립됨
           </div>
         )}
       </div>

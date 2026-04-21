@@ -104,7 +104,7 @@ export default function GamificationHeaderV2({
             {loginStreak >= 2 && onFreezeStreak && (
               <button
                 onClick={handleFreezeClick}
-                title={`스트릭 프리즈 (${STREAK_FREEZE_COST} BP)`}
+                title={`스트릭 프리즈 (${STREAK_FREEZE_COST} BM)`}
                 style={{
                   marginLeft: '2px',
                   background: 'none',
@@ -171,7 +171,7 @@ export default function GamificationHeaderV2({
               스트릭 프리즈
             </div>
             <div style={{ fontSize: '13px', color: 'var(--t3)', lineHeight: 1.5, marginBottom: '20px' }}>
-              {STREAK_FREEZE_COST} BP를 소비해 내일 로그인하지 않아도
+              {STREAK_FREEZE_COST} BM을 소비해 내일 로그인하지 않아도
               <br />현재 {loginStreak}일 스트릭을 유지해요.
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -195,7 +195,7 @@ export default function GamificationHeaderV2({
                   fontWeight: '600', cursor: 'pointer', opacity: freezing ? 0.6 : 1,
                 }}
               >
-                {freezing ? '발동 중...' : `발동 (${STREAK_FREEZE_COST} BP)`}
+                {freezing ? '발동 중...' : `발동 (${STREAK_FREEZE_COST} BM)`}
               </button>
             </div>
           </div>

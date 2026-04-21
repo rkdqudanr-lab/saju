@@ -446,7 +446,7 @@ export default function DailyStarCardV2({
                 }}
                 whileTap={{ scale: 0.93 }}
               >
-                {isBlocking ? '액막이 발동 중...' : '액막이 발동 (BP -20)'}
+                {isBlocking ? '액막이 발동 중...' : '액막이 발동 (BM -20)'}
               </motion.button>
             )}
 
@@ -458,7 +458,7 @@ export default function DailyStarCardV2({
 
             {(!canBlockBadtime || currentBp < 20) && (
               <div className="dsc-bp-hint">
-                BP를 충전하거나 미션을 완료하면 액막이를 발동할 수 있습니다
+                BM을 충전하거나 미션을 완료하면 액막이를 발동할 수 있습니다
               </div>
             )}
           </div>

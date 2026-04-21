@@ -34,7 +34,7 @@ export default function ResultsStep({
     const result = await spendBP(UNLOCK_COST, `answer_unlock_${i}`);
     if (result.success) {
       setUnlockedAnswers(prev => new Set([...prev, i]));
-      showToast(`✦ 이야기가 열렸어요 (남은 BP: ${result.newBp})`, 'success');
+      showToast(`✦ 이야기가 열렸어요 (남은 BM: ${result.newBp})`, 'success');
     } else {
       showToast(result.message || 'BP가 부족해요', 'error');
       setShowUpgradeModal(true);
@@ -119,9 +119,9 @@ export default function ResultsStep({
                     <div className="answer-unlock-overlay">
                       <div className="unlock-icon">🔒</div>
                       <div className="unlock-title">Q{i + 1} 이야기가 잠겨있어요</div>
-                      <div className="unlock-desc">별 포인트 {UNLOCK_COST}개로 열기 · 현재 {gamificationState?.currentBp || 0}BP</div>
+                      <div className="unlock-desc">별 머니 {UNLOCK_COST}개로 열기 · 현재 {gamificationState?.currentBp || 0}BM</div>
                       <button className="unlock-bp-btn" onClick={() => handleUnlock(i)}>
-                        ✦ {UNLOCK_COST}BP로 열기
+                        ✦ {UNLOCK_COST}BM으로 열기
                       </button>
                       <button className="unlock-premium-btn" onClick={() => setShowUpgradeModal(true)}>
                         프리미엄으로 전체 보기

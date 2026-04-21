@@ -55,7 +55,6 @@ const MENU_GROUPS = {
       { icon: 'grid',        label: '별숨 광장',      step: 29 },
       { icon: 'heart-users', label: '익명 궁합 광장', step: 32 },
       { icon: 'users',       label: '우리 모임의 별숨', step: 11 },
-      { icon: 'bolt',        label: '특별 상담',      step: 33 },
       { icon: 'envelope',    label: '별숨편지',       step: 35 },
     ],
   },
@@ -73,7 +72,7 @@ const TAB_STEPS = {
   today:    [0, 17, 18, 20, 10, 23],
   consult:  [2, 3, 4, 5, 6, 7, 8, 12, 14, 24, 25, 26, 30, 34, 39],
   growth:   [13, 28, 31, 37, 38, 40],
-  square:   [11, 29, 32, 33, 35],
+  square:   [11, 29, 32, 35],
   settings: [19, 27],
 };
 

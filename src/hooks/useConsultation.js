@@ -6,13 +6,16 @@ import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { loadHistory, addHistory, deleteHistory } from "../utils/history.js";
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { parseHoroscopeForGamification } from '../utils/missionGenerator.js';
+import { spendBP as spendBPUtil } from '../utils/gamificationLogic.js';
+
+const BM_COST_PER_ASK = 10; // BM cost per question (베타 기간)
 
 // 베타 기간 종료 시 false로 변경 (또는 서버 설정으로 대체)
 const IS_BETA = true;
 
 const SLOT_TAG_MAP = { morning: '[오전·100자]', afternoon: '[오후·100자]', evening: '[저녁·100자]', dawn: '[새벽·100자]' };
 const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요.';
-export const DAILY_MAX = 3;
+export const DAILY_MAX = 999; // 베타 기간: 일일 제한 없음 (BM 차감 방식으로 대체)
 
 function getTodayDateStr() {
   const d = new Date();
@@ -411,6 +414,25 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   // ── 질문 전송 ──
   const askClaude = useCallback(async () => {
     if (!selQs.length) return;
+
+    // BM 차감 (로그인 사용자: 질문 개수 × 10 BM)
+    if (user?.id) {
+      const totalCost = selQs.length * BM_COST_PER_ASK;
+      const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
+      if (currentBm < totalCost) {
+        if (showToast) showToast(`BM이 부족해요 (필요: ${totalCost} BM, 보유: ${currentBm} BM)`, 'error');
+        return;
+      }
+      const authClient = getAuthenticatedClient(user.id);
+      const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, totalCost, 'ASK_CLAUDE');
+      if (!ok) {
+        if (showToast) showToast(`BM이 부족해요`, 'error');
+        return;
+      }
+      const cur = useAppStore.getState().gamificationState || {};
+      useAppStore.getState().setGamificationData({ gamificationState: { ...cur, currentBp: newBP ?? (currentBm - totalCost) }, missions: useAppStore.getState().missions || [] });
+    }
+
     if (typeof window.gtag === 'function') window.gtag('event', 'ask_claude', { question_count: selQs.length });
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     setQLoadStatus(selQs.map(() => 'loading'));
@@ -438,6 +460,24 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (!q.trim()) return;
     if (typeof window.gtag === 'function') window.gtag('event', 'ask_quick', { question: q.slice(0, 30) });
     if (!formOk) { setSelQs([q.trim()]); setStep(1); return; }
+
+    // BM 차감 (로그인 사용자만)
+    if (user?.id) {
+      const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
+      if (currentBm < BM_COST_PER_ASK) {
+        if (showToast) showToast(`BM이 부족해요 (필요: ${BM_COST_PER_ASK} BM, 보유: ${currentBm} BM)`, 'error');
+        return;
+      }
+      const authClient = getAuthenticatedClient(user.id);
+      const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, BM_COST_PER_ASK, 'ASK_QUICK');
+      if (!ok) {
+        if (showToast) showToast(`BM이 부족해요`, 'error');
+        return;
+      }
+      const cur = useAppStore.getState().gamificationState || {};
+      useAppStore.getState().setGamificationData({ gamificationState: { ...cur, currentBp: newBP ?? (currentBm - BM_COST_PER_ASK) }, missions: useAppStore.getState().missions || [] });
+    }
+
     setSelQs([q.trim()]);
     setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     try {
@@ -446,7 +486,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       saveHistoryToSupabase([q.trim()], [ans], timeSlot);
     } catch { setAnswers([ERR_MSG]); }
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
-  }, [formOk, callApi, saveHistoryToSupabase, timeSlot]);
+  }, [formOk, user?.id, showToast, callApi, saveHistoryToSupabase, timeSlot]);
 
   const askTimeSlot = useCallback(async (prompt) => {
     if (!formOk) { setStep(1); return; }
@@ -463,10 +503,25 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
   const askDailyHoroscope = useCallback(async () => {
     if (!formOk) { setStep(1); return; }
     if (dailyLoading) return; // 중복 호출 방지 (레이스 컨디션 가드)
-    if (dailyCount >= DAILY_MAX) {
-      if (typeof onDailyLimitReached === 'function') onDailyLimitReached();
-      return;
+
+    // BM 차감 (로그인 사용자만)
+    if (user?.id) {
+      const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
+      if (currentBm < BM_COST_PER_ASK) {
+        if (showToast) showToast(`BM이 부족해요 (필요: ${BM_COST_PER_ASK} BM, 보유: ${currentBm} BM)`, 'error');
+        return;
+      }
+      const authClient = getAuthenticatedClient(user.id);
+      const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, BM_COST_PER_ASK, 'DAILY_HOROSCOPE');
+      if (!ok) {
+        if (showToast) showToast(`BM이 부족해요`, 'error');
+        return;
+      }
+      // 스토어 즉시 업데이트
+      const cur = useAppStore.getState().gamificationState || {};
+      useAppStore.getState().setGamificationData({ gamificationState: { ...cur, currentBp: newBP ?? (currentBm - BM_COST_PER_ASK) }, missions: useAppStore.getState().missions || [] });
     }
+
     if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
     setDailyLoading(true);
     try {

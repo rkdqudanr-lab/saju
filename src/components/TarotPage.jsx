@@ -138,7 +138,7 @@ export default function TarotPage({ callApi, buildCtx, showToast }) {
   }, [pickedCards, buildCtx, isStreaming, startStream, resetStream]);
 
   return (
-    <div className="page step-fade" style={{ paddingBottom: 80 }}>
+    <div className="page step-fade" style={{ paddingBottom: 80, maxWidth: 480, margin: '0 auto' }}>
       <style>{`
         @keyframes tarotShimmer {
           0%   { transform: translateX(-120%); }

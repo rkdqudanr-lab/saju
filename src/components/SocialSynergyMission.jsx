@@ -96,7 +96,7 @@ export default function SocialSynergyMission({
                       fontWeight: '600',
                     }}
                   >
-                    +{mission.reward} BP
+                    +{mission.reward} BM
                   </div>
                 </div>
 
@@ -221,7 +221,7 @@ export default function SocialSynergyMission({
                       fontWeight: '600',
                     }}
                   >
-                    +{mission.reward} BP
+                    +{mission.reward} BM
                   </div>
                 </div>
 

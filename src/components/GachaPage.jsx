@@ -243,7 +243,7 @@ function GachaBanner({ currentBP, pulling, onPull, bgStyle, accentColor, title, 
                 뽑는 중...
               </span>
             ) : (
-              <>✦ 1회 뽑기<br /><span style={{ fontSize: '11px', fontWeight: 400 }}>10 BP</span></>
+              <>✦ 1회 뽑기<br /><span style={{ fontSize: '11px', fontWeight: 400 }}>10 BM</span></>
             )}
           </button>
           {/* 10연 */}
@@ -273,7 +273,7 @@ function GachaBanner({ currentBP, pulling, onPull, bgStyle, accentColor, title, 
                   animation: currentBP >= 90 ? 'gacha-shine 2.5s ease infinite' : 'none',
                 }} />
                 ✦ 10연 뽑기<br />
-                <span style={{ fontSize: '11px' }}>90 BP</span>
+                <span style={{ fontSize: '11px' }}>90 BM</span>
                 <span style={{ display: 'block', fontSize: '10px', color: single10Label.color, marginTop: 2 }}>
                   {single10Label.text}
                 </span>
@@ -406,7 +406,7 @@ export default function GachaPage({ showToast }) {
   async function doPull(count) {
     if (!kakaoId) { showToast?.('로그인 후 이용 가능해요', 'info'); return; }
     const cost = count === 1 ? 10 : 90;
-    if (currentBP < cost) { showToast?.(`BP가 부족해요 (필요: ${cost} BP)`, 'error'); return; }
+    if (currentBP < cost) { showToast?.(`BM이 부족해요 (필요: ${cost} BM)`, 'error'); return; }
     setPulling(count === 1 ? 'single' : '10');
     try {
       const client = getAuthenticatedClient(kakaoId);
@@ -455,7 +455,7 @@ export default function GachaPage({ showToast }) {
         }}>
           <span style={{ fontSize: 13, color: 'var(--gold)' }}>✦</span>
           <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--gold)' }}>
-            {loadingBP ? '...' : currentBP} BP
+            {loadingBP ? '...' : currentBP} BM
           </span>
         </div>
       </div>

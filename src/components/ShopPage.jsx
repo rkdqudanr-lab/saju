@@ -1,6 +1,9 @@
 /**
- * ShopPage — 별숨 숍
- * BP를 소비해 테마·아바타·특별 상담·이펙트 아이템을 구매하거나 랜덤 뽑기
+ * ShopPage — 별숨 뽑기 + 숍 통합 허브 (step 31)
+ * 탭: [기운 뽑기 | 테마 뽑기 | 아바타 뽑기 | 이펙트 뽑기 | 보관함]
+ * - 기운 뽑기 : 우주/사주 기운 아이템 (from gachaItems.js)
+ * - 테마/아바타/이펙트 뽑기 : 로컬 풀 (from shopGachaItems.js) + SVG
+ * - 보관함 : 숍 아이템 + 직접 구매 특별 상담
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,6 +11,31 @@ import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { spendBP } from '../utils/gamificationLogic.js';
+import {
+  GACHA_POOL, GRADE_CONFIG, PROB_TABLE, pullOne, pull10, GRADE_ORDER,
+  SAJU_POOL, SAJU_GRADE_CONFIG, SAJU_PROB_TABLE, pullOneSaju, pull10Saju, SAJU_GRADE_ORDER,
+} from '../utils/gachaItems.js';
+import {
+  THEME_POOL, AVATAR_POOL, EFFECT_POOL,
+  SHOP_GRADE_CONFIG, SHOP_PROB_TABLE, SHOP_GRADE_ORDER,
+  ALL_SHOP_POOL, findShopItem,
+  pullOneShop, pull10Shop,
+} from '../utils/shopGachaItems.js';
+import GachaGraphic from './GachaGraphic.jsx';
+import ShopItemGraphic from './ShopItemGraphic.jsx';
+
+// ─── 상수 ────────────────────────────────────────────────────
+const SPIRIT_COST_1 = 10, SPIRIT_COST_10 = 90;
+const SHOP_COST_1   = 20, SHOP_COST_10   = 180;
+const DUPLICATE_REFUND = 5;
+
+const MAIN_TABS = [
+  { id: 'spirit', label: '기운 뽑기',   emoji: '🌌' },
+  { id: 'theme',  label: '테마 뽑기',   emoji: '🎨' },
+  { id: 'avatar', label: '아바타 뽑기', emoji: '👤' },
+  { id: 'effect', label: '이펙트 뽑기', emoji: '✨' },
+  { id: 'inv',    label: '보관함',      emoji: '🗃️' },
+];
 
 const CAT_DESC = {
   theme:           '앱 전체 색감과 분위기가 바뀌어요',
@@ -15,115 +43,189 @@ const CAT_DESC = {
   effect:          '화면에 아름다운 이펙트가 표시돼요',
   special_reading: '특별한 AI 상담을 1회 사용할 수 있어요',
 };
-
-const CATEGORIES = ['전체', '테마', '아바타', '특별 상담', '이펙트', '보관함'];
-const CAT_MAP    = { '테마': 'theme', '아바타': 'avatar', '특별 상담': 'special_reading', '이펙트': 'effect' };
-
 const RARITY_LABEL = { common: '일반', rare: '레어', legendary: '레전더리' };
-const RARITY_COLOR = { common: 'var(--t4)', rare: '#7B9EC4', legendary: '#E8B048' };
+const RARITY_COLOR = { common: 'var(--t4)', rare: '#B48EF0', legendary: '#E8B048' };
 
-const SHOP_GACHA_COST_1  = 20;
-const SHOP_GACHA_COST_10 = 180;
-const DUPLICATE_REFUND   = 5;
-
-// 뽑기 풀에서 개수만큼 뽑기 (10연 시 레어 이상 1개 보장)
-function pickFromPool(pool, count) {
-  const results = [];
-  for (let i = 0; i < count; i++) {
-    const roll = Math.random() * 100;
-    let rarity = 'common';
-    if (roll < 5)  rarity = 'legendary';
-    else if (roll < 40) rarity = 'rare';
-    const bucket = pool.filter(item => item.rarity === rarity);
-    const src    = bucket.length > 0 ? bucket : pool;
-    results.push(src[Math.floor(Math.random() * src.length)]);
-  }
-  if (count === 10) {
-    const hasRarePlus = results.some(i => i.rarity === 'rare' || i.rarity === 'legendary');
-    if (!hasRarePlus) {
-      const rareBucket = pool.filter(i => i.rarity === 'rare' || i.rarity === 'legendary');
-      if (rareBucket.length > 0) {
-        results[Math.floor(Math.random() * count)] =
-          rareBucket[Math.floor(Math.random() * rareBucket.length)];
-      }
-    }
-  }
-  return results;
+// ─── 반짝이 파티클 ────────────────────────────────────────────
+function Sparkles({ color }) {
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', borderRadius: 'inherit' }}>
+      {Array.from({length: 8}).map((_, i) => {
+        const a = (i / 8) * 360;
+        const d = 28 + (i % 3) * 10;
+        return (
+          <div key={i} style={{
+            position: 'absolute', top: '50%', left: '50%',
+            width: 4, height: 4, borderRadius: '50%', background: color,
+            '--sx': `${Math.cos(a*Math.PI/180)*d}px`,
+            '--sy': `${Math.sin(a*Math.PI/180)*d}px`,
+            animation: `gacha-sparkle ${0.5+Math.random()*0.4}s ease-out ${i*0.05}s forwards`,
+            opacity: 0,
+          }} />
+        );
+      })}
+    </div>
+  );
 }
 
-// ── 숍 뽑기 결과 모달 ───────────────────────────────────────
-function ShopGachaResultModal({ results, ownedIds, onClose }) {
-  if (!results) return null;
-  const isSingle = results.length === 1;
+// ─── 통합 결과 오버레이 ───────────────────────────────────────
+// results 항목은 gacha item(grade) 또는 shop item(rarity) 둘 다 OK
+function PullResultOverlay({ results, system, onClose }) {
+  const [revealed, setRevealed] = useState(new Set());
+  const isSingle    = results.length === 1;
+  const allRevealed = revealed.size === results.length;
+
+  useEffect(() => {
+    if (isSingle) {
+      const t = setTimeout(() => setRevealed(new Set([0])), 350);
+      return () => clearTimeout(t);
+    }
+  }, [isSingle]);
+
+  // item에서 config(color,bg,border,label) 추출
+  function getCfg(item) {
+    if (item.grade)   return (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[item.grade]   || {};
+    if (item.rarity)  return SHOP_GRADE_CONFIG[item.rarity] || {};
+    return {};
+  }
+  function isShopItem(item) { return !!item.rarity && !item.grade; }
+
+  const topGrade = results.reduce((best, item) => {
+    const cfg   = getCfg(item);
+    const order = item.grade
+      ? (system === 'saju' ? SAJU_GRADE_ORDER : GRADE_ORDER)
+      : SHOP_GRADE_ORDER;
+    const key   = item.grade || item.rarity;
+    if (!best || order.indexOf(key) > order.indexOf(best)) return key;
+    return best;
+  }, null);
+  const topCfg = topGrade
+    ? (results[0].grade
+        ? (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[topGrade]
+        : SHOP_GRADE_CONFIG[topGrade])
+    : {};
+
+  const bgGrad = topCfg?.bg
+    ? `radial-gradient(ellipse at 50% 35%, ${topCfg.bg?.replace('0.15','0.28') || 'rgba(232,176,72,.28)'} 0%, rgba(13,11,20,.97) 65%)`
+    : 'rgba(13,11,20,.96)';
 
   return createPortal(
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(13,11,20,0.96)',
+      position: 'fixed', inset: 0, zIndex: 9000,
+      background: bgGrad,
       display: 'flex', flexDirection: 'column',
       animation: 'gacha-result-bg .3s ease',
     }}>
-      <div style={{ padding: '22px 20px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: '#fff' }}>
-          {isSingle ? '✦ 숍 뽑기 결과' : '✦ 숍 10연 뽑기 결과'}
+          {isSingle ? '✦ 뽑기 결과' : '✦ 10연 뽑기 결과'}
         </div>
-        <button onClick={onClose} style={{
-          padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,.2)',
-          background: 'none', color: 'rgba(255,255,255,.6)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
-        }}>닫기</button>
+        {allRevealed && (
+          <button onClick={onClose} style={{
+            padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,.2)',
+            background: 'none', color: 'rgba(255,255,255,.6)',
+            fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+          }}>닫기</button>
+        )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 16px', display: 'flex', alignItems: isSingle ? 'center' : 'flex-start', justifyContent: 'center' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isSingle ? (() => {
-          const item  = results[0];
-          const isDup = ownedIds.has(item.id);
-          const rc    = RARITY_COLOR[item.rarity];
+          const item = results[0];
+          const cfg  = getCfg(item);
+          const rev  = revealed.has(0);
+          const isShop = isShopItem(item);
           return (
             <div style={{
-              width: 210, borderRadius: 22,
-              border: `2px solid ${rc}`,
-              background: `linear-gradient(160deg, ${rc}1A, ${rc}06)`,
-              padding: '36px 22px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-              boxShadow: `0 0 36px ${rc}44`,
+              width: 200, position: 'relative', borderRadius: 22,
+              border: `2px solid ${rev ? cfg.border : 'rgba(255,255,255,.1)'}`,
+              background: rev ? cfg.bg : 'rgba(255,255,255,.04)',
+              padding: '32px 20px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
               animation: 'gacha-card-in .5s cubic-bezier(.34,1.56,.64,1) both',
+              boxShadow: rev ? `0 0 32px ${cfg.border}` : 'none',
+              transition: 'all .4s ease',
             }}>
-              <div style={{ fontSize: 56 }}>{item.emoji}</div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: rc, letterSpacing: '.07em' }}>{RARITY_LABEL[item.rarity]}</div>
-              <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: '#fff', textAlign: 'center' }}>{item.name}</div>
-              <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.5)', textAlign: 'center', lineHeight: 1.6 }}>{item.description}</div>
-              {CAT_DESC[item.category] && (
-                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.35)', textAlign: 'center', fontStyle: 'italic' }}>{CAT_DESC[item.category]}</div>
+              {rev ? (
+                <>
+                  <Sparkles color={cfg.color} />
+                  <div style={{ animation: 'gacha-bounce .6s ease .2s both', marginTop: 8, marginBottom: 4 }}>
+                    {isShop
+                      ? <ShopItemGraphic item={item} size={90} />
+                      : <GachaGraphic item={item} size={90} />
+                    }
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: cfg.color, letterSpacing: '.06em' }}>
+                    {item.grade
+                      ? (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[item.grade]?.label
+                      : RARITY_LABEL[item.rarity]}
+                  </div>
+                  <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: item.affixColor || '#fff', textAlign: 'center' }}>
+                    {item.name}
+                  </div>
+                  <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.55)', textAlign: 'center', lineHeight: 1.6 }}>
+                    {item.description}
+                  </div>
+                  <div style={{
+                    padding: '5px 12px', borderRadius: 20, background: cfg.bg,
+                    border: `1px solid ${cfg.border}`, fontSize: '11px', color: cfg.color, fontWeight: 600, textAlign: 'center',
+                  }}>
+                    {item.effectLabel || item.effect}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 44, opacity: .3 }}>✦</div>
+                  <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.3)' }}>공개 중...</div>
+                </>
               )}
-              <div style={{
-                fontSize: '11px', padding: '5px 14px', borderRadius: 20,
-                background: isDup ? 'rgba(123,196,160,0.12)' : 'var(--goldf)',
-                border: `1px solid ${isDup ? 'rgba(123,196,160,0.35)' : 'var(--acc)'}`,
-                color: isDup ? '#7BC4A0' : 'var(--gold)', fontWeight: 600,
-              }}>
-                {isDup ? `중복 아이템 · +${DUPLICATE_REFUND}BP 환불` : '✦ 새 아이템!'}
-              </div>
             </div>
           );
         })() : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, width: '100%', maxWidth: 360 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6, width: '100%' }}>
             {results.map((item, i) => {
-              const isDup = ownedIds.has(item.id);
-              const rc    = RARITY_COLOR[item.rarity];
+              const cfg    = getCfg(item);
+              const rev    = revealed.has(i);
+              const isShop = isShopItem(item);
               return (
-                <div key={i} style={{
-                  borderRadius: 14, border: `1.5px solid ${rc}80`,
-                  background: `${rc}0C`,
-                  padding: '14px 12px',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
-                  animation: `gacha-card-in .4s cubic-bezier(.34,1.56,.64,1) ${i * 0.06}s both`,
-                }}>
-                  <div style={{ fontSize: 30 }}>{item.emoji}</div>
-                  <div style={{ fontSize: '9px', fontWeight: 700, color: rc, letterSpacing: '.05em' }}>{RARITY_LABEL[item.rarity]}</div>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>{item.name}</div>
-                  <div style={{ fontSize: '9px', color: isDup ? '#7BC4A0' : 'var(--gold)', fontWeight: 600 }}>
-                    {isDup ? `중복 +${DUPLICATE_REFUND}BP` : '✦ NEW'}
-                  </div>
+                <div key={i}
+                  onClick={() => !rev && setRevealed(prev => new Set([...prev, i]))}
+                  style={{
+                    position: 'relative', borderRadius: 12,
+                    border: `1.5px solid ${rev ? cfg.border : 'var(--line)'}`,
+                    background: rev ? cfg.bg : 'var(--bg2)',
+                    padding: '10px 6px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                    cursor: rev ? 'default' : 'pointer',
+                    animation: `gacha-card-in .4s cubic-bezier(.34,1.56,.64,1) ${i * 0.06}s both`,
+                    minHeight: 92, justifyContent: 'center',
+                    transition: 'background .3s, border-color .3s',
+                  }}
+                >
+                  {rev ? (
+                    <>
+                      <Sparkles color={cfg.color} />
+                      <div style={{ animation: `gacha-bounce .5s ease ${i*0.06+0.15}s both` }}>
+                        {isShop
+                          ? <ShopItemGraphic item={item} size={34} />
+                          : <GachaGraphic item={item} size={34} />
+                        }
+                      </div>
+                      <div style={{ fontSize: '9px', fontWeight: 700, color: cfg.color, letterSpacing: '.04em' }}>
+                        {item.grade
+                          ? (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[item.grade]?.label
+                          : RARITY_LABEL[item.rarity]}
+                      </div>
+                      <div style={{ fontSize: '10px', fontWeight: 600, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>
+                        {item.name}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 18, opacity: .35 }}>✦</div>
+                      <div style={{ fontSize: '9px', color: 'var(--t4)' }}>탭</div>
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -131,101 +233,84 @@ function ShopGachaResultModal({ results, ownedIds, onClose }) {
         )}
       </div>
 
-      <div style={{ padding: '10px 20px 32px' }}>
-        <button onClick={onClose} style={{
-          width: '100%', padding: '13px', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
-          borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
-          fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
-        }}>보관함에서 확인하기 →</button>
+      <div style={{ padding: '10px 16px 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {!allRevealed && !isSingle && (
+          <button onClick={() => setRevealed(new Set(results.map((_, i) => i)))} style={{
+            width: '100%', padding: '13px', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+            borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
+            fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
+          }}>✦ 모두 공개</button>
+        )}
+        {allRevealed && (
+          <button onClick={onClose} style={{
+            width: '100%', padding: '13px', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+            borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
+            fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
+          }}>보관함에서 확인하기 →</button>
+        )}
       </div>
     </div>,
     document.body,
   );
 }
 
-// ── 숍 뽑기 배너 ───────────────────────────────────────────
-function ShopGachaSection({ currentBP, pulling, onPull, hasItems }) {
+// ─── 공용 뽑기 배너 ──────────────────────────────────────────
+function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle, stats, accentColor, bgStyle, guarantee10Label }) {
+  const canAfford1  = currentBP >= cost1;
+  const canAfford10 = currentBP >= cost10;
+  const seed = title.charCodeAt(0) % 8;
   return (
-    <div style={{
-      margin: '0 20px',
-      background: 'linear-gradient(135deg, #0e0b1e 0%, #14112c 60%, #0e0b1e 100%)',
-      border: '1px solid rgba(180,142,240,.4)',
-      borderRadius: 'var(--r2)',
-      padding: '18px 16px', position: 'relative', overflow: 'hidden',
-    }}>
+    <div style={{ margin: '0 20px', borderRadius: 'var(--r2)', ...bgStyle, padding: '20px 16px', position: 'relative', overflow: 'hidden' }}>
       {[...Array(8)].map((_, i) => (
         <div key={i} style={{
           position: 'absolute',
-          top: `${8 + (i * 14) % 84}%`, left: `${5 + (i * 17) % 90}%`,
-          width: i % 2 === 0 ? 3 : 2, height: i % 2 === 0 ? 3 : 2,
-          borderRadius: '50%', background: 'rgba(180,142,240,0.8)',
-          opacity: 0.3 + (i % 3) * 0.2,
-          animation: `floatGently ${2.2 + i % 3}s ease infinite ${i * 0.28}s`,
+          top: `${8+(i*14)%84}%`, left: `${5+(i*17)%90}%`,
+          width: i%2===0 ? 3 : 2, height: i%2===0 ? 3 : 2,
+          borderRadius: '50%', background: accentColor,
+          opacity: 0.3+(i%3)*0.18,
+          animation: `floatGently ${2.2+i%3}s ease infinite ${i*0.28}s`,
         }} />
       ))}
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'rgba(180,142,240,0.9)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 4 }}>
-          🎰 숍 아이템 랜덤 뽑기
-        </div>
-        <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: '#fff', marginBottom: 3 }}>
-          테마 · 아바타 · 이펙트를 뽑아봐요
-        </div>
-        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.38)', marginBottom: 14, lineHeight: 1.6 }}>
-          레전더리 5% · 레어 35% · 일반 60% · 중복 시 {DUPLICATE_REFUND}BP 환불
-        </div>
+        <div style={{ fontSize: 'var(--xs)', color: accentColor, fontWeight: 700, letterSpacing: '.08em', marginBottom: 4, opacity: .9 }}>✦ {title}</div>
+        <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: '#fff', marginBottom: 3 }}>{subtitle}</div>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.4)', marginBottom: 14, lineHeight: 1.6 }}>{stats}</div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button
-            onClick={() => onPull(1)}
-            disabled={!!pulling || currentBP < SHOP_GACHA_COST_1 || !hasItems}
-            style={{
-              flex: 1, padding: '12px 6px', borderRadius: 'var(--r1)',
-              background: currentBP >= SHOP_GACHA_COST_1 ? 'rgba(180,142,240,0.18)' : 'rgba(255,255,255,.04)',
-              border: `1.5px solid ${currentBP >= SHOP_GACHA_COST_1 ? 'rgba(180,142,240,0.55)' : 'rgba(255,255,255,.08)'}`,
-              color: currentBP >= SHOP_GACHA_COST_1 ? 'rgba(180,142,240,0.9)' : 'rgba(255,255,255,.25)',
-              fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
-              cursor: currentBP >= SHOP_GACHA_COST_1 && !pulling && hasItems ? 'pointer' : 'not-allowed',
-              transition: 'all .2s',
-            }}
-          >
-            {pulling === 'shop1' ? (
+          <button onClick={() => onPull(1)} disabled={!!pulling || !canAfford1} style={{
+            flex: 1, padding: '12px 6px', borderRadius: 'var(--r1)',
+            background: canAfford1 ? `${accentColor}22` : 'rgba(255,255,255,.04)',
+            border: `1.5px solid ${canAfford1 ? `${accentColor}80` : 'rgba(255,255,255,.08)'}`,
+            color: canAfford1 ? accentColor : 'rgba(255,255,255,.25)',
+            fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+            cursor: canAfford1 && !pulling ? 'pointer' : 'not-allowed', transition: 'all .2s',
+          }}>
+            {pulling === 'single' ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                <span style={{ width: 10, height: 10, border: '2px solid rgba(180,142,240,.3)', borderTopColor: 'rgba(180,142,240,.9)', borderRadius: '50%', animation: 'orbSpin .7s linear infinite', display: 'inline-block' }} />
+                <span style={{ width: 10, height: 10, border: `2px solid ${accentColor}40`, borderTopColor: accentColor, borderRadius: '50%', animation: 'orbSpin .7s linear infinite', display: 'inline-block' }} />
                 뽑는 중...
               </span>
-            ) : (
-              <>✦ 1회 뽑기<br /><span style={{ fontSize: '11px', fontWeight: 400 }}>{SHOP_GACHA_COST_1} BP</span></>
-            )}
+            ) : <>✦ 1회 뽑기<br /><span style={{ fontSize: '11px', fontWeight: 400 }}>{cost1} BM</span></>}
           </button>
-          <button
-            onClick={() => onPull(10)}
-            disabled={!!pulling || currentBP < SHOP_GACHA_COST_10 || !hasItems}
-            style={{
-              flex: 1.4, padding: '12px 6px', borderRadius: 'var(--r1)',
-              background: currentBP >= SHOP_GACHA_COST_10 ? 'rgba(180,142,240,0.28)' : 'rgba(255,255,255,.04)',
-              border: `1.5px solid ${currentBP >= SHOP_GACHA_COST_10 ? 'rgba(180,142,240,0.5)' : 'rgba(255,255,255,.08)'}`,
-              color: currentBP >= SHOP_GACHA_COST_10 ? 'rgba(180,142,240,0.9)' : 'rgba(255,255,255,.25)',
-              fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
-              cursor: currentBP >= SHOP_GACHA_COST_10 && !pulling && hasItems ? 'pointer' : 'not-allowed',
-              transition: 'all .2s', position: 'relative', overflow: 'hidden',
-            }}
-          >
-            {pulling === 'shop10' ? (
+          <button onClick={() => onPull(10)} disabled={!!pulling || !canAfford10} style={{
+            flex: 1.4, padding: '12px 6px', borderRadius: 'var(--r1)',
+            background: canAfford10 ? `${accentColor}30` : 'rgba(255,255,255,.04)',
+            border: `1.5px solid ${canAfford10 ? `${accentColor}70` : 'rgba(255,255,255,.08)'}`,
+            color: canAfford10 ? accentColor : 'rgba(255,255,255,.25)',
+            fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+            cursor: canAfford10 && !pulling ? 'pointer' : 'not-allowed', transition: 'all .2s',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            {pulling === '10' ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                <span style={{ width: 10, height: 10, border: '2px solid rgba(180,142,240,.3)', borderTopColor: 'rgba(180,142,240,.9)', borderRadius: '50%', animation: 'orbSpin .7s linear infinite', display: 'inline-block' }} />
+                <span style={{ width: 10, height: 10, border: `2px solid ${accentColor}40`, borderTopColor: accentColor, borderRadius: '50%', animation: 'orbSpin .7s linear infinite', display: 'inline-block' }} />
                 뽑는 중...
               </span>
             ) : (
               <>
-                <span style={{
-                  position: 'absolute', inset: 0, borderRadius: 'inherit',
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent)',
-                  animation: currentBP >= SHOP_GACHA_COST_10 ? 'gacha-shine 2.5s ease infinite' : 'none',
-                }} />
+                <span style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent)', animation: canAfford10 ? 'gacha-shine 2.5s ease infinite' : 'none' }} />
                 ✦ 10연 뽑기<br />
-                <span style={{ fontSize: '11px' }}>{SHOP_GACHA_COST_10} BP</span>
-                <span style={{ display: 'block', fontSize: '10px', color: 'rgba(232,176,72,.8)', marginTop: 2 }}>
-                  레어 이상 1개 보장
-                </span>
+                <span style={{ fontSize: '11px' }}>{cost10} BM</span>
+                <span style={{ display: 'block', fontSize: '10px', color: guarantee10Label.color, marginTop: 2 }}>{guarantee10Label.text}</span>
               </>
             )}
           </button>
@@ -235,78 +320,220 @@ function ShopGachaSection({ currentBP, pulling, onPull, hasItems }) {
   );
 }
 
-// ── 구매 확인 모달 ──────────────────────────────────────────
-function ConfirmModal({ item, currentBP, onConfirm, onClose, buying }) {
-  const canAfford = currentBP >= item.bp_cost;
-
-  return createPortal(
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(0,0,0,0.7)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '0 20px',
-    }}>
-      <div style={{
-        width: '100%', maxWidth: 380,
-        background: 'var(--bg1)',
-        borderRadius: 'var(--r2, 16px)',
-        padding: '28px 24px',
-        border: '1px solid var(--line)',
+// ─── 확률표 토글 ──────────────────────────────────────────────
+function ProbTable({ probTable }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ padding: '8px 20px 0' }}>
+      <button onClick={() => setOpen(p => !p)} style={{
+        background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)',
+        fontFamily: 'var(--ff)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
       }}>
+        {open ? '▲' : '▼'} 뽑기 확률 보기
+      </button>
+      {open && (
+        <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', marginTop: 8, animation: 'fadeUp .25s ease' }}>
+          {probTable.map(row => (
+            <div key={row.grade || row.rarity} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: row.color }} />
+                <span style={{ fontSize: 'var(--xs)', color: 'var(--t2)' }}>{row.label}</span>
+              </div>
+              <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: row.color }}>{row.prob}%</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── 숍 아이템 미리보기 그리드 ───────────────────────────────
+function ShopItemPreviewGrid({ pool, gradeConfig, gradeOrder }) {
+  const [activeRarity, setActiveRarity] = useState(gradeOrder[0]);
+  const cfg = gradeConfig[activeRarity];
+  const filtered = pool.filter(i => i.rarity === activeRarity);
+
+  return (
+    <div style={{ padding: '14px 20px 0' }}>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
+        ✦ 등장 아이템 미리보기
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {gradeOrder.map(r => {
+          const c = gradeConfig[r];
+          return (
+            <button key={r} onClick={() => setActiveRarity(r)} style={{
+              padding: '5px 11px', borderRadius: 20, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+              border: `1px solid ${activeRarity === r ? c.border : 'var(--line)'}`,
+              background: activeRarity === r ? c.bg : 'none',
+              color: activeRarity === r ? c.color : 'var(--t3)',
+              fontWeight: activeRarity === r ? 700 : 400, cursor: 'pointer', transition: 'all .15s',
+            }}>
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+        {filtered.map(item => (
+          <div key={item.id} style={{
+            background: 'var(--bg2)', border: `1px solid ${cfg.border}`,
+            borderRadius: 12, padding: '14px 8px', textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+              <ShopItemGraphic item={item} size={48} />
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 3, wordBreak: 'keep-all' }}>
+              {item.name}
+            </div>
+            <div style={{ fontSize: '10px', color: cfg.color, lineHeight: 1.4, wordBreak: 'keep-all' }}>
+              {item.effect}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 기운 아이템 미리보기 (우주/사주) ────────────────────────
+function SpiritItemPreview({ pool, gradeConfig, gradeOrder }) {
+  const [activeGrade, setActiveGrade] = useState(gradeOrder[0]);
+  const cfg = gradeConfig[activeGrade];
+  const seen = new Set();
+  const bodies = pool.filter(i => i.grade === activeGrade).filter(i => {
+    if (seen.has(i.bodyId)) return false;
+    seen.add(i.bodyId); return true;
+  });
+
+  return (
+    <div style={{ padding: '14px 20px 0' }}>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
+        ✦ 등장 아이템 미리보기
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {gradeOrder.map(grade => {
+          const c = gradeConfig[grade];
+          return (
+            <button key={grade} onClick={() => setActiveGrade(grade)} style={{
+              padding: '5px 11px', borderRadius: 20, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+              border: `1px solid ${activeGrade === grade ? c.border : 'var(--line)'}`,
+              background: activeGrade === grade ? c.bg : 'none',
+              color: activeGrade === grade ? c.color : 'var(--t3)',
+              fontWeight: activeGrade === grade ? 700 : 400, cursor: 'pointer', transition: 'all .15s',
+            }}>
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        {bodies.map(item => (
+          <div key={item.bodyId} style={{
+            background: 'var(--bg2)', border: `1px solid ${cfg.border}`,
+            borderRadius: 12, padding: '14px 8px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 24, marginBottom: 5 }}>{item.emoji}</div>
+            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 3, wordBreak: 'keep-all' }}>
+              {item.bodyName}
+            </div>
+            <div style={{ fontSize: '10px', color: cfg.color, wordBreak: 'keep-all' }}>{item.effectLabel}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 보관함 아이템 카드 ───────────────────────────────────────
+function InvCard({ item, isEquipped, onEquip, onUse }) {
+  const canEquip  = ['theme','avatar','effect'].includes(item.category);
+  const isSpecial = item.category === 'special_reading';
+  const rarityColor = RARITY_COLOR[item.rarity] || 'var(--t4)';
+  const rarityLabel = RARITY_LABEL[item.rarity];
+
+  return (
+    <div style={{
+      background: 'var(--bg2)',
+      border: `1px solid ${isEquipped ? 'var(--acc)' : 'var(--line)'}`,
+      borderRadius: 'var(--r2)',
+      padding: '16px 14px',
+      display: 'flex', flexDirection: 'column', gap: 7,
+      position: 'relative',
+      boxShadow: isEquipped ? '0 0 10px rgba(232,176,72,0.2)' : 'none',
+    }}>
+      {item.rarity && item.rarity !== 'common' && (
+        <div style={{ position: 'absolute', top: 8, right: 10, fontSize: '10px', fontWeight: 700, color: rarityColor }}>
+          {rarityLabel}
+        </div>
+      )}
+
+      {/* graphic */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        {(item.category === 'theme' || item.category === 'avatar' || item.category === 'effect')
+          ? <ShopItemGraphic item={item} size={52} />
+          : <div style={{ fontSize: 32, lineHeight: 1 }}>{item.emoji}</div>
+        }
+      </div>
+
+      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center' }}>{item.name}</div>
+      <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.5, textAlign: 'center' }}>{item.description || CAT_DESC[item.category]}</div>
+
+      {canEquip && (
+        <button onClick={onEquip} style={{
+          padding: '8px', textAlign: 'center', fontSize: 'var(--xs)', width: '100%',
+          color: 'var(--gold)', fontWeight: 700, cursor: 'pointer',
+          border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
+          background: isEquipped ? 'rgba(232,176,72,0.2)' : 'var(--goldf)',
+          fontFamily: 'var(--ff)',
+          boxShadow: isEquipped ? '0 0 8px rgba(232,176,72,0.35)' : 'none',
+          transition: 'all .2s',
+        }}>
+          {isEquipped ? '✦ 장착 중 (해제)' : '장착하기'}
+        </button>
+      )}
+      {isSpecial && (
+        <button onClick={onUse} style={{
+          padding: '8px', textAlign: 'center', fontSize: 'var(--xs)', width: '100%',
+          color: 'var(--gold)', fontWeight: 700, cursor: 'pointer',
+          border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
+          background: 'var(--goldf)', fontFamily: 'var(--ff)',
+        }}>
+          ✦ 지금 사용하기 →
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── 구매 확인 모달 (특별 상담용) ────────────────────────────
+function BuyModal({ item, currentBP, onConfirm, onClose, buying }) {
+  const canAfford = currentBP >= (item.bp_cost || 0);
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px' }}>
+      <div style={{ width: '100%', maxWidth: 360, background: 'var(--bg1)', borderRadius: 'var(--r2)', padding: '28px 24px', border: '1px solid var(--line)' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 40, marginBottom: 10 }}>{item.emoji}</div>
-          <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>
-            {item.name}
-          </div>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 12 }}>
-            {item.description}
-          </div>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '8px 16px', background: 'var(--goldf)', borderRadius: 20, border: '1px solid var(--acc)',
-          }}>
-            <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--gold)' }}>
-              {item.bp_cost} BP
-            </span>
+          <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>{item.name}</div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 12 }}>{item.description}</div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: 'var(--goldf)', borderRadius: 20, border: '1px solid var(--acc)' }}>
+            <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--gold)' }}>{item.bp_cost} BM</span>
           </div>
         </div>
-
-        <div style={{
-          padding: '12px', background: 'var(--bg2)', borderRadius: 'var(--r1)',
-          marginBottom: 16, textAlign: 'center', fontSize: 'var(--xs)',
-          color: canAfford ? 'var(--t3)' : 'var(--rose)',
+        <div style={{ padding: '12px', background: 'var(--bg2)', borderRadius: 'var(--r1)', marginBottom: 16, textAlign: 'center', fontSize: 'var(--xs)', color: canAfford ? 'var(--t3)' : 'var(--rose)' }}>
+          현재 보유 BM: <strong style={{ color: canAfford ? 'var(--t1)' : 'var(--rose)' }}>{currentBP} BM</strong>
+          {!canAfford && <div style={{ marginTop: 4, color: 'var(--rose)' }}>BM이 {item.bp_cost - currentBP} 부족해요</div>}
+        </div>
+        <button onClick={onConfirm} disabled={!canAfford || buying} style={{
+          width: '100%', padding: '13px', background: canAfford ? 'var(--goldf)' : 'var(--bg3)',
+          border: `1.5px solid ${canAfford ? 'var(--acc)' : 'var(--line)'}`, borderRadius: 'var(--r1)',
+          color: canAfford ? 'var(--gold)' : 'var(--t4)', fontWeight: 700, fontSize: 'var(--sm)',
+          fontFamily: 'var(--ff)', cursor: canAfford ? 'pointer' : 'not-allowed', marginBottom: 8,
         }}>
-          현재 보유 BP: <strong style={{ color: canAfford ? 'var(--t1)' : 'var(--rose)' }}>{currentBP} BP</strong>
-          {!canAfford && (
-            <div style={{ marginTop: 4, color: 'var(--rose)' }}>
-              BP가 {item.bp_cost - currentBP} 부족해요
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={onConfirm}
-          disabled={!canAfford || buying}
-          style={{
-            width: '100%', padding: '13px',
-            background: canAfford ? 'var(--goldf)' : 'var(--bg3)',
-            border: `1.5px solid ${canAfford ? 'var(--acc)' : 'var(--line)'}`,
-            borderRadius: 'var(--r1)',
-            color: canAfford ? 'var(--gold)' : 'var(--t4)',
-            fontWeight: 700, fontSize: 'var(--sm)', fontFamily: 'var(--ff)',
-            cursor: canAfford ? 'pointer' : 'not-allowed',
-            marginBottom: 8,
-          }}
-        >
-          {buying ? '구매 중...' : canAfford ? `✦ 구매하기 (${item.bp_cost} BP)` : 'BP 부족'}
+          {buying ? '구매 중...' : canAfford ? `✦ 구매하기 (${item.bp_cost} BM)` : 'BM 부족'}
         </button>
-        <button
-          onClick={onClose}
-          style={{
-            width: '100%', padding: '10px', background: 'none', border: 'none',
-            color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
-          }}
-        >
+        <button onClick={onClose} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
           취소
         </button>
       </div>
@@ -315,470 +542,453 @@ function ConfirmModal({ item, currentBP, onConfirm, onClose, buying }) {
   );
 }
 
-// ── 아이템 카드 ────────────────────────────────────────────
-function ItemCard({ item, owned, onBuy, onUse }) {
-  const canEquip  = item.category === 'theme' || item.category === 'avatar' || item.category === 'effect';
-  const isSpecial = item.category === 'special_reading';
-
-  return (
-    <div style={{
-      background: 'var(--bg2)',
-      border: `1px solid ${owned ? 'var(--acc)' : 'var(--line)'}`,
-      borderRadius: 'var(--r2, 16px)',
-      padding: '18px 16px',
-      display: 'flex', flexDirection: 'column', gap: 8,
-      position: 'relative',
-    }}>
-      {item.rarity !== 'common' && (
-        <div style={{
-          position: 'absolute', top: 10, right: 10,
-          fontSize: '10px', fontWeight: 700,
-          color: RARITY_COLOR[item.rarity], letterSpacing: '.04em',
-        }}>
-          {RARITY_LABEL[item.rarity]}
-        </div>
-      )}
-
-      <div style={{ fontSize: 32, lineHeight: 1 }}>{item.emoji}</div>
-      <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>{item.name}</div>
-      <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>{item.description}</div>
-
-      {CAT_DESC[item.category] && (
-        <div style={{
-          fontSize: '10px', color: 'var(--t4)', lineHeight: 1.5,
-          padding: '5px 8px',
-          background: 'rgba(232,176,72,0.04)',
-          borderRadius: 8, borderLeft: '2px solid var(--acc)',
-        }}>
-          {CAT_DESC[item.category]}
-        </div>
-      )}
-
-      {owned ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-          {canEquip && (
-            <button
-              onClick={() => onBuy(item)}
-              style={{
-                padding: '9px', textAlign: 'center', fontSize: 'var(--xs)', width: '100%',
-                color: 'var(--gold)', fontWeight: 700, cursor: 'pointer',
-                border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
-                background: item.is_equipped ? 'rgba(232,176,72,0.2)' : 'var(--goldf)',
-                fontFamily: 'var(--ff)',
-                boxShadow: item.is_equipped ? '0 0 8px rgba(232,176,72,0.4)' : 'none',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {item.is_equipped ? '✦ 장착 중 (해제)' : '장착하기'}
-            </button>
-          )}
-          {isSpecial && (
-            <button
-              onClick={onUse}
-              style={{
-                padding: '9px', textAlign: 'center', fontSize: 'var(--xs)', width: '100%',
-                color: 'var(--gold)', fontWeight: 700, cursor: 'pointer',
-                border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
-                background: 'var(--goldf)', fontFamily: 'var(--ff)',
-              }}
-            >
-              ✦ 지금 사용하기 →
-            </button>
-          )}
-          {!canEquip && !isSpecial && (
-            <div style={{ padding: '9px', textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-              ✦ 보유 중
-            </div>
-          )}
-        </div>
-      ) : (
-        <button
-          onClick={() => onBuy(item)}
-          style={{
-            marginTop: 4, padding: '9px',
-            background: 'var(--goldf)', border: '1.5px solid var(--acc)',
-            borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
-            fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', width: '100%',
-          }}
-        >
-          {item.bp_cost} BP
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── 메인 페이지 ────────────────────────────────────────────
+// ─── 메인 페이지 ─────────────────────────────────────────────
 export default function ShopPage({ showToast }) {
-  const user    = useAppStore((s) => s.user);
-  const setStep = useAppStore((s) => s.setStep);
+  const user    = useAppStore(s => s.user);
+  const setStep = useAppStore(s => s.setStep);
+  const equippedSajuItem = useAppStore(s => s.equippedSajuItem);
 
-  const [category, setCategory]       = useState('전체');
-  const [items, setItems]             = useState([]);
-  const [ownedIds, setOwnedIds]       = useState(new Set());
-  const [currentBP, setCurrentBP]     = useState(0);
-  const [confirmItem, setConfirmItem] = useState(null);
-  const [buying, setBuying]           = useState(false);
-  const [loading, setLoading]         = useState(false);
-  const [equippedIds, setEquippedIds] = useState({ theme: null, avatar: null, effect: null });
+  const [activeTab,   setActiveTab]   = useState('spirit');
+  const [spiritTab,   setSpiritTab]   = useState('space'); // 'space'|'saju'
+  const [currentBP,   setCurrentBP]   = useState(0);
+  const [loadingBP,   setLoadingBP]   = useState(false);
+  const [pulling,     setPulling]     = useState(false);  // 'single'|'10'|false
+  const [results,     setResults]     = useState(null);   // pulled items
+  const [resultSys,   setResultSys]   = useState('space');
 
-  // 숍 뽑기 state
-  const [shopGachaPulling, setShopGachaPulling] = useState(false);
-  const [shopGachaResults, setShopGachaResults] = useState(null);
-  // ownedIds snapshot at pull time (for duplicate badge in modal)
-  const [pullTimeOwnedIds, setPullTimeOwnedIds] = useState(new Set());
+  // 숍 아이템 (DB — special_reading only now; theme/avatar/effect via local pool)
+  const [dbItems,       setDbItems]       = useState([]);
+  const [ownedIds,      setOwnedIds]      = useState(new Set());
+  const [equippedIds,   setEquippedIds]   = useState({ theme: null, avatar: null, effect: null });
+  const [confirmItem,   setConfirmItem]   = useState(null);
+  const [buying,        setBuying]        = useState(false);
+  const [invFilter,     setInvFilter]     = useState('all');
 
   const kakaoId = user?.kakaoId || user?.id;
 
+  // ── BP + 보유 아이템 로드 ────────────────────────────────────
   const loadData = useCallback(async () => {
-    setLoading(true);
+    if (!kakaoId) return;
+    setLoadingBP(true);
     try {
       const client = getAuthenticatedClient(kakaoId);
-
-      const [itemsRes, bpRes, invRes] = await Promise.all([
-        client.from('shop_items').select('*').eq('is_active', true).order('bp_cost'),
-        kakaoId
-          ? client.from('users').select('current_bp').eq('kakao_id', String(kakaoId)).single()
-          : Promise.resolve({ data: null }),
-        kakaoId
-          ? client.from('user_shop_inventory').select('item_id, is_equipped').eq('kakao_id', String(kakaoId))
-          : Promise.resolve({ data: [] }),
+      const [bpRes, invRes, dbItemsRes] = await Promise.all([
+        client.from('users').select('current_bp').eq('kakao_id', String(kakaoId)).single(),
+        client.from('user_shop_inventory').select('item_id, is_equipped').eq('kakao_id', String(kakaoId)),
+        client.from('shop_items').select('*').eq('is_active', true),
       ]);
-
-      const allItems = itemsRes.data || [];
-      const userInv  = invRes.data || [];
-      setItems(allItems.filter(i => i.category !== 'talisman'));
       setCurrentBP(bpRes.data?.current_bp ?? 0);
-      setOwnedIds(new Set(userInv.map(r => r.item_id)));
+      const inv = invRes.data || [];
+      setOwnedIds(new Set(inv.map(r => String(r.item_id))));
+      setDbItems((dbItemsRes.data || []).filter(i => i.category === 'special_reading'));
 
-      const equippedMap     = { theme: null, avatar: null, effect: null };
-      const equippedFromDB  = userInv.filter(r => r.is_equipped).map(r => r.item_id);
-      for (const eid of equippedFromDB) {
-        const itemObj = allItems.find(i => i.id === eid);
-        if (itemObj && equippedMap[itemObj.category] === null) {
-          equippedMap[itemObj.category] = eid;
+      const equippedMap = { theme: null, avatar: null, effect: null };
+      const equippedRaw = inv.filter(r => r.is_equipped).map(r => String(r.item_id));
+      for (const eid of equippedRaw) {
+        // check local pool first
+        const localItem = findShopItem(eid);
+        if (localItem && equippedMap[localItem.category] === null) {
+          equippedMap[localItem.category] = eid;
         }
       }
       setEquippedIds(equippedMap);
-
       const store = useAppStore.getState();
-      store.setEquippedTheme?.(allItems.find(i => i.id === equippedMap.theme)  || null);
-      store.setEquippedAvatar?.(allItems.find(i => i.id === equippedMap.avatar) || null);
-    } catch {
-      showToast?.('숍 정보를 불러오지 못했어요', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [kakaoId, showToast]);
+      const equippedThemeItem  = findShopItem(equippedMap.theme  || '') || null;
+      const equippedAvatarItem = findShopItem(equippedMap.avatar || '') || null;
+      store.setEquippedTheme?.(equippedThemeItem);
+      store.setEquippedAvatar?.(equippedAvatarItem);
+    } catch { /* silent */ }
+    finally { setLoadingBP(false); }
+  }, [kakaoId]);
 
   useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { setResults(null); }, [activeTab, spiritTab]);
 
-  // 직접 구매
-  async function handlePurchase(item) {
-    if (!kakaoId) { showToast?.('로그인 후 구매할 수 있어요', 'info'); return; }
-    setBuying(true);
-    try {
-      const client = getAuthenticatedClient(kakaoId);
-      const { ok, newBP } = await spendBP(client, kakaoId, item.bp_cost, 'SHOP_PURCHASE', item.name);
-      if (!ok) { showToast?.('BP가 부족해요', 'error'); setBuying(false); return; }
-
-      await client.from('user_shop_inventory').insert({
-        kakao_id: String(kakaoId), item_id: item.id, is_equipped: false,
-      });
-
-      setCurrentBP(newBP ?? currentBP - item.bp_cost);
-      setOwnedIds(prev => new Set([...prev, item.id]));
-      setConfirmItem(null);
-
-      if (item.category === 'special_reading') {
-        showToast?.(`${item.name} 구매 완료! 지금 바로 사용하러 가볼까요? ✦`, 'success');
-        setTimeout(() => setStep(33), 800);
-      } else {
-        showToast?.(`${item.name} 구매 완료! ✦`, 'success');
-      }
-    } catch {
-      showToast?.('구매에 실패했어요. 다시 시도해봐요.', 'error');
-    } finally {
-      setBuying(false);
-    }
-  }
-
-  // 장착/해제
-  async function handleEquipItem(item) {
-    if (!kakaoId) return;
-    const cat        = item.category;
-    const isEquipping = equippedIds[cat] !== item.id;
-    try {
-      const client          = getAuthenticatedClient(kakaoId);
-      const categoryItemIds = items.filter(i => i.category === cat).map(i => i.id);
-
-      if (isEquipping) {
-        const othersToUnequip = categoryItemIds.filter(id => id !== item.id);
-        if (othersToUnequip.length > 0) {
-          await client.from('user_shop_inventory')
-            .update({ is_equipped: false })
-            .eq('kakao_id', String(kakaoId))
-            .in('item_id', othersToUnequip);
-        }
-        await client.from('user_shop_inventory')
-          .update({ is_equipped: true })
-          .eq('kakao_id', String(kakaoId))
-          .eq('item_id', item.id);
-
-        setEquippedIds(prev => ({ ...prev, [cat]: item.id }));
-        if (cat === 'theme')  useAppStore.getState().setEquippedTheme(item);
-        if (cat === 'avatar') useAppStore.getState().setEquippedAvatar(item);
-        showToast?.(`${item.name} 장착 완료! ✦`, 'success');
-      } else {
-        await client.from('user_shop_inventory')
-          .update({ is_equipped: false })
-          .eq('kakao_id', String(kakaoId))
-          .eq('item_id', item.id);
-
-        setEquippedIds(prev => ({ ...prev, [cat]: null }));
-        if (cat === 'theme')  useAppStore.getState().setEquippedTheme(null);
-        if (cat === 'avatar') useAppStore.getState().setEquippedAvatar(null);
-        showToast?.(`${item.name} 장착을 해제했어요.`, 'success');
-      }
-    } catch {
-      showToast?.('장착 상태 변경에 실패했어요.', 'error');
-    }
-  }
-
-  // 숍 뽑기 (랜덤)
-  async function doShopGachaPull(count) {
+  // ── 기운 뽑기 ────────────────────────────────────────────────
+  async function doPullSpirit(count) {
     if (!kakaoId) { showToast?.('로그인 후 이용 가능해요', 'info'); return; }
-    const cost     = count === 1 ? SHOP_GACHA_COST_1 : SHOP_GACHA_COST_10;
-    if (currentBP < cost) { showToast?.(`BP가 부족해요 (필요: ${cost} BP)`, 'error'); return; }
-
-    // special_reading은 뽑기 풀에서 제외 (직접 구매만)
-    const gachaPool = items.filter(i => i.category !== 'special_reading');
-    if (gachaPool.length === 0) { showToast?.('뽑기 가능한 아이템이 없어요', 'error'); return; }
-
-    const pulling = count === 1 ? 'shop1' : 'shop10';
-    setShopGachaPulling(pulling);
-
-    // pull 시작 시점의 ownedIds 스냅샷 (중복 뱃지 표시용)
-    const ownedSnapshot = new Set(ownedIds);
-    setPullTimeOwnedIds(ownedSnapshot);
-
+    const cost = count === 1 ? SPIRIT_COST_1 : SPIRIT_COST_10;
+    if (currentBP < cost) { showToast?.(`BM이 부족해요 (필요: ${cost} BM)`, 'error'); return; }
+    setPulling(count === 1 ? 'single' : '10');
     try {
       const client = getAuthenticatedClient(kakaoId);
-      const { ok, newBP } = await spendBP(client, kakaoId, cost, `SHOP_GACHA_${count}_${Date.now()}`, `숍 뽑기 ${count}회`);
+      const { ok, newBP } = await spendBP(client, kakaoId, cost, `GACHA_SPIRIT_${spiritTab}_${count}_${Date.now()}`, `${spiritTab === 'saju' ? '사주' : '우주'} 기운 ${count}회`);
+      if (!ok) { showToast?.('BM이 부족해요', 'error'); return; }
+      const pulled = spiritTab === 'saju'
+        ? (count === 1 ? [pullOneSaju()] : pull10Saju())
+        : (count === 1 ? [pullOne()]     : pull10());
+      await client.from('user_shop_inventory').insert(
+        pulled.map(item => ({ kakao_id: String(kakaoId), item_id: item.id, is_equipped: false, unlocked_at: new Date().toISOString() }))
+      );
+      setCurrentBP(newBP ?? currentBP - cost);
+      setResultSys(spiritTab);
+      setResults(pulled);
+    } catch { showToast?.('뽑기 중 오류가 발생했어요', 'error'); }
+    finally { setPulling(false); }
+  }
+
+  // ── 숍 뽑기 (테마/아바타/이펙트) ────────────────────────────
+  async function doPullShop(category, count) {
+    if (!kakaoId) { showToast?.('로그인 후 이용 가능해요', 'info'); return; }
+    const cost = count === 1 ? SHOP_COST_1 : SHOP_COST_10;
+    if (currentBP < cost) { showToast?.(`BM이 부족해요 (필요: ${cost} BM)`, 'error'); return; }
+    const poolMap = { theme: THEME_POOL, avatar: AVATAR_POOL, effect: EFFECT_POOL };
+    const pool = poolMap[category] || [];
+    if (!pool.length) return;
+
+    setPulling(count === 1 ? 'single' : '10');
+    const ownedSnap = new Set(ownedIds);
+    try {
+      const client = getAuthenticatedClient(kakaoId);
+      const { ok, newBP } = await spendBP(client, kakaoId, cost, `GACHA_SHOP_${category}_${count}_${Date.now()}`, `${category} 뽑기 ${count}회`);
       if (!ok) { showToast?.('BP가 부족해요', 'error'); return; }
 
-      const pulled = pickFromPool(gachaPool, count);
+      const pulled = count === 1 ? [pullOneShop(pool)] : pull10Shop(pool);
 
-      // 중복 분리 (이번 뽑기 내에서도 중복 방지)
-      let   refundTotal    = 0;
-      const toInsert       = [];
-      const newThisPull    = new Set();
-
+      // 중복 처리
+      let refund = 0;
+      const toInsert = [];
+      const newThisPull = new Set();
       for (const item of pulled) {
-        if (ownedSnapshot.has(item.id) || newThisPull.has(item.id)) {
-          refundTotal += DUPLICATE_REFUND;
+        if (ownedSnap.has(item.id) || newThisPull.has(item.id)) {
+          refund += DUPLICATE_REFUND;
         } else {
           toInsert.push(item);
           newThisPull.add(item.id);
         }
       }
-
       if (toInsert.length > 0) {
         await client.from('user_shop_inventory').insert(
           toInsert.map(item => ({ kakao_id: String(kakaoId), item_id: item.id, is_equipped: false }))
         );
         setOwnedIds(prev => new Set([...prev, ...toInsert.map(i => i.id)]));
       }
-
-      // 중복 환불
       let finalBP = newBP ?? currentBP - cost;
-      if (refundTotal > 0) {
-        // 안전하게 DB에서 최신 BP 읽어서 업데이트
-        const { data: freshData } = await client
-          .from('users').select('current_bp')
-          .eq('kakao_id', String(kakaoId)).single();
-        const freshBP = freshData?.current_bp ?? finalBP;
-        await client.from('users')
-          .update({ current_bp: freshBP + refundTotal })
-          .eq('kakao_id', String(kakaoId));
-        finalBP = freshBP + refundTotal;
+      if (refund > 0) {
+        const { data: fresh } = await client.from('users').select('current_bp').eq('kakao_id', String(kakaoId)).single();
+        const freshBP = fresh?.current_bp ?? finalBP;
+        await client.from('users').update({ current_bp: freshBP + refund }).eq('kakao_id', String(kakaoId));
+        finalBP = freshBP + refund;
       }
       setCurrentBP(finalBP);
-      setShopGachaResults(pulled);
-    } catch {
-      showToast?.('뽑기 중 오류가 발생했어요', 'error');
-    } finally {
-      setShopGachaPulling(false);
-    }
+      setResultSys('shop');
+      setResults(pulled);
+    } catch { showToast?.('뽑기 중 오류가 발생했어요', 'error'); }
+    finally { setPulling(false); }
   }
 
-  const filtered = category === '전체'
-    ? items.filter(i => i.category !== 'special_reading')
-    : category === '보관함'
-      ? Array.from(ownedIds).map(id => items.find(i => i.id === id)).filter(Boolean)
-      : items.filter(i => i.category === CAT_MAP[category]);
+  // ── 장착/해제 ────────────────────────────────────────────────
+  async function handleEquip(item) {
+    if (!kakaoId) return;
+    const cat  = item.category;
+    const isEquipping = equippedIds[cat] !== item.id;
+    try {
+      const client = getAuthenticatedClient(kakaoId);
+      const allCatIds = [...THEME_POOL, ...AVATAR_POOL, ...EFFECT_POOL].filter(i => i.category === cat).map(i => i.id);
+      if (isEquipping) {
+        if (allCatIds.length > 1) {
+          await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).in('item_id', allCatIds.filter(id => id !== item.id));
+        }
+        await client.from('user_shop_inventory').update({ is_equipped: true }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
+        setEquippedIds(prev => ({ ...prev, [cat]: item.id }));
+        if (cat === 'theme')  useAppStore.getState().setEquippedTheme(item);
+        if (cat === 'avatar') useAppStore.getState().setEquippedAvatar(item);
+        showToast?.(`${item.name} 장착 완료! ✦`, 'success');
+      } else {
+        await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
+        setEquippedIds(prev => ({ ...prev, [cat]: null }));
+        if (cat === 'theme')  useAppStore.getState().setEquippedTheme(null);
+        if (cat === 'avatar') useAppStore.getState().setEquippedAvatar(null);
+        showToast?.(`${item.name} 해제했어요.`, 'success');
+      }
+    } catch { showToast?.('장착 상태 변경에 실패했어요.', 'error'); }
+  }
 
-  const gachaHasItems = items.filter(i => i.category !== 'special_reading').length > 0;
+  // ── 특별 상담 구매 ────────────────────────────────────────────
+  async function handleBuySpecial(item) {
+    if (!kakaoId) { showToast?.('로그인 후 구매할 수 있어요', 'info'); return; }
+    setBuying(true);
+    try {
+      const client = getAuthenticatedClient(kakaoId);
+      const { ok, newBP } = await spendBP(client, kakaoId, item.bp_cost, 'SHOP_BUY', item.name);
+      if (!ok) { showToast?.('BP가 부족해요', 'error'); setBuying(false); return; }
+      await client.from('user_shop_inventory').insert({ kakao_id: String(kakaoId), item_id: item.id, is_equipped: false });
+      setCurrentBP(newBP ?? currentBP - item.bp_cost);
+      setOwnedIds(prev => new Set([...prev, String(item.id)]));
+      setConfirmItem(null);
+      showToast?.(`${item.name} 구매 완료! ✦`, 'success');
+      setTimeout(() => setStep(33), 800);
+    } catch { showToast?.('구매에 실패했어요.', 'error'); }
+    finally { setBuying(false); }
+  }
 
+  // ── 보관함 아이템 목록 ────────────────────────────────────────
+  const localOwnedItems = ALL_SHOP_POOL.filter(i => ownedIds.has(i.id));
+  const dbOwnedItems    = dbItems.filter(i => ownedIds.has(String(i.id)));
+  const allOwnedItems   = [...localOwnedItems, ...dbOwnedItems];
+  const invItems = invFilter === 'all' ? allOwnedItems : allOwnedItems.filter(i => i.category === invFilter);
+
+  // ─── 렌더 ────────────────────────────────────────────────────
   return (
-    <div className="page step-fade" style={{ paddingBottom: 40 }}>
+    <div className="page step-fade" style={{ paddingBottom: 52 }}>
+
       {/* 헤더 */}
-      <div style={{ padding: '28px 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em' }}>
-            ✦ 별숨 숍
-          </div>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '6px 12px', background: 'var(--goldf)', borderRadius: 20, border: '1px solid var(--acc)',
-          }}>
-            <span style={{ fontSize: '14px', color: 'var(--gold)' }}>✦</span>
-            <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)' }}>{currentBP} BP</span>
-          </div>
+      <div style={{ padding: '22px 20px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 3 }}>✦ 별숨 숍</div>
+          <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.25 }}>뽑기 · 꾸미기 · 보관함</div>
         </div>
-        <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.3 }}>
-          BP로 나만의<br />별숨을 꾸며봐요
-        </div>
-        <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
-          직접 구매하거나 랜덤 뽑기로 아이템을 모아봐요
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--goldf)', borderRadius: 20, border: '1px solid var(--acc)', flexShrink: 0 }}>
+          <span style={{ fontSize: 13, color: 'var(--gold)' }}>✦</span>
+          <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--gold)' }}>
+            {loadingBP ? '...' : currentBP} BP
+          </span>
         </div>
       </div>
 
-      {/* 숍 뽑기 배너 */}
-      <ShopGachaSection
-        currentBP={currentBP}
-        pulling={shopGachaPulling}
-        onPull={doShopGachaPull}
-        hasItems={gachaHasItems && !loading}
-      />
+      {/* 장착 기운 상태 */}
+      {equippedSajuItem && (
+        <div style={{ margin: '0 20px 12px', padding: '9px 12px', background: 'rgba(232,176,72,0.06)', border: '1px solid rgba(232,176,72,0.25)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji}</span>
+          <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', flex: 1 }}>
+            <strong style={{ color: 'var(--gold)' }}>{equippedSajuItem.name}</strong> 기운이 AI 답변에 반영 중
+          </span>
+          <button onClick={() => setStep(38)} style={{ fontSize: '10px', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 16, padding: '3px 8px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+            변경
+          </button>
+        </div>
+      )}
 
-      {/* 카테고리 탭 */}
-      <div style={{
-        display: 'flex', gap: 8, overflowX: 'auto',
-        padding: '16px 20px 12px', scrollbarWidth: 'none',
-      }}>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCategory(cat)}
-            style={{
-              flexShrink: 0, padding: '7px 14px', borderRadius: 20,
-              border: `1px solid ${category === cat ? 'var(--acc)' : 'var(--line)'}`,
-              background: category === cat ? 'var(--goldf)' : 'none',
-              color: category === cat ? 'var(--gold)' : 'var(--t3)',
-              fontSize: 'var(--xs)', fontWeight: category === cat ? 700 : 400,
-              cursor: 'pointer', fontFamily: 'var(--ff)',
-            }}
-          >
-            {cat}
+      {/* 메인 탭 */}
+      <div style={{ display: 'flex', gap: 0, overflowX: 'auto', scrollbarWidth: 'none', padding: '0 20px 14px', borderBottom: '1px solid var(--line)' }}>
+        {MAIN_TABS.map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+            flexShrink: 0, padding: '8px 12px', borderRadius: 20,
+            border: `1px solid ${activeTab === tab.id ? 'var(--acc)' : 'transparent'}`,
+            background: activeTab === tab.id ? 'var(--goldf)' : 'none',
+            color: activeTab === tab.id ? 'var(--gold)' : 'var(--t3)',
+            fontSize: 'var(--xs)', fontWeight: activeTab === tab.id ? 700 : 400,
+            cursor: 'pointer', fontFamily: 'var(--ff)', whiteSpace: 'nowrap',
+            transition: 'all .15s',
+          }}>
+            {tab.emoji} {tab.label}
           </button>
         ))}
       </div>
 
-      {/* 특별 상담 탭: 안내 배너 */}
-      {category === '특별 상담' && (
-        <div style={{
-          margin: '0 20px 12px', padding: '12px 14px',
-          background: 'rgba(232,176,72,0.06)', border: '1px solid var(--acc)',
-          borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6,
-        }}>
-          ✦ 특별 상담 아이템은 구매 즉시 사용할 수 있어요. 뽑기로는 제공되지 않아요.
-        </div>
-      )}
-
-      {/* 아이템 그리드 */}
-      <div style={{ padding: '0 20px' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--t4)' }}>
-            <div style={{
-              width: 28, height: 28, border: '2px solid var(--line)', borderTopColor: 'var(--gold)',
-              borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', margin: '0 auto 10px',
-            }} />
-            불러오는 중...
-          </div>
-        ) : category === '보관함' && filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🗃️</div>
-            <div style={{ fontSize: 'var(--sm)' }}>아직 수집한 아이템이 없어요</div>
-            <div style={{ fontSize: 'var(--xs)', marginTop: 6, color: 'var(--t4)' }}>뽑기나 구매로 모아봐요</div>
-          </div>
-        ) : filtered.length === 0 && category !== '보관함' ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--t4)' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🛍️</div>
-            <div style={{ fontSize: 'var(--sm)' }}>준비 중인 아이템이에요</div>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
-            {filtered.map(item => (
-              <ItemCard
-                key={item.id}
-                item={{ ...item, is_equipped: equippedIds[item.category] === item.id }}
-                owned={ownedIds.has(item.id)}
-                onBuy={
-                  ownedIds.has(item.id) && (item.category === 'theme' || item.category === 'avatar' || item.category === 'effect')
-                    ? () => handleEquipItem(item)
-                    : setConfirmItem
-                }
-                onUse={() => setStep(33)}
-              />
+      {/* ── 기운 뽑기 탭 ──────────────────────────────────────── */}
+      {activeTab === 'spirit' && (
+        <>
+          {/* 우주/사주 서브탭 */}
+          <div style={{ display: 'flex', margin: '14px 20px 0', background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 4, border: '1px solid var(--line)' }}>
+            {[{k:'space', label:'🌌 우주 기운'}, {k:'saju', label:'☯️ 사주 기운'}].map(t => (
+              <button key={t.k} onClick={() => setSpiritTab(t.k)} style={{
+                flex: 1, padding: '9px', borderRadius: 8, border: 'none',
+                background: spiritTab === t.k ? 'var(--goldf)' : 'none',
+                color: spiritTab === t.k ? 'var(--gold)' : 'var(--t3)',
+                fontWeight: spiritTab === t.k ? 700 : 400,
+                fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                outline: spiritTab === t.k ? '1px solid var(--acc)' : 'none',
+                transition: 'all .18s',
+              }}>{t.label}</button>
             ))}
           </div>
-        )}
-      </div>
 
-      {/* 별숨 뽑기 교차 안내 */}
-      <div style={{
-        margin: '20px 20px 0', padding: '12px 14px',
-        background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-      }}>
-        <div>
-          <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t2)', marginBottom: 2 }}>
-            🌌 우주 · 사주 기운 아이템도 있어요
+          {/* 설명 */}
+          <div style={{ margin: '12px 20px 0', padding: '10px 12px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
+            ✦ 기운 아이템을 뽑아 <strong style={{ color: 'var(--gold)' }}>메인 기운</strong>으로 장착하면 모든 AI 답변에 반영돼요
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>
-            뽑기에서만 구할 수 있는 기운 아이템을 모아봐요
+
+          {spiritTab === 'space' ? (
+            <>
+              <PullBanner
+                currentBP={currentBP} pulling={pulling} onPull={doPullSpirit}
+                cost1={SPIRIT_COST_1} cost10={SPIRIT_COST_10}
+                title="우주 수집 가챠"
+                subtitle={`${GACHA_POOL.length}종 천체 기운 아이템`}
+                stats={`위성 ${GACHA_POOL.filter(i=>i.grade==='satellite').length}종 · 행성 ${GACHA_POOL.filter(i=>i.grade==='planet').length}종 · 은하 ${GACHA_POOL.filter(i=>i.grade==='galaxy').length}종 · 성운 ${GACHA_POOL.filter(i=>i.grade==='nebula').length}종`}
+                accentColor="rgba(180,142,240,0.9)"
+                bgStyle={{ background: 'linear-gradient(135deg, #0d0830 0%, #0d0b20 55%, #150a2e 100%)', border: '1px solid rgba(180,142,240,.3)' }}
+                guarantee10Label={{ color: 'rgba(126,200,164,.85)', text: '행성 이상 1개 보장' }}
+              />
+              <ProbTable probTable={PROB_TABLE} />
+              <SpiritItemPreview pool={GACHA_POOL} gradeConfig={GRADE_CONFIG} gradeOrder={GRADE_ORDER} />
+            </>
+          ) : (
+            <>
+              <PullBanner
+                currentBP={currentBP} pulling={pulling} onPull={doPullSpirit}
+                cost1={SPIRIT_COST_1} cost10={SPIRIT_COST_10}
+                title="사주명리 가챠"
+                subtitle={`${SAJU_POOL.length}종 사주 기운 아이템`}
+                stats={`오행 ${SAJU_POOL.filter(i=>i.grade==='ohaeng').length}종 · 천간 ${SAJU_POOL.filter(i=>i.grade==='cheongan').length}종 · 지지 ${SAJU_POOL.filter(i=>i.grade==='jiji').length}종 · 육십갑자 ${SAJU_POOL.filter(i=>i.grade==='gapja').length}종`}
+                accentColor="rgba(212,165,106,0.9)"
+                bgStyle={{ background: 'linear-gradient(135deg, #1a0c10 0%, #100a0a 55%, #1a100a 100%)', border: '1px solid rgba(212,165,106,.3)' }}
+                guarantee10Label={{ color: 'rgba(123,164,212,.85)', text: '천간 이상 1개 보장' }}
+              />
+              <ProbTable probTable={SAJU_PROB_TABLE} />
+              <SpiritItemPreview pool={SAJU_POOL} gradeConfig={SAJU_GRADE_CONFIG} gradeOrder={SAJU_GRADE_ORDER} />
+            </>
+          )}
+
+          {/* 기운 보관함·합성 링크 */}
+          <div style={{ margin: '16px 20px 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
+              뽑은 기운 아이템 확인 · 합성 · 장착
+            </div>
+            <button onClick={() => setStep(38)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'var(--goldf)', border: '1px solid var(--acc)', color: 'var(--gold)', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+              내 기운 보관함 →
+            </button>
           </div>
-        </div>
-        <button
-          onClick={() => setStep(40)}
-          style={{
-            flexShrink: 0, padding: '6px 12px', borderRadius: 20,
-            background: 'none', border: '1px solid var(--line)',
-            color: 'var(--t3)', fontSize: '11px', fontFamily: 'var(--ff)', cursor: 'pointer',
-          }}
-        >
-          별숨 뽑기 →
-        </button>
-      </div>
+        </>
+      )}
+
+      {/* ── 테마/아바타/이펙트 뽑기 탭 ──────────────────────── */}
+      {(activeTab === 'theme' || activeTab === 'avatar' || activeTab === 'effect') && (() => {
+        const poolMap  = { theme: THEME_POOL, avatar: AVATAR_POOL, effect: EFFECT_POOL };
+        const nameMap  = { theme: '테마', avatar: '아바타', effect: '이펙트' };
+        const emojiMap = { theme: '🎨', avatar: '👤', effect: '✨' };
+        const pool     = poolMap[activeTab];
+        const label    = nameMap[activeTab];
+        const accentMap = { theme: 'rgba(232,176,72,0.9)', avatar: 'rgba(180,142,240,0.9)', effect: 'rgba(126,200,164,0.9)' };
+        const bgMap = {
+          theme:  { background: 'linear-gradient(135deg, #1a1205 0%, #130e04 55%, #1a1205 100%)', border: '1px solid rgba(232,176,72,.3)' },
+          avatar: { background: 'linear-gradient(135deg, #0e0b1e 0%, #14112c 55%, #0e0b1e 100%)', border: '1px solid rgba(180,142,240,.3)' },
+          effect: { background: 'linear-gradient(135deg, #051410 0%, #081a10 55%, #051410 100%)', border: '1px solid rgba(126,200,164,.3)' },
+        };
+        const accent = accentMap[activeTab];
+        const equippedId = equippedIds[activeTab];
+        const equippedItem = equippedId ? findShopItem(equippedId) : null;
+
+        return (
+          <>
+            {/* 장착 현황 */}
+            {equippedItem ? (
+              <div style={{ margin: '14px 20px 0', padding: '10px 12px', background: 'rgba(232,176,72,0.06)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ShopItemGraphic item={equippedItem} size={32} />
+                <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', flex: 1 }}>
+                  <strong style={{ color: 'var(--gold)' }}>{equippedItem.name}</strong> 장착 중
+                </span>
+              </div>
+            ) : (
+              <div style={{ margin: '14px 20px 0', padding: '10px 12px', background: 'var(--bg2)', border: '1px dashed var(--line)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center' }}>
+                {label} 아이템을 뽑아서 장착해봐요 ✦
+              </div>
+            )}
+
+            <PullBanner
+              currentBP={currentBP} pulling={pulling}
+              onPull={(count) => doPullShop(activeTab, count)}
+              cost1={SHOP_COST_1} cost10={SHOP_COST_10}
+              title={`${label} 뽑기`}
+              subtitle={`${pool.length}종 ${label} 아이템`}
+              stats={`일반 60% · 레어 35% · 레전더리 5% · 중복 시 ${DUPLICATE_REFUND}BM 환불`}
+              accentColor={accent}
+              bgStyle={bgMap[activeTab]}
+              guarantee10Label={{ color: 'rgba(232,176,72,.8)', text: '레어 이상 1개 보장' }}
+            />
+            <ProbTable probTable={SHOP_PROB_TABLE} />
+            <ShopItemPreviewGrid pool={pool} gradeConfig={SHOP_GRADE_CONFIG} gradeOrder={SHOP_GRADE_ORDER} />
+          </>
+        );
+      })()}
+
+      {/* ── 보관함 탭 ─────────────────────────────────────────── */}
+      {activeTab === 'inv' && (
+        <>
+          <div style={{ display: 'flex', gap: 6, padding: '14px 20px 0', overflowX: 'auto', scrollbarWidth: 'none' }}>
+            {[{id:'all',label:'전체'},{id:'theme',label:'테마'},{id:'avatar',label:'아바타'},{id:'effect',label:'이펙트'},{id:'special_reading',label:'특별 상담'}].map(f => (
+              <button key={f.id} onClick={() => setInvFilter(f.id)} style={{
+                flexShrink: 0, padding: '6px 13px', borderRadius: 20,
+                border: `1px solid ${invFilter === f.id ? 'var(--acc)' : 'var(--line)'}`,
+                background: invFilter === f.id ? 'var(--goldf)' : 'none',
+                color: invFilter === f.id ? 'var(--gold)' : 'var(--t3)',
+                fontSize: 'var(--xs)', fontWeight: invFilter === f.id ? 700 : 400,
+                cursor: 'pointer', fontFamily: 'var(--ff)',
+              }}>{f.label}</button>
+            ))}
+          </div>
+
+          {/* 특별 상담 구매 섹션 */}
+          {(invFilter === 'all' || invFilter === 'special_reading') && dbItems.filter(i => !ownedIds.has(String(i.id))).length > 0 && (
+            <div style={{ margin: '14px 20px 0' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>✦ 특별 상담 구매</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                {dbItems.filter(i => !ownedIds.has(String(i.id))).map(item => (
+                  <div key={item.id} style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px', display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'center' }}>
+                    <div style={{ fontSize: 28 }}>{item.emoji}</div>
+                    <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center' }}>{item.name}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.5 }}>{item.description}</div>
+                    <button onClick={() => setConfirmItem(item)} style={{
+                      padding: '8px', width: '100%', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+                      borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
+                      fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                    }}>{item.bp_cost} BM</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 보유 아이템 그리드 */}
+          <div style={{ padding: '14px 20px 0' }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>보유 아이템 ({invItems.length})</div>
+            {invItems.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--t4)' }}>
+                <div style={{ fontSize: 36, marginBottom: 10 }}>🗃️</div>
+                <div style={{ fontSize: 'var(--sm)' }}>아직 수집한 아이템이 없어요</div>
+                <div style={{ fontSize: 'var(--xs)', marginTop: 6 }}>뽑기로 아이템을 모아봐요</div>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                {invItems.map(item => (
+                  <InvCard
+                    key={item.id}
+                    item={item}
+                    isEquipped={equippedIds[item.category] === item.id}
+                    onEquip={() => handleEquip(item)}
+                    onUse={() => setStep(33)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 기운 아이템 링크 */}
+          <div style={{ margin: '16px 20px 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
+              기운 아이템(우주·사주) 확인 및 합성
+            </div>
+            <button onClick={() => setStep(38)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'none', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: '11px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+              기운 보관함 →
+            </button>
+          </div>
+        </>
+      )}
 
       {/* BP 획득 안내 */}
-      <div style={{
-        margin: '14px 20px 0', padding: '14px 16px',
-        background: 'var(--bg2)', borderRadius: 'var(--r1)',
-        fontSize: '11px', color: 'var(--t4)', lineHeight: 1.7,
-      }}>
-        <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 6 }}>✦ BP 획득 방법</div>
+      <div style={{ margin: '20px 20px 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', fontSize: '11px', color: 'var(--t4)', lineHeight: 1.7 }}>
+        <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 5 }}>✦ BM 획득 방법</div>
         일일 출석 +5 · 미션 완료 +10 · 일기 작성 +5 · 앱 설치 +20 · 친구 공유 +3
       </div>
 
-      {/* 구매 확인 모달 */}
-      {confirmItem && (
-        <ConfirmModal
-          item={confirmItem}
-          currentBP={currentBP}
-          onConfirm={() => handlePurchase(confirmItem)}
-          onClose={() => setConfirmItem(null)}
-          buying={buying}
+      {/* 결과 오버레이 */}
+      {results && (
+        <PullResultOverlay
+          results={results}
+          system={resultSys}
+          onClose={() => { setResults(null); loadData(); }}
         />
       )}
 
-      {/* 숍 뽑기 결과 모달 */}
-      {shopGachaResults && (
-        <ShopGachaResultModal
-          results={shopGachaResults}
-          ownedIds={pullTimeOwnedIds}
-          onClose={() => { setShopGachaResults(null); loadData(); }}
+      {/* 특별 상담 구매 확인 모달 */}
+      {confirmItem && (
+        <BuyModal
+          item={confirmItem}
+          currentBP={currentBP}
+          onConfirm={() => handleBuySpecial(confirmItem)}
+          onClose={() => setConfirmItem(null)}
+          buying={buying}
         />
       )}
     </div>

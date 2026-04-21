@@ -114,6 +114,7 @@ export default function LandingPage({
   const { saju, sun, today, buildCtx, formOk, formOkApprox, isApproximate } = useSajuCtx();
   const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 }, missions = [] } = useGamCtx();
   const equippedTalisman = useAppStore((s) => s.equippedTalisman);
+  const equippedSajuItem = useAppStore((s) => s.equippedSajuItem);
   const setEquippedTalisman = useAppStore((s) => s.setEquippedTalisman);
   const setEquippedTheme = useAppStore((s) => s.setEquippedTheme);
   const setEquippedAvatar = useAppStore((s) => s.setEquippedAvatar);
@@ -122,6 +123,14 @@ export default function LandingPage({
   const nightMode = isNightMode();
   const nearbyJeolgi = getNearbyJeolgi();
   const [scoreHistory, setScoreHistory] = useState([]);
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
+
+  // 탭 순서: 낮엔 [오늘별숨, 오늘의 미션, 별숨달력, 나의하루] / 밤엔 [나의하루, 오늘별숨, 오늘의 미션, 별숨달력]
+  const TABS_DAY   = ['daily', 'mission', 'calendar', 'diary'];
+  const TABS_NIGHT = ['diary', 'daily', 'mission', 'calendar'];
+  const TAB_LABELS = { daily: '오늘별숨', mission: '오늘의 미션', calendar: '별숨달력', diary: '나의하루' };
+  const TABS = nightMode ? TABS_NIGHT : TABS_DAY;
+  const [activeTab, setActiveTab] = useState(TABS[0]);
 
   useEffect(() => {
     if (!user) { setEquippedTalisman(null); return; }
@@ -194,6 +203,18 @@ export default function LandingPage({
       return prev.map(item => item.date === today ? { ...item, score: dailyResult.score } : item);
     });
   }, [dailyResult?.score]);
+
+  // 로그인 후 연속 출석 팝업 (하루 1회)
+  useEffect(() => {
+    if (!user || !gamificationState.loginStreak) return;
+    const popupKey = `streak_popup_${new Date().toISOString().slice(0,10)}`;
+    if (localStorage.getItem(popupKey)) return;
+    const t = setTimeout(() => {
+      setShowStreakPopup(true);
+      localStorage.setItem(popupKey, '1');
+    }, 800);
+    return () => clearTimeout(t);
+  }, [user?.id, gamificationState.loginStreak]);
 
   return (
     <div className="page step-fade">
@@ -285,7 +306,7 @@ export default function LandingPage({
               {/* 출석 스트릭 위젯 */}
               {gamificationState.loginStreak >= 1 && (() => {
                 const streak = gamificationState.loginStreak;
-                const nextMilestone = streak < 7 ? 7 : streak < 14 ? 14 : streak < 30 ? 30 : null;
+                const nextMilestone = streak < 7 ? 7 : streak < 14 ? 14 : streak < 21 ? 21 : null;
                 const remaining = nextMilestone ? nextMilestone - streak : 0;
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,120,50,.08)', border: '1px solid rgba(255,120,50,.2)', borderRadius: 'var(--r1)', marginBottom: 10 }}>
@@ -295,11 +316,11 @@ export default function LandingPage({
                     </div>
                     {nextMilestone && (
                       <span style={{ fontSize: '11px', color: 'var(--t4)' }}>
-                        +{remaining}일 후 +{nextMilestone === 7 ? 20 : nextMilestone === 14 ? 30 : 50} BP 보너스
+                        +{remaining}일 후 +100 BM 보너스
                       </span>
                     )}
                     {!nextMilestone && (
-                      <span style={{ fontSize: '11px', color: '#ff7832', fontWeight: 700 }}>최고 기록 도달!</span>
+                      <span style={{ fontSize: '11px', color: '#ff7832', fontWeight: 700 }}>21일 달성! 최고 기록 🎉</span>
                     )}
                   </div>
                 );
@@ -334,13 +355,128 @@ export default function LandingPage({
 
               {form.by ? (
                 <>
+                  {/* ── 탭 바 ── */}
+                  <div style={{ display: 'flex', gap: 3, marginTop: 'var(--sp2)', marginBottom: 'var(--sp2)', background: 'var(--bg3)', borderRadius: 'var(--r1)', padding: 3, border: '1px solid var(--line)' }}>
+                    {TABS.map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => { if (tab === 'calendar') { setStep(10); return; } setActiveTab(tab); }}
+                        style={{
+                          flex: 1, padding: '7px 2px', borderRadius: 'calc(var(--r1) - 2px)',
+                          border: 'none', fontFamily: 'var(--ff)', fontSize: '11px', fontWeight: activeTab === tab ? 700 : 400,
+                          cursor: 'pointer', transition: 'all .15s', whiteSpace: 'nowrap',
+                          background: activeTab === tab ? 'var(--goldf)' : 'transparent',
+                          color: activeTab === tab ? 'var(--gold)' : 'var(--t4)',
+                          outline: activeTab === tab ? '1px solid var(--acc)' : 'none',
+                        }}
+                      >
+                        {TAB_LABELS[tab]}
+                      </button>
+                    ))}
+                  </div>
 
-                  {/* ── 밤 모드: 하루 마무리 & 일기 ── */}
-                  {nightMode && (
-                    <div style={{ marginTop: 'var(--sp2)', display: 'flex', flexDirection: 'column', gap: 'var(--sp2)' }}>
+                  {/* ── 탭: 오늘별숨 ── */}
+                  {activeTab === 'daily' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp2)' }}>
+                      {/* 오늘의 별숨 카드 */}
+                      <div data-tour="daily-card">
+                        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 6, marginBottom: 6 }}>
+                          ✦ 오늘 하루 나의 별숨 · {today?.month}월 {today?.day}일
+                          <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
+                        </div>
+                        {dailyLoading ? (
+                          <div className="dsc-loading-btn">
+                            <span>별숨이 오늘을 읽고 있어요</span>
+                            <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+                          </div>
+                        ) : dailyResult ? (
+                          <DailyStarCardV2
+                            result={dailyResult}
+                            onBlockBadtime={onBlockBadtime}
+                            isBlocking={isBlockingBadtime}
+                            canBlockBadtime={onBlockBadtime != null}
+                            currentBp={gamificationState.currentBp}
+                          />
+                        ) : (
+                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '18px', fontSize: 'var(--md)', fontWeight: 700 }} onClick={askDailyHoroscope}>
+                            오늘 별숨의 기운 확인하기 ✦
+                          </button>
+                        )}
+                      </div>
+
+                      {/* 별 메시지 */}
+                      <div style={{ padding: '14px 0 4px', borderTop: '1px solid var(--line)', marginTop: 6 }}>
+                        <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+                          {today?.month}월 {today?.day}일의 별 메시지
+                        </div>
+                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontStyle: 'italic', lineHeight: 1.8, paddingLeft: 2 }}>
+                          "{getDailyWord(today?.day)}"
+                        </div>
+                      </div>
+
+                      {/* 7일 운세 점수 히스토리 */}
+                      {scoreHistory.some(s => s.score !== null) && (
+                        <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6 }}>
+                          <div style={{ fontSize: '10px', color: 'var(--t4)', letterSpacing: '.04em', marginBottom: 8 }}>✦ 최근 7일 운세 흐름</div>
+                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
+                            {scoreHistory.map((item, i) => {
+                              const label = item.date.slice(5).replace('-', '/');
+                              const hasScore = item.score !== null;
+                              const barH = hasScore ? Math.max(8, Math.round((item.score / 100) * 40)) : 4;
+                              return (
+                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                  <div style={{ fontSize: '9px', color: hasScore ? 'var(--t4)' : 'transparent', marginBottom: 1, lineHeight: 1 }}>{hasScore ? item.score : '·'}</div>
+                                  <div style={{ width: '100%', minWidth: 12, height: barH, background: hasScore ? scoreColor(item.score) : 'var(--line)', borderRadius: 3, opacity: hasScore ? 1 : 0.3, transition: 'height .3s ease' }} />
+                                  <div style={{ fontSize: '8.5px', color: 'var(--t4)', marginTop: 2 }}>{label}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── 탭: 오늘의 미션 ── */}
+                  {activeTab === 'mission' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp2)' }}>
+                      <MissionDashboard
+                        missions={missions}
+                        onMissionComplete={onCompleteMission}
+                        onDiaryClick={() => { setActiveTab('diary'); }}
+                        hasDiaryToday={hasDiaryToday}
+                      />
+                      {/* 일기 완료 → 뽑기 유도 CTA */}
+                      {hasDiaryToday && (
+                        <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>✦ 오늘 일기를 별숨에게 들려줬어요</div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              onClick={() => setStep(40)}
+                              style={{ flex: 2, padding: '10px 12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                            >
+                              <span>🎰</span><span>별숨 뽑기로 기운 더하기</span>
+                            </button>
+                            {!equippedSajuItem ? (
+                              <button onClick={() => setStep(38)} style={{ flex: 1, padding: '10px 8px', background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>기운 장착</button>
+                            ) : (
+                              <div style={{ flex: 1, padding: '10px 8px', background: 'var(--bg2)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                                <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji || '✦'}</span>
+                                <span style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600 }}>장착 중</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── 탭: 나의하루 ── */}
+                  {activeTab === 'diary' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp2)' }}>
                       <div style={{ textAlign: 'center', padding: '8px 0' }}>
                         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em' }}>오늘 하루, 별이 예고한 대로 흘러갔나요?</div>
-                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', marginTop: 4, lineHeight: 1.6 }}>별숨에게 당신의 밤을 들려주세요</div>
+                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', marginTop: 4, lineHeight: 1.6 }}>별숨에게 당신의 하루를 들려주세요</div>
                       </div>
                       {(diaryReviewResult || diaryReviewLoading) ? (
                         <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
@@ -350,9 +486,7 @@ export default function LandingPage({
                               <span style={{ fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 700 }}>별숨의 오늘 해석</span>
                             </div>
                             {diaryReviewResult && !diaryReviewLoading && (
-                              <button onClick={resetDiaryReview} style={{ fontSize: '0.65rem', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-                                다시 쓰기
-                              </button>
+                              <button onClick={resetDiaryReview} style={{ fontSize: '0.65rem', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>다시 쓰기</button>
                             )}
                           </div>
                           <div style={{ padding: '12px 14px' }}>
@@ -388,7 +522,7 @@ export default function LandingPage({
                           )}
                         </Suspense>
                       )}
-                      {/* 낮에 본 오늘의 별숨 접기/펼치기 */}
+                      {/* 오늘의 별숨 접기/펼치기 */}
                       {dailyResult && (
                         <>
                           <button
@@ -410,151 +544,6 @@ export default function LandingPage({
                             </div>
                           )}
                         </>
-                      )}
-                    </div>
-                  )}
-
-                  {/* ── 낮 모드: 오늘 별숨 확인이 최우선 ── */}
-                  {!nightMode && (
-                    <div style={{ marginTop: 'var(--sp2)', display: 'flex', flexDirection: 'column', gap: 'var(--sp2)' }}>
-                      {/* 오늘의 별숨 처방 확인하기 — 메인 CTA */}
-                      {(() => {
-                        const dailyCardContent = dailyLoading ? (
-                          <div className="dsc-loading-btn">
-                            <span>별숨이 오늘을 읽고 있어요</span>
-                            <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
-                          </div>
-                        ) : dailyResult ? (
-                          <>
-                            <DailyStarCardV2
-                              result={dailyResult}
-                              onBlockBadtime={onBlockBadtime}
-                              isBlocking={isBlockingBadtime}
-                              canBlockBadtime={onBlockBadtime != null}
-                              currentBp={gamificationState.currentBp}
-                            />
-                          </>
-                        ) : (
-                          <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '18px', fontSize: 'var(--md)', fontWeight: 700 }} onClick={askDailyHoroscope}>
-                            오늘 별숨의 기운 확인하기 ✦
-                          </button>
-                        );
-                        return (
-                          <div data-tour="daily-card">
-                            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', paddingTop: 6, marginBottom: 6 }}>
-                              ✦ 오늘 하루 나의 별숨 · {today?.month}월 {today?.day}일
-                              <span style={{ marginLeft: 6, opacity: 0.6 }}>매일 새로워져요</span>
-                            </div>
-                            {dailyCardContent}
-                          </div>
-                        );
-                      })()}
-
-                      {/* 별 메시지 */}
-                      <div style={{ padding: '14px 0 4px', borderTop: '1px solid var(--line)', marginTop: 6 }}>
-                        <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.1em', textTransform: 'uppercase' }}>
-                          {today?.month}월 {today?.day}일의 별 메시지
-                        </div>
-                        <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontStyle: 'italic', lineHeight: 1.8, paddingLeft: 2 }}>
-                          "{getDailyWord(today?.day)}"
-                        </div>
-                      </div>
-
-                      {/* 별숨달력 */}
-                      {formOk && (
-                        <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '11px', background: 'none', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: 'var(--xs)' }} onClick={() => setStep(10)}>
-                          별숨달력 ✦
-                        </button>
-                      )}
-
-                      {/* ── 오늘의 미션 ── */}
-                      <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6 }}>
-                        <MissionDashboard
-                          missions={missions}
-                          onMissionComplete={onCompleteMission}
-                          onDiaryClick={() => setStep(17)}
-                          hasDiaryToday={hasDiaryToday}
-                        />
-                      </div>
-
-                      {/* ── 일기 완료 → 뽑기 유도 CTA ── */}
-                      {hasDiaryToday && (
-                        <div style={{
-                          paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6,
-                          display: 'flex', flexDirection: 'column', gap: 8,
-                        }}>
-                          <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>
-                            ✦ 오늘 일기를 별숨에게 들려줬어요
-                          </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button
-                              onClick={() => setStep(40)}
-                              style={{
-                                flex: 2, padding: '10px 12px',
-                                background: 'var(--goldf)', border: '1.5px solid var(--acc)',
-                                borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
-                                fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                              }}
-                            >
-                              <span>🎰</span>
-                              <span>별숨 뽑기로 기운 더하기</span>
-                            </button>
-                            {!equippedSajuItem ? (
-                              <button
-                                onClick={() => setStep(38)}
-                                style={{
-                                  flex: 1, padding: '10px 8px',
-                                  background: 'none', border: '1px solid var(--line)',
-                                  borderRadius: 'var(--r1)', color: 'var(--t3)',
-                                  fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
-                                }}
-                              >
-                                기운 장착
-                              </button>
-                            ) : (
-                              <div style={{
-                                flex: 1, padding: '10px 8px',
-                                background: 'var(--bg2)', border: '1px solid var(--acc)',
-                                borderRadius: 'var(--r1)', display: 'flex',
-                                alignItems: 'center', justifyContent: 'center', gap: 4,
-                              }}>
-                                <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji || '✦'}</span>
-                                <span style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600 }}>장착 중</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ── 7일 운세 점수 히스토리 ── */}
-                      {scoreHistory.some(s => s.score !== null) && (
-                        <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6 }}>
-                          <div style={{ fontSize: '10px', color: 'var(--t4)', letterSpacing: '.04em', marginBottom: 8 }}>✦ 최근 7일 운세 흐름</div>
-                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
-                            {scoreHistory.map((item, i) => {
-                              const label = item.date.slice(5).replace('-', '/');
-                              const hasScore = item.score !== null;
-                              const barH = hasScore ? Math.max(8, Math.round((item.score / 100) * 40)) : 4;
-                              return (
-                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                                  <div style={{ fontSize: '9px', color: hasScore ? 'var(--t4)' : 'transparent', marginBottom: 1, lineHeight: 1 }}>
-                                    {hasScore ? item.score : '·'}
-                                  </div>
-                                  <div style={{
-                                    width: '100%', minWidth: 12,
-                                    height: barH,
-                                    background: hasScore ? scoreColor(item.score) : 'var(--line)',
-                                    borderRadius: 3,
-                                    opacity: hasScore ? 1 : 0.3,
-                                    transition: 'height .3s ease',
-                                  }} />
-                                  <div style={{ fontSize: '8.5px', color: 'var(--t4)', marginTop: 2 }}>{label}</div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
                       )}
                     </div>
                   )}
@@ -671,6 +660,65 @@ export default function LandingPage({
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 연속 출석 팝업 ── */}
+      {showStreakPopup && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}
+          onClick={() => setShowStreakPopup(false)}
+        >
+          <div
+            style={{ background: 'var(--bg1)', border: '1px solid var(--acc)', borderRadius: 'var(--r2)', padding: '28px 24px', maxWidth: 320, width: '100%', textAlign: 'center', animation: 'fadeUp .3s ease' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: '2.4rem', marginBottom: 8 }}>🔥</div>
+            <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 6 }}>
+              {gamificationState.loginStreak}일 연속 출석!
+            </div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7, marginBottom: 18 }}>
+              {(() => {
+                const s = gamificationState.loginStreak;
+                if (s === 7) return '✦ 7일 달성 보너스 +100 BM을 받았어요!';
+                if (s === 14) return '✦ 14일 달성 보너스 +100 BM을 받았어요!';
+                if (s === 21) return '✦ 21일 달성 보너스 +100 BM을 받았어요!';
+                const next = s < 7 ? 7 : s < 14 ? 14 : s < 21 ? 21 : null;
+                return next
+                  ? `앞으로 ${next - s}일 더 출석하면 +100 BM 보너스를 받아요`
+                  : `21일을 넘었어요! 대단한 출석왕이에요 🌟`;
+              })()}
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 14 }}>
+              {[7, 14, 21].map(milestone => {
+                const s = gamificationState.loginStreak;
+                const done = s >= milestone;
+                const active = !done && (milestone === (s < 7 ? 7 : s < 14 ? 14 : s < 21 ? 21 : null));
+                return (
+                  <div key={milestone} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: '50%',
+                      background: done ? 'var(--gold)' : active ? 'var(--goldf)' : 'var(--bg2)',
+                      border: `2px solid ${done ? 'var(--gold)' : active ? 'var(--acc)' : 'var(--line)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: done ? '1.1rem' : 'var(--xs)',
+                      color: done ? '#fff' : active ? 'var(--gold)' : 'var(--t4)',
+                      fontWeight: 700,
+                    }}>
+                      {done ? '✓' : `${milestone}`}
+                    </div>
+                    <div style={{ fontSize: '9px', color: done ? 'var(--gold)' : 'var(--t4)' }}>{milestone}일</div>
+                  </div>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowStreakPopup(false)}
+              style={{ width: '100%', padding: '12px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontFamily: 'var(--ff)', fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700, cursor: 'pointer' }}
+            >
+              오늘도 별숨 시작하기 ✦
+            </button>
           </div>
         </div>
       )}
