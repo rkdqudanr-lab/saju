@@ -2,6 +2,7 @@
  * 별숨 커스텀 서비스 워커 (injectManifest 전략)
  * - Workbox precaching + runtime caching
  * - Web Push 알림 이벤트 처리
+ * v2
  */
 
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
