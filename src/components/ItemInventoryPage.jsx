@@ -607,12 +607,13 @@ export default function ItemInventoryPage({ showToast, callApi }) {
         </button>
       </div>
 
-        {/* 합성 버튼 */}
-        {canSynth && (
+      {/* 합성 버튼 */}
+      {canSynth && (
+        <div style={{ padding: '0 20px 14px' }}>
           <button
             onClick={() => setShowSynth(true)}
             style={{
-              marginTop: 10, padding: '8px 16px',
+              padding: '8px 16px',
               background: 'var(--goldf)', border: '1.5px solid var(--acc)',
               borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
               fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
@@ -625,8 +626,8 @@ export default function ItemInventoryPage({ showToast, callApi }) {
               return `${cfg.label} ${gradeCountMap[g]}개`;
             }).join(' · ')})
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* 카테고리 필터 */}
       <div style={{
