@@ -129,9 +129,12 @@ export default function LandingPage({
       .select('item_id, is_equipped, shop_items(*)')
       .eq('kakao_id', kakaoId)
       .eq('is_equipped', true)
-      .then(({ data }) => {
-        const talisman = (data || []).find(r => r.shop_items?.category === 'talisman');
-        setEquippedTalisman(talisman?.shop_items || null);
+      .then(async ({ data }) => {
+        const { findItem } = await import('../utils/gachaItems.js');
+        const equipped = (data || []).map(r => r.shop_items || findItem(r.item_id)).filter(Boolean);
+        useAppStore.getState().setEquippedItems?.(equipped);
+        const talisman = equipped.find(r => r.category === 'talisman');
+        setEquippedTalisman(talisman || null);
       });
   }, [user]);
 

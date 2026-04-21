@@ -7,11 +7,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
-import { GACHA_POOL, GRADE_CONFIG, synthesize, getGachaItem, GRADE_ORDER } from '../utils/gachaItems.js';
+import {
+  GACHA_POOL, GRADE_CONFIG, synthesize, getGachaItem, GRADE_ORDER,
+  SAJU_POOL, SAJU_GRADE_CONFIG, synthesizeSaju, getSajuItem, SAJU_GRADE_ORDER,
+  findItem, ALL_GACHA_POOL,
+} from '../utils/gachaItems.js';
+import GachaGraphic from './GachaGraphic.jsx';
+import ItemCollectionPage from './ItemCollectionPage.jsx';
 
 const CAT_LABEL = {
   theme: '테마', avatar: '아바타', special_reading: '특별 상담',
   talisman: '부적', effect: '이펙트',
+  // 우주
+  satellite: '위성', planet: '행성', galaxy: '은하', nebula: '성운',
+  // 사주
+  ohaeng: '오행', cheongan: '천간', jiji: '지지', gapja: '육십갑자',
+  // old (fallback)
   fragment: '조각', rare: '희귀', legendary: '전설',
 };
 
@@ -120,28 +131,37 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
   const [synthesizing, setSynthesizing] = useState(false);
   const [result, setResult] = useState(null);
 
-  // 합성 가능 옵션 (next가 있는 등급만)
-  const options = GRADE_ORDER
+  // 우주 + 사주 합성 가능 옵션 통합
+  const spaceOptions = GRADE_ORDER
     .filter(grade => GRADE_CONFIG[grade].next !== null)
     .map(grade => {
-      const cfg     = GRADE_CONFIG[grade];
-      const nextCfg = GRADE_CONFIG[cfg.next];
-      const count   = inventory.filter(i => i.grade === grade).length;
-      return { grade, label: cfg.label, count, cost: cfg.synthCost, yields: nextCfg.label, color: cfg.color };
+      const cfg = GRADE_CONFIG[grade];
+      const count = inventory.filter(i => i.grade === grade && !i.id?.startsWith('saju_')).length;
+      return { grade, system: 'space', label: `🌌 ${cfg.label}`, count, cost: cfg.synthCost, yields: GRADE_CONFIG[cfg.next].label, color: cfg.color };
     })
     .filter(o => o.count >= o.cost);
+
+  const sajuOptions = SAJU_GRADE_ORDER
+    .filter(grade => SAJU_GRADE_CONFIG[grade].next !== null)
+    .map(grade => {
+      const cfg = SAJU_GRADE_CONFIG[grade];
+      const count = inventory.filter(i => i.grade === grade && i.id?.startsWith('saju_')).length;
+      return { grade, system: 'saju', label: `☯️ ${cfg.label}`, count, cost: cfg.synthCost, yields: SAJU_GRADE_CONFIG[cfg.next].label, color: cfg.color };
+    })
+    .filter(o => o.count >= o.cost);
+
+  const options = [...spaceOptions, ...sajuOptions];
 
   async function handleSynthesize() {
     if (!selectedGrade || synthesizing) return;
     setSynthesizing(true);
+    const isSaju = options.find(o => o.grade === selectedGrade)?.system === 'saju';
     try {
       const client = getAuthenticatedClient(kakaoId);
-      // 소비할 아이템 3개 찾기
       const toConsume = inventory
-        .filter(i => i.grade === selectedGrade)
+        .filter(i => i.grade === selectedGrade && (isSaju ? i.id?.startsWith('saju_') : !i.id?.startsWith('saju_')))
         .slice(0, 3);
 
-      // DB에서 해당 inventory 행들 삭제
       for (const item of toConsume) {
         await client.from('user_shop_inventory')
           .delete()
@@ -150,8 +170,7 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
           .limit(1);
       }
 
-      // 새 아이템 획득
-      const newItem = synthesize(selectedGrade);
+      const newItem = isSaju ? synthesizeSaju(selectedGrade) : synthesize(selectedGrade);
       await client.from('user_shop_inventory').insert({
         kakao_id: String(kakaoId),
         item_id: newItem.id,
@@ -252,6 +271,11 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
                   <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: opt.color }}>
                     {opt.label} 3개 → {opt.yields} 1개
                   </div>
+                  {opt.system === 'saju' && opt.grade === 'cheongan' && (
+                    <div style={{ fontSize: '10px', color: 'var(--gold)', marginTop: 2, fontWeight: 700 }}>
+                      ※ 팁: 사주는 속성과 상관없이 글자만 맞으면 합성돼요!
+                    </div>
+                  )}
                   <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 2 }}>
                     보유 {opt.count}개 (합성 후 {opt.count - 3}개 남음)
                   </div>
@@ -347,12 +371,17 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse }) {
         </div>
       )}
 
-      {/* 이모지 */}
+      {/* 이모지(SVG 파티클 렌더러 교체) */}
       <div style={{
-        fontSize: 30, lineHeight: 1,
         marginTop: (item.is_equipped || cfg) ? 16 : 0,
+        marginBottom: 8,
+        display: 'flex', justifyContent: 'center'
       }}>
-        {item.emoji}
+        {item.category === 'talisman' ? (
+          <div style={{ fontSize: 30, lineHeight: 1 }}>{item.emoji}</div>
+        ) : (
+          <GachaGraphic item={item} size={46} />
+        )}
       </div>
 
       {/* 카테고리 */}
@@ -361,7 +390,7 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse }) {
       </div>
 
       {/* 이름 */}
-      <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.3 }}>
+      <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: item.affixColor || 'var(--t1)', lineHeight: 1.3 }}>
         {item.name}
       </div>
 
@@ -403,31 +432,22 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse }) {
         </button>
       )}
 
-      {isGachaItem && !isTalisman && (
+      {!isTalisman && (
         <button
-          onClick={() => onUse(item)}
+          onClick={() => onToggleEquip(item)}
+          disabled={toggling}
           style={{
             marginTop: 'auto', padding: '8px',
-            background: cfg?.bg || 'var(--bg3)',
-            border: `1px solid ${cfg?.border || 'var(--line)'}`,
+            background: item.is_equipped ? 'rgba(126,200,164,.15)' : (cfg?.bg || 'var(--bg3)'),
+            border: `1.5px solid ${item.is_equipped ? 'var(--acc)' : (cfg?.border || 'var(--line)')}`,
             borderRadius: 'var(--r1)',
-            color: cfg?.color || 'var(--t3)', fontWeight: 700,
-            fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
-            cursor: 'pointer', width: '100%', transition: 'all .15s',
+            color: item.is_equipped ? 'var(--gold)' : (cfg?.color || 'var(--t3)'),
+            fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+            cursor: toggling ? 'not-allowed' : 'pointer', width: '100%', transition: 'all .15s',
           }}
         >
-          ✦ 사용하기
+          {toggling ? '처리 중...' : item.is_equipped ? '✦ 장착 해제' : '장착하기'}
         </button>
-      )}
-
-      {!isGachaItem && !isTalisman && (
-        <div style={{
-          marginTop: 'auto', padding: '7px', textAlign: 'center',
-          fontSize: 'var(--xs)', color: 'var(--t4)',
-          borderTop: '1px solid var(--line)',
-        }}>
-          ✦ 보유 중
-        </div>
       )}
     </div>
   );
@@ -444,8 +464,9 @@ export default function ItemInventoryPage({ showToast, callApi }) {
   const [toggling, setToggling] = useState(null);
   const [useItem, setUseItem] = useState(null);
   const [showSynth, setShowSynth] = useState(false);
+  const [showCollection, setShowCollection] = useState(false);
 
-  const CATEGORIES = ['전체', '위성', '행성', '은하', '성운', '부적', '기타'];
+  const CATEGORIES = ['전체', '🌌 우주', '☯️ 사주', '부적', '기타'];
 
   const loadInventory = useCallback(async () => {
     if (!kakaoId) return;
@@ -459,12 +480,11 @@ export default function ItemInventoryPage({ showToast, callApi }) {
         .order('acquired_at', { ascending: false });
 
       const merged = (inv || []).map(r => {
-        // shop_items에 있는 아이템
         if (r.shop_items) {
           return { ...r.shop_items, is_equipped: r.is_equipped, _invItemId: r.item_id };
         }
-        // 가챠 아이템 (shop_items에 없을 수 있음)
-        const gachaItem = getGachaItem(r.item_id);
+        // 우주 또는 사주 가챠 아이템
+        const gachaItem = findItem(r.item_id);
         if (gachaItem) {
           return { ...gachaItem, id: r.item_id, is_equipped: r.is_equipped, _invItemId: r.item_id };
         }
@@ -486,21 +506,46 @@ export default function ItemInventoryPage({ showToast, callApi }) {
     setToggling(item.id);
     try {
       const client = getAuthenticatedClient(kakaoId);
+      const isSaju = String(item.id).startsWith('saju_');
+      const isGachaItem = !!item.grade;
       const newEquipped = !item.is_equipped;
+
       if (newEquipped) {
-        await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId));
+        // 우주 1슬롯, 사주 1슬롯 분리 장착
+        if (isGachaItem || item.category === 'talisman') {
+          const targetsToUnequip = items.filter(i => {
+            if (!i.is_equipped) return false;
+            if (item.category === 'talisman' && i.category === 'talisman') return true;
+            if (isGachaItem && !!i.grade && String(i.id).startsWith('saju_') === isSaju) return true;
+            return false;
+          });
+          
+          for (const t of targetsToUnequip) {
+            await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', t.id);
+          }
+        }
+        
         await client.from('user_shop_inventory').update({ is_equipped: true }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
-        useAppStore.getState().setEquippedTalisman(item);
+        
+        if (item.category === 'talisman') {
+           useAppStore.getState().setEquippedTalisman(item);
+        }
         showToast?.(`${item.name} 장착됐어요 ✦`, 'success');
       } else {
         await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
-        useAppStore.getState().setEquippedTalisman(null);
-        showToast?.('부적 장착을 해제했어요', 'info');
+        if (item.category === 'talisman') {
+           useAppStore.getState().setEquippedTalisman(null);
+        }
+        showToast?.('착용을 해제했어요', 'info');
       }
-      setItems(prev => prev.map(i => ({
-        ...i,
-        is_equipped: i.category === 'talisman' ? (i.id === item.id ? newEquipped : false) : i.is_equipped,
-      })));
+      setItems(prev => prev.map(i => {
+        if (i.id === item.id) return { ...i, is_equipped: newEquipped };
+        if (newEquipped && i.is_equipped) {
+           if (item.category === 'talisman' && i.category === 'talisman') return { ...i, is_equipped: false };
+           if (isGachaItem && !!i.grade && String(i.id).startsWith('saju_') === isSaju) return { ...i, is_equipped: false };
+        }
+        return i;
+      }));
     } catch {
       showToast?.('처리 중 오류가 발생했어요', 'error');
     } finally {
@@ -508,47 +553,59 @@ export default function ItemInventoryPage({ showToast, callApi }) {
     }
   }
 
-  const gachaItems = items.filter(i => GACHA_POOL.some(g => g.id === i._invItemId || g.id === i.id));
-  const shopItems  = items.filter(i => !GACHA_POOL.some(g => g.id === i._invItemId || g.id === i.id));
+  const isGachaId  = (id) => ALL_GACHA_POOL.some(g => g.id === id);
+  const gachaItems = items.filter(i => isGachaId(i._invItemId || i.id));
+  const shopItems  = items.filter(i => !isGachaId(i._invItemId || i.id));
 
   const filtered = (() => {
-    if (category === '전체') return items;
-    if (category === '위성')  return items.filter(i => i.grade === 'satellite');
-    if (category === '행성')  return items.filter(i => i.grade === 'planet');
-    if (category === '은하')  return items.filter(i => i.grade === 'galaxy');
-    if (category === '성운')  return items.filter(i => i.grade === 'nebula');
-    if (category === '부적')  return items.filter(i => i.category === 'talisman');
+    if (category === '전체')    return items;
+    if (category === '🌌 우주') return items.filter(i => GRADE_ORDER.includes(i.grade));
+    if (category === '☯️ 사주') return items.filter(i => SAJU_GRADE_ORDER.includes(i.grade));
+    if (category === '부적')    return items.filter(i => i.category === 'talisman');
     return shopItems; // 기타
   })();
 
   const equippedTalisman = items.find(i => i.category === 'talisman' && i.is_equipped);
 
-  // 합성 가능 여부 — synthable grades
+  // 합성 가능 여부 (우주 + 사주 통합)
   const gradeCountMap = {};
-  for (const g of GRADE_ORDER) {
-    gradeCountMap[g] = gachaItems.filter(i => i.grade === g).length;
-  }
-  const synthableGrades = GRADE_ORDER.filter(g => {
-    const cfg = GRADE_CONFIG[g];
-    return cfg.next && gradeCountMap[g] >= cfg.synthCost;
-  });
+  for (const g of GRADE_ORDER)      gradeCountMap[g] = gachaItems.filter(i => i.grade === g && !String(i.id).startsWith('saju_')).length;
+  for (const g of SAJU_GRADE_ORDER) gradeCountMap[g] = gachaItems.filter(i => i.grade === g && String(i.id).startsWith('saju_')).length;
+
+  const synthableGrades = [
+    ...GRADE_ORDER.filter(g => GRADE_CONFIG[g].next && gradeCountMap[g] >= GRADE_CONFIG[g].synthCost),
+    ...SAJU_GRADE_ORDER.filter(g => SAJU_GRADE_CONFIG[g].next && gradeCountMap[g] >= SAJU_GRADE_CONFIG[g].synthCost),
+  ];
   const canSynth = synthableGrades.length > 0;
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
       {/* 헤더 */}
-      <div style={{ padding: '22px 20px 14px' }}>
-        <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>
-          🎁 내 아이템
+      <div style={{ padding: '22px 20px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>
+            🎁 내 아이템
+          </div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+            보유 {items.length}개
+            {equippedTalisman && (
+              <span style={{ marginLeft: 8, color: 'var(--gold)', fontWeight: 600 }}>
+                · {equippedTalisman.emoji} {equippedTalisman.name} 장착 중
+              </span>
+            )}
+          </div>
         </div>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-          보유 {items.length}개
-          {equippedTalisman && (
-            <span style={{ marginLeft: 8, color: 'var(--gold)', fontWeight: 600 }}>
-              · {equippedTalisman.emoji} {equippedTalisman.name} 장착 중
-            </span>
-          )}
-        </div>
+        <button
+          onClick={() => setShowCollection(true)}
+          style={{
+            padding: '8px 14px', background: 'var(--bg2)', border: '1px solid var(--acc)',
+            borderRadius: 20, color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 700,
+            cursor: 'pointer', transition: 'all .2s'
+          }}
+        >
+          📖 도감 보기
+        </button>
+      </div>
 
         {/* 합성 버튼 */}
         {canSynth && (
@@ -563,7 +620,10 @@ export default function ItemInventoryPage({ showToast, callApi }) {
               animation: 'gacha-count-pop .4s ease',
             }}
           >
-            ⚗️ 합성 가능! ({synthableGrades.map(g => `${GRADE_CONFIG[g].label} ${gradeCountMap[g]}개`).join(' · ')})
+            ⚗️ 합성 가능! ({synthableGrades.map(g => {
+              const cfg = GRADE_CONFIG[g] || SAJU_GRADE_CONFIG[g];
+              return `${cfg.label} ${gradeCountMap[g]}개`;
+            }).join(' · ')})
           </button>
         )}
       </div>
@@ -686,6 +746,11 @@ export default function ItemInventoryPage({ showToast, callApi }) {
           onComplete={loadInventory}
           showToast={showToast}
         />
+      )}
+
+      {/* 도감 모달 */}
+      {showCollection && (
+        <ItemCollectionPage inventoryItems={items} onClose={() => setShowCollection(false)} />
       )}
     </div>
   );

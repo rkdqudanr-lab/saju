@@ -5,14 +5,21 @@
       "Bash(git commit -m ':*)",
       "Bash(git push:*)",
       "Bash(npm run:*)",
-      "Bash(node -e \"require\\('./lib/prompts/buildSystem/daily_horoscope_gamified.js'\\)\")",
-      "Bash(node --input-type=module -e \"import './lib/prompts/buildSystem/daily_horoscope_gamified.js'\")",
-      "Bash(git commit -m ' *)",
-      "Bash(git commit -m 'Revert FutureProphecyPage to 별숨의 예언 \\(원복\\) *)",
       "Bash(git commit *)",
-      "Bash(grep *)",
-      "Bash(python3 *)",
-      "Bash(node *)"
+      "Bash(git stash *)",
+      "Bash(git checkout *)",
+      "Bash(grep -v \"node_modules\\\\|//\")",
+      "Bash(grep -rn \"icon: '.\\\\{1,3\\\\}'\" src/utils/constants.js)",
+      "Bash(xargs grep *)",
+      "Bash(curl -sL --user-agent Mozilla/5.0 https://upload.wikimedia.org/wikipedia/commons/5/55/RWS_Tarot_15_Devil.jpg -o ar15.jpg)",
+      "Bash(curl -sL --user-agent Mozilla/5.0 https://upload.wikimedia.org/wikipedia/commons/d/db/RWS_Tarot_17_Star.jpg -o ar17.jpg)",
+      "Bash(curl -sL --user-agent Mozilla/5.0 https://upload.wikimedia.org/wikipedia/commons/1/17/RWS_Tarot_19_Sun.jpg -o ar19.jpg)",
+      "Bash(ls -lh /c/Users/rkdqu/Desktop/saju-main/public/tarot/*.jpg)",
+      "Bash(awk '{print $5, $9}')",
+      "Bash(sort -k2)",
+      "Bash(node -e ' *)",
+      "Bash(git pull *)",
+      "Bash(node --input-type=module)"
     ]
   }
 }

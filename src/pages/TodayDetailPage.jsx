@@ -12,6 +12,159 @@ function PageSpinner() {
   );
 }
 
+// ─────────────────────────────────────────────
+// 8축 운세 레이더 차트 (오늘의 운세 + 장착 아이템 보너스)
+// ─────────────────────────────────────────────
+const AXES_8 = [
+  { key: 'overall', label: '종합' },
+  { key: 'wealth',  label: '금전' },
+  { key: 'love',    label: '애정' },
+  { key: 'career',  label: '직장' },
+  { key: 'study',   label: '학업' },
+  { key: 'health',  label: '건강' },
+  { key: 'social',  label: '대인' },
+  { key: 'travel',  label: '이동' }
+];
+
+function DailyRadarChart({ baseScore, equippedItems }) {
+  // 오늘 날짜 기반으로 약간의 노이즈(난수)를 만들어 카테고리별 기본 점수 편차 생성
+  const todayDate = new Date().toISOString().slice(0, 10);
+  const getDailyNoise = (idx) => {
+    // 아주 간단한 일관성 있는 난수 생성
+    const val = Number(todayDate.replace(/-/g, '')) + idx;
+    return (((val * 9301 + 49297) % 233280) / 233280) * 16 - 8; // -8 ~ +8
+  };
+
+  const scores = AXES_8.map((axis, i) => {
+    let base = Math.max(20, Math.min(85, (baseScore || 60) + getDailyNoise(i)));
+    let bonus = 0;
+    
+    // 장착된 아이템의 효과(boost) 합산
+    (equippedItems || []).forEach(item => {
+      // 아이템의 aspectKey가 현재 축과 돌일하다면 합산
+      if (item.aspectKey === axis.key) {
+        bonus += item.boost || 0;
+      } else if (item.category === 'talisman' && item.type === axis.key) {
+        // 하위 호환
+        bonus += 10;
+      }
+    });
+
+    return {
+      label: axis.label,
+      base: Math.round(base),
+      total: Math.min(100, Math.round(base + bonus)),
+      bonus: Math.round(bonus)
+    };
+  });
+
+  const cx = 130, cy = 130, r = 90;
+  const n = AXES_8.length;
+  const angleStep = (2 * Math.PI) / n;
+  const toXY = (angle, radius) => ({
+    x: cx + radius * Math.sin(angle),
+    y: cy - radius * Math.cos(angle),
+  });
+
+  // 폴리곤 경로 계산
+  const basePoints = scores.map((s, i) => {
+    const pt = toXY(angleStep * i, (s.base / 100) * r);
+    return `${pt.x},${pt.y}`;
+  }).join(' ');
+
+  const totalPoints = scores.map((s, i) => {
+    const pt = toXY(angleStep * i, (s.total / 100) * r);
+    return `${pt.x},${pt.y}`;
+  }).join(' ');
+
+  // 아이템 장착 안내 문구 조립
+  const bonusAcc = scores.reduce((acc, s) => acc + s.bonus, 0);
+
+  return (
+    <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: '16px', border: '1px solid var(--line)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>
+            ✦ 8대 기운 레이더
+          </div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)' }}>
+            {bonusAcc > 0 ? (
+              <span style={{ color: 'var(--gold)' }}>아이템 효과로 기운이 채워졌어요!</span>
+            ) : (
+              '아이템을 장착하면 찌그러진 기운을 채울 수 있어요'
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <svg viewBox="0 0 260 260" width="100%" style={{ maxWidth: 280, display: 'block', margin: '0 auto' }}>
+        {/* 배경 팔각형 격자 */}
+        {[0.2, 0.4, 0.6, 0.8, 1.0].map(level => {
+          const pts = Array.from({ length: n }, (_, i) => {
+            const p = toXY(angleStep * i, level * r);
+            return `${p.x},${p.y}`;
+          }).join(' ');
+          return <polygon key={level} points={pts} fill="none" stroke="var(--line)" strokeWidth="1" />;
+        })}
+
+        {/* 축 선 */}
+        {Array.from({ length: n }, (_, i) => {
+          const outer = toXY(angleStep * i, r);
+          return <line key={i} x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke="var(--line)" strokeWidth="1" />;
+        })}
+
+        {/* 기본 점수 영역 (회색) */}
+        <polygon
+          points={basePoints}
+          fill="rgba(255,255,255,0.06)"
+          stroke="var(--t4)"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+
+        {/* 부스트 후 점수 영역 (골드) */}
+        {bonusAcc > 0 && (
+          <polygon
+            points={totalPoints}
+            fill="rgba(232,176,72,0.15)"
+            stroke="var(--gold)"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            style={{ transition: 'all 0.5s ease-out' }}
+          />
+        )}
+
+        {/* 데이터 포인트 */}
+        {scores.map((s, i) => {
+          const pt = toXY(angleStep * i, (s.total / 100) * r);
+          return <circle key={i} cx={pt.x} cy={pt.y} r="4" fill={s.bonus > 0 ? "var(--gold)" : "var(--t4)"} style={{ transition: 'all 0.5s ease' }} />;
+        })}
+
+        {/* 축 레이블 */}
+        {scores.map((s, i) => {
+          const pt = toXY(angleStep * i, r + 22);
+          const hasBonus = s.bonus > 0;
+          return (
+            <text
+              key={i}
+              x={pt.x}
+              y={pt.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill={hasBonus ? "var(--gold)" : "var(--t2)"}
+              fontSize={hasBonus ? "12" : "10"}
+              fontWeight={hasBonus ? "700" : "400"}
+              fontFamily="var(--ff)"
+            >
+              {s.label}
+            </text>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 // 간단한 주간 추세선 (Sparkline) — 실제 daily_cache 데이터 사용
 function WeeklyTrendChart({ kakaoId, todayScore }) {
   const [trend, setTrend] = useState(null); // null=로딩, []=[데이터없음]
@@ -215,6 +368,7 @@ export default function TodayDetailPage({
           <PageSpinner />
         ) : dailyResult ? (
           <Suspense fallback={<PageSpinner />}>
+            <DailyRadarChart baseScore={dailyResult?.score} equippedItems={user?.equippedItems || useAppStore.getState().equippedItems} />
             <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult?.score} />
             <DailyStarCardV2
               result={dailyResult}

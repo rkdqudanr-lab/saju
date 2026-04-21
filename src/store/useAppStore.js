@@ -61,4 +61,8 @@ export const useAppStore = create((set, get) => ({
   // ── 장착 중인 부적 (LandingPage/ShopPage에서 주입) ────────────
   equippedTalisman: null,
   setEquippedTalisman: (val) => set({ equippedTalisman: val }),
+
+  // ── 장착 중인 모든 아이템 (우주/사주 포함) ───────────────
+  equippedItems: [],
+  setEquippedItems: (val) => set({ equippedItems: val }),
 }));
