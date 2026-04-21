@@ -548,6 +548,7 @@ export default function GachaPage({ showToast }) {
 
       {/* ── 미리보기 ── */}
       <ItemPreview
+        key={`preview-${tab}`}
         pool={pool} gradeConfig={gradeConfig}
         gradeOrder={gradeOrder} probTable={probTable}
       />
