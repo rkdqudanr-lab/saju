@@ -55,7 +55,6 @@ export function useUserProfile() {
   // 단, 로그인 유지하기가 켜져 있으면 만료 체크를 건너뜀 (서버 401 시 자동 로그아웃)
   const [user, setUser] = useState(() => {
     const storedUser = getAuthUser();
-    if (!storedUser) return null;
     const token = getAuthToken();
     if (token && isJwtExpired(token) && !getKeepLogin()) {
       try { localStorage.removeItem('byeolsoom_user'); } catch {}

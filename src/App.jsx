@@ -407,6 +407,7 @@ export default function App() {
     const checkFreeRechargeAvailability = async () => {
       try {
         const authClient = getAuthenticatedClient(user.id) || supabase;
+        if (!authClient) return;
         const { data: userData } = await authClient
           .from('users')
           .select('free_bp_recharge_at')

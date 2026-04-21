@@ -127,14 +127,16 @@ export default function LandingPage({
     if (!user) { setEquippedTalisman(null); return; }
     const kakaoId = String(user.kakaoId || user.id);
     const client = getAuthenticatedClient(kakaoId);
+    if (!client) return;
+    const safeClient = client;
 
-    client.from('user_shop_inventory')
+    safeClient.from('user_shop_inventory')
       .select('item_id, is_equipped')
       .eq('kakao_id', kakaoId)
       .eq('is_equipped', true)
       .then(async ({ data }) => {
         const { findItem } = await import('../utils/gachaItems.js');
-        const { data: allShopItems } = await client.from('shop_items').select('*');
+        const { data: allShopItems } = await safeClient.from('shop_items').select('*');
         const shopItemsMap = new Map((allShopItems || []).map(i => [i.id, i]));
         
         const equipped = (data || []).map(r => {
@@ -479,26 +481,25 @@ export default function LandingPage({
                       {scoreHistory.some(s => s.score !== null) && (
                         <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6 }}>
                           <div style={{ fontSize: '10px', color: 'var(--t4)', letterSpacing: '.04em', marginBottom: 8 }}>✦ 최근 7일 운세 흐름</div>
-                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 44 }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4 }}>
                             {scoreHistory.map((item, i) => {
                               const label = item.date.slice(5).replace('-', '/');
                               const hasScore = item.score !== null;
-                              const barH = hasScore ? Math.max(6, Math.round((item.score / 100) * 36)) : 4;
+                              const barH = hasScore ? Math.max(8, Math.round((item.score / 100) * 40)) : 4;
                               return (
-                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                                  <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    {hasScore && (
-                                      <div style={{ fontSize: '9px', color: 'var(--t4)', marginBottom: 2 }}>{item.score}</div>
-                                    )}
-                                    <div style={{
-                                      width: '100%', minWidth: 14,
-                                      height: barH,
-                                      background: hasScore ? scoreColor(item.score) : 'var(--line)',
-                                      borderRadius: 3,
-                                      opacity: hasScore ? 1 : 0.4,
-                                    }} />
+                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                                  <div style={{ fontSize: '9px', color: hasScore ? 'var(--t4)' : 'transparent', marginBottom: 1, lineHeight: 1 }}>
+                                    {hasScore ? item.score : '·'}
                                   </div>
-                                  <div style={{ fontSize: '8.5px', color: 'var(--t4)' }}>{label}</div>
+                                  <div style={{
+                                    width: '100%', minWidth: 12,
+                                    height: barH,
+                                    background: hasScore ? scoreColor(item.score) : 'var(--line)',
+                                    borderRadius: 3,
+                                    opacity: hasScore ? 1 : 0.3,
+                                    transition: 'height .3s ease',
+                                  }} />
+                                  <div style={{ fontSize: '8.5px', color: 'var(--t4)', marginTop: 2 }}>{label}</div>
                                 </div>
                               );
                             })}

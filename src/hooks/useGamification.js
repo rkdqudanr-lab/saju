@@ -68,6 +68,7 @@ export function useGamification(user, showToast) {
     try {
       const authClient = getAuthenticatedClient(user.id);
       const client = authClient || supabase;
+      if (!client) return;
 
       // users 테이블에서 게이미피케이션 정보 로드
       const { data: userData } = await client

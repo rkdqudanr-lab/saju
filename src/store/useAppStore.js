@@ -71,4 +71,7 @@ export const useAppStore = create((set, get) => ({
   // ── (deprecated) 하위 호환용 ──
   equippedItems: [],
   setEquippedItems: (val) => set({ equippedItems: val }),
+
+  equippedTalisman: null,
+  setEquippedTalisman: (val) => set({ equippedTalisman: val }),
 }));
