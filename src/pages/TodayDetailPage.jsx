@@ -23,7 +23,8 @@ const AXES_8 = [
   { key: 'study',   label: '학업' },
   { key: 'health',  label: '건강' },
   { key: 'social',  label: '대인' },
-  { key: 'travel',  label: '이동' }
+  { key: 'travel',  label: '이동' },
+  { key: 'create',  label: '창의' },
 ];
 
 function DailyRadarChart({ baseScore, equippedItems }) {

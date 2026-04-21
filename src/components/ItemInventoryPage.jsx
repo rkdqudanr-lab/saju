@@ -433,7 +433,25 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse }) {
         </button>
       )}
 
-      {!isGachaItem && (
+      {isTalisman && (
+        <button
+          onClick={() => onToggleEquip(item)}
+          disabled={toggling}
+          style={{
+            marginTop: 'auto', padding: '8px',
+            background: item.is_equipped ? 'rgba(232,176,72,.2)' : 'var(--goldf)',
+            border: `1.5px solid ${item.is_equipped ? 'var(--acc)' : 'rgba(232,176,72,.4)'}`,
+            borderRadius: 'var(--r1)',
+            color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)',
+            fontFamily: 'var(--ff)', cursor: toggling ? 'not-allowed' : 'pointer',
+            width: '100%', transition: 'all .15s',
+          }}
+        >
+          {toggling ? '처리 중...' : item.is_equipped ? '🔮 발동 중 (해제)' : '🔮 부적 발동'}
+        </button>
+      )}
+
+      {!isGachaItem && !isTalisman && (
         <button
           onClick={() => onUse(item)}
           style={{
@@ -503,9 +521,35 @@ export default function ItemInventoryPage({ showToast, callApi }) {
     setToggling(item.id);
     try {
       const client = getAuthenticatedClient(kakaoId);
+      const isTalismanItem = item.category === 'talisman';
       const isGachaItem = !!item.grade;
       const newEquipped = !item.is_equipped;
 
+      // ── 부적 장착/해제 ──────────────────────────────────────
+      if (isTalismanItem) {
+        if (newEquipped) {
+          // 기존 장착 부적 해제
+          const prevTalismans = items.filter(i => i.is_equipped && i.category === 'talisman');
+          for (const t of prevTalismans) {
+            await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', t.id);
+          }
+          await client.from('user_shop_inventory').update({ is_equipped: true }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
+          useAppStore.getState().setEquippedTalisman(item);
+          showToast?.(`${item.emoji} ${item.name} 부적 발동! 오늘의 운세에 반영돼요 ✦`, 'success');
+        } else {
+          await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
+          useAppStore.getState().setEquippedTalisman(null);
+          showToast?.('부적 효과를 해제했어요.', 'info');
+        }
+        setItems(prev => prev.map(i => {
+          if (i.id === item.id) return { ...i, is_equipped: newEquipped };
+          if (newEquipped && i.is_equipped && i.category === 'talisman') return { ...i, is_equipped: false };
+          return i;
+        }));
+        return;
+      }
+
+      // ── 가챠 기운 장착/해제 ─────────────────────────────────
       if (!isGachaItem) {
         showToast?.('이 아이템은 장착할 수 없어요.', 'error');
         return;
@@ -514,11 +558,9 @@ export default function ItemInventoryPage({ showToast, callApi }) {
       if (newEquipped) {
         // 단일 메인 기운 슬롯: 다른 장착된 가챠 아이템 전부 해제
         const targetsToUnequip = items.filter(i => i.is_equipped && !!i.grade);
-        
         for (const t of targetsToUnequip) {
           await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', t.id);
         }
-        
         await client.from('user_shop_inventory').update({ is_equipped: true }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
         useAppStore.getState().setEquippedSajuItem(item);
         showToast?.(`[${item.name}] 기운을 장착했어요! ✦`, 'success');
@@ -529,9 +571,7 @@ export default function ItemInventoryPage({ showToast, callApi }) {
       }
       setItems(prev => prev.map(i => {
         if (i.id === item.id) return { ...i, is_equipped: newEquipped };
-        if (newEquipped && i.is_equipped && !!i.grade) {
-           return { ...i, is_equipped: false }; // 다른 가챠템 해제 반영
-        }
+        if (newEquipped && i.is_equipped && !!i.grade) return { ...i, is_equipped: false };
         return i;
       }));
     } catch {

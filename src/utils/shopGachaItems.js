@@ -145,8 +145,101 @@ export const EFFECT_POOL = [
     animType: 'divine_light' },
 ];
 
+// ─── 부적 (24종 — 8개 운 영역 × 3등급) ──────────────────────────
+// type: TodayDetailPage AXES_8의 key와 일치 → 해당 축 점수 +보정
+// description: useConsultation isDaily 시 AI 컨텍스트에 주입됨
+export const TALISMAN_POOL = [
+  // ── 금전 부적 ──
+  { id: 'talisman_wealth_c', rarity: 'common',    name: '황금 재물 부적',   emoji: '💰', category: 'talisman', type: 'wealth',
+    description: '황금빛 기운으로 오늘 하루 금전 흐름을 부드럽게 열어줘요.',
+    effect: '금전 운 +8점', boost: 8 },
+  { id: 'talisman_wealth_r', rarity: 'rare',      name: '황금 복덩이 부적', emoji: '🏆', category: 'talisman', type: 'wealth',
+    description: '복이 몰려드는 강한 재물 기운으로 오늘의 금전 흐름을 크게 열어줘요.',
+    effect: '금전 운 +15점', boost: 15 },
+  { id: 'talisman_wealth_l', rarity: 'legendary', name: '금룡 재운 부적',   emoji: '🐉', category: 'talisman', type: 'wealth',
+    description: '금룡의 기운이 깃든 레전더리 부적. 재물과 풍요의 기운이 폭발적으로 열려요.',
+    effect: '금전 운 +25점', boost: 25 },
+
+  // ── 애정 부적 ──
+  { id: 'talisman_love_c',   rarity: 'common',    name: '홍실 인연 부적',   emoji: '❤️', category: 'talisman', type: 'love',
+    description: '붉은 실로 이어지는 인연의 기운으로 오늘의 애정 흐름을 따뜻하게 해줘요.',
+    effect: '애정 운 +8점', boost: 8 },
+  { id: 'talisman_love_r',   rarity: 'rare',      name: '월하 연정 부적',   emoji: '🌹', category: 'talisman', type: 'love',
+    description: '달빛 아래 깊어지는 연정의 기운으로 오늘 설레는 애정 에너지가 흘러요.',
+    effect: '애정 운 +15점', boost: 15 },
+  { id: 'talisman_love_l',   rarity: 'legendary', name: '천생연분 부적',    emoji: '💞', category: 'talisman', type: 'love',
+    description: '하늘이 맺어준 인연의 기운. 레전더리 애정 부적으로 오늘 강한 인연 기운이 열려요.',
+    effect: '애정 운 +25점', boost: 25 },
+
+  // ── 직장 부적 ──
+  { id: 'talisman_career_c', rarity: 'common',    name: '승진 길운 부적',   emoji: '📈', category: 'talisman', type: 'career',
+    description: '직장과 사업의 기운을 열어 오늘의 커리어 흐름을 순탄하게 해줘요.',
+    effect: '직장 운 +8점', boost: 8 },
+  { id: 'talisman_career_r', rarity: 'rare',      name: '관운 대통 부적',   emoji: '🎖️', category: 'talisman', type: 'career',
+    description: '관운이 트이는 강한 기운으로 오늘 직장·사업에서 좋은 결과를 기대할 수 있어요.',
+    effect: '직장 운 +15점', boost: 15 },
+  { id: 'talisman_career_l', rarity: 'legendary', name: '왕관 출세 부적',   emoji: '👑', category: 'talisman', type: 'career',
+    description: '왕관의 기운이 깃든 레전더리 부적. 오늘 직장과 커리어에서 최고의 기운이 흘러요.',
+    effect: '직장 운 +25점', boost: 25 },
+
+  // ── 학업 부적 ──
+  { id: 'talisman_study_c',  rarity: 'common',    name: '문창 학업 부적',   emoji: '📚', category: 'talisman', type: 'study',
+    description: '문창성의 기운으로 오늘의 집중력과 학습 효율을 높여줘요.',
+    effect: '학업 운 +8점', boost: 8 },
+  { id: 'talisman_study_r',  rarity: 'rare',      name: '지혜 총명 부적',   emoji: '🦉', category: 'talisman', type: 'study',
+    description: '총명한 지혜의 기운으로 오늘 시험·학습·자격증에서 강한 집중력이 발휘돼요.',
+    effect: '학업 운 +15점', boost: 15 },
+  { id: 'talisman_study_l',  rarity: 'legendary', name: '장원급제 부적',    emoji: '🏅', category: 'talisman', type: 'study',
+    description: '과거 장원급제의 기운이 깃든 레전더리 부적. 오늘 학업과 시험에서 최상의 결과를 기대해요.',
+    effect: '학업 운 +25점', boost: 25 },
+
+  // ── 건강 부적 ──
+  { id: 'talisman_health_c', rarity: 'common',    name: '수복 건강 부적',   emoji: '🍀', category: 'talisman', type: 'health',
+    description: '수(壽)와 복(福)의 기운으로 오늘 하루 몸의 기운을 회복시켜줘요.',
+    effect: '건강 운 +8점', boost: 8 },
+  { id: 'talisman_health_r', rarity: 'rare',      name: '장수 무병 부적',   emoji: '⚕️', category: 'talisman', type: 'health',
+    description: '무병장수의 기운으로 오늘 활력이 넘치고 몸과 마음이 건강해져요.',
+    effect: '건강 운 +15점', boost: 15 },
+  { id: 'talisman_health_l', rarity: 'legendary', name: '불로장생 부적',    emoji: '🌿', category: 'talisman', type: 'health',
+    description: '불로장생의 기운이 깃든 레전더리 부적. 오늘 최상의 활력과 건강 에너지가 흘러요.',
+    effect: '건강 운 +25점', boost: 25 },
+
+  // ── 대인 부적 ──
+  { id: 'talisman_social_c', rarity: 'common',    name: '귀인 인맥 부적',   emoji: '🤝', category: 'talisman', type: 'social',
+    description: '귀인이 찾아오는 기운으로 오늘의 대인 관계가 원만해져요.',
+    effect: '대인 운 +8점', boost: 8 },
+  { id: 'talisman_social_r', rarity: 'rare',      name: '화합 귀인 부적',   emoji: '✨', category: 'talisman', type: 'social',
+    description: '강한 귀인 기운으로 오늘 뜻하지 않게 귀한 사람을 만날 수 있어요.',
+    effect: '대인 운 +15점', boost: 15 },
+  { id: 'talisman_social_l', rarity: 'legendary', name: '천하화합 부적',    emoji: '🌟', category: 'talisman', type: 'social',
+    description: '천하가 화합하는 레전더리 부적. 오늘 모든 인간관계에서 최상의 기운이 흘러요.',
+    effect: '대인 운 +25점', boost: 25 },
+
+  // ── 이동 부적 ──
+  { id: 'talisman_travel_c', rarity: 'common',    name: '순풍 여행 부적',   emoji: '🧭', category: 'talisman', type: 'travel',
+    description: '순풍의 기운으로 오늘의 이동·여행이 안전하고 순탄해져요.',
+    effect: '이동 운 +8점', boost: 8 },
+  { id: 'talisman_travel_r', rarity: 'rare',      name: '여행 길조 부적',   emoji: '🗺️', category: 'talisman', type: 'travel',
+    description: '길조의 기운으로 오늘 이동과 여행에서 뜻밖의 좋은 일이 생겨요.',
+    effect: '이동 운 +15점', boost: 15 },
+  { id: 'talisman_travel_l', rarity: 'legendary', name: '팔방통달 부적',    emoji: '🚀', category: 'talisman', type: 'travel',
+    description: '팔방으로 통하는 레전더리 부적. 오늘 어디를 가든 최고의 기운이 함께해요.',
+    effect: '이동 운 +25점', boost: 25 },
+
+  // ── 창의 부적 (8번째 영역) ──
+  { id: 'talisman_create_c', rarity: 'common',    name: '창작 영감 부적',   emoji: '🎨', category: 'talisman', type: 'create',
+    description: '창의성과 영감의 기운으로 오늘 새로운 아이디어가 샘솟아요.',
+    effect: '창의 운 +8점', boost: 8 },
+  { id: 'talisman_create_r', rarity: 'rare',      name: '뮤즈 영감 부적',   emoji: '🎭', category: 'talisman', type: 'create',
+    description: '뮤즈의 기운으로 오늘 창의력과 예술적 감각이 최고조로 깨어나요.',
+    effect: '창의 운 +15점', boost: 15 },
+  { id: 'talisman_create_l', rarity: 'legendary', name: '천재 영감 부적',   emoji: '💡', category: 'talisman', type: 'create',
+    description: '천재적 영감이 깃든 레전더리 부적. 오늘 창의·예술·기획에서 놀라운 기운이 열려요.',
+    effect: '창의 운 +25점', boost: 25 },
+];
+
 // 카테고리별 풀
-export const SHOP_GACHA_POOL = { theme: THEME_POOL, avatar: AVATAR_POOL, effect: EFFECT_POOL };
+export const SHOP_GACHA_POOL = { theme: THEME_POOL, avatar: AVATAR_POOL, effect: EFFECT_POOL, talisman: TALISMAN_POOL };
 
 // ─── 뽑기 함수 ────────────────────────────────────────────────
 function pickOne(pool, guaranteedMin = null) {
@@ -176,7 +269,7 @@ export function pull10Shop(pool) {
 }
 
 // ID로 아이템 찾기
-const ALL_SHOP_POOL = [...THEME_POOL, ...AVATAR_POOL, ...EFFECT_POOL];
+const ALL_SHOP_POOL = [...THEME_POOL, ...AVATAR_POOL, ...EFFECT_POOL, ...TALISMAN_POOL];
 export function findShopItem(id) {
   return ALL_SHOP_POOL.find(i => i.id === id) || null;
 }

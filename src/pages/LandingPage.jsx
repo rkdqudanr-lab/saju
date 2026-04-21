@@ -147,11 +147,12 @@ export default function LandingPage({
       .eq('is_equipped', true)
       .then(async ({ data }) => {
         const { findItem } = await import('../utils/gachaItems.js');
+        const { findShopItem } = await import('../utils/shopGachaItems.js');
         const { data: allShopItems } = await safeClient.from('shop_items').select('*');
         const shopItemsMap = new Map((allShopItems || []).map(i => [i.id, i]));
-        
+
         const equipped = (data || []).map(r => {
-          const matched = shopItemsMap.get(r.item_id) || findItem(r.item_id);
+          const matched = shopItemsMap.get(r.item_id) || findItem(r.item_id) || findShopItem(r.item_id);
           return matched ? { ...matched, is_equipped: r.is_equipped } : null;
         }).filter(Boolean);
         
