@@ -320,10 +320,9 @@ function ItemPreview({ pool, gradeConfig, gradeOrder, probTable }) {
           );
         })}
       </div>
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
         {previewBodies.map(item => (
           <div key={item.bodyId} style={{
-            flexShrink: 0, width: 76,
             background: 'var(--bg2)', border: `1px solid ${cfg.border}`,
             borderRadius: 12, padding: '10px 6px', textAlign: 'center',
           }}>
