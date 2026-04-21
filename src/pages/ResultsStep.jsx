@@ -186,9 +186,9 @@ export default function ResultsStep({
                 </div>
               ) : (
                 <div className="action-card" style={{ borderColor: 'var(--tealacc)' }} onClick={() => setStep(6)}>
-                  <div className="action-card-icon">📜</div>
-                  <div className="action-card-title">{cat?.label || '심층'} 심층 분석</div>
-                  <div className="action-card-sub">이 분야만 깊게 파고들기</div>
+                  <div className="action-card-icon">🪬</div>
+                  <div className="action-card-title">심층 인터뷰</div>
+                  <div className="action-card-sub">10가지 질문으로 나를 더 깊이 분석</div>
                 </div>
               )}
               <div className="action-card letter" onClick={() => setStep(8)}>

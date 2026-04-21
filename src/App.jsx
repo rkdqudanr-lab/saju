@@ -39,6 +39,7 @@ import ShareCardTemplate   from "./components/ShareCardTemplate.jsx";
 
 // pages (static)
 import ReportStep          from "./pages/ReportStep.jsx";
+const DeepInterviewPage    = lazy(() => import("./components/DeepInterviewPage.jsx"));
 import DailyHoroscopePage  from "./pages/DailyHoroscopePage.jsx";
 import ChatStep            from "./pages/ChatStep.jsx";
 import ResultsStep         from "./pages/ResultsStep.jsx";
@@ -675,14 +676,16 @@ export default function App() {
           />
         )}
 
-        {/* ── Step 6: 월간 리포트 ── */}
+        {/* ── Step 6: 별숨 심층 인터뷰 (구 월간리포트) ── */}
         {step === 6 && (
-          <ReportStep
-            form={form} today={today}
-            reportText={reportText} reportLoading={reportLoading}
-            genReport={genReport} shareCard={shareCard} shareResult={shareResult}
-            saveReportImage={handleSaveReportImage}
-          />
+          <Suspense fallback={<PageSpinner />}>
+            <DeepInterviewPage
+              form={form} today={today}
+              callApi={callApi}
+              shareResult={shareResult}
+              saveReportImage={handleSaveReportImage}
+            />
+          </Suspense>
         )}
 
         {/* ── Step 7: 궁합 ── */}
