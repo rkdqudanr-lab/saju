@@ -39,15 +39,18 @@ function DailyRadarChart({ baseScore, equippedItems }) {
   const scores = AXES_8.map((axis, i) => {
     let base = Math.max(20, Math.min(85, (baseScore || 60) + getDailyNoise(i)));
     let bonus = 0;
-    
+    let boostItem = null;
+
     // 장착된 아이템의 효과(boost) 합산
     (equippedItems || []).forEach(item => {
-      // 아이템의 aspectKey가 현재 축과 돌일하다면 합산
       if (item.aspectKey === axis.key) {
         bonus += item.boost || 0;
+        if (!boostItem) boostItem = item;
       } else if (item.category === 'talisman' && item.type === axis.key) {
         // 하위 호환
-        bonus += 10;
+        const b = item.boost || 10;
+        bonus += b;
+        if (!boostItem) boostItem = item;
       }
     });
 
@@ -55,7 +58,8 @@ function DailyRadarChart({ baseScore, equippedItems }) {
       label: axis.label,
       base: Math.round(base),
       total: Math.min(100, Math.round(base + bonus)),
-      bonus: Math.round(bonus)
+      bonus: Math.round(bonus),
+      boostItem,
     };
   });
 
@@ -162,6 +166,38 @@ function DailyRadarChart({ baseScore, equippedItems }) {
           );
         })}
       </svg>
+
+      {/* ── 운 영역별 점수 목록 + 아이템 효과 주석 ── */}
+      <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {scores.map((s, i) => (
+          <div key={i}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ minWidth: 30, fontSize: '11px', color: s.bonus > 0 ? 'var(--gold)' : 'var(--t3)', fontWeight: s.bonus > 0 ? 700 : 400 }}>
+                {s.label}
+              </span>
+              <div style={{ flex: 1, height: 5, background: 'var(--line)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${s.total}%`,
+                  background: s.bonus > 0
+                    ? 'linear-gradient(90deg, var(--t4) 0%, var(--gold) 100%)'
+                    : 'var(--t4)',
+                  borderRadius: 3,
+                  transition: 'width 0.6s ease-out',
+                }} />
+              </div>
+              <span style={{ minWidth: 30, textAlign: 'right', fontSize: '11px', fontWeight: 700, color: s.bonus > 0 ? 'var(--gold)' : 'var(--t3)' }}>
+                {s.total}
+              </span>
+            </div>
+            {s.bonus > 0 && s.boostItem && (
+              <div style={{ paddingLeft: 38, marginTop: 2, fontSize: '10px', color: 'var(--gold)', lineHeight: 1.4 }}>
+                ✦ {s.boostItem.name}의 효과로 +{s.bonus}점이 올랐어요!
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -309,6 +345,89 @@ function PurifyOverlay({ visible }) {
   );
 }
 
+// 기운 보강 CTA — 결과 확인 후 아이템 장착 유도
+function BoostCTA({ equippedItems, canPurify, remaining, onPurify, isPurifying, setStep }) {
+  const hasEquipped = (equippedItems || []).some(i =>
+    i.aspectKey || (i.category === 'talisman') || i.boost
+  );
+
+  return (
+    <div style={{
+      background: 'var(--bg2)',
+      border: '1px solid var(--line)',
+      borderRadius: 'var(--r1)',
+      padding: '14px 16px',
+      marginBottom: 16,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+    }}>
+      <div>
+        <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>
+          ✦ 기운 보강
+        </div>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6 }}>
+          {hasEquipped
+            ? '아이템 효과가 반영됐어요. 재생성하면 점수가 업데이트돼요.'
+            : '아이템을 장착하면 오늘 운세 기운이 올라가요.'}
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          onClick={() => setStep(38)}
+          style={{
+            flex: hasEquipped ? 1 : 2,
+            padding: '10px 12px',
+            background: hasEquipped ? 'transparent' : 'var(--goldf)',
+            border: `1.5px solid ${hasEquipped ? 'var(--line)' : 'var(--acc)'}`,
+            borderRadius: 'var(--r1)',
+            color: hasEquipped ? 'var(--t3)' : 'var(--gold)',
+            fontWeight: hasEquipped ? 400 : 700,
+            fontSize: 'var(--xs)',
+            fontFamily: 'var(--ff)',
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+          }}
+        >
+          {hasEquipped ? '아이템 교체' : '🔮 기운 보강하기 ✦'}
+        </button>
+        {canPurify && (
+          <button
+            onClick={onPurify}
+            disabled={isPurifying}
+            style={{
+              flex: hasEquipped ? 2 : 1,
+              padding: '10px 12px',
+              background: hasEquipped ? 'var(--goldf)' : 'transparent',
+              border: `1.5px solid ${hasEquipped ? 'var(--acc)' : 'var(--line)'}`,
+              borderRadius: 'var(--r1)',
+              color: hasEquipped ? 'var(--gold)' : 'var(--t3)',
+              fontWeight: hasEquipped ? 700 : 400,
+              fontSize: 'var(--xs)',
+              fontFamily: 'var(--ff)',
+              cursor: isPurifying ? 'not-allowed' : 'pointer',
+              opacity: isPurifying ? 0.6 : 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            }}
+          >
+            {isPurifying ? '정화 중...' : `✦ 재생성 (${remaining}회 남음)`}
+          </button>
+        )}
+        {!canPurify && remaining <= 0 && (
+          <div style={{
+            flex: 1, padding: '10px 12px', background: 'var(--bg3)',
+            border: '1px solid var(--line)', borderRadius: 'var(--r1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 'var(--xs)', color: 'var(--t4)',
+          }}>
+            오늘 재생성 완료
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /**
  * TodayDetailPage - "오늘 하루 나의 별숨" 운세 상세 페이지
  */
@@ -325,6 +444,12 @@ export default function TodayDetailPage({
 }) {
   const user = useAppStore(s => s.user);
   const kakaoId = user?.kakaoId || user?.id;
+  const equippedTalisman = useAppStore(s => s.equippedTalisman);
+  const storeEquippedItems = useAppStore(s => s.equippedItems) || [];
+  // equippedTalisman이 가챠 아이템(오늘 발동)인 경우에도 radar에 포함
+  const mergedEquippedItems = equippedTalisman
+    ? [...storeEquippedItems.filter(i => i.id !== equippedTalisman.id), equippedTalisman]
+    : storeEquippedItems;
   const [isPurifying, setIsPurifying] = useState(false);
 
   const handlePurify = useCallback(async () => {
@@ -369,8 +494,19 @@ export default function TodayDetailPage({
           <PageSpinner />
         ) : dailyResult ? (
           <Suspense fallback={<PageSpinner />}>
-            <DailyRadarChart baseScore={dailyResult?.score} equippedItems={user?.equippedItems || useAppStore.getState().equippedItems} />
+            <DailyRadarChart baseScore={dailyResult?.score} equippedItems={mergedEquippedItems} />
             <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult?.score} />
+
+            {/* ── 기운 보강 CTA ── */}
+            <BoostCTA
+              equippedItems={mergedEquippedItems}
+              canPurify={canPurify}
+              remaining={remaining}
+              onPurify={handlePurify}
+              isPurifying={isPurifying}
+              setStep={setStep}
+            />
+
             <DailyStarCardV2
               result={dailyResult}
               onBlockBadtime={onBlockBadtime}

@@ -16,7 +16,7 @@ import {
   SAJU_POOL, SAJU_GRADE_CONFIG, SAJU_PROB_TABLE, pullOneSaju, pull10Saju, SAJU_GRADE_ORDER,
 } from '../utils/gachaItems.js';
 import {
-  THEME_POOL, AVATAR_POOL, EFFECT_POOL, TALISMAN_POOL,
+  THEME_POOL, AVATAR_POOL, EFFECT_POOL,
   SHOP_GRADE_CONFIG, SHOP_PROB_TABLE, SHOP_GRADE_ORDER,
   ALL_SHOP_POOL, findShopItem,
   pullOneShop, pull10Shop,
@@ -31,7 +31,6 @@ const DUPLICATE_REFUND = 5;
 
 const MAIN_TABS = [
   { id: 'spirit',   label: '기운 뽑기',   emoji: '🌌' },
-  { id: 'talisman', label: '부적 뽑기',   emoji: '🔮' },
   { id: 'theme',    label: '테마 뽑기',   emoji: '🎨' },
   { id: 'avatar',   label: '아바타 뽑기', emoji: '👤' },
   { id: 'effect',   label: '이펙트 뽑기', emoji: '✨' },
@@ -852,77 +851,6 @@ export default function ShopPage({ showToast }) {
           </div>
         </>
       )}
-
-      {/* ── 부적 뽑기 탭 ─────────────────────────────────────── */}
-      {activeTab === 'talisman' && (() => {
-        const equippedTalisman = useAppStore.getState().equippedTalisman;
-        return (
-          <>
-            {/* 장착 현황 */}
-            {equippedTalisman ? (
-              <div style={{ margin: '14px 20px 0', padding: '10px 12px', background: 'rgba(232,176,72,0.06)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: '1.4rem' }}>{equippedTalisman.emoji}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 1 }}>✦ 오늘의 부적 발동 중</div>
-                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>{equippedTalisman.name}</div>
-                </div>
-                <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'right' }}>{equippedTalisman.effect}</div>
-              </div>
-            ) : (
-              <div style={{ margin: '14px 20px 0', padding: '10px 12px', background: 'var(--bg2)', border: '1px dashed var(--line)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center' }}>
-                부적을 뽑아 오늘의 운세에 기운을 더해봐요 🔮
-              </div>
-            )}
-
-            {/* 설명 */}
-            <div style={{ margin: '12px 20px 0', padding: '10px 12px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
-              ✦ 부적을 뽑아 <strong style={{ color: 'var(--gold)' }}>장착</strong>하면 오늘의 별숨 점수와 AI 운세 해석에 즉시 반영돼요
-            </div>
-
-            <PullBanner
-              currentBP={currentBP} pulling={pulling}
-              onPull={(count) => doPullShop('talisman', count)}
-              cost1={SHOP_COST_1} cost10={SHOP_COST_10}
-              title="별숨 부적 뽑기"
-              subtitle={`${TALISMAN_POOL.length}종 부적 아이템`}
-              stats={`일반 60% · 레어 35% · 레전더리 5% · 중복 시 ${DUPLICATE_REFUND}BP 환불`}
-              accentColor="rgba(232,176,72,0.9)"
-              bgStyle={{ background: 'linear-gradient(135deg, #1a1005 0%, #130e04 55%, #1a1205 100%)', border: '1px solid rgba(232,176,72,.35)' }}
-              guarantee10Label={{ color: 'rgba(232,176,72,.85)', text: '레어 이상 1개 보장' }}
-            />
-            <ProbTable probTable={SHOP_PROB_TABLE} />
-
-            {/* 부적 미리보기 — 운 영역별 */}
-            <div style={{ padding: '14px 20px 0' }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
-                ✦ 부적 종류 미리보기
-              </div>
-              {['common','rare','legendary'].map(rarity => {
-                const cfg = SHOP_GRADE_CONFIG[rarity];
-                const items = TALISMAN_POOL.filter(i => i.rarity === rarity);
-                return (
-                  <div key={rarity} style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: '10px', fontWeight: 700, color: cfg.color, marginBottom: 6, letterSpacing: '.04em' }}>{cfg.label}</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                      {items.map(item => (
-                        <div key={item.id} style={{
-                          background: 'var(--bg2)', border: `1px solid ${cfg.border}`,
-                          borderRadius: 10, padding: '10px 6px', textAlign: 'center',
-                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                        }}>
-                          <div style={{ fontSize: '1.4rem' }}>{item.emoji}</div>
-                          <div style={{ fontSize: '9px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item.name}</div>
-                          <div style={{ fontSize: '9px', color: cfg.color, fontWeight: 700 }}>{item.effect}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        );
-      })()}
 
       {/* ── 테마/아바타/이펙트 뽑기 탭 ──────────────────────── */}
       {(activeTab === 'theme' || activeTab === 'avatar' || activeTab === 'effect') && (() => {

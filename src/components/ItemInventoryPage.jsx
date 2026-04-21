@@ -324,10 +324,11 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
 }
 
 // ─── 아이템 카드 ────────────────────────────────────────────────
-function OwnedItemCard({ item, onToggleEquip, toggling, onUse }) {
+function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActId, onDailyActivate }) {
   const isTalisman = item.category === 'talisman';
   const isGachaItem = !!item.grade; // grade 있으면 가챠 아이템
   const cfg = item.grade ? GRADE_CONFIG[item.grade] : null;
+  const isDailyActive = dailyActId && (dailyActId === item.id || dailyActId === item.id.split('::')[0]);
 
   return (
     <div style={{
@@ -416,21 +417,38 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse }) {
 
       {/* 액션 버튼 */}
       {isGachaItem && (
-        <button
-          onClick={() => onToggleEquip(item)}
-          disabled={toggling}
-          style={{
-            marginTop: 'auto', padding: '8px',
-            background: item.is_equipped ? 'rgba(232,176,72,.15)' : (cfg?.bg || 'var(--bg3)'),
-            border: `1.5px solid ${item.is_equipped ? 'var(--acc)' : (cfg?.border || 'var(--line)')}`,
-            borderRadius: 'var(--r1)',
-            color: item.is_equipped ? 'var(--gold)' : (cfg?.color || 'var(--t3)'),
-            fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
-            cursor: toggling ? 'not-allowed' : 'pointer', width: '100%', transition: 'all .15s',
-          }}
-        >
-          {toggling ? '처리 중...' : item.is_equipped ? '✦ 메인 기운 해제' : '메인 기운 장착'}
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 'auto' }}>
+          {/* 메인 기운 장착 */}
+          <button
+            onClick={() => onToggleEquip(item)}
+            disabled={toggling}
+            style={{
+              padding: '7px',
+              background: item.is_equipped ? 'rgba(232,176,72,.15)' : (cfg?.bg || 'var(--bg3)'),
+              border: `1.5px solid ${item.is_equipped ? 'var(--acc)' : (cfg?.border || 'var(--line)')}`,
+              borderRadius: 'var(--r1)',
+              color: item.is_equipped ? 'var(--gold)' : (cfg?.color || 'var(--t3)'),
+              fontWeight: 700, fontSize: '10px', fontFamily: 'var(--ff)',
+              cursor: toggling ? 'not-allowed' : 'pointer', width: '100%', transition: 'all .15s',
+            }}
+          >
+            {toggling ? '...' : item.is_equipped ? '✦ 기운 장착 중' : '기운 장착'}
+          </button>
+          {/* 오늘 발동 */}
+          <button
+            onClick={() => onDailyActivate(item)}
+            style={{
+              padding: '7px',
+              background: isDailyActive ? 'rgba(232,176,72,.25)' : 'var(--goldf)',
+              border: `1.5px solid ${isDailyActive ? 'var(--gold)' : 'rgba(232,176,72,.4)'}`,
+              borderRadius: 'var(--r1)',
+              color: 'var(--gold)', fontWeight: 700, fontSize: '10px',
+              fontFamily: 'var(--ff)', cursor: 'pointer', width: '100%', transition: 'all .15s',
+            }}
+          >
+            {isDailyActive ? '🔮 발동 중 (해제)' : '🔮 오늘 발동'}
+          </button>
+        </div>
       )}
 
       {isTalisman && (
@@ -480,6 +498,25 @@ export default function ItemInventoryPage({ showToast, callApi }) {
   const [useItem, setUseItem] = useState(null);
   const [showSynth, setShowSynth] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
+
+  // 오늘 발동 — localStorage per-day
+  const todayKey = `byeolsoom_daily_act_${new Date().toISOString().slice(0, 10)}`;
+  const [dailyActId, setDailyActId] = useState(() => localStorage.getItem(todayKey) || null);
+
+  function handleDailyActivate(item) {
+    const isActive = dailyActId && (dailyActId === item.id || dailyActId === item.id.split('::')[0]);
+    if (isActive) {
+      localStorage.removeItem(todayKey);
+      setDailyActId(null);
+      useAppStore.getState().setEquippedTalisman(null);
+      showToast?.('오늘 발동을 해제했어요.', 'info');
+    } else {
+      localStorage.setItem(todayKey, item.id);
+      setDailyActId(item.id);
+      useAppStore.getState().setEquippedTalisman(item);
+      showToast?.(`${item.emoji} ${item.name} 오늘 발동! 재생성하면 별숨에 반영돼요 ✦`, 'success');
+    }
+  }
 
   const CATEGORIES = ['전체', '🌌 우주', '☯️ 사주', '기타'];
 
@@ -749,6 +786,8 @@ export default function ItemInventoryPage({ showToast, callApi }) {
                 onToggleEquip={handleToggleEquip}
                 toggling={toggling === item.id}
                 onUse={setUseItem}
+                dailyActId={dailyActId}
+                onDailyActivate={handleDailyActivate}
               />
             ))}
           </div>

@@ -160,6 +160,14 @@ export default function LandingPage({
         // 부적(하위호환 유지용)
         const talisman = equipped.find(r => r.category === 'talisman');
         setEquippedTalisman(talisman || null);
+
+        // 오늘 발동 기운 복원 (localStorage → Zustand, Supabase 부적보다 우선)
+        const todayKey = `byeolsoom_daily_act_${new Date().toISOString().slice(0, 10)}`;
+        const dailyActId = localStorage.getItem(todayKey);
+        if (dailyActId) {
+          const activatedItem = findItem(dailyActId);
+          if (activatedItem) setEquippedTalisman(activatedItem);
+        }
         
         // 커스텀 장착 파츠
         const theme = equipped.find(r => r.category === 'theme');
@@ -350,7 +358,7 @@ export default function LandingPage({
                     {equippedTalisman.emoji}
                   </div>
                   <div>
-                    <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 2 }}>✦ 오늘의 부적 효과 적용 중</div>
+                    <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 2 }}>✦ 오늘의 기운 발동 중</div>
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>{equippedTalisman.name}</div>
                   </div>
                 </div>
