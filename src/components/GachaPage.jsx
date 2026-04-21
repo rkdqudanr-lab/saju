@@ -584,6 +584,32 @@ export default function GachaPage({ showToast }) {
       {/* ── 합성 안내 ── */}
       <SynthGuide gradeConfig={gradeConfig} gradeOrder={gradeOrder} setStep={setStep} />
 
+      {/* ── 숍 교차 안내 ── */}
+      <div style={{
+        margin: '14px 20px 0', padding: '12px 14px',
+        background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+      }}>
+        <div>
+          <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t2)', marginBottom: 2 }}>
+            🛍️ 테마 · 아바타 · 이펙트 아이템도 있어요
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>
+            별숨 숍에서 직접 구매하거나 랜덤 뽑기로 모아봐요
+          </div>
+        </div>
+        <button
+          onClick={() => setStep(31)}
+          style={{
+            flexShrink: 0, padding: '6px 12px', borderRadius: 20,
+            background: 'none', border: '1px solid var(--line)',
+            color: 'var(--t3)', fontSize: '11px', fontFamily: 'var(--ff)', cursor: 'pointer',
+          }}
+        >
+          별숨 숍 →
+        </button>
+      </div>
+
       {/* 결과 오버레이 */}
       {results && (
         <ResultOverlay
