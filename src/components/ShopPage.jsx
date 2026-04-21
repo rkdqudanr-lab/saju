@@ -387,14 +387,15 @@ function ShopItemPreviewGrid({ pool, gradeConfig, gradeOrder }) {
           <div key={item.id} style={{
             background: 'var(--bg2)', border: `1px solid ${cfg.border}`,
             borderRadius: 12, padding: '14px 8px', textAlign: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
               <ShopItemGraphic item={item} size={48} />
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 3, wordBreak: 'keep-all' }}>
+            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', width: '100%' }}>
               {item.name}
             </div>
-            <div style={{ fontSize: '10px', color: cfg.color, lineHeight: 1.4, wordBreak: 'keep-all' }}>
+            <div style={{ fontSize: '10px', color: cfg.color, lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', width: '100%' }}>
               {item.effect}
             </div>
           </div>
@@ -469,6 +470,7 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
       display: 'flex', flexDirection: 'column', gap: 5,
       position: 'relative',
       boxShadow: isEquipped ? '0 0 10px rgba(232,176,72,0.2)' : 'none',
+      minHeight: 160,
     }}>
       {item.rarity && item.rarity !== 'common' && (
         <div style={{ position: 'absolute', top: 8, right: 10, fontSize: '10px', fontWeight: 700, color: rarityColor }}>
@@ -484,8 +486,8 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
         }
       </div>
 
-      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center' }}>{item.name}</div>
-      <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.5, textAlign: 'center' }}>{item.description || CAT_DESC[item.category]}</div>
+      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item.name}</div>
+      <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.5, textAlign: 'center', flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{item.description || CAT_DESC[item.category]}</div>
 
       {canEquip && (
         <button onClick={onEquip} style={{
@@ -922,10 +924,10 @@ export default function ShopPage({ showToast }) {
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>✦ 특별 상담 구매</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                 {dbItems.filter(i => !ownedIds.has(String(i.id))).map(item => (
-                  <div key={item.id} style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px', display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'center' }}>
+                  <div key={item.id} style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px', display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'center', minHeight: 160 }}>
                     <div style={{ fontSize: 28 }}>{item.emoji}</div>
-                    <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center' }}>{item.name}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.5 }}>{item.description}</div>
+                    <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item.name}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.5, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{item.description}</div>
                     <button onClick={() => setConfirmItem(item)} style={{
                       padding: '8px', width: '100%', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
                       borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
@@ -947,7 +949,7 @@ export default function ShopPage({ showToast }) {
                 <div style={{ fontSize: 'var(--xs)', marginTop: 6 }}>뽑기로 아이템을 모아봐요</div>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, alignItems: 'stretch' }}>
                 {invItems.map(item => (
                   <InvCard
                     key={item.id}
@@ -976,7 +978,7 @@ export default function ShopPage({ showToast }) {
       {/* BP 획득 안내 */}
       <div style={{ margin: '20px 20px 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', fontSize: '11px', color: 'var(--t4)', lineHeight: 1.7 }}>
         <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 5 }}>✦ BP 획득 방법</div>
-        일일 출석 +5 · 미션 완료 +10 · 일기 작성 +5 · 앱 설치 +20 · 친구 공유 +3
+        일일 출석 +100 · 미션 완료 +10 · 일기 작성 +5 · 앱 설치 +20 · 친구 공유 +3
       </div>
 
       {/* 결과 오버레이 */}

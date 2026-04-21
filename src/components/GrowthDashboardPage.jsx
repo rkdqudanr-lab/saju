@@ -199,6 +199,96 @@ function StreakDisplay({ streak }) {
 // ── 요일 레이블 ─────────────────────────────────────────────────
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
+/** 별숨점수 주간 꺾은선 차트 */
+function ScoreTrendChart({ data }) {
+  // data: 7개 값 배열 (null=데이터없음, 0~100=점수), 오래된 순
+  const hasAny = data.some(v => v !== null);
+  if (!hasAny) {
+    return (
+      <div style={{
+        background: 'var(--bg2)', border: '1px solid var(--line)',
+        borderRadius: 12, padding: '14px 16px',
+        textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--xs)',
+      }}>
+        ✦ 별숨점수 추이 — 오늘의 운세를 확인하면 기록돼요
+      </div>
+    );
+  }
+
+  const validVals = data.filter(v => v !== null);
+  const max = Math.max(...validVals, 1);
+  const min = Math.min(...validVals, 0);
+  const range = max - min || 1;
+  const toY = v => 100 - ((v - min) / range) * 80 - 10;
+
+  const segments = [];
+  let seg = [];
+  data.forEach((val, i) => {
+    if (val !== null) {
+      seg.push(`${(i / 6) * 100},${toY(val)}`);
+    } else {
+      if (seg.length > 1) segments.push(seg.join(' '));
+      seg = [];
+    }
+  });
+  if (seg.length > 1) segments.push(seg.join(' '));
+
+  const todayVal = data[6];
+  const prevVal = data.slice(0, 6).reverse().find(v => v !== null);
+  const isUp = todayVal != null && prevVal != null && todayVal >= prevVal;
+  const dates = getLast7Days();
+
+  return (
+    <div style={{
+      background: 'var(--bg2)', border: '1px solid var(--line)',
+      borderRadius: 12, padding: '14px 16px',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div>
+          <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t3)', marginBottom: 2 }}>
+            ✦ 최근 7일 별숨점수 흐름
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--t4)' }}>
+            {todayVal != null && prevVal != null
+              ? <>어제보다 <strong style={{ color: isUp ? '#ff7832' : '#7b9ec4' }}>{isUp ? '상승' : '하락'}세</strong></>
+              : '오늘 운세를 확인하면 기록돼요'}
+          </div>
+        </div>
+        {todayVal != null && (
+          <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: 'var(--gold)' }}>{todayVal}<span style={{ fontSize: '11px', fontWeight: 400 }}>점</span></div>
+        )}
+      </div>
+      <div style={{ position: 'relative', width: '100%', height: 56 }}>
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+          {segments.map((pts, si) => (
+            <polyline key={si} fill="none" stroke="var(--gold)" strokeWidth="3"
+              strokeLinecap="round" strokeLinejoin="round" points={pts} opacity="0.85" />
+          ))}
+          {data.map((val, i) => {
+            if (val === null) return null;
+            const x = (i / 6) * 100;
+            const y = toY(val);
+            return i === 6
+              ? <circle key={i} cx={x} cy={y} r="4" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2" />
+              : <circle key={i} cx={x} cy={y} r="2.5" fill="var(--gold)" opacity="0.5" />;
+          })}
+        </svg>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+        {dates.map((date, i) => {
+          const dow = new Date(date).getDay();
+          const isToday = i === 6;
+          return (
+            <div key={date} style={{ fontSize: '8px', color: isToday ? 'var(--gold)' : 'var(--t4)', fontWeight: isToday ? 700 : 400, flex: 1, textAlign: 'center' }}>
+              {DAY_LABELS[dow]}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /** 최근 7일 날짜 문자열 배열 (오늘 포함, 오래된 것부터) */
 function getLast7Days() {
   return Array.from({ length: 7 }, (_, i) => {
@@ -304,6 +394,8 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
   const [activityDays, setActivityDays] = useState(new Set());
   const [totalQuestions, setTotalQuestions] = useState(null);
   const [totalBpEarned, setTotalBpEarned] = useState(null);
+  const [scoreTrend, setScoreTrend] = useState(null); // 7개 배열 (null|number)
+  const [weeklyQuestions, setWeeklyQuestions] = useState(null); // 최근 7일 질문 수
   const [statsLoading, setStatsLoading] = useState(false);
 
   const safe = gamificationState ?? { currentBp: 0, guardianLevel: 1, loginStreak: 0, totalMissionsCompleted: 0 };
@@ -328,7 +420,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
         const client = getAuthenticatedClient(String(user.id));
         const sevenDaysAgo = getLast7Days()[0];
 
-        const [bpLogRes, consultRes, gamRes] = await Promise.all([
+        const [bpLogRes, consultRes, gamRes, scoreRes, weeklyConsultRes] = await Promise.all([
           client.from('daily_bp_log')
             .select('date, bp_amount')
             .eq('kakao_id', String(user.id))
@@ -343,6 +435,19 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
             .select('total_bp_earned')
             .eq('kakao_id', String(user.id))
             .maybeSingle(),
+          // 별숨점수 추이 (daily_cache 또는 daily_scores)
+          client.from('daily_scores')
+            .select('score_date, score')
+            .eq('kakao_id', String(user.id))
+            .gte('score_date', sevenDaysAgo)
+            .order('score_date', { ascending: true }),
+          // 최근 7일 질문 수
+          user.supabaseId
+            ? client.from('consultation_history')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.supabaseId)
+                .gte('created_at', sevenDaysAgo)
+            : Promise.resolve({ count: 0 }),
         ]);
 
         if (cancelled) return;
@@ -358,6 +463,15 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
         setActivityDays(active);
         setTotalQuestions(consultRes.count ?? 0);
         setTotalBpEarned(gamRes.data?.total_bp_earned ?? 0);
+        setWeeklyQuestions(weeklyConsultRes.count ?? 0);
+
+        // 별숨점수 추이: 7일 배열로 변환
+        const scoreMap = {};
+        for (const row of scoreRes.data || []) {
+          scoreMap[row.score_date] = row.score;
+        }
+        const dates7 = getLast7Days();
+        setScoreTrend(dates7.map(d => scoreMap[d] ?? null));
       } catch (_) {
         // 통계 로드 실패는 조용히 무시
       } finally {
@@ -569,54 +683,34 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
               </div>
             ) : (
               <>
+                {/* 별숨점수 추이 */}
+                {scoreTrend && <ScoreTrendChart data={scoreTrend} />}
+
                 {/* BP 추이 차트 */}
                 <BPTrendChart data={bpTrendData} />
 
                 {/* 주간 활동 */}
                 <WeeklyActivityRow activityDays={activityDays} />
 
-                {/* 핵심 수치 2×2 */}
+                {/* 핵심 수치 2×3 */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  <div style={{
-                    background: 'var(--bg2)', border: '1px solid var(--line)',
-                    borderRadius: 12, padding: '14px 12px', textAlign: 'center',
-                  }}>
-                    <div style={{ fontSize: 20, marginBottom: 4 }}>⭐</div>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--gold)', lineHeight: 1 }}>
-                      {totalBpEarned ?? '—'}
+                  {[
+                    { icon: '⭐', label: '누적 획득 BP',   value: totalBpEarned ?? '—', color: 'var(--gold)' },
+                    { icon: '📝', label: '총 질문 수',      value: totalQuestions ?? '—', color: '#4A8EC4' },
+                    { icon: '🗓️', label: '이번 주 질문',    value: weeklyQuestions ?? '—', color: '#9B72CF' },
+                    { icon: '✅', label: '완료한 미션',     value: totalMissionsCompleted, color: '#5FAD7A' },
+                    { icon: '🔥', label: '연속 방문일',     value: loginStreak, color: '#FF7832' },
+                    { icon: '💎', label: '현재 BP',         value: currentBp, color: 'var(--gold)' },
+                  ].map(({ icon, label, value, color }) => (
+                    <div key={label} style={{
+                      background: 'var(--bg2)', border: '1px solid var(--line)',
+                      borderRadius: 12, padding: '14px 12px', textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: 20, marginBottom: 4 }}>{icon}</div>
+                      <div style={{ fontSize: '22px', fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>{label}</div>
                     </div>
-                    <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>누적 획득 BP</div>
-                  </div>
-                  <div style={{
-                    background: 'var(--bg2)', border: '1px solid var(--line)',
-                    borderRadius: 12, padding: '14px 12px', textAlign: 'center',
-                  }}>
-                    <div style={{ fontSize: 20, marginBottom: 4 }}>📝</div>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#4A8EC4', lineHeight: 1 }}>
-                      {totalQuestions ?? '—'}
-                    </div>
-                    <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>총 질문 수</div>
-                  </div>
-                  <div style={{
-                    background: 'var(--bg2)', border: '1px solid var(--line)',
-                    borderRadius: 12, padding: '14px 12px', textAlign: 'center',
-                  }}>
-                    <div style={{ fontSize: 20, marginBottom: 4 }}>✅</div>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#5FAD7A', lineHeight: 1 }}>
-                      {totalMissionsCompleted}
-                    </div>
-                    <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>완료한 미션</div>
-                  </div>
-                  <div style={{
-                    background: 'var(--bg2)', border: '1px solid var(--line)',
-                    borderRadius: 12, padding: '14px 12px', textAlign: 'center',
-                  }}>
-                    <div style={{ fontSize: 20, marginBottom: 4 }}>🔥</div>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#FF7832', lineHeight: 1 }}>
-                      {loginStreak}
-                    </div>
-                    <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>연속 방문일</div>
-                  </div>
+                  ))}
                 </div>
               </>
             )}

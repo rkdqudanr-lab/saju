@@ -19,9 +19,9 @@ function DaeunCard({ period, isCurrent, isNext }) {
   return (
     <div
       style={{
-        width: isCurrent ? 150 : 120,
+        width: isCurrent ? 120 : 96,
         flexShrink: 0,
-        padding: isCurrent ? '18px 12px' : '14px 10px',
+        padding: isCurrent ? '16px 10px' : '12px 8px',
         borderRadius: 'var(--r2, 16px)',
         background: isCurrent ? color.bg : 'var(--bg2)',
         border: `2px solid ${isCurrent ? color.border : isNext ? 'var(--acc)' : 'var(--line)'}`,
@@ -32,6 +32,7 @@ function DaeunCard({ period, isCurrent, isNext }) {
         transition: 'all 0.2s ease',
         boxShadow: isCurrent ? `0 4px 16px ${color.bg}` : 'none',
         cursor: 'pointer',
+        scrollSnapAlign: 'start',
       }}
       onClick={period.onClick}
     >
@@ -66,7 +67,7 @@ function DaeunCard({ period, isCurrent, isNext }) {
 
       {/* 나이 */}
       <div style={{
-        fontSize: isCurrent ? '20px' : '17px',
+        fontSize: isCurrent ? '16px' : '14px',
         fontWeight: 800,
         color: isCurrent ? color.text : 'var(--t2)',
         lineHeight: 1.1,
@@ -141,8 +142,8 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
   // 현재 대운 카드로 스크롤
   useEffect(() => {
     if (!scrollRef.current || currentIdx === 0) return;
-    const cardWidth = 145;
-    const offset = Math.max(0, currentIdx * cardWidth - 40);
+    const cardWidth = 104; // card width(96) + gap(8)
+    const offset = Math.max(0, currentIdx * cardWidth - 20);
     scrollRef.current.scrollLeft = offset;
   }, [currentIdx, daeunData]);
 
@@ -270,14 +271,14 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
             ref={scrollRef}
             style={{
               display: 'flex',
-              gap: 10,
+              gap: 8,
               overflowX: 'auto',
               padding: '12px 20px 16px',
               scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch',
               scrollbarWidth: 'none',
-              width: '100%',
-              boxSizing: 'border-box',
+              msOverflowStyle: 'none',
+              scrollSnapType: 'x mandatory',
             }}
           >
             {daeunData.periods.map((period, idx) => (

@@ -297,7 +297,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             title: '별숨 포인트 쌓는 방법',
             content: (
               <div style={{ paddingTop: 8 }}>
-                <BpGuideRow icon="✦" text="매일 첫 로그인" bp="+5 BP" />
+                <BpGuideRow icon="✦" text="매일 첫 로그인" bp="+100 BP" />
                 <BpGuideRow icon="🎨" text="색상 처방 · 음식 처방 · 라이프 아이템 미션 완료" bp="+10 BP" />
                 <BpGuideRow icon="✅" text="오늘의 실천 DO 미션 완료" bp="+5 BP" />
                 <BpGuideRow icon="⚠️" text="오늘의 주의 DONT 미션 완료" bp="+5 BP" />
