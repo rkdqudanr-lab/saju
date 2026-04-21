@@ -284,7 +284,7 @@ export default function App() {
         showToast('내일 다시 충전할 수 있습니다 ⏰', 'info');
       }
     } catch (error) {
-      showToast('BM 충전 중 오류 발생', 'error');
+      showToast('BP 충전 중 오류 발생', 'error');
     }
   }, [rechargeFreeBP, showToast]);
 
@@ -563,7 +563,7 @@ export default function App() {
       )}
 
       {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {(step === 5 || step === 6 || step === 7 || step === 8) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {(step === 5 || step === 6 || step === 7 || step === 8 || step === 41) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30 || step === 33 || step === 34 || step === 35 || step === 39 || step === 40) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
@@ -585,6 +585,7 @@ export default function App() {
             showDailyCard={showDailyCard} setShowDailyCard={setShowDailyCard}
             setDiy={setDiy}
             setEditingMyProfile={setEditingMyProfile} setShowProfileModal={setShowProfileModal}
+            askQuick={askQuick} callApi={callApi} setDiaryViewDate={setDiaryViewDate}
             askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview} askWeeklyReview={askWeeklyReview}
             resetDiaryReview={resetDiaryReview}
             handleQuizAnswer={handleQuizAnswer} handleQuizSkip={handleQuizSkip}
@@ -1063,6 +1064,18 @@ export default function App() {
           <Suspense fallback={<PageSpinner />}>
             <GachaPage showToast={showToast} />
           </Suspense>
+        )}
+
+        {/* ── Step 41: 월간 리포트 ── */}
+        {step === 41 && (
+          <ReportStep
+            form={form} today={today}
+            reportText={reportText} reportLoading={reportLoading}
+            genReport={genReport}
+            shareCard={shareCard}
+            shareResult={shareResult}
+            saveReportImage={handleSaveReportImage}
+          />
         )}
 
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>

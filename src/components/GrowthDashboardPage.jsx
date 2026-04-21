@@ -3,10 +3,11 @@
  * 귀여운 SVG 캐릭터 기반 성장 시스템
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 import MissionDashboard from './MissionDashboard.jsx';
 import { FREE_BP_RECHARGE } from '../utils/gamificationLogic.js';
+import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 
 // ── 별숨 성장 단계 정의 (완료 미션 수 기준) ──────────────────────
 const GROWTH_STAGES = [
@@ -195,9 +196,115 @@ function StreakDisplay({ streak }) {
   );
 }
 
+// ── 요일 레이블 ─────────────────────────────────────────────────
+const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+
+/** 최근 7일 날짜 문자열 배열 (오늘 포함, 오래된 것부터) */
+function getLast7Days() {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+/** BP 추이 막대 차트 */
+function BPTrendChart({ data }) {
+  // data: [{ date, total }] — 날짜별 획득 BP 합계
+  const dates = getLast7Days();
+  const maxVal = Math.max(...dates.map(d => data[d] || 0), 1);
+
+  return (
+    <div style={{
+      background: 'var(--bg2)', border: '1px solid var(--line)',
+      borderRadius: 12, padding: '14px 16px',
+    }}>
+      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t3)', marginBottom: 12 }}>
+        ✦ 최근 7일 별 포인트 흐름
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 56 }}>
+        {dates.map(date => {
+          const val = data[date] || 0;
+          const pct = Math.max((val / maxVal) * 100, val > 0 ? 8 : 0);
+          const dow = new Date(date).getDay();
+          const isToday = date === new Date().toISOString().slice(0, 10);
+          return (
+            <div key={date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              {val > 0 && (
+                <div style={{ fontSize: '8px', color: 'var(--gold)', fontWeight: 700, lineHeight: 1 }}>{val}</div>
+              )}
+              <div style={{
+                width: '100%', height: `${pct}%`, minHeight: val > 0 ? 4 : 2,
+                borderRadius: 3,
+                background: isToday
+                  ? 'linear-gradient(180deg, var(--gold), #C8953A)'
+                  : val > 0
+                    ? 'var(--acc)'
+                    : 'var(--bg3)',
+                transition: 'height .4s ease',
+              }} />
+              <div style={{ fontSize: '8px', color: isToday ? 'var(--gold)' : 'var(--t4)', fontWeight: isToday ? 700 : 400 }}>
+                {DAY_LABELS[dow]}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** 주간 활동 달력 뷰 */
+function WeeklyActivityRow({ activityDays }) {
+  // activityDays: Set of 'YYYY-MM-DD' strings with any activity
+  const dates = getLast7Days();
+  return (
+    <div style={{
+      background: 'var(--bg2)', border: '1px solid var(--line)',
+      borderRadius: 12, padding: '14px 16px',
+    }}>
+      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t3)', marginBottom: 10 }}>
+        ✦ 이번 주 활동
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        {dates.map(date => {
+          const active = activityDays.has(date);
+          const isToday = date === new Date().toISOString().slice(0, 10);
+          const dow = new Date(date).getDay();
+          return (
+            <div key={date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: active
+                  ? 'linear-gradient(135deg, var(--gold), #C8953A)'
+                  : isToday ? 'var(--bg3)' : 'var(--bg3)',
+                border: isToday ? '1.5px solid var(--acc)' : '1.5px solid var(--line)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '10px',
+                boxShadow: active ? '0 2px 8px rgba(200,149,58,.35)' : 'none',
+              }}>
+                {active ? '✦' : ''}
+              </div>
+              <div style={{ fontSize: '8px', color: active ? 'var(--gold)' : isToday ? 'var(--t2)' : 'var(--t4)', fontWeight: active ? 700 : 400 }}>
+                {DAY_LABELS[dow]}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function GrowthDashboardPage({ onRechargeFreeBP }) {
-  const { gamificationState, missions, setStep } = useAppStore();
-  const [tab, setTab] = useState('growth'); // 'growth' | 'missions'
+  const { gamificationState, missions, setStep, user } = useAppStore();
+  const [tab, setTab] = useState('growth'); // 'growth' | 'missions' | 'stats'
+
+  const [bpTrendData, setBpTrendData] = useState({}); // { 'YYYY-MM-DD': number }
+  const [activityDays, setActivityDays] = useState(new Set());
+  const [totalQuestions, setTotalQuestions] = useState(null);
+  const [totalBpEarned, setTotalBpEarned] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   const safe = gamificationState ?? { currentBp: 0, guardianLevel: 1, loginStreak: 0, totalMissionsCompleted: 0 };
   const {
@@ -210,6 +317,56 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
   const freeRecharge = FREE_BP_RECHARGE[guardianLevel] || 5;
   const safeMissions = missions ?? [];
   const completedToday = safeMissions.filter(m => m.is_completed).length;
+
+  // 통계 데이터 로드 (최근 7일 BP 로그 + 총 질문 수)
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    async function fetchStats() {
+      setStatsLoading(true);
+      try {
+        const client = getAuthenticatedClient(String(user.id));
+        const sevenDaysAgo = getLast7Days()[0];
+
+        const [bpLogRes, consultRes, gamRes] = await Promise.all([
+          client.from('daily_bp_log')
+            .select('date, bp_amount')
+            .eq('kakao_id', String(user.id))
+            .gte('date', sevenDaysAgo)
+            .gt('bp_amount', 0),
+          user.supabaseId
+            ? client.from('consultation_history')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.supabaseId)
+            : Promise.resolve({ count: 0 }),
+          client.from('user_gamification')
+            .select('total_bp_earned')
+            .eq('kakao_id', String(user.id))
+            .maybeSingle(),
+        ]);
+
+        if (cancelled) return;
+
+        // BP 추이: 날짜별 합산
+        const trend = {};
+        const active = new Set();
+        for (const row of bpLogRes.data || []) {
+          trend[row.date] = (trend[row.date] || 0) + (row.bp_amount || 0);
+          active.add(row.date);
+        }
+        setBpTrendData(trend);
+        setActivityDays(active);
+        setTotalQuestions(consultRes.count ?? 0);
+        setTotalBpEarned(gamRes.data?.total_bp_earned ?? 0);
+      } catch (_) {
+        // 통계 로드 실패는 조용히 무시
+      } finally {
+        if (!cancelled) setStatsLoading(false);
+      }
+    }
+    fetchStats();
+    return () => { cancelled = true; };
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stage = getGrowthStage(totalMissionsCompleted);
   const TAB_COLOR = stage.color;
@@ -264,7 +421,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
       <div style={{ padding: '12px 20px 0', display: 'flex', gap: 8 }}>
         <ActivityCard icon="💎" label="보유 BP" value={currentBp} color="var(--gold)" />
         <ActivityCard icon="✅" label="완료 미션" value={totalMissionsCompleted} color="#5FAD7A" />
-        <ActivityCard icon="📓" label="오늘 미션" value={`${completedToday}/${safeMissions.length}`} color="#4A8EC4" />
+        <ActivityCard icon="📝" label="총 질문" value={totalQuestions ?? '—'} color="#4A8EC4" />
       </div>
 
       {/* BP 충전 버튼 */}
@@ -290,8 +447,9 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
         padding: '12px 20px 0', marginTop: 4,
       }}>
         {[
-          { id: 'growth', label: '🌱 성장 현황' },
-          { id: 'missions', label: '🎯 오늘 미션' },
+          { id: 'growth', label: '🌱 성장' },
+          { id: 'stats', label: '📊 통계' },
+          { id: 'missions', label: '🎯 미션' },
         ].map(t => (
           <button
             key={t.id}
@@ -400,6 +558,68 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
                 </button>
               ))}
             </div>
+          </>
+        )}
+
+        {tab === 'stats' && (
+          <>
+            {statsLoading ? (
+              <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--t4)', fontSize: 'var(--xs)' }}>
+                <span style={{ fontSize: 20 }}>✦</span><br />통계를 불러오는 중...
+              </div>
+            ) : (
+              <>
+                {/* BP 추이 차트 */}
+                <BPTrendChart data={bpTrendData} />
+
+                {/* 주간 활동 */}
+                <WeeklyActivityRow activityDays={activityDays} />
+
+                {/* 핵심 수치 2×2 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div style={{
+                    background: 'var(--bg2)', border: '1px solid var(--line)',
+                    borderRadius: 12, padding: '14px 12px', textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>⭐</div>
+                    <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--gold)', lineHeight: 1 }}>
+                      {totalBpEarned ?? '—'}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>누적 획득 BP</div>
+                  </div>
+                  <div style={{
+                    background: 'var(--bg2)', border: '1px solid var(--line)',
+                    borderRadius: 12, padding: '14px 12px', textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>📝</div>
+                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#4A8EC4', lineHeight: 1 }}>
+                      {totalQuestions ?? '—'}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>총 질문 수</div>
+                  </div>
+                  <div style={{
+                    background: 'var(--bg2)', border: '1px solid var(--line)',
+                    borderRadius: 12, padding: '14px 12px', textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>✅</div>
+                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#5FAD7A', lineHeight: 1 }}>
+                      {totalMissionsCompleted}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>완료한 미션</div>
+                  </div>
+                  <div style={{
+                    background: 'var(--bg2)', border: '1px solid var(--line)',
+                    borderRadius: 12, padding: '14px 12px', textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>🔥</div>
+                    <div style={{ fontSize: '22px', fontWeight: 800, color: '#FF7832', lineHeight: 1 }}>
+                      {loginStreak}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 3, fontWeight: 600 }}>연속 방문일</div>
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
 

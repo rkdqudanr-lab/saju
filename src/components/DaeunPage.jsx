@@ -19,15 +19,15 @@ function DaeunCard({ period, isCurrent, isNext }) {
   return (
     <div
       style={{
-        minWidth: isCurrent ? 160 : 130,
-        padding: isCurrent ? '18px 14px' : '14px 12px',
+        width: isCurrent ? 150 : 120,
+        flexShrink: 0,
+        padding: isCurrent ? '18px 12px' : '14px 10px',
         borderRadius: 'var(--r2, 16px)',
         background: isCurrent ? color.bg : 'var(--bg2)',
         border: `2px solid ${isCurrent ? color.border : isNext ? 'var(--acc)' : 'var(--line)'}`,
         display: 'flex',
         flexDirection: 'column',
         gap: 4,
-        flexShrink: 0,
         position: 'relative',
         transition: 'all 0.2s ease',
         boxShadow: isCurrent ? `0 4px 16px ${color.bg}` : 'none',
@@ -275,8 +275,9 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
               padding: '12px 20px 16px',
               scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
               width: '100%',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
             }}
           >
             {daeunData.periods.map((period, idx) => (

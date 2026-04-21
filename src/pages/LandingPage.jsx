@@ -10,6 +10,7 @@ import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
 import MissionDashboard from "../components/MissionDashboard.jsx";
 import SamplePreview from "../components/SamplePreview.jsx";
+import SajuCalendar from "../components/SajuCalendar.jsx";
 
 function PageSpinner() {
   return (
@@ -97,6 +98,7 @@ export default function LandingPage({
   showDailyCard, setShowDailyCard,
   setDiy,
   setEditingMyProfile, setShowProfileModal,
+  askQuick, callApi, setDiaryViewDate,
   askDailyHoroscope, askDiaryReview, askWeeklyReview, resetDiaryReview,
   handleQuizAnswer, handleQuizSkip,
   DiaryPageLazy,
@@ -360,7 +362,7 @@ export default function LandingPage({
                     {TABS.map(tab => (
                       <button
                         key={tab}
-                        onClick={() => { if (tab === 'calendar') { setStep(10); return; } setActiveTab(tab); }}
+                        onClick={() => setActiveTab(tab)}
                         style={{
                           flex: 1, padding: '7px 2px', borderRadius: 'calc(var(--r1) - 2px)',
                           border: 'none', fontFamily: 'var(--ff)', fontSize: '11px', fontWeight: activeTab === tab ? 700 : 400,
@@ -545,6 +547,18 @@ export default function LandingPage({
                           )}
                         </>
                       )}
+                    </div>
+                  )}
+
+                  {/* ── 탭: 별숨달력 ── */}
+                  {activeTab === 'calendar' && (
+                    <div style={{ marginTop: 4 }}>
+                      <SajuCalendar
+                        form={form} setStep={setStep}
+                        askQuick={askQuick} user={user}
+                        callApi={callApi} showToast={showToast}
+                        setDiaryViewDate={setDiaryViewDate}
+                      />
                     </div>
                   )}
 

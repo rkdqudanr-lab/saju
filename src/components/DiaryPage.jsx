@@ -162,9 +162,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
 
   const canSubmit = !!(mood || weather || energy || content.trim());
 
-  const handleSubmit = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
+  const saveEntry = async () => {
     const entry = {
       mood: mood || null,
       weather: weather || null,
@@ -173,33 +171,53 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
       tomorrow_goal: tomorrowGoal.trim() || null,
       content: content.trim() || '',
     };
-
-    // Supabase 저장 (인증 클라이언트 사용)
     if (user?.id) {
-      try {
-        const client = getAuthenticatedClient(user.id) || supabase;
-        if (client) {
-          const payload = { kakao_id: String(user.id), date: targetDate, ...entry };
-          if (todayEntry?.id) {
-            await client.from('diary_entries').update(entry).eq('id', todayEntry.id).eq('kakao_id', String(user.id));
-          } else {
-            const { data: inserted } = await client.from('diary_entries').insert(payload).select('id').single();
-            if (inserted?.id) {
-              setTodayEntry({ id: inserted.id, ...payload });
-              // 새 일기 저장 시 BP 적립 콜백 호출 (하루 1회)
-              onDiaryComplete?.();
-            }
+      const client = getAuthenticatedClient(user.id) || supabase;
+      if (client) {
+        const payload = { kakao_id: String(user.id), date: targetDate, ...entry };
+        if (todayEntry?.id) {
+          await client.from('diary_entries').update(entry).eq('id', todayEntry.id).eq('kakao_id', String(user.id));
+        } else {
+          const { data: inserted } = await client.from('diary_entries').insert(payload).select('id').single();
+          if (inserted?.id) {
+            setTodayEntry({ id: inserted.id, ...payload });
+            onDiaryComplete?.();
           }
         }
-      } catch (e) {
-        console.error('[DiaryPage] 저장 오류:', e);
-        showToast?.('일기 저장에 실패했어요...', 'error');
-        setIsSubmitting(false);
-        return;
       }
     }
+    return entry;
+  };
 
-    // 별숨 해석 요청 (오늘 날짜만)
+  const handleSaveOnly = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await saveEntry();
+      setSubmitted(true);
+      setIsEditing(false);
+      showToast?.('일기가 저장됐어요', 'info');
+    } catch (e) {
+      console.error('[DiaryPage] 저장 오류:', e);
+      showToast?.('일기 저장에 실패했어요...', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await saveEntry();
+    } catch (e) {
+      console.error('[DiaryPage] 저장 오류:', e);
+      showToast?.('일기 저장에 실패했어요...', 'error');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // 별숨 해석 요청
     if (askReview && !isPastEntry) {
       const moodLabel = MOOD_OPTIONS.find(m => m.value === mood)?.label || '';
       const weatherLabel = WEATHER_OPTIONS.find(w => w.value === weather)?.label || '';
@@ -214,12 +232,10 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
       askReview(`${context}\n\n${content.trim()}`, DIARY_PROMPT(moonPhase.label, rs));
       setSubmitted(true);
       setIsEditing(false);
-      // 임베디드 모드: 저장 후 전체 페이지로 이동해서 결과 보여주기
       if (embedded && setStep) {
         setStep(17);
       }
     } else {
-      // 과거 날짜 또는 askReview 없음: 저장 후 읽기 모드로 전환
       setSubmitted(true);
       setIsEditing(false);
       showToast?.('일기가 저장됐어요', 'info');
@@ -727,23 +743,53 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
               placeholder="오늘 어떤 일이 있었나요?"
               value={content}
               onChange={e => setContent(e.target.value)}
-              maxLength={500}
+              maxLength={1000}
               style={{ width: '100%', marginBottom: 4 }}
             />
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'right', marginBottom: 16 }}>
-              {content.length}/500
+              {content.length}/1000
             </div>
           </Section>
 
           {/* 제출 버튼 */}
-          <button
-            className="btn-main"
-            disabled={!canSubmit || isSubmitting}
-            onClick={handleSubmit}
-            style={{ marginBottom: 8 }}
-          >
-            {isPastEntry ? (isSubmitting ? '저장 중...' : '저장하기 ✦') : (isSubmitting ? '저장 중...' : '저장하고 별숨의 해석듣기 ✦')}
-          </button>
+          {isPastEntry ? (
+            <button
+              className="btn-main"
+              disabled={!canSubmit || isSubmitting}
+              onClick={handleSaveOnly}
+              style={{ marginBottom: 8 }}
+            >
+              {isSubmitting ? '저장 중...' : '저장하기 ✦'}
+            </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+              <button
+                className="btn-main"
+                disabled={!canSubmit || isSubmitting}
+                onClick={handleSubmit}
+              >
+                {isSubmitting ? '저장 중...' : '별숨에게 해석 듣기 ✦'}
+              </button>
+              <button
+                className="btn-sub"
+                disabled={!canSubmit || isSubmitting}
+                onClick={handleSaveOnly}
+                style={{
+                  padding: '12px',
+                  border: '1.5px solid var(--line)',
+                  borderRadius: 'var(--r1)',
+                  background: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--ff)',
+                  fontSize: 'var(--sm)',
+                  color: 'var(--t3)',
+                  fontWeight: 600,
+                }}
+              >
+                저장만 하기
+              </button>
+            </div>
+          )}
 
           {/* 별숨의 해석 */}
           {submitted && (diaryReviewLoading || diaryReviewResult) && (

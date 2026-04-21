@@ -22,33 +22,29 @@ const PILLAR_META = [
 function PillarCards({ saju }) {
   if (!saju) return null;
   return (
-    <div style={{ overflowX: 'auto', marginBottom: 20, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', width: '100%' }}>
-      <div style={{ display: 'flex', gap: 10, paddingBottom: 4, width: 'max-content' }}>
-        {PILLAR_META.map(({ key, label, role, desc }) => {
-          const p = saju[key];
-          return (
-            <div
-              key={key}
-              style={{
-                width: 150,
-                background: 'var(--bg2)',
-                border: '1px solid var(--line)',
-                borderRadius: 18,
-                padding: '16px 14px',
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>{label}</div>
-              <div style={{ fontSize: '1.45rem', fontWeight: 800, letterSpacing: '.06em', color: 'var(--t1)', lineHeight: 1.2, marginBottom: 2 }}>
-                {p.gh}<br />{p.jh}
-              </div>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 8 }}>{p.g}{p.j}</div>
-              <div style={{ fontSize: '0.6rem', color: 'var(--gold)', fontWeight: 600, letterSpacing: '.05em', marginBottom: 4 }}>{role}</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--t4)', lineHeight: 1.6, wordBreak: 'keep-all' }}>{desc}</div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 20 }}>
+      {PILLAR_META.map(({ key, label, role, desc }) => {
+        const p = saju[key];
+        return (
+          <div
+            key={key}
+            style={{
+              background: 'var(--bg2)',
+              border: '1px solid var(--line)',
+              borderRadius: 14,
+              padding: '12px 8px',
+            }}
+          >
+            <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 5 }}>{label}</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '.04em', color: 'var(--t1)', lineHeight: 1.2, marginBottom: 2 }}>
+              {p.gh}<br />{p.jh}
             </div>
-          );
-        })}
-      </div>
+            <div style={{ fontSize: '10px', color: 'var(--t3)', marginBottom: 6 }}>{p.g}{p.j}</div>
+            <div style={{ fontSize: '9px', color: 'var(--gold)', fontWeight: 600, letterSpacing: '.04em', marginBottom: 3, lineHeight: 1.4 }}>{role}</div>
+            <div style={{ fontSize: '9px', color: 'var(--t4)', lineHeight: 1.55, wordBreak: 'keep-all' }}>{desc}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }

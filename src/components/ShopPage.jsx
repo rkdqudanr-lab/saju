@@ -277,40 +277,47 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.4)', marginBottom: 14, lineHeight: 1.6 }}>{stats}</div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => onPull(1)} disabled={!!pulling || !canAfford1} style={{
-            flex: 1, padding: '12px 6px', borderRadius: 'var(--r1)',
+            flex: 1, padding: '11px 6px', borderRadius: 'var(--r1)',
             background: canAfford1 ? `${accentColor}22` : 'rgba(255,255,255,.04)',
             border: `1.5px solid ${canAfford1 ? `${accentColor}80` : 'rgba(255,255,255,.08)'}`,
             color: canAfford1 ? accentColor : 'rgba(255,255,255,.25)',
-            fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+            fontWeight: 700, fontFamily: 'var(--ff)',
             cursor: canAfford1 && !pulling ? 'pointer' : 'not-allowed', transition: 'all .2s',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
           }}>
             {pulling === 'single' ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--xs)' }}>
                 <span style={{ width: 10, height: 10, border: `2px solid ${accentColor}40`, borderTopColor: accentColor, borderRadius: '50%', animation: 'orbSpin .7s linear infinite', display: 'inline-block' }} />
                 뽑는 중...
               </span>
-            ) : <>✦ 1회 뽑기<br /><span style={{ fontSize: '11px', fontWeight: 400 }}>{cost1} BP</span></>}
+            ) : (
+              <>
+                <span style={{ fontSize: 'var(--xs)', whiteSpace: 'nowrap' }}>✦ 1회 뽑기</span>
+                <span style={{ fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap' }}>{cost1} BP</span>
+              </>
+            )}
           </button>
           <button onClick={() => onPull(10)} disabled={!!pulling || !canAfford10} style={{
-            flex: 1.4, padding: '12px 6px', borderRadius: 'var(--r1)',
+            flex: 1.4, padding: '11px 6px', borderRadius: 'var(--r1)',
             background: canAfford10 ? `${accentColor}30` : 'rgba(255,255,255,.04)',
             border: `1.5px solid ${canAfford10 ? `${accentColor}70` : 'rgba(255,255,255,.08)'}`,
             color: canAfford10 ? accentColor : 'rgba(255,255,255,.25)',
-            fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+            fontWeight: 700, fontFamily: 'var(--ff)',
             cursor: canAfford10 && !pulling ? 'pointer' : 'not-allowed', transition: 'all .2s',
             position: 'relative', overflow: 'hidden',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
           }}>
             {pulling === '10' ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 'var(--xs)' }}>
                 <span style={{ width: 10, height: 10, border: `2px solid ${accentColor}40`, borderTopColor: accentColor, borderRadius: '50%', animation: 'orbSpin .7s linear infinite', display: 'inline-block' }} />
                 뽑는 중...
               </span>
             ) : (
               <>
                 <span style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent)', animation: canAfford10 ? 'gacha-shine 2.5s ease infinite' : 'none' }} />
-                ✦ 10연 뽑기<br />
-                <span style={{ fontSize: '11px' }}>{cost10} BP</span>
-                <span style={{ display: 'block', fontSize: '10px', color: guarantee10Label.color, marginTop: 2 }}>{guarantee10Label.text}</span>
+                <span style={{ fontSize: 'var(--xs)', whiteSpace: 'nowrap' }}>✦ 10연 뽑기</span>
+                <span style={{ fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap' }}>{cost10} BP</span>
+                <span style={{ fontSize: '10px', color: guarantee10Label.color, whiteSpace: 'nowrap' }}>{guarantee10Label.text}</span>
               </>
             )}
           </button>
@@ -458,8 +465,8 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
       background: 'var(--bg2)',
       border: `1px solid ${isEquipped ? 'var(--acc)' : 'var(--line)'}`,
       borderRadius: 'var(--r2)',
-      padding: '16px 14px',
-      display: 'flex', flexDirection: 'column', gap: 7,
+      padding: '12px 8px',
+      display: 'flex', flexDirection: 'column', gap: 5,
       position: 'relative',
       boxShadow: isEquipped ? '0 0 10px rgba(232,176,72,0.2)' : 'none',
     }}>
@@ -531,7 +538,7 @@ function BuyModal({ item, currentBP, onConfirm, onClose, buying }) {
           color: canAfford ? 'var(--gold)' : 'var(--t4)', fontWeight: 700, fontSize: 'var(--sm)',
           fontFamily: 'var(--ff)', cursor: canAfford ? 'pointer' : 'not-allowed', marginBottom: 8,
         }}>
-          {buying ? '구매 중...' : canAfford ? `✦ 구매하기 (${item.bp_cost} BP)` : 'BM 부족'}
+          {buying ? '구매 중...' : canAfford ? `✦ 구매하기 (${item.bp_cost} BP)` : 'BP 부족'}
         </button>
         <button onClick={onClose} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
           취소
@@ -882,7 +889,7 @@ export default function ShopPage({ showToast }) {
               cost1={SHOP_COST_1} cost10={SHOP_COST_10}
               title={`${label} 뽑기`}
               subtitle={`${pool.length}종 ${label} 아이템`}
-              stats={`일반 60% · 레어 35% · 레전더리 5% · 중복 시 ${DUPLICATE_REFUND}BM 환불`}
+              stats={`일반 60% · 레어 35% · 레전더리 5% · 중복 시 ${DUPLICATE_REFUND}BP 환불`}
               accentColor={accent}
               bgStyle={bgMap[activeTab]}
               guarantee10Label={{ color: 'rgba(232,176,72,.8)', text: '레어 이상 1개 보장' }}
@@ -940,7 +947,7 @@ export default function ShopPage({ showToast }) {
                 <div style={{ fontSize: 'var(--xs)', marginTop: 6 }}>뽑기로 아이템을 모아봐요</div>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                 {invItems.map(item => (
                   <InvCard
                     key={item.id}

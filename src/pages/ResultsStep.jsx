@@ -119,7 +119,7 @@ export default function ResultsStep({
                     <div className="answer-unlock-overlay">
                       <div className="unlock-icon">🔒</div>
                       <div className="unlock-title">Q{i + 1} 이야기가 잠겨있어요</div>
-                      <div className="unlock-desc">별 머니 {UNLOCK_COST}개로 열기 · 현재 {gamificationState?.currentBp || 0}BM</div>
+                      <div className="unlock-desc">별 머니 {UNLOCK_COST}개로 열기 · 현재 {gamificationState?.currentBp || 0}BP</div>
                       <button className="unlock-bp-btn" onClick={() => handleUnlock(i)}>
                         ✦ {UNLOCK_COST}BP로 열기
                       </button>
@@ -209,7 +209,7 @@ export default function ResultsStep({
             <div className="upsell">
               <div className="up-t">✦ 이번 달 전체 운세가 궁금해요</div>
               <div className="up-d">연애 · 재물 · 건강 · 직업 종합 분석<br />사주와 별자리가 함께 쓴 월간 에세이</div>
-              <button className="up-btn" onClick={() => setStep(6)}>이달의 운세 리포트 보기 ✦</button>
+              <button className="up-btn" onClick={() => setStep(41)}>이달의 운세 리포트 보기 ✦</button>
             </div>
 
             <div className="res-btns">
@@ -233,7 +233,7 @@ export default function ResultsStep({
                 <button className="fg-card" onClick={() => setStep(35)}><span className="fg-icon" style={{ fontSize: 18 }}>✉</span><div className="fg-info"><div className="fg-name">별숨편지</div><div className="fg-desc">기운 맞는 익명의 누군가에게 편지 쓰고 받기</div></div></button>
                 <button className="fg-card" onClick={() => setStep(7)}><span className="fg-icon" style={{ fontSize: 18 }}>✦</span><div className="fg-info"><div className="fg-name">사이 별점</div><div className="fg-desc">두 사람의 사주+별자리로 관계 시나리오 읽기</div></div></button>
                 <button className="fg-card" onClick={() => setStep(8)}><span className="fg-icon" style={{ fontSize: 18 }}>◈</span><div className="fg-info"><div className="fg-name">별숨의 예언</div><div className="fg-desc">1개월~30년 후의 나에게 전하는 예언</div></div></button>
-                <button className="fg-card" onClick={() => setStep(6)}><span className="fg-icon" style={{ fontSize: 18 }}>◇</span><div className="fg-info"><div className="fg-name">월간 리포트</div><div className="fg-desc">이달의 연애·재물·직업·건강 에세이</div></div></button>
+                <button className="fg-card" onClick={() => setStep(41)}><span className="fg-icon" style={{ fontSize: 18 }}>◇</span><div className="fg-info"><div className="fg-name">월간 리포트</div><div className="fg-desc">이달의 연애·재물·직업·건강 에세이</div></div></button>
                 <button className="fg-card" onClick={() => setStep(5)}><span className="fg-icon" style={{ fontSize: 18 }}>✧</span><div className="fg-info"><div className="fg-name">별숨에게 더 물어보기</div><div className="fg-desc">답변 기반 후속 상담 채팅</div></div></button>
                 <button className="fg-card" onClick={() => setShowSidebar(true)}><span className="fg-icon" style={{ fontSize: 18 }}>≡</span><div className="fg-info"><div className="fg-name">지난 이야기</div><div className="fg-desc">내가 별숨에 물었던 모든 질문 기록</div></div></button>
                 <button className="fg-card" onClick={handleCopyAll}>

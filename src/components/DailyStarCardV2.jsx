@@ -446,7 +446,7 @@ export default function DailyStarCardV2({
                 }}
                 whileTap={{ scale: 0.93 }}
               >
-                {isBlocking ? '액막이 발동 중...' : '액막이 발동 (BM -20)'}
+                {isBlocking ? '액막이 발동 중...' : '액막이 발동 (BP -20)'}
               </motion.button>
             )}
 

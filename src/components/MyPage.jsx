@@ -229,7 +229,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
                     fontFamily: 'var(--ff)',
                   }}
                 >
-                  ❄️ 프리즈 {STREAK_FREEZE_COST}BM
+                  ❄️ 프리즈 {STREAK_FREEZE_COST}BP
                 </button>
               )}
             </div>

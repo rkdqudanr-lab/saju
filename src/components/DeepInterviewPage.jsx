@@ -4,7 +4,7 @@
  * 유저가 답변 → AI가 깊고 길게 분석
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 import { ReportBody } from './AccItem.jsx';
 import { exportReadingAsTxt } from '../utils/constants.js';
@@ -138,14 +138,21 @@ export default function DeepInterviewPage({
   const setStep = useAppStore(s => s.setStep);
   const user    = useAppStore(s => s.user);
 
-  // phase: 'idle' | 'generating' | 'answering' | 'analyzing' | 'result'
-  const [phase, setPhase] = useState('idle');
+  // phase: 'entry' | 'idle' | 'generating' | 'answering' | 'analyzing' | 'result'
+  const [phase, setPhase] = useState('entry');
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState(Array(10).fill(''));
   const [focusedIdx, setFocusedIdx] = useState(null);
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
   const topRef = useRef(null);
+
+  // 진입 시 1.8초 로딩 메시지 표시 후 idle로 전환
+  useEffect(() => {
+    if (phase !== 'entry') return;
+    const t = setTimeout(() => setPhase('idle'), 1800);
+    return () => clearTimeout(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filledCount = answers.filter((a, i) => i < questions.length && a.trim().length > 0).length;
   const totalQ = questions.length || 10;
@@ -239,6 +246,27 @@ ${qaPairs}
           <div className="report-title">{displayName}님을 위한<br />심층 인터뷰</div>
           <div className="report-name">별숨이 당신을 더 깊이 알아가요</div>
         </div>
+
+        {/* ── Phase: entry (진입 로딩 메시지) ── */}
+        {phase === 'entry' && (
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', padding: '80px 20px', gap: 24, animation: 'fadeUp .4s ease',
+          }}>
+            <div style={{ fontSize: '3rem', animation: 'floatGently 2s ease-in-out infinite' }}>✦</div>
+            <div style={{
+              fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)',
+              textAlign: 'center', lineHeight: 1.9, wordBreak: 'keep-all',
+            }}>
+              이제 당신과 별숨이<br />이야기 나눌 준비가<br />모두 끝났어요.
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} className="dsc-loading-dot" style={{ animationDelay: `${i * 0.18}s` }} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Phase: idle ── */}
         {phase === 'idle' && (

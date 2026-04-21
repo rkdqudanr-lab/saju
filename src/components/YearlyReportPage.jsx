@@ -114,13 +114,13 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
   const handleStart = useCallback(async () => {
     if (!user?.id) { showToast('로그인이 필요해요', 'info'); return; }
     if (currentBp < YEARLY_COST) {
-      showToast(`별 포인트가 부족해요 (${YEARLY_COST}BM 필요)`, 'error');
+      showToast(`별 포인트가 부족해요 (${YEARLY_COST}BP 필요)`, 'error');
       return;
     }
     if (!paid) {
       const spendResult = await spendBP(YEARLY_COST, 'yearly_report');
       if (!spendResult?.success) {
-        showToast('BM 차감에 실패했어요. 다시 시도해 주세요.', 'error');
+        showToast('BP 차감에 실패했어요. 다시 시도해 주세요.', 'error');
         return;
       }
       setPaid(true);

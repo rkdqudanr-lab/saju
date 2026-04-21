@@ -171,7 +171,7 @@ export default function ShieldBlockModal({
               <div>
                 <strong>✦ 오늘치 별의 에너지를 받아볼까요?</strong>
                 <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t2)' }}>
-                  별숨 포인트(BM)로 나의 별에게 맑은 기운을 선물할 수 있어요.
+                  별숨 포인트(BP)로 나의 별에게 맑은 기운을 선물할 수 있어요.
                   무료 충전 후 기운을 정화해보세요.
                 </div>
               </div>
