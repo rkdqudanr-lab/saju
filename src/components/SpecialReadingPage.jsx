@@ -231,12 +231,24 @@ export default function SpecialReadingPage({ callApi, showToast }) {
     if (!kakaoId) { setOwnedItems([]); return; }
     try {
       const client = getAuthenticatedClient(kakaoId);
+      
+      const { data: allShopItems } = await client.from('shop_items').select('*');
+      const shopItemsMap = new Map((allShopItems || []).map(i => [i.id, i]));
+
       const { data } = await client
         .from('user_shop_inventory')
-        .select('item_id, is_equipped, shop_items(name, description, emoji, category)')
+        .select('item_id, is_equipped')
         .eq('kakao_id', String(kakaoId))
         .eq('is_equipped', false);
-      const specials = (data || []).filter(r => r.shop_items?.category === 'special_reading');
+        
+      const specials = (data || []).map(r => {
+        const info = shopItemsMap.get(r.item_id);
+        if (info && info.category === 'special_reading') {
+          return { ...r, shop_items: info, id: r.id || r.item_id };
+        }
+        return null;
+      }).filter(Boolean);
+      
       setOwnedItems(specials);
     } catch {
       setOwnedItems([]);

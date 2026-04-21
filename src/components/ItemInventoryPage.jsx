@@ -473,20 +473,20 @@ export default function ItemInventoryPage({ showToast, callApi }) {
     setLoading(true);
     try {
       const client = getAuthenticatedClient(kakaoId);
+
+      const { data: allShopItems } = await client.from('shop_items').select('*');
+      const shopItemsMap = new Map((allShopItems || []).map(i => [i.id, i]));
+
       const { data: inv } = await client
         .from('user_shop_inventory')
-        .select('item_id, is_equipped, acquired_at, shop_items(*)')
+        .select('item_id, is_equipped, acquired_at')
         .eq('kakao_id', String(kakaoId))
         .order('acquired_at', { ascending: false });
 
       const merged = (inv || []).map(r => {
-        if (r.shop_items) {
-          return { ...r.shop_items, is_equipped: r.is_equipped, _invItemId: r.item_id };
-        }
-        // 우주 또는 사주 가챠 아이템
-        const gachaItem = findItem(r.item_id);
-        if (gachaItem) {
-          return { ...gachaItem, id: r.item_id, is_equipped: r.is_equipped, _invItemId: r.item_id };
+        const itemInfo = shopItemsMap.get(r.item_id) || findItem(r.item_id);
+        if (itemInfo) {
+          return { ...itemInfo, is_equipped: r.is_equipped, _invItemId: r.item_id, id: itemInfo.id || r.item_id };
         }
         return null;
       }).filter(Boolean);

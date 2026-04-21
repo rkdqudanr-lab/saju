@@ -126,12 +126,19 @@ export default function LandingPage({
     const client = getAuthenticatedClient(kakaoId);
 
     client.from('user_shop_inventory')
-      .select('item_id, is_equipped, shop_items(*)')
+      .select('item_id, is_equipped')
       .eq('kakao_id', kakaoId)
       .eq('is_equipped', true)
       .then(async ({ data }) => {
         const { findItem } = await import('../utils/gachaItems.js');
-        const equipped = (data || []).map(r => r.shop_items || findItem(r.item_id)).filter(Boolean);
+        const { data: allShopItems } = await client.from('shop_items').select('*');
+        const shopItemsMap = new Map((allShopItems || []).map(i => [i.id, i]));
+        
+        const equipped = (data || []).map(r => {
+          const matched = shopItemsMap.get(r.item_id) || findItem(r.item_id);
+          return matched ? { ...matched, is_equipped: r.is_equipped } : null;
+        }).filter(Boolean);
+        
         useAppStore.getState().setEquippedItems?.(equipped);
         const talisman = equipped.find(r => r.category === 'talisman');
         setEquippedTalisman(talisman || null);
