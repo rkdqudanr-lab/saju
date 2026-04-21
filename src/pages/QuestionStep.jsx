@@ -5,6 +5,7 @@ import { TIME_CONFIG } from "../utils/time.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import BPInsufficientModal from "../components/BPInsufficientModal.jsx";
 import { useBPCostGate } from "../hooks/useBPCostGate.js";
+import { useAppStore } from "../store/useAppStore.js";
 
 export default function QuestionStep({
   form, saju, sun, moon,
@@ -78,12 +79,30 @@ export default function QuestionStep({
       });
     }
   }, [askQuick, setDiy, user?.id, askQuestion, earnBP, showToast]);
+  const equippedSajuItem = useAppStore(s => s.equippedSajuItem);
   return (
     <div className="page">
       <div className="inner">
         <div className="step-dots">
           {[0, 1, 2].map(i => <div key={i} className={`dot ${i < 1 ? 'done' : i === 1 ? 'active' : 'todo'}`} />)}
         </div>
+
+        {/* 장착 기운 힌트 */}
+        {equippedSajuItem && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '8px 12px', marginBottom: 10,
+            background: 'linear-gradient(135deg, rgba(232,176,72,0.06), rgba(232,176,72,0.02))',
+            border: '1px solid rgba(232,176,72,0.2)',
+            borderRadius: 'var(--r1)',
+          }}>
+            <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji || '✦'}</span>
+            <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.4 }}>
+              <strong style={{ color: 'var(--gold)' }}>{equippedSajuItem.name}</strong> 기운이 오늘 답변에 반영돼요
+            </span>
+          </div>
+        )}
+
         <div className="q-shell">
           <div className="combo-banner">
             <div className="combo-title">✦ 사주 × 별자리 통합 분석</div>

@@ -477,6 +477,56 @@ export default function LandingPage({
                         />
                       </div>
 
+                      {/* ── 일기 완료 → 뽑기 유도 CTA ── */}
+                      {hasDiaryToday && (
+                        <div style={{
+                          paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6,
+                          display: 'flex', flexDirection: 'column', gap: 8,
+                        }}>
+                          <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>
+                            ✦ 오늘 일기를 별숨에게 들려줬어요
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              onClick={() => setStep(40)}
+                              style={{
+                                flex: 2, padding: '10px 12px',
+                                background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+                                borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
+                                fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                              }}
+                            >
+                              <span>🎰</span>
+                              <span>별숨 뽑기로 기운 더하기</span>
+                            </button>
+                            {!equippedSajuItem ? (
+                              <button
+                                onClick={() => setStep(38)}
+                                style={{
+                                  flex: 1, padding: '10px 8px',
+                                  background: 'none', border: '1px solid var(--line)',
+                                  borderRadius: 'var(--r1)', color: 'var(--t3)',
+                                  fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                                }}
+                              >
+                                기운 장착
+                              </button>
+                            ) : (
+                              <div style={{
+                                flex: 1, padding: '10px 8px',
+                                background: 'var(--bg2)', border: '1px solid var(--acc)',
+                                borderRadius: 'var(--r1)', display: 'flex',
+                                alignItems: 'center', justifyContent: 'center', gap: 4,
+                              }}>
+                                <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji || '✦'}</span>
+                                <span style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600 }}>장착 중</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* ── 7일 운세 점수 히스토리 ── */}
                       {scoreHistory.some(s => s.score !== null) && (
                         <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6 }}>

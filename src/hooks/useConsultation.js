@@ -214,11 +214,18 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           }
         } catch { /* 이력 주입 실패 시 기본 context 사용 */ }
 
-        // 일일 운세 호출 시 장착된 부적 효과를 context에 주입
-        if (opts.isDaily) {
+        // 장착된 아이템 기운을 context에 주입
+        {
           const talisman = useAppStore.getState().equippedTalisman;
-          if (talisman) {
+          // 부적은 일일 운세 호출 시에만
+          if (opts.isDaily && talisman) {
             fullContext = fullContext + `\n\n[오늘 장착한 부적: ${talisman.name}]\n효과: ${talisman.description}\n→ 이 부적의 기운을 오늘의 운세 해석에 자연스럽게 반영해줘요. 부적 이름을 직접 언급하지 말고 그 효과가 오행·별자리 해석에 녹아들도록 해요.`;
+          }
+          // 메인 기운(가챠 아이템)은 모든 AI 호출에 반영
+          const sajuItem = useAppStore.getState().equippedSajuItem;
+          if (sajuItem) {
+            const itemEffect = sajuItem.effect || sajuItem.description || '';
+            fullContext = fullContext + `\n\n[장착한 메인 기운: ${sajuItem.name} ${sajuItem.emoji || ''}]\n기운: ${itemEffect}\n→ 이 기운을 답변에 자연스럽게 녹여주세요. 아이템 이름을 직접 언급하지 말고, 이 에너지가 사주·별자리 해석에 자연스럽게 반영되도록 써주세요.`;
           }
         }
 

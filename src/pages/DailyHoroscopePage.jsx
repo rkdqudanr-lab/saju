@@ -5,6 +5,7 @@ import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
 import FeatureLoadingScreen from "../components/FeatureLoadingScreen.jsx";
 import { detectBadtime } from "../utils/gamificationLogic.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
+import { useAppStore } from "../store/useAppStore.js";
 import { getAuthenticatedClient } from "../lib/supabase.js";
 
 export default function DailyHoroscopePage({
@@ -23,6 +24,8 @@ export default function DailyHoroscopePage({
   const { user } = useUserCtx();
   const { saju = null } = useSajuCtx();
   const { gamificationState = {} } = useGamCtx();
+  const equippedSajuItem = useAppStore((s) => s.equippedSajuItem);
+  const setStep = useAppStore((s) => s.setStep);
   const [badtimeModal, setBadtimeModal] = useState({
     isOpen: false,
     badtime: null,
@@ -178,6 +181,66 @@ export default function DailyHoroscopePage({
             {dailyResult ? (
               <>
                 <DailyStarCardV2 result={dailyResult} />
+
+                {/* 장착된 메인 기운 공명 카드 */}
+                {equippedSajuItem && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 14px', marginTop: 10,
+                    background: 'linear-gradient(135deg, rgba(232,176,72,0.08), rgba(232,176,72,0.02))',
+                    border: '1px solid rgba(232,176,72,0.25)',
+                    borderRadius: 'var(--r1)',
+                    animation: 'dsc-breathe 4s ease-in-out infinite',
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: 'var(--bg2)', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: '1.3rem', flexShrink: 0,
+                      boxShadow: '0 0 10px rgba(232,176,72,0.4)',
+                    }}>
+                      {equippedSajuItem.emoji || '✦'}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 2 }}>
+                        ✦ 메인 기운 적용 중
+                      </div>
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>
+                        {equippedSajuItem.name}
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 2, lineHeight: 1.4 }}>
+                        {(equippedSajuItem.effect || equippedSajuItem.description || '').slice(0, 40)}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setStep(38)}
+                      style={{
+                        flexShrink: 0, fontSize: '10px', color: 'var(--t4)',
+                        background: 'none', border: '1px solid var(--line)',
+                        borderRadius: 20, padding: '3px 8px',
+                        fontFamily: 'var(--ff)', cursor: 'pointer',
+                      }}
+                    >
+                      변경
+                    </button>
+                  </div>
+                )}
+
+                {/* 기운 미장착 시 유도 */}
+                {!equippedSajuItem && (
+                  <button
+                    onClick={() => setStep(38)}
+                    style={{
+                      width: '100%', marginTop: 10, padding: '10px 14px',
+                      background: 'none', border: '1px dashed var(--line)',
+                      borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center',
+                      gap: 8, cursor: 'pointer', fontFamily: 'var(--ff)',
+                    }}
+                  >
+                    <span style={{ fontSize: '1rem' }}>✦</span>
+                    <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>메인 기운을 장착하면 오늘의 운세에 반영돼요</span>
+                  </button>
+                )}
+
                 {dailyCount < DAILY_MAX ? (
                   <button
                     className="cta-main"
