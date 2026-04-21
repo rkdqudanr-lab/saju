@@ -175,7 +175,7 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
         kakao_id: String(kakaoId),
         item_id: newItem.id,
         is_equipped: false,
-        acquired_at: new Date().toISOString(),
+        unlocked_at: new Date().toISOString(),
       });
 
       setResult(newItem);
@@ -479,9 +479,9 @@ export default function ItemInventoryPage({ showToast, callApi }) {
 
       const { data: inv } = await client
         .from('user_shop_inventory')
-        .select('item_id, is_equipped, acquired_at')
+        .select('item_id, is_equipped, unlocked_at')
         .eq('kakao_id', String(kakaoId))
-        .order('acquired_at', { ascending: false });
+        .order('unlocked_at', { ascending: false });
 
       const merged = (inv || []).map(r => {
         const itemInfo = shopItemsMap.get(r.item_id) || findItem(r.item_id);

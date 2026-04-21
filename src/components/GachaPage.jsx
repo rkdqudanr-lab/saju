@@ -419,7 +419,7 @@ export default function GachaPage({ showToast }) {
       await client.from('user_shop_inventory').insert(
         pulled.map(item => ({
           kakao_id: String(kakaoId), item_id: item.id,
-          is_equipped: false, acquired_at: new Date().toISOString(),
+          is_equipped: false, unlocked_at: new Date().toISOString(),
         }))
       );
 
