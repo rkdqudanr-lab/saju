@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { ChatBubble } from '../components/AccItem.jsx';
 
 function getContextualChips(chatHistory) {
@@ -86,29 +86,8 @@ export default function ChatStep({
   handleSendChat,
   handleSaveChatImage,
   chatEndRef,
-  generateChatSuggestions,
 }) {
-  const [aiChips, setAiChips] = useState(null);
-  const [aiChipsLoading, setAiChipsLoading] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-
-    if (chatHistory.length === 0 && generateChatSuggestions && !aiChips && !aiChipsLoading) {
-      setAiChipsLoading(true);
-      generateChatSuggestions().then((result) => {
-        if (!active) return;
-        if (result && result.length > 0) setAiChips(result);
-        setAiChipsLoading(false);
-      });
-    }
-
-    return () => {
-      active = false;
-    };
-  }, [chatHistory.length, generateChatSuggestions, aiChips, aiChipsLoading]);
-
-  const chips = aiChips || getContextualChips(chatHistory);
+  const chips = getContextualChips(chatHistory);
   const lastMsg = chatHistory[chatHistory.length - 1];
   const lastMsgIsStreaming = lastMsg?.streaming === true;
 
@@ -159,9 +138,13 @@ export default function ChatStep({
           <div key={index} className={`chat-msg ${message.role}`}>
             <div className="chat-role">{message.role === 'ai' ? '별숨' : '나'}</div>
             {message.role === 'ai' ? (
-              message.streaming ? (
+              message.streaming && !message.text ? (
                 <div style={{ padding: '8px 0' }}>
                   <div className="typing-dots"><span /><span /><span /></div>
+                </div>
+              ) : message.streaming ? (
+                <div className="chat-bubble">
+                  {message.text}<span className="typing-cursor" aria-hidden="true" />
                 </div>
               ) : (
                 <ChatBubble text={message.text} isNew={index === latestChatIdx} />
@@ -265,52 +248,35 @@ export default function ChatStep({
               scrollbarWidth: 'none',
             }}
           >
-            {aiChipsLoading ? (
-              <div
+            {chips.map((chip, index) => (
+              <button
+                key={index}
+                onClick={() => sendChip(chip)}
                 style={{
-                  fontSize: 'var(--xs)',
-                  color: 'var(--t4)',
+                  flexShrink: 0,
                   padding: '6px 14px',
-                  fontStyle: 'italic',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
+                  borderRadius: 20,
+                  border: '1px solid var(--line)',
+                  background: 'var(--bg2)',
+                  color: 'var(--t2)',
+                  fontSize: 'var(--xs)',
+                  fontFamily: 'var(--ff)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all var(--trans-fast)',
+                }}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.borderColor = 'var(--gold)';
+                  event.currentTarget.style.color = 'var(--gold)';
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.borderColor = 'var(--line)';
+                  event.currentTarget.style.color = 'var(--t2)';
                 }}
               >
-                <div className="typing-dots"><span /><span /><span /></div>
-                질문을 고르는 중...
-              </div>
-            ) : (
-              chips.map((chip, index) => (
-                <button
-                  key={index}
-                  onClick={() => sendChip(chip)}
-                  style={{
-                    flexShrink: 0,
-                    padding: '6px 14px',
-                    borderRadius: 20,
-                    border: '1px solid var(--line)',
-                    background: 'var(--bg2)',
-                    color: 'var(--t2)',
-                    fontSize: 'var(--xs)',
-                    fontFamily: 'var(--ff)',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    transition: 'all var(--trans-fast)',
-                  }}
-                  onMouseEnter={(event) => {
-                    event.currentTarget.style.borderColor = 'var(--gold)';
-                    event.currentTarget.style.color = 'var(--gold)';
-                  }}
-                  onMouseLeave={(event) => {
-                    event.currentTarget.style.borderColor = 'var(--line)';
-                    event.currentTarget.style.color = 'var(--t2)';
-                  }}
-                >
-                  {chip}
-                </button>
-              ))
-            )}
+                {chip}
+              </button>
+            ))}
           </div>
         )}
 
