@@ -735,6 +735,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           userMessage,
           context: fullContext,
           kakaoId: user?.id,
+          isChat: true,
           responseStyle: responseStyle || 'M',
           clientHour: new Date().getHours(),
         }),
@@ -797,7 +798,20 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (typeof window.gtag === 'function') window.gtag('event', 'gen_report');
     setReportText(''); setReportLoading(true);
     try {
-      const text = await callApi('[요청] 이번 달 종합 운세 리포트', { isReport: true });
+      const prompt = `[요청] 이달의 월간 운세 리포트를 아래 형식으로 작성해주세요.
+
+첫 번째 줄에 반드시 다음 형식으로 8가지 운세 점수를 써주세요 (0~100 정수):
+[월간점수] 종합:숫자,금전:숫자,애정:숫자,직장:숫자,학업:숫자,건강:숫자,대인:숫자,이동:숫자,창의:숫자
+
+두 번째 줄에 이달의 행운 색상:
+[행운색] 색상 이름 (2~4자)
+
+세 번째 줄에 이달의 행운 아이템:
+[행운아이템] 아이템1, 아이템2 (구체적인 실생활 물건)
+
+그 다음에 이달의 운세 서사 (500~700자, 자연스러운 문단):
+각 운세 영역(금전·애정·직장·건강)을 따로 나누지 말고 하나의 흐름으로 이어주세요.`;
+      const text = await callApi(prompt, { isReport: true });
       setReportText(text);
     } catch { setReportText('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!'); }
     finally { setReportLoading(false); }

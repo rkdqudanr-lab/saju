@@ -134,6 +134,8 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
           </div>
         </div>
 
+        {/* 결과가 없을 때만 입력 UI 표시 */}
+        {!result && <>
         {/* 꿈 내용 입력 */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
@@ -213,10 +215,26 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
         >
           🌙 꿈 해몽 받기
         </button>
+        </>}
 
         {/* 결과 */}
         {result && (
           <div style={{ animation: 'fadeUp .4s ease' }}>
+            {/* 다시 해몽하기 */}
+            {!loading && (
+              <button
+                onClick={() => { resetStream(); setFollowUps([]); setChatHistory([]); }}
+                style={{
+                  width: '100%', padding: '10px', marginBottom: 12,
+                  borderRadius: 'var(--r1)', border: '1px solid var(--line)',
+                  background: 'transparent', color: 'var(--t3)',
+                  fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                🌙 다른 꿈 해몽하기
+              </button>
+            )}
             <div style={{
               background: 'var(--card)', border: '1px solid var(--line)',
               borderRadius: 'var(--r1)', padding: '16px', marginBottom: 16,
@@ -298,14 +316,14 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
               </div>
             )}
 
-            {/* 채팅 입력 */}
-            {chatHistory.length > 0 && (
-              <div style={{ display: 'flex', gap: 8 }}>
+            {/* 채팅 입력 — 결과 있으면 항상 표시 */}
+            {!loading && (
+              <div style={{ display: 'flex', gap: 8, marginTop: chatHistory.length > 0 ? 4 : 0 }}>
                 <input
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleChat(); } }}
-                  placeholder="더 궁금한 점을 물어보세요"
+                  placeholder="별숨에게 더 물어보세요"
                   style={{
                     flex: 1, padding: '10px 12px', borderRadius: 'var(--r1)',
                     border: '1px solid var(--line)', background: 'var(--card)',

@@ -1049,7 +1049,7 @@ export default function App() {
         {/* ── Step 38: 내 아이템 ── */}
         {step === 38 && (
           <Suspense fallback={<PageSpinner />}>
-            <ItemInventoryPage showToast={showToast} callApi={callApi} />
+            <ItemInventoryPage showToast={showToast} callApi={callApi} spendBP={spendBP} />
           </Suspense>
         )}
 

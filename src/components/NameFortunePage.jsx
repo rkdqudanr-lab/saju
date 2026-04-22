@@ -203,7 +203,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
           <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
             ✦ 이름 입력
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, minWidth: 0 }}>
             <input
               type="text"
               value={name}
@@ -211,10 +211,11 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               placeholder="예) 김별숨"
               maxLength={6}
               style={{
-                flex: 1, padding: '12px 14px', borderRadius: 'var(--r1)',
+                flex: 1, minWidth: 0, padding: '12px 10px', borderRadius: 'var(--r1)',
                 border: '1px solid var(--line)', background: 'var(--card)',
                 color: 'var(--t1)', fontSize: '1.1rem', fontWeight: 600,
                 boxSizing: 'border-box', letterSpacing: '.08em', textAlign: 'center',
+                width: 0,
               }}
             />
             <input
@@ -224,10 +225,11 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               placeholder="한자 (선택)"
               maxLength={8}
               style={{
-                flex: 1, padding: '12px 14px', borderRadius: 'var(--r1)',
+                flex: 1, minWidth: 0, padding: '12px 10px', borderRadius: 'var(--r1)',
                 border: '1px solid var(--line)', background: 'var(--card)',
                 color: 'var(--t1)', fontSize: '1rem', fontWeight: 600,
                 boxSizing: 'border-box', letterSpacing: '.06em', textAlign: 'center',
+                width: 0,
               }}
             />
           </div>

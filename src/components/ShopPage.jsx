@@ -408,7 +408,8 @@ function ShopItemPreviewGrid({ pool, gradeConfig, gradeOrder }) {
               {item.effect}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

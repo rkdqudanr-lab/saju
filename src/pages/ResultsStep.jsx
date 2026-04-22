@@ -155,44 +155,25 @@ export default function ResultsStep({
           <PrecisionNudge />
 
           <div className="res-actions">
-            {showSubNudge && (
-              <div style={{ padding: 'var(--sp2) var(--sp3)', background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.08))', border: '1px solid var(--acc)', borderRadius: 'var(--r2)', marginBottom: 'var(--sp2)', display: 'flex', alignItems: 'center', gap: 12, animation: 'fadeUp .4s ease' }}>
-                <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>✦</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 'var(--sm)', fontWeight: 600, color: 'var(--gold)', marginBottom: 3 }}>더 깊은 이야기가 있어요</div>
-                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>채팅으로 더 물어보거나, 이달 전체 리포트를 받아봐요</div>
+            {/* 별숨과 더 깊은 대화하기 CTA */}
+            <div style={{ marginBottom: 'var(--sp2)', animation: 'fadeUp .4s ease' }}>
+              <button
+                onClick={() => setStep(5)}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 'var(--r2)',
+                  background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.08))',
+                  border: '1.5px solid var(--acc)',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  fontFamily: 'var(--ff)', cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>🪬</span>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--gold)', marginBottom: 2 }}>별숨과 더 깊은 대화하기</div>
+                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>답변 기반으로 별숨과 자유롭게 이야기해요</div>
                 </div>
-                <button className="up-btn" style={{ width: 'auto', padding: '8px 16px', flexShrink: 0, fontSize: 'var(--xs)' }} onClick={() => setStep(5)}>더 물어보기</button>
-              </div>
-            )}
-
-            {curPkg.chat > 0 && (
-              <div style={{ padding: 'var(--sp3)', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', marginBottom: 'var(--sp2)', textAlign: 'center' }}>
-                <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', marginBottom: 'var(--sp2)' }}>별숨과 더 이야기 할까요?</div>
-                <button className="chat-cta-large" onClick={() => setStep(5)} style={{ marginBottom: 0 }}>
-                  <span className="chat-cta-emoji" style={{ fontSize: '1.4rem', color: 'var(--gold)' }}>🪬</span>
-                  <div className="chat-cta-info">
-                    <div className="chat-cta-title">심층 인터뷰로 넘어갑니다</div>
-                    <div className="chat-cta-desc">방금 들은 답변에 대해 더 깊은 대화를 나눠요</div>
-                  </div>
-                  <span style={{ fontSize: '1.1rem', color: 'var(--gold)', flexShrink: 0 }}>→</span>
-                </button>
-              </div>
-            )}
-
-            <div className="action-grid" style={{ marginBottom: 'var(--sp2)' }}>
-              {['love', 'family', 'relation'].includes(cat?.id ?? '') && (
-                <div className="action-card compat" onClick={() => setStep(7)}>
-                  <div className="action-card-icon">💞</div>
-                  <div className="action-card-title">우리가 만나면</div>
-                  <div className="action-card-sub">두 사람의 별이 만나는 시나리오</div>
-                </div>
-              )}
-              <div className="action-card letter" onClick={() => setStep(8)}>
-                <div className="action-card-icon">🔮</div>
-                <div className="action-card-title">별숨의 예언</div>
-                <div className="action-card-sub">시간이 흐른 뒤의 나의 예언</div>
-              </div>
+                <span style={{ fontSize: '1.1rem', color: 'var(--gold)', flexShrink: 0 }}>→</span>
+              </button>
             </div>
 
             {!user && (
@@ -202,12 +183,6 @@ export default function ResultsStep({
                 <button className="kakao-btn" style={{ width: 'auto', padding: '6px 14px', fontSize: 'var(--xs)' }} onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }}>카카오 로그인</button>
               </div>
             )}
-
-            <div className="upsell">
-              <div className="up-t">✦ 이번 달 전체 운세가 궁금해요</div>
-              <div className="up-d">연애 · 재물 · 건강 · 직업 종합 분석<br />사주와 별자리가 함께 쓴 월간 에세이</div>
-              <button className="up-btn" onClick={() => setStep(41)}>이달의 운세 리포트 보기 ✦</button>
-            </div>
 
             <div className="res-btns">
               <button className="res-btn" onClick={() => { setSelQs([]); setDiy(''); resetSession(); setStep(formOk ? 2 : 1); }}>다른 질문</button>
@@ -229,9 +204,6 @@ export default function ResultsStep({
               <div className="feature-guide-grid">
                 <button className="fg-card" onClick={() => setStep(35)}><span className="fg-icon" style={{ fontSize: 18 }}>✉</span><div className="fg-info"><div className="fg-name">별숨편지</div><div className="fg-desc">기운 맞는 익명의 누군가에게 편지 쓰고 받기</div></div></button>
                 <button className="fg-card" onClick={() => setStep(7)}><span className="fg-icon" style={{ fontSize: 18 }}>✦</span><div className="fg-info"><div className="fg-name">사이 별점</div><div className="fg-desc">두 사람의 사주+별자리로 관계 시나리오 읽기</div></div></button>
-                <button className="fg-card" onClick={() => setStep(8)}><span className="fg-icon" style={{ fontSize: 18 }}>◈</span><div className="fg-info"><div className="fg-name">별숨의 예언</div><div className="fg-desc">1개월~30년 후의 나에게 전하는 예언</div></div></button>
-                <button className="fg-card" onClick={() => setStep(41)}><span className="fg-icon" style={{ fontSize: 18 }}>◇</span><div className="fg-info"><div className="fg-name">월간 리포트</div><div className="fg-desc">이달의 연애·재물·직업·건강 에세이</div></div></button>
-                <button className="fg-card" onClick={() => setStep(5)}><span className="fg-icon" style={{ fontSize: 18 }}>✧</span><div className="fg-info"><div className="fg-name">별숨에게 더 물어보기</div><div className="fg-desc">답변 기반 후속 상담 채팅</div></div></button>
                 <button className="fg-card" onClick={() => setShowSidebar(true)}><span className="fg-icon" style={{ fontSize: 18 }}>≡</span><div className="fg-info"><div className="fg-name">지난 이야기</div><div className="fg-desc">내가 별숨에 물었던 모든 질문 기록</div></div></button>
                 <button className="fg-card" onClick={handleCopyAll}>
                   <span className="fg-icon">{copyDone ? '✅' : '📋'}</span>

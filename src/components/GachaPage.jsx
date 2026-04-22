@@ -97,10 +97,10 @@ function ResultOverlay({ results, gradeConfig, onClose }) {
   }, [isSingle]);
 
   const bgGradient = topGrade === gradeOrder[gradeOrder.length - 1]
-    ? `radial-gradient(ellipse at 50% 35%, ${topCfg.bg?.replace('0.15','0.3') || 'rgba(232,176,72,.3)'} 0%, rgba(13,11,20,.97) 65%)`
+    ? `radial-gradient(ellipse at 50% 35%, ${topCfg.bg?.replace('0.15','0.35') || 'rgba(232,176,72,.35)'} 0%, #0d0b14 60%)`
     : topGrade === gradeOrder[gradeOrder.length - 2]
-    ? `radial-gradient(ellipse at 50% 35%, ${topCfg.bg?.replace('0.15','0.22') || 'rgba(180,142,240,.22)'} 0%, rgba(13,11,20,.97) 65%)`
-    : 'rgba(13,11,20,.96)';
+    ? `radial-gradient(ellipse at 50% 35%, ${topCfg.bg?.replace('0.15','0.25') || 'rgba(180,142,240,.25)'} 0%, #0d0b14 60%)`
+    : '#0d0b14';
 
   return createPortal(
     <div style={{
@@ -440,7 +440,7 @@ export default function GachaPage({ showToast }) {
   const probTable   = isSaju ? SAJU_PROB_TABLE    : PROB_TABLE;
 
   return (
-    <div className="page step-fade" style={{ paddingBottom: 52 }}>
+    <div className="page step-fade" style={{ paddingBottom: 52, maxWidth: 480, margin: '0 auto' }}>
       {/* 헤더 */}
       <div style={{ padding: '22px 20px 0', textAlign: 'center' }}>
         <div style={{ fontSize: 44, marginBottom: 8, animation: 'floatGently 3s ease infinite' }}>

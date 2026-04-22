@@ -125,11 +125,15 @@ function UseItemModal({ item, callApi, onClose, showToast }) {
   );
 }
 
+// ─── 합성 성공률 ─────────────────────────────────────────────────
+// satellite→planet: 100%, planet→galaxy: 50%, galaxy→nebula: 10%
+const SYNTH_RATES = { satellite: 1.0, planet: 0.5, galaxy: 0.1, ohaeng: 1.0, cheongan: 0.5, jiji: 0.1 };
+
 // ─── 합성 모달 ─────────────────────────────────────────────────
-function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) {
+function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast, currentBp, onSpendBP }) {
   const [selectedGrade, setSelectedGrade] = useState(null);
   const [synthesizing, setSynthesizing] = useState(false);
-  const [result, setResult] = useState(null);
+  const [outcome, setOutcome] = useState(null); // null | { success: boolean, item?: object }
 
   // 우주 + 사주 합성 가능 옵션 통합
   const spaceOptions = GRADE_ORDER
@@ -137,7 +141,8 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
     .map(grade => {
       const cfg = GRADE_CONFIG[grade];
       const count = inventory.filter(i => i.grade === grade && !i.id?.startsWith('saju_')).length;
-      return { grade, system: 'space', label: `🌌 ${cfg.label}`, count, cost: cfg.synthCost, yields: GRADE_CONFIG[cfg.next].label, color: cfg.color };
+      const rate = SYNTH_RATES[grade] ?? 1.0;
+      return { grade, system: 'space', label: `🌌 ${cfg.label}`, count, cost: cfg.synthCost, yields: GRADE_CONFIG[cfg.next].label, color: cfg.color, rate };
     })
     .filter(o => o.count >= o.cost);
 
@@ -146,72 +151,84 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
     .map(grade => {
       const cfg = SAJU_GRADE_CONFIG[grade];
       const count = inventory.filter(i => i.grade === grade && i.id?.startsWith('saju_')).length;
-      return { grade, system: 'saju', label: `☯️ ${cfg.label}`, count, cost: cfg.synthCost, yields: SAJU_GRADE_CONFIG[cfg.next].label, color: cfg.color };
+      const rate = SYNTH_RATES[grade] ?? 1.0;
+      return { grade, system: 'saju', label: `☯️ ${cfg.label}`, count, cost: cfg.synthCost, yields: SAJU_GRADE_CONFIG[cfg.next].label, color: cfg.color, rate };
     })
     .filter(o => o.count >= o.cost);
 
   const options = [...spaceOptions, ...sajuOptions];
+  const selectedOpt = options.find(o => o.grade === selectedGrade);
 
   async function handleSynthesize() {
-    if (!selectedGrade || synthesizing) return;
+    if (!selectedGrade || synthesizing || !selectedOpt) return;
     setSynthesizing(true);
-    const isSaju = options.find(o => o.grade === selectedGrade)?.system === 'saju';
+    const isSaju = selectedOpt.system === 'saju';
+    const rate = selectedOpt.rate;
+    const success = Math.random() < rate;
+
     try {
       const client = getAuthenticatedClient(kakaoId);
-      const toConsume = inventory
-        .filter(i => i.grade === selectedGrade && (isSaju ? i.id?.startsWith('saju_') : !i.id?.startsWith('saju_')))
-        .slice(0, 3);
 
-      for (const item of toConsume) {
-        await client.from('user_shop_inventory')
-          .delete()
-          .eq('kakao_id', String(kakaoId))
-          .eq('item_id', item.id)
-          .limit(1);
+      if (success) {
+        // 성공: 재료 소모 후 새 아이템 지급
+        const toConsume = inventory
+          .filter(i => i.grade === selectedGrade && (isSaju ? i.id?.startsWith('saju_') : !i.id?.startsWith('saju_')))
+          .slice(0, 3);
+        for (const item of toConsume) {
+          await client.from('user_shop_inventory')
+            .delete()
+            .eq('kakao_id', String(kakaoId))
+            .eq('item_id', item.id)
+            .limit(1);
+        }
+        const newItem = isSaju ? synthesizeSaju(selectedGrade) : synthesize(selectedGrade);
+        await client.from('user_shop_inventory').insert({
+          kakao_id: String(kakaoId),
+          item_id: newItem.id,
+          is_equipped: false,
+          unlocked_at: new Date().toISOString(),
+        });
+        setOutcome({ success: true, item: newItem });
+      } else {
+        // 실패: 아이템 보존, 100 BP 차감
+        if (onSpendBP) await onSpendBP(100, 'synthesis_fail');
+        setOutcome({ success: false });
       }
-
-      const newItem = isSaju ? synthesizeSaju(selectedGrade) : synthesize(selectedGrade);
-      await client.from('user_shop_inventory').insert({
-        kakao_id: String(kakaoId),
-        item_id: newItem.id,
-        is_equipped: false,
-        unlocked_at: new Date().toISOString(),
-      });
-
-      setResult(newItem);
     } catch {
       showToast?.('합성 중 오류가 발생했어요', 'error');
       setSynthesizing(false);
     }
   }
 
-  if (result) {
-    const cfg = GRADE_CONFIG[result.grade];
+  // 결과 화면 (성공)
+  if (outcome?.success && outcome.item) {
+    const item = outcome.item;
+    const cfg = GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade] || {};
     return createPortal(
       <div style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,.85)',
+        background: 'rgba(0,0,0,.9)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '0 20px',
       }}>
         <div style={{
           width: '100%', maxWidth: 340, textAlign: 'center',
           background: 'var(--bg1)', borderRadius: 'var(--r2)',
-          border: `1px solid ${cfg.border}`, padding: '32px 24px',
-          boxShadow: result.grade === 'legendary' ? '0 0 40px rgba(232,176,72,.3)' : 'none',
+          border: `1px solid ${cfg.border || 'var(--acc)'}`, padding: '32px 24px',
+          boxShadow: `0 0 40px ${cfg.border || 'rgba(232,176,72,.3)'}`,
           animation: 'fadeUp .35s ease',
         }}>
           <div style={{ fontSize: 64, marginBottom: 12, animation: 'gacha-bounce .6s ease both' }}>
-            {result.emoji}
+            {item.emoji}
           </div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: cfg.color, marginBottom: 6, letterSpacing: '.05em' }}>
-            합성 성공! {cfg.label} 아이템 획득
+          <div style={{ fontSize: '12px', fontWeight: 700, color: cfg.color || 'var(--gold)', marginBottom: 6, letterSpacing: '.05em' }}>
+            ✦ 합성 성공! {cfg.label} 아이템 획득
           </div>
           <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: 'var(--t1)', marginBottom: 8 }}>
-            {result.name}
+            {item.name}
           </div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 20, lineHeight: 1.6 }}>
-            {result.description}
+            {item.description}
           </div>
           <button
             onClick={() => { onComplete(); onClose(); }}
@@ -222,7 +239,52 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
               fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
             }}
           >
-            ✦ 확인
+            ✦ 보관함 확인
+          </button>
+        </div>
+      </div>,
+      document.body,
+    );
+  }
+
+  // 결과 화면 (실패)
+  if (outcome?.success === false) {
+    return createPortal(
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,.9)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 20px',
+      }}>
+        <div style={{
+          width: '100%', maxWidth: 340, textAlign: 'center',
+          background: 'var(--bg1)', borderRadius: 'var(--r2)',
+          border: '1px solid rgba(224,90,58,.4)', padding: '32px 24px',
+          boxShadow: '0 0 30px rgba(224,90,58,.2)',
+          animation: 'fadeUp .35s ease',
+        }}>
+          <div style={{ fontSize: 64, marginBottom: 12, animation: 'gacha-bounce .6s ease both' }}>
+            💫
+          </div>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--rose, #E05A3A)', marginBottom: 8, letterSpacing: '.05em' }}>
+            합성 실패
+          </div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', marginBottom: 8, lineHeight: 1.6 }}>
+            별이 잠시 빗나갔어요
+          </div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 20, lineHeight: 1.6 }}>
+            아이템은 보존됩니다. 100 BP가 소모됐어요.
+          </div>
+          <button
+            onClick={() => { onComplete(); onClose(); }}
+            style={{
+              width: '100%', padding: '12px',
+              background: 'none', border: '1.5px solid var(--line)',
+              borderRadius: 'var(--r1)', color: 'var(--t2)', fontWeight: 600,
+              fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
+            }}
+          >
+            확인
           </button>
         </div>
       </div>,
@@ -254,40 +316,49 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-            {options.map(opt => (
-              <button
-                key={opt.grade}
-                onClick={() => setSelectedGrade(opt.grade === selectedGrade ? null : opt.grade)}
-                style={{
-                  padding: '12px 14px', borderRadius: 'var(--r1)',
-                  border: `1.5px solid ${selectedGrade === opt.grade ? opt.color : 'var(--line)'}`,
-                  background: selectedGrade === opt.grade ? `${opt.color}18` : 'var(--bg2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  cursor: 'pointer', fontFamily: 'var(--ff)',
-                  transition: 'all .15s',
-                }}
-              >
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: opt.color }}>
-                    {opt.label} 3개 → {opt.yields} 1개
-                  </div>
-                  {opt.system === 'saju' && opt.grade === 'cheongan' && (
-                    <div style={{ fontSize: '10px', color: 'var(--gold)', marginTop: 2, fontWeight: 700 }}>
-                      ※ 팁: 사주는 속성과 상관없이 글자만 맞으면 합성돼요!
+            {options.map(opt => {
+              const rateLabel = opt.rate === 1.0 ? '성공률 100%' : opt.rate === 0.5 ? '성공률 50%' : `성공률 ${Math.round(opt.rate * 100)}%`;
+              const rateColor = opt.rate === 1.0 ? '#7EC8A4' : opt.rate >= 0.5 ? '#E8B048' : '#E05A3A';
+              return (
+                <button
+                  key={opt.grade}
+                  onClick={() => setSelectedGrade(opt.grade === selectedGrade ? null : opt.grade)}
+                  style={{
+                    padding: '12px 14px', borderRadius: 'var(--r1)',
+                    border: `1.5px solid ${selectedGrade === opt.grade ? opt.color : 'var(--line)'}`,
+                    background: selectedGrade === opt.grade ? `${opt.color}18` : 'var(--bg2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    cursor: 'pointer', fontFamily: 'var(--ff)',
+                    transition: 'all .15s',
+                  }}
+                >
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: opt.color }}>
+                      {opt.label} 3개 → {opt.yields} 1개
                     </div>
-                  )}
-                  <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 2 }}>
-                    보유 {opt.count}개 (합성 후 {opt.count - 3}개 남음)
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                      <span style={{ fontSize: '11px', color: 'var(--t4)' }}>
+                        보유 {opt.count}개
+                      </span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: rateColor }}>
+                        {rateLabel}
+                      </span>
+                    </div>
+                    {opt.rate < 1.0 && (
+                      <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 2 }}>
+                        실패 시 아이템 보존 · 100 BP 소모
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div style={{
-                  width: 20, height: 20, borderRadius: '50%',
-                  border: `2px solid ${selectedGrade === opt.grade ? opt.color : 'var(--line)'}`,
-                  background: selectedGrade === opt.grade ? opt.color : 'none',
-                  flexShrink: 0,
-                }} />
-              </button>
-            ))}
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: `2px solid ${selectedGrade === opt.grade ? opt.color : 'var(--line)'}`,
+                    background: selectedGrade === opt.grade ? opt.color : 'none',
+                    flexShrink: 0,
+                  }} />
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -311,10 +382,13 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
               borderRadius: 'var(--r1)',
               color: selectedGrade ? 'var(--gold)' : 'var(--t4)',
               fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
-              cursor: selectedGrade ? 'pointer' : 'not-allowed',
+              cursor: selectedGrade && !synthesizing ? 'pointer' : 'not-allowed',
             }}
           >
-            {synthesizing ? '합성 중...' : '✦ 합성하기'}
+            {synthesizing ? '합성 중...' : selectedOpt && selectedOpt.rate < 1.0
+              ? `✦ 합성 시도 (${Math.round(selectedOpt.rate * 100)}%)`
+              : '✦ 합성하기'
+            }
           </button>
         </div>
       </div>
@@ -323,8 +397,104 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast }) 
   );
 }
 
+// ─── 아이템 상세 모달 ─────────────────────────────────────────────
+function ItemDetailModal({ item, onClose }) {
+  const cfg = item.grade ? (GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG?.[item.grade]) : null;
+  const systemLabel = item.id?.startsWith('saju_') ? '사주 시스템' : item.grade ? '우주 시스템' : '';
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,.75)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 20px',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%', maxWidth: 320,
+          background: 'var(--bg1)',
+          borderRadius: 'var(--r2)',
+          border: `1px solid ${cfg?.border || 'var(--line)'}`,
+          padding: '28px 24px',
+          animation: 'fadeUp .28s ease',
+          boxShadow: cfg ? `0 0 24px ${cfg.border}` : 'none',
+        }}
+      >
+        {/* 이모지/그래픽 */}
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          {item.category === 'talisman'
+            ? <div style={{ fontSize: 56, marginBottom: 10 }}>{item.emoji}</div>
+            : <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><GachaGraphic item={item} size={72} /></div>
+          }
+          {cfg && (
+            <div style={{
+              display: 'inline-flex', padding: '4px 12px', borderRadius: 20,
+              background: cfg.bg, border: `1px solid ${cfg.border}`,
+              fontSize: '10px', color: cfg.color, fontWeight: 700,
+              letterSpacing: '.05em', marginBottom: 8,
+            }}>
+              {cfg.label} {systemLabel && `· ${systemLabel}`}
+            </div>
+          )}
+          <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: item.affixColor || 'var(--t1)' }}>
+            {item.name}
+          </div>
+        </div>
+
+        {/* 설명 */}
+        {item.description && (
+          <div style={{
+            fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.8,
+            background: 'var(--bg2)', borderRadius: 'var(--r1)',
+            padding: '12px 14px', marginBottom: 12,
+            border: '1px solid var(--line)',
+          }}>
+            {item.description}
+          </div>
+        )}
+
+        {/* 효과 */}
+        {(item.effect || item.effectLabel) && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
+            fontSize: 'var(--xs)', color: cfg?.color || 'var(--gold)',
+          }}>
+            <span>✦</span>
+            <span style={{ fontWeight: 600 }}>{item.effect || item.effectLabel}</span>
+          </div>
+        )}
+
+        {/* 부스트 정보 */}
+        {item.boost && (
+          <div style={{ fontSize: '11px', color: 'var(--t4)', marginBottom: 12 }}>
+            운세 부스트: <strong style={{ color: 'var(--gold)' }}>+{item.boost}점</strong>
+            {item.aspectKey && ` (${item.aspectKey} 축)`}
+          </div>
+        )}
+
+        <button
+          onClick={onClose}
+          style={{
+            width: '100%', padding: '11px',
+            background: 'none', border: '1px solid var(--line)',
+            borderRadius: 'var(--r1)', color: 'var(--t3)',
+            fontFamily: 'var(--ff)', fontSize: 'var(--xs)', cursor: 'pointer',
+          }}
+        >
+          닫기
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // ─── 아이템 카드 ────────────────────────────────────────────────
-function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActId, onDailyActivate }) {
+function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActId, onDailyActivate, onDetail }) {
   const isTalisman = item.category === 'talisman';
   const isGachaItem = !!item.grade; // grade 있으면 가챠 아이템
   const cfg = item.grade ? GRADE_CONFIG[item.grade] : null;
@@ -372,12 +542,16 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActId, onDai
         </div>
       )}
 
-      {/* 이모지(SVG 파티클 렌더러 교체) */}
-      <div style={{
-        marginTop: (item.is_equipped || cfg) ? 16 : 0,
-        marginBottom: 8,
-        display: 'flex', justifyContent: 'center'
-      }}>
+      {/* 이모지(SVG 파티클 렌더러 교체) — 클릭 시 상세 모달 */}
+      <div
+        onClick={onDetail ? () => onDetail(item) : undefined}
+        style={{
+          marginTop: (item.is_equipped || cfg) ? 16 : 0,
+          marginBottom: 8,
+          display: 'flex', justifyContent: 'center',
+          cursor: onDetail ? 'pointer' : 'default',
+        }}
+      >
         {item.category === 'talisman' ? (
           <div style={{ fontSize: 30, lineHeight: 1 }}>{item.emoji}</div>
         ) : (
@@ -390,8 +564,11 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActId, onDai
         {CAT_LABEL[item.category] ?? item.category}
       </div>
 
-      {/* 이름 */}
-      <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: item.affixColor || 'var(--t1)', lineHeight: 1.3 }}>
+      {/* 이름 — 클릭 시 상세 */}
+      <div
+        onClick={onDetail ? () => onDetail(item) : undefined}
+        style={{ fontSize: 'var(--sm)', fontWeight: 700, color: item.affixColor || 'var(--t1)', lineHeight: 1.3, cursor: onDetail ? 'pointer' : 'default' }}
+      >
         {item.name}
       </div>
 
@@ -487,7 +664,7 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActId, onDai
 }
 
 // ─── 메인 페이지 ────────────────────────────────────────────────
-export default function ItemInventoryPage({ showToast, callApi }) {
+export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const { user, setStep } = useAppStore();
   const kakaoId = user?.kakaoId || user?.id;
 
@@ -496,6 +673,7 @@ export default function ItemInventoryPage({ showToast, callApi }) {
   const [category, setCategory] = useState('전체');
   const [toggling, setToggling] = useState(null);
   const [useItem, setUseItem] = useState(null);
+  const [detailItem, setDetailItem] = useState(null);
   const [showSynth, setShowSynth] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
 
@@ -825,11 +1003,17 @@ export default function ItemInventoryPage({ showToast, callApi }) {
                 onUse={setUseItem}
                 dailyActId={dailyActId}
                 onDailyActivate={handleDailyActivate}
+                onDetail={setDetailItem}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* 아이템 상세 모달 */}
+      {detailItem && (
+        <ItemDetailModal item={detailItem} onClose={() => setDetailItem(null)} />
+      )}
 
       {/* 아이템 사용 모달 */}
       {useItem && (
@@ -849,6 +1033,7 @@ export default function ItemInventoryPage({ showToast, callApi }) {
           onClose={() => setShowSynth(false)}
           onComplete={loadInventory}
           showToast={showToast}
+          onSpendBP={spendBP}
         />
       )}
 
