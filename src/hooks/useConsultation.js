@@ -480,7 +480,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
   const askDailyHoroscope = useCallback(async (options = {}) => {
     if (!formOk) { setStep(1); return; }
-    if (dailyLoading) return; // ?? ?? ??
+    if (dailyLoading) return; // 중복 호출 방지
     if (!options.ignoreDailyLimit && dailyCount >= DAILY_MAX) {
       if (typeof onDailyLimitReached === 'function') onDailyLimitReached();
       return;
@@ -498,13 +498,13 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       }
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
-        if (showToast) showToast(`BP? ????. (??: ${BM_COST_PER_ASK} BP, ??: ${currentBm} BP)`, 'error');
+        if (showToast) showToast(`BP가 부족해요. (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, 'error');
         return;
       }
       const authClient = getAuthenticatedClient(user.id);
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, BM_COST_PER_ASK, 'DAILY_HOROSCOPE');
       if (!ok) {
-        if (showToast) showToast('BP? ????.', 'error');
+        if (showToast) showToast('BP가 부족해요.', 'error');
         return;
       }
       const cur = useAppStore.getState().gamificationState || {};
@@ -517,7 +517,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
     setDailyLoading(true);
     try {
-      const ans = await callApi('?? ?? ?? ????', {
+      const ans = await callApi('오늘 하루 나의 별숨은?', {
         isDaily: true,
         transientItems: options.transientItems || [],
       });
@@ -567,15 +567,15 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
             saveDailyCacheToSupabase(user.id, 'horoscope_score', String(gamData.score)).catch(() => {});
           }
         } catch (gamErr) {
-          console.error('[??] ??????? ?? ??:', gamErr);
+          console.error('[별숨] 게이미피케이션 처리 오류:', gamErr);
         }
       }
 
       if (shouldSaveHistory) {
-        saveHistoryToSupabase(['?? ?? ?? ????'], [ans], timeSlot);
+        saveHistoryToSupabase(['오늘 하루 나의 별숨은?'], [ans], timeSlot);
       }
     } catch {
-      /* ??? ?? ??? ?? */
+      /* 에러는 버튼 상태로 처리 */
     } finally {
       setDailyLoading(false);
     }
