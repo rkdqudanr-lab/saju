@@ -100,7 +100,7 @@ export default function FutureProphecyPage({
     setPhase('result');
     try {
       if (user?.id) {
-        const confirmed = window.confirm('10BP를 들여 별숨에게 물어볼까요?');
+        const confirmed = await useAppStore.getState().showBPConfirm(FEATURE_COST, 1);
         if (!confirmed) {
           setPhase('intro');
           return;

@@ -50,6 +50,19 @@ export const useAppStore = create((set, get) => ({
   showUpgradeModal: false,
   setShowUpgradeModal: (val) => set({ showUpgradeModal: val }),
 
+  // BP 사용 확인 모달 (Promise 기반)
+  bpConfirmState: { open: false, cost: 10, questionCount: 1 },
+  _bpConfirmResolve: null,
+  showBPConfirm: (cost, questionCount = 1) =>
+    new Promise((resolve) => {
+      set({ bpConfirmState: { open: true, cost, questionCount }, _bpConfirmResolve: resolve });
+    }),
+  resolveBPConfirm: (result) => {
+    const resolve = get()._bpConfirmResolve;
+    if (resolve) resolve(result);
+    set({ bpConfirmState: { open: false, cost: 10, questionCount: 1 }, _bpConfirmResolve: null });
+  },
+
   // 수호신 레벨업 이벤트 (null → { fromLevel, toLevel } 로 세팅되면 모달 표시)
   guardianLevelUp: null,
   setGuardianLevelUp: (val) => set({ guardianLevelUp: val }),

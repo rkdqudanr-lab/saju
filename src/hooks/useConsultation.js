@@ -388,11 +388,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     // BP 차감 (로그인 사용자: 질문 개수 × 10 BP)
     if (user?.id) {
       const totalCost = selQs.length * BM_COST_PER_ASK;
-      const confirmed = window.confirm(
-        selQs.length === 1
-          ? '10BP를 들여 별숨에게 물어볼까요?'
-          : `${totalCost}BP를 들여 별숨에게 물어볼까요?\n질문 ${selQs.length}개가 함께 전송돼요.`
-      );
+      const confirmed = await useAppStore.getState().showBPConfirm(totalCost, selQs.length);
       if (!confirmed) return;
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < totalCost) {
@@ -443,7 +439,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
     // BP 차감 (로그인 사용자만)
     if (user?.id) {
-      const confirmed = window.confirm('10BP를 들여 별숨에게 물어볼까요?');
+      const confirmed = await useAppStore.getState().showBPConfirm(BM_COST_PER_ASK, 1);
       if (!confirmed) return;
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
@@ -484,55 +480,66 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
   const askDailyHoroscope = useCallback(async (options = {}) => {
     if (!formOk) { setStep(1); return; }
-    if (dailyLoading) return; // 중복 호출 방지 (레이스 컨디션 가드)
+    if (dailyLoading) return; // ?? ?? ??
+    if (!options.ignoreDailyLimit && dailyCount >= DAILY_MAX) {
+      if (typeof onDailyLimitReached === 'function') onDailyLimitReached();
+      return;
+    }
 
-    // BP 차감 (로그인 사용자만)
-    if (user?.id) {
-      const confirmed = window.confirm('10BP를 들여 별숨에게 물어볼까요?');
-      if (!confirmed) return;
+    const shouldChargeBp = !options.skipBpCharge;
+    const shouldConfirm = !options.skipConfirm;
+    const shouldSaveHistory = options.saveHistory !== false;
+    const shouldIncrementCount = options.incrementCount !== false;
+
+    if (shouldChargeBp && user?.id) {
+      if (shouldConfirm) {
+        const confirmed = await useAppStore.getState().showBPConfirm(BM_COST_PER_ASK, 1);
+        if (!confirmed) return;
+      }
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
-        if (showToast) showToast(`BP가 부족해요 (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, 'error');
+        if (showToast) showToast(`BP? ????. (??: ${BM_COST_PER_ASK} BP, ??: ${currentBm} BP)`, 'error');
         return;
       }
       const authClient = getAuthenticatedClient(user.id);
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, BM_COST_PER_ASK, 'DAILY_HOROSCOPE');
       if (!ok) {
-        if (showToast) showToast(`BP가 부족해요`, 'error');
+        if (showToast) showToast('BP? ????.', 'error');
         return;
       }
-      // 스토어 즉시 업데이트
       const cur = useAppStore.getState().gamificationState || {};
-      useAppStore.getState().setGamificationData({ gamificationState: { ...cur, currentBp: newBP ?? (currentBm - BM_COST_PER_ASK) }, missions: useAppStore.getState().missions || [] });
+      useAppStore.getState().setGamificationData({
+        gamificationState: { ...cur, currentBp: newBP ?? (currentBm - BM_COST_PER_ASK) },
+        missions: useAppStore.getState().missions || [],
+      });
     }
 
     if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
     setDailyLoading(true);
     try {
-      const ans = await callApi('오늘 하루 나의 별숨은?', {
+      const ans = await callApi('?? ?? ?? ????', {
         isDaily: true,
         transientItems: options.transientItems || [],
       });
       const result = { text: ans };
-      const newCount = dailyCount + 1;
+      const newCount = shouldIncrementCount ? dailyCount + 1 : dailyCount;
       setDailyResult(result);
-      setDailyCount(newCount);
+      if (shouldIncrementCount) setDailyCount(newCount);
+
       if (user?.id) {
         await saveDailyCacheToSupabase(user.id, 'horoscope', ans);
-        await saveDailyCacheToSupabase(user.id, 'horoscope_count', String(newCount));
+        if (shouldIncrementCount) {
+          await saveDailyCacheToSupabase(user.id, 'horoscope_count', String(newCount));
+        }
 
-        // ── 게이미피케이션 처리 ──
         try {
-          // 1. AI 응답 파싱
           const gamData = parseHoroscopeForGamification(ans);
 
           const authClient = getAuthenticatedClient(user.id);
           const client = authClient || supabase;
           const today = getTodayDateStr();
 
-          // 2. 미션 생성 및 저장 (다시 물어보기 시 오늘 미션 전체 초기화 후 새로 삽입)
           if (gamData.missions && gamData.missions.length > 0) {
-            // 오늘 미션 전체 삭제 후 새로 삽입 (완료 상태 포함 초기화)
             await client.from('missions')
               .delete()
               .eq('kakao_id', String(user.id))
@@ -547,30 +554,32 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
                 is_completed: false,
               });
             }
-            // UI 미션 목록 새로고침
             if (typeof onMissionsSaved === 'function') onMissionsSaved();
           }
 
-          // 3. score 저장 (배드타임 유무와 관계없이 항상)
           setDailyResult(prev => ({
             ...prev,
             score: gamData.score,
             ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
           }));
 
-          // 4. 점수 히스토리 캐시 저장 (7일 차트용)
           if (gamData.score != null) {
             saveDailyCacheToSupabase(user.id, 'horoscope_score', String(gamData.score)).catch(() => {});
           }
         } catch (gamErr) {
-          console.error('[별숨] 게이미피케이션 처리 오류:', gamErr);
-          // 게이미피케이션 오류가 전체 흐름을 막지 않도록 함
+          console.error('[??] ??????? ?? ??:', gamErr);
         }
       }
-      saveHistoryToSupabase(['오늘 하루 나의 별숨은?'], [ans], timeSlot);
-    } catch { /* 에러는 버튼 상태로 처리 */ }
-    finally { setDailyLoading(false); }
-  }, [formOk, callApi, dailyCount, dailyLoading, saveHistoryToSupabase, timeSlot, user?.id, onDailyLimitReached, onMissionsSaved]);
+
+      if (shouldSaveHistory) {
+        saveHistoryToSupabase(['?? ?? ?? ????'], [ans], timeSlot);
+      }
+    } catch {
+      /* ??? ?? ??? ?? */
+    } finally {
+      setDailyLoading(false);
+    }
+  }, [formOk, callApi, dailyCount, dailyLoading, saveHistoryToSupabase, timeSlot, user?.id, onDailyLimitReached, onMissionsSaved, showToast]);
 
   const askReview = useCallback(async (text, prompt) => {
     if (!formOk) { setStep(1); return; }

@@ -32,6 +32,7 @@ import FeatureTour        from "./components/FeatureTour.jsx";
 // modal components (static)
 import UpgradeModal        from "./components/UpgradeModal.jsx";
 import GuardianLevelUpModal from "./components/GuardianLevelUpModal.jsx";
+import BPConfirmModal       from "./components/BPConfirmModal.jsx";
 import OtherProfileModal   from "./components/OtherProfileModal.jsx";
 import InviteModal         from "./components/InviteModal.jsx";
 import ShareModal          from "./components/ShareModal.jsx";
@@ -1135,6 +1136,9 @@ export default function App() {
           cardDataUrl={cardDataUrl}
         />
       )}
+
+      {/* ── BP 사용 확인 모달 ── */}
+      <BPConfirmModal />
 
       {/* ── 수호신 레벨업 모달 ── */}
       {guardianLevelUp && (

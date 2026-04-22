@@ -89,7 +89,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
     if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
 
     if (user?.id) {
-      const confirmed = window.confirm('10BP를 들여 별숨에게 물어볼까요?');
+      const confirmed = await useAppStore.getState().showBPConfirm(FEATURE_COST, 1);
       if (!confirmed) return;
       const currentBp = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBp < FEATURE_COST) {
