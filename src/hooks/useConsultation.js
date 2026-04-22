@@ -232,6 +232,21 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
           }
         }
 
+        if (opts.isDaily && Array.isArray(opts.transientItems) && opts.transientItems.length > 0) {
+          const transientSummary = opts.transientItems
+            .map((item, index) => {
+              const parts = [item?.name].filter(Boolean);
+              if (item?.effect) parts.push(`effect: ${item.effect}`);
+              else if (item?.description) parts.push(`description: ${item.description}`);
+              return `${index + 1}. ${parts.join(' / ')}`.trim();
+            })
+            .filter(Boolean)
+            .join('\n');
+          if (transientSummary) {
+            fullContext = fullContext + `\n\n[daily transient items]\n${transientSummary}\nPlease reflect these temporary item effects naturally in today's score interpretation, advice, Do, and caution sections without over-emphasizing item names.`;
+          }
+        }
+
         const res = await fetch('/api/ask', {
           method: 'POST',
           headers,
@@ -297,9 +312,6 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (loadMsgRef.current) { clearInterval(loadMsgRef.current); loadMsgRef.current = null; }
   }, []);
 
-  // 플랜별 기록 저장 한도 (free: 10, premium: 100)
-  const HISTORY_LIMIT = { free: 10, premium: 100 };
-
   // ── Supabase 상담기록 저장 ──
   const saveHistoryToSupabase = useCallback(async (questions, answersArr, slot) => {
     if (!supabase) return;
@@ -310,50 +322,8 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
       let supabaseUserId = user?.supabaseId || null;
       if (!supabaseUserId) {
         const authClient = getAuthenticatedClient(kakaoId);
-        const { data: userRow } = await (authClient || supabase).from('users').select('id, plan').eq('kakao_id', String(kakaoId)).maybeSingle();
+        const { data: userRow } = await (authClient || supabase).from('users').select('id').eq('kakao_id', String(kakaoId)).maybeSingle();
         supabaseUserId = userRow?.id || null;
-        // 플랜 확인 및 기록 수 제한 체크
-        const plan = userRow?.plan || 'free';
-        const limit = HISTORY_LIMIT[plan] ?? HISTORY_LIMIT.free;
-        if (supabaseUserId) {
-          const authClient2 = getAuthenticatedClient(kakaoId);
-          const { count } = await (authClient2 || supabase)
-            .from('consultation_history')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', supabaseUserId);
-          if (count !== null && count >= limit) {
-            if (typeof showToast === 'function') {
-              showToast(
-                plan === 'premium'
-                  ? `기록이 ${limit}개 한도에 도달했어요. 오래된 기록을 삭제해봐요.`
-                  : `무료 플랜은 기록을 ${limit}개까지 저장할 수 있어요. 프리미엄으로 업그레이드하면 100개까지 저장돼요.`,
-                'info'
-              );
-            }
-            return;
-          }
-        }
-      } else {
-        // supabaseUserId 이미 있는 경우 플랜/한도 체크
-        const authClient = getAuthenticatedClient(kakaoId);
-        const { data: userRow } = await (authClient || supabase).from('users').select('plan').eq('kakao_id', String(kakaoId)).maybeSingle();
-        const plan = userRow?.plan || 'free';
-        const limit = HISTORY_LIMIT[plan] ?? HISTORY_LIMIT.free;
-        const { count } = await (authClient || supabase)
-          .from('consultation_history')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', supabaseUserId);
-        if (count !== null && count >= limit) {
-          if (typeof showToast === 'function') {
-            showToast(
-              plan === 'premium'
-                ? `기록이 ${limit}개 한도에 도달했어요. 오래된 기록을 삭제해봐요.`
-                : `무료 플랜은 기록을 ${limit}개까지 저장할 수 있어요. 프리미엄으로 업그레이드하면 100개까지 저장돼요.`,
-              'info'
-            );
-          }
-          return;
-        }
       }
       if (!supabaseUserId) return;
       const authClient = getAuthenticatedClient(kakaoId);
@@ -418,23 +388,33 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     // BP 차감 (로그인 사용자: 질문 개수 × 10 BP)
     if (user?.id) {
       const totalCost = selQs.length * BM_COST_PER_ASK;
+      const confirmed = window.confirm(
+        selQs.length === 1
+          ? '10BP를 들여 별숨에게 물어볼까요?'
+          : `${totalCost}BP를 들여 별숨에게 물어볼까요?\n질문 ${selQs.length}개가 함께 전송돼요.`
+      );
+      if (!confirmed) return;
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < totalCost) {
         if (showToast) showToast(`BP가 부족해요 (필요: ${totalCost} BP, 보유: ${currentBm} BP)`, 'error');
         return;
       }
+      // confirm 직후 즉시 로딩 화면으로 이동 (BP 차감 awaiting 중 질문 페이지 노출 방지)
+      if (typeof window.gtag === 'function') window.gtag('event', 'ask_claude', { question_count: selQs.length });
+      setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
       const authClient = getAuthenticatedClient(user.id);
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, totalCost, 'ASK_CLAUDE');
       if (!ok) {
         if (showToast) showToast(`BP가 부족해요`, 'error');
+        setStep(2); // rollback
         return;
       }
       const cur = useAppStore.getState().gamificationState || {};
       useAppStore.getState().setGamificationData({ gamificationState: { ...cur, currentBp: newBP ?? (currentBm - totalCost) }, missions: useAppStore.getState().missions || [] });
+    } else {
+      if (typeof window.gtag === 'function') window.gtag('event', 'ask_claude', { question_count: selQs.length });
+      setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     }
-
-    if (typeof window.gtag === 'function') window.gtag('event', 'ask_claude', { question_count: selQs.length });
-    setStep(3); setAnswers([]); setTypedSet(new Set()); setOpenAcc(0);
     setQLoadStatus(selQs.map(() => 'loading'));
     startLoadingMsg();
     const results = await Promise.allSettled(
@@ -463,6 +443,8 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
     // BP 차감 (로그인 사용자만)
     if (user?.id) {
+      const confirmed = window.confirm('10BP를 들여 별숨에게 물어볼까요?');
+      if (!confirmed) return;
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
         if (showToast) showToast(`BP가 부족해요 (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, 'error');
@@ -500,12 +482,14 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     setStep(prev => prev === 3 ? 4 : prev); setOpenAcc(0);
   }, [formOk, timeSlot, callApi]);
 
-  const askDailyHoroscope = useCallback(async () => {
+  const askDailyHoroscope = useCallback(async (options = {}) => {
     if (!formOk) { setStep(1); return; }
     if (dailyLoading) return; // 중복 호출 방지 (레이스 컨디션 가드)
 
     // BP 차감 (로그인 사용자만)
     if (user?.id) {
+      const confirmed = window.confirm('10BP를 들여 별숨에게 물어볼까요?');
+      if (!confirmed) return;
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
         if (showToast) showToast(`BP가 부족해요 (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, 'error');
@@ -525,7 +509,10 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (typeof window.gtag === 'function') window.gtag('event', 'daily_horoscope_click');
     setDailyLoading(true);
     try {
-      const ans = await callApi('오늘 하루 나의 별숨은?', { isDaily: true });
+      const ans = await callApi('오늘 하루 나의 별숨은?', {
+        isDaily: true,
+        transientItems: options.transientItems || [],
+      });
       const result = { text: ans };
       const newCount = dailyCount + 1;
       setDailyResult(result);

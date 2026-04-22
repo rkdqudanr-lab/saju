@@ -1036,14 +1036,14 @@ export default function TodayDetailPage({
     setIsPurifying(true);
     const animPromise = new Promise((resolve) => setTimeout(resolve, 1200));
     try {
-      await Promise.all([onRefresh?.(), animPromise]);
+      await Promise.all([onRefresh?.({ transientItems: usedItems }), animPromise]);
       setUsedItems([]);
     } catch {
       await animPromise;
     } finally {
       setIsPurifying(false);
     }
-  }, [isPurifying, dailyLoading, dailyCount, DAILY_MAX, onRefresh]);
+  }, [isPurifying, dailyLoading, dailyCount, DAILY_MAX, onRefresh, usedItems]);
 
   const canPurify = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
   const remaining = DAILY_MAX - dailyCount;

@@ -4,6 +4,11 @@ import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { useStreamResponse } from "../hooks/useStreamResponse.js";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 import { ChatBubble } from "./AccItem.jsx";
+import { getAuthenticatedClient } from "../lib/supabase.js";
+import { spendBP } from "../utils/gamificationLogic.js";
+import { useAppStore } from "../store/useAppStore.js";
+
+const FEATURE_COST = 10;
 
 const DREAM_MOODS = [
   { value: '행복한', emoji: '😊' },
@@ -82,6 +87,27 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
   const handleAnalyze = async () => {
     if (!dreamText.trim()) { showToast('꿈 내용을 입력해주세요', 'info'); return; }
     if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
+
+    if (user?.id) {
+      const confirmed = window.confirm('10BP를 들여 별숨에게 물어볼까요?');
+      if (!confirmed) return;
+      const currentBp = useAppStore.getState().gamificationState?.currentBp ?? 0;
+      if (currentBp < FEATURE_COST) {
+        showToast(`BP가 부족해요 (필요: ${FEATURE_COST} BP, 보유: ${currentBp} BP)`, 'error');
+        return;
+      }
+      const client = getAuthenticatedClient(user.id);
+      const { ok, newBP } = await spendBP(client, user.id, FEATURE_COST, 'DREAM_READING', '꿈해몽');
+      if (!ok) {
+        showToast('BP가 부족해요', 'error');
+        return;
+      }
+      const cur = useAppStore.getState().gamificationState || {};
+      useAppStore.getState().setGamificationData({
+        gamificationState: { ...cur, currentBp: newBP ?? (currentBp - FEATURE_COST) },
+        missions: useAppStore.getState().missions || [],
+      });
+    }
 
     resetStream();
     setFollowUps([]);
@@ -177,6 +203,7 @@ ${msg}`;
                   background: 'var(--card)',
                   color: 'var(--t1)',
                   fontSize: 'var(--sm)',
+                  fontFamily: 'var(--ff)',
                   resize: 'vertical',
                   boxSizing: 'border-box',
                   lineHeight: 1.6,

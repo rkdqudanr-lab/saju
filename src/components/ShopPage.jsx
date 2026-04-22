@@ -834,10 +834,10 @@ export default function ShopPage({ showToast }) {
           {/* 기운 보관함·합성 링크 */}
           <div style={{ margin: '16px 0 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
-              뽑은 기운 아이템 확인 · 합성 · 장착
+              뽑은 기운은 내 아이템에서 합성하고 장착해요
             </div>
             <button onClick={() => setStep(38)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'var(--goldf)', border: '1px solid var(--acc)', color: 'var(--gold)', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-              내 기운 보관함 →
+              내 아이템 →
             </button>
           </div>
         </>
@@ -956,10 +956,10 @@ export default function ShopPage({ showToast }) {
           {/* 기운 아이템 링크 */}
           <div style={{ margin: '16px 0 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
-              기운 아이템(우주·사주) 확인 및 합성
+              장착 중인 테마와 보유 아이템을 한곳에서 관리해요
             </div>
             <button onClick={() => setStep(38)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'none', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: '11px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-              기운 보관함 →
+              관리하러 가기 →
             </button>
           </div>
         </>

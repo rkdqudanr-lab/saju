@@ -1120,6 +1120,10 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
     ...SAJU_GRADE_ORDER.filter(g => SAJU_GRADE_CONFIG[g].next && gradeCountMap[g] >= SAJU_GRADE_CONFIG[g].synthCost),
   ];
   const canSynth = synthableGrades.length > 0;
+  const equippedDailyItem = items.find((item) => dailyActId && (dailyActId === item.id || dailyActId === item.id.split('::')[0])) || null;
+  const equippedTalismanItem = items.find((item) => item.is_equipped && item.category === 'talisman') || null;
+  const spiritCount = gachaItems.length;
+  const utilityCount = shopItems.length;
 
   const groupedItems = Object.entries(
     filtered.reduce((acc, item) => {
@@ -1168,6 +1172,88 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
         >
           📖 도감 보기
         </button>
+      </div>
+
+      <div style={{ padding: '0 24px 14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+          <button
+            onClick={() => equippedSajuItem && setDetailItem(equippedSajuItem)}
+            style={{
+              textAlign: 'left',
+              padding: '14px',
+              borderRadius: 'var(--r2)',
+              border: '1px solid rgba(232,176,72,0.22)',
+              background: 'linear-gradient(135deg, rgba(232,176,72,0.12), rgba(232,176,72,0.04))',
+              cursor: equippedSajuItem ? 'pointer' : 'default',
+            }}
+          >
+            <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>MAIN SPIRIT</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 700, lineHeight: 1.5 }}>
+              {equippedSajuItem ? equippedSajuItem.name : '아직 메인 기운이 없어요'}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 6 }}>
+              {equippedSajuItem ? '모든 AI 결과에 반영 중' : '내 아이템에서 바로 장착할 수 있어요'}
+            </div>
+          </button>
+
+          <button
+            onClick={() => (equippedDailyItem || equippedTalismanItem) && setDetailItem(equippedDailyItem || equippedTalismanItem)}
+            style={{
+              textAlign: 'left',
+              padding: '14px',
+              borderRadius: 'var(--r2)',
+              border: '1px solid rgba(180,142,240,0.22)',
+              background: 'linear-gradient(135deg, rgba(180,142,240,0.12), rgba(180,142,240,0.04))',
+              cursor: equippedDailyItem || equippedTalismanItem ? 'pointer' : 'default',
+            }}
+          >
+            <div style={{ fontSize: '10px', color: '#B48EF0', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>TODAY SLOT</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 700, lineHeight: 1.5 }}>
+              {equippedDailyItem?.name || equippedTalismanItem?.name || '오늘 발동한 아이템이 없어요'}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 6 }}>
+              {equippedDailyItem || equippedTalismanItem ? '오늘 하루 결과에 반영 중' : '일일 발동 버튼으로 바로 적용해요'}
+            </div>
+          </button>
+
+          <button
+            onClick={() => setCategory('?꾩껜')}
+            style={{
+              textAlign: 'left',
+              padding: '14px',
+              borderRadius: 'var(--r2)',
+              border: '1px solid var(--line)',
+              background: 'var(--bg2)',
+              cursor: 'pointer',
+            }}
+          >
+            <div style={{ fontSize: '10px', color: 'var(--t4)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>COLLECTION</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 700 }}>{items.length}개 보유 중</div>
+            <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 6 }}>
+              기운 {spiritCount}개 · 기타 {utilityCount}개
+            </div>
+          </button>
+
+          <button
+            onClick={() => (canSynth ? setShowSynth(true) : setStep(31))}
+            style={{
+              textAlign: 'left',
+              padding: '14px',
+              borderRadius: 'var(--r2)',
+              border: `1px solid ${canSynth ? 'rgba(126,200,164,0.35)' : 'var(--line)'}`,
+              background: canSynth ? 'linear-gradient(135deg, rgba(126,200,164,0.14), rgba(126,200,164,0.05))' : 'var(--bg2)',
+              cursor: 'pointer',
+            }}
+          >
+            <div style={{ fontSize: '10px', color: canSynth ? '#7EC8A4' : 'var(--t4)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>SYNTH LAB</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 700 }}>
+              {canSynth ? `${synthableGrades.length}개 조합이 가능해요` : '합성 재료가 아직 부족해요'}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 6 }}>
+              {canSynth ? '내 아이템에서 바로 합성하기' : '별숨샵에서 재료를 더 모아보세요'}
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* 합성 버튼 */}
@@ -1251,7 +1337,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
               <button
-                onClick={() => setStep(40)}
+                onClick={() => setStep(31)}
                 style={{
                   padding: '9px 18px', background: 'var(--goldf)',
                   border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)',
@@ -1259,10 +1345,10 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
                   fontFamily: 'var(--ff)', cursor: 'pointer',
                 }}
               >
-                별숨 뽑기 →
+                별숨샵 열기 →
               </button>
               <button
-                onClick={() => setStep(31)}
+                onClick={() => setShowCollection(true)}
                 style={{
                   padding: '9px 18px', background: 'var(--bg3)',
                   border: '1px solid var(--line)', borderRadius: 'var(--r1)',
@@ -1270,7 +1356,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
                   fontFamily: 'var(--ff)', cursor: 'pointer',
                 }}
               >
-                별숨샵 →
+                도감 보기 →
               </button>
             </div>
           </div>

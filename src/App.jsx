@@ -712,6 +712,7 @@ export default function App() {
               saveImage={handleSaveProphecyImage}
               user={user}
               consentFlags={consentFlags}
+              showToast={showToast}
             />
           </Suspense>
         )}
@@ -1072,7 +1073,7 @@ export default function App() {
         {/* ── Step 40: 별숨 뽑기 (가챠) ── */}
         {step === 40 && (
           <Suspense fallback={<PageSpinner />}>
-            <GachaPage showToast={showToast} consentFlags={consentFlags} />
+            <ShopPage showToast={showToast} />
           </Suspense>
         )}
 

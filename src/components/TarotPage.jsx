@@ -9,6 +9,10 @@ import { useAppStore } from '../store/useAppStore.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 import { useStreamResponse } from '../hooks/useStreamResponse.js';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
+import { getAuthenticatedClient } from '../lib/supabase.js';
+import { spendBP } from '../utils/gamificationLogic.js';
+
+const FEATURE_COST = 10;
 
 const MAJOR_ARCANA = [
   { id: 0,  name: '광대',        emoji: '🌀', meaning: '새 시작, 순수한 모험심',    detail: '두려움 없이 새로운 길로 나서는 자유로운 영혼이에요.',          img: '/tarot/ar00.jpg' },
@@ -127,6 +131,26 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
 
   const askReading = useCallback(async () => {
     if (isStreaming) return;
+    if (user?.id) {
+      const confirmed = window.confirm('10BP를 들여 별숨에게 물어볼까요?');
+      if (!confirmed) return;
+      const currentBp = useAppStore.getState().gamificationState?.currentBp ?? 0;
+      if (currentBp < FEATURE_COST) {
+        showToast?.(`BP가 부족해요 (필요: ${FEATURE_COST} BP, 보유: ${currentBp} BP)`, 'error');
+        return;
+      }
+      const client = getAuthenticatedClient(user.id);
+      const { ok, newBP } = await spendBP(client, user.id, FEATURE_COST, 'TAROT_READING', '별숨 타로');
+      if (!ok) {
+        showToast?.('BP가 부족해요', 'error');
+        return;
+      }
+      const cur = useAppStore.getState().gamificationState || {};
+      useAppStore.getState().setGamificationData({
+        gamificationState: { ...cur, currentBp: newBP ?? (currentBp - FEATURE_COST) },
+        missions: useAppStore.getState().missions || [],
+      });
+    }
     resetStream();
     const cardDesc = pickedCards
       .map((c, i) => `${POSITIONS[i]}: [${c.name}] ${c.meaning}`)
@@ -137,7 +161,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
       isChat: true,
       clientHour: new Date().getHours(),
     });
-  }, [pickedCards, buildCtx, isStreaming, startStream, resetStream]);
+  }, [pickedCards, buildCtx, isStreaming, showToast, startStream, resetStream, user?.id]);
 
   useEffect(() => {
     if (!streamText || isStreaming || pickedCards.length !== 3) return;
@@ -154,6 +178,10 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
       answers: [streamText],
     }).catch(() => {});
   }, [consentFlags, isStreaming, pickedCards, streamText, user]);
+
+  if (phase === 'done' && isStreaming && !streamText) {
+    return <FeatureLoadingScreen type="tarot" />;
+  }
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 80, maxWidth: 860, margin: '0 auto', paddingLeft: 12, paddingRight: 12 }}>
@@ -591,6 +619,86 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
         </>
       )}
 
+
+      {phase === 'done' && (streamText || streamError) && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 5000,
+            background: 'linear-gradient(180deg, #0f0b1d 0%, #120f24 58%, #161126 100%)',
+            overflowY: 'auto',
+            padding: '84px 20px 32px',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: 560, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 18 }}>
+              <div style={{ fontSize: '10px', color: 'rgba(200,165,80,0.78)', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', marginBottom: 8 }}>
+                Byeolsoom Tarot
+              </div>
+              <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'rgba(238,232,252,0.96)', marginBottom: 8 }}>
+                별빛의 세 흐름
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+                {pickedCards.map((card, idx) => (
+                  <span
+                    key={card.id}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: 999,
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(200,165,80,0.16)',
+                      fontSize: '11px',
+                      color: 'rgba(238,232,252,0.88)',
+                    }}
+                  >
+                    {idx + 1}. {card.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ padding: '22px 18px', background: 'linear-gradient(160deg, rgba(13,11,30,0.96), rgba(20,16,44,0.92))', borderRadius: 18, border: '1px solid rgba(200,165,80,0.35)', boxShadow: '0 18px 40px rgba(0,0,0,0.32)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+                <div style={{ width: 20, height: 1, background: 'rgba(200,165,80,0.5)' }} />
+                <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.85)', fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase' }}>별숨의 타로 해석</div>
+                <div style={{ flex: 1, height: 1, background: 'rgba(200,165,80,0.5)' }} />
+              </div>
+              {streamError ? (
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)' }}>{streamError}</div>
+              ) : (
+                <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.95, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
+                  {streamText}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                resetStream();
+                setPicks([]);
+                setHoveredIdx(null);
+                setPhase('idle');
+              }}
+              style={{
+                width: '100%',
+                marginTop: 14,
+                padding: '13px',
+                background: 'var(--bg2)',
+                border: '1px solid var(--line)',
+                borderRadius: 'var(--r1)',
+                color: 'var(--t3)',
+                fontWeight: 600,
+                fontSize: 'var(--xs)',
+                fontFamily: 'var(--ff)',
+                cursor: 'pointer',
+              }}
+            >
+              다시 카드 고르기
+            </button>
+          </div>
+        </div>
+      )}
       <div style={{ margin: '20px 20px 0', padding: '10px 14px', background: 'rgba(200,165,80,0.04)', border: '1px solid rgba(200,165,80,0.1)', borderRadius: 10, textAlign: 'center' }}>
         <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.7 }}>
           오늘의 별빛은 매일 자정 새롭게 열려요 ✦
