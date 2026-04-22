@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { NAME_FORTUNE_PROMPT } from "../utils/constants.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
+import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 
 // ═══════════════════════════════════════════════════════════
 //  📛 이름 풀이 — 성명학으로 이름 속 기운 읽기
@@ -61,7 +62,7 @@ function getNameOhaeng(name) {
   return Object.entries(counts).filter(([,v]) => v > 0).map(([k, v]) => `${k}(${v})`).join(' · ');
 }
 
-export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, showToast }) {
+export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, showToast, user, consentFlags }) {
   const [tab, setTab] = useState('analyze'); // 'analyze' | 'create' | 'english'
 
   // ── 이름풀이 상태 ──
@@ -92,6 +93,12 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
       const prompt = NAME_FORTUNE_PROMPT({ name, hanja: hanja.trim(), strokes, sounds, sajuCtx: '' });
       const text = await callApiProp(prompt);
       setResult(text);
+      saveConsultationHistoryEntry({
+        user,
+        consentFlags,
+        questions: [`이름풀이: ${name.trim()}${hanja.trim() ? ` (${hanja.trim()})` : ""}`],
+        answers: [text],
+      }).catch(() => {});
     } catch {
       showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요', 'error');
     } finally {
@@ -122,6 +129,12 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
 따뜻하고 희망적인 에너지가 담긴 이름으로 추천해주세요.`;
       const text = await callApiProp(prompt, { isReport: true });
       setCreateResult(text);
+      saveConsultationHistoryEntry({
+        user,
+        consentFlags,
+        questions: [`이름추천: ${createLastName.trim() || "성씨 자유 추천"}`],
+        answers: [text],
+      }).catch(() => {});
     } catch {
       showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요', 'error');
     } finally {
@@ -152,6 +165,12 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
 친근하고 부르기 쉬운 영어 이름 위주로 추천해주세요.`;
       const text = await callApiProp(prompt, { isReport: true });
       setEngResult(text);
+      saveConsultationHistoryEntry({
+        user,
+        consentFlags,
+        questions: [`영어이름 추천: ${engName.trim()}`],
+        answers: [text],
+      }).catch(() => {});
     } catch {
       showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요', 'error');
     } finally {
@@ -203,7 +222,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
           <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
             ✦ 이름 입력
           </div>
-          <div style={{ display: 'flex', gap: 8, minWidth: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 0.9fr)', gap: 8, minWidth: 0, width: '100%' }}>
             <input
               type="text"
               value={name}
@@ -211,11 +230,10 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               placeholder="예) 김별숨"
               maxLength={6}
               style={{
-                flex: 1, minWidth: 0, padding: '12px 10px', borderRadius: 'var(--r1)',
+                minWidth: 0, width: '100%', padding: '12px 10px', borderRadius: 'var(--r1)',
                 border: '1px solid var(--line)', background: 'var(--card)',
                 color: 'var(--t1)', fontSize: '1.1rem', fontWeight: 600,
                 boxSizing: 'border-box', letterSpacing: '.08em', textAlign: 'center',
-                width: 0,
               }}
             />
             <input
@@ -225,16 +243,15 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               placeholder="한자 (선택)"
               maxLength={8}
               style={{
-                flex: 1, minWidth: 0, padding: '12px 10px', borderRadius: 'var(--r1)',
+                minWidth: 0, width: '100%', padding: '12px 10px', borderRadius: 'var(--r1)',
                 border: '1px solid var(--line)', background: 'var(--card)',
                 color: 'var(--t1)', fontSize: '1rem', fontWeight: 600,
                 boxSizing: 'border-box', letterSpacing: '.06em', textAlign: 'center',
-                width: 0,
               }}
             />
           </div>
           {hanja.trim() && (
-            <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 5, textAlign: 'right' }}>
+            <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 5, textAlign: 'left', paddingLeft: 2 }}>
               한자 이름: {hanja.trim()}
             </div>
           )}

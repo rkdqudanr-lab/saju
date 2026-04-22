@@ -8,6 +8,7 @@ import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthToken } from '../hooks/useUserProfile.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
+import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 
 // ── 사주 기반 행운 번호 생성 유틸 ──
 function seededRandom(seed) {
@@ -217,7 +218,7 @@ const READING_TYPES = [
   },
 ];
 
-export default function SpecialReadingPage({ callApi, showToast }) {
+export default function SpecialReadingPage({ callApi, showToast, consentFlags }) {
   const { user, form, saju, buildCtx, setStep } = useAppStore();
   const [ownedItems, setOwnedItems] = useState(null); // null=로딩중
   const [selectedType, setSelectedType] = useState(null);
@@ -298,6 +299,12 @@ export default function SpecialReadingPage({ callApi, showToast }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResult(data.text || '');
+      saveConsultationHistoryEntry({
+        user,
+        consentFlags,
+        questions: [`특별 리딩: ${readingType.title}`],
+        answers: [data.text || ''],
+      }).catch(() => {});
       await loadInventory();
     } catch {
       showToast?.('특별 상담 중 오류가 발생했어요. 아이템은 소진되지 않았어요.', 'error');
@@ -369,7 +376,7 @@ export default function SpecialReadingPage({ callApi, showToast }) {
 
       {/* 아이템 미보유 */}
       {!loading && !result && ownedItems !== null && !hasItems && (
-        <div style={{ margin: '0 20px', padding: '28px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', textAlign: 'center' }}>
+        <div style={{ margin: '0 24px', padding: '28px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', textAlign: 'center' }}>
           <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
           <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>
             특별 상담권이 없어요
@@ -396,7 +403,7 @@ export default function SpecialReadingPage({ callApi, showToast }) {
 
       {/* 보유 아이템 + 상담 유형 선택 */}
       {!loading && !result && hasItems && (
-        <div style={{ padding: '0 20px' }}>
+        <div style={{ padding: '0 24px' }}>
           {/* 보유 상담권 */}
           <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--goldf)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)' }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>보유 특별 상담권</div>

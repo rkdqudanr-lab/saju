@@ -8,6 +8,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 import { useStreamResponse } from '../hooks/useStreamResponse.js';
+import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 
 const MAJOR_ARCANA = [
   { id: 0,  name: '광대',        emoji: '🌀', meaning: '새 시작, 순수한 모험심',    detail: '두려움 없이 새로운 길로 나서는 자유로운 영혼이에요.',          img: '/tarot/ar00.jpg' },
@@ -84,9 +85,10 @@ function CardBack({ opacity = 1 }) {
   );
 }
 
-export default function TarotPage({ callApi, buildCtx, showToast }) {
+export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }) {
   const user = useAppStore((s) => s.user);
   const deck = useRef(shuffleDeck(user?.id)).current;
+  const lastSavedRef = useRef('');
 
   const [phase, setPhase]           = useState('idle');
   const [picks, setPicks]           = useState([]);
@@ -137,8 +139,24 @@ export default function TarotPage({ callApi, buildCtx, showToast }) {
     });
   }, [pickedCards, buildCtx, isStreaming, startStream, resetStream]);
 
+  useEffect(() => {
+    if (!streamText || isStreaming || pickedCards.length !== 3) return;
+
+    const summary = pickedCards.map((card, index) => `${POSITIONS[index]}: ${card.name}`).join(' / ');
+    const saveKey = `${summary}::${streamText}`;
+    if (lastSavedRef.current === saveKey) return;
+    lastSavedRef.current = saveKey;
+
+    saveConsultationHistoryEntry({
+      user,
+      consentFlags,
+      questions: [`타로 리딩: ${summary}`],
+      answers: [streamText],
+    }).catch(() => {});
+  }, [consentFlags, isStreaming, pickedCards, streamText, user]);
+
   return (
-    <div className="page step-fade" style={{ paddingBottom: 80, maxWidth: 800, margin: '0 auto' }}>
+    <div className="page step-fade" style={{ paddingBottom: 80, maxWidth: 860, margin: '0 auto', paddingLeft: 12, paddingRight: 12 }}>
       <style>{`
         @keyframes tarotShimmer {
           0%   { transform: translateX(-120%); }
@@ -559,9 +577,14 @@ export default function TarotPage({ callApi, buildCtx, showToast }) {
               </div>
               {streamError
                 ? <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)' }}>{streamError}</div>
-                : <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-                    {streamText}{isStreaming && <span className="typing-cursor" />}
-                  </div>
+                : isStreaming
+                  ? <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div className="typing-dots"><span /><span /><span /></div>
+                      <span style={{ fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.7)', fontStyle: 'italic' }}>별숨이 카드를 읽는 중...</span>
+                    </div>
+                  : <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
+                      {streamText}
+                    </div>
               }
             </div>
           )}

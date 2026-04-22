@@ -277,7 +277,7 @@ export default function SettingsPage({
             <div className="card-title">개인정보 수정</div>
             <div className="card-sub">저장된 생년월일, 이름, 성별을 수정할 수 있어요</div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 'var(--sp2)' }}>
               <div>
                 <label className="lbl" htmlFor="set-nickname" style={{ marginBottom: 4 }}>닉네임 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(표시용)</span></label>
                 <input
@@ -307,7 +307,7 @@ export default function SettingsPage({
               </div>
             </div>
 
-            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+            <fieldset style={{ border: 'none', padding: 0, margin: '4px 0 0' }}>
               <legend className="lbl">생년월일</legend>
               <div className="row" style={{ marginBottom: 'var(--sp2)' }}>
                 <div className="col">
@@ -351,6 +351,7 @@ export default function SettingsPage({
 
             <div
               className="toggle-row"
+              style={{ marginTop: 'var(--sp2)' }}
               onClick={() => setLocalForm(f => ({ ...f, noTime: !f.noTime, bh: '' }))}
             >
               <button
@@ -387,7 +388,7 @@ export default function SettingsPage({
               </>
             )}
 
-            <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+            <fieldset style={{ border: 'none', padding: 0, margin: '4px 0 0' }}>
               <legend className="lbl">성별</legend>
               <div className="gender-group" role="group" aria-label="성별 선택">
                 {['여성', '남성', '기타'].map(g => (

@@ -276,10 +276,12 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   const selectedData = selected ? daysData.find(d => d.d === selected) : null;
   const selectedKey = selected ? dateKey(viewYear, viewMonth, selected) : null;
   const selectedEvents = selectedKey ? (events[selectedKey] || []) : [];
+  const sortedSelectedEvents = useMemo(() => sortedEvents(selectedEvents), [selectedEvents]);
   const selectedFortune = selectedKey ? (dailyFortunes[selectedKey] || null) : null;
   const selectedDiary = selectedKey ? (diaryEntries[selectedKey] || null) : null;
   const selectedDiaryReview = selectedKey ? (diaryReviews[selectedKey] || null) : null;
   const todayKey = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  const upcomingSelectedEvents = sortedSelectedEvents.slice(0, 3);
 
   const addEvent = async () => {
     if (!inputText.trim() || !selectedKey) return;
@@ -579,6 +581,89 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               {viewMonth}월 {selectedData.d}일 ({WEEKDAYS[new Date(viewYear, viewMonth - 1, selectedData.d).getDay()]}요일)
             </div>
 
+            <div style={{ marginBottom: 14, background: 'var(--bg1)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
+              <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>🗓️ 일정 입력하기</span>
+                <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+                  {selectedEvents.length > 0 ? `${selectedEvents.length}개의 일정이 있어요` : '아직 등록된 일정이 없어요'}
+                </span>
+              </div>
+              <div style={{ padding: '12px 14px' }}>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                  <input
+                    type="time"
+                    value={inputTime}
+                    onChange={e => setInputTime(e.target.value)}
+                    style={{
+                      padding: '10px 8px', border: '1px solid var(--line)', borderRadius: 'var(--r1)',
+                      background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--xs)',
+                      fontFamily: 'var(--ff)', outline: 'none', width: 96, flexShrink: 0,
+                    }}
+                  />
+                  <input
+                    className="inp"
+                    style={{ flex: 1, marginBottom: 0, padding: '10px 12px', fontSize: 'var(--sm)' }}
+                    placeholder="오늘 일정 제목"
+                    value={inputText}
+                    onChange={e => setInputText(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) addEvent(); }}
+                    maxLength={40}
+                  />
+                  <button
+                    onClick={addEvent}
+                    disabled={!inputText.trim()}
+                    style={{ background: inputText.trim() ? 'var(--gold)' : 'var(--bg3)', color: inputText.trim() ? '#0D0B14' : 'var(--t4)', border: 'none', borderRadius: 'var(--r1)', padding: '0 16px', fontFamily: 'var(--ff)', fontWeight: 700, cursor: inputText.trim() ? 'pointer' : 'default', fontSize: 'var(--sm)', whiteSpace: 'nowrap', transition: 'all 0.15s', flexShrink: 0 }}
+                  >
+                    추가
+                  </button>
+                </div>
+                {!user?.id && (
+                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 4 }}>
+                    로그인하면 일정이 저장돼요
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 14, background: 'var(--bg1)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
+              <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--lav, #9b8ec4)', fontWeight: 700, letterSpacing: '.04em' }}>✦ 오늘 일정</span>
+                <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+                  {sortedSelectedEvents.length > 0 ? '시간순으로 정렬했어요' : '먼저 일정을 추가해보세요'}
+                </span>
+              </div>
+              <div style={{ padding: '12px 14px' }}>
+                {sortedSelectedEvents.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {upcomingSelectedEvents.map((event) => {
+                      const { time, title } = parseEventTitle(event.title);
+                      return (
+                        <div key={event.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', borderRadius: 'var(--r1)', background: 'var(--bg2)', border: '1px solid var(--line)' }}>
+                          <div style={{ minWidth: 56, fontSize: 'var(--xs)', color: time ? 'var(--gold)' : 'var(--t4)', fontWeight: 700 }}>
+                            {time || '미정'}
+                          </div>
+                          <div style={{ flex: 1, fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.5 }}>
+                            {title}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {sortedSelectedEvents.length > upcomingSelectedEvents.length && (
+                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+                        아래에서 나머지 {sortedSelectedEvents.length - upcomingSelectedEvents.length}개 일정도 확인할 수 있어요.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7 }}>
+                    이 날짜를 누르자마자 바로 일정을 적을 수 있게 준비해뒀어요.
+                    <br />
+                    시간을 입력하면 아래에서 시간대별로 정리해서 보여드려요.
+                  </div>
+                )}
+              </div>
+            </div>
+
             {selectedData.saju && (() => {
               // 생체리듬 계산 (생년월일이 있을 때만)
               const biorhythm = form?.by && form?.bm && form?.bd
@@ -782,11 +867,11 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
             )}
 
             {/* 일정 목록 (시간순 정렬) */}
-            {selectedEvents.length > 0 && (
+            {sortedSelectedEvents.length > 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontWeight: 600, marginBottom: 8, letterSpacing: '.04em' }}>이날의 일정</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontWeight: 600, marginBottom: 8, letterSpacing: '.04em' }}>시간대별 일정</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {sortedEvents(selectedEvents).map(ev => {
+                  {sortedSelectedEvents.map(ev => {
                     const { time, title: evTitle } = parseEventTitle(ev.title);
                     return (
                     <div key={ev.id} style={{ background: 'var(--bg1)', borderRadius: 'var(--r1)', padding: '10px 12px', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -842,46 +927,6 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                 </div>
               </div>
             )}
-
-            {/* 일정 입력 */}
-            <div>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontWeight: 600, marginBottom: 6, letterSpacing: '.04em' }}>
-                {selectedEvents.length > 0 ? '일정 추가하기' : '이날 일정 입력하기'}
-              </div>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-                <input
-                  type="time"
-                  value={inputTime}
-                  onChange={e => setInputTime(e.target.value)}
-                  style={{
-                    padding: '10px 8px', border: '1px solid var(--line)', borderRadius: 'var(--r1)',
-                    background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--xs)',
-                    fontFamily: 'var(--ff)', outline: 'none', width: 90, flexShrink: 0,
-                  }}
-                />
-                <input
-                  className="inp"
-                  style={{ flex: 1, marginBottom: 0, padding: '10px 12px', fontSize: 'var(--sm)' }}
-                  placeholder="일정 제목"
-                  value={inputText}
-                  onChange={e => setInputText(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) addEvent(); }}
-                  maxLength={40}
-                />
-                <button
-                  onClick={addEvent}
-                  disabled={!inputText.trim()}
-                  style={{ background: inputText.trim() ? 'var(--gold)' : 'var(--bg3)', color: inputText.trim() ? '#0D0B14' : 'var(--t4)', border: 'none', borderRadius: 'var(--r1)', padding: '0 16px', fontFamily: 'var(--ff)', fontWeight: 700, cursor: inputText.trim() ? 'pointer' : 'default', fontSize: 'var(--sm)', whiteSpace: 'nowrap', transition: 'all 0.15s', flexShrink: 0 }}
-                >
-                  추가
-                </button>
-              </div>
-              {!user?.id && (
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 4 }}>
-                  로그인하면 일정이 저장돼요
-                </div>
-              )}
-            </div>
           </div>
         )}
 

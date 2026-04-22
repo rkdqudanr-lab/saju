@@ -699,6 +699,7 @@ export default function App() {
               onBack={() => setStep(4)}
               shareResult={shareResult}
               user={user}
+              consentFlags={consentFlags}
               otherProfiles={otherProfiles}
               saveOtherProfile={saveOtherProfile}
               onAnonShare={(data) => { setAnonCompatShareData(data); setStep(32); }}
@@ -714,6 +715,8 @@ export default function App() {
               onBack={() => setStep(4)}
               shareResult={shareResult}
               saveImage={handleSaveProphecyImage}
+              user={user}
+              consentFlags={consentFlags}
             />
           </Suspense>
         )}
@@ -725,6 +728,10 @@ export default function App() {
               item={histItem}
               onBack={() => { setHistItem(null); setStep(0); }}
               onDelete={(id, supabaseId) => { deleteHistoryItem(id, supabaseId); }}
+              onReplay={(targetStep) => {
+                setHistItem(null);
+                setStep(targetStep);
+              }}
             />
           </Suspense>
         )}
@@ -784,6 +791,7 @@ export default function App() {
               form={form}
               buildCtx={buildCtx}
               user={user}
+              consentFlags={consentFlags}
             />
           </Suspense>
         )}
@@ -914,6 +922,7 @@ export default function App() {
               callApi={callApi}
               setStep={setStep}
               showToast={showToast}
+              consentFlags={consentFlags}
               onShareCard={handleShareDreamCard}
             />
           </Suspense>
@@ -928,6 +937,8 @@ export default function App() {
               callApi={callApi}
               showToast={showToast}
               onShareCard={handleShareTaegilCard}
+              user={user}
+              consentFlags={consentFlags}
             />
           </Suspense>
         )}
@@ -940,6 +951,8 @@ export default function App() {
               buildCtx={buildCtx}
               callApi={callApi}
               showToast={showToast}
+              user={user}
+              consentFlags={consentFlags}
             />
           </Suspense>
         )}
@@ -1005,6 +1018,7 @@ export default function App() {
             <SpecialReadingPage
               callApi={callApi}
               showToast={showToast}
+              consentFlags={consentFlags}
             />
           </Suspense>
         )}
@@ -1012,7 +1026,7 @@ export default function App() {
         {/* ── Step 34: 별숨 타로 ── */}
         {step === 34 && (
           <Suspense fallback={<PageSpinner />}>
-            <TarotPage callApi={callApi} buildCtx={buildCtx} showToast={showToast} />
+            <TarotPage callApi={callApi} buildCtx={buildCtx} showToast={showToast} consentFlags={consentFlags} />
           </Suspense>
         )}
 
@@ -1056,14 +1070,14 @@ export default function App() {
         {/* ── Step 39: 로또 번호 뽑기 ── */}
         {step === 39 && (
           <Suspense fallback={<PageSpinner />}>
-            <LottoPage />
+            <LottoPage consentFlags={consentFlags} />
           </Suspense>
         )}
 
         {/* ── Step 40: 별숨 뽑기 (가챠) ── */}
         {step === 40 && (
           <Suspense fallback={<PageSpinner />}>
-            <GachaPage showToast={showToast} />
+            <GachaPage showToast={showToast} consentFlags={consentFlags} />
           </Suspense>
         )}
 

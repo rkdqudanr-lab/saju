@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { spendBP } from '../utils/gamificationLogic.js';
+import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 import {
   GACHA_POOL,   GRADE_CONFIG,      PROB_TABLE,      pullOne,     pull10,      GRADE_ORDER,
   SAJU_POOL,    SAJU_GRADE_CONFIG,  SAJU_PROB_TABLE, pullOneSaju, pull10Saju, SAJU_GRADE_ORDER,
@@ -377,7 +378,7 @@ function SynthGuide({ gradeConfig, gradeOrder, setStep }) {
 }
 
 // ─── 메인 페이지 ─────────────────────────────────────────────
-export default function GachaPage({ showToast }) {
+export default function GachaPage({ showToast, consentFlags }) {
   const user             = useAppStore(s => s.user);
   const setStep          = useAppStore(s => s.setStep);
   const equippedSajuItem = useAppStore(s => s.equippedSajuItem);
@@ -390,6 +391,7 @@ export default function GachaPage({ showToast }) {
   const [pulling, setPulling]     = useState(false);
   const [results, setResults]     = useState(null);
   const [showProb, setShowProb]   = useState(false);
+  const [lastPullMeta, setLastPullMeta] = useState(null);
 
   useEffect(() => {
     if (!kakaoId) return;
@@ -402,6 +404,18 @@ export default function GachaPage({ showToast }) {
 
   // 탭 바뀔 때 결과 오버레이 닫기
   useEffect(() => { setResults(null); setShowProb(false); }, [tab]);
+
+  useEffect(() => {
+    if (!results?.length || !lastPullMeta) return;
+
+    const resultSummary = results.map(item => `${item.name} (${item.grade})`).join(', ');
+    saveConsultationHistoryEntry({
+      user,
+      consentFlags,
+      questions: [`별숨 뽑기: ${lastPullMeta.label} ${lastPullMeta.count}회`],
+      answers: [`획득 아이템: ${resultSummary}`],
+    }).catch(() => {});
+  }, [consentFlags, lastPullMeta, results, user]);
 
   async function doPull(count) {
     if (!kakaoId) { showToast?.('로그인 후 이용 가능해요', 'info'); return; }
@@ -425,6 +439,7 @@ export default function GachaPage({ showToast }) {
       );
 
       setCurrentBP(newBP ?? currentBP - cost);
+      setLastPullMeta({ count, label: tab === 'saju' ? '사주 뽑기' : '우주 뽑기' });
       setResults(pulled);
     } catch {
       showToast?.('뽑기 중 오류가 발생했어요', 'error');

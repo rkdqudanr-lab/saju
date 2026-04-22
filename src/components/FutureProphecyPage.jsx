@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import useWordTyping from "../hooks/useWordTyping.js";
+import { TIMING } from "../utils/constants.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
+import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 
 // ═══════════════════════════════════════════════════════════
 //  🔮 별숨의 예언 (구 미래의 별숨)
@@ -15,12 +17,12 @@ const PERIOD_OPTIONS = [
   { id: '30년 후', label: '30년 후', desc: '인생의 깊은 곳에서', emoji: '⊛' },
 ];
 
-export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, shareResult, saveImage }) {
+export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, shareResult, saveImage, user, consentFlags }) {
   const [phase, setPhase] = useState('intro'); // 'intro' | 'result'
   const [selectedPeriod, setPeriod] = useState(null);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
-  const { shown, done, skipToEnd } = useWordTyping(text, !!text && !loading, 55);
+  const { shown, done, skipToEnd } = useWordTyping(text, !!text && !loading, TIMING.typingWord);
 
   const fetchProphecy = useCallback(async (period) => {
     setLoading(true);
@@ -32,6 +34,12 @@ export default function FutureProphecyPage({ form, buildCtx, callApi, onBack, sh
         { isProphecy: true }
       );
       setText(pText);
+      saveConsultationHistoryEntry({
+        user,
+        consentFlags,
+        questions: [`미래 예언: ${period}`],
+        answers: [pText],
+      }).catch(() => {});
     } catch {
       setText('별의 궤도를 읽는 데 실패했어요.\n잠시 후 다시 시도해주세요.');
     } finally {

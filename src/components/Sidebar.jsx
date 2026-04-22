@@ -24,6 +24,23 @@ function Highlight({ text, query }) {
   );
 }
 
+/** 질문 내용으로 기능 추론 */
+const FEATURE_RULES = [
+  { id: 'dream',  label: '꿈해몽',    icon: '🌙', keywords: ['꿈', '해몽', '꿈에서', '꿈을 꿨'] },
+  { id: 'name',   label: '이름풀이',  icon: '✍️', keywords: ['이름', '한자', '이름의', '성함'] },
+  { id: 'compat', label: '궁합',      icon: '💫', keywords: ['궁합', '사이별점', '인연', '두 사람', '함께'] },
+  { id: 'report', label: '리포트',    icon: '📊', keywords: ['리포트', '월간', '월별', '이달의'] },
+  { id: 'letter', label: '편지',      icon: '💌', keywords: ['편지', '위로', '응원', '편지를'] },
+];
+
+function inferFeature(questions) {
+  const text = questions.join(' ').toLowerCase();
+  for (const r of FEATURE_RULES) {
+    if (r.keywords.some(k => text.includes(k))) return r.id;
+  }
+  return 'general';
+}
+
 /** 날짜 필터 범위 계산 */
 function getDateRange(filter) {
   const now = new Date();
@@ -44,6 +61,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
+  const [featureFilter, setFeatureFilter] = useState('all'); // 'all' | feature id
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [starredIds, setStarredIds] = useState(new Set());
   const [openGroups, setOpenGroups] = useState({ today: true, consult: true, growth: true, square: true });
@@ -100,6 +118,8 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
       const hDate = new Date(h.ts || h.date);
       if (isNaN(hDate) || hDate < rangeStart) return false;
     }
+    // 기능 필터
+    if (featureFilter !== 'all' && inferFeature(h.questions) !== featureFilter) return false;
     // 검색어 필터
     if (!search) return true;
     return (
@@ -236,7 +256,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
                     { icon: 'chat',         label: '별숨에게 물어보기',     s: 2  },
-                    { icon: 'chart-bar',    label: '월간 리포트',           s: 6  },
+                    { icon: 'chart-bar',    label: '월간 리포트',           s: 41 },
                     { icon: 'document-chart', label: '연간 종합 리포트',    s: 36 },
                     { icon: 'sparkles',     label: '별숨의 예언',           s: 8  },
                     { icon: 'layers',       label: '종합 분석 (사주·점성술)', s: 14 },
@@ -392,6 +412,21 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                   onChange={e => handleSearchChange(e.target.value)}
                   aria-label="기록 검색"
                 />
+                {/* 기능 필터 */}
+                {histItems.length > 3 && (
+                  <div style={{ display: 'flex', gap: 5, overflowX: 'auto', scrollbarWidth: 'none', marginBottom: 6, paddingBottom: 2 }}>
+                    <button
+                      onClick={() => setFeatureFilter('all')}
+                      style={{ flexShrink: 0, padding: '3px 10px', borderRadius: 20, border: `1px solid ${featureFilter === 'all' ? 'var(--acc)' : 'var(--line)'}`, background: featureFilter === 'all' ? 'var(--goldf)' : 'none', color: featureFilter === 'all' ? 'var(--gold)' : 'var(--t4)', fontSize: '10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: featureFilter === 'all' ? 700 : 400 }}
+                    >전체</button>
+                    {FEATURE_RULES.filter(r => histItems.some(h => inferFeature(h.questions) === r.id)).map(r => (
+                      <button key={r.id}
+                        onClick={() => setFeatureFilter(featureFilter === r.id ? 'all' : r.id)}
+                        style={{ flexShrink: 0, padding: '3px 10px', borderRadius: 20, border: `1px solid ${featureFilter === r.id ? 'var(--acc)' : 'var(--line)'}`, background: featureFilter === r.id ? 'var(--goldf)' : 'none', color: featureFilter === r.id ? 'var(--gold)' : 'var(--t4)', fontSize: '10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: featureFilter === r.id ? 700 : 400, whiteSpace: 'nowrap' }}
+                      >{r.icon} {r.label}</button>
+                    ))}
+                  </div>
+                )}
                 {/* 날짜 필터 탭 */}
                 <div className="hist-date-filter" role="group" aria-label="날짜 필터">
                   {[
@@ -422,9 +457,14 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                 {filtered.slice(0, displayLimit).map(h => (
                   <div key={h.id} className="sidebar-hist-item" onClick={() => { onNav('history', h); onClose(); }}>
                     <div className="shi-date" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Icon name={SLOT_ICONS[h.slot] || 'sparkles'} size={11} color="var(--t4)" />
-                    {h.date}
-                  </div>
+                      <Icon name={SLOT_ICONS[h.slot] || 'sparkles'} size={11} color="var(--t4)" />
+                      {h.date}
+                      {(() => {
+                        const feat = inferFeature(h.questions);
+                        const r = FEATURE_RULES.find(f => f.id === feat);
+                        return r ? <span style={{ marginLeft: 4, fontSize: '9px', padding: '1px 6px', borderRadius: 10, background: 'var(--goldf)', color: 'var(--gold)', fontWeight: 700 }}>{r.icon} {r.label}</span> : null;
+                      })()}
+                    </div>
                     <div className="shi-q">
                       <Highlight text={h.questions[0]} query={search} />
                     </div>

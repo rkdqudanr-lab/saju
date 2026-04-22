@@ -3,8 +3,9 @@
  * 사주 기운 기반 시드로 오늘 하루 고정된 6개의 행운 번호를 생성합니다.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
+import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 
 // xoshiro128** — 균등 분포 PRNG (128비트 상태)
 function createRng(seed) {
@@ -54,12 +55,13 @@ function getBallColor(n) {
   return '#9b9b9b';
 }
 
-export default function LottoPage() {
+export default function LottoPage({ consentFlags }) {
   const { user, saju } = useAppStore();
   const [numbers, setNumbers] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [drawCount, setDrawCount] = useState(0);
+  const [lastDrawId, setLastDrawId] = useState('');
 
   const today = new Date();
   const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -74,11 +76,22 @@ export default function LottoPage() {
     setTimeout(() => {
       // drawId = 날짜 + 뽑기 횟수 → 버튼마다 다른 번호
       const drawId = `${dateStr}:${nextCount}`;
+      setLastDrawId(drawId);
       setNumbers(getLottoNumbers(kakaoId, saju, drawId));
       setSpinning(false);
       setTimeout(() => setRevealed(true), 100);
     }, 800);
   };
+
+  useEffect(() => {
+    if (!numbers || !revealed || !lastDrawId) return;
+    saveConsultationHistoryEntry({
+      user,
+      consentFlags,
+      questions: [`별숨 로또 번호: ${lastDrawId}`],
+      answers: [`추천 번호 ${numbers.join(', ')}`],
+    }).catch(() => {});
+  }, [consentFlags, lastDrawId, numbers, revealed, user]);
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
@@ -95,7 +108,7 @@ export default function LottoPage() {
         </div>
       </div>
 
-      <div style={{ padding: '28px 20px' }}>
+      <div style={{ padding: '28px 24px' }}>
         {/* 번호 표시 영역 */}
         <div style={{
           background: 'var(--bg2)',

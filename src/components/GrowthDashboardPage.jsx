@@ -303,39 +303,50 @@ const BAR_MAX_H = 48; // px
 
 /** BP 추이 막대 차트 */
 function BPTrendChart({ data }) {
-  // data: { 'YYYY-MM-DD': number } — 날짜별 획득 BP 합계
   const dates = getLast7Days();
   const values = dates.map(d => data[d] || 0);
   const maxVal = Math.max(...values, 1);
+  const positiveCount = values.filter(v => v > 0).length;
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   return (
     <div style={{
       background: 'var(--bg2)', border: '1px solid var(--line)',
       borderRadius: 12, padding: '14px 16px',
     }}>
-      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t3)', marginBottom: 12 }}>
-        ✦ 최근 7일 별 포인트 흐름
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t3)' }}>
+          ✦ 최근 7일 별 포인트 흐름
+        </div>
+        {positiveCount > 0 && (
+          <div style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 700 }}>
+            최대 {maxVal} BP
+          </div>
+        )}
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5 }}>
         {dates.map((date, i) => {
           const val = values[i];
-          const barH = val > 0 ? Math.max(Math.round((val / maxVal) * BAR_MAX_H), 4) : 2;
+          // 항상 max 대비 비율로 높이 계산 → 같은 값이어도 동일 높이로 표시됨
+          const ratio = val > 0 ? val / maxVal : 0;
+          const barH = val > 0 ? Math.max(Math.round(ratio * BAR_MAX_H), 8) : 4;
           const dow = new Date(date).getDay();
-          const isToday = date === new Date().toISOString().slice(0, 10);
+          const isToday = date === todayStr;
           return (
             <div key={date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
               {val > 0 && (
-                <div style={{ fontSize: '8px', color: 'var(--gold)', fontWeight: 700, lineHeight: 1 }}>{val}</div>
+                <div style={{ fontSize: '8px', color: isToday ? 'var(--gold)' : 'var(--t3)', fontWeight: 700, lineHeight: 1 }}>{val}</div>
               )}
               <div style={{
                 width: '100%', height: barH,
-                borderRadius: 3,
+                borderRadius: '3px 3px 2px 2px',
                 background: isToday
                   ? 'linear-gradient(180deg, var(--gold), #C8953A)'
                   : val > 0
-                    ? 'var(--acc)'
+                    ? 'linear-gradient(180deg, rgba(155,142,196,0.95), rgba(74,142,196,0.85))'
                     : 'var(--bg3)',
-                transition: 'height .4s ease',
+                transition: 'height .5s ease',
+                boxShadow: isToday && val > 0 ? '0 4px 12px rgba(232,176,72,.3)' : val > 0 ? '0 4px 8px rgba(20,18,32,0.14)' : 'none',
               }} />
               <div style={{ fontSize: '8px', color: isToday ? 'var(--gold)' : 'var(--t4)', fontWeight: isToday ? 700 : 400 }}>
                 {DAY_LABELS[dow]}
@@ -344,6 +355,11 @@ function BPTrendChart({ data }) {
           );
         })}
       </div>
+      {positiveCount === 0 && (
+        <div style={{ marginTop: 10, fontSize: '10px', color: 'var(--t4)', textAlign: 'center' }}>
+          미션을 완료하거나 별숨을 이용하면 BP가 기록돼요
+        </div>
+      )}
     </div>
   );
 }
@@ -492,7 +508,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
       {/* 헤더 */}
-      <div style={{ padding: '24px 20px 0' }}>
+      <div style={{ padding: '28px 24px 0' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>
           ✦ 별숨성장
         </div>
@@ -505,7 +521,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
       </div>
 
       {/* 캐릭터 + 성장 단계 카드 */}
-      <div style={{ padding: '16px 20px 0' }}>
+      <div style={{ padding: '16px 24px 0' }}>
         <div style={{
           background: `linear-gradient(135deg, ${stage.color}18, ${stage.color}08)`,
           border: `1px solid ${stage.color}44`,
@@ -536,14 +552,14 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
       </div>
 
       {/* 활동 통계 */}
-      <div style={{ padding: '12px 20px 0', display: 'flex', gap: 8 }}>
+      <div style={{ padding: '14px 24px 0', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
         <ActivityCard icon="💎" label="보유 BP" value={currentBp} color="var(--gold)" />
         <ActivityCard icon="✅" label="완료 미션" value={totalMissionsCompleted} color="#5FAD7A" />
         <ActivityCard icon="📝" label="총 질문" value={totalQuestions ?? '—'} color="#4A8EC4" />
       </div>
 
       {/* BP 충전 버튼 */}
-      <div style={{ padding: '12px 20px 0' }}>
+      <div style={{ padding: '14px 24px 0' }}>
         <button
           onClick={onRechargeFreeBP}
           style={{
@@ -562,7 +578,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
       {/* 탭 */}
       <div style={{
         display: 'flex', borderBottom: '1px solid var(--line)',
-        padding: '12px 20px 0', marginTop: 4,
+        padding: '12px 24px 0', marginTop: 6,
       }}>
         {[
           { id: 'growth', label: '🌱 성장' },
@@ -588,7 +604,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
       </div>
 
       {/* 탭 콘텐츠 */}
-      <div style={{ padding: '16px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: '18px 24px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {tab === 'growth' && (
           <>
             {/* 연속 출석 */}
@@ -697,7 +713,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
                 <WeeklyActivityRow activityDays={activityDays} />
 
                 {/* 핵심 수치 2×3 */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
                   {[
                     { icon: '⭐', label: '누적 획득 BP',   value: totalBpEarned ?? '—', color: 'var(--gold)' },
                     { icon: '📝', label: '총 질문 수',      value: totalQuestions ?? '—', color: '#4A8EC4' },

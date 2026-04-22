@@ -5,6 +5,7 @@ import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
 import PrecisionNudge from "./PrecisionNudge.jsx";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
+import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 
 // ── 섹션 파서 ──
 function parseSections(text, tags) {
@@ -74,7 +75,7 @@ function SectionCard({ icon, title, text, delay = 0 }) {
 }
 
 // ── 사주 분석 패널 ──
-function SajuPanel({ saju, sun, form, buildCtx, user }) {
+function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
   const cacheKey = `comp_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
   const localKey = `byeolsoom_comp_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
 
@@ -118,6 +119,12 @@ function SajuPanel({ saju, sun, form, buildCtx, user }) {
       setText(cleaned);
       try { localStorage.setItem(localKey, cleaned); } catch {}
       if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
+      saveConsultationHistoryEntry({
+        user,
+        consentFlags,
+        questions: ['종합 사주 분석'],
+        answers: [cleaned],
+      }).catch(() => {});
     } catch {
       setError(true);
     } finally {
@@ -179,7 +186,7 @@ function SajuPanel({ saju, sun, form, buildCtx, user }) {
 }
 
 // ── 점성술 분석 패널 ──
-function AstroPanel({ sun, moon, asc, form, buildCtx, user }) {
+function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
   const cacheKey = `astro_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
   const localKey = `byeolsoom_astro_${form.by}${form.bm}${form.bd}${form.bh || ''}`;
 
@@ -222,6 +229,12 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user }) {
       setText(cleaned);
       try { localStorage.setItem(localKey, cleaned); } catch {}
       if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
+      saveConsultationHistoryEntry({
+        user,
+        consentFlags,
+        questions: ['종합 점성술 분석'],
+        answers: [cleaned],
+      }).catch(() => {});
     } catch {
       setError(true);
     } finally {
@@ -291,7 +304,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user }) {
 }
 
 // ── 메인 컴포넌트 ──
-export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx, user }) {
+export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx, user, consentFlags }) {
   const [activeTab, setActiveTab] = useState('saju');
 
   return (
@@ -340,8 +353,8 @@ export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx
           {/* 패널 */}
           <div key={activeTab} className="step-fade">
             {activeTab === 'saju'
-              ? <SajuPanel saju={saju} sun={sun} form={form} buildCtx={buildCtx} user={user} />
-              : <AstroPanel sun={sun} moon={moon} asc={asc} form={form} buildCtx={buildCtx} user={user} />
+              ? <SajuPanel saju={saju} sun={sun} form={form} buildCtx={buildCtx} user={user} consentFlags={consentFlags} />
+              : <AstroPanel sun={sun} moon={moon} asc={asc} form={form} buildCtx={buildCtx} user={user} consentFlags={consentFlags} />
             }
           </div>
 

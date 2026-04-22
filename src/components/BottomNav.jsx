@@ -25,7 +25,7 @@ const MENU_GROUPS = {
     label: '별숨 상담',
     items: [
       { icon: 'chat',            label: '별숨에게 물어보기', step: 2  },
-      { icon: 'chart-bar',       label: '월간 리포트',       step: 6  },
+      { icon: 'chart-bar',       label: '월간 리포트',       step: 41 },
       { icon: 'sparkles',        label: '별숨의 예언',       step: 8  },
       { icon: 'layers',          label: '종합 분석',         step: 14 },
       { icon: 'moon',            label: '꿈 해몽',           step: 24 },
@@ -70,7 +70,7 @@ const MENU_GROUPS = {
 // 각 탭에서 활성으로 표시할 step 목록
 const TAB_STEPS = {
   today:    [0, 17, 18, 20, 10, 23],
-  consult:  [2, 3, 4, 5, 6, 7, 8, 12, 14, 24, 25, 26, 30, 34, 39],
+  consult:  [2, 3, 4, 5, 6, 7, 8, 12, 14, 24, 25, 26, 30, 34, 39, 41],
   growth:   [13, 28, 31, 37, 38, 40],
   square:   [11, 29, 32, 35],
   settings: [19, 27],

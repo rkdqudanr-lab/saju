@@ -1,11 +1,13 @@
-import { Suspense, useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import DailyStarCardV2 from '../components/DailyStarCardV2.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import '../styles/TodayDetailPage.css';
 import {
-  GACHA_POOL, GRADE_CONFIG as SPACE_GRADE_CONFIG,
-  SAJU_POOL, SAJU_GRADE_CONFIG,
+  GACHA_POOL,
+  GRADE_CONFIG as SPACE_GRADE_CONFIG,
+  SAJU_POOL,
+  SAJU_GRADE_CONFIG,
 } from '../utils/gachaItems.js';
 
 function PageSpinner() {
@@ -16,49 +18,65 @@ function PageSpinner() {
   );
 }
 
-// ─────────────────────────────────────────────
-// 8축 운세 레이더 차트 (오늘의 운세 + 장착 아이템 보너스)
-// ─────────────────────────────────────────────
 const AXES_8 = [
   { key: 'overall', label: '종합' },
-  { key: 'wealth',  label: '금전' },
-  { key: 'love',    label: '애정' },
-  { key: 'career',  label: '직장' },
-  { key: 'study',   label: '학업' },
-  { key: 'health',  label: '건강' },
-  { key: 'social',  label: '대인' },
-  { key: 'travel',  label: '이동' },
-  { key: 'create',  label: '창의' },
+  { key: 'wealth', label: '금전' },
+  { key: 'love', label: '애정' },
+  { key: 'career', label: '직장' },
+  { key: 'study', label: '학업' },
+  { key: 'health', label: '건강' },
+  { key: 'social', label: '대인' },
+  { key: 'travel', label: '이동' },
+  { key: 'create', label: '창의' },
 ];
 
-function DailyRadarChart({ baseScore, equippedItems }) {
-  // 오늘 날짜 기반으로 약간의 노이즈(난수)를 만들어 카테고리별 기본 점수 편차 생성
+const ASPECT_META = {
+  overall: { label: '종합', emoji: '✨' },
+  wealth: { label: '금전', emoji: '💰' },
+  love: { label: '애정', emoji: '💞' },
+  career: { label: '직장', emoji: '📈' },
+  study: { label: '학업', emoji: '📚' },
+  health: { label: '건강', emoji: '🌿' },
+  social: { label: '대인', emoji: '🤝' },
+  travel: { label: '이동', emoji: '🧭' },
+  create: { label: '창의', emoji: '🎨' },
+};
+
+const ALL_SPIRIT_MAP = Object.fromEntries(
+  [...GACHA_POOL, ...SAJU_POOL].map((item) => [item.id, item])
+);
+
+function getItemGradeConfig(item) {
+  if (!item?.grade) return {};
+  return SPACE_GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade] || {};
+}
+
+function getDailyAxisScores(baseScore, equippedItems) {
   const todayDate = new Date().toISOString().slice(0, 10);
+
   const getDailyNoise = (idx) => {
-    // 아주 간단한 일관성 있는 난수 생성
     const val = Number(todayDate.replace(/-/g, '')) + idx;
-    return (((val * 9301 + 49297) % 233280) / 233280) * 16 - 8; // -8 ~ +8
+    return (((val * 9301 + 49297) % 233280) / 233280) * 16 - 8;
   };
 
-  const scores = AXES_8.map((axis, i) => {
-    let base = Math.max(20, Math.min(85, (baseScore || 60) + getDailyNoise(i)));
+  return AXES_8.map((axis, idx) => {
+    const base = Math.max(20, Math.min(85, (baseScore || 60) + getDailyNoise(idx)));
     let bonus = 0;
     let boostItem = null;
 
-    // 장착된 아이템의 효과(boost) 합산
-    (equippedItems || []).forEach(item => {
+    (equippedItems || []).forEach((item) => {
       if (item.aspectKey === axis.key) {
         bonus += item.boost || 0;
         if (!boostItem) boostItem = item;
       } else if (item.category === 'talisman' && item.type === axis.key) {
-        // 하위 호환
-        const b = item.boost || 10;
-        bonus += b;
+        const talismanBoost = item.boost || 10;
+        bonus += talismanBoost;
         if (!boostItem) boostItem = item;
       }
     });
 
     return {
+      key: axis.key,
       label: axis.label,
       base: Math.round(base),
       total: Math.min(100, Math.round(base + bonus)),
@@ -66,8 +84,13 @@ function DailyRadarChart({ baseScore, equippedItems }) {
       boostItem,
     };
   });
+}
 
-  const cx = 130, cy = 130, r = 90;
+function DailyRadarChart({ baseScore, equippedItems }) {
+  const scores = getDailyAxisScores(baseScore, equippedItems);
+  const cx = 130;
+  const cy = 130;
+  const r = 90;
   const n = AXES_8.length;
   const angleStep = (2 * Math.PI) / n;
   const toXY = (angle, radius) => ({
@@ -75,7 +98,6 @@ function DailyRadarChart({ baseScore, equippedItems }) {
     y: cy - radius * Math.cos(angle),
   });
 
-  // 폴리곤 경로 계산
   const basePoints = scores.map((s, i) => {
     const pt = toXY(angleStep * i, (s.base / 100) * r);
     return `${pt.x},${pt.y}`;
@@ -86,29 +108,25 @@ function DailyRadarChart({ baseScore, equippedItems }) {
     return `${pt.x},${pt.y}`;
   }).join(' ');
 
-  // 아이템 장착 안내 문구 조립
   const bonusAcc = scores.reduce((acc, s) => acc + s.bonus, 0);
 
   return (
-    <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: '16px', border: '1px solid var(--line)' }}>
+    <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid var(--line)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>
-            ✦ 8대 기운 레이더
+          <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>
+            오늘의 운세 점수
           </div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)' }}>
-            {bonusAcc > 0 ? (
-              <span style={{ color: 'var(--gold)' }}>아이템 효과로 기운이 채워졌어요!</span>
-            ) : (
-              '아이템을 장착하면 찌그러진 기운을 채울 수 있어요'
-            )}
+            {bonusAcc > 0
+              ? <span style={{ color: 'var(--gold)' }}>아이템 효과가 점수에 바로 반영되고 있어요.</span>
+              : '오늘 운세를 본 뒤 더 올리고 싶은 항목에 아이템을 사용할 수 있어요.'}
           </div>
         </div>
       </div>
-      
+
       <svg viewBox="0 0 260 260" width="100%" style={{ maxWidth: 280, display: 'block', margin: '0 auto' }}>
-        {/* 배경 팔각형 격자 */}
-        {[0.2, 0.4, 0.6, 0.8, 1.0].map(level => {
+        {[0.2, 0.4, 0.6, 0.8, 1].map((level) => {
           const pts = Array.from({ length: n }, (_, i) => {
             const p = toXY(angleStep * i, level * r);
             return `${p.x},${p.y}`;
@@ -116,22 +134,13 @@ function DailyRadarChart({ baseScore, equippedItems }) {
           return <polygon key={level} points={pts} fill="none" stroke="var(--line)" strokeWidth="1" />;
         })}
 
-        {/* 축 선 */}
         {Array.from({ length: n }, (_, i) => {
           const outer = toXY(angleStep * i, r);
           return <line key={i} x1={cx} y1={cy} x2={outer.x} y2={outer.y} stroke="var(--line)" strokeWidth="1" />;
         })}
 
-        {/* 기본 점수 영역 (회색) */}
-        <polygon
-          points={basePoints}
-          fill="rgba(255,255,255,0.06)"
-          stroke="var(--t4)"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
+        <polygon points={basePoints} fill="rgba(255,255,255,0.06)" stroke="var(--t4)" strokeWidth="1.5" strokeLinejoin="round" />
 
-        {/* 부스트 후 점수 영역 (골드) */}
         {bonusAcc > 0 && (
           <polygon
             points={totalPoints}
@@ -143,13 +152,11 @@ function DailyRadarChart({ baseScore, equippedItems }) {
           />
         )}
 
-        {/* 데이터 포인트 */}
         {scores.map((s, i) => {
           const pt = toXY(angleStep * i, (s.total / 100) * r);
-          return <circle key={i} cx={pt.x} cy={pt.y} r="4" fill={s.bonus > 0 ? "var(--gold)" : "var(--t4)"} style={{ transition: 'all 0.5s ease' }} />;
+          return <circle key={i} cx={pt.x} cy={pt.y} r="4" fill={s.bonus > 0 ? 'var(--gold)' : 'var(--t4)'} style={{ transition: 'all 0.5s ease' }} />;
         })}
 
-        {/* 축 레이블 */}
         {scores.map((s, i) => {
           const pt = toXY(angleStep * i, r + 22);
           const hasBonus = s.bonus > 0;
@@ -160,9 +167,9 @@ function DailyRadarChart({ baseScore, equippedItems }) {
               y={pt.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill={hasBonus ? "var(--gold)" : "var(--t2)"}
-              fontSize={hasBonus ? "12" : "10"}
-              fontWeight={hasBonus ? "700" : "400"}
+              fill={hasBonus ? 'var(--gold)' : 'var(--t2)'}
+              fontSize={hasBonus ? '12' : '10'}
+              fontWeight={hasBonus ? '700' : '400'}
               fontFamily="var(--ff)"
             >
               {s.label}
@@ -171,32 +178,31 @@ function DailyRadarChart({ baseScore, equippedItems }) {
         })}
       </svg>
 
-      {/* ── 운 영역별 점수 목록 + 아이템 효과 주석 ── */}
       <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {scores.map((s, i) => (
-          <div key={i}>
+        {scores.map((s) => (
+          <div key={s.key}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ minWidth: 30, fontSize: '11px', color: s.bonus > 0 ? 'var(--gold)' : 'var(--t3)', fontWeight: s.bonus > 0 ? 700 : 400 }}>
+              <span style={{ minWidth: 34, fontSize: 11, color: s.bonus > 0 ? 'var(--gold)' : 'var(--t3)', fontWeight: s.bonus > 0 ? 700 : 400 }}>
                 {s.label}
               </span>
               <div style={{ flex: 1, height: 5, background: 'var(--line)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%',
-                  width: `${s.total}%`,
-                  background: s.bonus > 0
-                    ? 'linear-gradient(90deg, var(--t4) 0%, var(--gold) 100%)'
-                    : 'var(--t4)',
-                  borderRadius: 3,
-                  transition: 'width 0.6s ease-out',
-                }} />
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${s.total}%`,
+                    background: s.bonus > 0 ? 'linear-gradient(90deg, var(--t4) 0%, var(--gold) 100%)' : 'var(--t4)',
+                    borderRadius: 3,
+                    transition: 'width 0.6s ease-out',
+                  }}
+                />
               </div>
-              <span style={{ minWidth: 30, textAlign: 'right', fontSize: '11px', fontWeight: 700, color: s.bonus > 0 ? 'var(--gold)' : 'var(--t3)' }}>
+              <span style={{ minWidth: 30, textAlign: 'right', fontSize: 11, fontWeight: 700, color: s.bonus > 0 ? 'var(--gold)' : 'var(--t3)' }}>
                 {s.total}
               </span>
             </div>
             {s.bonus > 0 && s.boostItem && (
-              <div style={{ paddingLeft: 38, marginTop: 2, fontSize: '10px', color: 'var(--gold)', lineHeight: 1.4 }}>
-                ✦ {s.boostItem.name}의 효과로 +{s.bonus}점이 올랐어요!
+              <div style={{ paddingLeft: 42, marginTop: 2, fontSize: 10, color: 'var(--gold)', lineHeight: 1.4 }}>
+                {s.boostItem.name} 효과로 +{s.bonus}점이 반영됐어요.
               </div>
             )}
           </div>
@@ -206,14 +212,17 @@ function DailyRadarChart({ baseScore, equippedItems }) {
   );
 }
 
-// 간단한 주간 추세선 (Sparkline) — 실제 daily_cache 데이터 사용
 function WeeklyTrendChart({ kakaoId, todayScore }) {
-  const [trend, setTrend] = useState(null); // null=로딩, []=[데이터없음]
+  const [trend, setTrend] = useState(null);
 
   useEffect(() => {
-    if (!kakaoId) { setTrend([]); return; }
+    if (!kakaoId) {
+      setTrend([]);
+      return;
+    }
     const last7 = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(); d.setDate(d.getDate() - i);
+      const d = new Date();
+      d.setDate(d.getDate() - i);
       return d.toISOString().slice(0, 10);
     });
     const client = getAuthenticatedClient(String(kakaoId));
@@ -224,53 +233,45 @@ function WeeklyTrendChart({ kakaoId, todayScore }) {
       .in('cache_date', last7)
       .then(({ data }) => {
         const map = {};
-        (data || []).forEach(r => { map[r.cache_date] = Number(r.content); });
+        (data || []).forEach((row) => { map[row.cache_date] = Number(row.content); });
         const today = new Date().toISOString().slice(0, 10);
         if (todayScore != null) map[today] = todayScore;
-        const pts = last7.reverse().map(date => map[date] ?? null);
-        setTrend(pts);
+        setTrend(last7.reverse().map((date) => map[date] ?? null));
       })
       .catch(() => setTrend([]));
-  }, [kakaoId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [kakaoId, todayScore]);
 
-  // todayScore prop이 바뀌면 마지막 포인트만 업데이트
   useEffect(() => {
     if (todayScore == null || !trend) return;
-    setTrend(prev => {
+    setTrend((prev) => {
       if (!prev) return prev;
       const next = [...prev];
       next[6] = todayScore;
       return next;
     });
-  }, [todayScore]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [todayScore]);
 
-  // 로딩 중
   if (trend === null) {
     return (
-      <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: '16px', border: '1px solid var(--line)', textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--xs)' }}>
+      <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid var(--line)', textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--xs)' }}>
         <div style={{ width: 20, height: 20, border: '2px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', margin: '0 auto 8px' }} />
-        점수 히스토리 불러오는 중...
+        최근 점수를 불러오는 중...
       </div>
     );
   }
 
-  // 실제 점수가 하나도 없으면 차트 숨김
-  const hasAnyScore = trend.some(v => v !== null);
+  const hasAnyScore = trend.some((v) => v !== null);
   if (!hasAnyScore) return null;
 
-  // null 점수(기록 없는 날)는 선 연결에서 제외하고 도트만 표시
-  const filled = trend.map(v => v ?? null);
-  const validVals = filled.filter(v => v !== null);
+  const validVals = trend.filter((v) => v !== null);
   const max = Math.max(...validVals);
   const min = Math.min(...validVals);
   const range = max - min || 1;
-
   const toY = (val) => 100 - ((val - min) / range) * 80 - 10;
 
-  // 연속된 non-null 구간을 polyline 세그먼트로 나눔
   const segments = [];
   let seg = [];
-  filled.forEach((val, i) => {
+  trend.forEach((val, i) => {
     if (val !== null) {
       seg.push(`${(i / 6) * 100},${toY(val)}`);
     } else {
@@ -280,37 +281,32 @@ function WeeklyTrendChart({ kakaoId, todayScore }) {
   });
   if (seg.length > 1) segments.push(seg.join(' '));
 
-  const todayVal = filled[6];
-  const yesterdayVal = filled.slice(0, 6).reverse().find(v => v !== null);
+  const todayVal = trend[6];
+  const yesterdayVal = trend.slice(0, 6).reverse().find((v) => v !== null);
   const isUp = todayVal !== null && yesterdayVal !== null && todayVal >= yesterdayVal;
-  const hasTodayScore = todayVal !== null;
 
   return (
-    <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: '16px', border: '1px solid var(--line)' }}>
+    <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid var(--line)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>
-            ✦ 나의 주간 운세 흐름
+          <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>
+            최근 운세 흐름
           </div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)' }}>
-            {hasTodayScore && yesterdayVal !== null
-              ? <>어제보다 <strong style={{ color: isUp ? '#ff7832' : '#7b9ec4' }}>{isUp ? '상승' : '하락'}세</strong>에 있어요</>
-              : '오늘 운세를 확인하면 기록돼요'}
+            {todayVal !== null && yesterdayVal !== null
+              ? <>어제보다 <strong style={{ color: isUp ? '#ff7832' : '#7b9ec4' }}>{isUp ? '상승' : '하락'}</strong>했어요.</>
+              : '오늘 점수가 쌓이면 흐름이 함께 기록돼요.'}
           </div>
         </div>
-        {hasTodayScore && (
-          <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: isUp ? '#ff7832' : '#7b9ec4', lineHeight: 1 }}>
-            {isUp ? '↑' : '↓'}
-          </div>
-        )}
-        {hasTodayScore && <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>{todayVal}점</div>}
+        {todayVal !== null && <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>{todayVal}점</div>}
       </div>
+
       <div style={{ position: 'relative', width: '100%', height: 60 }}>
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {segments.map((pts, si) => (
-            <polyline key={si} fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={pts} style={{ opacity: 0.8 }} />
+          {segments.map((pts, idx) => (
+            <polyline key={idx} fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={pts} style={{ opacity: 0.8 }} />
           ))}
-          {filled.map((val, i) => {
+          {trend.map((val, i) => {
             if (val === null) return null;
             const x = (i / 6) * 100;
             const y = toY(val);
@@ -320,7 +316,8 @@ function WeeklyTrendChart({ kakaoId, todayScore }) {
           })}
         </svg>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '9px', color: 'var(--t4)' }}>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 9, color: 'var(--t4)' }}>
         <span>6일 전</span>
         <span>오늘</span>
       </div>
@@ -328,7 +325,6 @@ function WeeklyTrendChart({ kakaoId, todayScore }) {
   );
 }
 
-// 정화 재점 오버레이 컴포넌트
 function PurifyOverlay({ visible }) {
   if (!visible) return null;
   return (
@@ -340,21 +336,16 @@ function PurifyOverlay({ visible }) {
         <div className="purify-ring purify-ring-3" />
       </div>
       <div className="purify-sparks">
-        {['✦','·','✦','·','✦','·'].map((s, i) => (
-          <span key={i} className={`purify-spark purify-spark-${i + 1}`}>{s}</span>
+        {['✦', '✧', '✦', '✧', '✦'].map((spark, idx) => (
+          <span key={idx} className={`purify-spark purify-spark-${idx + 1}`}>{spark}</span>
         ))}
       </div>
-      <div className="purify-text">정화 중...</div>
+      <div className="purify-text">정화 재점 중...</div>
     </div>
   );
 }
 
-// 기운 보강 CTA — 결과 확인 후 아이템 장착 유도
-function BoostCTA({ equippedItems, canPurify, remaining, onPurify, isPurifying, setStep }) {
-  const hasEquipped = (equippedItems || []).some(i =>
-    i.aspectKey || (i.category === 'talisman') || i.boost
-  );
-
+function BoostCTA({ hasBoostedToday, canPurify, remaining, onPurify, isPurifying, setStep }) {
   return (
     <div style={{
       background: 'var(--bg2)',
@@ -367,64 +358,67 @@ function BoostCTA({ equippedItems, canPurify, remaining, onPurify, isPurifying, 
       gap: 10,
     }}>
       <div>
-        <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>
-          ✦ 기운 보강
+        <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>
+          기운 보강
         </div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6 }}>
-          {hasEquipped
-            ? '아이템 효과가 반영됐어요. 재생성하면 점수가 업데이트돼요.'
-            : '아이템을 장착하면 오늘 운세 기운이 올라가요.'}
+          {hasBoostedToday
+            ? '아이템을 쓴 뒤 다시 정화 재점을 눌러 오늘 흐름을 새로 확인할 수 있어요.'
+            : '샵이나 보관함에서 오늘 점수를 올릴 아이템을 더 준비할 수 있어요.'}
         </div>
       </div>
+
       <div style={{ display: 'flex', gap: 8 }}>
         <button
           onClick={() => setStep(38)}
           style={{
-            flex: hasEquipped ? 1 : 2,
+            flex: 1,
             padding: '10px 12px',
-            background: hasEquipped ? 'transparent' : 'var(--goldf)',
-            border: `1.5px solid ${hasEquipped ? 'var(--line)' : 'var(--acc)'}`,
+            background: 'transparent',
+            border: '1.5px solid var(--line)',
             borderRadius: 'var(--r1)',
-            color: hasEquipped ? 'var(--t3)' : 'var(--gold)',
-            fontWeight: hasEquipped ? 400 : 700,
+            color: 'var(--t3)',
             fontSize: 'var(--xs)',
             fontFamily: 'var(--ff)',
             cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
           }}
         >
-          {hasEquipped ? '아이템 교체' : '🔮 기운 보강하기 ✦'}
+          내 아이템 보기
         </button>
-        {canPurify && (
+        {canPurify ? (
           <button
             onClick={onPurify}
             disabled={isPurifying}
             style={{
-              flex: hasEquipped ? 2 : 1,
+              flex: 1.3,
               padding: '10px 12px',
-              background: hasEquipped ? 'var(--goldf)' : 'transparent',
-              border: `1.5px solid ${hasEquipped ? 'var(--acc)' : 'var(--line)'}`,
+              background: 'var(--goldf)',
+              border: '1.5px solid var(--acc)',
               borderRadius: 'var(--r1)',
-              color: hasEquipped ? 'var(--gold)' : 'var(--t3)',
-              fontWeight: hasEquipped ? 700 : 400,
+              color: 'var(--gold)',
+              fontWeight: 700,
               fontSize: 'var(--xs)',
               fontFamily: 'var(--ff)',
               cursor: isPurifying ? 'not-allowed' : 'pointer',
               opacity: isPurifying ? 0.6 : 1,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
             }}
           >
-            {isPurifying ? '정화 중...' : `✦ 재생성 (${remaining}회 남음)`}
+            {isPurifying ? '재점 중...' : `정화재점 (${remaining}회 남음)`}
           </button>
-        )}
-        {!canPurify && remaining <= 0 && (
+        ) : (
           <div style={{
-            flex: 1, padding: '10px 12px', background: 'var(--bg3)',
-            border: '1px solid var(--line)', borderRadius: 'var(--r1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 'var(--xs)', color: 'var(--t4)',
+            flex: 1.1,
+            padding: '10px 12px',
+            background: 'var(--bg3)',
+            border: '1px solid var(--line)',
+            borderRadius: 'var(--r1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 'var(--xs)',
+            color: 'var(--t4)',
           }}>
-            오늘 재생성 완료
+            오늘 재점 완료
           </div>
         )}
       </div>
@@ -432,119 +426,245 @@ function BoostCTA({ equippedItems, canPurify, remaining, onPurify, isPurifying, 
   );
 }
 
-// ─── 1회성 아이템 픽커 ───────────────────────────────────────────
-const ASPECT_META = {
-  overall: { label: '종합', emoji: '🌟' },
-  wealth:  { label: '금전', emoji: '💰' },
-  love:    { label: '애정', emoji: '💫' },
-  career:  { label: '직장', emoji: '👑' },
-  study:   { label: '학업', emoji: '📚' },
-  health:  { label: '건강', emoji: '✨' },
-  social:  { label: '대인', emoji: '🤝' },
-  travel:  { label: '이동', emoji: '🚀' },
-};
-
-const ALL_SPIRIT_MAP = Object.fromEntries(
-  [...GACHA_POOL, ...SAJU_POOL].map(i => [i.id, i])
-);
-
-function OneShotItemPicker({ ownedRows, onUse }) {
-  const [activeAxis, setActiveAxis] = useState(null);
-
-  const byAxis = {};
-  for (const row of ownedRows) {
-    const k = row.item?.aspectKey;
-    if (!k || !ASPECT_META[k]) continue;
-    if (!byAxis[k]) byAxis[k] = [];
-    byAxis[k].push(row);
-  }
-
-  const hasAny = Object.values(byAxis).some(a => a.length > 0);
-  if (!hasAny) return null;
-
-  const activeItems = activeAxis ? (byAxis[activeAxis] || []) : [];
-
-  function getCfg(item) {
-    if (!item?.grade) return {};
-    return SPACE_GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade] || {};
-  }
+function ItemDetailModal({ row, onClose, onUse }) {
+  if (!row?.item) return null;
+  const item = row.item;
+  const cfg = getItemGradeConfig(item);
 
   return (
-    <div style={{
-      background: 'var(--bg2)', borderRadius: 'var(--r1)',
-      border: '1px solid var(--line)', padding: '14px 16px', marginBottom: 16,
-    }}>
-      <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 6 }}>
-        ✦ 1회 기운 아이템 사용
-      </div>
-      <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 12, lineHeight: 1.5 }}>
-        오늘만 발동하는 1회용 기운이에요. 사용 시 아이템이 소모돼요.
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-        {Object.entries(ASPECT_META).map(([key, meta]) => {
-          const cnt = (byAxis[key] || []).length;
-          if (cnt === 0) return null;
-          const isActive = activeAxis === key;
-          return (
-            <button key={key} onClick={() => setActiveAxis(isActive ? null : key)} style={{
-              padding: '6px 11px', borderRadius: 20,
-              border: `1px solid ${isActive ? 'var(--acc)' : 'var(--line)'}`,
-              background: isActive ? 'var(--goldf)' : 'none',
-              color: isActive ? 'var(--gold)' : 'var(--t3)',
-              fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
-              fontWeight: isActive ? 700 : 400,
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
-              {meta.emoji} {meta.label}
-              <span style={{ fontSize: '10px', opacity: 0.7 }}>({cnt})</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {activeAxis && activeItems.length > 0 && (
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4 }}>
-          {activeItems.map(row => {
-            const item = row.item;
-            const cfg = getCfg(item);
-            return (
-              <div key={row.rowId} style={{
-                flexShrink: 0, width: 110,
-                background: 'var(--bg1)', borderRadius: 12,
-                border: `1px solid ${cfg.border || 'var(--line)'}`,
-                padding: '12px 8px', textAlign: 'center',
-                display: 'flex', flexDirection: 'column', gap: 5,
-              }}>
-                <div style={{ fontSize: 28 }}>{item.emoji}</div>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.3, wordBreak: 'keep-all' }}>
-                  {item.name}
-                </div>
-                <div style={{ fontSize: '10px', color: cfg.color || 'var(--t4)', fontWeight: 600 }}>
-                  {cfg.label || item.grade}
-                </div>
-                <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700 }}>
-                  +{item.boost}점
-                </div>
-                <button onClick={() => onUse(row)} style={{
-                  marginTop: 4, padding: '7px', borderRadius: 8,
-                  background: 'var(--goldf)', border: '1px solid var(--acc)',
-                  color: 'var(--gold)', fontSize: '11px', fontWeight: 700,
-                  fontFamily: 'var(--ff)', cursor: 'pointer',
-                }}>
-                  사용하기
-                </button>
-              </div>
-            );
-          })}
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1200,
+        background: 'rgba(6, 8, 16, 0.72)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxWidth: 360,
+          background: 'var(--bg1)',
+          borderRadius: 20,
+          border: `1px solid ${cfg.border || 'var(--line)'}`,
+          boxShadow: cfg.border ? `0 20px 50px ${cfg.border}` : '0 20px 50px rgba(0,0,0,.25)',
+          padding: '22px 20px 18px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{
+            width: 64,
+            height: 64,
+            borderRadius: 18,
+            background: cfg.bg || 'var(--bg2)',
+            border: `1px solid ${cfg.border || 'var(--line)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 32,
+            flexShrink: 0,
+          }}>
+            {item.emoji}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 10, color: cfg.color || 'var(--gold)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>
+              {cfg.label || item.grade}
+            </div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 800, lineHeight: 1.35, marginBottom: 6 }}>
+              {item.name}
+            </div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>
+              {item.effectLabel || `+${item.boost} boost`}
+            </div>
+          </div>
         </div>
-      )}
+
+        <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 14, padding: 14 }}>
+          <div style={{ fontSize: 10, color: 'var(--t4)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
+            ITEM STORY
+          </div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>
+            {item.description || item.effect || '설명이 아직 준비되지 않았어요.'}
+          </div>
+        </div>
+
+        {item.effect && (
+          <div style={{ background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 14, padding: '12px 14px' }}>
+            <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
+              TODAY EFFECT
+            </div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>
+              {item.effect}
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: '11px 12px',
+              borderRadius: 12,
+              border: '1px solid var(--line)',
+              background: 'transparent',
+              color: 'var(--t3)',
+              fontSize: 'var(--xs)',
+              fontFamily: 'var(--ff)',
+              cursor: 'pointer',
+            }}
+          >
+            닫기
+          </button>
+          <button
+            onClick={() => onUse(row)}
+            style={{
+              flex: 1.4,
+              padding: '11px 12px',
+              borderRadius: 12,
+              border: '1px solid var(--acc)',
+              background: 'var(--goldf)',
+              color: 'var(--gold)',
+              fontSize: 'var(--xs)',
+              fontWeight: 700,
+              fontFamily: 'var(--ff)',
+              cursor: 'pointer',
+            }}
+          >
+            이 아이템 쓰기
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-/**
- * TodayDetailPage - "오늘 하루 나의 별숨" 운세 상세 페이지
- */
+function OneShotItemPicker({ scores, ownedRows, onUse, onInspect }) {
+  const byAxis = {};
+  for (const row of ownedRows) {
+    const aspectKey = row.item?.aspectKey;
+    if (!aspectKey || !ASPECT_META[aspectKey]) continue;
+    if (!byAxis[aspectKey]) byAxis[aspectKey] = [];
+    byAxis[aspectKey].push(row);
+  }
+
+  const hasAny = Object.values(byAxis).some((list) => list.length > 0);
+  if (!hasAny) return null;
+
+  return (
+    <div style={{
+      background: 'var(--bg2)',
+      borderRadius: 'var(--r1)',
+      border: '1px solid var(--line)',
+      padding: 16,
+      marginBottom: 16,
+    }}>
+      <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 6 }}>
+        TODAY BOOST ITEMS
+      </div>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 14, lineHeight: 1.6 }}>
+        오늘 별숨을 본 뒤 더 올리고 싶은 항목에 바로 아이템을 써보세요. 카드를 누르면 설명을 먼저 볼 수 있어요.
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {scores.map((score) => {
+          const rows = byAxis[score.key] || [];
+          if (rows.length === 0) return null;
+
+          return (
+            <div key={score.key} style={{ padding: 12, borderRadius: 14, background: 'var(--bg1)', border: '1px solid var(--line)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>{ASPECT_META[score.key]?.emoji || '✦'}</span>
+                  <div>
+                    <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>{score.label}</div>
+                    <div style={{ fontSize: 10, color: 'var(--t4)' }}>현재 {score.total}점</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700 }}>
+                  사용 가능 {rows.length}개
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
+                {rows.map((row) => {
+                  const item = row.item;
+                  const cfg = getItemGradeConfig(item);
+                  return (
+                    <button
+                      key={row.rowId}
+                      onClick={() => onInspect(row)}
+                      style={{
+                        flexShrink: 0,
+                        minWidth: 132,
+                        textAlign: 'left',
+                        borderRadius: 14,
+                        border: `1px solid ${cfg.border || 'var(--line)'}`,
+                        background: cfg.bg || 'var(--bg2)',
+                        padding: 10,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 6,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 22 }}>{item.emoji}</span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 10, color: cfg.color || 'var(--gold)', fontWeight: 700 }}>
+                            {cfg.label || item.grade}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--t1)', fontWeight: 700, lineHeight: 1.3, wordBreak: 'keep-all' }}>
+                            {item.name}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--t4)', lineHeight: 1.45, minHeight: 28 }}>
+                        {item.description || item.effect}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 'auto' }}>
+                        <span style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700 }}>
+                          +{item.boost}점
+                        </span>
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUse(row);
+                          }}
+                          style={{
+                            padding: '5px 9px',
+                            borderRadius: 999,
+                            border: '1px solid var(--acc)',
+                            background: 'var(--goldf)',
+                            color: 'var(--gold)',
+                            fontSize: 10,
+                            fontWeight: 700,
+                          }}
+                        >
+                          사용
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function TodayDetailPage({
   dailyResult,
   dailyLoading,
@@ -556,22 +676,27 @@ export default function TodayDetailPage({
   setStep,
   onRefresh,
 }) {
-  const user = useAppStore(s => s.user);
+  const user = useAppStore((s) => s.user);
   const kakaoId = user?.kakaoId || user?.id;
-  const equippedTalisman = useAppStore(s => s.equippedTalisman);
-  const storeEquippedItems = useAppStore(s => s.equippedItems) || [];
-  // equippedTalisman이 가챠 아이템(오늘 발동)인 경우에도 radar에 포함
-  const mergedEquippedItems = [
+  const equippedTalisman = useAppStore((s) => s.equippedTalisman);
+  const storeEquippedItems = useAppStore((s) => s.equippedItems) || [];
+  const [usedItems, setUsedItems] = useState([]);
+  const [ownedRows, setOwnedRows] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [isPurifying, setIsPurifying] = useState(false);
+
+  const mergedEquippedItems = useMemo(() => ([
     ...(equippedTalisman
-      ? [...storeEquippedItems.filter(i => i.id !== equippedTalisman.id), equippedTalisman]
+      ? [...storeEquippedItems.filter((item) => item.id !== equippedTalisman.id), equippedTalisman]
       : storeEquippedItems),
     ...usedItems,
-  ];
-  const [isPurifying, setIsPurifying] = useState(false);
-  const [ownedRows, setOwnedRows] = useState(null); // null=not loaded
-  const [usedItems, setUsedItems] = useState([]);
+  ]), [equippedTalisman, storeEquippedItems, usedItems]);
 
-  // 기운 아이템 목록 로드
+  const axisScores = useMemo(
+    () => getDailyAxisScores(dailyResult?.score, mergedEquippedItems),
+    [dailyResult?.score, mergedEquippedItems]
+  );
+
   useEffect(() => {
     if (!kakaoId || !dailyResult) return;
     const client = getAuthenticatedClient(String(kakaoId));
@@ -580,32 +705,33 @@ export default function TodayDetailPage({
       .eq('kakao_id', String(kakaoId))
       .then(({ data }) => {
         const rows = (data || [])
-          .map(r => ({ rowId: r.id, item: ALL_SPIRIT_MAP[String(r.item_id)] }))
-          .filter(r => r.item?.aspectKey); // spirit items only
+          .map((row) => ({ rowId: row.id, item: ALL_SPIRIT_MAP[String(row.item_id)] }))
+          .filter((row) => row.item?.aspectKey);
         setOwnedRows(rows);
       })
       .catch(() => setOwnedRows([]));
-  }, [kakaoId, dailyResult]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [kakaoId, dailyResult]);
 
   const handleUseItem = useCallback(async (row) => {
     if (!kakaoId) return;
     try {
       const client = getAuthenticatedClient(String(kakaoId));
-      await client.from('user_shop_inventory')
-        .delete()
-        .eq('id', row.rowId);
-      setOwnedRows(prev => (prev || []).filter(r => r.rowId !== row.rowId));
-      setUsedItems(prev => [...prev, row.item]);
-    } catch { /* silent */ }
+      await client.from('user_shop_inventory').delete().eq('id', row.rowId);
+      setOwnedRows((prev) => (prev || []).filter((item) => item.rowId !== row.rowId));
+      setUsedItems((prev) => [...prev, row.item]);
+      setSelectedRow(null);
+    } catch {
+      // ignore for now
+    }
   }, [kakaoId]);
 
   const handlePurify = useCallback(async () => {
     if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
     setIsPurifying(true);
-    // 애니메이션 최소 1.2초 보장
-    const animPromise = new Promise(r => setTimeout(r, 1200));
+    const animPromise = new Promise((resolve) => setTimeout(resolve, 1200));
     try {
       await Promise.all([onRefresh?.(), animPromise]);
+      setUsedItems([]);
     } catch {
       await animPromise;
     } finally {
@@ -618,24 +744,16 @@ export default function TodayDetailPage({
 
   return (
     <div className="today-detail-container">
-      {/* 정화 애니메이션 오버레이 */}
       <PurifyOverlay visible={isPurifying} />
 
-      {/* 헤더 */}
       <div className="today-detail-header">
-        <button
-          className="today-detail-back-btn"
-          onClick={() => setStep(0)}
-          aria-label="홈으로 돌아가기"
-        >
+        <button className="today-detail-back-btn" onClick={() => setStep(0)} aria-label="홈으로 돌아가기">
           ←
         </button>
         <span className="today-detail-title">오늘 하루 나의 별숨</span>
-        {/* 헤더 우측 빈 공간 (레이아웃 균형) */}
         <div style={{ width: 40 }} />
       </div>
 
-      {/* 메인 카드 영역 */}
       <div className={`today-detail-content${isPurifying ? ' today-detail-content--blurred' : ''}`}>
         {dailyLoading && !dailyResult ? (
           <PageSpinner />
@@ -643,16 +761,19 @@ export default function TodayDetailPage({
           <Suspense fallback={<PageSpinner />}>
             <DailyRadarChart baseScore={dailyResult?.score} equippedItems={mergedEquippedItems} />
 
-            {/* 1회 아이템 픽커 */}
             {ownedRows && ownedRows.length > 0 && (
-              <OneShotItemPicker ownedRows={ownedRows} onUse={handleUseItem} />
+              <OneShotItemPicker
+                scores={axisScores}
+                ownedRows={ownedRows}
+                onUse={handleUseItem}
+                onInspect={setSelectedRow}
+              />
             )}
 
             <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult?.score} />
 
-            {/* ── 기운 보강 CTA ── */}
             <BoostCTA
-              equippedItems={mergedEquippedItems}
+              hasBoostedToday={usedItems.length > 0}
               canPurify={canPurify}
               remaining={remaining}
               onPurify={handlePurify}
@@ -673,7 +794,7 @@ export default function TodayDetailPage({
             <div className="today-detail-empty-icon" style={{ fontSize: '2rem', color: 'var(--t4)', marginBottom: 8 }}>✦</div>
             <div className="today-detail-empty-text">
               운세를 불러오지 못했어요.<br />
-              <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>아래 버튼을 눌러 다시 시도해봐요.</span>
+              <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>아래 버튼으로 다시 시도해 주세요.</span>
             </div>
             {onRefresh && (
               <button
@@ -689,16 +810,35 @@ export default function TodayDetailPage({
         )}
       </div>
 
-      {/* 하단 버튼 */}
       <div className="today-detail-footer">
-        <button
-          className="today-detail-btn-home"
-          onClick={() => setStep(0)}
-        >
+        <button className="today-detail-btn-home" onClick={() => setStep(0)}>
           홈으로
         </button>
-
+        {usedItems.length > 0 && canPurify && (
+          <button
+            className="today-detail-btn-home"
+            onClick={handlePurify}
+            disabled={isPurifying}
+            style={{
+              background: 'var(--goldf)',
+              border: '1px solid var(--acc)',
+              color: 'var(--gold)',
+              marginLeft: 8,
+              opacity: isPurifying ? 0.7 : 1,
+            }}
+          >
+            {isPurifying ? '재점 중...' : `정화재점 (${remaining}회 남음)`}
+          </button>
+        )}
       </div>
+
+      {selectedRow && (
+        <ItemDetailModal
+          row={selectedRow}
+          onClose={() => setSelectedRow(null)}
+          onUse={handleUseItem}
+        />
+      )}
     </div>
   );
 }

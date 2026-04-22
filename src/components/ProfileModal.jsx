@@ -219,7 +219,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
             앞으로 모든 운세에 자동으로 반영될 거예요.
           </div>
           <button className="profile-save-btn" onClick={() => { onClose(); setStep(6); }}>
-            별숨에게 나를 더 알려주기 ✦
+            심층인터뷰 시작하기
           </button>
           <button className="profile-save-btn" style={{ background: 'none', border: '1px solid var(--acc)', color: 'var(--gold)', marginTop: 8 }} onClick={onClose}>
             별숨에게 물어보러 가기

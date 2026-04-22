@@ -5,6 +5,7 @@ import { getSun } from "../utils/astrology.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
 import { RELATION_TYPES } from "./OtherProfileModal.jsx";
+import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 
 function getCompatTier(score) {
   if (score >= 90) return { label: '환상의 티키타카', color: '#E8B048' };
@@ -24,7 +25,7 @@ function getDaysInMonth(year, month) {
 // ═══════════════════════════════════════════════════════════
 //  💞 1대1 별숨 — 두 별의 인연 읽기
 // ═══════════════════════════════════════════════════════════
-export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, shareResult, user, otherProfiles = [], saveOtherProfile, onAnonShare }) {
+export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, shareResult, user, consentFlags, otherProfiles = [], saveOtherProfile, onAnonShare }) {
   const [partner, setPartner] = useState({ name: '', by: '', bm: '', bd: '', gender: '' });
   const [storyResult, setStoryResult] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
@@ -129,6 +130,13 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
       try {
         const raw = data.text.replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(raw);
+        const historyText = [
+          parsed.todayVibe || '',
+          parsed.story || '',
+          ...(parsed.moments || []),
+          parsed.tip || '',
+          parsed.chemistry || '',
+        ].filter(Boolean).join('\n');
         setStoryResult({
           todayVibe: parsed.todayVibe || '',
           story: parsed.story || '',
@@ -136,8 +144,20 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
           tip: parsed.tip || '',
           chemistry: parsed.chemistry || '',
         });
+        saveConsultationHistoryEntry({
+          user,
+          consentFlags,
+          questions: [`궁합 보기: ${myForm.name || '나'} × ${partner.name || '상대'}`],
+          answers: [historyText],
+        }).catch(() => {});
       } catch {
         setStoryResult({ todayVibe: '', story: data.text, moments: [], tip: '', chemistry: '' });
+        saveConsultationHistoryEntry({
+          user,
+          consentFlags,
+          questions: [`궁합 보기: ${myForm.name || '나'} × ${partner.name || '상대'}`],
+          answers: [data.text],
+        }).catch(() => {});
       }
     } catch (fetchErr) {
       console.error('[CompatPage] fetch error:', fetchErr?.message);

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { getSaju } from "../utils/saju.js";
 import { TAEGIL_PROMPT } from "../utils/constants.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
+import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 
 // ═══════════════════════════════════════════════════════════
 //  🗓️ 택일 — 중요한 날, 별숨이 골라드릴게요
@@ -47,7 +48,7 @@ function scoreToStars(score) {
   return '⭐';
 }
 
-export default function TaegillPage({ form, buildCtx, callApi: callApiProp, showToast, onShareCard }) {
+export default function TaegillPage({ form, buildCtx, callApi: callApiProp, showToast, onShareCard, user, consentFlags }) {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
@@ -91,6 +92,12 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
       const prompt = TAEGIL_PROMPT({ eventType, candidateDates: top, sajuCtx: buildCtx?.() || '' });
       const text = await callApi(prompt);
       setResult(text);
+      saveConsultationHistoryEntry({
+        user,
+        consentFlags,
+        questions: [`생일 길일: ${eventType} / ${startDate} ~ ${endDate}`],
+        answers: [text],
+      }).catch(() => {});
     } catch {
       showToast('별이 잠시 쉬고 있어요. 다시 시도해봐요', 'error');
     } finally {

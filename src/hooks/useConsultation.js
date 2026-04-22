@@ -662,8 +662,24 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     const prevQAs  = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${answers[i] || ''}`).join('\n\n');
     const prevChat = chatHistory.map(m => `[${m.role === 'ai' ? '별숨' : '나'}] ${m.text}`).join('\n');
     const fullMsg  = `[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
+    const chatPrompt = `[역할]
+너는 사용자의 직전 상담을 이어서 대화하는 별숨이다.
+지금부터는 보고서나 섹션형 리포트가 아니라 자연스러운 채팅처럼 답한다.
+- "종합내용", "사주내용", "점성술", "추천행동" 같은 제목형 구성을 쓰지 말 것
+- 이전 답변과 방금 질문을 연결해서 바로 이어 말할 것
+- 말투는 부드럽고 자연스럽게, 2~5문장 중심으로 답할 것
+- 필요하면 사용자의 감정이나 상황을 먼저 짚고 이어서 조언할 것
+
+[이전 상담]
+${prevQAs}
+
+[이전 대화]
+${prevChat}
+
+[새 질문]
+${userMsg}`;
     try {
-      const aiText = await callApi(fullMsg, { isChat: true });
+      const aiText = await callApi(chatPrompt, { isChat: true });
       setChatUsed(p => p + 1); // 성공 시에만 카운트 증가
       setChatHistory(p => { const updated = [...p, { role: 'ai', text: aiText }]; setLatestChatIdx(updated.length - 1); return updated; });
     } catch { setChatHistory(p => [...p, { role: 'ai', text: '앗, 잠깐 연결이 끊겼어요 🌙 다시 시도해봐요!' }]); }
@@ -675,8 +691,9 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     if (chatHistory.length > 0) return null;
     const prevQAs = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${(answers[i] || '').slice(0, 300)}`).join('\n\n');
     const prompt = `[이전 상담]\n${prevQAs}\n\n[요청]\n이전 상담 내용과 답변을 바탕으로, 사용자가 이어서 더 깊이 물어볼 만한 심층 꼬리 질문 5개를 생성해주세요.\n- 사용자가 그대로 복사해서 보낼 수 있도록 짧고 자연스러운 대화체로 작성하세요.\n- 포맷은 반드시 번호와 텍스트만 적어주세요:\n1. [질문내용]\n2. [질문내용]\n3. [질문내용]\n4. [질문내용]\n5. [질문내용]`;
+    const naturalPrompt = `[이전 상담]\n${prevQAs}\n\n[요청]\n이전 상담 내용과 응답을 바탕으로, 사용자가 별숨에게 이어서 자연스럽게 물어볼 만한 후속 질문 5개를 생성해주세요.\n- 실제 채팅창에 바로 눌러 보낼 수 있게 짧고 자연스러운 한국어 구어체로 작성해주세요\n- 보고서식 표현 말고 대화하듯 써주세요\n- 설명과 번호는 빼고 텍스트만 적어주세요\n1. [질문내용]\n2. [질문내용]\n3. [질문내용]\n4. [질문내용]\n5. [질문내용]`;
     try {
-      const text = await callApi(prompt, { isChat: true });
+      const text = await callApi(naturalPrompt, { isChat: true });
       const lines = text.split('\n').map(l => l.replace(/^\d+\.\s*/, '').replace(/^[-\*]\s*/, '').trim()).filter(Boolean).slice(0, 5);
       if (lines.length >= 3) return lines;
     } catch (e) {
@@ -715,6 +732,22 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     const prevChat = compressChatHistory(chatHistory);
     const userMessage = `[이전 상담]\n${prevQAs}\n\n[이전 대화]\n${prevChat}\n\n[새 질문]\n${userMsg}`;
     // 사용자 메시지 + 스트리밍 플레이스홀더 동시 추가
+    const streamChatPrompt = `[역할]
+너는 사용자의 직전 상담을 이어서 대화하는 별숨이다.
+지금부터는 보고서나 섹션형 리포트가 아니라 자연스러운 채팅처럼 답한다.
+- "종합내용", "사주내용", "점성술", "추천행동" 같은 제목형 구성을 쓰지 말 것
+- 이전 답변과 방금 질문을 연결해서 바로 이어 말할 것
+- 말투는 부드럽고 자연스럽게, 2~5문장 중심으로 답할 것
+- 필요하면 사용자의 감정이나 상황을 먼저 짚고 이어서 조언할 것
+
+[이전 상담]
+${prevQAs}
+
+[이전 대화]
+${prevChat}
+
+[새 질문]
+${userMsg}`;
     setChatHistory(p => [...p, { role: 'user', text: userMsg }, { role: 'ai', text: '', streaming: true }]);
     setLatestChatIdx(-1); // 스트리밍 완료 후 재애니메이션 방지
     setChatLoading(true);
@@ -732,7 +765,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
         headers,
         signal,
         body: JSON.stringify({
-          userMessage,
+          userMessage: streamChatPrompt,
           context: fullContext,
           kakaoId: user?.id,
           isChat: true,
@@ -811,7 +844,24 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
 
 그 다음에 이달의 운세 서사 (500~700자, 자연스러운 문단):
 각 운세 영역(금전·애정·직장·건강)을 따로 나누지 말고 하나의 흐름으로 이어주세요.`;
-      const text = await callApi(prompt, { isReport: true });
+      const normalizedPrompt = `[요청] 이달의 별숨 흐름 리포트를 아래 형식으로 작성해주세요.
+
+첫 줄에는 반드시 아래 형식으로 8가지 운세 점수를 적어주세요. 점수는 0~100 정수입니다.
+[월간점수] 종합:숫자,금전:숫자,애정:숫자,직장:숫자,학업:숫자,건강:숫자,대인:숫자,이동:숫자,창의:숫자
+
+둘째 줄에는 이달의 행운 색을 적어주세요.
+[행운색] 색 이름
+
+셋째 줄에는 이달의 행운 아이템 2~3개를 적어주세요.
+[행운아이템] 아이템1, 아이템2, 아이템3
+
+그 아래 본문은 다음 기준으로 작성해주세요.
+- 오늘 하루 나의 별숨을 한 달 단위로 확장한 느낌으로 써주세요
+- 이달의 흐름, 상승 구간, 조심할 구간, 분위기 변화를 자연스럽게 이어서 설명해주세요
+- 항목별 소제목 없이 하나의 읽기 좋은 월간 리포트처럼 써주세요
+- 너무 딱딱한 보고서체보다 별숨이 들려주는 설명처럼 부드럽게 써주세요
+- 분량은 500~700자 정도로 해주세요`;
+      const text = await callApi(normalizedPrompt, { isReport: true });
       setReportText(text);
     } catch { setReportText('별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!'); }
     finally { setReportLoading(false); }
