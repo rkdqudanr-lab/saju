@@ -87,7 +87,14 @@ export default function DailyHoroscopePage({
     setIsPurifying(true);
     const animPromise = new Promise(r => setTimeout(r, 1200));
     try {
-      await Promise.all([askDailyHoroscope?.(), animPromise]);
+      await Promise.all([
+        askDailyHoroscope?.({
+          skipBpCharge: true,
+          skipConfirm: true,
+          saveHistory: false,
+        }),
+        animPromise,
+      ]);
     } catch {
       await animPromise;
     } finally {

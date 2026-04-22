@@ -185,7 +185,7 @@ function getRecommendedRow(score, ownedRows) {
   return [...matchedRows].sort((a, b) => (b.item?.boost || 0) - (a.item?.boost || 0))[0];
 }
 
-function AxisInsightPanel({ scores, ownedRows, onUseItem, onInspectItem, setStep }) {
+function AxisInsightPanel({ scores, ownedRows, onUseItem, onInspectItem, setStep, canUseItems = true }) {
   const [openKey, setOpenKey] = useState(scores[0]?.key ?? null);
 
   useEffect(() => {
@@ -308,6 +308,7 @@ function AxisInsightPanel({ scores, ownedRows, onUseItem, onInspectItem, setStep
                         </div>
                         <button
                           onClick={() => onUseItem?.(recommendedRow)}
+                          disabled={!canUseItems}
                           style={{
                             width: '100%',
                             marginTop: 8,
@@ -319,7 +320,8 @@ function AxisInsightPanel({ scores, ownedRows, onUseItem, onInspectItem, setStep
                             fontSize: 'var(--xs)',
                             fontWeight: 700,
                             fontFamily: 'var(--ff)',
-                            cursor: 'pointer',
+                            cursor: canUseItems ? 'pointer' : 'not-allowed',
+                            opacity: canUseItems ? 1 : 0.45,
                           }}
                         >
                           이 영역 아이템 바로 사용
@@ -728,7 +730,7 @@ function BoostCTA({ hasBoostedToday, canPurify, remaining, onPurify, isPurifying
   );
 }
 
-function ItemDetailModal({ row, onClose, onUse }) {
+function ItemDetailModal({ row, onClose, onUse, canUseItems = true }) {
   if (!row?.item) return null;
   const item = row.item;
   const cfg = getItemGradeConfig(item);
@@ -829,6 +831,7 @@ function ItemDetailModal({ row, onClose, onUse }) {
           </button>
           <button
             onClick={() => onUse(row)}
+            disabled={!canUseItems}
             style={{
               flex: 1.4,
               padding: '11px 12px',
@@ -839,7 +842,8 @@ function ItemDetailModal({ row, onClose, onUse }) {
               fontSize: 'var(--xs)',
               fontWeight: 700,
               fontFamily: 'var(--ff)',
-              cursor: 'pointer',
+              cursor: canUseItems ? 'pointer' : 'not-allowed',
+              opacity: canUseItems ? 1 : 0.45,
             }}
           >
             이 아이템 쓰기
@@ -850,7 +854,7 @@ function ItemDetailModal({ row, onClose, onUse }) {
   );
 }
 
-function OneShotItemPicker({ scores, ownedRows, onUse, onInspect }) {
+function OneShotItemPicker({ scores, ownedRows, onUse, onInspect, canUseItems = true }) {
   const byAxis = {};
   for (const row of ownedRows) {
     const aspectKey = row.item?.aspectKey;
@@ -943,6 +947,7 @@ function OneShotItemPicker({ scores, ownedRows, onUse, onInspect }) {
                         </span>
                         <span
                           onClick={(e) => {
+                            if (!canUseItems) return;
                             e.stopPropagation();
                             onUse(row);
                           }}
@@ -954,6 +959,7 @@ function OneShotItemPicker({ scores, ownedRows, onUse, onInspect }) {
                             color: 'var(--gold)',
                             fontSize: 10,
                             fontWeight: 700,
+                            opacity: canUseItems ? 1 : 0.45,
                           }}
                         >
                           사용
@@ -1004,6 +1010,30 @@ export default function TodayDetailPage({
   );
 
   useEffect(() => {
+    if (!kakaoId) return;
+    const client = getAuthenticatedClient(String(kakaoId));
+    client.from('daily_cache')
+      .select('content')
+      .eq('kakao_id', String(kakaoId))
+      .eq('cache_date', new Date().toISOString().slice(0, 10))
+      .eq('cache_type', 'daily_transient_items')
+      .maybeSingle()
+      .then(({ data }) => {
+        try {
+          const ids = JSON.parse(data?.content || '[]');
+          if (!Array.isArray(ids)) {
+            setUsedItems([]);
+            return;
+          }
+          setUsedItems(ids.map((id) => ALL_SPIRIT_MAP[String(id)]).filter(Boolean));
+        } catch {
+          setUsedItems([]);
+        }
+      })
+      .catch(() => setUsedItems([]));
+  }, [kakaoId]);
+
+  useEffect(() => {
     if (!kakaoId || !dailyResult) return;
     const client = getAuthenticatedClient(String(kakaoId));
     client.from('user_shop_inventory')
@@ -1018,35 +1048,64 @@ export default function TodayDetailPage({
       .catch(() => setOwnedRows([]));
   }, [kakaoId, dailyResult]);
 
+  const canPurify = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
+  const remaining = DAILY_MAX - dailyCount;
+  const canUseItems = canPurify && !!onRefresh;
+
   const handleUseItem = useCallback(async (row) => {
-    if (!kakaoId) return;
+    if (!kakaoId || !row?.item || !canUseItems) return;
+    setIsPurifying(true);
+    const nextUsedItems = [...usedItems, row.item];
+    const animPromise = new Promise((resolve) => setTimeout(resolve, 1200));
     try {
+      await Promise.all([
+        onRefresh?.({
+          transientItems: nextUsedItems,
+          skipBpCharge: true,
+          skipConfirm: true,
+          saveHistory: false,
+        }),
+        animPromise,
+      ]);
+
       const client = getAuthenticatedClient(String(kakaoId));
       await client.from('user_shop_inventory').delete().eq('id', row.rowId);
+      await client.from('daily_cache').upsert({
+        kakao_id: String(kakaoId),
+        cache_date: new Date().toISOString().slice(0, 10),
+        cache_type: 'daily_transient_items',
+        content: JSON.stringify(nextUsedItems.map((item) => item.id)),
+      }, { onConflict: 'kakao_id,cache_date,cache_type' });
       setOwnedRows((prev) => (prev || []).filter((item) => item.rowId !== row.rowId));
-      setUsedItems((prev) => [...prev, row.item]);
+      setUsedItems(nextUsedItems);
       setSelectedRow(null);
     } catch {
-      // ignore for now
+      await animPromise;
+    } finally {
+      setIsPurifying(false);
     }
-  }, [kakaoId]);
+  }, [kakaoId, canUseItems, onRefresh, usedItems]);
 
   const handlePurify = useCallback(async () => {
     if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
     setIsPurifying(true);
     const animPromise = new Promise((resolve) => setTimeout(resolve, 1200));
     try {
-      await Promise.all([onRefresh?.({ transientItems: usedItems }), animPromise]);
-      setUsedItems([]);
+      await Promise.all([
+        onRefresh?.({
+          transientItems: usedItems,
+          skipBpCharge: true,
+          skipConfirm: true,
+          saveHistory: false,
+        }),
+        animPromise,
+      ]);
     } catch {
       await animPromise;
     } finally {
       setIsPurifying(false);
     }
   }, [isPurifying, dailyLoading, dailyCount, DAILY_MAX, onRefresh, usedItems]);
-
-  const canPurify = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
-  const remaining = DAILY_MAX - dailyCount;
 
   return (
     <div className="today-detail-container">
@@ -1072,6 +1131,7 @@ export default function TodayDetailPage({
               onUseItem={handleUseItem}
               onInspectItem={setSelectedRow}
               setStep={setStep}
+              canUseItems={canUseItems}
             />
 
             {ownedRows && ownedRows.length > 0 && (
@@ -1080,6 +1140,7 @@ export default function TodayDetailPage({
                 ownedRows={ownedRows}
                 onUse={handleUseItem}
                 onInspect={setSelectedRow}
+                canUseItems={canUseItems}
               />
             )}
 
@@ -1150,6 +1211,7 @@ export default function TodayDetailPage({
           row={selectedRow}
           onClose={() => setSelectedRow(null)}
           onUse={handleUseItem}
+          canUseItems={canUseItems}
         />
       )}
     </div>

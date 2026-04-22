@@ -8,6 +8,18 @@ import { motion } from 'framer-motion';
 import { breakAtNatural } from '../utils/constants.js';
 import { BADTIME_THRESHOLD } from '../utils/gamificationLogic.js';
 
+const CATEGORY_META = [
+  { key: 'overall', label: '종합운', icon: '⭐' },
+  { key: 'love', label: '애정운', icon: '💕' },
+  { key: 'money', label: '금전운', icon: '💰' },
+  { key: 'work', label: '직장운', icon: '💼' },
+  { key: 'study', label: '학업운', icon: '📚' },
+  { key: 'health', label: '건강운', icon: '🌿' },
+  { key: 'social', label: '대인운', icon: '🤝' },
+  { key: 'travel', label: '이동운', icon: '🧭' },
+  { key: 'create', label: '창의운', icon: '🎨' },
+];
+
 /**
  * 응답 텍스트에서 [태그] 기준으로 섹션을 추출해 구조화된 객체로 반환
  */
@@ -18,7 +30,7 @@ function parseDailyLines(text) {
     saju: null,       // 동양의 기운
     astrology: null,  // 서양의 하늘
     synergy: null,    // 별숨픽
-    categories: null, // 카테고리 운세 (종합/애정/금전/직장)
+    categories: null, // 카테고리 운세 (9개 영역)
     badtime: null,
     closingAdvice: '',
     // 구형 아이템 fallback
@@ -89,7 +101,17 @@ function parseDailyLines(text) {
   const categoryLines = extractSection('[카테고리 운세]');
   let categories = null;
   if (categoryLines && categoryLines.length > 0) {
-    categories = { overall: null, love: null, money: null, work: null };
+    categories = {
+      overall: null,
+      love: null,
+      money: null,
+      work: null,
+      study: null,
+      health: null,
+      social: null,
+      travel: null,
+      create: null,
+    };
     const parseStarLine = (line, prefix) => {
       const raw = line.replace(prefix, '').trim();
       const parts = raw.split('—');
@@ -102,9 +124,13 @@ function parseDailyLines(text) {
       else if (line.startsWith('애정운:')) categories.love = parseStarLine(line, '애정운:');
       else if (line.startsWith('금전운:')) categories.money = parseStarLine(line, '금전운:');
       else if (line.startsWith('직장운:')) categories.work = parseStarLine(line, '직장운:');
+      else if (line.startsWith('학업운:')) categories.study = parseStarLine(line, '학업운:');
+      else if (line.startsWith('건강운:')) categories.health = parseStarLine(line, '건강운:');
+      else if (line.startsWith('대인운:')) categories.social = parseStarLine(line, '대인운:');
+      else if (line.startsWith('이동운:')) categories.travel = parseStarLine(line, '이동운:');
+      else if (line.startsWith('창의운:')) categories.create = parseStarLine(line, '창의운:');
     }
-    // 모두 null이면 categories를 null로
-    if (!categories.overall && !categories.love && !categories.money && !categories.work) {
+    if (!Object.values(categories).some(Boolean)) {
       categories = null;
     }
   }
@@ -245,7 +271,7 @@ export default function DailyStarCardV2({
           <div className="dsc-summary">{breakAtNatural(summary)}</div>
         )}
 
-        {/* ── 카테고리 운세 (종합/애정/금전/직장) ── */}
+        {/* ── 카테고리 운세 (9개 영역) ── */}
         {categories && (
           <div style={{
             background: 'var(--bg2)',
@@ -260,12 +286,7 @@ export default function DailyStarCardV2({
             }}>
               ✦ 오늘의 운세
             </div>
-            {[
-              { key: 'overall', label: '종합운', icon: '⭐' },
-              { key: 'love',    label: '애정운', icon: '💕' },
-              { key: 'money',   label: '금전운', icon: '💰' },
-              { key: 'work',    label: '직장운', icon: '💼' },
-            ].map(({ key, label, icon }) => {
+            {CATEGORY_META.map(({ key, label, icon }) => {
               const cat = categories[key];
               if (!cat) return null;
               const stars = cat.stars || 0;
