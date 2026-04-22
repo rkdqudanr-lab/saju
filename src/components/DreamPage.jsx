@@ -121,7 +121,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
 
   return (
     <div className="page step-fade">
-      <div className="inner">
+      <div className="inner" style={{ paddingBottom: 120 }}>
         {/* 헤더 */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontSize: '2rem', marginBottom: 8 }}>🌙</div>
@@ -224,7 +224,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>
                 🌙 별숨의 꿈 해몽
               </div>
-              <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+              <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>
                 {mainText}{loading && <span className="typing-cursor" />}
               </div>
             </div>
@@ -284,7 +284,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
                       background: m.role === 'user' ? 'var(--goldf)' : 'var(--card)',
                       border: `1px solid ${m.role === 'user' ? 'var(--acc)' : 'var(--line)'}`,
                       color: m.role === 'user' ? 'var(--gold)' : 'var(--t1)',
-                      fontSize: 'var(--xs)', lineHeight: 1.7, whiteSpace: 'pre-line',
+                      fontSize: 'var(--xs)', lineHeight: 1.7, whiteSpace: 'pre-line', wordBreak: 'keep-all',
                     }}>
                       {m.content}
                     </div>

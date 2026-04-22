@@ -167,28 +167,25 @@ export default function ResultsStep({
             )}
 
             {curPkg.chat > 0 && (
-              <button className="chat-cta-large" onClick={() => setStep(5)}>
-                <span className="chat-cta-emoji" style={{ fontSize: '1.4rem', color: 'var(--gold)' }}>✦</span>
-                <div className="chat-cta-info">
-                  <div className="chat-cta-title">별숨과 더 깊은 대화하기</div>
-                  <div className="chat-cta-desc">답변 내용으로 더 자세히 물어봐요</div>
-                </div>
-                <span style={{ fontSize: '1.1rem', color: 'var(--gold)', flexShrink: 0 }}>→</span>
-              </button>
+              <div style={{ padding: 'var(--sp3)', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', marginBottom: 'var(--sp2)', textAlign: 'center' }}>
+                <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', marginBottom: 'var(--sp2)' }}>별숨과 더 이야기 할까요?</div>
+                <button className="chat-cta-large" onClick={() => setStep(5)} style={{ marginBottom: 0 }}>
+                  <span className="chat-cta-emoji" style={{ fontSize: '1.4rem', color: 'var(--gold)' }}>🪬</span>
+                  <div className="chat-cta-info">
+                    <div className="chat-cta-title">심층 인터뷰로 넘어갑니다</div>
+                    <div className="chat-cta-desc">방금 들은 답변에 대해 더 깊은 대화를 나눠요</div>
+                  </div>
+                  <span style={{ fontSize: '1.1rem', color: 'var(--gold)', flexShrink: 0 }}>→</span>
+                </button>
+              </div>
             )}
 
             <div className="action-grid" style={{ marginBottom: 'var(--sp2)' }}>
-              {['love', 'family', 'relation'].includes(cat?.id ?? '') ? (
+              {['love', 'family', 'relation'].includes(cat?.id ?? '') && (
                 <div className="action-card compat" onClick={() => setStep(7)}>
                   <div className="action-card-icon">💞</div>
                   <div className="action-card-title">우리가 만나면</div>
                   <div className="action-card-sub">두 사람의 별이 만나는 시나리오</div>
-                </div>
-              ) : (
-                <div className="action-card" style={{ borderColor: 'var(--tealacc)' }} onClick={() => setStep(6)}>
-                  <div className="action-card-icon">🪬</div>
-                  <div className="action-card-title">심층 인터뷰</div>
-                  <div className="action-card-sub">10가지 질문으로 나를 더 깊이 분석</div>
                 </div>
               )}
               <div className="action-card letter" onClick={() => setStep(8)}>

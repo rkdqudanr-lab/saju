@@ -138,7 +138,7 @@ export default function TarotPage({ callApi, buildCtx, showToast }) {
   }, [pickedCards, buildCtx, isStreaming, startStream, resetStream]);
 
   return (
-    <div className="page step-fade" style={{ paddingBottom: 80, maxWidth: 480, margin: '0 auto' }}>
+    <div className="page step-fade" style={{ paddingBottom: 80, maxWidth: 800, margin: '0 auto' }}>
       <style>{`
         @keyframes tarotShimmer {
           0%   { transform: translateX(-120%); }
@@ -368,12 +368,14 @@ export default function TarotPage({ callApi, buildCtx, showToast }) {
           {/* 구분선 */}
           <div style={{ margin: '0 20px 14px', height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.25), transparent)' }} />
 
-          {/* 5열 그리드 */}
+          {/* 카드 스프레드 그리드 */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(65px, 1fr))',
             gap: 6,
             padding: '4px 20px 16px',
+            maxWidth: 600,
+            margin: '0 auto',
           }}>
             {deck.map((card, i) => {
               const isPicked  = picks.includes(i);
@@ -557,7 +559,7 @@ export default function TarotPage({ callApi, buildCtx, showToast }) {
               </div>
               {streamError
                 ? <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)' }}>{streamError}</div>
-                : <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
+                : <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
                     {streamText}{isStreaming && <span className="typing-cursor" />}
                   </div>
               }

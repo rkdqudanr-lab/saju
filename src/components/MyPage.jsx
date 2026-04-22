@@ -9,6 +9,109 @@ import BPDisplay from './BPDisplay.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { usePushNotification } from '../hooks/usePushNotification.js';
 import { getStreakTier, getNextStreakMilestone, STREAK_FREEZE_COST } from '../utils/gamificationLogic.js';
+import { getAuthenticatedClient } from '../lib/supabase.js';
+
+// ── 기운 성장 그래프 위젯 ──────────────────────────────────────────
+function GrowthWidget({ userId }) {
+  const [scores, setScores] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    async function loadData() {
+      try {
+        const client = getAuthenticatedClient(userId);
+        const d = new Date();
+        d.setDate(d.getDate() - 14); // 최근 14일
+        const { data } = await client
+          .from('daily_scores')
+          .select('score_date, score')
+          .gte('score_date', d.toISOString().slice(0, 10))
+          .order('score_date', { ascending: true });
+        if (data) setScores(data);
+      } catch {
+        // 무시
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [userId]);
+
+  if (loading) {
+    return <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t4)', fontSize: 'var(--xs)' }}>그래프를 그리는 중...</div>;
+  }
+
+  if (scores.length < 2) {
+    return (
+      <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t4)', fontSize: 'var(--xs)', textAlign: 'center', lineHeight: 1.6 }}>
+        기운 흐름을 보려면<br/>하루 더 별숨 점수를 받아주세요 ✦
+      </div>
+    );
+  }
+
+  // 데이터 가공
+  const data = scores.slice(-10); // 최대 최근 10개만 시각화
+  const W = 320;
+  const H = 80;
+  const maxScore = Math.max(...data.map(d => d.score), 100);
+  const minScore = Math.min(...data.map(d => d.score), 40); // 최소 바닥을 40정도로 띄움
+  const range = Math.max(maxScore - minScore, 10);
+
+  const dx = W / (data.length - 1);
+  const points = data.map((d, i) => {
+    const x = i * dx;
+    const y = H - ((d.score - minScore) / range) * H;
+    return { x, y, score: d.score, date: d.score_date.slice(5) }; // MM-DD
+  });
+
+  const pathD = points.map((p, i) => (i === 0 ? `M ${p.x},${p.y}` : `L ${p.x},${p.y}`)).join(' ');
+  const areaD = `${pathD} L ${points[points.length - 1].x},${H} L 0,${H} Z`;
+
+  return (
+    <div style={{ marginTop: 12, padding: '16px 14px', background: 'var(--bg3)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
+      <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 12 }}>나의 기운 성장 그래프</div>
+      
+      <div style={{ position: 'relative', width: '100%', overflowX: 'auto', paddingBottom: 16 }}>
+        <svg width={W} height={H} style={{ overflow: 'visible' }}>
+          <defs>
+            <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--gold)" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="var(--gold)" stopOpacity="0.0" />
+            </linearGradient>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#4A9EFF" />
+              <stop offset="50%" stopColor="var(--gold)" />
+              <stop offset="100%" stopColor="#F68C6C" />
+            </linearGradient>
+          </defs>
+          
+          {/* 영역 채우기 */}
+          <path d={areaD} fill="url(#growthFill)" />
+          
+          {/* 선 그리기 */}
+          <path d={pathD} fill="none" stroke="url(#lineGrad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          
+          {/* 점(노드) 및 라벨 그리기 */}
+          {points.map((p, i) => (
+            <g key={i}>
+              {/* 포인트 */}
+              <circle cx={p.x} cy={p.y} r="4" fill="var(--bg2)" stroke="var(--gold)" strokeWidth="2" />
+              {/* 점수 툴팁 */}
+              <text x={p.x} y={p.y - 10} textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--t2)">
+                {p.score}
+              </text>
+              {/* 날짜 축 */}
+              <text x={p.x} y={H + 16} textAnchor="middle" fontSize="9" fill="var(--t4)">
+                {p.date.replace('-', '/')}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
 
 function InfoAccordion({ items }) {
   const [openIdx, setOpenIdx] = useState(null);
@@ -251,6 +354,9 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             )}
           </div>
         )}
+
+        {/* 내 기운 성장 그래프 */}
+        <GrowthWidget userId={user?.kakaoId || user?.id} />
 
         {/* 스트릭 프리즈 확인 모달 */}
         {showFreezeConfirm && (

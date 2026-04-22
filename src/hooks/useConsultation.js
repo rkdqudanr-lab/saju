@@ -670,6 +670,21 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     finally { setChatLoading(false); }
   }, [chatInput, chatLoading, chatLeft, selQs, answers, chatHistory, callApi]);
 
+  // ── 꼬리 질문 5개 동적 생성 ──
+  const generateChatSuggestions = useCallback(async () => {
+    if (chatHistory.length > 0) return null;
+    const prevQAs = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${(answers[i] || '').slice(0, 300)}`).join('\n\n');
+    const prompt = `[이전 상담]\n${prevQAs}\n\n[요청]\n이전 상담 내용과 답변을 바탕으로, 사용자가 이어서 더 깊이 물어볼 만한 심층 꼬리 질문 5개를 생성해주세요.\n- 사용자가 그대로 복사해서 보낼 수 있도록 짧고 자연스러운 대화체로 작성하세요.\n- 포맷은 반드시 번호와 텍스트만 적어주세요:\n1. [질문내용]\n2. [질문내용]\n3. [질문내용]\n4. [질문내용]\n5. [질문내용]`;
+    try {
+      const text = await callApi(prompt, { isChat: true });
+      const lines = text.split('\n').map(l => l.replace(/^\d+\.\s*/, '').replace(/^[-\*]\s*/, '').trim()).filter(Boolean).slice(0, 5);
+      if (lines.length >= 3) return lines;
+    } catch (e) {
+      // 실패 시 null 반환 (ChatStep에서 기본값 사용)
+    }
+    return null;
+  }, [selQs, answers, chatHistory, callApi]);
+
   // ── 채팅 컨텍스트 압축 (히스토리가 길어질 때 오래된 메시지 요약) ──
   function compressChatHistory(history) {
     if (history.length <= 6) {
@@ -798,6 +813,7 @@ export function useConsultation(buildCtx, formOk, user, consentFlags, responseSt
     pkg, setPkg,
     answers, setAnswers,
     openAcc, setOpenAcc,
+    generateChatSuggestions,
     typedSet, setTypedSet,
     chatHistory, chatInput, setChatInput, chatLoading, chatUsed, latestChatIdx,
     chatLeft, maxQ, maxChat, curPkg,

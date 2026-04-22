@@ -228,7 +228,7 @@ export default function App() {
           diaryReviewResult, diaryReviewLoading,
           addQ, rmQ, askClaude, askQuick, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview, resetDiaryReview, handleTypingDone: _handleTypingDone, handleAccToggle,
           retryAnswer, sendChat, sendStreamChat, genReport, callApi, retryMsg, resetSession,
-          deleteHistoryItem, deleteAllHistoryItems } = consultation;
+          deleteHistoryItem, deleteAllHistoryItems, generateChatSuggestions } = consultation;
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
 
@@ -674,6 +674,7 @@ export default function App() {
             setShowProfileModal={setShowProfileModal}
             handleSendChat={handleSendChat} handleSaveChatImage={handleSaveChatImage}
             chatEndRef={chatEndRef}
+            generateChatSuggestions={generateChatSuggestions}
           />
         )}
 

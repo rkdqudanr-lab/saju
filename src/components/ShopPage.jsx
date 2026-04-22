@@ -382,20 +382,29 @@ function ShopItemPreviewGrid({ pool, gradeConfig, gradeOrder }) {
           );
         })}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-        {filtered.map(item => (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 10 }}>
+        {filtered.map(item => {
+          let styleVars = {};
+          if (item.category === 'theme' && item.effect) {
+            try { styleVars = typeof item.effect === 'string' ? JSON.parse(item.effect) : item.effect; } catch (e) {}
+          }
+          const themeBg = styleVars['--bg2'] || 'var(--bg2)';
+          const themeAcc = styleVars['--acc'] || cfg.border;
+          
+          return (
           <div key={item.id} style={{
-            background: 'var(--bg2)', border: `1px solid ${cfg.border}`,
+            background: themeBg, border: `1px solid ${themeAcc}`,
             borderRadius: 12, padding: '14px 8px', textAlign: 'center',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+            ...styleVars,
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
               <ShopItemGraphic item={item} size={48} />
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', width: '100%' }}>
+            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, wordBreak: 'keep-all', width: '100%' }}>
               {item.name}
             </div>
-            <div style={{ fontSize: '10px', color: cfg.color, lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', width: '100%' }}>
+            <div style={{ fontSize: '10px', color: cfg.color, lineHeight: 1.4, wordBreak: 'keep-all', width: '100%' }}>
               {item.effect}
             </div>
           </div>
@@ -436,7 +445,7 @@ function SpiritItemPreview({ pool, gradeConfig, gradeOrder }) {
           );
         })}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 10 }}>
         {bodies.map(item => (
           <div key={item.bodyId} style={{
             background: 'var(--bg2)', border: `1px solid ${cfg.border}`,
@@ -461,16 +470,24 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
   const rarityColor = RARITY_COLOR[item.rarity] || 'var(--t4)';
   const rarityLabel = RARITY_LABEL[item.rarity];
 
+  let styleVars = {};
+  if (item.category === 'theme' && item.effect) {
+    try { styleVars = typeof item.effect === 'string' ? JSON.parse(item.effect) : item.effect; } catch (e) {}
+  }
+  const themeBg = styleVars['--bg2'] || 'var(--bg2)';
+  const themeAcc = styleVars['--acc'] || (isEquipped ? 'var(--acc)' : 'var(--line)');
+
   return (
     <div style={{
-      background: 'var(--bg2)',
-      border: `1px solid ${isEquipped ? 'var(--acc)' : 'var(--line)'}`,
+      background: themeBg,
+      border: `1px solid ${themeAcc}`,
       borderRadius: 'var(--r2)',
       padding: '12px 8px',
       display: 'flex', flexDirection: 'column', gap: 5,
       position: 'relative',
-      boxShadow: isEquipped ? '0 0 10px rgba(232,176,72,0.2)' : 'none',
+      boxShadow: isEquipped ? `0 0 10px ${styleVars['--acc'] || 'rgba(232,176,72,0.2)'}` : 'none',
       minHeight: 160,
+      ...styleVars,
     }}>
       {item.rarity && item.rarity !== 'common' && (
         <div style={{ position: 'absolute', top: 8, right: 10, fontSize: '10px', fontWeight: 700, color: rarityColor }}>
@@ -486,8 +503,8 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
         }
       </div>
 
-      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item.name}</div>
-      <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.5, textAlign: 'center', flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{item.description || CAT_DESC[item.category]}</div>
+      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center', wordBreak: 'keep-all', lineHeight: 1.3 }}>{item.name}</div>
+      <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.4, textAlign: 'center', flex: 1, wordBreak: 'keep-all' }}>{item.description || CAT_DESC[item.category]}</div>
 
       {canEquip && (
         <button onClick={onEquip} style={{
@@ -949,7 +966,7 @@ export default function ShopPage({ showToast }) {
                 <div style={{ fontSize: 'var(--xs)', marginTop: 6 }}>뽑기로 아이템을 모아봐요</div>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, alignItems: 'stretch' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10, alignItems: 'stretch' }}>
                 {invItems.map(item => (
                   <InvCard
                     key={item.id}

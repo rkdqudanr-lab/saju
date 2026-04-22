@@ -74,8 +74,26 @@ export default function ChatStep({
   setShowProfileModal,
   handleSendChat, handleSaveChatImage,
   chatEndRef,
+  generateChatSuggestions,
 }) {
-  const chips = getContextualChips(chatHistory, selQs);
+  const [aiChips, setAiChips] = useState(null);
+  const [aiChipsLoading, setAiChipsLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (chatHistory.length === 0 && generateChatSuggestions && !aiChips && !aiChipsLoading) {
+      setAiChipsLoading(true);
+      generateChatSuggestions().then(res => {
+        if (active) {
+          if (res && res.length > 0) setAiChips(res);
+          setAiChipsLoading(false);
+        }
+      });
+    }
+    return () => { active = false; };
+  }, [chatHistory.length, generateChatSuggestions, aiChips, aiChipsLoading]);
+
+  const chips = aiChips || getContextualChips(chatHistory, selQs);
   const lastMsg = chatHistory[chatHistory.length - 1];
   const lastMsgIsStreaming = lastMsg?.streaming === true;
 
@@ -164,22 +182,28 @@ export default function ChatStep({
         {/* 스마트 추천 질문 칩 */}
         {chatLeft > 0 && !chatLoading && (
           <div style={{ overflowX: 'auto', padding: '8px 16px 4px', display: 'flex', gap: 8, scrollbarWidth: 'none' }}>
-            {chips.map((chip, i) => (
-              <button
-                key={i}
-                onClick={() => sendChip(chip)}
-                style={{
-                  flexShrink: 0, padding: '6px 14px', borderRadius: 20,
-                  border: '1px solid var(--line)', background: 'var(--bg2)',
-                  color: 'var(--t2)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
-                  cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all var(--trans-fast)',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.color = 'var(--gold)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
-              >
-                {chip}
-              </button>
-            ))}
+            {aiChipsLoading ? (
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', padding: '6px 14px', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div className="typing-dots"><span /><span /><span /></div> 질문을 생각하는 중...
+              </div>
+            ) : (
+              chips.map((chip, i) => (
+                <button
+                  key={i}
+                  onClick={() => sendChip(chip)}
+                  style={{
+                    flexShrink: 0, padding: '6px 14px', borderRadius: 20,
+                    border: '1px solid var(--line)', background: 'var(--bg2)',
+                    color: 'var(--t2)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+                    cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all var(--trans-fast)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.color = 'var(--gold)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
+                >
+                  {chip}
+                </button>
+              ))
+            )}
           </div>
         )}
         <div className="chat-inp-row">

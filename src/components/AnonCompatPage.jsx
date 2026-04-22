@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
+import { spendBP } from '../utils/gamificationLogic.js';
 
 const FILTERS = ['전체', '90점↑', '75점↑', '내 별자리'];
 const PAGE_SIZE = 15;
@@ -223,7 +224,87 @@ function CompatCard({ post, myKakaoId, onLike, liked }) {
           </span>
         </button>
       </div>
+
+      {/* 천생연분 이상일 때 표시되는 액션 버튼 (편지 / 팔로우) */}
+      {post.compat_score >= 75 && post.kakao_id && post.kakao_id !== myKakaoId && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--line)', display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => onLike(post, 'letter')}
+            style={{
+              flex: 1, padding: '8px 0', borderRadius: 'var(--r1)',
+              background: 'linear-gradient(135deg, rgba(200,165,80,0.1), rgba(200,165,80,0.02))',
+              border: '1px solid var(--acc)', color: 'var(--gold)',
+              fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--ff)'
+            }}
+          >
+            💌 편지 남기기 (500 BP)
+          </button>
+          <button
+            onClick={() => onLike(post, 'follow')}
+            style={{
+              flex: 1, padding: '8px 0', borderRadius: 'var(--r1)',
+              background: 'var(--bg3)', border: '1px solid var(--line)',
+              color: 'var(--t3)', fontSize: '11px', fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'var(--ff)'
+            }}
+          >
+            ✦ 팔로우
+          </button>
+        </div>
+      )}
     </div>
+  );
+}
+
+// ── 편지 보내기 모달 ──────────────────────────────────────────────────
+function LetterModal({ post, onClose, onSubmit, loading }) {
+  const [content, setContent] = useState('');
+
+  return createPortal(
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: 'rgba(0,0,0,0.7)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', padding: '0 20px'
+    }}>
+      <div style={{
+        width: '100%', maxWidth: 360,
+        background: 'var(--bg2)', borderRadius: 'var(--r2, 16px)',
+        padding: '24px 20px', border: '1px solid var(--acc)'
+      }}>
+        <div style={{ fontSize: '24px', textAlign: 'center', marginBottom: 8 }}>💌</div>
+        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center', marginBottom: 6 }}>
+          인연에게 편지 남기기
+        </div>
+        <div style={{ fontSize: '11px', color: 'var(--t4)', textAlign: 'center', marginBottom: 16 }}>
+          전송 시 500 BP가 차감되며, 상대방에게 내 익명 편지가 전달돼요
+        </div>
+
+        <textarea
+          placeholder="따뜻한 한마디를 남겨주세요..."
+          value={content}
+          onChange={e => setContent(e.target.value.slice(0, 200))}
+          style={{
+            width: '100%', height: 100, padding: '12px', borderRadius: 'var(--r1)',
+            border: '1px solid var(--line)', background: 'var(--bg1)', color: 'var(--t1)',
+            fontSize: 'var(--xs)', resize: 'none', outline: 'none', boxSizing: 'border-box',
+            marginBottom: 4, fontFamily: 'var(--ff)'
+          }}
+        />
+        <div style={{ textAlign: 'right', fontSize: '10px', color: 'var(--t4)', marginBottom: 16 }}>
+          {content.length}/200
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onClose} disabled={loading} style={{ flex: 1, padding: '10px', background: 'var(--bg3)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', cursor: 'pointer', fontFamily: 'var(--ff)' }}>
+            취소
+          </button>
+          <button onClick={() => onSubmit(content)} disabled={loading || !content.trim()} style={{ flex: 1, padding: '10px', background: 'var(--gold)', border: 'none', borderRadius: 'var(--r1)', color: '#1a1208', fontSize: 'var(--xs)', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--ff)', opacity: (!content.trim() || loading) ? 0.6 : 1 }}>
+            {loading ? '전송 중...' : '보내기'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -237,6 +318,11 @@ export default function AnonCompatPage({ showToast, shareData }) {
   const [likedIds, setLikedIds] = useState(new Set());
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
+  
+  // 편지 보내기 관련 상태
+  const [letterPost, setLetterPost] = useState(null);
+  const [letterLoading, setLetterLoading] = useState(false);
+
   const offsetRef = useRef(0);
 
   const kakaoId = user?.kakaoId || user?.id;
@@ -298,11 +384,31 @@ export default function AnonCompatPage({ showToast, shareData }) {
     loadLikes();
   }, [filter]);
 
-  async function handleLike(postId) {
-    if (!kakaoId) { showToast?.('로그인 후 공감할 수 있어요', 'info'); return; }
-    const isLiked = likedIds.has(postId);
+  async function handleLike(postOrId, action = 'like') {
+    if (!kakaoId) { showToast?.('로그인 후 이용할 수 있어요', 'info'); return; }
+    const postId = typeof postOrId === 'object' ? postOrId.id : postOrId;
     const client = getAuthenticatedClient(kakaoId);
 
+    if (action === 'letter') {
+      setLetterPost(typeof postOrId === 'object' ? postOrId : posts.find(p => p.id === postId));
+      return;
+    }
+
+    if (action === 'follow') {
+      const targetId = typeof postOrId === 'object' ? postOrId.kakao_id : posts.find(p => p.id === postId)?.kakao_id;
+      if (!targetId) return;
+      try {
+        const { error } = await client.from('anon_follows').insert({ follower_id: String(kakaoId), following_id: targetId });
+        if (error && error.code !== '23505') throw error; // 23505 is unique violation (already following)
+        showToast?.('이 인연을 팔로우했어요 ✦', 'success');
+      } catch {
+        showToast?.('팔로우 처리 중 오류가 발생했어요', 'error');
+      }
+      return;
+    }
+
+    // 일반 공감(Like)
+    const isLiked = likedIds.has(postId);
     if (isLiked) {
       setLikedIds(prev => { const s = new Set(prev); s.delete(postId); return s; });
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes_count: Math.max(0, (p.likes_count || 0) - 1) } : p));
@@ -313,6 +419,41 @@ export default function AnonCompatPage({ showToast, shareData }) {
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes_count: (p.likes_count || 0) + 1 } : p));
       await client.from('anon_compat_reactions').insert({ post_id: postId, kakao_id: String(kakaoId) });
       await client.from('anon_compat_posts').update({ likes_count: (posts.find(p => p.id === postId)?.likes_count || 0) + 1 }).eq('id', postId);
+    }
+  }
+
+  async function handleSendLetter(content) {
+    if (!letterPost || !kakaoId) return;
+    
+    // BP 차감 로직
+    const { gamificationState, setGamificationState } = useAppStore.getState();
+    if (gamificationState.currentBp < 500) {
+      showToast?.('BP가 부족해요. (500 BP 필요)', 'error');
+      setLetterPost(null);
+      return;
+    }
+
+    setLetterLoading(true);
+    try {
+      const client = getAuthenticatedClient(kakaoId);
+      const { error } = await client.from('anon_messages').insert({
+        sender_id: String(kakaoId),
+        receiver_id: letterPost.kakao_id,
+        post_id: letterPost.id,
+        content: content,
+      });
+      if (error) throw error;
+      
+      // BP 차감 성공 시
+      await spendBP(500, '편지 전송', kakaoId);
+      setGamificationState({ ...gamificationState, currentBp: gamificationState.currentBp - 500 });
+      
+      showToast?.('편지가 별빛을 타고 전송됐어요 💌', 'success');
+      setLetterPost(null);
+    } catch {
+      showToast?.('편지 전송에 실패했어요', 'error');
+    } finally {
+      setLetterLoading(false);
     }
   }
 
@@ -470,6 +611,16 @@ export default function AnonCompatPage({ showToast, shareData }) {
           onClose={() => setShowShareModal(false)}
           onSubmit={handleShare}
           loading={shareLoading}
+        />
+      )}
+
+      {/* 편지 보내기 모달 */}
+      {letterPost && (
+        <LetterModal
+          post={letterPost}
+          onClose={() => setLetterPost(null)}
+          onSubmit={handleSendLetter}
+          loading={letterLoading}
         />
       )}
     </div>
