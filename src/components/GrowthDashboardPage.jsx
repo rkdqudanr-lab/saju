@@ -218,8 +218,9 @@ function ScoreTrendChart({ data }) {
   const validVals = data.filter(v => v !== null);
   const max = Math.max(...validVals, 1);
   const min = Math.min(...validVals, 0);
-  const range = max - min || 1;
-  const toY = v => 100 - ((v - min) / range) * 80 - 10;
+  // 모든 값이 같으면 range=0이 되므로 방어 처리
+  const range = max - min || 10;
+  const toY = v => 100 - ((v - min) / range) * 70 - 15;
 
   const segments = [];
   let seg = [];
@@ -298,11 +299,14 @@ function getLast7Days() {
   });
 }
 
+const BAR_MAX_H = 48; // px
+
 /** BP 추이 막대 차트 */
 function BPTrendChart({ data }) {
-  // data: [{ date, total }] — 날짜별 획득 BP 합계
+  // data: { 'YYYY-MM-DD': number } — 날짜별 획득 BP 합계
   const dates = getLast7Days();
-  const maxVal = Math.max(...dates.map(d => data[d] || 0), 1);
+  const values = dates.map(d => data[d] || 0);
+  const maxVal = Math.max(...values, 1);
 
   return (
     <div style={{
@@ -312,10 +316,10 @@ function BPTrendChart({ data }) {
       <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t3)', marginBottom: 12 }}>
         ✦ 최근 7일 별 포인트 흐름
       </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 56 }}>
-        {dates.map(date => {
-          const val = data[date] || 0;
-          const pct = Math.max((val / maxVal) * 100, val > 0 ? 8 : 0);
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5 }}>
+        {dates.map((date, i) => {
+          const val = values[i];
+          const barH = val > 0 ? Math.max(Math.round((val / maxVal) * BAR_MAX_H), 4) : 2;
           const dow = new Date(date).getDay();
           const isToday = date === new Date().toISOString().slice(0, 10);
           return (
@@ -324,7 +328,7 @@ function BPTrendChart({ data }) {
                 <div style={{ fontSize: '8px', color: 'var(--gold)', fontWeight: 700, lineHeight: 1 }}>{val}</div>
               )}
               <div style={{
-                width: '100%', height: `${pct}%`, minHeight: val > 0 ? 4 : 2,
+                width: '100%', height: barH,
                 borderRadius: 3,
                 background: isToday
                   ? 'linear-gradient(180deg, var(--gold), #C8953A)'

@@ -760,17 +760,17 @@ export default function ShopPage({ showToast }) {
     <div className="page step-fade" style={{ paddingBottom: 52 }}>
 
       {/* 헤더 */}
-      <div style={{ padding: '22px 20px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 3 }}>✦ 별숨 숍</div>
-          <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.25 }}>뽑기 · 꾸미기 · 보관함</div>
+      <div style={{ padding: '22px 20px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em' }}>✦ 별숨 숍</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', background: 'var(--goldf)', borderRadius: 20, border: '1px solid var(--acc)' }}>
+            <span style={{ fontSize: 12, color: 'var(--gold)' }}>✦</span>
+            <span style={{ fontSize: 'var(--xs)', fontWeight: 800, color: 'var(--gold)' }}>
+              {loadingBP ? '...' : currentBP} BP
+            </span>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--goldf)', borderRadius: 20, border: '1px solid var(--acc)', flexShrink: 0 }}>
-          <span style={{ fontSize: 13, color: 'var(--gold)' }}>✦</span>
-          <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--gold)' }}>
-            {loadingBP ? '...' : currentBP} BP
-          </span>
-        </div>
+        <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.25 }}>뽑기 · 꾸미기 · 보관함</div>
       </div>
 
       {/* 장착 기운 상태 */}

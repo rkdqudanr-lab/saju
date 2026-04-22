@@ -614,7 +614,7 @@ export default function SettingsPage({
 
         {/* ── Tab 2 추가 섹션: 현재 나의 상황 (생애 단계) ── */}
         {tab === 2 && (
-          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>
             <div className="card-title">현재 나의 상황</div>
             <div className="card-sub" style={{ marginBottom: 12 }}>
               지금 내 상황을 알려주면 별숨이 더 맞춤 언어로 이야기해줘요.
@@ -649,7 +649,7 @@ export default function SettingsPage({
 
         {/* ── Tab 2 추가 섹션: 큰 글씨 모드 ── */}
         {tab === 2 && (
-          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>
             <div className="card-title">큰 글씨 모드</div>
             <div className="card-sub" style={{ marginBottom: 8 }}>
               글씨가 조금 더 크게 보이도록 설정할 수 있어요.
@@ -681,7 +681,7 @@ export default function SettingsPage({
 
         {/* ── Tab 2 추가 섹션: 푸시 알림 설정 ── */}
         {tab === 2 && (
-          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>
             <div className="card-title">별숨 푸시 알림</div>
             <div className="card-sub" style={{ marginBottom: 8 }}>
               ⚠️ 배드타임 진입, 행운의 시간대 도달 시 알림을 받아보세요.
@@ -703,7 +703,7 @@ export default function SettingsPage({
 
         {/* ── Tab 2 추가 섹션: 광장 공개 설정 ── */}
         {tab === 2 && (
-          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 0 }}>
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>
             <div className="card-title">광장 공개 설정</div>
             <div className="card-sub" style={{ marginBottom: 8 }}>
               별숨 광장에 글을 쓸 때 나의 사주 정보를 보이게 할지 설정해요.

@@ -243,8 +243,8 @@ ${qaPairs}
           {today && (
             <div className="report-date">{today.year}년 {today.month}월</div>
           )}
-          <div className="report-title">{displayName}님을 위한<br />심층 인터뷰</div>
-          <div className="report-name">별숨이 당신을 더 깊이 알아가요</div>
+          <div className="report-title">{displayName}님을<br />별숨에게 알려주기</div>
+          <div className="report-name">당신의 이야기로 별숨이 더 깊이 알아가요</div>
         </div>
 
         {/* ── Phase: entry (진입 로딩 메시지) ── */}
@@ -277,9 +277,9 @@ ${qaPairs}
             }}>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, marginBottom: 14 }}>
                 별숨이 당신의 사주와 별자리를 읽고,
-                <strong style={{ color: 'var(--gold)' }}> 당신만을 위한 10가지 질문</strong>을 만들어드려요.<br />
-                솔직하게 답해주시면, 그 답변들을 바탕으로
-                <strong style={{ color: 'var(--gold)' }}> 깊고 풍부한 분석</strong>을 드릴게요.
+                <strong style={{ color: 'var(--gold)' }}> 나를 더 잘 이해하기 위한 10가지 질문</strong>을 만들어드려요.<br />
+                솔직하게 답해주시면, 별숨이
+                <strong style={{ color: 'var(--gold)' }}> 당신만을 위한 깊은 이야기</strong>를 건네드려요.
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[

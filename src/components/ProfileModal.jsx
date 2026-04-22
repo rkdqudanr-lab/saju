@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { DAILY_QUESTIONS, PROFILE_QUESTIONS_IDS } from "../utils/constants.js";
 import { getAuthToken } from "../hooks/useUserProfile.js";
+import { useAppStore } from "../store/useAppStore.js";
 
 // 20문 20답용 질문 목록 (DAILY_QUESTIONS에서 선별)
 const PROFILE_QS = DAILY_QUESTIONS.filter(q => PROFILE_QUESTIONS_IDS.includes(q.id));
@@ -15,6 +16,7 @@ function countAnswered(qa) {
 //  👤 별숨에게 나를 알려주기 — 20문 20답
 // ═══════════════════════════════════════════════════════════
 export default function ProfileModal({ profile, setProfile, onClose, user, saveUserProfileExtra }) {
+  const setStep = useAppStore(s => s.setStep);
   // qa_answers: { [questionId]: answerString }
   const [qa, setQa] = useState(() => {
     try { return profile?.qa_answers ? { ...profile.qa_answers } : {}; } catch { return {}; }
@@ -216,8 +218,11 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
             {answeredCount}개의 이야기를 들었어요.<br />
             앞으로 모든 운세에 자동으로 반영될 거예요.
           </div>
-          <button className="profile-save-btn" onClick={onClose}>
-            별숨에게 물어보러 가기 ✦
+          <button className="profile-save-btn" onClick={() => { onClose(); setStep(6); }}>
+            별숨에게 나를 더 알려주기 ✦
+          </button>
+          <button className="profile-save-btn" style={{ background: 'none', border: '1px solid var(--acc)', color: 'var(--gold)', marginTop: 8 }} onClick={onClose}>
+            별숨에게 물어보러 가기
           </button>
           <button className="profile-close-btn" onClick={() => { setPhase('quiz'); setCurrentIdx(0); }}>
             처음부터 다시 하기

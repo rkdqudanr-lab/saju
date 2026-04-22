@@ -423,31 +423,22 @@ export default function AnonCompatPage({ showToast, shareData }) {
   }
 
   async function handleSendLetter(content) {
-    if (!letterPost || !kakaoId) return;
-    
-    // BP 차감 로직
-    const { gamificationState, setGamificationState } = useAppStore.getState();
-    if (gamificationState.currentBp < 500) {
-      showToast?.('BP가 부족해요. (500 BP 필요)', 'error');
-      setLetterPost(null);
-      return;
-    }
-
+    if (!letterPost || !kakaoId || !content.trim()) return;
     setLetterLoading(true);
     try {
       const client = getAuthenticatedClient(kakaoId);
+      const { ok } = await spendBP(client, String(kakaoId), 500, `LETTER_${Date.now()}`, '편지 전송');
+      if (!ok) {
+        showToast?.('BP가 부족해요. (500 BP 필요)', 'error');
+        return;
+      }
       const { error } = await client.from('anon_messages').insert({
         sender_id: String(kakaoId),
         receiver_id: letterPost.kakao_id,
         post_id: letterPost.id,
-        content: content,
+        content: content.trim(),
       });
       if (error) throw error;
-      
-      // BP 차감 성공 시
-      await spendBP(500, '편지 전송', kakaoId);
-      setGamificationState({ ...gamificationState, currentBp: gamificationState.currentBp - 500 });
-      
       showToast?.('편지가 별빛을 타고 전송됐어요 💌', 'success');
       setLetterPost(null);
     } catch {

@@ -95,6 +95,21 @@ function dateKey(y, m, d) {
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MONTHS = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 
+// 일정 시간 파싱 — "[HH:MM] 제목" 형식
+function parseEventTitle(raw) {
+  const m = raw.match(/^\[(\d{2}:\d{2})\]\s*(.+)$/);
+  if (m) return { time: m[1], title: m[2] };
+  return { time: null, title: raw };
+}
+
+function sortedEvents(evs) {
+  return [...evs].sort((a, b) => {
+    const ta = parseEventTitle(a.title).time || '99:99';
+    const tb = parseEventTitle(b.title).time || '99:99';
+    return ta.localeCompare(tb);
+  });
+}
+
 // 운세/일기 표시용 맵
 const MOOD_MAP = {
   1: { emoji: '😞', label: '많이 힘들어요' },
@@ -129,9 +144,11 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
-  const [selected, setSelected] = useState(null);
+  // 오늘 날짜를 기본으로 선택
+  const [selected, setSelected] = useState(now.getDate());
   const [events, setEvents] = useState({});
   const [inputText, setInputText] = useState('');
+  const [inputTime, setInputTime] = useState('');
   const [editingEventId, setEditingEventId] = useState(null);
   const [editingEventText, setEditingEventText] = useState('');
 
@@ -266,8 +283,9 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
 
   const addEvent = async () => {
     if (!inputText.trim() || !selectedKey) return;
-    const title = inputText.trim();
+    const title = inputTime ? `[${inputTime}] ${inputText.trim()}` : inputText.trim();
     setInputText('');
+    setInputTime('');
     if (user?.id) {
       const authClient = getAuthenticatedClient(user.id);
       const { data, error } = await (authClient || supabase)
@@ -763,12 +781,14 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               </button>
             )}
 
-            {/* 일정 목록 */}
+            {/* 일정 목록 (시간순 정렬) */}
             {selectedEvents.length > 0 && (
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontWeight: 600, marginBottom: 8, letterSpacing: '.04em' }}>이날의 일정</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {selectedEvents.map(ev => (
+                  {sortedEvents(selectedEvents).map(ev => {
+                    const { time, title: evTitle } = parseEventTitle(ev.title);
+                    return (
                     <div key={ev.id} style={{ background: 'var(--bg1)', borderRadius: 'var(--r1)', padding: '10px 12px', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
                       {editingEventId === ev.id ? (
                         <>
@@ -778,7 +798,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                             value={editingEventText}
                             onChange={e => setEditingEventText(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) saveEditEvent(selectedKey, ev.id); if (e.key === 'Escape') cancelEditEvent(); }}
-                            maxLength={40}
+                            maxLength={50}
                             autoFocus
                           />
                           <button
@@ -792,27 +812,33 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                         </>
                       ) : (
                         <>
-                          <span style={{ flex: 1, fontSize: 'var(--sm)', color: 'var(--t1)' }}>📅 {ev.title}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            {time && (
+                              <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 2 }}>🕐 {time}</div>
+                            )}
+                            <span style={{ fontSize: 'var(--sm)', color: 'var(--t1)' }}>📅 {evTitle}</span>
+                          </div>
                           <button
-                            onClick={() => askAboutEvent(ev.title, selectedData.score, selectedData.d)}
-                            style={{ background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.15))', border: '1px solid var(--gold)', borderRadius: 20, padding: '5px 12px', fontSize: 'var(--xs)', color: 'var(--gold)', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
+                            onClick={() => askAboutEvent(evTitle, selectedData.score, selectedData.d)}
+                            style={{ background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.15))', border: '1px solid var(--gold)', borderRadius: 20, padding: '5px 10px', fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}
                           >
-                            별숨에게 물어보기 ✦
+                            별숨에게 ✦
                           </button>
                           <button
                             onClick={() => startEditEvent(ev)}
-                            style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '0.75rem', padding: '4px', fontFamily: 'var(--ff)' }}
+                            style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '0.75rem', padding: '4px', fontFamily: 'var(--ff)', flexShrink: 0 }}
                             aria-label="일정 수정"
                           >✎</button>
                           <button
                             onClick={() => deleteEvent(selectedKey, ev.id)}
-                            style={{ background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', fontSize: '0.75rem', padding: '4px', fontFamily: 'var(--ff)' }}
+                            style={{ background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer', fontSize: '0.75rem', padding: '4px', fontFamily: 'var(--ff)', flexShrink: 0 }}
                             aria-label="일정 삭제"
                           >✕</button>
                         </>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -822,11 +848,21 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontWeight: 600, marginBottom: 6, letterSpacing: '.04em' }}>
                 {selectedEvents.length > 0 ? '일정 추가하기' : '이날 일정 입력하기'}
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                <input
+                  type="time"
+                  value={inputTime}
+                  onChange={e => setInputTime(e.target.value)}
+                  style={{
+                    padding: '10px 8px', border: '1px solid var(--line)', borderRadius: 'var(--r1)',
+                    background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--xs)',
+                    fontFamily: 'var(--ff)', outline: 'none', width: 90, flexShrink: 0,
+                  }}
+                />
                 <input
                   className="inp"
                   style={{ flex: 1, marginBottom: 0, padding: '10px 12px', fontSize: 'var(--sm)' }}
-                  placeholder="직접 입력"
+                  placeholder="일정 제목"
                   value={inputText}
                   onChange={e => setInputText(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) addEvent(); }}
@@ -835,13 +871,13 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                 <button
                   onClick={addEvent}
                   disabled={!inputText.trim()}
-                  style={{ background: inputText.trim() ? 'var(--gold)' : 'var(--bg3)', color: inputText.trim() ? '#0D0B14' : 'var(--t4)', border: 'none', borderRadius: 'var(--r1)', padding: '0 18px', fontFamily: 'var(--ff)', fontWeight: 700, cursor: inputText.trim() ? 'pointer' : 'default', fontSize: 'var(--sm)', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
+                  style={{ background: inputText.trim() ? 'var(--gold)' : 'var(--bg3)', color: inputText.trim() ? '#0D0B14' : 'var(--t4)', border: 'none', borderRadius: 'var(--r1)', padding: '0 16px', fontFamily: 'var(--ff)', fontWeight: 700, cursor: inputText.trim() ? 'pointer' : 'default', fontSize: 'var(--sm)', whiteSpace: 'nowrap', transition: 'all 0.15s', flexShrink: 0 }}
                 >
                   추가
                 </button>
               </div>
               {!user?.id && (
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 6 }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 4 }}>
                   로그인하면 일정이 저장돼요
                 </div>
               )}
@@ -870,9 +906,14 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                       <div style={{ fontSize: 'var(--xs)', color: scoreColor(dayData?.score || 50), fontWeight: 600 }}>{dayData?.score || 50}점</div>
                     </div>
                     <div style={{ flex: 1 }}>
-                      {dayEvs.map(ev => (
-                        <div key={ev.id} style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 2 }}>📅 {ev.title}</div>
-                      ))}
+                      {sortedEvents(dayEvs).map(ev => {
+                        const { time, title: evT } = parseEventTitle(ev.title);
+                        return (
+                          <div key={ev.id} style={{ fontSize: 'var(--xs)', color: 'var(--t2)', marginBottom: 2 }}>
+                            {time && <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{time} </span>}📅 {evT}
+                          </div>
+                        );
+                      })}
                     </div>
                     <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>›</span>
                   </button>

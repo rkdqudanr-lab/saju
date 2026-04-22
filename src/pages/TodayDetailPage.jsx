@@ -3,6 +3,10 @@ import DailyStarCardV2 from '../components/DailyStarCardV2.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import '../styles/TodayDetailPage.css';
+import {
+  GACHA_POOL, GRADE_CONFIG as SPACE_GRADE_CONFIG,
+  SAJU_POOL, SAJU_GRADE_CONFIG,
+} from '../utils/gachaItems.js';
 
 function PageSpinner() {
   return (
@@ -428,6 +432,116 @@ function BoostCTA({ equippedItems, canPurify, remaining, onPurify, isPurifying, 
   );
 }
 
+// ─── 1회성 아이템 픽커 ───────────────────────────────────────────
+const ASPECT_META = {
+  overall: { label: '종합', emoji: '🌟' },
+  wealth:  { label: '금전', emoji: '💰' },
+  love:    { label: '애정', emoji: '💫' },
+  career:  { label: '직장', emoji: '👑' },
+  study:   { label: '학업', emoji: '📚' },
+  health:  { label: '건강', emoji: '✨' },
+  social:  { label: '대인', emoji: '🤝' },
+  travel:  { label: '이동', emoji: '🚀' },
+};
+
+const ALL_SPIRIT_MAP = Object.fromEntries(
+  [...GACHA_POOL, ...SAJU_POOL].map(i => [i.id, i])
+);
+
+function OneShotItemPicker({ ownedRows, onUse }) {
+  const [activeAxis, setActiveAxis] = useState(null);
+
+  const byAxis = {};
+  for (const row of ownedRows) {
+    const k = row.item?.aspectKey;
+    if (!k || !ASPECT_META[k]) continue;
+    if (!byAxis[k]) byAxis[k] = [];
+    byAxis[k].push(row);
+  }
+
+  const hasAny = Object.values(byAxis).some(a => a.length > 0);
+  if (!hasAny) return null;
+
+  const activeItems = activeAxis ? (byAxis[activeAxis] || []) : [];
+
+  function getCfg(item) {
+    if (!item?.grade) return {};
+    return SPACE_GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade] || {};
+  }
+
+  return (
+    <div style={{
+      background: 'var(--bg2)', borderRadius: 'var(--r1)',
+      border: '1px solid var(--line)', padding: '14px 16px', marginBottom: 16,
+    }}>
+      <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 6 }}>
+        ✦ 1회 기운 아이템 사용
+      </div>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 12, lineHeight: 1.5 }}>
+        오늘만 발동하는 1회용 기운이에요. 사용 시 아이템이 소모돼요.
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+        {Object.entries(ASPECT_META).map(([key, meta]) => {
+          const cnt = (byAxis[key] || []).length;
+          if (cnt === 0) return null;
+          const isActive = activeAxis === key;
+          return (
+            <button key={key} onClick={() => setActiveAxis(isActive ? null : key)} style={{
+              padding: '6px 11px', borderRadius: 20,
+              border: `1px solid ${isActive ? 'var(--acc)' : 'var(--line)'}`,
+              background: isActive ? 'var(--goldf)' : 'none',
+              color: isActive ? 'var(--gold)' : 'var(--t3)',
+              fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+              fontWeight: isActive ? 700 : 400,
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              {meta.emoji} {meta.label}
+              <span style={{ fontSize: '10px', opacity: 0.7 }}>({cnt})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {activeAxis && activeItems.length > 0 && (
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 4 }}>
+          {activeItems.map(row => {
+            const item = row.item;
+            const cfg = getCfg(item);
+            return (
+              <div key={row.rowId} style={{
+                flexShrink: 0, width: 110,
+                background: 'var(--bg1)', borderRadius: 12,
+                border: `1px solid ${cfg.border || 'var(--line)'}`,
+                padding: '12px 8px', textAlign: 'center',
+                display: 'flex', flexDirection: 'column', gap: 5,
+              }}>
+                <div style={{ fontSize: 28 }}>{item.emoji}</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.3, wordBreak: 'keep-all' }}>
+                  {item.name}
+                </div>
+                <div style={{ fontSize: '10px', color: cfg.color || 'var(--t4)', fontWeight: 600 }}>
+                  {cfg.label || item.grade}
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700 }}>
+                  +{item.boost}점
+                </div>
+                <button onClick={() => onUse(row)} style={{
+                  marginTop: 4, padding: '7px', borderRadius: 8,
+                  background: 'var(--goldf)', border: '1px solid var(--acc)',
+                  color: 'var(--gold)', fontSize: '11px', fontWeight: 700,
+                  fontFamily: 'var(--ff)', cursor: 'pointer',
+                }}>
+                  사용하기
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * TodayDetailPage - "오늘 하루 나의 별숨" 운세 상세 페이지
  */
@@ -447,10 +561,43 @@ export default function TodayDetailPage({
   const equippedTalisman = useAppStore(s => s.equippedTalisman);
   const storeEquippedItems = useAppStore(s => s.equippedItems) || [];
   // equippedTalisman이 가챠 아이템(오늘 발동)인 경우에도 radar에 포함
-  const mergedEquippedItems = equippedTalisman
-    ? [...storeEquippedItems.filter(i => i.id !== equippedTalisman.id), equippedTalisman]
-    : storeEquippedItems;
+  const mergedEquippedItems = [
+    ...(equippedTalisman
+      ? [...storeEquippedItems.filter(i => i.id !== equippedTalisman.id), equippedTalisman]
+      : storeEquippedItems),
+    ...usedItems,
+  ];
   const [isPurifying, setIsPurifying] = useState(false);
+  const [ownedRows, setOwnedRows] = useState(null); // null=not loaded
+  const [usedItems, setUsedItems] = useState([]);
+
+  // 기운 아이템 목록 로드
+  useEffect(() => {
+    if (!kakaoId || !dailyResult) return;
+    const client = getAuthenticatedClient(String(kakaoId));
+    client.from('user_shop_inventory')
+      .select('id, item_id')
+      .eq('kakao_id', String(kakaoId))
+      .then(({ data }) => {
+        const rows = (data || [])
+          .map(r => ({ rowId: r.id, item: ALL_SPIRIT_MAP[String(r.item_id)] }))
+          .filter(r => r.item?.aspectKey); // spirit items only
+        setOwnedRows(rows);
+      })
+      .catch(() => setOwnedRows([]));
+  }, [kakaoId, dailyResult]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleUseItem = useCallback(async (row) => {
+    if (!kakaoId) return;
+    try {
+      const client = getAuthenticatedClient(String(kakaoId));
+      await client.from('user_shop_inventory')
+        .delete()
+        .eq('id', row.rowId);
+      setOwnedRows(prev => (prev || []).filter(r => r.rowId !== row.rowId));
+      setUsedItems(prev => [...prev, row.item]);
+    } catch { /* silent */ }
+  }, [kakaoId]);
 
   const handlePurify = useCallback(async () => {
     if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
@@ -495,6 +642,12 @@ export default function TodayDetailPage({
         ) : dailyResult ? (
           <Suspense fallback={<PageSpinner />}>
             <DailyRadarChart baseScore={dailyResult?.score} equippedItems={mergedEquippedItems} />
+
+            {/* 1회 아이템 픽커 */}
+            {ownedRows && ownedRows.length > 0 && (
+              <OneShotItemPicker ownedRows={ownedRows} onUse={handleUseItem} />
+            )}
+
             <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult?.score} />
 
             {/* ── 기운 보강 CTA ── */}
