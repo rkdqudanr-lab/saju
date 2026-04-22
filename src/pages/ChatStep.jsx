@@ -160,11 +160,8 @@ export default function ChatStep({
             <div className="chat-role">{message.role === 'ai' ? '별숨' : '나'}</div>
             {message.role === 'ai' ? (
               message.streaming ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
+                <div style={{ padding: '8px 0' }}>
                   <div className="typing-dots"><span /><span /><span /></div>
-                  <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontStyle: 'italic' }}>
-                    별숨이 답을 고르고 있어요...
-                  </span>
                 </div>
               ) : (
                 <ChatBubble text={message.text} isNew={index === latestChatIdx} />
@@ -178,11 +175,8 @@ export default function ChatStep({
         {chatLoading && !lastMsgIsStreaming && (
           <div className="chat-msg ai">
             <div className="chat-role">별숨</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
+            <div style={{ padding: '8px 0' }}>
               <div className="typing-dots"><span /><span /><span /></div>
-              <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontStyle: 'italic' }}>
-                별숨이 답을 고르고 있어요...
-              </span>
             </div>
           </div>
         )}
@@ -354,7 +348,6 @@ export default function ChatStep({
                 border: listening ? '2px solid var(--rose)' : '1px solid var(--line)',
                 background: listening ? 'rgba(224,90,58,0.12)' : 'var(--bg2)',
                 color: listening ? 'var(--rose)' : 'var(--t3)',
-                fontSize: 16,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -363,7 +356,18 @@ export default function ChatStep({
                 animation: listening ? 'mic-pulse 1.2s ease-in-out infinite' : 'none',
               }}
             >
-              {listening ? '⏹' : '🎤'}
+              {listening ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              )}
             </button>
           )}
 
@@ -372,7 +376,10 @@ export default function ChatStep({
             onClick={handleSendChat}
             disabled={!chatInput.trim() || chatLeft <= 0 || chatLoading}
           >
-            전송
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" stroke="none"/>
+            </svg>
           </button>
         </div>
 

@@ -90,25 +90,6 @@ function PullResultOverlay({ results, system, onClose }) {
   }
   function isShopItem(item) { return !!item.rarity && !item.grade; }
 
-  const topGrade = results.reduce((best, item) => {
-    const cfg   = getCfg(item);
-    const order = item.grade
-      ? (system === 'saju' ? SAJU_GRADE_ORDER : GRADE_ORDER)
-      : SHOP_GRADE_ORDER;
-    const key   = item.grade || item.rarity;
-    if (!best || order.indexOf(key) > order.indexOf(best)) return key;
-    return best;
-  }, null);
-  const topCfg = topGrade
-    ? (results[0].grade
-        ? (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[topGrade]
-        : SHOP_GRADE_CONFIG[topGrade])
-    : {};
-
-  const bgGrad = topCfg?.bg
-    ? `radial-gradient(ellipse at 50% 35%, ${topCfg.bg?.replace('0.15','0.28') || 'rgba(232,176,72,.28)'} 0%, rgba(13,11,20,.97) 65%)`
-    : 'rgba(13,11,20,.96)';
-
   return createPortal(
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9000,
@@ -260,9 +241,8 @@ function PullResultOverlay({ results, system, onClose }) {
 function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle, stats, accentColor, bgStyle, guarantee10Label }) {
   const canAfford1  = currentBP >= cost1;
   const canAfford10 = currentBP >= cost10;
-  const seed = title.charCodeAt(0) % 8;
   return (
-    <div style={{ margin: '0 24px', borderRadius: 'var(--r2)', ...bgStyle, padding: '20px 16px', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ margin: '16px 0 0', borderRadius: 'var(--r2)', ...bgStyle, padding: '20px 16px', position: 'relative', overflow: 'hidden' }}>
       {[...Array(8)].map((_, i) => (
         <div key={i} style={{
           position: 'absolute',
@@ -333,7 +313,7 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
 function ProbTable({ probTable }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ padding: '8px 24px 0' }}>
+    <div style={{ padding: '8px 0 0' }}>
       <button onClick={() => setOpen(p => !p)} style={{
         background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)',
         fontFamily: 'var(--ff)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
@@ -364,7 +344,7 @@ function ShopItemPreviewGrid({ pool, gradeConfig, gradeOrder }) {
   const filtered = pool.filter(i => i.rarity === activeRarity);
 
   return (
-    <div style={{ padding: '14px 24px 0' }}>
+    <div style={{ padding: '14px 0 0' }}>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
         ✦ 등장 아이템 미리보기
       </div>
@@ -386,19 +366,14 @@ function ShopItemPreviewGrid({ pool, gradeConfig, gradeOrder }) {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 10 }}>
         {filtered.map(item => {
-          let styleVars = {};
-          if (item.category === 'theme' && item.effect) {
-            try { styleVars = typeof item.effect === 'string' ? JSON.parse(item.effect) : item.effect; } catch (e) {}
-          }
-          const themeBg = styleVars['--bg2'] || 'var(--bg2)';
-          const themeAcc = styleVars['--acc'] || cfg.border;
+          const themeBg  = (item.category === 'theme' && item.colors?.bg2)      ? item.colors.bg2      : 'var(--bg2)';
+          const themeAcc = (item.category === 'theme' && item.colors?.primary)   ? item.colors.primary  : cfg.border;
           
           return (
           <div key={item.id} style={{
             background: themeBg, border: `1px solid ${themeAcc}`,
             borderRadius: 12, padding: '14px 8px', textAlign: 'center',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-            ...styleVars,
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
               <ShopItemGraphic item={item} size={48} />
@@ -428,7 +403,7 @@ function SpiritItemPreview({ pool, gradeConfig, gradeOrder }) {
   });
 
   return (
-    <div style={{ padding: '14px 24px 0' }}>
+    <div style={{ padding: '14px 0 0' }}>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
         ✦ 등장 아이템 미리보기
       </div>
@@ -473,12 +448,8 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
   const rarityColor = RARITY_COLOR[item.rarity] || 'var(--t4)';
   const rarityLabel = RARITY_LABEL[item.rarity];
 
-  let styleVars = {};
-  if (item.category === 'theme' && item.effect) {
-    try { styleVars = typeof item.effect === 'string' ? JSON.parse(item.effect) : item.effect; } catch (e) {}
-  }
-  const themeBg = styleVars['--bg2'] || 'var(--bg2)';
-  const themeAcc = styleVars['--acc'] || (isEquipped ? 'var(--acc)' : 'var(--line)');
+  const themeBg  = (item.category === 'theme' && item.colors?.bg2)    ? item.colors.bg2    : 'var(--bg2)';
+  const themeAcc = (item.category === 'theme' && item.colors?.primary) ? item.colors.primary : (isEquipped ? 'var(--acc)' : 'var(--line)');
 
   return (
     <div style={{
@@ -488,9 +459,8 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
       padding: '12px 8px',
       display: 'flex', flexDirection: 'column', gap: 5,
       position: 'relative',
-      boxShadow: isEquipped ? `0 0 10px ${styleVars['--acc'] || 'rgba(232,176,72,0.2)'}` : 'none',
+      boxShadow: isEquipped ? `0 0 10px ${themeAcc === 'var(--line)' ? 'rgba(232,176,72,0.2)' : themeAcc}` : 'none',
       minHeight: 160,
-      ...styleVars,
     }}>
       {item.rarity && item.rarity !== 'common' && (
         <div style={{ position: 'absolute', top: 8, right: 10, fontSize: '10px', fontWeight: 700, color: rarityColor }}>
@@ -759,10 +729,11 @@ export default function ShopPage({ showToast }) {
 
   // ─── 렌더 ────────────────────────────────────────────────────
   return (
-    <div className="page step-fade" style={{ paddingBottom: 52 }}>
+    <div className="page step-fade" style={{ paddingBottom: 52, alignItems: 'stretch' }}>
+      <div style={{ width: '100%', maxWidth: 460, margin: '0 auto', padding: '0 16px' }}>
 
       {/* 헤더 */}
-      <div style={{ padding: '28px 24px 16px' }}>
+      <div style={{ padding: '24px 0 16px' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>✦ 별숨 숍</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.25 }}>뽑기 · 꾸미기 · 보관함</div>
@@ -777,7 +748,7 @@ export default function ShopPage({ showToast }) {
 
       {/* 장착 기운 상태 */}
       {equippedSajuItem && (
-        <div style={{ margin: '0 24px 12px', padding: '9px 12px', background: 'rgba(232,176,72,0.06)', border: '1px solid rgba(232,176,72,0.25)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ marginBottom: 12, padding: '9px 12px', background: 'rgba(232,176,72,0.06)', border: '1px solid rgba(232,176,72,0.25)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji}</span>
           <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', flex: 1 }}>
             <strong style={{ color: 'var(--gold)' }}>{equippedSajuItem.name}</strong> 기운이 AI 답변에 반영 중
@@ -789,7 +760,7 @@ export default function ShopPage({ showToast }) {
       )}
 
       {/* 메인 탭 */}
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '0 24px 14px', borderBottom: '1px solid var(--line)' }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '0 0 14px', borderBottom: '1px solid var(--line)', margin: '0 -16px', paddingLeft: 16, paddingRight: 16 }}>
         {MAIN_TABS.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
             flexShrink: 0, padding: '9px 14px', borderRadius: 22,
@@ -809,7 +780,7 @@ export default function ShopPage({ showToast }) {
       {activeTab === 'spirit' && (
         <>
           {/* 우주/사주 서브탭 */}
-          <div style={{ display: 'flex', margin: '14px 24px 0', background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 4, border: '1px solid var(--line)' }}>
+          <div style={{ display: 'flex', margin: '14px 0 0', background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 4, border: '1px solid var(--line)' }}>
             {[{k:'space', label:'🌌 우주 기운'}, {k:'saju', label:'☯️ 사주 기운'}].map(t => (
               <button key={t.k} onClick={() => setSpiritTab(t.k)} style={{
                 flex: 1, padding: '9px', borderRadius: 8, border: 'none',
@@ -824,7 +795,7 @@ export default function ShopPage({ showToast }) {
           </div>
 
           {/* 설명 */}
-          <div style={{ margin: '12px 24px 0', padding: '10px 12px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
+          <div style={{ margin: '12px 0 0', padding: '10px 12px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
             ✦ 기운 아이템을 뽑아 <strong style={{ color: 'var(--gold)' }}>메인 기운</strong>으로 장착하면 모든 AI 답변에 반영돼요
           </div>
 
@@ -861,7 +832,7 @@ export default function ShopPage({ showToast }) {
           )}
 
           {/* 기운 보관함·합성 링크 */}
-          <div style={{ margin: '16px 24px 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <div style={{ margin: '16px 0 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
               뽑은 기운 아이템 확인 · 합성 · 장착
             </div>
@@ -876,7 +847,6 @@ export default function ShopPage({ showToast }) {
       {(activeTab === 'theme' || activeTab === 'avatar' || activeTab === 'effect') && (() => {
         const poolMap  = { theme: THEME_POOL, avatar: AVATAR_POOL, effect: EFFECT_POOL };
         const nameMap  = { theme: '테마', avatar: '아바타', effect: '이펙트' };
-        const emojiMap = { theme: '🎨', avatar: '👤', effect: '✨' };
         const pool     = poolMap[activeTab];
         const label    = nameMap[activeTab];
         const accentMap = { theme: 'rgba(232,176,72,0.9)', avatar: 'rgba(180,142,240,0.9)', effect: 'rgba(126,200,164,0.9)' };
@@ -893,14 +863,14 @@ export default function ShopPage({ showToast }) {
           <>
             {/* 장착 현황 */}
             {equippedItem ? (
-              <div style={{ margin: '14px 24px 0', padding: '10px 12px', background: 'rgba(232,176,72,0.06)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ margin: '14px 0 0', padding: '10px 12px', background: 'rgba(232,176,72,0.06)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <ShopItemGraphic item={equippedItem} size={32} />
                 <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', flex: 1 }}>
                   <strong style={{ color: 'var(--gold)' }}>{equippedItem.name}</strong> 장착 중
                 </span>
               </div>
             ) : (
-              <div style={{ margin: '14px 24px 0', padding: '10px 12px', background: 'var(--bg2)', border: '1px dashed var(--line)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center' }}>
+              <div style={{ margin: '14px 0 0', padding: '10px 12px', background: 'var(--bg2)', border: '1px dashed var(--line)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center' }}>
                 {label} 아이템을 뽑아서 장착해봐요 ✦
               </div>
             )}
@@ -925,7 +895,7 @@ export default function ShopPage({ showToast }) {
       {/* ── 보관함 탭 ─────────────────────────────────────────── */}
       {activeTab === 'inv' && (
         <>
-          <div style={{ display: 'flex', gap: 8, padding: '16px 24px 0', overflowX: 'auto', scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', gap: 8, padding: '16px 0 0', overflowX: 'auto', scrollbarWidth: 'none' }}>
             {[{id:'all',label:'전체'},{id:'theme',label:'테마'},{id:'avatar',label:'아바타'},{id:'effect',label:'이펙트'},{id:'special_reading',label:'특별 상담'}].map(f => (
               <button key={f.id} onClick={() => setInvFilter(f.id)} style={{
                 flexShrink: 0, padding: '7px 14px', borderRadius: 20,
@@ -940,7 +910,7 @@ export default function ShopPage({ showToast }) {
 
           {/* 특별 상담 구매 섹션 */}
           {(invFilter === 'all' || invFilter === 'special_reading') && dbItems.filter(i => !ownedIds.has(String(i.id))).length > 0 && (
-            <div style={{ margin: '14px 24px 0' }}>
+            <div style={{ margin: '14px 0 0' }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>✦ 특별 상담 구매</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                 {dbItems.filter(i => !ownedIds.has(String(i.id))).map(item => (
@@ -960,7 +930,7 @@ export default function ShopPage({ showToast }) {
           )}
 
           {/* 보유 아이템 그리드 */}
-          <div style={{ padding: '14px 24px 0' }}>
+          <div style={{ padding: '14px 0 0' }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>보유 아이템 ({invItems.length})</div>
             {invItems.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--t4)' }}>
@@ -984,7 +954,7 @@ export default function ShopPage({ showToast }) {
           </div>
 
           {/* 기운 아이템 링크 */}
-          <div style={{ margin: '16px 24px 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <div style={{ margin: '16px 0 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
               기운 아이템(우주·사주) 확인 및 합성
             </div>
@@ -996,10 +966,12 @@ export default function ShopPage({ showToast }) {
       )}
 
       {/* BP 획득 안내 */}
-      <div style={{ margin: '20px 20px 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', fontSize: '11px', color: 'var(--t4)', lineHeight: 1.7 }}>
+      <div style={{ margin: '20px 0 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', fontSize: '11px', color: 'var(--t4)', lineHeight: 1.7 }}>
         <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 5 }}>✦ BP 획득 방법</div>
         일일 출석 +100 · 미션 완료 +10 · 일기 작성 +5 · 앱 설치 +20 · 친구 공유 +3
       </div>
+
+      </div>{/* /inner wrapper */}
 
       {/* 결과 오버레이 */}
       {results && (

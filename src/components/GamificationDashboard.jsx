@@ -54,7 +54,7 @@ export default function GamificationDashboard({
       className={`gamification-dashboard ${className}`}
       style={{
         padding: '16px',
-        maxWidth: '600px',
+        maxWidth: '460px',
         margin: '0 auto',
       }}
     >

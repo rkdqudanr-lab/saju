@@ -157,6 +157,21 @@ function buildItems() {
           aspectKey,
         });
       }
+      items.push({
+        id: `${grade}_${body.id}_create`,
+        grade,
+        name: `${body.name}의 창의`,
+        emoji: body.emoji,
+        aspectEmoji: '🎨',
+        description: body.lore,
+        effect: `${body.name}의 창의 기운이 오늘의 영감과 표현력을 깨워줘요`,
+        effectLabel: `창의운 +${minBoost}~${maxBoost}`,
+        boost: minBoost + Math.round((maxBoost - minBoost) / 2),
+        category: grade,
+        bodyId: body.id,
+        bodyName: body.name,
+        aspectKey: 'create',
+      });
     }
   }
   return items;
@@ -393,6 +408,22 @@ function buildSajuItems() {
           aspectKey,
         });
       }
+      items.push({
+        id: `saju_${grade}_${body.id}_create`,
+        grade,
+        system: 'saju',
+        name: `${body.name}의 창의`,
+        emoji: body.emoji,
+        aspectEmoji: '🎨',
+        description: body.lore,
+        effect: `${body.name}의 기운이 오늘의 창의력과 발상력을 깨워줘요`,
+        effectLabel: `창의운 +${minBoost}~${maxBoost}`,
+        boost: minBoost + Math.round((maxBoost - minBoost) / 2),
+        category: grade,
+        bodyId: body.id,
+        bodyName: body.name,
+        aspectKey: 'create',
+      });
     }
   }
   return items;

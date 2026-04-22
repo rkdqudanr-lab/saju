@@ -332,26 +332,21 @@ export default function App() {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (equippedTheme?.effect) {
-      // 테마 아이템의 effect 필드에 정의된 CSS 변수 적용
-      // 구조 예시: { "--acc": "#FFCF70", "--gold": "#E8B048", "--bg1": "#0d0b14" }
-      try {
-        const vars = typeof equippedTheme.effect === 'string' ? JSON.parse(equippedTheme.effect) : equippedTheme.effect;
-        Object.entries(vars).forEach(([key, value]) => {
-          root.style.setProperty(key, value);
-        });
-      } catch (e) {
-        console.error('테마 파싱 에러:', e);
-      }
+    if (equippedTheme?.colors) {
+      const { primary, bg, bg2 } = equippedTheme.colors;
+      const toRgba = (hex, a) => {
+        const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+        return `rgba(${r},${g},${b},${a})`;
+      };
+      root.style.setProperty('--gold',  primary);
+      root.style.setProperty('--gold2', primary);
+      root.style.setProperty('--acc',   toRgba(primary, 0.2));
+      root.style.setProperty('--goldf', toRgba(primary, 0.1));
+      root.style.setProperty('--golda', toRgba(primary, 0.15));
+      if (bg)  root.style.setProperty('--bg1', bg);
+      if (bg2) root.style.setProperty('--bg2', bg2);
     } else {
-      // 장착 해제 시 인라인 속성 제거 (index.css 원본 복구)
-      root.style.removeProperty('--acc');
-      root.style.removeProperty('--gold');
-      root.style.removeProperty('--goldf');
-      root.style.removeProperty('--golda');
-      root.style.removeProperty('--bg1');
-      root.style.removeProperty('--bg2');
-      root.style.removeProperty('--bg3');
+      ['--acc','--gold','--gold2','--goldf','--golda','--bg1','--bg2','--bg3'].forEach(v => root.style.removeProperty(v));
     }
   }, [equippedTheme]);
 
