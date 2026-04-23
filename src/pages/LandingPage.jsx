@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState } from "react";
 import { getAuthenticatedClient } from "../lib/supabase.js";
+import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, readDailyLocalCacheMap } from "../lib/dailyDataAccess.js";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
@@ -162,16 +163,18 @@ export default function LandingPage({
         setEquippedTalisman(talisman || null);
 
         // 오늘 발동 기운 복원 (Supabase daily_cache → Zustand, 부적보다 우선)
-        const todayStr = new Date().toISOString().slice(0, 10);
-        const { data: dailyActData } = await safeClient
-          .from('daily_cache')
-          .select('content')
-          .eq('kakao_id', kakaoId)
-          .eq('cache_date', todayStr)
-          .eq('cache_type', 'daily_activation')
-          .maybeSingle();
-        if (dailyActData?.content) {
-          const activatedItem = findItem(dailyActData.content);
+        const todayStr = getDailyDateKey();
+        const dailyActivation = canUseDailySupabaseTables()
+          ? (await safeClient
+              .from('daily_cache')
+              .select('content')
+              .eq('kakao_id', kakaoId)
+              .eq('cache_date', todayStr)
+              .eq('cache_type', 'daily_activation')
+              .maybeSingle()).data?.content
+          : readDailyLocalCache(kakaoId, 'daily_activation', todayStr);
+        if (dailyActivation) {
+          const activatedItem = findItem(dailyActivation);
           if (activatedItem) setEquippedTalisman(activatedItem);
         }
         
@@ -192,12 +195,17 @@ export default function LandingPage({
   useEffect(() => {
     if (!user) { setScoreHistory([]); return; }
     const kakaoId = String(user.kakaoId || user.id);
-    const client = getAuthenticatedClient(kakaoId);
     const last7 = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
       return d.toISOString().slice(0, 10);
     });
+    if (!canUseDailySupabaseTables()) {
+      const map = readDailyLocalCacheMap(kakaoId, 'horoscope_score', last7);
+      setScoreHistory(last7.reverse().map(date => ({ date, score: map[date] == null ? null : Number(map[date]) })));
+      return;
+    }
+    const client = getAuthenticatedClient(kakaoId);
     client.from('daily_cache')
       .select('cache_date, content')
       .eq('kakao_id', kakaoId)

@@ -2,6 +2,7 @@ import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import DailyStarCardV2 from '../components/DailyStarCardV2.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
+import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, readDailyLocalCacheMap, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import '../styles/TodayDetailPage.css';
 import {
   GRADE_CONFIG as SPACE_GRADE_CONFIG,
@@ -601,6 +602,16 @@ function WeeklyTrendChart({ kakaoId, todayScore }) {
       d.setDate(d.getDate() - i);
       return d.toISOString().slice(0, 10);
     });
+    if (!canUseDailySupabaseTables()) {
+      const cachedMap = readDailyLocalCacheMap(String(kakaoId), 'horoscope_score', last7);
+      const today = getDailyDateKey();
+      if (todayScore != null) cachedMap[today] = String(todayScore);
+      setTrend(last7.reverse().map((date) => {
+        const value = cachedMap[date];
+        return value == null ? null : Number(value);
+      }));
+      return;
+    }
     const client = getAuthenticatedClient(String(kakaoId));
     client.from('daily_cache')
       .select('cache_date, content')
@@ -1083,6 +1094,23 @@ export default function TodayDetailPage({
 
   useEffect(() => {
     if (!kakaoId) return;
+    if (!canUseDailySupabaseTables()) {
+      try {
+        const activationMap = JSON.parse(readDailyLocalCache(String(kakaoId), TODAY_AXIS_CACHE, getDailyDateKey()) || '{}');
+        if (!activationMap || typeof activationMap !== 'object' || Array.isArray(activationMap)) {
+          setUsedItems([]);
+          return;
+        }
+        setUsedItems(
+          Object.values(activationMap)
+            .map((id) => findItem(id))
+            .filter(Boolean)
+        );
+      } catch {
+        setUsedItems([]);
+      }
+      return;
+    }
     const client = getAuthenticatedClient(String(kakaoId));
     client.from('daily_cache')
       .select('content')
@@ -1147,18 +1175,21 @@ export default function TodayDetailPage({
         animPromise,
       ]);
 
-      const client = getAuthenticatedClient(String(kakaoId));
       const nextActivationMap = Object.fromEntries(
         nextUsedItems
           .filter((item) => item?.aspectKey)
           .map((item) => [item.aspectKey, item.id])
       );
-      await client.from('daily_cache').upsert({
-        kakao_id: String(kakaoId),
-        cache_date: new Date().toISOString().slice(0, 10),
-        cache_type: TODAY_AXIS_CACHE,
-        content: JSON.stringify(nextActivationMap),
-      }, { onConflict: 'kakao_id,cache_date,cache_type' });
+      writeDailyLocalCache(String(kakaoId), TODAY_AXIS_CACHE, JSON.stringify(nextActivationMap), getDailyDateKey());
+      if (canUseDailySupabaseTables()) {
+        const client = getAuthenticatedClient(String(kakaoId));
+        await client.from('daily_cache').upsert({
+          kakao_id: String(kakaoId),
+          cache_date: getDailyDateKey(),
+          cache_type: TODAY_AXIS_CACHE,
+          content: JSON.stringify(nextActivationMap),
+        }, { onConflict: 'kakao_id,cache_date,cache_type' });
+      }
       setUsedItems(nextUsedItems);
       setSelectedRow(null);
     } catch {

@@ -5,6 +5,7 @@ import { useAppStore } from "../store/useAppStore.js";
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { loadHistory, addHistory, deleteHistory } from "../utils/history.js";
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
+import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import { parseHoroscopeForGamification } from '../utils/missionGenerator.js';
 import { spendBP as spendBPUtil } from '../utils/gamificationLogic.js';
 
@@ -18,13 +19,15 @@ const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도�
 export const DAILY_MAX = 999; // 베타 기간: 일일 제한 없음 (BM 차감 방식으로 대체)
 
 function getTodayDateStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return getDailyDateKey();
 }
 
 // ── Supabase daily_cache 헬퍼 ──
 async function loadDailyCacheFromSupabase(userId, type) {
   if (!supabase || !userId) return null;
+  if (!canUseDailySupabaseTables()) {
+    return readDailyLocalCache(userId, type, getTodayDateStr());
+  }
   try {
     const authClient = getAuthenticatedClient(userId);
     const { data } = await (authClient || supabase)
@@ -35,11 +38,15 @@ async function loadDailyCacheFromSupabase(userId, type) {
       .eq('cache_type', type)
       .maybeSingle();
     return data?.content || null;
-  } catch { return null; }
+  } catch {
+    return readDailyLocalCache(userId, type, getTodayDateStr());
+  }
 }
 
 async function saveDailyCacheToSupabase(userId, type, content) {
   if (!supabase || !userId) return;
+  writeDailyLocalCache(userId, type, content, getTodayDateStr());
+  if (!canUseDailySupabaseTables()) return;
   try {
     const authClient = getAuthenticatedClient(userId);
     await (authClient || supabase).from('daily_cache').upsert({

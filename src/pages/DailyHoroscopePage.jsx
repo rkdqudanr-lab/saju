@@ -7,6 +7,7 @@ import { detectBadtime } from "../utils/gamificationLogic.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
 import { getAuthenticatedClient } from "../lib/supabase.js";
+import { canUseDailySupabaseTables, getDailyDateKey, writeDailyLocalCache } from "../lib/dailyDataAccess.js";
 import { findItem } from "../utils/gachaItems.js";
 
 export default function DailyHoroscopePage({
@@ -37,10 +38,12 @@ export default function DailyHoroscopePage({
   // 일별 점수 저장 (daily_scores 테이블)
   useEffect(() => {
     if (!dailyResult?.score || !user) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getDailyDateKey();
     if (savedScoreDateRef.current === today) return; // 같은 날 중복 방지
     savedScoreDateRef.current = today;
     const kakaoId = user.kakaoId || user.id;
+    writeDailyLocalCache(kakaoId, 'horoscope_score', String(dailyResult.score), today);
+    if (!canUseDailySupabaseTables()) return;
     getAuthenticatedClient(kakaoId)
       .from('daily_scores')
       .upsert(

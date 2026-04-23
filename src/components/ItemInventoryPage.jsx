@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
+import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import { useAppStore } from '../store/useAppStore.js';
 import {
   GACHA_POOL, GRADE_CONFIG, synthesize, getGachaItem, GRADE_ORDER,
@@ -972,12 +973,21 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const [sortMode, setSortMode] = useState('recommended');
 
   // 오늘 발동 — Supabase daily_cache (cache_type: 'daily_activation')
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getDailyDateKey();
   const [dailyActMap, setDailyActMap] = useState({});
 
   // 마운트 시 오늘 발동 내역 로드
   useEffect(() => {
     if (!kakaoId) return;
+    if (!canUseDailySupabaseTables()) {
+      try {
+        const parsed = JSON.parse(readDailyLocalCache(kakaoId, DAILY_AXIS_CACHE, today) || '{}');
+        setDailyActMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
+      } catch {
+        setDailyActMap({});
+      }
+      return;
+    }
     const client = getAuthenticatedClient(kakaoId);
     client.from('daily_cache')
       .select('content')
@@ -1003,27 +1013,34 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
     const axisKey = item.aspectKey;
     if (!axisKey) return;
     const isActive = isItemDailyActive(item, dailyActMap);
-    const client = getAuthenticatedClient(kakaoId);
     try {
       if (isActive) {
         const nextMap = { ...dailyActMap };
         delete nextMap[axisKey];
-        await client.from('daily_cache').upsert({
-          kakao_id: String(kakaoId),
-          cache_date: today,
-          cache_type: DAILY_AXIS_CACHE,
-          content: JSON.stringify(nextMap),
-        }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        writeDailyLocalCache(kakaoId, DAILY_AXIS_CACHE, JSON.stringify(nextMap), today);
+        if (canUseDailySupabaseTables()) {
+          const client = getAuthenticatedClient(kakaoId);
+          await client.from('daily_cache').upsert({
+            kakao_id: String(kakaoId),
+            cache_date: today,
+            cache_type: DAILY_AXIS_CACHE,
+            content: JSON.stringify(nextMap),
+          }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        }
         setDailyActMap(nextMap);
         showToast?.('오늘 발동을 해제했어요.', 'info');
       } else {
         const nextMap = { ...dailyActMap, [axisKey]: item.id };
-        await client.from('daily_cache').upsert({
-          kakao_id: String(kakaoId),
-          cache_date: today,
-          cache_type: DAILY_AXIS_CACHE,
-          content: JSON.stringify(nextMap),
-        }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        writeDailyLocalCache(kakaoId, DAILY_AXIS_CACHE, JSON.stringify(nextMap), today);
+        if (canUseDailySupabaseTables()) {
+          const client = getAuthenticatedClient(kakaoId);
+          await client.from('daily_cache').upsert({
+            kakao_id: String(kakaoId),
+            cache_date: today,
+            cache_type: DAILY_AXIS_CACHE,
+            content: JSON.stringify(nextMap),
+          }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        }
         setDailyActMap(nextMap);
         showToast?.(`${item.emoji} ${item.name} 오늘 발동! 재생성하면 별숨에 반영돼요 ✦`, 'success');
       }
