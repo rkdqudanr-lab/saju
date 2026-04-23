@@ -739,10 +739,18 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 .dsc-action-text{font-size:var(--sm);color:var(--t1);line-height:1.85;flex:1}
 .dsc-astro-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .dsc-astro-chip{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.3);border-radius:20px;padding:4px 10px;font-size:var(--sm);color:var(--t1);font-weight:600}
-.dsc-synergy-row{display:flex;align-items:flex-start;gap:8px;font-size:var(--sm);color:var(--t1);line-height:1.85}
-.dsc-synergy-label{flex-shrink:0;font-size:1rem;margin-top:1px}
-.dsc-synergy-value{flex:1}
-.dsc-synergy-summary{margin-top:6px;padding-top:8px;border-top:1px solid var(--tealacc);font-size:var(--sm);font-weight:600;color:var(--t1);line-height:1.7}
+.dsc-synergy-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+.dsc-synergy-card{padding:12px;border-radius:14px;background:rgba(255,255,255,.42);border:1px solid rgba(255,255,255,.55);box-shadow:0 10px 24px rgba(31,38,61,.05)}
+.dsc-synergy-card-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.dsc-synergy-icon{width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, var(--dsc-synergy-tint, var(--teal)) 18%, white);color:var(--t1);font-size:.95rem;line-height:1}
+.dsc-synergy-label{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--t4);text-transform:uppercase}
+.dsc-synergy-primary{font-size:var(--sm);font-weight:700;color:var(--t1);line-height:1.55;word-break:keep-all}
+.dsc-synergy-desc{margin-top:4px;font-size:11px;color:var(--t3);line-height:1.7;word-break:keep-all}
+.dsc-synergy-summary{margin-top:10px;padding-top:10px;border-top:1px solid var(--tealacc);font-size:var(--xs);font-weight:700;color:var(--t2);line-height:1.8}
+
+@media (max-width: 380px){
+  .dsc-synergy-grid{grid-template-columns:1fr}
+}
 
 /* ── 배드타임 ── */
 .dsc-badtime{margin-top:20px;padding:16px;background:var(--rosef);border-left:4px solid var(--rose);border-radius:4px}

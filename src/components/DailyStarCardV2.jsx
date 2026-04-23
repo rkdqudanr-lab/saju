@@ -19,6 +19,16 @@ const LOW_SCORE_THRESHOLD = 45;
 
 const LEGACY_ICONS = ['✨', '🍽️', '🌿', '🔢', '💬'];
 const LEGACY_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
+const SYNERGY_META = [
+  { key: 'food', label: '\uC74C\uC2DD', icon: '\u{1F372}', tint: 'var(--gold)' },
+  { key: 'place', label: '\uC7A5\uC18C', icon: '\u{1F4CD}', tint: 'var(--teal)' },
+  { key: 'color', label: '\uC0C9', icon: '\u{1F3A8}', tint: 'var(--lav)' },
+  { key: 'item', label: '\uC544\uC774\uD15C', icon: '\u{1F9FF}', tint: 'var(--gold)' },
+  { key: 'number', label: '\uC22B\uC790', icon: '\u{1F522}', tint: 'var(--teal)' },
+  { key: 'direction', label: '\uBC29\uD5A5', icon: '\u{1F9ED}', tint: 'var(--mint)' },
+  { key: 'communication', label: '\uC18C\uD1B5', icon: '\u{1F4AC}', tint: 'var(--rose)' },
+  { key: 'action', label: '\uD589\uB3D9', icon: '\u2728', tint: 'var(--gold)' },
+];
 
 function extractLabeledValue(lines, patterns) {
   const line = lines.find((entry) => patterns.some((pattern) => pattern.test(entry)));
@@ -27,6 +37,15 @@ function extractLabeledValue(lines, patterns) {
     .replace(/^\[[^\]]+\]\s*/, '')
     .replace(/^[^:]+:\s*/, '')
     .trim();
+}
+
+function splitSynergyValue(value) {
+  if (!value) return { primary: '', description: '' };
+  const [primary, ...rest] = value.split(/\s*[—-]\s*/);
+  return {
+    primary: primary?.trim() || value,
+    description: rest.join(' — ').trim(),
+  };
 }
 
 function parseCategoryLine(line) {
@@ -393,24 +412,28 @@ export default function DailyStarCardV2({
         {synergy && (
           <div className="dsc-section dsc-section-synergy">
             <div className="dsc-section-header">
-              <span className="dsc-section-icon">🪄</span>
-              <span className="dsc-section-title-text">별숨픽</span>
+              <span className="dsc-section-icon">{'\u{1FA84}'}</span>
+              <span className="dsc-section-title-text">{'\uBCC4\uC228\uD53D'}</span>
             </div>
-            {[
-              { label: '음식', value: synergy.food },
-              { label: '장소', value: synergy.place },
-              { label: '색', value: synergy.color },
-              { label: '아이템', value: synergy.item },
-              { label: '숫자', value: synergy.number },
-              { label: '방향', value: synergy.direction },
-              { label: '소통', value: synergy.communication },
-              { label: '행동', value: synergy.action },
-            ].filter(({ value }) => value).map(({ label, value }) => (
-              <div key={label} className="dsc-synergy-row">
-                <span className="dsc-synergy-label">{label}</span>
-                <span className="dsc-synergy-value">{value}</span>
-              </div>
-            ))}
+            <div className="dsc-synergy-grid">
+              {SYNERGY_META
+                .map(({ key, ...meta }) => ({ ...meta, value: synergy[key] }))
+                .filter(({ value }) => value)
+                .map(({ label, icon, tint, value }) => {
+                  const { primary, description } = splitSynergyValue(value);
+
+                  return (
+                    <div key={label} className="dsc-synergy-card" style={{ '--dsc-synergy-tint': tint }}>
+                      <div className="dsc-synergy-card-top">
+                        <span className="dsc-synergy-icon" aria-hidden="true">{icon}</span>
+                        <span className="dsc-synergy-label">{label}</span>
+                      </div>
+                      <div className="dsc-synergy-primary">{primary}</div>
+                      {description && <div className="dsc-synergy-desc">{description}</div>}
+                    </div>
+                  );
+                })}
+            </div>
             {synergy.summary && (
               <div className="dsc-synergy-summary">{synergy.summary}</div>
             )}
