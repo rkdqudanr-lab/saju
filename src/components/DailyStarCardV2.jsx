@@ -6,14 +6,16 @@ import { BADTIME_THRESHOLD } from '../utils/gamificationLogic.js';
 const CATEGORY_META = [
   { key: 'overall', label: '종합운', icon: '✨' },
   { key: 'love', label: '애정운', icon: '💞' },
-  { key: 'money', label: '금전운', icon: '💰' },
-  { key: 'work', label: '직장운', icon: '💼' },
+  { key: 'wealth', label: '금전운', icon: '💰' },
+  { key: 'career', label: '직장운', icon: '📈' },
   { key: 'study', label: '학업운', icon: '📚' },
   { key: 'health', label: '건강운', icon: '🌿' },
   { key: 'social', label: '대인운', icon: '🤝' },
   { key: 'travel', label: '이동운', icon: '🧭' },
   { key: 'create', label: '창의운', icon: '🎨' },
 ];
+
+const LOW_SCORE_THRESHOLD = 45;
 
 const LEGACY_ICONS = ['✨', '🍽️', '🌿', '🔢', '💬'];
 const LEGACY_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
@@ -29,7 +31,7 @@ function extractLabeledValue(lines, patterns) {
 
 function parseCategoryLine(line) {
   const numericMatch = line.match(/(\d{1,3})\s*점/);
-  const starCount = (line.match(/⭐/g) || []).length;
+  const starCount = (line.match(/[⭐★]/g) || []).length;
   const stars = starCount || (numericMatch ? Math.max(1, Math.min(5, Math.round(Number(numericMatch[1]) / 20))) : null);
   const desc = line.split('-').slice(1).join('-').trim() || line.split(':').slice(1).join(':').trim();
   return {
@@ -69,8 +71,8 @@ function parseDailyLines(text) {
   const categoryPatterns = [
     { key: 'overall', regexes: [/^종합운[:\s]/, /^종합[:\s]/] },
     { key: 'love', regexes: [/^애정운[:\s]/, /^애정[:\s]/] },
-    { key: 'money', regexes: [/^금전운[:\s]/, /^금전[:\s]/] },
-    { key: 'work', regexes: [/^직장운[:\s]/, /^직장[:\s]/] },
+    { key: 'wealth', regexes: [/^금전운[:\s]/, /^금전[:\s]/] },
+    { key: 'career', regexes: [/^직장운[:\s]/, /^직장[:\s]/] },
     { key: 'study', regexes: [/^학업운[:\s]/, /^학업[:\s]/] },
     { key: 'health', regexes: [/^건강운[:\s]/, /^건강[:\s]/] },
     { key: 'social', regexes: [/^대인운[:\s]/, /^대인[:\s]/] },
@@ -135,6 +137,9 @@ export default function DailyStarCardV2({
   canBlockBadtime = true,
   currentBp = 0,
   className = '',
+  axisScores = [],
+  ownedRows = null,
+  onUseItem = null,
 }) {
   const [blocked, setBlocked] = useState(false);
   const parsed = parseDailyLines(result?.text || '');
@@ -206,15 +211,22 @@ export default function DailyStarCardV2({
               letterSpacing: '.06em',
               marginBottom: 12,
             }}>
-              오늘의 영역별 점수
+              ✦ 오늘의 운세
             </div>
             {CATEGORY_META.map(({ key, label, icon }) => {
               const cat = categories[key];
               if (!cat) return null;
-              const scoreValue = Math.max(20, Math.min(100, (cat.stars || 0) * 20));
+              const axisScore = axisScores.find((s) => s.key === key);
+              const scoreValue = axisScore
+                ? Math.min(100, axisScore.total)
+                : Math.max(20, Math.min(100, (cat.stars || 0) * 20));
+              const bonus = axisScore?.bonus || 0;
+              const isLow = scoreValue <= LOW_SCORE_THRESHOLD;
+              const matchingRow = ownedRows?.find((r) => r.item?.aspectKey === key);
+              const scoreColor = bonus > 0 ? 'var(--gold)' : isLow ? '#c46b4f' : 'var(--t2)';
               return (
-                <div key={key} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div key={key} style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
                     <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
                     <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', minWidth: 44 }}>{label}</span>
                     <div style={{ flex: 1, height: 6, background: 'var(--line)', borderRadius: 999, overflow: 'hidden' }}>
@@ -223,16 +235,45 @@ export default function DailyStarCardV2({
                           width: `${scoreValue}%`,
                           height: '100%',
                           borderRadius: 999,
-                          background: scoreValue <= 45
-                            ? 'linear-gradient(90deg, #d58f6c 0%, #c46b4f 100%)'
-                            : 'linear-gradient(90deg, #8f8aaf 0%, var(--gold) 100%)',
+                          background: bonus > 0
+                            ? 'linear-gradient(90deg, #d8b36a 0%, var(--gold) 100%)'
+                            : isLow
+                              ? 'linear-gradient(90deg, #d58f6c 0%, #c46b4f 100%)'
+                              : 'linear-gradient(90deg, #8f8aaf 0%, var(--gold) 100%)',
+                          transition: 'width 0.5s ease-out',
                         }}
                       />
                     </div>
-                    <span style={{ minWidth: 34, textAlign: 'right', fontSize: 12, fontWeight: 700, color: scoreValue <= 45 ? '#c46b4f' : 'var(--gold)' }}>
+                    <span style={{ minWidth: 34, textAlign: 'right', fontSize: 12, fontWeight: 800, color: scoreColor }}>
                       {scoreValue}점
                     </span>
+                    {isLow && matchingRow && onUseItem && (
+                      <button
+                        type="button"
+                        onClick={() => onUseItem(matchingRow)}
+                        style={{
+                          flexShrink: 0,
+                          padding: '4px 9px',
+                          borderRadius: 999,
+                          border: '1px solid var(--acc)',
+                          background: 'var(--goldf)',
+                          color: 'var(--gold)',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          fontFamily: 'var(--ff)',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        바로 쓰기
+                      </button>
+                    )}
                   </div>
+                  {bonus > 0 && axisScore?.boostItem && (
+                    <div style={{ paddingLeft: 30, marginBottom: 3, fontSize: 10, color: 'var(--gold)', fontWeight: 700, lineHeight: 1.5 }}>
+                      {axisScore.boostItem.name} 효과로 +{bonus}점 상승!
+                    </div>
+                  )}
                   {cat.desc && (
                     <div style={{
                       fontSize: 11,
@@ -242,6 +283,11 @@ export default function DailyStarCardV2({
                       wordBreak: 'keep-all',
                     }}>
                       {cat.desc}
+                    </div>
+                  )}
+                  {isLow && !matchingRow && ownedRows !== null && (
+                    <div style={{ paddingLeft: 30, marginTop: 3, fontSize: 10, color: 'var(--t4)', lineHeight: 1.5 }}>
+                      이 영역에 쓸 아이템이 없어요.
                     </div>
                   )}
                 </div>

@@ -1243,6 +1243,9 @@ export default function TodayDetailPage({
               isBlocking={isBlockingBadtime}
               canBlockBadtime={onBlockBadtime != null}
               currentBp={gamificationState?.currentBp || 0}
+              axisScores={axisScores}
+              ownedRows={ownedRows}
+              onUseItem={canUseItems ? handleUseItem : null}
             />
           </Suspense>
         ) : (
