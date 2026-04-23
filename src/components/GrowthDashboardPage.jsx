@@ -18,7 +18,7 @@ const GROWTH_STAGES = [
 ];
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-const MAX_CONTENT_WIDTH = 520;
+const MAX_CONTENT_WIDTH = 460;
 
 function formatLocalDateKey(date) {
   const year = date.getFullYear();
@@ -59,8 +59,8 @@ function sectionCardStyle(extra = {}) {
     background:
       'linear-gradient(180deg, color-mix(in srgb, var(--bg1) 82%, white 18%) 0%, var(--bg1) 100%)',
     border: '1px solid color-mix(in srgb, var(--line) 55%, var(--gold) 18%)',
-    borderRadius: 24,
-    boxShadow: '0 16px 40px rgba(17, 12, 30, 0.08)',
+    borderRadius: 20,
+    boxShadow: '0 12px 30px rgba(17, 12, 30, 0.08)',
     ...extra,
   };
 }
@@ -69,12 +69,12 @@ function tabButtonStyle(active, color) {
   return {
     flex: 1,
     minWidth: 0,
-    padding: '12px 10px',
+    padding: '10px 9px',
     borderRadius: 999,
     border: active ? `1px solid ${color}44` : '1px solid transparent',
     background: active ? `${color}18` : 'transparent',
     color: active ? color : 'var(--t3)',
-    fontSize: 'var(--sm)',
+    fontSize: '12px',
     fontWeight: active ? 800 : 600,
     fontFamily: 'var(--ff)',
     cursor: 'pointer',
@@ -87,27 +87,27 @@ function MetricCard({ icon, value, label, accent, note }) {
     <div
       style={{
         ...sectionCardStyle(),
-        padding: '18px 16px',
+        padding: '16px 15px',
         minWidth: 0,
       }}
     >
       <div
         style={{
-          width: 42,
-          height: 42,
-          borderRadius: 14,
+          width: 38,
+          height: 38,
+          borderRadius: 12,
           display: 'grid',
           placeItems: 'center',
-          fontSize: 21,
-          marginBottom: 14,
+          fontSize: 18,
+          marginBottom: 12,
           background: `${accent}16`,
           boxShadow: `inset 0 0 0 1px ${accent}2a`,
         }}
       >
         {icon}
       </div>
-      <div style={{ fontSize: '30px', lineHeight: 1, fontWeight: 900, color: accent }}>{value}</div>
-      <div style={{ marginTop: 8, fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t2)' }}>{label}</div>
+      <div style={{ fontSize: '24px', lineHeight: 1, fontWeight: 900, color: accent }}>{value}</div>
+      <div style={{ marginTop: 7, fontSize: '12px', fontWeight: 700, color: 'var(--t2)' }}>{label}</div>
       {note ? <div style={{ marginTop: 4, fontSize: '11px', color: 'var(--t4)' }}>{note}</div> : null}
     </div>
   );
@@ -119,10 +119,10 @@ function ConstellationBadge({ stage }) {
   return (
     <div
       style={{
-        width: 94,
-        height: 94,
+        width: 78,
+        height: 78,
         flexShrink: 0,
-        borderRadius: 28,
+        borderRadius: 24,
         display: 'grid',
         placeItems: 'center',
         position: 'relative',
@@ -133,8 +133,8 @@ function ConstellationBadge({ stage }) {
       <div
         style={{
           position: 'absolute',
-          inset: 10,
-          borderRadius: 24,
+          inset: 9,
+          borderRadius: 20,
           background: `linear-gradient(145deg, ${stage.color}24, rgba(255,255,255,0.04))`,
           filter: 'blur(1px)',
         }}
@@ -143,7 +143,7 @@ function ConstellationBadge({ stage }) {
         style={{
           position: 'relative',
           zIndex: 1,
-          fontSize: 44,
+          fontSize: 36,
           animation: 'floatGently 3.6s ease-in-out infinite',
         }}
       >
@@ -203,8 +203,8 @@ function StageRoadmap({ totalMissions }) {
   const current = getGrowthStage(totalMissions);
 
   return (
-    <div style={{ ...sectionCardStyle(), padding: 22 }}>
-      <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)', marginBottom: 16 }}>성장 단계</div>
+    <div style={{ ...sectionCardStyle(), padding: 18 }}>
+      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)', marginBottom: 14 }}>성장 단계</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {GROWTH_STAGES.map((stage) => {
           const reached = totalMissions >= stage.minMissions;
@@ -235,7 +235,7 @@ function StageRoadmap({ totalMissions }) {
                     marginBottom: 4,
                   }}
                 >
-                  <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: active ? stage.color : 'var(--t1)' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 800, color: active ? stage.color : 'var(--t1)' }}>
                     {stage.label}
                   </span>
                   {active ? (
@@ -275,17 +275,17 @@ function QuickActions({ setStep }) {
   ];
 
   return (
-    <div style={{ ...sectionCardStyle(), padding: 22 }}>
-      <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)', marginBottom: 16 }}>바로가기</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
+    <div style={{ ...sectionCardStyle(), padding: 18 }}>
+      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)', marginBottom: 14 }}>바로가기</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(136px, 1fr))', gap: 10 }}>
         {actions.map((action) => (
           <button
             key={action.step}
             onClick={() => setStep(action.step)}
             style={{
               border: '1px solid var(--line)',
-              borderRadius: 20,
-              padding: '16px 14px',
+              borderRadius: 18,
+              padding: '14px 13px',
               background: 'linear-gradient(180deg, var(--bg2), color-mix(in srgb, var(--bg2) 88%, white 12%))',
               color: 'var(--t1)',
               textAlign: 'left',
@@ -293,8 +293,8 @@ function QuickActions({ setStep }) {
               fontFamily: 'var(--ff)',
             }}
           >
-            <div style={{ fontSize: 20, marginBottom: 10 }}>{action.icon}</div>
-            <div style={{ fontSize: 'var(--sm)', fontWeight: 800, marginBottom: 4 }}>{action.label}</div>
+            <div style={{ fontSize: 18, marginBottom: 8 }}>{action.icon}</div>
+            <div style={{ fontSize: '12px', fontWeight: 800, marginBottom: 4 }}>{action.label}</div>
             <div style={{ fontSize: '12px', color: 'var(--t4)', lineHeight: 1.5 }}>{action.desc}</div>
           </button>
         ))}
@@ -308,11 +308,11 @@ function EmptyPanel({ title, body }) {
     <div
       style={{
         ...sectionCardStyle(),
-        padding: '28px 22px',
+        padding: '24px 18px',
         textAlign: 'center',
       }}
     >
-      <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)', marginBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)', marginBottom: 8 }}>{title}</div>
       <div style={{ fontSize: '12px', lineHeight: 1.7, color: 'var(--t4)' }}>{body}</div>
     </div>
   );
@@ -327,23 +327,30 @@ function ScoreTrendChart({ data, dates }) {
     return <EmptyPanel title="최근 7일 별숨점수 흐름" body="아직 기록이 없어요. 오늘의 별숨을 확인하면 여기부터 흐름이 쌓여요." />;
   }
 
+  const chartWidth = 320;
+  const chartHeight = 164;
+  const paddingX = 18;
+  const topY = 18;
+  const bottomY = 112;
+  const usableWidth = chartWidth - paddingX * 2;
+  const usableHeight = bottomY - topY;
   const min = Math.min(...valid.map((item) => item.value));
   const max = Math.max(...valid.map((item) => item.value));
   const range = Math.max(8, max - min);
   const coords = valid.map(({ value, index }) => {
-    const x = valid.length === 1 ? 50 : (index / (dates.length - 1)) * 100;
-    const y = 82 - ((value - min) / range) * 54;
+    const x = dates.length === 1 ? chartWidth / 2 : paddingX + (index / (dates.length - 1)) * usableWidth;
+    const y = bottomY - ((value - min) / range) * usableHeight;
     return { x, y, value, index };
   });
 
   const points = coords.map((point) => `${point.x},${point.y}`).join(' ');
-  const areaPoints = `0,92 ${points} 100,92`;
+  const areaPoints = `${paddingX},${bottomY} ${points} ${chartWidth - paddingX},${bottomY}`;
   const today = coords.find((point) => point.index === dates.length - 1);
   const previous = [...coords].reverse().find((point) => point.index < dates.length - 1);
   const direction = today && previous ? (today.value >= previous.value ? '상승세' : '조정세') : '누적 중';
 
   return (
-    <div style={{ ...sectionCardStyle(), padding: 22 }}>
+    <div style={{ ...sectionCardStyle(), padding: 18 }}>
       <div
         style={{
           display: 'flex',
@@ -354,7 +361,7 @@ function ScoreTrendChart({ data, dates }) {
         }}
       >
         <div>
-          <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)' }}>최근 7일 별숨점수 흐름</div>
+          <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)' }}>최근 7일 별숨점수 흐름</div>
           <div style={{ marginTop: 4, fontSize: '12px', color: 'var(--t4)' }}>
             전일 대비 <span style={{ color: direction === '상승세' ? '#E98143' : '#6E94D6', fontWeight: 800 }}>{direction}</span>
           </div>
@@ -362,28 +369,37 @@ function ScoreTrendChart({ data, dates }) {
         {today ? (
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '11px', color: 'var(--t4)' }}>오늘 점수</div>
-            <div style={{ fontSize: '32px', lineHeight: 1, fontWeight: 900, color: 'var(--gold)' }}>{today.value}</div>
+            <div style={{ fontSize: '28px', lineHeight: 1, fontWeight: 900, color: 'var(--gold)' }}>{today.value}</div>
           </div>
         ) : null}
       </div>
 
-      <div style={{ height: 170 }}>
-        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <div style={{ height: 164 }}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`} aria-hidden="true">
           <defs>
             <linearGradient id="growth-score-fill" x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor="rgba(176,120,32,0.28)" />
               <stop offset="100%" stopColor="rgba(176,120,32,0.02)" />
             </linearGradient>
           </defs>
-          {[20, 46, 72].map((y) => (
-            <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="var(--line)" strokeDasharray="2 4" />
+          {[topY, topY + usableHeight / 2, bottomY].map((y) => (
+            <line
+              key={y}
+              x1={paddingX}
+              y1={y}
+              x2={chartWidth - paddingX}
+              y2={y}
+              stroke="var(--line)"
+              strokeDasharray="8 14"
+              strokeLinecap="round"
+            />
           ))}
           <polygon points={areaPoints} fill="url(#growth-score-fill)" />
           <polyline
             points={points}
             fill="none"
             stroke="var(--gold)"
-            strokeWidth="2.8"
+            strokeWidth="6"
             strokeLinejoin="round"
             strokeLinecap="round"
           />
@@ -392,26 +408,26 @@ function ScoreTrendChart({ data, dates }) {
               <circle
                 cx={point.x}
                 cy={point.y}
-                r={point.index === dates.length - 1 ? 3.7 : 2.3}
+                r={point.index === dates.length - 1 ? 8 : 5.5}
                 fill="var(--bg1)"
                 stroke={point.index === dates.length - 1 ? 'var(--gold)' : 'rgba(176,120,32,0.48)'}
-                strokeWidth={point.index === dates.length - 1 ? 2.5 : 1.4}
+                strokeWidth={point.index === dates.length - 1 ? 4 : 3}
               />
             </g>
           ))}
         </svg>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 8, marginTop: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6, marginTop: 6 }}>
         {dates.map((dateKey, index) => {
           const date = parseDateKey(dateKey);
           const isToday = index === dates.length - 1;
           return (
             <div key={dateKey} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--gold)' : 'var(--t3)' }}>
+              <div style={{ fontSize: '10px', fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--gold)' : 'var(--t3)' }}>
                 {DAY_LABELS[date.getDay()]}
               </div>
-              <div style={{ marginTop: 4, fontSize: '10px', color: 'var(--t4)' }}>{String(date.getDate()).padStart(2, '0')}</div>
+              <div style={{ marginTop: 3, fontSize: '10px', color: 'var(--t4)' }}>{String(date.getDate()).padStart(2, '0')}</div>
             </div>
           );
         })}
@@ -429,7 +445,7 @@ function BPTrendChart({ data, dates }) {
   }
 
   return (
-    <div style={{ ...sectionCardStyle(), padding: 22 }}>
+    <div style={{ ...sectionCardStyle(), padding: 18 }}>
       <div
         style={{
           display: 'flex',
@@ -440,16 +456,16 @@ function BPTrendChart({ data, dates }) {
         }}
       >
         <div>
-          <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)' }}>최근 7일 별 포인트 흐름</div>
+          <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)' }}>최근 7일 별 포인트 흐름</div>
           <div style={{ marginTop: 4, fontSize: '12px', color: 'var(--t4)' }}>미션, 출석, 활동 보상이 일자별로 합산돼요.</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '11px', color: 'var(--t4)' }}>최고 획득</div>
-          <div style={{ fontSize: '22px', fontWeight: 900, color: 'var(--gold)' }}>{maxValue} BP</div>
+          <div style={{ fontSize: '20px', fontWeight: 900, color: 'var(--gold)' }}>{maxValue} BP</div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 10, alignItems: 'end' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 8, alignItems: 'end' }}>
         {dates.map((dateKey, index) => {
           const value = values[index];
           const date = parseDateKey(dateKey);
@@ -458,15 +474,15 @@ function BPTrendChart({ data, dates }) {
 
           return (
             <div key={dateKey} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 0 }}>
-              <div style={{ minHeight: 18, fontSize: '11px', fontWeight: 800, color: isToday ? 'var(--gold)' : 'var(--t3)' }}>
+              <div style={{ minHeight: 18, fontSize: '10px', fontWeight: 800, color: isToday ? 'var(--gold)' : 'var(--t3)' }}>
                 {value > 0 ? value : ''}
               </div>
               <div
                 style={{
                   width: '100%',
                   height,
-                  minWidth: 24,
-                  borderRadius: '14px 14px 10px 10px',
+                  minWidth: 22,
+                  borderRadius: '12px 12px 8px 8px',
                   background: isToday
                     ? 'linear-gradient(180deg, #D7A849 0%, #A46B15 100%)'
                     : 'linear-gradient(180deg, #B8A7E2 0%, #6E94D6 100%)',
@@ -475,7 +491,7 @@ function BPTrendChart({ data, dates }) {
                   transition: 'height .35s ease',
                 }}
               />
-              <div style={{ marginTop: 8, fontSize: '11px', color: isToday ? 'var(--gold)' : 'var(--t4)', fontWeight: isToday ? 800 : 600 }}>
+              <div style={{ marginTop: 7, fontSize: '10px', color: isToday ? 'var(--gold)' : 'var(--t4)', fontWeight: isToday ? 800 : 600 }}>
                 {DAY_LABELS[date.getDay()]}
               </div>
             </div>
@@ -488,8 +504,8 @@ function BPTrendChart({ data, dates }) {
 
 function WeeklyActivityRow({ activityDays, dates }) {
   return (
-    <div style={{ ...sectionCardStyle(), padding: 22 }}>
-      <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)', marginBottom: 16 }}>이번 주 활동</div>
+    <div style={{ ...sectionCardStyle(), padding: 18 }}>
+      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)', marginBottom: 14 }}>이번 주 활동</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 8 }}>
         {dates.map((dateKey, index) => {
           const active = activityDays.has(dateKey);
@@ -500,12 +516,12 @@ function WeeklyActivityRow({ activityDays, dates }) {
             <div key={dateKey} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
               <div
                 style={{
-                  width: 40,
-                  height: 40,
+                  width: 34,
+                  height: 34,
                   borderRadius: '50%',
                   display: 'grid',
                   placeItems: 'center',
-                  fontSize: 15,
+                  fontSize: 13,
                   background: active
                     ? 'linear-gradient(135deg, #D7A849 0%, #A46B15 100%)'
                     : 'linear-gradient(180deg, var(--bg3), var(--bg2))',
@@ -517,7 +533,7 @@ function WeeklyActivityRow({ activityDays, dates }) {
                 {active ? '✦' : '·'}
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '11px', fontWeight: active ? 800 : 600, color: active ? 'var(--gold)' : 'var(--t3)' }}>
+                <div style={{ fontSize: '10px', fontWeight: active ? 800 : 600, color: active ? 'var(--gold)' : 'var(--t3)' }}>
                   {DAY_LABELS[date.getDay()]}
                 </div>
                 <div style={{ marginTop: 2, fontSize: '10px', color: 'var(--t4)' }}>{String(date.getDate()).padStart(2, '0')}</div>
@@ -541,12 +557,12 @@ function StatsTiles({ totalBpEarned, totalQuestions, weeklyQuestions, totalMissi
   ];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))', gap: 10 }}>
       {tiles.map((tile) => (
-        <div key={tile.label} style={{ ...sectionCardStyle(), padding: '18px 16px', textAlign: 'center' }}>
-          <div style={{ fontSize: 20, marginBottom: 10 }}>{tile.icon}</div>
-          <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 900, color: tile.color }}>{tile.value}</div>
-          <div style={{ marginTop: 8, fontSize: '12px', color: 'var(--t3)', fontWeight: 700 }}>{tile.label}</div>
+        <div key={tile.label} style={{ ...sectionCardStyle(), padding: '16px 14px', textAlign: 'center' }}>
+          <div style={{ fontSize: 18, marginBottom: 8 }}>{tile.icon}</div>
+          <div style={{ fontSize: 22, lineHeight: 1, fontWeight: 900, color: tile.color }}>{tile.value}</div>
+          <div style={{ marginTop: 7, fontSize: '11px', color: 'var(--t3)', fontWeight: 700 }}>{tile.label}</div>
         </div>
       ))}
     </div>
@@ -666,12 +682,12 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
   }, [dates, user?.id, user?.supabaseId]);
 
   return (
-    <div className="page step-fade" style={{ padding: '24px 18px 40px', justifyContent: 'flex-start' }}>
+    <div className="page step-fade" style={{ padding: '22px 16px 36px', justifyContent: 'flex-start' }}>
       <div style={{ width: '100%', maxWidth: MAX_CONTENT_WIDTH }}>
         <div
           style={{
             ...sectionCardStyle({
-              padding: '28px 22px',
+              padding: '22px 18px',
               overflow: 'hidden',
               position: 'relative',
               background: `radial-gradient(circle at top right, ${stage.color}18 0%, transparent 34%), linear-gradient(180deg, color-mix(in srgb, var(--bg1) 86%, white 14%) 0%, var(--bg1) 100%)`,
@@ -683,8 +699,8 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
               position: 'absolute',
               right: -18,
               top: -18,
-              width: 120,
-              height: 120,
+              width: 104,
+              height: 104,
               borderRadius: '50%',
               background: `${stage.color}12`,
               filter: 'blur(18px)',
@@ -692,11 +708,11 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
           />
 
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: '12px', fontWeight: 800, color: stage.color, letterSpacing: '.08em' }}>BYEOLSOOM GROWTH</div>
-            <div style={{ marginTop: 8, fontSize: 'clamp(26px, 6vw, 34px)', lineHeight: 1.15, fontWeight: 900, color: 'var(--t1)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: stage.color, letterSpacing: '.08em' }}>BYEOLSOOM GROWTH</div>
+            <div style={{ marginTop: 6, fontSize: 'var(--xl)', lineHeight: 1.2, fontWeight: 900, color: 'var(--t1)' }}>
               별숨 성장 대시보드
             </div>
-            <div style={{ marginTop: 10, maxWidth: 420, fontSize: '14px', lineHeight: 1.7, color: 'var(--t3)' }}>
+            <div style={{ marginTop: 8, maxWidth: 380, fontSize: '12px', lineHeight: 1.7, color: 'var(--t3)' }}>
               흩어진 정보 대신 한 화면에서 성장 단계, 활동 흐름, 미션 상태를 편하게 보도록 레이아웃을 정리했어요.
             </div>
 
@@ -704,8 +720,8 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 18,
-                marginTop: 22,
+                gap: 14,
+                marginTop: 18,
                 flexWrap: 'wrap',
               }}
             >
@@ -723,20 +739,20 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
                 >
                   <span
                     style={{
-                      padding: '6px 10px',
+                      padding: '5px 9px',
                       borderRadius: 999,
                       background: `${stage.color}18`,
                       color: stage.color,
-                      fontSize: '11px',
+                      fontSize: '10px',
                       fontWeight: 900,
                     }}
                   >
                     {stage.emoji} {stage.label}
                   </span>
-                  <span style={{ fontSize: '12px', color: 'var(--t4)' }}>완료 미션 {totalMissionsCompleted}개</span>
+                  <span style={{ fontSize: '11px', color: 'var(--t4)' }}>완료 미션 {totalMissionsCompleted}개</span>
                 </div>
 
-                <div style={{ fontSize: '14px', lineHeight: 1.7, color: 'var(--t2)', marginBottom: 14 }}>{stage.desc}</div>
+                <div style={{ fontSize: '12px', lineHeight: 1.7, color: 'var(--t2)', marginBottom: 12 }}>{stage.desc}</div>
                 <GrowthProgress totalMissions={totalMissionsCompleted} />
               </div>
             </div>
@@ -746,9 +762,9 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            gap: 12,
-            marginTop: 14,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))',
+            gap: 10,
+            marginTop: 12,
           }}
         >
           <MetricCard icon="💎" value={currentBp} label="보유 BP" accent="var(--gold)" />
@@ -762,11 +778,11 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
             marginTop: 14,
             width: '100%',
             border: '1px solid rgba(176,120,32,0.2)',
-            borderRadius: 22,
-            padding: '17px 18px',
+            borderRadius: 18,
+            padding: '15px 16px',
             background: 'linear-gradient(180deg, var(--goldf), color-mix(in srgb, var(--bg1) 88%, var(--gold) 12%))',
             color: 'var(--gold)',
-            fontSize: 'var(--sm)',
+            fontSize: '12px',
             fontWeight: 900,
             fontFamily: 'var(--ff)',
             cursor: 'pointer',
@@ -779,7 +795,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
         <div
           style={{
             ...sectionCardStyle(),
-            marginTop: 16,
+            marginTop: 14,
             padding: 8,
             display: 'flex',
             gap: 6,
@@ -796,28 +812,28 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
           ))}
         </div>
 
-        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {tab === 'growth' ? (
             <>
               <div
                 style={{
                   ...sectionCardStyle(),
-                  padding: 22,
+                  padding: 18,
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: 12,
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                  gap: 10,
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)', marginBottom: 6 }}>연속 방문</div>
-                  <div style={{ fontSize: 34, lineHeight: 1, fontWeight: 900, color: '#E98143' }}>{loginStreak}일</div>
+                  <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)', marginBottom: 6 }}>연속 방문</div>
+                  <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 900, color: '#E98143' }}>{loginStreak}일</div>
                   <div style={{ marginTop: 8, fontSize: '12px', lineHeight: 1.6, color: 'var(--t4)' }}>
                     오늘도 들어오면 흐름이 이어져요. 꾸준함이 성장 단계를 가장 빠르게 올려줘요.
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)', marginBottom: 6 }}>오늘 미션 진행</div>
-                  <div style={{ fontSize: 34, lineHeight: 1, fontWeight: 900, color: stage.color }}>
+                  <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)', marginBottom: 6 }}>오늘 미션 진행</div>
+                  <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 900, color: stage.color }}>
                     {completedToday}/{safeMissions.length || 0}
                   </div>
                   <div style={{ marginTop: 8, fontSize: '12px', lineHeight: 1.6, color: 'var(--t4)' }}>
@@ -835,7 +851,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
             statsLoading ? (
               <div style={{ ...sectionCardStyle(), padding: '40px 22px', textAlign: 'center' }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>📊</div>
-                <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t2)' }}>통계를 불러오는 중</div>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)' }}>통계를 불러오는 중</div>
                 <div style={{ marginTop: 6, fontSize: '12px', color: 'var(--t4)' }}>최근 7일 데이터를 정리하고 있어요.</div>
               </div>
             ) : (

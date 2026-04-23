@@ -142,7 +142,12 @@ export function useGamification(user, showToast) {
 
         // daily_bp_log에 기록
         // 미션 완료 시 reason을 mission_id 포함해 고유하게 만들어 같은 날 여러 미션 로그가 충돌하지 않도록 함
-        const logReason = missionId ? `${reason}_${missionId}` : reason;
+        const needsUniqueReason = !missionId && amount < 0 && reason === 'question_ask';
+        const logReason = missionId
+          ? `${reason}_${missionId}`
+          : needsUniqueReason
+            ? `${reason}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+            : reason;
         await client.from('daily_bp_log').upsert(
           {
             kakao_id: String(user.id),
