@@ -9,6 +9,7 @@ import { useAppStore } from '../store/useAppStore.js';
 import { getAuthToken } from '../hooks/useUserProfile.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
+import FeatureResultSheet from './FeatureResultSheet.jsx';
 
 // ── 사주 기반 행운 번호 생성 유틸 ──
 function seededRandom(seed) {
@@ -225,6 +226,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [usedItem, setUsedItem] = useState(null);
+  const [showResultSheet, setShowResultSheet] = useState(true);
 
   const kakaoId = user?.kakaoId || user?.id;
 
@@ -267,6 +269,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
     }
     setLoading(true);
     setResult('');
+    setShowResultSheet(true);
     setUsedItem(inventoryId);
     setSelectedType(readingType);
 
@@ -372,6 +375,25 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
             </div>
           </div>
         </div>
+      )}
+      {result && showResultSheet && (
+        <FeatureResultSheet
+          type="special"
+          eyebrow="BYEOLSOOM SPECIAL READING"
+          title={selectedType?.title || "\uBCC4\uC228 \uD2B9\uBCC4 \uC0C1\uB2F4"}
+          text={result}
+          highlights={[
+            selectedType?.emoji ? { emoji: selectedType.emoji, label: "\uC120\uD0DD\uD55C \uC0C1\uB2F4", value: selectedType.title, caption: selectedType.desc } : null,
+            usedItem ? { emoji: "ticket", label: "\uC0AC\uC6A9\uD55C \uC0C1\uB2F4\uAD8C", value: "\uD2B9\uBCC4 \uC0C1\uB2F4\uAD8C 1\uAC1C \uC0AC\uC6A9" } : null,
+          ].filter(Boolean)}
+          primaryAction={() => {
+            setResult('');
+            setSelectedType(null);
+            setShowResultSheet(false);
+          }}
+          primaryLabel="다른 특별 상담 받기"
+          onDismiss={() => setShowResultSheet(false)}
+        />
       )}
 
       {/* 아이템 미보유 */}

@@ -85,6 +85,36 @@ export default function DailyHoroscopePage({
 
   // 정화 재점 상태
   const [isPurifying, setIsPurifying] = useState(false);
+  const [pendingItems, setPendingItems] = useState([]);
+
+  const handleToggleItem = useCallback((row) => {
+    setPendingItems(prev => {
+      const exists = prev.find(p => p.rowId === row.rowId);
+      if (exists) return prev.filter(p => p.rowId !== row.rowId);
+      return [...prev, row];
+    });
+  }, []);
+
+  const handleApplyPending = useCallback(async () => {
+    if (pendingItems.length === 0 || !askDailyHoroscope || isPurifying || dailyLoading) return;
+    setIsPurifying(true);
+    const animPromise = new Promise(r => setTimeout(r, 1200));
+    try {
+      await askDailyHoroscope({
+        transientItems: pendingItems.map(p => p.item),
+        previousResult: dailyResult?.text,
+        skipBpCharge: true,
+        skipConfirm: true,
+        saveHistory: false,
+      });
+      setPendingItems([]);
+    } catch (e) {
+      console.error('[별숨] 아이템 일괄 적용 실패:', e);
+    } finally {
+      await animPromise;
+      setIsPurifying(false);
+    }
+  }, [pendingItems, askDailyHoroscope, isPurifying, dailyLoading, dailyResult?.text]);
 
   // 아이템 보관함 로드
   const [ownedRows, setOwnedRows] = useState(null);
@@ -107,28 +137,7 @@ export default function DailyHoroscopePage({
       .catch(() => setOwnedRows([]));
   }, [user?.kakaoId, user?.id, dailyResult]);
 
-  // 아이템 사용 핸들러 (운세 점수 낮은 영역에 직접 사용)
   const canUseItems = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
-  const handleUseItem = useCallback(async (row) => {
-    if (!row?.item || !askDailyHoroscope || !canUseItems) return;
-    setIsPurifying(true);
-    const animPromise = new Promise(r => setTimeout(r, 1200));
-    try {
-      await Promise.all([
-        askDailyHoroscope({
-          transientItems: [row.item],
-          skipBpCharge: true,
-          skipConfirm: true,
-          saveHistory: false,
-        }),
-        animPromise,
-      ]);
-    } catch {
-      await animPromise;
-    } finally {
-      setIsPurifying(false);
-    }
-  }, [askDailyHoroscope, canUseItems]);
 
   const handlePurify = useCallback(async () => {
     if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
@@ -238,7 +247,8 @@ export default function DailyHoroscopePage({
                 <DailyStarCardV2
                   result={dailyResult}
                   ownedRows={ownedRows}
-                  onUseItem={canUseItems ? handleUseItem : null}
+                  onToggleItem={canUseItems ? handleToggleItem : null}
+                  pendingItems={pendingItems}
                 />
 
                 {/* 장착된 메인 기운 공명 카드 */}
@@ -344,6 +354,44 @@ export default function DailyHoroscopePage({
         onRecharge={handleRecharge}
         isBlocking={isBlockingBadtime}
       />
+
+      {/* 일괄 적용 버튼 */}
+      {pendingItems.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: 100,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 100,
+          width: '90%',
+          maxWidth: 400,
+          animation: 'purifyFadeIn 0.3s ease',
+        }}>
+          <button
+            onClick={handleApplyPending}
+            disabled={isPurifying || dailyLoading}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: 16,
+              background: 'var(--gold)',
+              color: '#fff',
+              border: 'none',
+              fontWeight: 800,
+              fontSize: 16,
+              boxShadow: '0 8px 32px rgba(232,176,72,0.4)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+            }}
+          >
+            <span>✦</span>
+            {pendingItems.length}개의 아이템 효과 반영하기
+          </button>
+        </div>
+      )}
     </div>
   );
 }

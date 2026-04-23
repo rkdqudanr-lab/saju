@@ -6,6 +6,7 @@ import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { spendBP } from '../utils/gamificationLogic.js';
 import { useAppStore } from '../store/useAppStore.js';
+import FeatureResultSheet from './FeatureResultSheet.jsx';
 
 const FEATURE_COST = 10;
 
@@ -92,12 +93,14 @@ export default function FutureProphecyPage({
   const [selectedPeriod, setPeriod] = useState(null);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showResultSheet, setShowResultSheet] = useState(true);
   const { shown, done, skipToEnd } = useWordTyping(text, !!text && !loading, TIMING.typingWord);
 
   const fetchProphecy = useCallback(async (period) => {
     setLoading(true);
     setText('');
     setPhase('result');
+    setShowResultSheet(true);
     try {
       if (user?.id) {
         const confirmed = await useAppStore.getState().showBPConfirm(FEATURE_COST, 1);
@@ -150,6 +153,30 @@ export default function FutureProphecyPage({
 
   if (phase === 'result') {
     const period = PERIOD_OPTIONS.find((item) => item.id === selectedPeriod) || PERIOD_OPTIONS[0];
+    if (done && text && showResultSheet) {
+      return (
+        <FeatureResultSheet
+          type="prophecy"
+          eyebrow="BYEOLSOOM PROPHECY"
+          title="\uBCC4\uC228\uC758 \uBBF8\uB798 \uC608\uC5B8"
+          text={text}
+          highlights={[
+            { emoji: "time", label: "\uC77D\uB294 \uC2DC\uAC04\uB300", value: period.label, caption: period.desc },
+            (form?.nickname || form?.name) ? { emoji: "star", label: "\uC774\uBC88 \uC608\uC5B8\uC758 \uC8FC\uC778\uACF5", value: form.nickname || form.name } : null,
+          ].filter(Boolean)}
+          primaryAction={() => {
+            setPhase("intro");
+            setText("");
+            setShowResultSheet(false);
+          }}
+          primaryLabel="\uB2E4\uB978 \uBBF8\uB798 \uB2E4\uC2DC \uBCF4\uAE30"
+          secondaryAction={shareResult && done ? () => shareResult("prophecy", text, selectedPeriod) : null}
+          secondaryLabel={shareResult && done ? "\uC774 \uC608\uC5B8 \uACF5\uC720\uD558\uAE30" : undefined}
+          onDismiss={() => setShowResultSheet(false)}
+        />
+      );
+    }
+
     return (
       <div className="page-top">
         <div className="inner" style={{ animation: 'fadeUp .5s ease' }}>

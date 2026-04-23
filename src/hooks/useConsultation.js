@@ -208,12 +208,29 @@ export function useConsultation(
               const parts = [item?.name].filter(Boolean);
               if (item?.effect) parts.push(`effect: ${item.effect}`);
               else if (item?.description) parts.push(`description: ${item.description}`);
+              if (item?.boost) parts.push(`boost: +${item.boost}`);
+              if (item?.aspectKey) parts.push(`target_category: ${item.aspectKey}`);
               return `${index + 1}. ${parts.join(" / ")}`.trim();
             })
             .filter(Boolean)
             .join("\n");
           if (transientSummary) {
-            fullContext += `\n\n[daily transient items]\n${transientSummary}\nPlease reflect these temporary item effects naturally in today's interpretation.`;
+            let itemInstr = `\n\n[daily transient items]\n${transientSummary}\nPlease reflect these temporary item effects naturally in today's interpretation.`;
+            if (opts.previousResult) {
+              itemInstr += `\n\n[important instruction for re-evaluation]
+The user is using an item to boost their fortune.
+Previous result for reference:
+"""
+${opts.previousResult}
+"""
+When generating the new result:
+1. For each item in [daily transient items], identify its 'target_category' and 'boost' value.
+2. Find the previous score for that category in the [previous result].
+3. ADD the boost value to the previous score. (Example: 60 + 10 = 70). The new score MUST be the sum, capped at 100.
+4. Update the description for that category to be significantly more positive and encouraging.
+5. Keep other category scores and details similar but you may slightly adjust them to maintain overall flow.`;
+            }
+            fullContext += itemInstr;
           }
         }
 
@@ -243,6 +260,10 @@ export function useConsultation(
             isDaily: opts.isDaily || false,
             isDaeun: opts.isDaeun || false,
             isAnalytics: opts.isAnalytics || false,
+            isTarot: opts.isTarot || false,
+            isDream: opts.isDream || false,
+            isName: opts.isName || false,
+            isTaegil: opts.isTaegil || false,
             responseStyle: style,
             precision_level: useAppStore.getState().dataPrecision?.level || "low",
             clientHour: new Date().getHours(),

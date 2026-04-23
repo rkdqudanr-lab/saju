@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useAppStore } from '../store/useAppStore.js';
 import { breakAtNatural } from '../utils/constants.js';
 import { BADTIME_THRESHOLD } from '../utils/gamificationLogic.js';
 import { parseDailyLines } from '../utils/parseDailyLines.js';
@@ -50,8 +51,11 @@ export default function DailyStarCardV2({
   axisScores = [],
   ownedRows = null,
   onUseItem = null,
+  pendingItems = [],
+  onToggleItem = null,
 }) {
   const [blocked, setBlocked] = useState(false);
+  const setStep = useAppStore((s) => s.setStep);
   const parsed = parseDailyLines(result?.text || '');
 
   const score = parsed.score ?? result?.score ?? null;
@@ -217,72 +221,96 @@ export default function DailyStarCardV2({
               const scoreValue = axisScore?.total ?? catScore ?? 50;
               const bonus = axisScore?.bonus || 0;
               const isLow = scoreValue <= LOW_SCORE_THRESHOLD;
-              const matchingRow = ownedRows?.find((r) => r.item?.aspectKey === key);
               const scoreColor = bonus > 0 ? 'var(--gold)' : isLow ? '#c46b4f' : 'var(--t2)';
+              const matchingRow = ownedRows?.find((r) => r.item?.aspectKey === key);
+              const isPending = pendingItems.some(pi => pi.rowId === matchingRow?.rowId);
+              const boostVal = matchingRow?.item?.boost || 0;
+              const pendingBoost = isPending ? boostVal : 0;
+              const totalPredicted = Math.min(100, scoreValue + pendingBoost);
+
               return (
                 <div key={key} style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                    <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
-                    <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', minWidth: 44 }}>{label}</span>
-                    <div style={{ flex: 1, height: 6, background: 'var(--line)', borderRadius: 999, overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          width: `${scoreValue}%`,
-                          height: '100%',
-                          borderRadius: 999,
-                          background: bonus > 0
-                            ? 'linear-gradient(90deg, #d8b36a 0%, var(--gold) 100%)'
-                            : isLow
-                              ? 'linear-gradient(90deg, #d58f6c 0%, #c46b4f 100%)'
-                              : 'linear-gradient(90deg, #8f8aaf 0%, var(--gold) 100%)',
-                          transition: 'width 0.5s ease-out',
-                        }}
-                      />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+                    <span style={{ fontSize: 13, color: 'var(--t2)', minWidth: 40, fontWeight: 600 }}>{label}</span>
+                    <div style={{ flex: 1, height: 6, background: 'var(--bg3)', borderRadius: 3, position: 'relative', overflow: 'hidden' }}>
+                      <div style={{
+                        position: 'absolute', left: 0, top: 0, height: '100%',
+                        width: `${scoreValue}%`, background: scoreColor, borderRadius: 3, zIndex: 1
+                      }} />
+                      {pendingBoost > 0 && (
+                        <div style={{
+                          position: 'absolute', left: `${scoreValue}%`, top: 0, height: '100%',
+                          width: `${Math.min(100 - scoreValue, pendingBoost)}%`,
+                          background: 'var(--gold)', borderRadius: '0 3px 3px 0',
+                          animation: 'dsc-boost-pulse 1.5s ease-in-out infinite',
+                          zIndex: 0
+                        }} />
+                      )}
                     </div>
-                    <span style={{ minWidth: 34, textAlign: 'right', fontSize: 12, fontWeight: 800, color: scoreColor }}>
-                      {scoreValue}점
-                    </span>
-                    {matchingRow && onUseItem && (
-                      <button
-                        type="button"
-                        onClick={() => onUseItem(matchingRow)}
-                        style={{
-                          flexShrink: 0,
-                          padding: '4px 9px',
-                          borderRadius: 999,
-                          border: '1px solid var(--acc)',
-                          background: 'var(--goldf)',
-                          color: 'var(--gold)',
-                          fontSize: 10,
-                          fontWeight: 700,
-                          fontFamily: 'var(--ff)',
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {isLow ? '바로 쓰기' : '사용'}
-                      </button>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 100, justifyContent: 'flex-end' }}>
+                      {pendingBoost > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', animation: 'dsc-text-pulse 1.5s infinite' }}>
+                          {totalPredicted}점
+                        </span>
+                      )}
+                      <span style={{ minWidth: 34, textAlign: 'right', fontSize: 12, fontWeight: 800, color: scoreColor, opacity: pendingBoost > 0 ? 0.5 : 1 }}>
+                        {scoreValue}점
+                      </span>
+                      {onToggleItem && (
+                        matchingRow ? (
+                          <button
+                            type="button"
+                            onClick={() => onToggleItem(matchingRow)}
+                            style={{
+                              flexShrink: 0,
+                              padding: '4px 9px',
+                              borderRadius: 999,
+                              border: isPending ? '1px solid var(--gold)' : '1px solid var(--acc)',
+                              background: isPending ? 'var(--gold)' : 'var(--goldf)',
+                              color: isPending ? '#fff' : 'var(--gold)',
+                              fontSize: 10,
+                              fontWeight: 700,
+                              fontFamily: 'var(--ff)',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            {isPending ? '취소' : `선택 (+${matchingRow.item.boost})`}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setStep(40)}
+                            style={{
+                              flexShrink: 0,
+                              padding: '4px 9px',
+                              borderRadius: 999,
+                              border: '1px solid var(--line)',
+                              background: 'var(--bg3)',
+                              color: 'var(--t4)',
+                              fontSize: 10,
+                              fontWeight: 700,
+                              fontFamily: 'var(--ff)',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            아이템 얻기
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
-                  {bonus > 0 && axisScore?.boostItem && (
-                    <div style={{ paddingLeft: 30, marginBottom: 3, fontSize: 10, color: 'var(--gold)', fontWeight: 700, lineHeight: 1.5 }}>
-                      {axisScore.boostItem.name} 효과로 +{bonus}점 상승!
-                    </div>
-                  )}
                   {cat.desc && (
                     <div style={{
                       fontSize: 11,
                       color: 'var(--t3)',
                       lineHeight: 1.5,
-                      paddingLeft: 30,
+                      paddingLeft: 50,
                       wordBreak: 'keep-all',
                     }}>
                       {cat.desc}
-                    </div>
-                  )}
-                  {isLow && !matchingRow && ownedRows !== null && (
-                    <div style={{ paddingLeft: 30, marginTop: 3, fontSize: 10, color: 'var(--t4)', lineHeight: 1.5 }}>
-                      이 영역에 쓸 아이템이 없어요.
                     </div>
                   )}
                 </div>

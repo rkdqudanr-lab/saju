@@ -126,6 +126,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
       userMessage: prompt,
       context: buildCtx?.() || '',
       isChat: true,
+      isDream: true,
       clientHour: new Date().getHours(),
     });
   };

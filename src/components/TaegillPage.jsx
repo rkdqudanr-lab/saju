@@ -3,6 +3,7 @@ import { getSaju } from "../utils/saju.js";
 import { TAEGIL_PROMPT } from "../utils/constants.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
+import FeatureResultSheet from "./FeatureResultSheet.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  🗓️ 택일 — 중요한 날, 별숨이 골라드릴게요
@@ -60,6 +61,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
   });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showResultSheet, setShowResultSheet] = useState(true);
 
   // 후보 날짜 목록 (최대 14일, 날짜별 사주 정보)
   const candidateDates = useMemo(() => {
@@ -87,10 +89,11 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
     if (!callApi) { showToast('로그인이 필요해요', 'info'); return; }
     setLoading(true);
     setResult('');
+    setShowResultSheet(true);
     try {
       const top = candidateDates.slice(0, 6);
       const prompt = TAEGIL_PROMPT({ eventType, candidateDates: top, sajuCtx: buildCtx?.() || '' });
-      const text = await callApi(prompt);
+      const text = await callApi(prompt, { isTaegil: true });
       setResult(text);
       saveConsultationHistoryEntry({
         user,
@@ -237,6 +240,25 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
               </button>
             )}
           </div>
+        )}
+        {result && showResultSheet && (
+          <FeatureResultSheet
+            type="taegil"
+            eyebrow="BYEOLSOOM TAEGIL"
+            title="\uBCC4\uC228\uC758 \uD0DD\uC77C \uACB0\uACFC"
+            text={result}
+            highlights={[
+              eventType ? { emoji: "calendar", label: "\uCC3E\uB294 \uC77C\uC815", value: eventType } : null,
+              candidateDates[0] ? { emoji: "best", label: "\uAC00\uC7A5 \uC88B\uC740 \uD6C4\uBCF4", value: candidateDates[0].label, caption: candidateDates[0].sajuDesc } : null,
+              candidateDates[1] ? { emoji: "plus", label: "\uD568\uAED8 \uBCFC \uB0A0\uC9DC", value: candidateDates[1].label } : null,
+            ].filter(Boolean)}
+            primaryAction={() => {
+              setResult("");
+              setShowResultSheet(false);
+            }}
+            primaryLabel="\uB2E4\uB978 \uB0A0\uC9DC \uB2E4\uC2DC \uBCF4\uAE30"
+            onDismiss={() => setShowResultSheet(false)}
+          />
         )}
       </div>
     </div>

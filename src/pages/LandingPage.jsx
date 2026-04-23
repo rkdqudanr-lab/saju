@@ -6,6 +6,7 @@ import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
 import { isTodayAnswered } from "../utils/quiz.js";
 import { getKeepLogin, setKeepLogin } from "../hooks/useUserProfile.js";
+import { findItem } from "../utils/gachaItems.js";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
@@ -147,7 +148,6 @@ export default function LandingPage({
       .eq('kakao_id', kakaoId)
       .eq('is_equipped', true)
       .then(async ({ data }) => {
-        const { findItem } = await import('../utils/gachaItems.js');
         const { findShopItem } = await import('../utils/shopGachaItems.js');
         const { data: allShopItems } = await safeClient.from('shop_items').select('*');
         const shopItemsMap = new Map((allShopItems || []).map(i => [i.id, i]));

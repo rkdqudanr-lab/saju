@@ -7,7 +7,7 @@ import { useAppStore } from "./store/useAppStore.js";
 import { PKGS, TIMING, ANNIVERSARY_PROMPT } from "./utils/constants.js";
 
 // hooks
-import { useUserProfile }   from "./hooks/useUserProfile.js";
+import { getAuthToken, useUserProfile } from "./hooks/useUserProfile.js";
 import { useSajuContext }   from "./hooks/useSajuContext.js";
 import { useConsultation }  from "./hooks/useConsultation.js";
 import { useNavigation }    from "./hooks/useNavigation.js";
@@ -28,6 +28,7 @@ import Sidebar            from "./components/Sidebar.jsx";
 import PWAInstallBanner   from "./components/PWAInstallBanner.jsx";
 import BottomNav          from "./components/BottomNav.jsx";
 import FeatureTour        from "./components/FeatureTour.jsx";
+import SajuCalendar       from "./components/SajuCalendar.jsx";
 
 // modal components (static)
 import UpgradeModal        from "./components/UpgradeModal.jsx";
@@ -54,7 +55,6 @@ const ProfileModal             = lazy(() => import("./components/ProfileModal.js
 const HistoryPage              = lazy(() => import("./components/HistoryPage.jsx"));
 const FutureProphecyPage       = lazy(() => import("./components/FutureProphecyPage.jsx"));
 const CompatPage               = lazy(() => import("./components/CompatPage.jsx"));
-const SajuCalendar             = lazy(() => import("./components/SajuCalendar.jsx"));
 const GroupBulseumPage         = lazy(() => import("./components/GroupBulseumPage.jsx"));
 const AnniversaryPage          = lazy(() => import("./components/AnniversaryPage.jsx"));
 const NatalInterpretationPage  = lazy(() => import("./components/NatalInterpretationPage.jsx"));
@@ -253,7 +253,6 @@ export default function App() {
     (async () => {
       try {
         const ctx = buildCtx ? buildCtx() : '';
-        const { getAuthToken } = await import('./hooks/useUserProfile.js');
         const token = getAuthToken();
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -409,7 +408,6 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     const t = setTimeout(() => {
-      import('./components/SajuCalendar.jsx').catch(() => {});
       import('./components/GroupBulseumPage.jsx').catch(() => {});
       import('./components/CompatPage.jsx').catch(() => {});
       import('./components/FutureProphecyPage.jsx').catch(() => {});

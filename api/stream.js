@@ -78,6 +78,10 @@ export default async function handler(req, res) {
   const isDaeun           = !!body.isDaeun;
   const isAnalytics       = !!body.isAnalytics;
   const isYearly          = !!body.isYearly;
+  const isTarot           = !!body.isTarot;
+  const isDream           = !!body.isDream;
+  const isName            = !!body.isName;
+  const isTaegil          = !!body.isTaegil;
   const precision_level   = ['low','mid','high'].includes(body.precision_level) ? body.precision_level : 'low';
   const gender            = typeof body.gender === 'string' && ['남','여'].includes(body.gender) ? body.gender : null;
 
@@ -87,7 +91,8 @@ export default async function handler(req, res) {
   // 모드 플래그가 없으면 기본 isChat: true (하위 호환)
   const effectiveIsChat = isChat || (!isReport && !isLetter && !isProphecy && !isScenario && !isStory
     && !isNatal && !isZodiac && !isComprehensive && !isAstrology && !isGroupAnalysis
-    && !isFullGroupAnalysis && !isSlot && !isWeekly && !isDaily && !isDaeun && !isAnalytics && !isYearly);
+    && !isFullGroupAnalysis && !isSlot && !isWeekly && !isDaily && !isDaeun && !isAnalytics && !isYearly
+    && !isTarot && !isDream && !isName && !isTaegil);
 
   const userContext    = context ? context.slice(0, 500) : '';
   const categoryHint   = getCategoryHint(userMessage, userContext);
@@ -100,7 +105,8 @@ export default async function handler(req, res) {
     today, season, categoryHint, endingHint, timeHorizon,
     userMessage, effectiveIsChat, isReport, isLetter, isScenario, isStory, isDecision,
     categoryExample, isNatal, isZodiac, isComprehensive, isAstrology, responseStyle,
-    isSlot, isWeekly, isDaily, isDaeun, isAnalytics, precision_level, gender, isProphecy, isYearly
+    isSlot, isWeekly, isDaily, isDaeun, isAnalytics, precision_level, gender, isProphecy, isYearly,
+    false, isTarot, isDream, isName, isTaegil
   );
 
   // 그룹 분석 전용 시스템 프롬프트 오버라이드 (ask.js와 동일)
@@ -137,6 +143,7 @@ export default async function handler(req, res) {
     isGroupAnalysis     ? 1800 :
     isDaily             ? 1800 :
     isDaeun             ? 2000 :
+    (isTarot || isDream || isName || isTaegil) ? 1800 :
     isAnalytics         ? 1000 :
                           1200;
 
