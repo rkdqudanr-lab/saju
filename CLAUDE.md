@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **세션 시작 시 반드시 먼저 읽을 것**: [`docs/DASHBOARD.md`](docs/DASHBOARD.md)
+> 전체 기능 Q&A, 키 매핑, 버그 패턴, 리팩토링 로드맵이 정리되어 있음.
+
 ## Project Overview
 
 **별숨 (Byeolsoom)** — AI-based Korean Saju (四柱) fortune-telling × Western astrology app. Korean-language UI, deployed on Vercel as a PWA. Frontend is React + Vite; backend is Vercel serverless functions. AI responses come from Anthropic's Claude API (claude-haiku-4-5-20251001).
