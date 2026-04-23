@@ -712,51 +712,72 @@ function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActMap, onDa
       <div
         onClick={() => onDetail?.(item)}
         style={{
-          background: 'var(--bg2)',
+          background: item.is_equipped
+            ? 'linear-gradient(180deg, rgba(232,176,72,0.12), rgba(232,176,72,0.04))'
+            : 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
           border: `1px solid ${item.is_equipped ? 'var(--acc)' : (cfg?.border || 'var(--line)')}`,
-          borderRadius: 10,
-          padding: '8px 4px 6px',
+          borderRadius: 14,
+          padding: '10px 6px 8px',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
           position: 'relative',
           cursor: 'pointer',
-          boxShadow: item.is_equipped ? '0 0 8px rgba(232,176,72,.25)' : 'none',
-          minHeight: 76,
+          boxShadow: item.is_equipped ? '0 10px 22px rgba(232,176,72,.16)' : 'none',
+          minHeight: 92,
           justifyContent: 'flex-start',
           transition: 'all 0.15s',
         }}
       >
         {item.is_equipped && (
           <div style={{
-            position: 'absolute', top: 4, left: 4,
-            width: 5, height: 5, borderRadius: '50%',
-            background: 'var(--gold)',
-          }} />
+            position: 'absolute', top: 6, left: 6,
+            padding: '2px 5px',
+            borderRadius: 999,
+            background: 'rgba(232,176,72,0.18)',
+            color: 'var(--gold)',
+            fontSize: '8px',
+            fontWeight: 700,
+            letterSpacing: '.04em',
+          }}>
+            ON
+          </div>
         )}
         {cfg && (
           <div style={{
-            position: 'absolute', top: 3, right: 4,
+            position: 'absolute', top: 7, right: 7,
             fontSize: '8px', fontWeight: 700, color: cfg.color,
             lineHeight: 1,
           }}>
             {cfg.label.slice(0, 1)}
           </div>
         )}
-        <div style={{ marginTop: cfg ? 6 : 2 }}>
+        <div style={{ marginTop: cfg ? 10 : 6 }}>
           {item.category === 'talisman' ? (
-            <div style={{ fontSize: 26, lineHeight: 1 }}>{item.emoji}</div>
+            <div style={{ fontSize: 28, lineHeight: 1 }}>{item.emoji}</div>
           ) : (
-            <GachaGraphic item={item} size={30} />
+            <GachaGraphic item={item} size={34} />
           )}
         </div>
         <div style={{
-          fontSize: '9px', fontWeight: 600, color: item.affixColor || 'var(--t2)',
+          fontSize: '10px', fontWeight: 700, color: item.affixColor || 'var(--t2)',
           textAlign: 'center', lineHeight: 1.3,
           overflow: 'hidden', display: '-webkit-box',
           WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          wordBreak: 'break-all', width: '100%',
+          wordBreak: 'keep-all', width: '100%',
+          marginTop: 2,
         }}>
           {item.name}
         </div>
+        {(item.is_equipped || isDailyActive) && (
+          <div style={{
+            marginTop: 'auto',
+            fontSize: '8px',
+            color: item.is_equipped ? 'var(--gold)' : '#B48EF0',
+            fontWeight: 700,
+            letterSpacing: '.03em',
+          }}>
+            {item.is_equipped ? 'EQUIPPED' : 'TODAY'}
+          </div>
+        )}
       </div>
     );
   }
@@ -1154,16 +1175,26 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
 
   const itemGridStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-    gap: 8,
+    gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))',
+    gap: 10,
     alignItems: 'stretch',
   };
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
       {/* 헤더 */}
-      <div style={{ padding: '24px 24px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
+      <div style={{
+        margin: '20px 24px 14px',
+        padding: '18px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: 14,
+        borderRadius: 'var(--r2)',
+        border: '1px solid var(--line)',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
+      }}>
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>
             🎁 내 아이템
           </div>
@@ -1189,6 +1220,26 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
       </div>
 
       <div style={{ padding: '0 24px 14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 10 }}>
+          {[
+            { label: 'ALL', value: items.length, tone: 'var(--t1)' },
+            { label: 'SPIRIT', value: spiritCount, tone: 'var(--gold)' },
+            { label: 'ETC', value: utilityCount, tone: 'var(--t3)' },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 'var(--r1)',
+                border: '1px solid var(--line)',
+                background: 'var(--bg2)',
+              }}
+            >
+              <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 4 }}>{stat.label}</div>
+              <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: stat.tone }}>{stat.value}</div>
+            </div>
+          ))}
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
           <button
             onClick={() => equippedSajuItem && setDetailItem(equippedSajuItem)}
@@ -1199,6 +1250,10 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
               border: '1px solid rgba(232,176,72,0.22)',
               background: 'linear-gradient(135deg, rgba(232,176,72,0.12), rgba(232,176,72,0.04))',
               cursor: equippedSajuItem ? 'pointer' : 'default',
+              minHeight: 108,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
             }}
           >
             <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>MAIN SPIRIT</div>
@@ -1219,6 +1274,10 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
               border: '1px solid rgba(180,142,240,0.22)',
               background: 'linear-gradient(135deg, rgba(180,142,240,0.12), rgba(180,142,240,0.04))',
               cursor: equippedDailyItem || equippedTalismanItem ? 'pointer' : 'default',
+              minHeight: 108,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
             }}
           >
             <div style={{ fontSize: '10px', color: '#B48EF0', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>TODAY SLOT</div>
@@ -1233,7 +1292,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
           </button>
 
           <button
-            onClick={() => setCategory('?꾩껜')}
+            onClick={() => setShowCollection(true)}
             style={{
               textAlign: 'left',
               padding: '14px',
@@ -1241,6 +1300,10 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
               border: '1px solid var(--line)',
               background: 'var(--bg2)',
               cursor: 'pointer',
+              minHeight: 108,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
             }}
           >
             <div style={{ fontSize: '10px', color: 'var(--t4)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>COLLECTION</div>
@@ -1259,6 +1322,10 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
               border: `1px solid ${canSynth ? 'rgba(126,200,164,0.35)' : 'var(--line)'}`,
               background: canSynth ? 'linear-gradient(135deg, rgba(126,200,164,0.14), rgba(126,200,164,0.05))' : 'var(--bg2)',
               cursor: 'pointer',
+              minHeight: 108,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
             }}
           >
             <div style={{ fontSize: '10px', color: canSynth ? '#7EC8A4' : 'var(--t4)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>SYNTH LAB</div>
@@ -1382,7 +1449,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
               <section
                 key={groupKey}
                 style={{
-                  background: 'var(--bg2)',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
                   border: '1px solid var(--line)',
                   borderRadius: 'var(--r2)',
                   padding: '14px',

@@ -45,7 +45,7 @@ const MENU_GROUPS = {
       { icon: 'star',               label: '나의 별숨',         step: 13 },
       { icon: 'chart-pie',          label: '별숨 통계',         step: 28 },
       { icon: 'shopping-bag',       label: '별숨샵',            step: 31 },
-      { icon: 'sparkles',           label: '별숨샵',           step: 40 },
+      { icon: 'sparkles',           label: '별숨뽑기',          step: 40 },
       { icon: 'gift',               label: '내 아이템',         step: 38 },
     ],
   },
