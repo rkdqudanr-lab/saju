@@ -1,16 +1,11 @@
-/**
- * DailyStarCardV2 컴포넌트
- * 3섹션 구조: [동양의 기운] + [서양의 하늘] + [별숨픽]
- */
-
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { breakAtNatural } from '../utils/constants.js';
 import { BADTIME_THRESHOLD } from '../utils/gamificationLogic.js';
 
 const CATEGORY_META = [
-  { key: 'overall', label: '종합운', icon: '⭐' },
-  { key: 'love', label: '애정운', icon: '💕' },
+  { key: 'overall', label: '종합운', icon: '✨' },
+  { key: 'love', label: '애정운', icon: '💞' },
   { key: 'money', label: '금전운', icon: '💰' },
   { key: 'work', label: '직장운', icon: '💼' },
   { key: 'study', label: '학업운', icon: '📚' },
@@ -20,186 +15,118 @@ const CATEGORY_META = [
   { key: 'create', label: '창의운', icon: '🎨' },
 ];
 
-/**
- * 응답 텍스트에서 [태그] 기준으로 섹션을 추출해 구조화된 객체로 반환
- */
+const LEGACY_ICONS = ['✨', '🍽️', '🌿', '🔢', '💬'];
+const LEGACY_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
+
+function extractLabeledValue(lines, patterns) {
+  const line = lines.find((entry) => patterns.some((pattern) => pattern.test(entry)));
+  if (!line) return '';
+  return line
+    .replace(/^\[[^\]]+\]\s*/, '')
+    .replace(/^[^:]+:\s*/, '')
+    .trim();
+}
+
+function parseCategoryLine(line) {
+  const numericMatch = line.match(/(\d{1,3})\s*점/);
+  const starCount = (line.match(/⭐/g) || []).length;
+  const stars = starCount || (numericMatch ? Math.max(1, Math.min(5, Math.round(Number(numericMatch[1]) / 20))) : null);
+  const desc = line.split('-').slice(1).join('-').trim() || line.split(':').slice(1).join(':').trim();
+  return {
+    stars,
+    desc: desc && !/^\d+\s*점?$/.test(desc) ? desc : '',
+  };
+}
+
 function parseDailyLines(text) {
   const empty = {
     score: null,
     summary: '',
-    saju: null,       // 동양의 기운
-    astrology: null,  // 서양의 하늘
-    synergy: null,    // 별숨픽
-    categories: null, // 카테고리 운세 (9개 영역)
+    synergy: null,
+    categories: null,
     badtime: null,
     closingAdvice: '',
-    // 구형 아이템 fallback
     items: [],
   };
 
   if (!text || typeof text !== 'string') return empty;
 
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const lines = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
 
-  // ── 점수 ──
-  let score = null;
-  const scoreIdx = lines.findIndex(l => l.startsWith('[점수]'));
-  if (scoreIdx !== -1) {
-    score = parseInt(lines[scoreIdx].replace('[점수]', '').trim(), 10);
+  const scoreLine = lines.find((line) => /^\[(점수|score)\]/i.test(line));
+  const scoreMatch = scoreLine?.match(/(\d{1,3})/);
+  const score = scoreMatch ? Math.max(0, Math.min(100, Number(scoreMatch[1]))) : null;
+
+  const summaryLine = lines.find((line) => /^\[(요약|summary)\]/i.test(line));
+  const summary = summaryLine
+    ? summaryLine.replace(/^\[(요약|summary)\]\s*/i, '').trim()
+    : '';
+
+  const categories = {};
+  const categoryPatterns = [
+    { key: 'overall', regexes: [/^종합운[:\s]/, /^종합[:\s]/] },
+    { key: 'love', regexes: [/^애정운[:\s]/, /^애정[:\s]/] },
+    { key: 'money', regexes: [/^금전운[:\s]/, /^금전[:\s]/] },
+    { key: 'work', regexes: [/^직장운[:\s]/, /^직장[:\s]/] },
+    { key: 'study', regexes: [/^학업운[:\s]/, /^학업[:\s]/] },
+    { key: 'health', regexes: [/^건강운[:\s]/, /^건강[:\s]/] },
+    { key: 'social', regexes: [/^대인운[:\s]/, /^대인[:\s]/] },
+    { key: 'travel', regexes: [/^이동운[:\s]/, /^이동[:\s]/] },
+    { key: 'create', regexes: [/^창의운[:\s]/, /^창의[:\s]/] },
+  ];
+
+  for (const { key, regexes } of categoryPatterns) {
+    const line = lines.find((entry) => regexes.some((regex) => regex.test(entry)));
+    if (line) categories[key] = parseCategoryLine(line);
   }
 
-  // ── 요약 ──
-  let summary = '';
-  const summaryIdx = lines.findIndex(l => l.startsWith('[요약]'));
-  if (summaryIdx !== -1) {
-    summary = lines[summaryIdx].replace('[요약]', '').trim();
-  }
+  const normalizedCategories = Object.keys(categories).length > 0 ? categories : null;
 
-  // ── 섹션 범위 추출 헬퍼 ──
-  function extractSection(startTag) {
-    const idx = lines.findIndex(l => l.startsWith(startTag));
-    if (idx === -1) return null;
-    const end = lines.findIndex((l, i) => i > idx && l.startsWith('['));
-    return lines.slice(idx + 1, end === -1 ? undefined : end);
-  }
+  const synergy = {
+    food: extractLabeledValue(lines, [/^음식[:\s]/, /^추천 음식[:\s]/]),
+    place: extractLabeledValue(lines, [/^장소[:\s]/, /^추천 장소[:\s]/]),
+    color: extractLabeledValue(lines, [/^컬러[:\s]/, /^색상[:\s]/]),
+    number: extractLabeledValue(lines, [/^숫자[:\s]/, /^행운 숫자[:\s]/]),
+    direction: extractLabeledValue(lines, [/^방향[:\s]/, /^행운 방향[:\s]/]),
+    summary: extractLabeledValue(lines, [/^\[별숨 시너지\]/, /^\[시너지\]/, /^시너지[:\s]/]),
+  };
 
-  // ── [동양의 기운] ──
-  const sajuLines = extractSection('[동양의 기운]');
-  let saju = null;
-  if (sajuLines && sajuLines.length > 0) {
-    saju = { sipsin: '', energy: '', do: '', dont: '' };
-    for (const line of sajuLines) {
-      if (line.startsWith('십신:')) saju.sipsin = line.replace('십신:', '').trim();
-      else if (line.startsWith('기운:')) saju.energy = line.replace('기운:', '').trim();
-      else if (line.startsWith('DO:')) saju.do = line.replace('DO:', '').trim();
-      else if (line.startsWith('DONT:') || line.startsWith("DON'T:")) {
-        saju.dont = line.replace("DON'T:", '').replace('DONT:', '').trim();
-      } else if (line.startsWith('✅')) saju.do = line.replace('✅', '').trim();
-      else if (line.startsWith('❌')) saju.dont = line.replace('❌', '').trim();
-      // 십신 설명 보조 줄
-      else if (!saju.energy && saju.sipsin) saju.sipsinDesc = line;
-    }
-  }
+  const normalizedSynergy = Object.values(synergy).some(Boolean) ? synergy : null;
 
-  // ── [서양의 하늘] ──
-  const astroLines = extractSection('[서양의 하늘]');
-  let astrology = null;
-  if (astroLines && astroLines.length > 0) {
-    astrology = { planet: '', flow: '', color: '', number: '' };
-    for (const line of astroLines) {
-      if (line.startsWith('행성:')) astrology.planet = line.replace('행성:', '').trim();
-      else if (line.startsWith('흐름:')) astrology.flow = line.replace('흐름:', '').trim();
-      else if (line.startsWith('컬러:') || line.startsWith('🎨')) {
-        astrology.color = line.replace('컬러:', '').replace('🎨', '').trim();
-      } else if (line.startsWith('숫자:') || line.startsWith('🔢')) {
-        astrology.number = line.replace('숫자:', '').replace('🔢', '').trim();
-      } else if (!astrology.flow && astrology.planet) astrology.flow = line;
-    }
-  }
-
-  // ── [카테고리 운세] ──
-  const categoryLines = extractSection('[카테고리 운세]');
-  let categories = null;
-  if (categoryLines && categoryLines.length > 0) {
-    categories = {
-      overall: null,
-      love: null,
-      money: null,
-      work: null,
-      study: null,
-      health: null,
-      social: null,
-      travel: null,
-      create: null,
-    };
-    const parseStarLine = (line, prefix) => {
-      const raw = line.replace(prefix, '').trim();
-      const parts = raw.split('—');
-      const stars = parseInt(parts[0].trim(), 10);
-      const desc = parts[1]?.trim() || '';
-      return { stars: isNaN(stars) ? null : Math.min(5, Math.max(1, stars)), desc };
-    };
-    for (const line of categoryLines) {
-      if (line.startsWith('종합운:')) categories.overall = parseStarLine(line, '종합운:');
-      else if (line.startsWith('애정운:')) categories.love = parseStarLine(line, '애정운:');
-      else if (line.startsWith('금전운:')) categories.money = parseStarLine(line, '금전운:');
-      else if (line.startsWith('직장운:')) categories.work = parseStarLine(line, '직장운:');
-      else if (line.startsWith('학업운:')) categories.study = parseStarLine(line, '학업운:');
-      else if (line.startsWith('건강운:')) categories.health = parseStarLine(line, '건강운:');
-      else if (line.startsWith('대인운:')) categories.social = parseStarLine(line, '대인운:');
-      else if (line.startsWith('이동운:')) categories.travel = parseStarLine(line, '이동운:');
-      else if (line.startsWith('창의운:')) categories.create = parseStarLine(line, '창의운:');
-    }
-    if (!Object.values(categories).some(Boolean)) {
-      categories = null;
-    }
-  }
-
-  // ── [별숨픽] ──
-  const synergyLines = extractSection('[별숨픽]') || extractSection('[별숨 픽]');
-  let synergy = null;
-  if (synergyLines && synergyLines.length > 0) {
-    synergy = { food: '', place: '', color: '', number: '', direction: '', summary: '' };
-    for (const line of synergyLines) {
-      if (line.startsWith('음식:') || line.startsWith('🍽️')) {
-        synergy.food = line.replace('음식:', '').replace('🍽️', '').trim();
-      } else if (line.startsWith('장소:') || line.startsWith('📍')) {
-        synergy.place = line.replace('장소:', '').replace('📍', '').trim();
-      } else if (line.startsWith('색:') || line.startsWith('🎨')) {
-        synergy.color = line.replace('색:', '').replace('🎨', '').trim();
-      } else if (line.startsWith('숫자:')) {
-        synergy.number = line.replace('숫자:', '').trim();
-      } else if (line.startsWith('방향:')) {
-        synergy.direction = line.replace('방향:', '').trim();
-      } else if (line.startsWith('요약:') || line.startsWith('✨')) {
-        synergy.summary = line.replace('요약:', '').replace('✨', '').trim();
+  const badtimeLine = lines.find((line) => /배드타임|액막이|주의/.test(line));
+  const badtime = badtimeLine
+    ? {
+        symptom: badtimeLine.replace(/^\[[^\]]+\]\s*/, '').trim(),
+        transformation: '',
       }
-    }
-  }
+    : null;
 
-  // ── 배드타임 ──
-  let badtime = null;
-  const badtimeIdx = lines.findIndex(l => l.includes('배드타임') || l.includes('⚠️'));
-  if (badtimeIdx !== -1) {
-    let symptom = '';
-    let transformation = '';
-    for (let i = badtimeIdx; i < Math.min(lines.length, badtimeIdx + 4); i++) {
-      if (lines[i].startsWith('[악운 증상]') || lines[i].includes('악운') || lines[i].includes('증상')) {
-        symptom = lines[i].replace('[악운 증상]', '').replace('악운 증상:', '').replace('악운:', '').replace('⚠️', '').trim();
-        break;
-      }
-    }
-    for (let i = badtimeIdx; i < Math.min(lines.length, badtimeIdx + 6); i++) {
-      if (lines[i].includes('바꿨어요')) {
-        transformation = lines[i].replace(/^→\s*/, '').trim();
-        break;
-      }
-    }
-    if (symptom || transformation) badtime = { symptom, transformation };
-  }
+  const closingAdvice = [...lines].reverse().find((line) => {
+    if (line.startsWith('[')) return false;
+    if (/^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운)[:\s]/.test(line)) return false;
+    if (/^(음식|장소|컬러|색상|숫자|행운 숫자|방향|행운 방향|시너지)[:\s]/.test(line)) return false;
+    return true;
+  }) || '';
 
-  // ── 마무리 문장 ──
-  const closingAdvice = [...lines].reverse().find(
-    l => !l.startsWith('[') && !l.startsWith('🀄') && !l.startsWith('✦') && !l.includes('⚠️')
-  ) || '';
+  const items = lines
+    .filter((line) => !line.startsWith('['))
+    .filter((line) => !/^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운)[:\s]/.test(line))
+    .filter((line) => !/^(음식|장소|컬러|색상|숫자|행운 숫자|방향|행운 방향|시너지)[:\s]/.test(line))
+    .slice(0, 5);
 
-  // ── 구형 포맷 fallback: 아이템 목록 ──
-  const items = [];
-  if (!saju && !astrology) {
-    const itemStart = summaryIdx !== -1 ? summaryIdx + 1 : 0;
-    for (let i = itemStart; i < lines.length && items.length < 5; i++) {
-      const l = lines[i];
-      if (l.startsWith('[') || l.startsWith('🀄') || l.startsWith('✦')) continue;
-      items.push(l);
-    }
-  }
-
-  return { score, summary, saju, astrology, synergy, categories, badtime, closingAdvice, items };
+  return {
+    score,
+    summary,
+    synergy: normalizedSynergy,
+    categories: normalizedCategories,
+    badtime,
+    closingAdvice,
+    items,
+  };
 }
-
-// ── 구형 포맷용 아이콘/색상 ──
-const LEGACY_ICONS = ['🎨', '🍽️', '🌿', '✨', '🌙'];
-const LEGACY_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
 
 export default function DailyStarCardV2({
   result,
@@ -210,21 +137,18 @@ export default function DailyStarCardV2({
   className = '',
 }) {
   const [blocked, setBlocked] = useState(false);
+  const parsed = parseDailyLines(result?.text || '');
 
-  const {
-    score,
-    summary,
-    saju,
-    astrology,
-    synergy,
-    categories,
-    badtime,
-    closingAdvice,
-    items,
-  } = parseDailyLines(result?.text || '');
+  const score = parsed.score ?? result?.score ?? null;
+  const summary = parsed.summary || '';
+  const categories = parsed.categories;
+  const synergy = parsed.synergy;
+  const badtime = result?.badtime || parsed.badtime;
+  const closingAdvice = parsed.closingAdvice;
+  const items = parsed.items;
 
-  const hasBadtime = badtime && score !== null && !isNaN(score) && score < BADTIME_THRESHOLD;
-  const isNewFormat = !!(saju || astrology || synergy);
+  const hasBadtime = badtime && score !== null && !Number.isNaN(score) && score < BADTIME_THRESHOLD;
+  const hasStructuredData = !!(categories || synergy);
 
   const handleBlockBadtime = useCallback(async () => {
     if (isBlocking || !onBlockBadtime) return;
@@ -243,68 +167,79 @@ export default function DailyStarCardV2({
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
     >
-      {/* 별 파티클 */}
       <span className="dsc-spark dsc-spark-1">✦</span>
-      <span className="dsc-spark dsc-spark-2">·</span>
-      <span className="dsc-spark dsc-spark-3">✦</span>
-      <span className="dsc-spark dsc-spark-4">·</span>
+      <span className="dsc-spark dsc-spark-2">✧</span>
+      <span className="dsc-spark dsc-spark-3">⋆</span>
+      <span className="dsc-spark dsc-spark-4">✦</span>
 
       <div className="dsc-card">
         <div className="dsc-top-shimmer" />
 
-        {/* 제목 */}
         <div className="dsc-header">
           <span className="dsc-header-dot" />
           <span className="dsc-title">오늘 하루 나의 별숨</span>
           <span className="dsc-header-dot" />
         </div>
 
-        {/* 점수 */}
         {score !== null && (
           <div className="dsc-score">
             별숨 점수 <strong>{score}</strong>
           </div>
         )}
 
-        {/* 요약 */}
         {summary && (
           <div className="dsc-summary">{breakAtNatural(summary)}</div>
         )}
 
-        {/* ── 카테고리 운세 (9개 영역) ── */}
         {categories && (
           <div style={{
             background: 'var(--bg2)',
             border: '1px solid var(--line)',
             borderRadius: 'var(--r2)',
-            padding: '16px',
+            padding: 16,
             marginBottom: 16,
           }}>
             <div style={{
-              fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)',
-              letterSpacing: '.06em', marginBottom: 12,
+              fontSize: 'var(--xs)',
+              fontWeight: 700,
+              color: 'var(--gold)',
+              letterSpacing: '.06em',
+              marginBottom: 12,
             }}>
-              ✦ 오늘의 운세
+              오늘의 영역별 점수
             </div>
             {CATEGORY_META.map(({ key, label, icon }) => {
               const cat = categories[key];
               if (!cat) return null;
-              const stars = cat.stars || 0;
+              const scoreValue = Math.max(20, Math.min(100, (cat.stars || 0) * 20));
               return (
                 <div key={key} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
                     <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', minWidth: 44 }}>{label}</span>
-                    <span style={{ letterSpacing: 2, fontSize: 13 }}>
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <span key={i} style={{ color: i < stars ? 'var(--gold)' : 'var(--line)', lineHeight: 1 }}>★</span>
-                      ))}
+                    <div style={{ flex: 1, height: 6, background: 'var(--line)', borderRadius: 999, overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          width: `${scoreValue}%`,
+                          height: '100%',
+                          borderRadius: 999,
+                          background: scoreValue <= 45
+                            ? 'linear-gradient(90deg, #d58f6c 0%, #c46b4f 100%)'
+                            : 'linear-gradient(90deg, #8f8aaf 0%, var(--gold) 100%)',
+                        }}
+                      />
+                    </div>
+                    <span style={{ minWidth: 34, textAlign: 'right', fontSize: 12, fontWeight: 700, color: scoreValue <= 45 ? '#c46b4f' : 'var(--gold)' }}>
+                      {scoreValue}점
                     </span>
                   </div>
                   {cat.desc && (
                     <div style={{
-                      fontSize: '11px', color: 'var(--t3)', lineHeight: 1.5,
-                      paddingLeft: 30, wordBreak: 'keep-all',
+                      fontSize: 11,
+                      color: 'var(--t3)',
+                      lineHeight: 1.5,
+                      paddingLeft: 30,
+                      wordBreak: 'keep-all',
                     }}>
                       {cat.desc}
                     </div>
@@ -315,130 +250,61 @@ export default function DailyStarCardV2({
           </div>
         )}
 
-        {isNewFormat ? (
-          /* ───── 신형 3섹션 레이아웃 ───── */
-          <div className="dsc-sections">
-
-            {/* 1. 동양의 기운 */}
-            {saju && (
-              <div className="dsc-section dsc-section-east">
-                <div className="dsc-section-header">
-                  <span className="dsc-section-icon">易</span>
-                  <span className="dsc-section-title-text">동양의 기운 · 사주</span>
-                </div>
-                {saju.sipsin && (
-                  <div className="dsc-sipsin">{saju.sipsin}</div>
-                )}
-                {saju.sipsinDesc && (
-                  <div className="dsc-section-text dsc-sipsin-desc">{saju.sipsinDesc}</div>
-                )}
-                {saju.energy && (
-                  <div className="dsc-section-text">{saju.energy}</div>
-                )}
-                {saju.do && (
-                  <div className="dsc-action dsc-action-do">
-                    <span className="dsc-action-badge dsc-badge-do">DO</span>
-                    <span className="dsc-action-text">{saju.do}</span>
-                  </div>
-                )}
-                {saju.dont && (
-                  <div className="dsc-action dsc-action-dont">
-                    <span className="dsc-action-badge dsc-badge-dont">주의</span>
-                    <span className="dsc-action-text">{saju.dont}</span>
-                  </div>
-                )}
+        {synergy && (
+          <div className="dsc-section dsc-section-synergy">
+            <div className="dsc-section-header">
+              <span className="dsc-section-icon">🪄</span>
+              <span className="dsc-section-title-text">아이템 연계</span>
+            </div>
+            {synergy.food && (
+              <div className="dsc-synergy-row">
+                <span className="dsc-synergy-label">음식</span>
+                <span className="dsc-synergy-value">{synergy.food}</span>
               </div>
             )}
-
-            {/* 2. 서양의 하늘 */}
-            {astrology && (
-              <div className="dsc-section dsc-section-west">
-                <div className="dsc-section-header">
-                  <span className="dsc-section-icon">✦</span>
-                  <span className="dsc-section-title-text">서양의 하늘 · 점성술</span>
-                </div>
-                {astrology.planet && (
-                  <div className="dsc-section-text">{astrology.planet}</div>
-                )}
-                {astrology.flow && (
-                  <div className="dsc-section-text">{astrology.flow}</div>
-                )}
-                {(astrology.color || astrology.number) && (
-                  <div className="dsc-astro-chips">
-                    {astrology.color && (
-                      <div className="dsc-astro-chip">
-                        <span>🎨</span>
-                        <span>{astrology.color}</span>
-                      </div>
-                    )}
-                    {astrology.number && (
-                      <div className="dsc-astro-chip">
-                        <span>#</span>
-                        <span>{astrology.number}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+            {synergy.place && (
+              <div className="dsc-synergy-row">
+                <span className="dsc-synergy-label">장소</span>
+                <span className="dsc-synergy-value">{synergy.place}</span>
               </div>
             )}
-
-            {/* 3. 별숨픽 */}
-            {synergy && (
-              <div className="dsc-section dsc-section-synergy">
-                <div className="dsc-section-header">
-                  <span className="dsc-section-icon">✦</span>
-                  <span className="dsc-section-title-text">별숨 픽 · 오늘의 시너지</span>
-                </div>
-                {synergy.food && (
-                  <div className="dsc-synergy-row">
-                    <span className="dsc-synergy-label">🍽️</span>
-                    <span className="dsc-synergy-value">{synergy.food}</span>
-                  </div>
-                )}
-                {synergy.place && (
-                  <div className="dsc-synergy-row">
-                    <span className="dsc-synergy-label">📍</span>
-                    <span className="dsc-synergy-value">{synergy.place}</span>
-                  </div>
-                )}
-                {synergy.color && (
-                  <div className="dsc-synergy-row">
-                    <span className="dsc-synergy-label">🎨</span>
-                    <span className="dsc-synergy-value">{synergy.color}</span>
-                  </div>
-                )}
-                {synergy.number && (
-                  <div className="dsc-synergy-row">
-                    <span className="dsc-synergy-label">✦</span>
-                    <span className="dsc-synergy-value">행운 숫자 <strong style={{ color: 'var(--gold)' }}>{synergy.number}</strong></span>
-                  </div>
-                )}
-                {synergy.direction && (
-                  <div className="dsc-synergy-row">
-                    <span className="dsc-synergy-label">↗</span>
-                    <span className="dsc-synergy-value">행운 방향 <strong style={{ color: 'var(--gold)' }}>{synergy.direction}</strong></span>
-                  </div>
-                )}
-                {synergy.summary && (
-                  <div className="dsc-synergy-summary">{synergy.summary}</div>
-                )}
+            {synergy.color && (
+              <div className="dsc-synergy-row">
+                <span className="dsc-synergy-label">컬러</span>
+                <span className="dsc-synergy-value">{synergy.color}</span>
               </div>
+            )}
+            {synergy.number && (
+              <div className="dsc-synergy-row">
+                <span className="dsc-synergy-label">숫자</span>
+                <span className="dsc-synergy-value">{synergy.number}</span>
+              </div>
+            )}
+            {synergy.direction && (
+              <div className="dsc-synergy-row">
+                <span className="dsc-synergy-label">방향</span>
+                <span className="dsc-synergy-value">{synergy.direction}</span>
+              </div>
+            )}
+            {synergy.summary && (
+              <div className="dsc-synergy-summary">{synergy.summary}</div>
             )}
           </div>
-        ) : (
-          /* ───── 구형 아이템 리스트 fallback ───── */
+        )}
+
+        {!hasStructuredData && items.length > 0 && (
           <div className="dsc-items">
-            {items.map((item, i) => (
+            {items.map((item, index) => (
               <div
-                key={i}
+                key={`${item}-${index}`}
                 className="dsc-item"
                 style={{
-                  '--dsc-delay': `${i * 0.08}s`,
-                  '--dsc-color': LEGACY_COLORS[i],
+                  '--dsc-delay': `${index * 0.08}s`,
+                  '--dsc-color': LEGACY_COLORS[index % LEGACY_COLORS.length],
                 }}
               >
                 <div className="dsc-item-icon-wrap">
-                  <span className="dsc-item-icon">{LEGACY_ICONS[i]}</span>
+                  <span className="dsc-item-icon">{LEGACY_ICONS[index % LEGACY_ICONS.length]}</span>
                 </div>
                 <p className="dsc-item-text">{item}</p>
               </div>
@@ -446,13 +312,12 @@ export default function DailyStarCardV2({
           </div>
         )}
 
-        {/* 배드타임 섹션 */}
         {hasBadtime && (
           <div className="dsc-badtime">
-            <div className="dsc-badtime-title">⚠️ 배드타임 감지</div>
+            <div className="dsc-badtime-title">주의 흐름</div>
 
-            {badtime.symptom && (
-              <div className="dsc-badtime-symptom">악운: {badtime.symptom}</div>
+            {badtime?.symptom && (
+              <div className="dsc-badtime-symptom">징후: {badtime.symptom}</div>
             )}
 
             {!blocked && (
@@ -473,20 +338,19 @@ export default function DailyStarCardV2({
 
             {blocked && (
               <div className="dsc-block-done">
-                {badtime.transformation || '별숨이 악운을 긍정적으로 바꿨어요'}
+                {badtime?.transformation || '별숨이 주의 흐름을 한 번 눌러줬어요.'}
               </div>
             )}
 
             {(!canBlockBadtime || currentBp < 20) && (
               <div className="dsc-bp-hint">
-                BP를 충전하거나 미션을 완료하면 액막이를 발동할 수 있습니다
+                BP를 충전하거나 미션을 완료하면 액막이를 발동할 수 있어요.
               </div>
             )}
           </div>
         )}
 
-        {/* 마무리 문장 — 신형 포맷에서만 표시 (구형 아이템 모드에서는 마지막 아이템과 중복되므로 제외) */}
-        {isNewFormat && closingAdvice && (
+        {closingAdvice && (
           <div className="dsc-closing">
             {closingAdvice}
           </div>

@@ -4,10 +4,9 @@ import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import '../styles/TodayDetailPage.css';
 import {
-  GACHA_POOL,
   GRADE_CONFIG as SPACE_GRADE_CONFIG,
-  SAJU_POOL,
   SAJU_GRADE_CONFIG,
+  findItem,
 } from '../utils/gachaItems.js';
 
 function PageSpinner() {
@@ -42,9 +41,8 @@ const ASPECT_META = {
   create: { label: '창의', emoji: '🎨' },
 };
 
-const ALL_SPIRIT_MAP = Object.fromEntries(
-  [...GACHA_POOL, ...SAJU_POOL].map((item) => [item.id, item])
-);
+const TODAY_AXIS_CACHE = 'daily_axis_activations';
+const LOW_AXIS_SCORE_THRESHOLD = 45;
 
 function getItemGradeConfig(item) {
   if (!item?.grade) return {};
@@ -185,6 +183,37 @@ function getRecommendedRow(score, ownedRows) {
   return [...matchedRows].sort((a, b) => (b.item?.boost || 0) - (a.item?.boost || 0))[0];
 }
 
+function AxisScoreMeter({ score, compact = false }) {
+  const tone = score.bonus > 0 ? 'var(--gold)' : score.total <= LOW_AXIS_SCORE_THRESHOLD ? '#c46b4f' : 'var(--t4)';
+
+  return (
+    <div style={{ minWidth: compact ? 96 : 132 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+        <span style={{ fontSize: compact ? 10 : 11, color: 'var(--t4)' }}>
+          {score.bonus > 0 ? `기본 ${score.base} · 보정 +${score.bonus}` : `기본 ${score.base}`}
+        </span>
+        <span style={{ fontSize: compact ? 15 : 17, fontWeight: 800, color: tone }}>{score.total}점</span>
+      </div>
+      <div style={{ height: compact ? 6 : 8, background: 'var(--line)', borderRadius: 999, overflow: 'hidden' }}>
+        <div
+          style={{
+            height: '100%',
+            width: `${score.total}%`,
+            background:
+              score.bonus > 0
+                ? 'linear-gradient(90deg, #d8b36a 0%, var(--gold) 100%)'
+                : score.total <= LOW_AXIS_SCORE_THRESHOLD
+                  ? 'linear-gradient(90deg, #d58f6c 0%, #c46b4f 100%)'
+                  : 'linear-gradient(90deg, #8f8aaf 0%, var(--t4) 100%)',
+            borderRadius: 999,
+            transition: 'width 0.6s ease-out',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function AxisInsightPanel({ scores, ownedRows, onUseItem, onInspectItem, setStep, canUseItems = true }) {
   const [openKey, setOpenKey] = useState(scores[0]?.key ?? null);
 
@@ -209,6 +238,7 @@ function AxisInsightPanel({ scores, ownedRows, onUseItem, onInspectItem, setStep
           const insight = getAxisInsight(score);
           const recommendedRow = getRecommendedRow(score, ownedRows);
           const recommendedItem = recommendedRow?.item || null;
+          const isLowScore = score.total <= LOW_AXIS_SCORE_THRESHOLD;
 
           return (
             <div
@@ -220,38 +250,75 @@ function AxisInsightPanel({ scores, ownedRows, onUseItem, onInspectItem, setStep
                 overflow: 'hidden',
               }}
             >
-              <button
-                onClick={() => setOpenKey(isOpen ? null : score.key)}
+              <div
                 style={{
                   width: '100%',
                   padding: '12px 14px',
-                  background: 'transparent',
-                  border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 12,
-                  cursor: 'pointer',
-                  fontFamily: 'var(--ff)',
-                  textAlign: 'left',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                  <span style={{ fontSize: 18 }}>{ASPECT_META[score.key]?.emoji || '✦'}</span>
-                  <div style={{ minWidth: 0 }}>
+                <button
+                  type="button"
+                  onClick={() => setOpenKey(isOpen ? null : score.key)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--ff)',
+                    textAlign: 'left',
+                    padding: 0,
+                  }}
+                >
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{ASPECT_META[score.key]?.emoji || '?'}</span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>{score.label}</div>
-                    <div style={{ fontSize: 10, color: score.bonus > 0 ? 'var(--gold)' : 'var(--t4)' }}>
-                      {score.total}점 {score.bonus > 0 ? `· 아이템 +${score.bonus}` : ''}
-                    </div>
+                    <AxisScoreMeter score={score} compact />
+                  </div>
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  {isLowScore && recommendedItem && (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onUseItem?.(recommendedRow);
+                      }}
+                      disabled={!canUseItems}
+                      style={{
+                        padding: '7px 10px',
+                        borderRadius: 999,
+                        border: '1px solid var(--acc)',
+                        background: 'var(--goldf)',
+                        color: 'var(--gold)',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        fontFamily: 'var(--ff)',
+                        cursor: canUseItems ? 'pointer' : 'not-allowed',
+                        opacity: canUseItems ? 1 : 0.45,
+                      }}
+                    >
+                      바로 쓰기
+                    </button>
+                  )}
+                  <div style={{ color: isOpen ? 'var(--gold)' : 'var(--t4)', fontSize: 12 }}>
+                    {isOpen ? '▲' : '▼'}
                   </div>
                 </div>
-                <div style={{ flexShrink: 0, color: isOpen ? 'var(--gold)' : 'var(--t4)', fontSize: 12 }}>
-                  {isOpen ? '▲' : '▼'}
-                </div>
-              </button>
+              </div>
 
               {isOpen && (
                 <div style={{ padding: '0 14px 14px', borderTop: '1px solid var(--line)' }}>
+                  <div style={{ marginTop: 12 }}>
+                    <AxisScoreMeter score={score} />
+                  </div>
                   <div style={{ marginTop: 12, fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>
                     {insight.reason}
                   </div>
@@ -306,6 +373,11 @@ function AxisInsightPanel({ scores, ownedRows, onUseItem, onInspectItem, setStep
                             보기
                           </button>
                         </div>
+                        {isLowScore && (
+                          <div style={{ marginTop: 8, fontSize: 10, color: 'var(--gold)', lineHeight: 1.5 }}>
+                            점수가 낮은 영역이라 지금 써도 체감 변화가 클 수 있어요.
+                          </div>
+                        )}
                         <button
                           onClick={() => onUseItem?.(recommendedRow)}
                           disabled={!canUseItems}
@@ -882,7 +954,7 @@ function OneShotItemPicker({ scores, ownedRows, onUse, onInspect, canUseItems = 
         TODAY BOOST ITEMS
       </div>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 14, lineHeight: 1.6 }}>
-        오늘 별숨을 본 뒤 더 올리고 싶은 항목에 바로 아이템을 써보세요. 카드를 누르면 설명을 먼저 볼 수 있어요.
+        ?? ??? ? ? ? ??? ?? ??? ?? ???? ????. ??? ??? ??? ?? ? ? ???.
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -894,14 +966,14 @@ function OneShotItemPicker({ scores, ownedRows, onUse, onInspect, canUseItems = 
             <div key={score.key} style={{ padding: 12, borderRadius: 14, background: 'var(--bg1)', border: '1px solid var(--line)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 16 }}>{ASPECT_META[score.key]?.emoji || '✦'}</span>
+                  <span style={{ fontSize: 16 }}>{ASPECT_META[score.key]?.emoji || '?'}</span>
                   <div>
                     <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>{score.label}</div>
-                    <div style={{ fontSize: 10, color: 'var(--t4)' }}>현재 {score.total}점</div>
+                    <div style={{ fontSize: 10, color: 'var(--t4)' }}>?? {score.total}?</div>
                   </div>
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700 }}>
-                  사용 가능 {rows.length}개
+                  ?? ?? {rows.length}?
                 </div>
               </div>
 
@@ -918,15 +990,14 @@ function OneShotItemPicker({ scores, ownedRows, onUse, onInspect, canUseItems = 
                         minWidth: 132,
                         textAlign: 'left',
                         borderRadius: 14,
-                        border: `1px solid ${cfg.border || 'var(--line)'}`,
+                        border: `1px solid ${cfg.border || 'var(--line)'}` ,
                         background: cfg.bg || 'var(--bg2)',
                         padding: 10,
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 6,
                         cursor: 'pointer',
-                      }}
-                    >
+                      }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 22 }}>{item.emoji}</span>
                         <div style={{ minWidth: 0 }}>
@@ -943,9 +1014,10 @@ function OneShotItemPicker({ scores, ownedRows, onUse, onInspect, canUseItems = 
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 'auto' }}>
                         <span style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700 }}>
-                          +{item.boost}점
+                          +{item.boost}?
                         </span>
-                        <span
+                        <button
+                          type="button"
                           onClick={(e) => {
                             if (!canUseItems) return;
                             e.stopPropagation();
@@ -959,11 +1031,12 @@ function OneShotItemPicker({ scores, ownedRows, onUse, onInspect, canUseItems = 
                             color: 'var(--gold)',
                             fontSize: 10,
                             fontWeight: 700,
+                            fontFamily: 'var(--ff)',
+                            cursor: canUseItems ? 'pointer' : 'not-allowed',
                             opacity: canUseItems ? 1 : 0.45,
-                          }}
-                        >
-                          사용
-                        </span>
+                          }}>
+                          ??
+                        </button>
                       </div>
                     </button>
                   );
@@ -976,7 +1049,6 @@ function OneShotItemPicker({ scores, ownedRows, onUse, onInspect, canUseItems = 
     </div>
   );
 }
-
 export default function TodayDetailPage({
   dailyResult,
   dailyLoading,
@@ -1016,16 +1088,20 @@ export default function TodayDetailPage({
       .select('content')
       .eq('kakao_id', String(kakaoId))
       .eq('cache_date', new Date().toISOString().slice(0, 10))
-      .eq('cache_type', 'daily_transient_items')
+      .eq('cache_type', TODAY_AXIS_CACHE)
       .maybeSingle()
       .then(({ data }) => {
         try {
-          const ids = JSON.parse(data?.content || '[]');
-          if (!Array.isArray(ids)) {
+          const activationMap = JSON.parse(data?.content || '{}');
+          if (!activationMap || typeof activationMap !== 'object' || Array.isArray(activationMap)) {
             setUsedItems([]);
             return;
           }
-          setUsedItems(ids.map((id) => ALL_SPIRIT_MAP[String(id)]).filter(Boolean));
+          setUsedItems(
+            Object.values(activationMap)
+              .map((id) => findItem(id))
+              .filter(Boolean)
+          );
         } catch {
           setUsedItems([]);
         }
@@ -1041,7 +1117,7 @@ export default function TodayDetailPage({
       .eq('kakao_id', String(kakaoId))
       .then(({ data }) => {
         const rows = (data || [])
-          .map((row) => ({ rowId: row.id, item: ALL_SPIRIT_MAP[String(row.item_id)] }))
+          .map((row) => ({ rowId: row.id, item: findItem(String(row.item_id)) }))
           .filter((row) => row.item?.aspectKey);
         setOwnedRows(rows);
       })
@@ -1049,13 +1125,16 @@ export default function TodayDetailPage({
   }, [kakaoId, dailyResult]);
 
   const canPurify = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
-  const remaining = DAILY_MAX - dailyCount;
+  const remaining = Math.max(0, DAILY_MAX - dailyCount);
   const canUseItems = canPurify && !!onRefresh;
 
   const handleUseItem = useCallback(async (row) => {
     if (!kakaoId || !row?.item || !canUseItems) return;
     setIsPurifying(true);
-    const nextUsedItems = [...usedItems, row.item];
+    const nextUsedItems = [
+      ...usedItems.filter((item) => item.aspectKey !== row.item.aspectKey),
+      row.item,
+    ];
     const animPromise = new Promise((resolve) => setTimeout(resolve, 1200));
     try {
       await Promise.all([
@@ -1069,14 +1148,17 @@ export default function TodayDetailPage({
       ]);
 
       const client = getAuthenticatedClient(String(kakaoId));
-      await client.from('user_shop_inventory').delete().eq('id', row.rowId);
+      const nextActivationMap = Object.fromEntries(
+        nextUsedItems
+          .filter((item) => item?.aspectKey)
+          .map((item) => [item.aspectKey, item.id])
+      );
       await client.from('daily_cache').upsert({
         kakao_id: String(kakaoId),
         cache_date: new Date().toISOString().slice(0, 10),
-        cache_type: 'daily_transient_items',
-        content: JSON.stringify(nextUsedItems.map((item) => item.id)),
+        cache_type: TODAY_AXIS_CACHE,
+        content: JSON.stringify(nextActivationMap),
       }, { onConflict: 'kakao_id,cache_date,cache_type' });
-      setOwnedRows((prev) => (prev || []).filter((item) => item.rowId !== row.rowId));
       setUsedItems(nextUsedItems);
       setSelectedRow(null);
     } catch {

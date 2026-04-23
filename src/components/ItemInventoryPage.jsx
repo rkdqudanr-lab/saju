@@ -26,6 +26,14 @@ const FORTUNE_LABELS = {
   general: '기타 아이템',
 };
 
+const DAILY_AXIS_CACHE = 'daily_axis_activations';
+
+function isItemDailyActive(item, dailyActMap) {
+  if (!item?.aspectKey || !dailyActMap || typeof dailyActMap !== 'object') return false;
+  const activeId = dailyActMap[item.aspectKey];
+  return !!activeId && (activeId === item.id || activeId === item.id.split('::')[0]);
+}
+
 const CAT_LABEL = {
   theme: '테마', avatar: '아바타', special_reading: '특별 상담',
   talisman: '부적', effect: '이펙트',
@@ -545,12 +553,12 @@ function SynthesisModal({ inventory, kakaoId, onClose, onComplete, showToast, cu
 }
 
 // ─── 아이템 상세 모달 ─────────────────────────────────────────────
-function ItemDetailModal({ item, onClose, onToggleEquip, toggling, onDailyActivate, dailyActId }) {
+function ItemDetailModal({ item, onClose, onToggleEquip, toggling, onDailyActivate, dailyActMap }) {
   const cfg = item.grade ? (GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG?.[item.grade]) : null;
   const systemLabel = item.id?.startsWith('saju_') ? '사주 시스템' : item.grade ? '우주 시스템' : '';
   const isGachaItem = !!item.grade;
   const isTalisman = item.category === 'talisman';
-  const isDailyActive = dailyActId && (dailyActId === item.id || dailyActId === item.id.split('::')[0]);
+  const isDailyActive = isItemDailyActive(item, dailyActMap);
 
   return createPortal(
     <div
@@ -693,11 +701,11 @@ function ItemDetailModal({ item, onClose, onToggleEquip, toggling, onDailyActiva
 }
 
 // ─── 아이템 카드 ────────────────────────────────────────────────
-function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActId, onDailyActivate, onDetail, compact }) {
+function OwnedItemCard({ item, onToggleEquip, toggling, onUse, dailyActMap, onDailyActivate, onDetail, compact }) {
   const isTalisman = item.category === 'talisman';
   const isGachaItem = !!item.grade; // grade 있으면 가챠 아이템
   const cfg = item.grade ? GRADE_CONFIG[item.grade] : null;
-  const isDailyActive = dailyActId && (dailyActId === item.id || dailyActId === item.id.split('::')[0]);
+  const isDailyActive = isItemDailyActive(item, dailyActMap);
 
   if (compact) {
     return (
@@ -943,7 +951,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
 
   // 오늘 발동 — Supabase daily_cache (cache_type: 'daily_activation')
   const today = new Date().toISOString().slice(0, 10);
-  const [dailyActId, setDailyActId] = useState(null);
+  const [dailyActMap, setDailyActMap] = useState({});
 
   // 마운트 시 오늘 발동 내역 로드
   useEffect(() => {
@@ -953,47 +961,52 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
       .select('content')
       .eq('kakao_id', String(kakaoId))
       .eq('cache_date', today)
-      .eq('cache_type', 'daily_activation')
+      .eq('cache_type', DAILY_AXIS_CACHE)
       .maybeSingle()
       .then(({ data }) => {
         if (data?.content) {
-          setDailyActId(data.content);
-          import('../utils/gachaItems.js').then(m => {
-            const item = m.findItem(data.content);
-            if (item) useAppStore.getState().setEquippedTalisman(item);
-          });
+          try {
+            const parsed = JSON.parse(data.content);
+            setDailyActMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
+          } catch {
+            setDailyActMap({});
+          }
         }
       })
-      .catch(() => {});
+      .catch(() => setDailyActMap({}));
   }, [kakaoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleDailyActivate(item) {
     if (!kakaoId) return;
-    const isActive = dailyActId && (dailyActId === item.id || dailyActId === item.id.split('::')[0]);
+    const axisKey = item.aspectKey;
+    if (!axisKey) return;
+    const isActive = isItemDailyActive(item, dailyActMap);
     const client = getAuthenticatedClient(kakaoId);
     try {
       if (isActive) {
-        await client.from('daily_cache')
-          .delete()
-          .eq('kakao_id', String(kakaoId))
-          .eq('cache_date', today)
-          .eq('cache_type', 'daily_activation');
-        setDailyActId(null);
-        useAppStore.getState().setEquippedTalisman(null);
-        showToast?.('오늘 발동을 해제했어요.', 'info');
-      } else {
+        const nextMap = { ...dailyActMap };
+        delete nextMap[axisKey];
         await client.from('daily_cache').upsert({
           kakao_id: String(kakaoId),
           cache_date: today,
-          cache_type: 'daily_activation',
-          content: item.id,
+          cache_type: DAILY_AXIS_CACHE,
+          content: JSON.stringify(nextMap),
         }, { onConflict: 'kakao_id,cache_date,cache_type' });
-        setDailyActId(item.id);
-        useAppStore.getState().setEquippedTalisman(item);
+        setDailyActMap(nextMap);
+        showToast?.('오늘 발동을 해제했어요.', 'info');
+      } else {
+        const nextMap = { ...dailyActMap, [axisKey]: item.id };
+        await client.from('daily_cache').upsert({
+          kakao_id: String(kakaoId),
+          cache_date: today,
+          cache_type: DAILY_AXIS_CACHE,
+          content: JSON.stringify(nextMap),
+        }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        setDailyActMap(nextMap);
         showToast?.(`${item.emoji} ${item.name} 오늘 발동! 재생성하면 별숨에 반영돼요 ✦`, 'success');
       }
     } catch {
-      showToast?.('처리 중 오류가 발생했어요', 'error');
+      showToast?.('처리 중 오류가 발생했어요.', 'error');
     }
   }
 
@@ -1120,7 +1133,8 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
     ...SAJU_GRADE_ORDER.filter(g => SAJU_GRADE_CONFIG[g].next && gradeCountMap[g] >= SAJU_GRADE_CONFIG[g].synthCost),
   ];
   const canSynth = synthableGrades.length > 0;
-  const equippedDailyItem = items.find((item) => dailyActId && (dailyActId === item.id || dailyActId === item.id.split('::')[0])) || null;
+  const equippedDailyItems = items.filter((item) => isItemDailyActive(item, dailyActMap));
+  const equippedDailyItem = equippedDailyItems[0] || null;
   const equippedTalismanItem = items.find((item) => item.is_equipped && item.category === 'talisman') || null;
   const spiritCount = gachaItems.length;
   const utilityCount = shopItems.length;
@@ -1209,7 +1223,9 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
           >
             <div style={{ fontSize: '10px', color: '#B48EF0', fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>TODAY SLOT</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 700, lineHeight: 1.5 }}>
-              {equippedDailyItem?.name || equippedTalismanItem?.name || '오늘 발동한 아이템이 없어요'}
+              {equippedDailyItems.length > 1
+                ? `${equippedDailyItems.length}개 축 아이템 발동 중`
+                : (equippedDailyItem?.name || equippedTalismanItem?.name || '오늘 발동한 아이템이 없어요')}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 6 }}>
               {equippedDailyItem || equippedTalismanItem ? '오늘 하루 결과에 반영 중' : '일일 발동 버튼으로 바로 적용해요'}
@@ -1393,7 +1409,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
                       onToggleEquip={handleToggleEquip}
                       toggling={toggling === item.id}
                       onUse={setUseItem}
-                      dailyActId={dailyActId}
+                      dailyActMap={dailyActMap}
                       onDailyActivate={handleDailyActivate}
                       onDetail={setDetailItem}
                       compact
@@ -1412,7 +1428,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
                 onToggleEquip={handleToggleEquip}
                 toggling={toggling === item.id}
                 onUse={setUseItem}
-                dailyActId={dailyActId}
+                dailyActMap={dailyActMap}
                 onDailyActivate={handleDailyActivate}
                 onDetail={setDetailItem}
                 compact
@@ -1430,7 +1446,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
           onToggleEquip={handleToggleEquip}
           toggling={toggling === detailItem?.id}
           onDailyActivate={handleDailyActivate}
-          dailyActId={dailyActId}
+          dailyActMap={dailyActMap}
         />
       )}
 
