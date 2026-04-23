@@ -75,7 +75,11 @@ class ErrorBoundary extends React.Component {
 // autoUpdate로 새 SW가 skipWaiting() 후 controllerchange 이벤트 발생 → 즉시 반영
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload()
+    if (sessionStorage.getItem('_swReloadedOnce') === '1') return
+    sessionStorage.setItem('_swReloadedOnce', '1')
+    const nextUrl = new URL(window.location.href)
+    nextUrl.searchParams.set('_sw', String(Date.now()))
+    window.location.replace(nextUrl.toString())
   })
 }
 

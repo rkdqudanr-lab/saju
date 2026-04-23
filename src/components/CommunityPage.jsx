@@ -1086,7 +1086,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
       </div>
 
       {/* 토픽 필터 */}
-      <div style={{ display: 'flex', gap: 6, padding: '8px 20px', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid var(--line)' }}>
+      <div style={{ display: 'flex', gap: 6, padding: '8px max(20px, env(safe-area-inset-left)) 12px max(20px, env(safe-area-inset-right))', overflowX: 'auto', scrollbarWidth: 'none', scrollPaddingInline: 20, borderBottom: '1px solid var(--line)' }}>
         <button
           onClick={() => setTopicFilter('')}
           style={{

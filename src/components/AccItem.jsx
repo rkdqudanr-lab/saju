@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useWordTyping from "../hooks/useWordTyping.js";
 import { TIMING } from "../utils/constants.js";
 
@@ -75,14 +75,32 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
 // ═══════════════════════════════════════════════════════════
 //  채팅 AI 버블
 // ═══════════════════════════════════════════════════════════
-export function ChatBubble({text,isNew}){
-  const{shown,done,skipToEnd}=useWordTyping(text,isNew,TIMING.typingChat);
-  const display=isNew?shown:text;
-  const isDone=!isNew||done;
+export function ChatBubble({text,isNew,isStreaming=false}){
+  const{shown,done,skipToEnd}=useWordTyping(text,isNew&&!isStreaming,TIMING.typingChat);
+  const [streamShown, setStreamShown] = useState('');
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (!isStreaming) {
+      setStreamShown(text || '');
+      if (timerRef.current) clearTimeout(timerRef.current);
+      return;
+    }
+    if ((streamShown || '').length >= (text || '').length) return;
+    timerRef.current = setTimeout(() => {
+      setStreamShown((text || '').slice(0, (streamShown || '').length + 1));
+    }, TIMING.typingChat);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [text, isStreaming, streamShown]);
+
+  const display=isStreaming?streamShown:(isNew?shown:text);
+  const isDone=isStreaming?display===(text||''):(!isNew||done);
   return(
     <div>
       <div className="chat-bubble">{display}{!isDone&&<span className="typing-cursor"/>}</div>
-      {!isDone&&(
+      {!isDone&&!isStreaming&&(
         <div className="chat-bubble-actions">
           <button className="skip-btn" onClick={skipToEnd}>바로 보기</button>
         </div>

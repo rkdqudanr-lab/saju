@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef, lazy, Suspense, useMemo } from "react";
+﻿import { useState, useCallback, useEffect, useRef, lazy, Suspense, useMemo } from "react";
 
-// store (showToast를 스토어에 주입)
+// store (showToast瑜??ㅽ넗?댁뿉 二쇱엯)
 import { useAppStore } from "./store/useAppStore.js";
 
 // utils
@@ -49,7 +49,7 @@ import ProfileStep         from "./pages/ProfileStep.jsx";
 import LandingPage         from "./pages/LandingPage.jsx";
 import TodayDetailPage     from "./pages/TodayDetailPage.jsx";
 
-// lazy-loaded components — ALL const declarations come after ALL static imports
+// lazy-loaded components ??ALL const declarations come after ALL static imports
 const ProfileModal             = lazy(() => import("./components/ProfileModal.jsx"));
 const HistoryPage              = lazy(() => import("./components/HistoryPage.jsx"));
 const FutureProphecyPage       = lazy(() => import("./components/FutureProphecyPage.jsx"));
@@ -92,12 +92,14 @@ function PageSpinner() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-//  🏠 메인 앱
-// ═══════════════════════════════════════════════════════════
+// ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??
+//  ?룧 硫붿씤 ??
+// ?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧?먥븧??
 export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(true);
+  const [chatTransitioning, setChatTransitioning] = useState(false);
   const [shareModal, setShareModal] = useState({ open: false, title: '', text: '' });
   const [toast, setToast] = useState(null);
   const [showDailyCard, setShowDailyCard] = useState(true);
@@ -109,9 +111,9 @@ export default function App() {
   const [showAllCats, setShowAllCats] = useState(false);
   const [quizInput, setQuizInput] = useState('');
   const [sidebarPrefs, setSidebarPrefs] = useState({ hiddenGroups: [] });
-  const [todayDiaryWritten, setTodayDiaryWritten] = useState(null); // null=미확인, true/false
+  const [todayDiaryWritten, setTodayDiaryWritten] = useState(null); // null=誘명솗?? true/false
   const [anonCompatShareData, setAnonCompatShareData] = useState(null);
-  const [diaryViewDate, setDiaryViewDate] = useState(null); // null=오늘, 'YYYY-MM-DD'=특정 날짜
+  const [diaryViewDate, setDiaryViewDate] = useState(null); // null=?ㅻ뒛, 'YYYY-MM-DD'=?뱀젙 ?좎쭨
   const toastTimer = useRef(null);
   const resultsRef = useRef(null);
   const askBtnRef = useRef(null);
@@ -122,19 +124,19 @@ export default function App() {
     toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
   }, []);
 
-  // ── Zustand State (App level) ──
+  // ?? Zustand State (App level) ??
   const step = useAppStore((s) => s.step);
   const setStep = useAppStore((s) => s.setStep);
   const equippedTheme = useAppStore((s) => s.equippedTheme);
   const equippedAvatar = useAppStore((s) => s.equippedAvatar);
 
-  // showToast를 Zustand store에 1회 주입 (Context 없이 컴포넌트에서 직접 사용 가능)
+  // showToast瑜?Zustand store??1??二쇱엯 (Context ?놁씠 而댄룷?뚰듃?먯꽌 吏곸젒 ?ъ슜 媛??
   const _storeSetAuthFns    = useAppStore((s) => s.setAuthFns);
   const showUpgradeModal    = useAppStore((s) => s.showUpgradeModal);
   const setShowUpgradeModal = useAppStore((s) => s.setShowUpgradeModal);
   useEffect(() => { _storeSetAuthFns({ showToast }); }, [showToast, _storeSetAuthFns]);
 
-  // ── 커스텀 훅 ──
+  // ?? 而ㅼ뒪? ????
   const userProfile = useUserProfile();
   const { user, profile, setProfile, form, setForm, otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
           otherForm, setOtherForm, showProfileModal, setShowProfileModal,
@@ -147,12 +149,12 @@ export default function App() {
           saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
           responseStyle, theme, onboarded, quizState, lifeStage, fontSize, saveSettings } = userProfile;
 
-  // isDark / onboardingDone / quiz → userProfile에서 파생
+  // isDark / onboardingDone / quiz ??userProfile?먯꽌 ?뚯깮
   const isDark          = theme === 'dark';
   const onboardingDone  = onboarded;
   const quiz            = quizState;
 
-  // ── 피처 투어 트리거 (온보딩 완료 후 step 0 첫 도달 시 1회만) ──
+  // ?? ?쇱쿂 ?ъ뼱 ?몃━嫄?(?⑤낫???꾨즺 ??step 0 泥??꾨떖 ??1?뚮쭔) ??
   useEffect(() => {
     if (step === 0 && onboardingDone && localStorage.getItem('byeolsoom_tour_v1') !== 'done') {
       const t = setTimeout(() => setShowTour(true), 700);
@@ -160,65 +162,65 @@ export default function App() {
     }
   }, [step, onboardingDone]);
 
-  // lifeStage + qaAnswers를 profile에 병합하여 AI 컨텍스트 빌더에 전달
+  // lifeStage + qaAnswers瑜?profile??蹂묓빀?섏뿬 AI 而⑦뀓?ㅽ듃 鍮뚮뜑???꾨떖
   const profileWithMeta = { ...profile, lifeStage, qaAnswers: profile.qa_answers || profile.qaAnswers };
   const sajuCtx = useSajuContext(form, profileWithMeta, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx } = sajuCtx;
 
-  // ── 게이미피케이션 시스템 ──
+  // ?? 寃뚯씠誘명뵾耳?댁뀡 ?쒖뒪????
   const gamification = useGamification(user, showToast);
   const {
     gamificationState, missions,
     earnBP, earnDiaryBP, spendBP, blockBadtime, completeMission, loadTodayMissions, rechargeFreeBP, freezeStreak,
   } = gamification;
 
-  // 배드타임 액막이 상태
+  // 諛곕뱶????〓쭑???곹깭
   const [isBlockingBadtime, setIsBlockingBadtime] = useState(false);
 
-  // 수호신 레벨업 모달
+  // ?섑샇???덈꺼??紐⑤떖
   const guardianLevelUp = useAppStore((s) => s.guardianLevelUp);
   const setGuardianLevelUp = useAppStore((s) => s.setGuardianLevelUp);
   const [guardianMessage, setGuardianMessage] = useState('');
   const [guardianMsgLoading, setGuardianMsgLoading] = useState(false);
 
-  // 무료 BP 충전 가능 여부
+  // 臾대즺 BP 異⑹쟾 媛???щ?
   const [freeRechargeAvailable, setFreeRechargeAvailable] = useState(true);
 
-  // 오늘 일기 작성 여부 (세션 내 추적)
+  // ?ㅻ뒛 ?쇨린 ?묒꽦 ?щ? (?몄뀡 ??異붿쟻)
   const [hasDiaryToday, setHasDiaryToday] = useState(false);
 
-  // 배드타임 액막이 핸들러
+  // 諛곕뱶????〓쭑???몃뱾??
   const handleBlockBadtime = useCallback(async () => {
     if (!gamificationState.currentBp || gamificationState.currentBp < 20) {
-      showToast('BP가 부족합니다 😢', 'error');
+      showToast('BP媛 遺議깊빀?덈떎 ?삟', 'error');
       return;
     }
     setIsBlockingBadtime(true);
     try {
       const result = await blockBadtime('badtime_1', 20);
       if (result.success) {
-        showToast('액막이 발동! 악운을 긍정적으로 바꿨어요 ✨', 'success');
+        showToast('??? ??! ??? ?? ? ????? ????.', 'success');
       }
     } finally {
       setIsBlockingBadtime(false);
     }
   }, [gamificationState.currentBp, blockBadtime, showToast]);
 
-  // 미션 완료 핸들러 — completeMission 내부에서 낙관적 업데이트 처리하므로 여기선 호출만
+  // 誘몄뀡 ?꾨즺 ?몃뱾????completeMission ?대??먯꽌 ?숆????낅뜲?댄듃 泥섎━?섎?濡??ш린???몄텧留?
   const handleCompleteMission = useCallback(async (missionId) => {
     try {
       await completeMission(missionId);
     } catch {
-      showToast('미션 완료 중 오류 발생', 'error');
+      showToast('誘몄뀡 ?꾨즺 以??ㅻ쪟 諛쒖깮', 'error');
     }
   }, [completeMission, showToast]);
 
-  // 미션 저장 완료 후 UI 갱신 콜백
+  // 誘몄뀡 ????꾨즺 ??UI 媛깆떊 肄쒕갚
   const handleMissionsSaved = useCallback(() => {
     loadTodayMissions(user?.id);
   }, [loadTodayMissions, user?.id]);
 
-  // formOkApprox: 년+월만 있어도 체험 가능하도록 게이트 완화
+  // formOkApprox: ???붾쭔 ?덉뼱??泥댄뿕 媛?ν븯?꾨줉 寃뚯씠???꾪솕
   const consultation = useConsultation(buildCtx, formOkApprox, user, consentFlags, responseStyle, kakaoLogin, undefined, showToast, handleSessionExpired, handleMissionsSaved);
   const { timeSlot, loadingMsgIdx, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg,
           answers, openAcc, typedSet, chatHistory, chatInput, setChatInput, chatLoading,
@@ -233,10 +235,10 @@ export default function App() {
 
   const curPkg = PKGS.find(p => p.id === pkg) || PKGS[1]; // fallback: premium
 
-  // 수호신 레벨업 감지 → AI 메시지 생성
+  // ?섑샇???덈꺼??媛먯? ??AI 硫붿떆吏 ?앹꽦
   useEffect(() => {
     if (!guardianLevelUp) return;
-    const LEVEL_LABELS = { 1: '초급 액막이사', 2: '중급 액막이사', 3: '고급 액막이사', 4: '마스터 액막이사', 5: '별숨의 수호자' };
+    const LEVEL_LABELS = { 1: 'Guardian I', 2: 'Guardian II', 3: 'Guardian III', 4: 'Guardian Master', 5: 'Star Guardian' };
     setGuardianMessage('');
     setGuardianMsgLoading(true);
     (async () => {
@@ -250,7 +252,7 @@ export default function App() {
           method: 'POST',
           headers,
           body: JSON.stringify({
-            userMessage: `나는 방금 별숨 수호자 시스템에서 ${LEVEL_LABELS[guardianLevelUp.fromLevel]}(Lv${guardianLevelUp.fromLevel})에서 ${LEVEL_LABELS[guardianLevelUp.toLevel]}(Lv${guardianLevelUp.toLevel})로 레벨업했어요. 수호신이 되어 짧고 진심 어린 축하 메시지를 2~3줄로 전해줘요. 너무 격식 있지 않게, 별과 사주의 언어로요.`,
+            userMessage: `I just leveled up in the Byeolsoom guardian system from ${LEVEL_LABELS[guardianLevelUp.fromLevel]} (Lv${guardianLevelUp.fromLevel}) to ${LEVEL_LABELS[guardianLevelUp.toLevel]} (Lv${guardianLevelUp.toLevel}). Please write a short 2-3 line celebratory message in a warm, starlit tone without sounding too formal.`, 
             context: ctx,
             kakaoId: user?.id,
             clientHour: new Date().getHours(),
@@ -260,32 +262,32 @@ export default function App() {
         const data = await res.json();
         setGuardianMessage(data.text || '');
       } catch {
-        setGuardianMessage('새로운 레벨의 힘이 당신과 함께해요. 더 성장한 모습으로 별을 맞이하세요.');
+        setGuardianMessage('A new level of strength is with you now. Meet the next star with a steadier heart.');
       } finally {
         setGuardianMsgLoading(false);
       }
     })();
   }, [guardianLevelUp]);
 
-  // 일기 완료 핸들러 (새 일기 저장 시 BP 적립)
+  // ?쇨린 ?꾨즺 ?몃뱾??(???쇨린 ?????BP ?곷┰)
   const handleDiaryComplete = useCallback(async () => {
     if (!earnDiaryBP) return;
     const result = await earnDiaryBP();
     if (result?.success) setHasDiaryToday(true);
   }, [earnDiaryBP]);
 
-  // 무료 BP 충전 핸들러
+  // 臾대즺 BP 異⑹쟾 ?몃뱾??
   const handleFreeRecharge = useCallback(async () => {
     try {
       const result = await rechargeFreeBP();
       if (result.success) {
-        showToast(`+${result.recharged} BP 충전! 🔋`, 'success');
-        setFreeRechargeAvailable(false); // 충전 완료 후 상태 업데이트
-      } else if (result.message === '일일 1회 제한') {
-        showToast('내일 다시 충전할 수 있습니다 ⏰', 'info');
+        showToast(`+${result.recharged} BP 異⑹쟾! ?뵅`, 'success');
+        setFreeRechargeAvailable(false); // 異⑹쟾 ?꾨즺 ???곹깭 ?낅뜲?댄듃
+      } else if (result.message === '?쇱씪 1???쒗븳') {
+        showToast('?? ?? ??? ? ???.', 'info');
       }
     } catch (error) {
-      showToast('BP 충전 중 오류 발생', 'error');
+      showToast('BP 異⑹쟾 以??ㅻ쪟 諛쒖깮', 'error');
     }
   }, [rechargeFreeBP, showToast]);
 
@@ -307,14 +309,14 @@ export default function App() {
     sun, saju, form,
   });
 
-  // ── 모달 열림 시 body 스크롤 잠금 ──
+  // ?? 紐⑤떖 ?대┝ ??body ?ㅽ겕濡??좉툑 ??
   useEffect(() => {
     const anyOpen = showUpgradeModal || showOtherProfileModal || showInviteModal || shareModal.open;
     document.body.style.overflow = anyOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [showUpgradeModal, showOtherProfileModal, showInviteModal, shareModal.open]);
 
-  // ── Escape 키로 모달/사이드바 닫기 ──
+  // ?? Escape ?ㅻ줈 紐⑤떖/?ъ씠?쒕컮 ?リ린 ??
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key !== 'Escape') return;
@@ -328,8 +330,29 @@ export default function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [shareModal.open, showUpgradeModal, showOtherProfileModal, showInviteModal, showSidebar]);
 
-  // ── 테마 ──
+  // ?? ?뚮쭏 ??
   useEffect(() => { document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); }, [isDark]);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const updateVisibility = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastY;
+      if (currentY < 64) setIsMenuVisible(true);
+      else if (delta > 8) setIsMenuVisible(false);
+      else if (delta < -8) setIsMenuVisible(true);
+      lastY = currentY;
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(updateVisibility);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -355,12 +378,22 @@ export default function App() {
     saveSettings({ theme: isDark ? 'light' : 'dark' });
   }, [isDark, saveSettings]);
 
-  // ── 큰 글씨 모드 ──
+  const handleEnterChat = useCallback(() => {
+    if (chatTransitioning) return;
+    setChatTransitioning(true);
+    window.setTimeout(() => {
+      setStep(5);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 240);
+    window.setTimeout(() => setChatTransitioning(false), 820);
+  }, [chatTransitioning, setStep]);
+
+  // ?? ??湲??紐⑤뱶 ??
   useEffect(() => {
     document.documentElement.setAttribute('data-font', fontSize === 'large' ? 'large' : 'standard');
   }, [fontSize]);
 
-  // ── 새 배포 후 ChunkLoadError 방지: 유저 로그인 시 lazy chunk 선제 프리패치 ──
+  // ?? ??諛고룷 ??ChunkLoadError 諛⑹?: ?좎? 濡쒓렇????lazy chunk ?좎젣 ?꾨━?⑥튂 ??
   useEffect(() => {
     if (!user) return;
     const t = setTimeout(() => {
@@ -385,7 +418,7 @@ export default function App() {
     return () => clearTimeout(t);
   }, [user]);
 
-  // ── 사이드바 설정 로드 (로그인 후) ──
+  // ?? ?ъ씠?쒕컮 ?ㅼ젙 濡쒕뱶 (濡쒓렇???? ??
   useEffect(() => {
     if (!user?.id) return;
     loadAnalysisCache(user.id, 'sidebar_prefs').then(raw => {
@@ -394,7 +427,7 @@ export default function App() {
     });
   }, [user?.id]);
 
-  // ── 무료 BP 충전 가능 여부 체크 (로그인 후) ──
+  // ?? 臾대즺 BP 異⑹쟾 媛???щ? 泥댄겕 (濡쒓렇???? ??
   useEffect(() => {
     if (!user?.id) {
       setFreeRechargeAvailable(true);
@@ -417,21 +450,21 @@ export default function App() {
         }
 
         const today = new Date().toISOString().slice(0, 10);
-        // free_bp_recharge_at 컬럼이 timestamptz이므로 앞 10자(날짜)만 비교
+        // free_bp_recharge_at 而щ읆??timestamptz?대?濡???10???좎쭨)留?鍮꾧탳
         const lastRechargeDate = userData.free_bp_recharge_at?.slice(0, 10);
         const isAvailable = lastRechargeDate !== today;
 
         setFreeRechargeAvailable(isAvailable);
       } catch (error) {
-        console.error('무료 BP 충전 가능 여부 체크 오류:', error);
-        setFreeRechargeAvailable(true); // 오류 시 true로 처리
+        console.error('臾대즺 BP 異⑹쟾 媛???щ? 泥댄겕 ?ㅻ쪟:', error);
+        setFreeRechargeAvailable(true); // ?ㅻ쪟 ??true濡?泥섎━
       }
     };
 
     checkFreeRechargeAvailability();
   }, [user?.id]);
 
-  // ── 오늘 일기 작성 여부 확인 ──
+  // ?? ?ㅻ뒛 ?쇨린 ?묒꽦 ?щ? ?뺤씤 ??
   useEffect(() => {
     if (!user?.id) { setTodayDiaryWritten(null); return; }
     const client = getAuthenticatedClient(user.id) || supabase;
@@ -441,10 +474,10 @@ export default function App() {
       .then(({ data }) => setTodayDiaryWritten(!!data)).catch(() => {});
   }, [user?.id]);
 
-  // ── Context.Provider는 Zustand 마이그레이션으로 제거됨 ──
-  // useUserCtx / useSajuCtx / useGamCtx → store에서 직접 읽는 shim으로 교체
+  // ?? Context.Provider??Zustand 留덉씠洹몃젅?댁뀡?쇰줈 ?쒓굅????
+  // useUserCtx / useSajuCtx / useGamCtx ??store?먯꽌 吏곸젒 ?쎈뒗 shim?쇰줈 援먯껜
 
-  // ── 카카오 로그인 처리 중 로딩 화면 ──
+  // ?? 移댁뭅??濡쒓렇??泥섎━ 以?濡쒕뵫 ?붾㈃ ??
   if (loginLoading) {
     return (
       <>
@@ -454,8 +487,8 @@ export default function App() {
             <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>별숨이 당신을 맞이하고 있어요</div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요 🌙</div>
+            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>Getting things ready</div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>Please wait a moment</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
@@ -465,7 +498,7 @@ export default function App() {
     );
   }
 
-  // ── 기존 로그인 유저 프로필 동기화 중 로딩 화면 (새로고침 시 버튼 플래시 방지) ──
+  // ?? 湲곗〈 濡쒓렇???좎? ?꾨줈???숆린??以?濡쒕뵫 ?붾㈃ (?덈줈怨좎묠 ??踰꾪듉 ?뚮옒??諛⑹?) ??
   if (profileSyncing) {
     return (
       <>
@@ -475,8 +508,8 @@ export default function App() {
             <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>별숨 로그인 중</div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠깐만요 🌙</div>
+            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>Signing you in</div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>Please wait a moment</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
@@ -491,10 +524,10 @@ export default function App() {
       <StarCanvas isDark={isDark} />
       <PWAInstallBanner />
 
-      {/* ── 피처 투어 (첫 방문 1회만) ── */}
+      {/* ?? ?쇱쿂 ?ъ뼱 (泥?諛⑸Ц 1?뚮쭔) ?? */}
       {showTour && <FeatureTour onFinish={() => setShowTour(false)} />}
 
-      {/* ── 오프스크린 카드 템플릿 (html2canvas 캡처 대상) ── */}
+      {/* ?? ?ㅽ봽?ㅽ겕由?移대뱶 ?쒗뵆由?(html2canvas 罹≪쿂 ??? ?? */}
       <ShareCardTemplate
         ref={shareCardRef}
         type={shareCardType}
@@ -503,15 +536,25 @@ export default function App() {
         summary={cardSummary}
       />
 
-      {/* ── 토스트 알림 ── */}
+      {/* ?? ?좎뒪???뚮┝ ?? */}
       {toast && (
         <div role="alert" aria-live="assertive" className={`toast toast-${toast.type}`}>
           {toast.message}
         </div>
       )}
 
-      {/* ── 사이드바 (메뉴 버튼 우측 상단에 유지 — 히스토리 검색 등 고급 기능 접근용) ── */}
-      <button className="menu-btn" data-tour="menu-btn" onClick={() => setShowSidebar(true)} aria-label="메뉴 열기" aria-expanded={showSidebar}>☰</button>
+      {chatTransitioning && (
+        <div className="chat-transition-overlay" aria-hidden="true">
+          <div className="chat-transition-orb">
+            <div className="chat-transition-ring" />
+            <div className="chat-transition-core" />
+            <div className="chat-transition-star">*</div>
+          </div>
+        </div>
+      )}
+
+      {/* ?? ?ъ씠?쒕컮 (硫붾돱 踰꾪듉 ?곗륫 ?곷떒???좎? ???덉뒪?좊━ 寃????怨좉툒 湲곕뒫 ?묎렐?? ?? */}
+      <button className={`menu-btn ${isMenuVisible || showSidebar ? "" : "is-hidden"}`} data-tour="menu-btn" onClick={() => setShowSidebar(true)} aria-label="menu" aria-expanded={showSidebar}><Icon name="grid" size={18} color="currentColor" /></button>
 
       {showSidebar && (
         <Sidebar
@@ -538,39 +581,39 @@ export default function App() {
         />
       )}
 
-      <button className="theme-btn" onClick={toggleDark} aria-label={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}>{isDark ? '☀' : '◑'}</button>
+      <button className="theme-btn" onClick={toggleDark} aria-label={isDark ? "switch to light mode" : "switch to dark mode"}>{isDark ? "L" : "D"}</button>
 
       {step >= 1 && user && (
-        <div className="user-chip" onClick={() => setShowProfileModal(true)} title="내 정보 수정" style={{ cursor: 'pointer' }}>
+        <div className="user-chip" onClick={() => setShowProfileModal(true)} title="Edit profile" style={{ cursor: 'pointer' }}>
           {equippedAvatar ? (
             <div style={{ fontSize: '1.2rem', lineHeight: 1 }}>{equippedAvatar.emoji}</div>
           ) : user.profileImage ? (
-            <img src={user.profileImage} alt="프로필" />
+            <img src={user.profileImage} alt="Profile" />
           ) : (
-            <span style={{ fontSize: '1rem' }}>🌙</span>
+            <span style={{ fontSize: '1rem' }}>*</span>
           )}
           <span>{user.nickname}</span>
         </div>
       )}
       {step >= 1 && !user && (
         <button className="user-chip" onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }} style={{ border: '1px solid #FEE500', background: 'rgba(254,229,0,.1)' }}>
-          <span style={{ fontSize: '.75rem', color: 'var(--t2)' }}>카카오 로그인</span>
+          <span style={{ fontSize: '.75rem', color: 'var(--t2)' }}>Kakao Login</span>
         </button>
       )}
 
-      {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="이전 단계로" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {(step === 5 || step === 6 || step === 7 || step === 8 || step === 41) && <button className="back-btn" aria-label="결과로 돌아가기" onClick={() => setStep(4)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {step === 9 && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => { setHistItem(null); setStep(0); }}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30 || step === 33 || step === 34 || step === 35 || step === 39 || step === 40) && <button className="back-btn" aria-label="홈으로 돌아가기" onClick={() => setStep(0)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {step === 15 && <button className="back-btn" aria-label="이전으로" onClick={() => setStep(1)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {step > 0 && <button className="home-btn" aria-label="홈으로" onClick={() => setStep(0)}><Icon name="home" size={18} color="currentColor" /></button>}
+      {step > 0 && step < 5 && step !== 9 && <button className="back-btn" aria-label="go back" onClick={() => setStep(p => p === 4 ? 2 : Math.max(0, p - 1))}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {(step === 5 || step === 6 || step === 7 || step === 8 || step === 41) && <button className="back-btn" aria-label="back to result" onClick={() => setStep(4)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step === 9 && <button className="back-btn" aria-label="back home" onClick={() => { setHistItem(null); setStep(0); }}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {(step === 10 || step === 11 || step === 12 || step === 13 || step === 14 || step === 16 || step === 17 || step === 18 || step === 19 || step === 20 || step === 22 || step === 24 || step === 25 || step === 26 || step === 27 || step === 28 || step === 29 || step === 30 || step === 33 || step === 34 || step === 35 || step === 39 || step === 40) && <button className="back-btn" aria-label="back home" onClick={() => setStep(0)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step === 15 && <button className="back-btn" aria-label="go back" onClick={() => setStep(1)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step > 0 && <button className="home-btn" aria-label="go home" onClick={() => setStep(0)}><Icon name="home" size={18} color="currentColor" /></button>}
 
-      {/* ── 하단 네비게이션 바 (Zustand store에서 step/user/formOkApprox 직접 읽음) ── */}
+      {/* ?? ?섎떒 ?ㅻ퉬寃뚯씠??諛?(Zustand store?먯꽌 step/user/formOkApprox 吏곸젒 ?쎌쓬) ?? */}
       <BottomNav />
 
       <div className="app" id="main-content" style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
 
-        {/* ── Step 0: 랜딩 ── */}
+        {/* ?? Step 0: ?쒕뵫 ?? */}
         {step === 0 && (
           <LandingPage
             otherProfiles={otherProfiles}
@@ -596,7 +639,7 @@ export default function App() {
           />
         )}
 
-        {/* ── Step 1: 프로필 선택 / 생년월일 입력 ── */}
+        {/* ?? Step 1: ?꾨줈???좏깮 / ?앸뀈?붿씪 ?낅젰 ?? */}
         {step === 1 && (
           <ProfileStep
             form={form} setForm={setForm}
@@ -613,7 +656,7 @@ export default function App() {
           />
         )}
 
-        {/* ── Step 2: 질문 선택 ── */}
+        {/* ?? Step 2: 吏덈Ц ?좏깮 ?? */}
         {step === 2 && (
           <QuestionStep
             form={form} saju={saju} sun={sun} moon={moon}
@@ -629,9 +672,9 @@ export default function App() {
           />
         )}
 
-        {/* ── Step 3: 로딩 ── */}
+        {/* ?? Step 3: 濡쒕뵫 ?? */}
         {step === 3 && (
-          <div className="page" role="status" aria-live="polite" aria-busy="true" aria-label="별숨이 답변을 준비하고 있어요">
+          <div className="page" role="status" aria-live="polite" aria-busy="true" aria-label="?? ?">
             <SkeletonLoader qCount={selQs.length} saju={saju} loadingMsgIdx={loadingMsgIdx} selQs={selQs} qLoadStatus={qLoadStatus} />
             {retryMsg && (
               <div style={{ marginTop: 12, padding: '10px 16px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--gold)', textAlign: 'center', animation: 'fadeUp .3s ease' }}>
@@ -641,7 +684,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ── Step 4: 결과 ── */}
+        {/* ?? Step 4: 寃곌낵 ?? */}
         {step === 4 && (
           <ResultsStep
             selQs={selQs} answers={answers} openAcc={openAcc} typedSet={typedSet}
@@ -657,10 +700,11 @@ export default function App() {
             setStep={setStep} setSelQs={setSelQs} setDiy={setDiy}
             setShowSidebar={setShowSidebar} setShowUpgradeModal={setShowUpgradeModal}
             kakaoLogin={kakaoLogin} genReport={genReport} resetSession={resetSession}
+            onEnterChat={handleEnterChat}
           />
         )}
 
-        {/* ── Step 5: 채팅 (고정 레이아웃 — 헤더+입력창 고정, 히스토리만 스크롤) ── */}
+        {/* ?? Step 5: 梨꾪똿 (怨좎젙 ?덉씠?꾩썐 ???ㅻ뜑+?낅젰李?怨좎젙, ?덉뒪?좊━留??ㅽ겕濡? ?? */}
         {step === 5 && (
           <ChatStep
             chatHistory={chatHistory} chatInput={chatInput} setChatInput={setChatInput}
@@ -673,7 +717,7 @@ export default function App() {
           />
         )}
 
-        {/* ── Step 6: 별숨 심층 인터뷰 (구 월간리포트) ── */}
+        {/* ?? Step 6: 蹂꾩닲 ?ъ링 ?명꽣酉?(援??붽컙由ы룷?? ?? */}
         {step === 6 && (
           <Suspense fallback={<PageSpinner />}>
             <DeepInterviewPage
@@ -685,7 +729,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 7: 궁합 ── */}
+        {/* ?? Step 7: 沅곹빀 ?? */}
         {step === 7 && (
           <Suspense fallback={<PageSpinner />}>
             <CompatPage
@@ -702,7 +746,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 8: 미래 예언 ── */}
+        {/* ?? Step 8: 誘몃옒 ?덉뼵 ?? */}
         {step === 8 && (
           <Suspense fallback={<PageSpinner />}>
             <FutureProphecyPage
@@ -717,7 +761,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 9: 히스토리 ── */}
+        {/* ?? Step 9: ?덉뒪?좊━ ?? */}
         {step === 9 && histItem && (
           <Suspense fallback={<PageSpinner />}>
             <HistoryPage
@@ -732,21 +776,21 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 10: 별숨 달력 ── */}
+        {/* ?? Step 10: 蹂꾩닲 ?щ젰 ?? */}
         {step === 10 && (
           <Suspense fallback={<PageSpinner />}>
             <SajuCalendar form={form} setStep={setStep} askQuick={askQuick} user={user} callApi={callApi} showToast={showToast} setDiaryViewDate={setDiaryViewDate} />
           </Suspense>
         )}
 
-        {/* ── Step 11: 우리 모임의 별숨은? ── */}
+        {/* ?? Step 11: ?곕━ 紐⑥엫??蹂꾩닲?? ?? */}
         {step === 11 && (
           <Suspense fallback={<PageSpinner />}>
             <GroupBulseumPage form={form} saju={saju} sun={sun} setStep={setStep} initialCode={groupCode} user={user} />
           </Suspense>
         )}
 
-        {/* ── Step 12: 기념일 운세 ── */}
+        {/* ?? Step 12: 湲곕뀗???댁꽭 ?? */}
         {step === 12 && (
           <Suspense fallback={<PageSpinner />}>
             <AnniversaryPage
@@ -762,7 +806,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 13: 나의 별숨 (사주원국과 별자리) ── */}
+        {/* ?? Step 13: ?섏쓽 蹂꾩닲 (?ъ＜?먭뎅怨?蹂꾩옄由? ?? */}
         {step === 13 && (
           <Suspense fallback={<PageSpinner />}>
             <NatalInterpretationPage
@@ -776,7 +820,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 14: 종합 분석 (사주 + 점성술 탭 통합) ── */}
+        {/* ?? Step 14: 醫낇빀 遺꾩꽍 (?ъ＜ + ?먯꽦?????듯빀) ?? */}
         {step === 14 && (
           <Suspense fallback={<PageSpinner />}>
             <ComprehensivePage
@@ -792,7 +836,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 15: 온보딩 카드 ── */}
+        {/* ?? Step 15: ?⑤낫??移대뱶 ?? */}
         {step === 15 && (
           <Suspense fallback={<PageSpinner />}>
             <OnboardingCards
@@ -803,10 +847,10 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 16: 종합 점성술 → step 14(종합 분석)로 리다이렉트 ── */}
+        {/* ?? Step 16: 醫낇빀 ?먯꽦????step 14(醫낇빀 遺꾩꽍)濡?由щ떎?대젆???? */}
         {step === 16 && (() => { setStep(14); return null; })()}
 
-        {/* ── Step 17: 나의 하루를 별숨에게 (일기) ── */}
+        {/* ?? Step 17: ?섏쓽 ?섎（瑜?蹂꾩닲?먭쾶 (?쇨린) ?? */}
         {step === 17 && (
           <Suspense fallback={<PageSpinner />}>
             <DiaryPage
@@ -822,7 +866,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 18: 오늘 하루 나의 별숨 (운세 카드) ── */}
+        {/* ?? Step 18: ?ㅻ뒛 ?섎（ ?섏쓽 蹂꾩닲 (?댁꽭 移대뱶) ?? */}
         {step === 18 && (
           <DailyHoroscopePage
             today={today}
@@ -837,7 +881,7 @@ export default function App() {
           />
         )}
 
-        {/* ── Step 19: 설정 ── */}
+        {/* ?? Step 19: ?ㅼ젙 ?? */}
         {step === 19 && (
           <Suspense fallback={<PageSpinner />}>
             <SettingsPage
@@ -862,7 +906,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 20: 일기 모아보기 ── */}
+        {/* ?? Step 20: ?쇨린 紐⑥븘蹂닿린 ?? */}
         {step === 20 && (
           <Suspense fallback={<PageSpinner />}>
             <DiaryListPage
@@ -873,7 +917,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 21: 사주 명함 카드 ── */}
+        {/* ?? Step 21: ?ъ＜ 紐낇븿 移대뱶 ?? */}
         {step === 21 && (
           <Suspense fallback={<PageSpinner />}>
             <SajuCardPage
@@ -886,14 +930,14 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 22: 문의하기 ── */}
+        {/* ?? Step 22: 臾몄쓽?섍린 ?? */}
         {step === 22 && (
           <Suspense fallback={<PageSpinner />}>
             <InquiryPage />
           </Suspense>
         )}
 
-        {/* ── Step 23: "오늘의 별숨" 상세 페이지 ── */}
+        {/* Step 23: Today detail page */}
         {step === 23 && (
           <TodayDetailPage
             dailyResult={dailyResult}
@@ -908,7 +952,7 @@ export default function App() {
           />
         )}
 
-        {/* ── Step 24: 꿈 해몽 ── */}
+        {/* ?? Step 24: 轅??대そ ?? */}
         {step === 24 && (
           <Suspense fallback={<PageSpinner />}>
             <DreamPage
@@ -924,7 +968,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 25: 택일 (길일 찾기) ── */}
+        {/* ?? Step 25: ?앹씪 (湲몄씪 李얘린) ?? */}
         {step === 25 && (
           <Suspense fallback={<PageSpinner />}>
             <TaegillPage
@@ -939,7 +983,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 26: 이름 풀이 (성명학) ── */}
+        {/* ?? Step 26: ?대쫫 ???(?깅챸?? ?? */}
         {step === 26 && (
           <Suspense fallback={<PageSpinner />}>
             <NameFortunePage
@@ -953,7 +997,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 27: 마이페이지 (store에서 직접 읽음) ── */}
+        {/* ?? Step 27: 留덉씠?섏씠吏 (store?먯꽌 吏곸젒 ?쎌쓬) ?? */}
         {step === 27 && (
           <Suspense fallback={<PageSpinner />}>
             <MyPage
@@ -964,21 +1008,21 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 28: 나의 별숨 통계 ── */}
+        {/* ?? Step 28: ?섏쓽 蹂꾩닲 ?듦퀎 ?? */}
         {step === 28 && (
           <Suspense fallback={<PageSpinner />}>
             <StatsPage callApi={callApi} />
           </Suspense>
         )}
 
-        {/* ── Step 29: 별숨 광장 (커뮤니티 피드) ── */}
+        {/* ?? Step 29: 蹂꾩닲 愿묒옣 (而ㅻ??덊떚 ?쇰뱶) ?? */}
         {step === 29 && (
           <Suspense fallback={<PageSpinner />}>
             <CommunityPage showToast={showToast} dailyResult={dailyResult} />
           </Suspense>
         )}
 
-        {/* ── Step 30: 나의 대운 흐름 ── */}
+        {/* ?? Step 30: ?섏쓽 ????먮쫫 ?? */}
         {step === 30 && (
           <Suspense fallback={<PageSpinner />}>
             <DaeunPage
@@ -991,14 +1035,14 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 31: 별숨 숍 ── */}
+        {/* ?? Step 31: 蹂꾩닲 ???? */}
         {step === 31 && (
           <Suspense fallback={<PageSpinner />}>
             <ShopPage showToast={showToast} />
           </Suspense>
         )}
 
-        {/* ── Step 32: 익명 궁합 광장 ── */}
+        {/* ?? Step 32: ?듬챸 沅곹빀 愿묒옣 ?? */}
         {step === 32 && (
           <Suspense fallback={<PageSpinner />}>
             <AnonCompatPage
@@ -1008,7 +1052,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 33: 특별 상담 (숍 아이템 연결) ── */}
+        {/* ?? Step 33: ?밸퀎 ?곷떞 (???꾩씠???곌껐) ?? */}
         {step === 33 && (
           <Suspense fallback={<PageSpinner />}>
             <SpecialReadingPage
@@ -1019,21 +1063,21 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 34: 별숨 타로 ── */}
+        {/* ?? Step 34: 蹂꾩닲 ?濡??? */}
         {step === 34 && (
           <Suspense fallback={<PageSpinner />}>
             <TarotPage callApi={callApi} buildCtx={buildCtx} showToast={showToast} consentFlags={consentFlags} />
           </Suspense>
         )}
 
-        {/* ── Step 35: 별숨편지 ── */}
+        {/* ?? Step 35: 蹂꾩닲?몄? ?? */}
         {step === 35 && (
           <Suspense fallback={<PageSpinner />}>
             <ByeolsoomLetterPage showToast={showToast} />
           </Suspense>
         )}
 
-        {/* ── Step 36: 연간 종합 리포트 ── */}
+        {/* ?? Step 36: ?곌컙 醫낇빀 由ы룷???? */}
         {step === 36 && (
           <Suspense fallback={<PageSpinner />}>
             <YearlyReportPage
@@ -1047,7 +1091,7 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 37: 별숨성장 대시보드 ── */}
+        {/* ?? Step 37: 蹂꾩닲?깆옣 ??쒕낫???? */}
         {step === 37 && (
           <Suspense fallback={<PageSpinner />}>
             <GrowthDashboardPage
@@ -1056,28 +1100,28 @@ export default function App() {
           </Suspense>
         )}
 
-        {/* ── Step 38: 내 아이템 ── */}
+        {/* ?? Step 38: ???꾩씠???? */}
         {step === 38 && (
           <Suspense fallback={<PageSpinner />}>
             <ItemInventoryPage showToast={showToast} callApi={callApi} spendBP={spendBP} />
           </Suspense>
         )}
 
-        {/* ── Step 39: 로또 번호 뽑기 ── */}
+        {/* ?? Step 39: 濡쒕삉 踰덊샇 戮묎린 ?? */}
         {step === 39 && (
           <Suspense fallback={<PageSpinner />}>
             <LottoPage consentFlags={consentFlags} />
           </Suspense>
         )}
 
-        {/* ── Step 40: 별숨 뽑기 (가챠) ── */}
+        {/* ?? Step 40: 蹂꾩닲 戮묎린 (媛梨? ?? */}
         {step === 40 && (
           <Suspense fallback={<PageSpinner />}>
             <ShopPage showToast={showToast} />
           </Suspense>
         )}
 
-        {/* ── Step 41: 월간 리포트 ── */}
+        {/* ?? Step 41: ?붽컙 由ы룷???? */}
         {step === 41 && (
           <ReportStep
             form={form} today={today}
@@ -1090,11 +1134,11 @@ export default function App() {
         )}
 
         <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>
-          ✦ 별숨은 점술 및 오락 목적의 서비스이며, 결과에 대해서는 법적 책임이나 효력을 지지 않습니다.
+          ??蹂꾩닲? ?먯닠 諛??ㅻ씫 紐⑹쟻???쒕퉬?ㅼ씠硫? 寃곌낵????댁꽌??踰뺤쟻 梨낆엫?대굹 ?⑤젰??吏吏 ?딆뒿?덈떎.
         </div>
       </div>
 
-      {/* ── 모달들 ── */}
+      {/* ?? 紐⑤떖???? */}
       {showProfileModal && (
         <Suspense fallback={<PageSpinner />}>
           <ProfileModal profile={profile} setProfile={userProfile.setProfile} onClose={() => setShowProfileModal(false)} user={user} saveUserProfileExtra={saveUserProfileExtra} />
@@ -1117,7 +1161,7 @@ export default function App() {
         />
       )}
 
-      {/* ── 친구 초대 모달 ── */}
+      {/* ?? 移쒓뎄 珥덈? 紐⑤떖 ?? */}
       {showInviteModal && (
         <InviteModal
           user={user} showToast={showToast}
@@ -1125,7 +1169,7 @@ export default function App() {
         />
       )}
 
-      {/* 일기 모달 제거됨 → Step 17 DiaryPage로 이동 */}
+      {/* ?쇨린 紐⑤떖 ?쒓굅????Step 17 DiaryPage濡??대룞 */}
 
       {shareModal.open && (
         <ShareModal
@@ -1136,10 +1180,10 @@ export default function App() {
         />
       )}
 
-      {/* ── BP 사용 확인 모달 ── */}
+      {/* ?? BP ?ъ슜 ?뺤씤 紐⑤떖 ?? */}
       <BPConfirmModal />
 
-      {/* ── 수호신 레벨업 모달 ── */}
+      {/* ?? ?섑샇???덈꺼??紐⑤떖 ?? */}
       {guardianLevelUp && (
         <GuardianLevelUpModal
           fromLevel={guardianLevelUp.fromLevel}
@@ -1150,7 +1194,7 @@ export default function App() {
         />
       )}
 
-      {/* ── 동의 팝업 ── */}
+      {/* ?? ?숈쓽 ?앹뾽 ?? */}
       {showConsentModal && (
         <Suspense fallback={<PageSpinner />}>
           <ConsentModal
@@ -1163,3 +1207,4 @@ export default function App() {
     </>
   );
 }
+

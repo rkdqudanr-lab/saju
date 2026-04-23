@@ -142,12 +142,12 @@ export default function ChatStep({
                 <div style={{ padding: '8px 0' }}>
                   <div className="typing-dots"><span /><span /><span /></div>
                 </div>
-              ) : message.streaming ? (
-                <div className="chat-bubble">
-                  {message.text}<span className="typing-cursor" aria-hidden="true" />
-                </div>
               ) : (
-                <ChatBubble text={message.text} isNew={index === latestChatIdx} />
+                <ChatBubble
+                  text={message.text}
+                  isNew={index === latestChatIdx}
+                  isStreaming={message.streaming}
+                />
               )
             ) : (
               <div className="chat-bubble">{message.text}</div>
@@ -239,15 +239,7 @@ export default function ChatStep({
         )}
 
         {chatLeft > 0 && !chatLoading && (
-          <div
-            style={{
-              overflowX: 'auto',
-              padding: '8px 16px 4px',
-              display: 'flex',
-              gap: 8,
-              scrollbarWidth: 'none',
-            }}
-          >
+          <div className="chat-chip-row">
             {chips.map((chip, index) => (
               <button
                 key={index}

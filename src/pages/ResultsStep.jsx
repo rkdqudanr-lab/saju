@@ -21,7 +21,7 @@ export default function ResultsStep({
   handleShareFortuneCard,
   spendBP,
   setStep, setSelQs, setDiy, setShowSidebar, setShowUpgradeModal,
-  kakaoLogin, genReport, resetSession,
+  kakaoLogin, genReport, resetSession, onEnterChat,
 }) {
   const { user, form, showToast } = useUserCtx();
   const { saju, sun, moon, asc, today, formOk } = useSajuCtx();
@@ -159,7 +159,7 @@ export default function ResultsStep({
           <div className="res-actions">
             <div style={{ marginBottom: 'var(--sp2)', animation: 'fadeUp .4s ease' }}>
               <button
-                onClick={() => setStep(5)}
+                onClick={() => (typeof onEnterChat === 'function' ? onEnterChat() : setStep(5))}
                 style={{
                   width: '100%',
                   padding: '14px',

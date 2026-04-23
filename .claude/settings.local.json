@@ -21,7 +21,8 @@
       "Bash(git pull *)",
       "Bash(node --input-type=module)",
       "Bash(grep -n \"var\\(--\\\\|#[0-9A-Fa-f]\\\\{3,6\\\\}\\\\|gold\\\\|purple\\\\|theme\" src/index.css)",
-      "Bash(grep -n \"style.*\\\\`\\\\|innerHTML\\\\|document.head\\\\|<style>\" src/App.jsx)"
+      "Bash(grep -n \"style.*\\\\`\\\\|innerHTML\\\\|document.head\\\\|<style>\" src/App.jsx)",
+      "Bash(xargs wc *)"
     ]
   }
 }

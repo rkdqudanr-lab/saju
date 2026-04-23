@@ -171,10 +171,43 @@ Supabase `missions` 테이블. 매일 리셋되는 일일 미션.
 
 ## 리팩토링 로드맵
 
-| 단계 | 대상 파일 | 분리할 내용 | 예상 결과 |
-|------|-----------|-------------|-----------|
-| 1 | `TodayDetailPage.jsx` | AxisInsightPanel, DailyRadarChart, WeeklyTrendChart, ItemPicker → `src/features/today/` | 1337줄 → ~400줄 |
-| 2 | `ItemInventoryPage.jsx` | OwnedItemCard, SynthLab, CollectionView, EquipPanel → `src/features/inventory/` | 1735줄 → ~500줄 |
-| 3 | `GroupBulseumPage.jsx` | GroupInputForm, GroupResultCard, GroupChatPanel → `src/features/group/` | 1454줄 → ~400줄 |
-| 4 | `App.jsx` | daily horoscope 훅, 핸들러들 → `src/hooks/useDailyHoroscope.js` | 1165줄 → ~600줄 |
-| 5 | `DailyStarCardV2.jsx` | parseDailyLines → `src/utils/parseDailyLines.js` | 파싱 로직 독립 테스트 가능 |
+| 단계 | 대상 파일 | 분리할 내용 | 결과 | 상태 |
+|------|-----------|-------------|------|------|
+| 1 | `TodayDetailPage.jsx` | AxisInsightPanel, DailyRadarChart, WeeklyTrendChart, ItemPicker → `src/features/today/` | 1337줄 → 229줄 | ✅ 완료 |
+| 2 | `ItemInventoryPage.jsx` | OwnedItemCard, ItemDetailModal, UseItemModal, SynthesisModal → `src/features/inventory/` | 1735줄 → 347줄 | ✅ 완료 |
+| 3 | `GroupBulseumPage.jsx` | MemberForm, RelationGraph, TeamChemiSummary, DetailPanel, GroupAnalysisPanel → `src/features/group/` | 1454줄 → 418줄 | ✅ 완료 |
+| 4 | `App.jsx` | daily horoscope 훅, 핸들러들 → `src/hooks/useDailyHoroscope.js` | 1165줄 (대부분 이미 훅으로 위임됨) | ⏭ 스킵 |
+| 5 | `DailyStarCardV2.jsx` | parseDailyLines, parseCategoryLine → `src/utils/parseDailyLines.js` | 파싱 로직 독립 테스트 가능 | ✅ 완료 |
+
+### 생성된 feature 파일 목록
+
+**`src/features/today/`**
+- `getDailyAxisScores.js` — AXES_9, getDailyAxisScores(), getAxisInsight(), getRecommendedRow()
+- `AxisInsightPanel.jsx` — 9축 인사이트 패널
+- `AxisScoreMeter.jsx` — 단일 축 점수 미터
+- `DailyRadarChart.jsx` — 방사형 차트
+- `WeeklyTrendChart.jsx` — 주간 추세 차트
+- `PurifyOverlay.jsx` — 정화 오버레이
+- `BoostCTA.jsx` — 부스트 CTA
+- `ItemDetailModal.jsx` — 아이템 상세 모달
+- `OneShotItemPicker.jsx` — 일회성 아이템 선택
+
+**`src/features/inventory/`**
+- `inventoryUtils.js` — FORTUNE_LABELS, CAT_LABEL, isItemDailyActive()
+- `OwnedItemCard.jsx` — 보유 아이템 카드 (compact/full)
+- `ItemDetailModal.jsx` — 아이템 상세 모달
+- `UseItemModal.jsx` — 아이템 사용 모달
+- `SynthesisModal.jsx` — 아이템 합성 모달
+
+**`src/features/group/`**
+- `groupUtils.js` — SANGSAENG, SANGGEUK, pairScore(), getCompatTier() 등 모든 유틸
+- `OhaengBar.jsx` — 오행 분포 바 차트
+- `MemberForm.jsx` — 멤버 정보 입력 폼
+- `TeamChemiSummary.jsx` — 팀 케미 요약 카드
+- `RelationGraph.jsx` — SVG 관계도
+- `DetailPanel.jsx` — 두 사람 상세 분석 패널
+- `GroupAnalysisPanel.jsx` — 모임 전체 분석 패널
+
+**`src/utils/parseDailyLines.js`**
+- `parseCategoryLine(line)` — 카테고리 줄 파싱
+- `parseDailyLines(text)` — 전체 일일운세 텍스트 파싱
