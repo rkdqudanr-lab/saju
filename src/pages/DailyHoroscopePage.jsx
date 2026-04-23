@@ -86,20 +86,23 @@ export default function DailyHoroscopePage({
   // 아이템 보관함 로드
   const [ownedRows, setOwnedRows] = useState(null);
   useEffect(() => {
-    if (!user || !dailyResult) return;
-    const kakaoId = user.kakaoId || user.id;
-    getAuthenticatedClient(String(kakaoId))
+    const kakaoId = user?.kakaoId || user?.id;
+    if (!kakaoId || !dailyResult) return;
+    const client = getAuthenticatedClient(String(kakaoId));
+    if (!client) return;
+    client
       .from('user_shop_inventory')
       .select('id, item_id')
       .eq('kakao_id', String(kakaoId))
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setOwnedRows([]); return; }
         const rows = (data || [])
           .map((row) => ({ rowId: row.id, item: findItem(String(row.item_id)) }))
           .filter((row) => row.item?.aspectKey);
         setOwnedRows(rows);
       })
       .catch(() => setOwnedRows([]));
-  }, [user, dailyResult]);
+  }, [user?.kakaoId, user?.id, dailyResult]);
 
   // 아이템 사용 핸들러 (운세 점수 낮은 영역에 직접 사용)
   const canUseItems = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;

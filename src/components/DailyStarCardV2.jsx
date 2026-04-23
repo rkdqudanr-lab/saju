@@ -158,17 +158,17 @@ function parseDailyLines(text) {
       }
     : null;
 
+  const FIELD_PREFIXES = /^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운|음식|장소|색|컬러|색상|아이템|숫자|행운 숫자|방향|행운 방향|소통|행동|요약|시너지|십신|기운|DO|DONT|행성|흐름)[:\s]/i;
+
   const closingAdvice = [...lines].reverse().find((line) => {
     if (line.startsWith('[')) return false;
-    if (/^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운)[:\s]/.test(line)) return false;
-    if (/^(음식|장소|컬러|색상|숫자|행운 숫자|방향|행운 방향|시너지)[:\s]/.test(line)) return false;
+    if (FIELD_PREFIXES.test(line)) return false;
     return true;
   }) || '';
 
   const items = lines
     .filter((line) => !line.startsWith('['))
-    .filter((line) => !/^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운)[:\s]/.test(line))
-    .filter((line) => !/^(음식|장소|컬러|색상|숫자|행운 숫자|방향|행운 방향|시너지)[:\s]/.test(line))
+    .filter((line) => !FIELD_PREFIXES.test(line))
     .slice(0, 5);
 
   return {
