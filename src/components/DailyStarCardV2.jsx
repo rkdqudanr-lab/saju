@@ -229,6 +229,31 @@ export default function DailyStarCardV2({
 
   const hasBadtime = badtime && score !== null && !Number.isNaN(score) && score < BADTIME_THRESHOLD;
   const hasStructuredData = !!(categories || synergy);
+  const categoryActionRows = categories
+    ? CATEGORY_META.map(({ key, label }) => {
+        const cat = categories[key];
+        if (!cat) return null;
+        const axisScore = axisScores.find((s) => s.key === key);
+        const catScore = cat.score ?? (cat.stars != null ? Math.max(20, Math.min(100, cat.stars * 20)) : null);
+        const scoreValue = axisScore?.total ?? catScore ?? 50;
+        const matchingRow = ownedRows?.find((r) => r.item?.aspectKey === key) || null;
+        return {
+          key,
+          label,
+          scoreValue,
+          isLow: scoreValue <= LOW_SCORE_THRESHOLD,
+          matchingRow,
+          boost: matchingRow?.item?.boost || 0,
+        };
+      }).filter(Boolean)
+    : [];
+  const primaryActionRow = categoryActionRows
+    .filter((entry) => entry.matchingRow)
+    .sort((a, b) => {
+      if (a.isLow !== b.isLow) return a.isLow ? -1 : 1;
+      if (a.scoreValue !== b.scoreValue) return a.scoreValue - b.scoreValue;
+      return b.boost - a.boost;
+    })[0] || null;
 
   const handleBlockBadtime = useCallback(async () => {
     if (isBlocking || !onBlockBadtime) return;
@@ -318,11 +343,31 @@ export default function DailyStarCardV2({
             padding: 16,
             marginBottom: 16,
           }}>
+            <div className="dsc-section-title-row">
+              <div style={{
+                fontSize: 'var(--xs)',
+                fontWeight: 700,
+                color: 'var(--gold)',
+                letterSpacing: '.06em',
+              }}>
+                {'\uC624\uB298\uC758 \uC6B4\uC138'}
+              </div>
+              {primaryActionRow && onUseItem && (
+                <button
+                  type="button"
+                  className="dsc-inline-action-btn"
+                  onClick={() => onUseItem(primaryActionRow.matchingRow)}
+                >
+                  {primaryActionRow.isLow ? `${primaryActionRow.label} \uC544\uC774\uD15C \uC0AC\uC6A9` : '\uC544\uC774\uD15C \uC0AC\uC6A9'}
+                </button>
+              )}
+            </div>
             <div style={{
               fontSize: 'var(--xs)',
               fontWeight: 700,
               color: 'var(--gold)',
               letterSpacing: '.06em',
+              display: 'none',
               marginBottom: 12,
             }}>
               ✦ 오늘의 운세
@@ -360,7 +405,7 @@ export default function DailyStarCardV2({
                     <span style={{ minWidth: 34, textAlign: 'right', fontSize: 12, fontWeight: 800, color: scoreColor }}>
                       {scoreValue}점
                     </span>
-                    {isLow && matchingRow && onUseItem && (
+                    {matchingRow && onUseItem && (
                       <button
                         type="button"
                         onClick={() => onUseItem(matchingRow)}
@@ -378,7 +423,7 @@ export default function DailyStarCardV2({
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        바로 쓰기
+                        {isLow ? '바로 쓰기' : '사용'}
                       </button>
                     )}
                   </div>

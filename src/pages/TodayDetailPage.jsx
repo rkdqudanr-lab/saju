@@ -732,7 +732,7 @@ function PurifyOverlay({ visible }) {
   );
 }
 
-function BoostCTA({ hasBoostedToday, canPurify, remaining, onPurify, isPurifying, setStep }) {
+function BoostCTA({ hasBoostedToday, canPurify, todayScore, onPurify, isPurifying, setStep }) {
   return (
     <div style={{
       background: 'var(--bg2)',
@@ -750,8 +750,10 @@ function BoostCTA({ hasBoostedToday, canPurify, remaining, onPurify, isPurifying
         </div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6 }}>
           {hasBoostedToday
-            ? '아이템을 쓴 뒤 다시 정화 재점을 눌러 오늘 흐름을 새로 확인할 수 있어요.'
-            : '샵이나 보관함에서 오늘 점수를 올릴 아이템을 더 준비할 수 있어요.'}
+            ? ((todayScore || 0) >= 100
+                ? '오늘 점수가 100점에 도달해서 아이템 사용이 마무리됐어요.'
+                : '100점이 될 때까지 아이템을 쓰고 다시 정화 재점으로 흐름을 새로 확인할 수 있어요.')
+            : '샵이나 보관함에서 오늘 점수를 100점까지 올릴 아이템을 더 준비할 수 있어요.'}
         </div>
       </div>
 
@@ -790,7 +792,7 @@ function BoostCTA({ hasBoostedToday, canPurify, remaining, onPurify, isPurifying
               opacity: isPurifying ? 0.6 : 1,
             }}
           >
-            {isPurifying ? '재점 중...' : `정화재점 (${remaining}회 남음)`}
+            {isPurifying ? '재점 중...' : ((todayScore || 0) >= 100 ? '100점 달성' : '정화재점')}
           </button>
         ) : (
           <div style={{
@@ -1152,9 +1154,9 @@ export default function TodayDetailPage({
       .catch(() => setOwnedRows([]));
   }, [kakaoId, dailyResult]);
 
-  const canPurify = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
-  const remaining = Math.max(0, DAILY_MAX - dailyCount);
-  const canUseItems = canPurify && !!onRefresh;
+  const isScoreMaxed = (dailyResult?.score || 0) >= 100;
+  const canPurify = !isPurifying && !dailyLoading && !isScoreMaxed && !!onRefresh;
+  const canUseItems = canPurify;
 
   const handleUseItem = useCallback(async (row) => {
     if (!kakaoId || !row?.item || !canUseItems) return;
@@ -1200,7 +1202,7 @@ export default function TodayDetailPage({
   }, [kakaoId, canUseItems, onRefresh, usedItems]);
 
   const handlePurify = useCallback(async () => {
-    if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
+    if (isPurifying || dailyLoading || isScoreMaxed) return;
     setIsPurifying(true);
     const animPromise = new Promise((resolve) => setTimeout(resolve, 1200));
     try {
@@ -1218,7 +1220,7 @@ export default function TodayDetailPage({
     } finally {
       setIsPurifying(false);
     }
-  }, [isPurifying, dailyLoading, dailyCount, DAILY_MAX, onRefresh, usedItems]);
+  }, [isPurifying, dailyLoading, isScoreMaxed, onRefresh, usedItems]);
 
   return (
     <div className="today-detail-container">
@@ -1262,7 +1264,7 @@ export default function TodayDetailPage({
             <BoostCTA
               hasBoostedToday={usedItems.length > 0}
               canPurify={canPurify}
-              remaining={remaining}
+              todayScore={dailyResult?.score}
               onPurify={handlePurify}
               isPurifying={isPurifying}
               setStep={setStep}
@@ -1317,7 +1319,7 @@ export default function TodayDetailPage({
               opacity: isPurifying ? 0.7 : 1,
             }}
           >
-            {isPurifying ? '재점 중...' : `정화재점 (${remaining}회 남음)`}
+            {isPurifying ? '재점 중...' : '정화재점'}
           </button>
         )}
       </div>
