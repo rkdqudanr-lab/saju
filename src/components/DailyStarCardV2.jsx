@@ -30,10 +30,30 @@ function extractLabeledValue(lines, patterns) {
 }
 
 function parseCategoryLine(line) {
+  const afterColon = line.split(':').slice(1).join(':').trim();
+  // "3 — 설명" 또는 "3 - 설명" 형식 (em dash / en dash / hyphen 모두 처리)
+  const leadingNumMatch = afterColon.match(/^(\d)\s*[—–-]+\s*/);
+  // "60점" 형식
   const numericMatch = line.match(/(\d{1,3})\s*점/);
+  // "★★★" 형식
   const starCount = (line.match(/[⭐★]/g) || []).length;
-  const stars = starCount || (numericMatch ? Math.max(1, Math.min(5, Math.round(Number(numericMatch[1]) / 20))) : null);
-  const desc = line.split('-').slice(1).join('-').trim() || line.split(':').slice(1).join(':').trim();
+
+  let stars = null;
+  let desc = '';
+
+  if (starCount) {
+    stars = starCount;
+    desc = line.split('-').slice(1).join('-').trim() || afterColon;
+  } else if (leadingNumMatch) {
+    stars = Math.max(1, Math.min(5, Number(leadingNumMatch[1])));
+    desc = afterColon.replace(leadingNumMatch[0], '').trim();
+  } else if (numericMatch) {
+    stars = Math.max(1, Math.min(5, Math.round(Number(numericMatch[1]) / 20)));
+    desc = line.split(':').slice(1).join(':').replace(/\d{1,3}\s*점/, '').trim();
+  } else {
+    desc = afterColon;
+  }
+
   return {
     stars,
     desc: desc && !/^\d+\s*점?$/.test(desc) ? desc : '',
