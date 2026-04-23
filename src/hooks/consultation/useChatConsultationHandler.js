@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { getAuthToken } from "../useUserProfile.js";
 
 const CHAT_ERROR_MESSAGE = "별과 연결이 끊겼어요 🌙 다시 시도해봐요.";
@@ -221,7 +221,7 @@ export function useChatConsultationHandler({
     setChatUsed(0);
   }, []);
 
-  return {
+  return useMemo(() => ({
     chatHistory,
     chatInput,
     chatLoading,
@@ -235,5 +235,5 @@ export function useChatConsultationHandler({
     sendChat,
     sendStreamChat,
     resetSession,
-  };
+  }), [chatHistory, chatInput, chatLoading, chatUsed, chatLeft, latestChatIdx, generateChatSuggestions, sendChat, sendStreamChat, resetSession]);
 }

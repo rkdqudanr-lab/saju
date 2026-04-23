@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useAppStore } from "../../store/useAppStore.js";
 import { supabase, getAuthenticatedClient } from "../../lib/supabase.js";
 import { parseHoroscopeForGamification } from "../../utils/missionGenerator.js";
@@ -158,7 +158,7 @@ export function useDailyConsultationHandler({
     return { question: q, answer: ans };
   }, [callApi, saveHistoryToSupabase, timeSlot]);
 
-  return {
+  return useMemo(() => ({
     dailyResult,
     dailyLoading,
     dailyCount,
@@ -171,6 +171,6 @@ export function useDailyConsultationHandler({
     askReview,
     askDiaryReview,
     askWeeklyReview,
-    resetDiaryReview: useCallback(() => { setDiaryReviewResult(null); }, []),
-  };
+    resetDiaryReview: () => { setDiaryReviewResult(null); },
+  }), [dailyResult, dailyLoading, dailyCount, diaryReviewResult, diaryReviewLoading, setDailyResult, setDailyCount, setDiaryReviewResult, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview]);
 }

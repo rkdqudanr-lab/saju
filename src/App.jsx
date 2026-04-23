@@ -167,8 +167,12 @@ export default function App() {
     }
   }, [step, onboardingDone]);
 
-  // lifeStage + qaAnswers瑜?profile??蹂묓빀?섏뿬 AI 而⑦뀓?ㅽ듃 鍮뚮뜑???꾨떖
-  const profileWithMeta = { ...profile, lifeStage, qaAnswers: profile.qa_answers || profile.qaAnswers };
+  // lifeStage + qaAnswers를 profile에 병합하여 AI 컨텍스트 빌더에 전달 (메모이제이션으로 리렌더링 루프 방지)
+  const profileWithMeta = useMemo(() => ({
+    ...profile,
+    lifeStage,
+    qaAnswers: profile.qa_answers || profile.qaAnswers
+  }), [profile, lifeStage]);
   const sajuCtx = useSajuContext(form, profileWithMeta, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx } = sajuCtx;
 

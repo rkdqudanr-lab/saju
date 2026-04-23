@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 
@@ -545,7 +545,7 @@ export function useUserProfile() {
     useAppStore.getState().setDataPrecision({ total, level, filled });
   }, [form, profile, lifeStage, otherProfiles]);
 
-  return {
+  return useMemo(() => ({
     user, setUser,
     profile, setProfile,
     form, setForm,
@@ -565,5 +565,5 @@ export function useUserProfile() {
     saveSettings,
     kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile,
     saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
-  };
+  }), [user, profile, form, otherProfiles, activeProfileIdx, otherForm, editingOtherIdx, showProfileModal, showOtherProfileModal, showConsentModal, consentFlags, handleConsentConfirm, loginError, loginLoading, profileSyncing, responseStyle, theme, onboarded, quizState, lifeStage, fontSize, saveSettings, kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile, saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer]);
 }

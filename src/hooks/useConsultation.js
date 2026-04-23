@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { stripMarkdown, PKGS, TIMING, LOAD_STATES } from "../utils/constants.js";
 import { useAppStore } from "../store/useAppStore.js";
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
@@ -368,7 +368,7 @@ export function useConsultation(
     loadDailyCacheFromSupabase(user.id, "horoscope_count").then((countStr) => {
       if (countStr) dailyHandler.setDailyCount(parseInt(countStr, 10) || 0);
     }).catch((e) => console.error("[별숨] 별숨 횟수 캐시 로드 오류:", e));
-  }, [dailyHandler, user?.id]);
+  }, [user?.id]);
 
   const chatHandler = useChatConsultationHandler({
     buildCtx,
@@ -771,5 +771,5 @@ export function useConsultation(
     deleteHistoryItem,
     deleteAllHistoryItems,
     resetSession,
-  };
+  }), [timeSlot, loadingMsgIdx, step, setStep, cat, setCat, selQs, setSelQs, diy, setDiy, pkg, setPkg, answers, setAnswers, openAcc, setOpenAcc, generateChatSuggestions, typedSet, setTypedSet, chatHistory, chatInput, setChatInput, chatLoading, chatUsed, latestChatIdx, chatLeft, maxQ, maxChat, curPkg, reportText, reportLoading, histItem, setHistItem, histItems, setHistItems, chatEndRef, qLoadStatus, callApi, retryMsg, addQ, rmQ, dailyResult, dailyLoading, dailyCount, DAILY_MAX, diaryReviewResult, diaryReviewLoading, askClaude, askQuick, askTimeSlot, askDailyHoroscope, askReview, askDiaryReview, askWeeklyReview, resetDiaryReview, retryAnswer, handleTypingDone, handleAccToggle, sendChat, sendStreamChat, genReport, deleteHistoryItem, deleteAllHistoryItems, resetSession]);
 }

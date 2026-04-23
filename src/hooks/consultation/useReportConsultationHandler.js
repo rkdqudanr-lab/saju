@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 const IS_BETA = true;
 const REPORT_ERROR_MESSAGE = "蹂꾩씠 ?좎떆 ?ш퀬 ?덉뼱???뙔\n?좎떆 ???ㅼ떆 ?쒕룄?대킄??";
@@ -42,9 +42,9 @@ export function useReportConsultationHandler({ callApi, curPkg, setShowUpgradeMo
     }
   }, [callApi, curPkg, setShowUpgradeModal]);
 
-  return {
+  return useMemo(() => ({
     reportText,
     reportLoading,
     genReport,
-  };
+  }), [reportText, reportLoading, genReport]);
 }

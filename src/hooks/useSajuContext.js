@@ -158,5 +158,5 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     useAppStore.getState().setSajuData({ saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate });
   }, [saju, sun, moon, asc, today, buildCtx, formOk, formOkApprox, isApproximate]);
 
-  return { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx };
+  return useMemo(() => ({ today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx }), [today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx]);
 }
