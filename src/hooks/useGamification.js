@@ -148,7 +148,7 @@ export function useGamification(user, showToast) {
           : needsUniqueReason
             ? `${reason}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
             : reason;
-        await client.from('daily_bp_log').upsert(
+        const { error: bpLogError } = await client.from('daily_bp_log').upsert(
           {
             kakao_id: String(user.id),
             date: today,
@@ -158,6 +158,10 @@ export function useGamification(user, showToast) {
           },
           { onConflict: 'kakao_id,date,reason', ignoreDuplicates: true }
         );
+
+        if (bpLogError && bpLogError.code !== '23505') {
+          throw bpLogError;
+        }
 
         // users + user_gamification 동시 조회
         const [{ data: currentUser }, { data: gamRow }] = await Promise.all([

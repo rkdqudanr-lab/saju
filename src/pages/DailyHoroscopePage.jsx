@@ -96,7 +96,7 @@ export default function DailyHoroscopePage({
   }, []);
 
   const handleApplyPending = useCallback(async () => {
-    if (pendingItems.length === 0 || !askDailyHoroscope || isPurifying || dailyLoading) return;
+    if (pendingItems.length === 0 || !askDailyHoroscope || isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
     setIsPurifying(true);
     const animPromise = new Promise(r => setTimeout(r, 1200));
     try {
@@ -114,7 +114,7 @@ export default function DailyHoroscopePage({
       await animPromise;
       setIsPurifying(false);
     }
-  }, [pendingItems, askDailyHoroscope, isPurifying, dailyLoading, dailyResult?.text]);
+  }, [pendingItems, askDailyHoroscope, isPurifying, dailyLoading, dailyCount, DAILY_MAX, dailyResult?.text]);
 
   // 아이템 보관함 로드
   const [ownedRows, setOwnedRows] = useState(null);
@@ -369,7 +369,7 @@ export default function DailyHoroscopePage({
         }}>
           <button
             onClick={handleApplyPending}
-            disabled={isPurifying || dailyLoading}
+            disabled={isPurifying || dailyLoading || dailyCount >= DAILY_MAX}
             style={{
               width: '100%',
               padding: '16px',

@@ -28,6 +28,7 @@ export default function QuestionStep({
 }) {
   const [recentQs, setRecentQs] = useState([]);
   const [bpModal, setBpModal] = useState({ isOpen: false, isRecharging: false });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // BP 비용 게이팅
   const { askQuestion, QUESTION_COST } = useBPCostGate(

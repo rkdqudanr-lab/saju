@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ON } from "../utils/saju.js";
 import { parseAccSummary, breakAtNatural, SIGN_MOOD } from "../utils/constants.js";
 import AccItem, { FeedbackBtn } from "../components/AccItem.jsx";
@@ -6,6 +6,7 @@ import PrecisionNudge from "../components/PrecisionNudge.jsx";
 import { useUserCtx } from "../context/AppContext.jsx";
 import { useSajuCtx } from "../context/AppContext.jsx";
 import { useGamCtx } from "../context/AppContext.jsx";
+import { getAuthToken } from "../hooks/useUserProfile.js";
 
 const UNLOCK_COST = 10;
 
@@ -29,17 +30,23 @@ export default function ResultsStep({
 
   const [followUpQuestions, setFollowUpQuestions] = useState([]);
   const [loadingFollowUp, setLoadingFollowUp] = useState(false);
+  const [unlockedAnswers, setUnlockedAnswers] = useState(new Set([0]));
+  // 무한 루프 방지: fetch 시도 여부 추적 (parse 실패해도 재시도하지 않음)
+  const followUpAttemptedRef = useRef(false);
 
   // 첫 번째 답변이 타이핑 완료되면 후속 질문 생성
   useEffect(() => {
-    if (typedSet.has(0) && followUpQuestions.length === 0 && !loadingFollowUp) {
+    if (typedSet.has(0) && followUpQuestions.length === 0 && !loadingFollowUp && !followUpAttemptedRef.current) {
+      followUpAttemptedRef.current = true;
       const fetchFollowUp = async () => {
         setLoadingFollowUp(true);
         try {
-          // fetch('/api/ask', ...) 호출로 후속 질문 JSON 가져오기
+          const token = getAuthToken();
+          const headers = { 'Content-Type': 'application/json' };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
           const res = await fetch('/api/ask', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
               userMessage: `방금 답변한 내용을 바탕으로 후속 질문 5개를 만들어줘. (답변 요약: ${answers[0].slice(0, 100)})`,
               isFollowUpQ: true,
@@ -71,6 +78,23 @@ export default function ResultsStep({
     } else {
       onEnterChat(q.text);
     }
+  };
+
+  const handleUnlock = async (index) => {
+    if (unlockedAnswers.has(index)) return;
+
+    const result = await spendBP?.(UNLOCK_COST, `answer_unlock_${index}`);
+    if (!result?.success) {
+      showToast?.('BP가 부족하거나 잠금 해제에 실패했어요.', 'error');
+      return;
+    }
+
+    setUnlockedAnswers((prev) => {
+      const next = new Set(prev);
+      next.add(index);
+      return next;
+    });
+    showToast?.(`답변이 열렸어요. -${UNLOCK_COST} BP`, 'success');
   };
 
   return (
