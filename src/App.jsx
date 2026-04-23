@@ -7,7 +7,8 @@ import { useAppStore } from "./store/useAppStore.js";
 import { PKGS, TIMING, ANNIVERSARY_PROMPT } from "./utils/constants.js";
 
 // hooks
-import { getAuthToken, useUserProfile } from "./hooks/useUserProfile.js";
+import { useUserProfile } from "./hooks/useUserProfile.js";
+import { postAskText } from "./lib/askApi.js";
 import { useSajuContext }   from "./hooks/useSajuContext.js";
 import { useConsultation }  from "./hooks/useConsultation.js";
 import { useNavigation }    from "./hooks/useNavigation.js";
@@ -253,22 +254,14 @@ export default function App() {
     (async () => {
       try {
         const ctx = buildCtx ? buildCtx() : '';
-        const token = getAuthToken();
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch('/api/ask', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            userMessage: `I just leveled up in the Byeolsoom guardian system from ${LEVEL_LABELS[guardianLevelUp.fromLevel]} (Lv${guardianLevelUp.fromLevel}) to ${LEVEL_LABELS[guardianLevelUp.toLevel]} (Lv${guardianLevelUp.toLevel}). Please write a short 2-3 line celebratory message in a warm, starlit tone without sounding too formal.`, 
-            context: ctx,
-            kakaoId: user?.id,
-            clientHour: new Date().getHours(),
-            isChat: true,
-          }),
+        const text = await postAskText({
+          userMessage: `I just leveled up in the Byeolsoom guardian system from ${LEVEL_LABELS[guardianLevelUp.fromLevel]} (Lv${guardianLevelUp.fromLevel}) to ${LEVEL_LABELS[guardianLevelUp.toLevel]} (Lv${guardianLevelUp.toLevel}). Please write a short 2-3 line celebratory message in a warm, starlit tone without sounding too formal.`,
+          context: ctx,
+          kakaoId: user?.id,
+          clientHour: new Date().getHours(),
+          isChat: true,
         });
-        const data = await res.json();
-        setGuardianMessage(data.text || '');
+        setGuardianMessage(text);
       } catch {
         setGuardianMessage('A new level of strength is with you now. Meet the next star with a steadier heart.');
       } finally {
@@ -975,6 +968,7 @@ export default function App() {
             isBlockingBadtime={isBlockingBadtime}
             setStep={setStep}
             onRefresh={askDailyHoroscope}
+            onSpendBp={spendBP}
           />
         )}
 

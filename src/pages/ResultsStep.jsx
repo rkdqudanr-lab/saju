@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { ON } from "../utils/saju.js";
 import { parseAccSummary, breakAtNatural, SIGN_MOOD } from "../utils/constants.js";
 import AccItem, { FeedbackBtn } from "../components/AccItem.jsx";
@@ -6,7 +6,7 @@ import PrecisionNudge from "../components/PrecisionNudge.jsx";
 import { useUserCtx } from "../context/AppContext.jsx";
 import { useSajuCtx } from "../context/AppContext.jsx";
 import { useGamCtx } from "../context/AppContext.jsx";
-import { getAuthToken } from "../hooks/useUserProfile.js";
+import { postAsk } from "../lib/askApi.js";
 
 const UNLOCK_COST = 10;
 
@@ -41,19 +41,11 @@ export default function ResultsStep({
       const fetchFollowUp = async () => {
         setLoadingFollowUp(true);
         try {
-          const token = getAuthToken();
-          const headers = { 'Content-Type': 'application/json' };
-          if (token) headers['Authorization'] = `Bearer ${token}`;
-          const res = await fetch('/api/ask', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-              userMessage: `방금 답변한 내용을 바탕으로 후속 질문 5개를 만들어줘. (답변 요약: ${answers[0].slice(0, 100)})`,
-              isFollowUpQ: true,
-              kakaoId: user?.id
-            })
+          const data = await postAsk({
+            userMessage: `방금 답변한 내용을 바탕으로 후속 질문 5개를 만들어줘. (답변 요약: ${answers[0].slice(0, 100)})`,
+            isFollowUpQ: true,
+            kakaoId: user?.id,
           });
-          const data = await res.json();
           if (data.text) {
             try {
               const parsed = JSON.parse(data.text);
@@ -309,3 +301,4 @@ export default function ResultsStep({
     </div>
   );
 }
+

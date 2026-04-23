@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+﻿import { useState, useCallback, useEffect, useRef } from "react";
 import { ON } from "../utils/saju.js";
 import { stripMarkdown } from "../utils/constants.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
-import { getAuthToken } from "../hooks/useUserProfile.js";
+import { postAskText } from "../lib/askApi.js";
 import PrecisionNudge from "./PrecisionNudge.jsx";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
@@ -105,17 +105,14 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
         : '';
       const sunSummary = sun ? `별자리: ${sun.n}(${sun.s}) — ${sun.desc}` : '';
       const userMsg = `나의 종합 사주 리포트를 작성해주세요. ${sajuSummary} ${sunSummary}. 현재 ${now}년.`;
-      const _token = getAuthToken();
-      const _headers = { 'Content-Type': 'application/json' };
-      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: _headers,
-        body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isComprehensive: true, kakaoId: user?.id || null, clientHour: new Date().getHours() }),
+      const text = await postAskText({
+        userMessage: userMsg,
+        context: buildCtx(),
+        isComprehensive: true,
+        kakaoId: user?.id || null,
+        clientHour: new Date().getHours(),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API 오류');
-      const cleaned = stripMarkdown(data.text || '');
+      const cleaned = stripMarkdown(text);
       setText(cleaned);
       try { localStorage.setItem(localKey, cleaned); } catch {}
       if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
@@ -215,17 +212,14 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
       const moonSummary = moon ? `달(감정): ${moon.n}(${moon.s}) — ${moon.desc}` : '달 정보 없음(태양 기반으로 감정 해석 부탁)';
       const ascSummary  = asc  ? `상승(첫인상): ${asc.n}(${asc.s}) — ${asc.desc}` : '상승 정보 없음(태양 기반으로 첫인상 해석 부탁)';
       const userMsg = `나의 종합 점성술 리포트를 작성해주세요. ${sunSummary}. ${moonSummary}. ${ascSummary}. 현재 ${now}년.`;
-      const _token = getAuthToken();
-      const _headers = { 'Content-Type': 'application/json' };
-      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: _headers,
-        body: JSON.stringify({ userMessage: userMsg, context: buildCtx(), isAstrology: true, kakaoId: user?.id || null, clientHour: new Date().getHours() }),
+      const text = await postAskText({
+        userMessage: userMsg,
+        context: buildCtx(),
+        isAstrology: true,
+        kakaoId: user?.id || null,
+        clientHour: new Date().getHours(),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'API 오류');
-      const cleaned = stripMarkdown(data.text || '');
+      const cleaned = stripMarkdown(text);
       setText(cleaned);
       try { localStorage.setItem(localKey, cleaned); } catch {}
       if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
@@ -364,3 +358,5 @@ export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx
     </div>
   );
 }
+
+

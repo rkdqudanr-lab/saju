@@ -1,236 +1,77 @@
-// api/ask.js — 별숨 Vercel Serverless Function
-import { getTodayStr, getSeasonDesc, getTimeHorizon, isDecisionQuestion } from "../lib/prompts/utils.js";
-import { getCategoryHint, pickEndingHint, getCategoryExample } from "../lib/prompts/hints.js";
-import { buildSystem } from "../lib/prompts/buildSystem/index.js";
+import { buildAiRequestContext, validateAiRequest } from "../lib/aiRequest.js";
 import { verifyUser } from "../lib/auth.js";
 
-
-
-// ── IP 기반 레이트 리미팅 (Upstash Redis) ──
 async function checkRateLimit(ip) {
-  const url   = process.env.UPSTASH_REDIS_REST_URL;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  // 환경변수 없으면 로컬 개발용으로 스킵
   if (!url || !token) return { ok: true };
 
-  const now      = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000);
   const minuteKey = `rl:min:${ip}:${Math.floor(now / 60)}`;
-  const dayKey    = `rl:day:${ip}:${Math.floor(now / 86400)}`;
-
-  async function redisCmd(cmd) {
-    const res = await fetch(`${url}/${cmd.join('/')}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return res.json();
-  }
+  const dayKey = `rl:day:${ip}:${Math.floor(now / 86400)}`;
 
   try {
-    // 파이프라인으로 incr + expire 동시 실행 (atomic)
     const pipe = await fetch(`${url}/pipeline`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify([
-        ['INCR', minuteKey],
-        ['EXPIRE', minuteKey, 60],
-        ['INCR', dayKey],
-        ['EXPIRE', dayKey, 86400],
+        ["INCR", minuteKey],
+        ["EXPIRE", minuteKey, 60],
+        ["INCR", dayKey],
+        ["EXPIRE", dayKey, 86400],
       ]),
     });
+
     const results = await pipe.json();
     const minCount = results?.[0]?.result ?? 0;
     const dayCount = results?.[2]?.result ?? 0;
 
-    if (minCount > 20) return { ok: false, reason: 'minute' };
-    if (dayCount > 200) return { ok: false, reason: 'day' };
+    if (minCount > 20) return { ok: false, reason: "minute" };
+    if (dayCount > 200) return { ok: false, reason: "day" };
     return { ok: true };
-  } catch (e) {
-    // Redis 오류: 안전 우선으로 거부 (가용성보다 보안 우선)
-    console.error('[별숨] Redis rate limit check failed:', e?.message);
-    return { ok: false, reason: 'service' };
+  } catch (error) {
+    console.error("[byeolsoom] Redis rate limit check failed:", error?.message);
+    return { ok: false, reason: "service" };
   }
-}
-
-// ── 요청 스키마 검증 ──
-/**
- * @typedef {{ userMessage: string, context?: string, isChat?: boolean, isReport?: boolean, isLetter?: boolean, isScenario?: boolean, isStory?: boolean }} AskRequest
- * @typedef {{ text: string }} AskResponse
- */
-
-/**
- * 요청 바디를 검증해요.
- * @param {unknown} body
- * @returns {{ ok: true, data: AskRequest } | { ok: false, reason: string }}
- */
-function validateRequest(body) {
-  if (!body || typeof body !== 'object') return { ok: false, reason: '요청 바디가 없어요' };
-  const { userMessage, context, isChat, isReport, isLetter, isProphecy, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isFullGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, isYearly, isFollowUpQ, isTarot, isDream, isName, isTaegil, responseStyle, kakaoId, clientHour, precision_level, gender } = body;
-
-  if (typeof userMessage !== 'string' || !userMessage.trim()) {
-    return { ok: false, reason: 'userMessage가 없거나 비어있어요' };
-  }
-  if (userMessage.length > 3000) {
-    return { ok: false, reason: 'userMessage가 너무 길어요 (최대 3000자)' };
-  }
-  if (context !== undefined && typeof context !== 'string') {
-    return { ok: false, reason: 'context는 문자열이어야 해요' };
-  }
-
-  // responseStyle: 'T' | 'M' | 'F' (기본: 'M')
-  const validStyles = ['T', 'M', 'F'];
-  const style = typeof responseStyle === 'string' && validStyles.includes(responseStyle) ? responseStyle : 'M';
-
-  const validLevels = ['low', 'mid', 'high'];
-  const precisionLevel = typeof precision_level === 'string' && validLevels.includes(precision_level) ? precision_level : 'low';
-
-  return {
-    ok: true,
-    data: {
-      userMessage: userMessage.trim(),
-      context: typeof context === 'string' ? context : undefined,
-      isChat: !!isChat,
-      isReport: !!isReport,
-      isLetter: !!isLetter,
-      isProphecy: !!isProphecy,
-      isScenario: !!isScenario,
-      isStory: !!isStory,
-      isNatal: !!isNatal,
-      isZodiac: !!isZodiac,
-      isComprehensive: !!isComprehensive,
-      isAstrology: !!isAstrology,
-      isProfileQuestion: !!isProfileQuestion,
-      isGroupAnalysis: !!isGroupAnalysis,
-      isFullGroupAnalysis: !!isFullGroupAnalysis,
-      teamMode: !!(teamMode || isGroupAnalysis),
-      isCalendarMonth: !!isCalendarMonth,
-      isSlot: !!isSlot,
-      isWeekly: !!isWeekly,
-      isDaily: !!isDaily,
-      isDaeun: !!isDaeun,
-      isAnalytics: !!isAnalytics,
-      isYearly: !!isYearly,
-      isFollowUpQ: !!isFollowUpQ,
-      isTarot: !!isTarot,
-      isDream: !!isDream,
-      isName: !!isName,
-      isTaegil: !!isTaegil,
-      responseStyle: style,
-      precision_level: precisionLevel,
-      kakaoId: kakaoId || null,
-      clientHour: (typeof clientHour === 'number' && Number.isInteger(clientHour) && clientHour >= 0 && clientHour <= 23) ? clientHour : undefined,
-      gender: typeof gender === 'string' && ['남', '여'].includes(gender) ? gender : null,
-    },
-  };
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  // ── 레이트 리미팅 ──
-  const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
-  const rl = await checkRateLimit(ip);
-  if (!rl.ok) {
-    if (rl.reason === 'service') {
-      return res.status(503).json({ error: '서비스가 잠시 점검 중이에요. 조금 뒤에 다시 시도해봐요 🌙' });
-    }
-    return res.status(429).json({ error: '너무 많은 요청이에요. 잠시 후 다시 시도해봐요 🌙' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const validation = validateRequest(req.body);
+  const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
+  const rateLimit = await checkRateLimit(ip);
+  if (!rateLimit.ok) {
+    if (rateLimit.reason === "service") {
+      return res.status(503).json({ error: "서비스가 잠시 바빠요. 조금 뒤에 다시 시도해주세요." });
+    }
+    return res.status(429).json({ error: "요청이 너무 많아요. 잠시 후 다시 시도해주세요." });
+  }
+
+  const validation = validateAiRequest(req.body);
   if (!validation.ok) {
     return res.status(400).json({ error: validation.reason });
   }
 
-  // ── 로그인 인증 (JWT 우선, kakaoId 하위 호환) ──
-  const { kakaoId } = validation.data;
-  if (!kakaoId) {
-    return res.status(401).json({ error: '로그인이 필요해요 🌙' });
+  const data = validation.data;
+  if (!data.kakaoId) {
+    return res.status(401).json({ error: "로그인이 필요해요." });
   }
+
   const authResult = await verifyUser(req);
   if (!authResult.ok) {
-    return res.status(401).json({ error: '로그인이 필요해요 🌙' });
+    return res.status(401).json({ error: "로그인이 필요해요." });
   }
 
-  const { userMessage, context, isChat, isReport, isLetter, isProphecy, isScenario, isStory, isNatal, isZodiac, isComprehensive, isAstrology, isProfileQuestion, isGroupAnalysis, isFullGroupAnalysis, teamMode, isCalendarMonth, isSlot, isWeekly, isDaily, isDaeun, isAnalytics, isYearly, isFollowUpQ, isTarot, isDream, isName, isTaegil, responseStyle, precision_level: precisionLevel, clientHour, gender } = validation.data;
-
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수를 Vercel에 설정해주세요!" });
+  if (!apiKey) {
+    return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수가 필요해요." });
+  }
 
-  const today        = getTodayStr(clientHour);
-  const season       = getSeasonDesc(today.m);
-  // context 문자열에서 직업/상황 정보 추출 (직업 인식 힌트용)
-  const userContext  = context ? context.slice(0, 500) : '';
-  const categoryHint = getCategoryHint(userMessage, userContext);
-  const endingHint      = pickEndingHint(userMessage);
-  const categoryExample = getCategoryExample(userMessage);
-  const timeHorizon     = getTimeHorizon(userMessage);
-  const isDecision   = isDecisionQuestion(userMessage);
-
-  // 모드별 동적 로드 — isSlot, isWeekly는 프론트에서 명시적으로 전달받아 사용 (userMessage 분석 없음)
-  const systemBase = await buildSystem(
-    today, season, categoryHint, endingHint, timeHorizon,
-    userMessage, isChat, isReport, isLetter, isScenario, isStory, isDecision,
-    categoryExample, isNatal, isZodiac, isComprehensive, isAstrology, responseStyle, isSlot, isWeekly, isDaily,
-    isDaeun, isAnalytics, precisionLevel, gender, isProphecy, isYearly, isFollowUpQ,
-    isTarot, isDream, isName, isTaegil
-  );
-
-  // isProfileQuestion: 프로필 맞춤 질문 생성 전용 시스템 프롬프트
-  const profileQuestionSystem = isProfileQuestion
-    ? `당신은 별숨(byeolsoom)이에요. 사주와 별자리를 기반으로 사용자를 깊이 이해하는 점성술 AI예요.
-사용자의 20가지 자기소개 답변을 읽고, 그 사람에게만 맞는 심층 질문 5개를 JSON 배열로만 답해주세요.
-각 질문은 사주와 별자리 관점에서 더 깊이 이해하기 위한 것으로, 개인적이고 구체적이어야 해요.
-반드시 JSON만 응답하세요: [{"id":"aq_1","q":"질문 내용"},{"id":"aq_2","q":"..."},...]`
-    : null;
-
-  // 그룹 전체 분석 (N명): 팀 집단 에너지 분석 전용
-  const fullGroupSystem = isFullGroupAnalysis
-    ? `당신은 별숨(byeolsoom)이에요. 여러 사람의 사주와 별자리를 읽고 이 모임이 가진 집단 별숨을 따뜻하게 풀어줘요.
-이 팀의 전체 오행 에너지 구성, 집단의 강점, 주의해야 할 취약점, 함께할 때 가장 빛나는 순간, 이 모임에서 각자가 맡게 되는 자연스러운 역할을 별숨의 언어로 이야기해주세요.
-개인을 지목해 평가하지 말고, 모임 전체의 에너지 흐름을 따뜻하고 입체적으로 묘사해주세요.
-마크다운 문법(## --- ** * - 1.) 절대 금지. 소제목 금지. 번호 금지. 섹션 구분선 금지. 모든 텍스트는 일반 텍스트로만.`
-    : null;
-
-  // teamMode/isGroupAnalysis: 두 사람 관계 분석 전용 시스템 프롬프트
-  const groupAnalysisSystem = !isFullGroupAnalysis && (isGroupAnalysis || teamMode)
-    ? `당신은 별숨(byeolsoom)이에요. 여러 사람의 사주와 별자리를 읽고 그들의 관계를 따뜻하고 재밌게 분석해줘요.
-두 사람의 관계를 분석할 때는: 좋은 점, 조심해야 할 점, 함께하면 시너지가 나는 상황, 서로에게 필요한 것을 별숨의 언어로 이야기해주세요.
-판단하지 말고, 재밌고 따뜻하게 두 별의 관계를 풀어주세요.
-마크다운 문법(## --- ** * - 1.) 절대 금지. 소제목 금지. 번호 금지. 섹션 구분선 금지. 모든 텍스트는 일반 텍스트로만.`
-    : null;
-
-  const systemWithContext = (profileQuestionSystem || fullGroupSystem || groupAnalysisSystem || systemBase)
-    + (context
-      ? `\n\n━━━ 오늘 상담하는 분의 기운 데이터 ━━━\n${context}\n(위 데이터는 취재 노트예요. 이걸 그대로 보여주는 게 아니라, 에세이의 재료로 자연스럽게 녹여요.)`
-      : '');
-
-  // 감성 깊이가 필요한 모드는 sonnet, 나머지는 haiku (비용 최적화)
-  const model = "claude-haiku-4-5-20251001";
-
-  // 모드별 최대 토큰 분기 — 응답이 중간에 끊기지 않도록 넉넉하게 설정
-  const maxTokens =
-    isYearly            ? 3500 :
-    isComprehensive     ? 3500 :
-    isAstrology         ? 3500 :
-    isReport            ? 2500 :
-    isCalendarMonth     ? 2000 :
-    isProphecy          ? 1200 :
-    isLetter            ? 1500 :
-    isStory             ? 3000 :
-    isScenario          ? 2000 :
-    isNatal             ? 2500 :
-    isZodiac            ? 1200 :
-    isFullGroupAnalysis ? 2200 :
-    isGroupAnalysis     ? 1800 :
-    isProfileQuestion   ?  800 :
-    isDaily             ? 1800 :
-    isDaeun             ? 2000 :
-    isAnalytics         ? 1000 :
-    isChat              ? 1200 :
-    isFollowUpQ         ? 600 :
-                          1500;
+  const { systemWithContext, maxTokens } = await buildAiRequestContext(data);
 
   try {
-    // Vercel 함수 30초 제한보다 5초 여유를 두고 25초 타임아웃 설정
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 25000);
 
@@ -246,40 +87,31 @@ export default async function handler(req, res) {
           "anthropic-beta": "prompt-caching-2024-07-31",
         },
         body: JSON.stringify({
-          model: model,
+          model: "claude-haiku-4-5-20251001",
           max_tokens: maxTokens,
-          // 일일 운세는 낮은 temperature로 점수·아이템 일관성 향상
-          ...(isDaily ? { temperature: 0.3 } : {}),
-          system: [
-            {
-              type: "text",
-              text: systemWithContext,
-              cache_control: { type: "ephemeral" },
-            },
-          ],
-          messages: [{ role: "user", content: userMessage }],
+          ...(data.isDaily ? { temperature: 0.3 } : {}),
+          system: [{ type: "text", text: systemWithContext, cache_control: { type: "ephemeral" } }],
+          messages: [{ role: "user", content: data.userMessage }],
         }),
       });
     } finally {
       clearTimeout(timeoutId);
     }
 
-    const data = await response.json();
+    const body = await response.json();
     if (!response.ok) {
-      console.error("Anthropic API error:", JSON.stringify(data));
-      return res.status(response.status).json({ error: data.error?.message || "API 오류가 났어요" });
+      console.error("Anthropic API error:", JSON.stringify(body));
+      return res.status(response.status).json({ error: body.error?.message || "AI 응답을 가져오지 못했어요." });
     }
 
-    /** @type {AskResponse} */
-    const result = { text: data.content?.[0]?.text || "" };
-    return res.status(200).json(result);
-
-  } catch (err) {
-    if (err?.name === 'AbortError') {
+    return res.status(200).json({ text: body.content?.[0]?.text || "" });
+  } catch (error) {
+    if (error?.name === "AbortError") {
       console.error("Anthropic API timeout (25s exceeded)");
-      return res.status(504).json({ error: "별이 잠시 바빠요 🌙 잠시 후 다시 시도해봐요." });
+      return res.status(504).json({ error: "별이 잠시 바빴어요. 다시 시도해주세요." });
     }
-    console.error("Server error:", err?.message || err);
-    return res.status(500).json({ error: "서버 오류가 났어요. 잠시 후 다시 시도해봐요 🌙" });
+
+    console.error("Server error:", error?.message || error);
+    return res.status(500).json({ error: "서버 오류가 있었어요. 잠시 후 다시 시도해주세요." });
   }
 }

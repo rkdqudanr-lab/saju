@@ -9,7 +9,7 @@ import {
   readDailyLocalCache,
   writeDailyLocalCache,
 } from "../lib/dailyDataAccess.js";
-import { getAuthToken } from "./useUserProfile.js";
+import { postAskRaw } from "../lib/askApi.js";
 import { parseHoroscopeForGamification } from "../utils/missionGenerator.js";
 import { spendBP as spendBPUtil } from "../utils/gamificationLogic.js";
 import { useDailyConsultationHandler } from "./consultation/useDailyConsultationHandler.js";
@@ -169,10 +169,6 @@ export function useConsultation(
           await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 1000));
         }
 
-        const token = getAuthToken();
-        const headers = { "Content-Type": "application/json" };
-        if (token) headers.Authorization = `Bearer ${token}`;
-
         let fullContext = buildCtx();
         try {
           if (histItems.length > 0) {
@@ -238,10 +234,7 @@ When generating the new result:
           fullContext += "\n\n[채팅 응답 규칙]\n이번 응답은 채팅 모드입니다. [요약], 제목, 섹션 헤더, 번호 목록 없이 바로 대화형 문장으로 답하세요. 첫 줄에 요약문이나 태그를 쓰지 말고, 상대와 이어서 말하듯 2~4문장 안팎으로 답하세요.";
         }
 
-        const res = await fetch("/api/ask", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
+        const res = await postAskRaw({
             userMessage,
             context: fullContext,
             kakaoId: user.id,
@@ -267,7 +260,6 @@ When generating the new result:
             responseStyle: style,
             precision_level: useAppStore.getState().dataPrecision?.level || "low",
             clientHour: new Date().getHours(),
-          }),
         });
 
         if (res.status === 401) {

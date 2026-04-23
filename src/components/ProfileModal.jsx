@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { DAILY_QUESTIONS, PROFILE_QUESTIONS_IDS } from "../utils/constants.js";
-import { getAuthToken } from "../hooks/useUserProfile.js";
+import { postAsk } from "../lib/askApi.js";
 import { useAppStore } from "../store/useAppStore.js";
 
 // 20문 20답용 질문 목록 (DAILY_QUESTIONS에서 선별)
@@ -128,27 +128,19 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
     try {
       // 답변 요약 컨텍스트 생성
       const summary = PROFILE_QS.map(q => `${q.q} → ${finalQa[q.id] || '(미답변)'}`).join('\n');
-      const _token = getAuthToken();
-      const _headers = { 'Content-Type': 'application/json' };
-      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: _headers,
-        signal: controller.signal,
-        body: JSON.stringify({
-          userMessage: `사용자의 20가지 답변을 읽고, 이 사람에게 맞춤형 심층 질문 5개를 JSON 배열로만 답해주세요.
+      const data = await postAsk({
+        userMessage: `사용자의 20가지 답변을 읽고, 이 사람에게 맞춤형 심층 질문 5개를 JSON 배열로만 답해주세요.
           형식: [{"id":"aq_1","q":"질문 내용"},...]
           각 질문은 사주와 별자리 관점에서 더 깊이 이해하기 위한 것으로, 개인적이고 구체적으로 만들어주세요.
 
           사용자 답변:
           ${summary}`,
-          isProfileQuestion: true,
-          kakaoId: user.id,
-          clientHour: new Date().getHours(),
-        }),
+        isProfileQuestion: true,
+        kakaoId: user.id,
+        clientHour: new Date().getHours(),
+      }, {
+        signal: controller.signal,
       });
-      if (!res.ok) throw new Error(`AI 질문 생성 실패 (${res.status})`);
-      const data = await res.json();
       try {
         const raw = (data.text || '').replace(/```json|```/g, '').trim();
         const parsed = JSON.parse(raw);
@@ -401,3 +393,4 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
     </div>
   );
 }
+

@@ -1,10 +1,10 @@
-import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
+import { Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import DailyStarCardV2 from '../components/DailyStarCardV2.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import '../styles/TodayDetailPage.css';
-import { findItem } from '../utils/gachaItems.js';
+import { findItem, pullOne, pullOneSaju } from '../utils/gachaItems.js';
 
 import { getDailyAxisScores, TODAY_AXIS_CACHE } from '../features/today/getDailyAxisScores.js';
 import AxisInsightPanel  from '../features/today/AxisInsightPanel.jsx';
@@ -14,6 +14,10 @@ import PurifyOverlay     from '../features/today/PurifyOverlay.jsx';
 import BoostCTA          from '../features/today/BoostCTA.jsx';
 import ItemDetailModal   from '../features/today/ItemDetailModal.jsx';
 import OneShotItemPicker from '../features/today/OneShotItemPicker.jsx';
+import InstantBoostModal from '../features/today/InstantBoostModal.jsx';
+import GoldenParticles   from '../features/today/GoldenParticles.jsx';
+
+const INSTANT_BOOST_COST = 10;
 
 function PageSpinner() {
   return (
@@ -21,6 +25,18 @@ function PageSpinner() {
       <div style={{ width: 36, height: 36, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite' }} />
     </div>
   );
+}
+
+function animateScore(from, to, durationMs, onTick, onComplete) {
+  const start = performance.now();
+  function tick(now) {
+    const t     = Math.min((now - start) / durationMs, 1);
+    const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+    onTick(Math.round(from + (to - from) * eased));
+    if (t < 1) requestAnimationFrame(tick);
+    else onComplete?.();
+  }
+  requestAnimationFrame(tick);
 }
 
 export default function TodayDetailPage({
@@ -33,16 +49,24 @@ export default function TodayDetailPage({
   isBlockingBadtime,
   setStep,
   onRefresh,
+  onSpendBp,
 }) {
   const user = useAppStore((s) => s.user);
   const kakaoId = user?.kakaoId || user?.id;
   const equippedTalisman = useAppStore((s) => s.equippedTalisman);
   const storeEquippedItems = useAppStore((s) => s.equippedItems) || [];
 
-  const [usedItems, setUsedItems] = useState([]);
-  const [ownedRows, setOwnedRows] = useState(null);
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [isPurifying, setIsPurifying] = useState(false);
+  const [usedItems,    setUsedItems]    = useState([]);
+  const [ownedRows,    setOwnedRows]    = useState(null);
+  const [selectedRow,  setSelectedRow]  = useState(null);
+  const [isPurifying,  setIsPurifying]  = useState(false);
+
+  // 즉시 부스트 state
+  const [boostPhase,   setBoostPhase]   = useState(null); // null | 'pulling' | 'reveal' | 'confirming'
+  const [pulledItem,   setPulledItem]   = useState(null);
+  const [displayScore, setDisplayScore] = useState(null);
+  const [showParticles, setShowParticles] = useState(false);
+  const rafRef = useRef(null);
 
   const mergedEquippedItems = useMemo(() => ([
     ...(equippedTalisman
@@ -51,9 +75,10 @@ export default function TodayDetailPage({
     ...usedItems,
   ]), [equippedTalisman, storeEquippedItems, usedItems]);
 
+  const baseScore  = displayScore ?? (dailyResult?.score || 0);
   const axisScores = useMemo(
-    () => getDailyAxisScores(dailyResult?.score, mergedEquippedItems),
-    [dailyResult?.score, mergedEquippedItems]
+    () => getDailyAxisScores(baseScore, mergedEquippedItems),
+    [baseScore, mergedEquippedItems]
   );
 
   // 오늘 아이템 활성화 이력 로드
@@ -105,9 +130,10 @@ export default function TodayDetailPage({
       .catch(() => setOwnedRows([]));
   }, [kakaoId, dailyResult]);
 
-  const isScoreMaxed = (dailyResult?.score || 0) >= 100;
-  const canPurify = !isPurifying && !dailyLoading && !isScoreMaxed && !!onRefresh;
-  const canUseItems = canPurify;
+  const currentScore = dailyResult?.score || 0;
+  const isScoreMaxed = currentScore >= 100;
+  const canPurify    = !isPurifying && !dailyLoading && !isScoreMaxed && !!onRefresh;
+  const canUseItems  = canPurify;
 
   const handleUseItem = useCallback(async (row) => {
     if (!kakaoId || !row?.item || !canUseItems) return;
@@ -156,9 +182,84 @@ export default function TodayDetailPage({
     }
   }, [isPurifying, dailyLoading, isScoreMaxed, onRefresh, usedItems]);
 
+  // ── 즉시 부스트 ─────────────────────────────────────────────
+  const handleInstantBoost = useCallback(async () => {
+    if ((gamificationState?.currentBp || 0) < INSTANT_BOOST_COST) return;
+    if (isScoreMaxed || boostPhase) return;
+
+    setBoostPhase('pulling');
+
+    // BP 차감 — reason에 타임스탬프 포함해 하루 여러 번 허용
+    if (typeof onSpendBp === 'function') {
+      await onSpendBp(INSTANT_BOOST_COST, `instant_boost_${Date.now()}`);
+    }
+
+    const item = Math.random() < 0.5 ? pullOne() : pullOneSaju();
+    await new Promise((r) => setTimeout(r, 380));
+
+    setPulledItem(item);
+    setBoostPhase('reveal');
+  }, [gamificationState, isScoreMaxed, boostPhase, onSpendBp]);
+
+  const handleBoostConfirm = useCallback(async (item) => {
+    if (!item || !kakaoId) { setBoostPhase(null); return; }
+    setBoostPhase('confirming');
+    setIsPurifying(true);
+
+    const nextUsedItems = [
+      ...usedItems.filter((i) => i.aspectKey !== item.aspectKey),
+      item,
+    ];
+    const animPromise = new Promise((r) => setTimeout(r, 1200));
+    const prevScore   = currentScore;
+
+    try {
+      await Promise.all([
+        onRefresh?.({ transientItems: nextUsedItems, skipBpCharge: true, skipConfirm: true, saveHistory: false }),
+        animPromise,
+      ]);
+      const nextMap = Object.fromEntries(
+        nextUsedItems.filter((i) => i?.aspectKey).map((i) => [i.aspectKey, i.id])
+      );
+      writeDailyLocalCache(String(kakaoId), TODAY_AXIS_CACHE, JSON.stringify(nextMap), getDailyDateKey());
+      if (canUseDailySupabaseTables()) {
+        await getAuthenticatedClient(String(kakaoId))
+          .from('daily_cache')
+          .upsert({ kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: TODAY_AXIS_CACHE, content: JSON.stringify(nextMap) }, { onConflict: 'kakao_id,cache_date,cache_type' });
+      }
+      setUsedItems(nextUsedItems);
+      setBoostPhase(null);
+      setPulledItem(null);
+
+      // 카운트업 애니메이션
+      const newScore = Math.min(100, prevScore + (item.boost || 10));
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      setDisplayScore(prevScore);
+      animateScore(prevScore, newScore, 1300, setDisplayScore, () => {
+        setDisplayScore(null);
+        if (newScore >= 100) setShowParticles(true);
+      });
+    } catch {
+      await animPromise;
+      setBoostPhase(null);
+      setPulledItem(null);
+    } finally {
+      setIsPurifying(false);
+    }
+  }, [kakaoId, usedItems, currentScore, onRefresh]);
+
   return (
     <div className="today-detail-container">
-      <PurifyOverlay visible={isPurifying} />
+      <PurifyOverlay visible={isPurifying && !boostPhase} />
+      <GoldenParticles active={showParticles} onComplete={() => setShowParticles(false)} />
+      <InstantBoostModal
+        phase={boostPhase}
+        pulledItem={pulledItem}
+        cost={INSTANT_BOOST_COST}
+        currentBp={gamificationState?.currentBp || 0}
+        onConfirm={handleBoostConfirm}
+        onClose={() => { setBoostPhase(null); setPulledItem(null); }}
+      />
 
       <div className="today-detail-header">
         <button className="today-detail-back-btn" onClick={() => setStep(0)} aria-label="홈으로 돌아가기">←</button>
@@ -166,12 +267,12 @@ export default function TodayDetailPage({
         <div style={{ width: 40 }} />
       </div>
 
-      <div className={`today-detail-content${isPurifying ? ' today-detail-content--blurred' : ''}`}>
+      <div className={`today-detail-content${(isPurifying && !boostPhase) ? ' today-detail-content--blurred' : ''}`}>
         {dailyLoading && !dailyResult ? (
           <PageSpinner />
         ) : dailyResult ? (
           <Suspense fallback={<PageSpinner />}>
-            <DailyRadarChart baseScore={dailyResult?.score} equippedItems={mergedEquippedItems} />
+            <DailyRadarChart baseScore={baseScore} equippedItems={mergedEquippedItems} />
             <AxisInsightPanel
               scores={axisScores}
               ownedRows={ownedRows}
@@ -183,8 +284,18 @@ export default function TodayDetailPage({
             {ownedRows && ownedRows.length > 0 && (
               <OneShotItemPicker scores={axisScores} ownedRows={ownedRows} onUse={handleUseItem} onInspect={setSelectedRow} canUseItems={canUseItems} />
             )}
-            <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult?.score} />
-            <BoostCTA hasBoostedToday={usedItems.length > 0} canPurify={canPurify} todayScore={dailyResult?.score} onPurify={handlePurify} isPurifying={isPurifying} setStep={setStep} />
+            <WeeklyTrendChart kakaoId={kakaoId} todayScore={baseScore} />
+            <BoostCTA
+              hasBoostedToday={usedItems.length > 0}
+              canPurify={canPurify}
+              todayScore={baseScore}
+              onPurify={handlePurify}
+              isPurifying={isPurifying}
+              setStep={setStep}
+              currentBp={gamificationState?.currentBp || 0}
+              boostCost={INSTANT_BOOST_COST}
+              onInstantBoost={!isScoreMaxed ? handleInstantBoost : undefined}
+            />
             <DailyStarCardV2
               result={dailyResult}
               onBlockBadtime={onBlockBadtime}

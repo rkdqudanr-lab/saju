@@ -61,7 +61,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
   const [chatHistory, setChatHistory] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
 
-  const { streamText: result, isStreaming: loading, startStream, resetStream } = useStreamResponse();
+  const { streamText: result, isStreaming: loading, streamError, startStream, resetStream } = useStreamResponse();
 
   useEffect(() => {
     if (!loading && result) {
@@ -185,7 +185,7 @@ ${msg}`;
           </div>
         </div>
 
-        {!result && (
+        {!result && !streamError && (
           <>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
@@ -286,7 +286,7 @@ ${msg}`;
           </>
         )}
 
-        {result && (
+        {(result || streamError) && (
           <div style={{ animation: 'fadeUp .4s ease' }}>
             {!loading && (
               <button
@@ -322,13 +322,15 @@ ${msg}`;
                     <div className="typing-dots"><span /><span /><span /></div>
                     <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontStyle: 'italic' }}>별숨이 꿈의 결을 읽고 있어요...</span>
                   </div>
+                ) : streamError ? (
+                  <div style={{ color: 'var(--rose)' }}>{streamError}</div>
                 ) : (
                   mainText
                 )}
               </div>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
+            {!streamError && <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 8 }}>더 궁금한 점이 있나요?</div>
               <button
                 onClick={() => setChatOpen(true)}
@@ -347,9 +349,9 @@ ${msg}`;
               >
                 별숨에게 더 물어보기
               </button>
-            </div>
+            </div>}
 
-            {chatOpen && followUps.length > 0 && chatHistory.length === 0 && (
+            {!streamError && chatOpen && followUps.length > 0 && chatHistory.length === 0 && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {followUps.map((q, i) => (
@@ -375,7 +377,7 @@ ${msg}`;
               </div>
             )}
 
-            {chatHistory.length > 0 && (
+            {!streamError && chatHistory.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 {chatHistory.map((m, i) => (
                   <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
@@ -409,7 +411,7 @@ ${msg}`;
               </div>
             )}
 
-            {!loading && chatOpen && (
+            {!loading && !streamError && chatOpen && (
               <div style={{ display: 'flex', gap: 8, marginTop: chatHistory.length > 0 ? 4 : 0 }}>
                 <input
                   value={chatInput}
@@ -445,7 +447,7 @@ ${msg}`;
               </div>
             )}
 
-            {onShareCard && mainText && (
+            {!streamError && onShareCard && mainText && (
               <button
                 onClick={() => onShareCard(mainText, form?.name)}
                 style={{

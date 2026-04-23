@@ -3,7 +3,7 @@ import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
-import { getAuthToken } from "../hooks/useUserProfile.js";
+import { postAsk } from "../lib/askApi.js";
 import { RELATION_TYPES } from "./OtherProfileModal.jsx";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 
@@ -109,23 +109,13 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
     const ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 28000);
     try {
-      const _token = getAuthToken();
-      const _headers = { 'Content-Type': 'application/json' };
-      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: _headers,
-        body: JSON.stringify({
-          userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요.`,
-          context: buildPartnerCtx(),
-          isChat: false, isReport: false, isScenario: false, isStory: true,
-          kakaoId: user?.id || null,
-          clientHour: new Date().getHours(),
-        }),
-        signal: ctrl.signal,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await postAsk({
+        userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요.`,
+        context: buildPartnerCtx(),
+        isChat: false, isReport: false, isScenario: false, isStory: true,
+        kakaoId: user?.id || null,
+        clientHour: new Date().getHours(),
+      }, { signal: ctrl.signal });
       saveRecentPartner(partner);
       try {
         const raw = data.text.replace(/```json|```/g, '').trim();

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { DIARY_PROMPT, getMoonPhase } from "../utils/constants.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
-import { getAuthToken } from "../hooks/useUserProfile.js";
+import { postAskText } from "../lib/askApi.js";
 import { useUserCtx, useSajuCtx } from "../context/AppContext.jsx";
 
 // ═══════════════════════════════════════════════════════════
@@ -287,23 +287,13 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
         return `[${e.date}] 기분:${moodLabel} 에너지:${e.energy || '?'}/5\n${e.content || '(내용 없음)'}`;
       }).join('\n\n');
 
-      const _token = getAuthToken();
-      const _headers = { 'Content-Type': 'application/json' };
-      if (_token) _headers['Authorization'] = `Bearer ${_token}`;
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: _headers,
-        body: JSON.stringify({
-          userMessage: `이번 달(${yyyy}년 ${now.getMonth() + 1}월)의 일기 ${entries.length}개를 사주·별자리 관점으로 따뜻하게 요약해줘요. 감정 흐름, 반복된 패턴, 성장한 부분을 짚어주세요.\n\n${entrySummary}`,
-          context: buildCtx?.() || '',
-          isChat: true,
-          kakaoId: user.id,
-          clientHour: now.getHours(),
-        }),
+      const text = await postAskText({
+        userMessage: `이번 달(${yyyy}년 ${now.getMonth() + 1}월)의 일기 ${entries.length}개를 사주·별자리 관점으로 따뜻하게 요약해줘요. 감정 흐름, 반복된 패턴, 성장한 부분을 짚어주세요.\n\n${entrySummary}`,
+        context: buildCtx?.() || '',
+        isChat: true,
+        kakaoId: user.id,
+        clientHour: now.getHours(),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      const text = data.text || '';
       setSummaryText(text);
       setShowSummary(true);
       await saveAnalysisCache(user.id, cacheKey, text);

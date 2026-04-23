@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
-import { getAuthToken } from '../hooks/useUserProfile.js';
+import { postAskText } from '../lib/askApi.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 import FeatureResultSheet from './FeatureResultSheet.jsx';
@@ -284,29 +284,19 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
 
       // AI 특별 상담 호출
       const ctx = buildCtx ? buildCtx() : '';
-      const token = getAuthToken();
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          userMessage: readingType.prompt,
-          context: ctx,
-          kakaoId,
-          clientHour: new Date().getHours(),
-          ...readingType.flag,
-        }),
+      const text = await postAskText({
+        userMessage: readingType.prompt,
+        context: ctx,
+        kakaoId,
+        clientHour: new Date().getHours(),
+        ...readingType.flag,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setResult(data.text || '');
+      setResult(text);
       saveConsultationHistoryEntry({
         user,
         consentFlags,
         questions: [`특별 리딩: ${readingType.title}`],
-        answers: [data.text || ''],
+        answers: [text],
       }).catch(() => {});
       await loadInventory();
     } catch {
@@ -317,7 +307,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
         await client
           .from('user_shop_inventory')
           .update({ is_equipped: false, equipped_at: null })
-          .eq('id', usedItem)
+          .eq('id', inventoryId)
           .eq('kakao_id', String(kakaoId));
       } catch {}
     } finally {
