@@ -7,6 +7,7 @@ import { detectBadtime } from "../utils/gamificationLogic.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
 import { getAuthenticatedClient } from "../lib/supabase.js";
+import { findItem } from "../utils/gachaItems.js";
 
 export default function DailyHoroscopePage({
   today,
@@ -81,6 +82,47 @@ export default function DailyHoroscopePage({
 
   // 정화 재점 상태
   const [isPurifying, setIsPurifying] = useState(false);
+
+  // 아이템 보관함 로드
+  const [ownedRows, setOwnedRows] = useState(null);
+  useEffect(() => {
+    if (!user || !dailyResult) return;
+    const kakaoId = user.kakaoId || user.id;
+    getAuthenticatedClient(String(kakaoId))
+      .from('user_shop_inventory')
+      .select('id, item_id')
+      .eq('kakao_id', String(kakaoId))
+      .then(({ data }) => {
+        const rows = (data || [])
+          .map((row) => ({ rowId: row.id, item: findItem(String(row.item_id)) }))
+          .filter((row) => row.item?.aspectKey);
+        setOwnedRows(rows);
+      })
+      .catch(() => setOwnedRows([]));
+  }, [user, dailyResult]);
+
+  // 아이템 사용 핸들러 (운세 점수 낮은 영역에 직접 사용)
+  const canUseItems = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
+  const handleUseItem = useCallback(async (row) => {
+    if (!row?.item || !askDailyHoroscope || !canUseItems) return;
+    setIsPurifying(true);
+    const animPromise = new Promise(r => setTimeout(r, 1200));
+    try {
+      await Promise.all([
+        askDailyHoroscope({
+          transientItems: [row.item],
+          skipBpCharge: true,
+          skipConfirm: true,
+          saveHistory: false,
+        }),
+        animPromise,
+      ]);
+    } catch {
+      await animPromise;
+    } finally {
+      setIsPurifying(false);
+    }
+  }, [askDailyHoroscope, canUseItems]);
 
   const handlePurify = useCallback(async () => {
     if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
@@ -187,7 +229,11 @@ export default function DailyHoroscopePage({
           <>
             {dailyResult ? (
               <>
-                <DailyStarCardV2 result={dailyResult} />
+                <DailyStarCardV2
+                  result={dailyResult}
+                  ownedRows={ownedRows}
+                  onUseItem={canUseItems ? handleUseItem : null}
+                />
 
                 {/* 장착된 메인 기운 공명 카드 */}
                 {equippedSajuItem && (
