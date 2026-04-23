@@ -3,7 +3,7 @@
  * 보유 아이템 확인 + 부적 장착/해제 + 합성 + 아이템 사용
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
@@ -969,6 +969,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const [detailItem, setDetailItem] = useState(null);
   const [showSynth, setShowSynth] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
+  const [sortMode, setSortMode] = useState('recommended');
 
   // 오늘 발동 — Supabase daily_cache (cache_type: 'daily_activation')
   const today = new Date().toISOString().slice(0, 10);
@@ -1159,9 +1160,63 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const equippedTalismanItem = items.find((item) => item.is_equipped && item.category === 'talisman') || null;
   const spiritCount = gachaItems.length;
   const utilityCount = shopItems.length;
+  const equippedSpiritCount = items.filter((item) => item.is_equipped && !!item.grade).length;
+  const equippedUtilityCount = items.filter((item) => item.is_equipped && !item.grade).length;
+  const todayActiveCount = equippedDailyItems.length + (equippedTalismanItem && !equippedDailyItems.some((item) => item.id === equippedTalismanItem.id) ? 1 : 0);
+
+  const recommendedItems = useMemo(() => {
+    const picked = [];
+    const seen = new Set();
+    const pushItem = (item) => {
+      if (!item || seen.has(item.id)) return;
+      seen.add(item.id);
+      picked.push(item);
+    };
+
+    pushItem(equippedSajuItem);
+    pushItem(equippedDailyItem);
+    pushItem(equippedTalismanItem);
+
+    items
+      .filter((item) => !item.is_equipped && !!item.grade)
+      .sort((a, b) => (b.boost || 0) - (a.boost || 0))
+      .slice(0, 4)
+      .forEach(pushItem);
+
+    return picked.slice(0, 4);
+  }, [equippedDailyItem, equippedSajuItem, equippedTalismanItem, items]);
+
+  const sortedFiltered = useMemo(() => {
+    const gradeRank = (item) => {
+      if (GRADE_ORDER.includes(item.grade)) return 100 - GRADE_ORDER.indexOf(item.grade);
+      if (SAJU_GRADE_ORDER.includes(item.grade)) return 100 - SAJU_GRADE_ORDER.indexOf(item.grade);
+      return 0;
+    };
+
+    const priorityScore = (item) => (
+      (item.is_equipped ? 100000 : 0) +
+      (isItemDailyActive(item, dailyActMap) ? 50000 : 0) +
+      (item.category === 'talisman' ? 10000 : 0) +
+      (item.boost || 0) * 100 +
+      gradeRank(item)
+    );
+
+    return [...filtered].sort((a, b) => {
+      if (sortMode === 'name') {
+        return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+      }
+      if (sortMode === 'recent') {
+        return new Date(b.unlocked_at || 0).getTime() - new Date(a.unlocked_at || 0).getTime();
+      }
+      if (sortMode === 'grade') {
+        return gradeRank(b) - gradeRank(a) || (b.boost || 0) - (a.boost || 0);
+      }
+      return priorityScore(b) - priorityScore(a) || String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+    });
+  }, [dailyActMap, filtered, sortMode]);
 
   const groupedItems = Object.entries(
-    filtered.reduce((acc, item) => {
+    sortedFiltered.reduce((acc, item) => {
       const key = item.aspectKey || 'general';
       if (!acc[key]) acc[key] = [];
       acc[key].push(item);
@@ -1179,6 +1234,10 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
     gap: 10,
     alignItems: 'stretch',
   };
+  const listSectionTitle = category === '전체' ? '전체 아이템' : `${category} 아이템`;
+  const listSectionHint = category === '전체'
+    ? '운세 축 기준으로 묶어서 필요한 아이템을 더 빨리 찾을 수 있어요.'
+    : '현재 선택한 필터에 맞는 아이템만 보여드려요.';
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 40 }}>
@@ -1233,6 +1292,26 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
                 borderRadius: 'var(--r1)',
                 border: '1px solid var(--line)',
                 background: 'var(--bg2)',
+              }}
+            >
+              <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 4 }}>{stat.label}</div>
+              <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: stat.tone }}>{stat.value}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 10 }}>
+          {[
+            { label: 'MAIN', value: equippedSpiritCount, tone: 'var(--gold)' },
+            { label: 'TODAY', value: todayActiveCount, tone: '#B48EF0' },
+            { label: 'ACTIVE', value: equippedUtilityCount, tone: '#7EC8A4' },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 'var(--r1)',
+                border: '1px solid var(--line)',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
               }}
             >
               <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 4 }}>{stat.label}</div>
@@ -1396,6 +1475,97 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
         ))}
       </div>
 
+      <div style={{
+        display: 'flex', gap: 6, padding: '0 24px 14px',
+        overflowX: 'auto', scrollbarWidth: 'none',
+      }}>
+        {[
+          { id: 'recommended', label: '추천순' },
+          { id: 'recent', label: '최근획득' },
+          { id: 'grade', label: '등급순' },
+          { id: 'name', label: '이름순' },
+        ].map((option) => (
+          <button
+            key={option.id}
+            onClick={() => setSortMode(option.id)}
+            style={{
+              flexShrink: 0,
+              padding: '6px 12px',
+              borderRadius: 20,
+              border: `1px solid ${sortMode === option.id ? 'var(--acc)' : 'var(--line)'}`,
+              background: sortMode === option.id ? 'var(--goldf)' : 'var(--bg2)',
+              color: sortMode === option.id ? 'var(--gold)' : 'var(--t3)',
+              fontWeight: sortMode === option.id ? 700 : 400,
+              fontSize: 'var(--xs)',
+              fontFamily: 'var(--ff)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      {recommendedItems.length > 0 && (
+        <div style={{ padding: '0 24px 14px' }}>
+          <div style={{
+            borderRadius: 'var(--r2)',
+            border: '1px solid rgba(232,176,72,0.18)',
+            background: 'linear-gradient(180deg, rgba(232,176,72,0.08), rgba(255,255,255,0))',
+            padding: '14px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+              <div>
+                <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>지금 보기 좋은 아이템</div>
+                <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 2 }}>장착 중이거나 바로 활용하기 좋은 아이템을 먼저 보여드려요.</div>
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 700 }}>{recommendedItems.length}개</div>
+            </div>
+            <div style={itemGridStyle}>
+              {recommendedItems.map((item, idx) => (
+                <OwnedItemCard
+                  key={`recommended-${item.id}-${idx}`}
+                  item={item}
+                  onToggleEquip={handleToggleEquip}
+                  toggling={toggling === item.id}
+                  onUse={setUseItem}
+                  dailyActMap={dailyActMap}
+                  onDailyActivate={handleDailyActivate}
+                  onDetail={setDetailItem}
+                  compact
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ padding: '0 24px 14px' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '12px 14px',
+          borderRadius: 'var(--r2)',
+          border: '1px solid var(--line)',
+          background: 'var(--bg2)',
+        }}>
+          <div>
+            <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
+              {listSectionTitle}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.6 }}>
+              {listSectionHint}
+            </div>
+          </div>
+          <div style={{ flexShrink: 0, fontSize: '11px', color: 'var(--gold)', fontWeight: 700 }}>
+            {sortedFiltered.length}개
+          </div>
+        </div>
+      </div>
+
       {/* 아이템 그리드 */}
       <div style={{ padding: '0 24px' }}>
         {loading ? (
@@ -1403,7 +1573,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
             <div style={{ fontSize: 28, marginBottom: 8 }}>✦</div>
             불러오는 중...
           </div>
-        ) : filtered.length === 0 ? (
+        ) : sortedFiltered.length === 0 ? (
           <div style={{
             textAlign: 'center', padding: '40px 20px',
             background: 'var(--bg2)', borderRadius: 'var(--r1)',
@@ -1488,7 +1658,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
           </div>
         ) : (
           <div style={itemGridStyle}>
-            {filtered.map((item, idx) => (
+            {sortedFiltered.map((item, idx) => (
               <OwnedItemCard
                 key={`${item.id}-${idx}`}
                 item={item}
