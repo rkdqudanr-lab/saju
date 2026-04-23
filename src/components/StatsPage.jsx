@@ -199,7 +199,7 @@ export default function StatsPage({ callApi }) {
     const kakaoId = user.kakaoId || user.id;
     loadHistory(kakaoId);
     loadScores(kakaoId);
-  }, [user]);
+  }, [user?.id]);
 
   async function loadHistory(kakaoId) {
     setLoading(true);

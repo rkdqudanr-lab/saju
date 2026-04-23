@@ -189,7 +189,7 @@ export default function LandingPage({
         const gachaItem = equipped.find(r => ['space', 'saju'].includes(r.system) || r.grade);
         setEquippedSajuItem(gachaItem || null);
       });
-  }, [user, setEquippedTalisman, setEquippedTheme, setEquippedAvatar, setEquippedSajuItem]);
+  }, [user?.id, setEquippedTalisman, setEquippedTheme, setEquippedAvatar, setEquippedSajuItem]);
 
   // 7일 운세 점수 히스토리 로드
   useEffect(() => {
@@ -217,7 +217,7 @@ export default function LandingPage({
         setScoreHistory(last7.reverse().map(date => ({ date, score: map[date] ?? null })));
       })
       .catch(() => {});
-  }, [user]);
+  }, [user?.id]);
 
   // 오늘 점수 받으면 히스토리에 즉시 반영
   useEffect(() => {
