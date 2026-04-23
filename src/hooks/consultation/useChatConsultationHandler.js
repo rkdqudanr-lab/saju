@@ -5,10 +5,20 @@ import { readStreamResponse } from "../../lib/streamTransport.js";
 const CHAT_ERROR_MESSAGE = "별과 연결이 잠시 끊겼어요. 다시 시도해볼까요?";
 
 function sanitizeChatReply(text) {
-  return String(text || "")
+  if (!text) return "";
+  let sanitized = String(text)
     .replace(/^\s*\[?요약\][^\n]*\n?/i, "")
-    .replace(/^\s*요약\s*[:：]\s*[^\n]*\n?/i, "")
-    .trimStart();
+    .replace(/^\s*요약\s*[:：]\s*[^\n]*\n?/i, "");
+
+  // 스트리밍 중 첫 글자가 [ 또는 요 등으로 시작할 때 잠깐 보였다가 사라지는 현상 방지
+  // 핵심 패턴의 시작 부분만 있는 경우 빈 문자열 반환
+  if (sanitized.length > 0 && sanitized.length < 4) {
+    if (/^\s*\[?요?약?\]?$/i.test(sanitized)) {
+      return "";
+    }
+  }
+
+  return sanitized.trimStart();
 }
 
 function compressChatHistory(history) {
@@ -183,6 +193,9 @@ export function useChatConsultationHandler({
     setChatHistory((prev) => [...prev, { role: "user", text: userMsg }, { role: "ai", text: "", streaming: true }]);
     setLatestChatIdx(-1);
     setChatLoading(true);
+
+    // 사용자가 요청한 자연스러운 연출을 위한 2초 지연 (AI가 생각하는 시간)
+    await new Promise(r => setTimeout(r, 2000));
 
     try {
       if (streamAbortRef.current) streamAbortRef.current.abort();

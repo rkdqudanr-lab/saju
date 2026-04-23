@@ -6,7 +6,12 @@ export function canUseDailySupabaseTables() {
 
 export function getDailyDateKey(date = new Date()) {
   const value = date instanceof Date ? date : new Date(date);
-  return value.toISOString().slice(0, 10);
+  // toISOString()은 UTC 기준이므로 한국 시간대에서 날짜가 어제로 표시되는 문제가 있음.
+  // 로컬 시간 기준 YYYY-MM-DD 반환
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, '0');
+  const d = String(value.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function buildDailyStorageKey(userId, type, date = getDailyDateKey()) {

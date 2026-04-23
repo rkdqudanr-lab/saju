@@ -1,12 +1,39 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ON } from "../utils/saju.js";
 import { parseAccSummary, breakAtNatural, SIGN_MOOD } from "../utils/constants.js";
 import AccItem, { FeedbackBtn } from "../components/AccItem.jsx";
 import PrecisionNudge from "../components/PrecisionNudge.jsx";
-import { useUserCtx } from "../context/AppContext.jsx";
-import { useSajuCtx } from "../context/AppContext.jsx";
-import { useGamCtx } from "../context/AppContext.jsx";
 import { postAsk } from "../lib/askApi.js";
+import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
+
+function extractFollowUpQuestions(raw) {
+  if (!raw) return [];
+  let parsed = null;
+
+  try {
+    parsed = JSON.parse(raw.trim());
+  } catch (e) {
+    const match = raw.match(/\[[\s\S]*?\]/);
+    if (match) {
+      try {
+        parsed = JSON.parse(match[0]);
+      } catch (e2) {}
+    }
+  }
+
+  if (Array.isArray(parsed)) {
+    return parsed.map((item, i) => {
+      if (typeof item === 'string') {
+        return { id: `fq_${i + 1}`, text: item };
+      }
+      if (item && typeof item === 'object' && item.text) {
+        return { id: item.id || `fq_${i + 1}`, text: item.text };
+      }
+      return null;
+    }).filter(Boolean);
+  }
+  return [];
+}
 
 const UNLOCK_COST = 10;
 
@@ -47,11 +74,9 @@ export default function ResultsStep({
             kakaoId: user?.id,
           });
           if (data.text) {
-            try {
-              const parsed = JSON.parse(data.text);
+            const parsed = extractFollowUpQuestions(data.text);
+            if (parsed.length > 0) {
               setFollowUpQuestions(parsed);
-            } catch (e) {
-              console.error('JSON Parse error for follow-up questions:', e);
             }
           }
         } catch (err) {

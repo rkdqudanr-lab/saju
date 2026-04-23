@@ -26,7 +26,6 @@ export function generateMissionsFromHoroscope(horoscopeText) {
   // ─────────────────────────────────────────────────────────────
   // 1. 색상 추출
   // 현재 AI 응답 포맷: "색: 하늘색 — 사주·별자리 근거."
-  //   또는 구형 포맷: "오늘의 색: 파란색"
   // ─────────────────────────────────────────────────────────────
   const colorPatterns = [
     /^색[:\s]+([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,    // 신형: 색: 하늘색 — 이유
@@ -58,12 +57,11 @@ export function generateMissionsFromHoroscope(horoscopeText) {
 
   // ─────────────────────────────────────────────────────────────
   // 2. 음식 추출
-  // 현재 AI 응답 포맷: "음식: 한식 + 안 매운 것 + 밥 ▶ 된장찌개 — 이유"
-  //   → ▶ 뒤 구체적 메뉴명을 추출
-  // 구형 포맷: "오늘의 음식: 김치찌개"
+  // 현재 AI 응답 포맷: "음식: 된장찌개 — 이유"
   // ─────────────────────────────────────────────────────────────
   const foodPatterns = [
-    /^음식:[^\n]*?▶\s*([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,  // 신형: ▶ 뒤 메뉴명
+    /^음식:[^\n]*?▶\s*([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,  // ▶ 포함 포맷
+    /^음식[:\s]+([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,       // "음식: 메뉴 — 이유" 포맷
     /오늘의 음식[:\s]+([가-힣0-9a-zA-Z\s]+?)(?:\n|$)/i,
     /음식[:\s]+([가-힣0-9a-zA-Z\s]+?)(?:\n|$)/i,
   ];
@@ -91,45 +89,42 @@ export function generateMissionsFromHoroscope(horoscopeText) {
 
   // ─────────────────────────────────────────────────────────────
   // 3. 장소/라이프 아이템 추출
-  // 현재 AI 응답 포맷: "장소: 조용한 독립서점 — 이유"
-  // 구형 포맷: "해도 좋은 것", "행운의 아이템" 등
+  // 현재 AI 응답 포맷: "장소: 카페 — 이유", "아이템: 볼펜 — 이유"
   // ─────────────────────────────────────────────────────────────
   const itemPatterns = [
-    /^장소[:\s]+([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,  // 신형: 장소: 카페 — 이유
-    /해도 좋은 것[^\n]*\n([^\n]+)/i,
+    /^장소[:\s]+([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,    // 장소
+    /^아이템[:\s]+([^—\-\n]+?)(?:\s*[—\-]|\n|$)/im,  // 아이템
     /행운의 아이템[:\s]+([^\n]+)/i,
     /오늘의 아이템[:\s]+([^\n]+)/i,
     /라이프 아이템[:\s]+([^\n]+)/i,
   ];
 
-  let itemMatch = null;
-  let isPlace = false;
   for (let i = 0; i < itemPatterns.length; i++) {
     const match = horoscopeText.match(itemPatterns[i]);
     if (match) {
-      itemMatch = match;
-      isPlace = i === 0; // 첫 번째 패턴이 장소 패턴
-      break;
-    }
-  }
-
-  if (itemMatch) {
-    const item = itemMatch[1].trim().split(/[,\n]/)[0].trim();
-    const itemContent = isPlace
-      ? `${item} 방문하기`
-      : (item.endsWith('하기') ? item : `${item}하기`);
-    if (item && item.length > 0 && item.length < 30) {
-      missions.push({
-        type: 'item',
-        content: itemContent,
-        originalValue: item,
-        bpReward: 10,
-      });
+      const isPlace = i === 0;
+      const item = match[1].trim().split(/[,\n]/)[0].trim();
+      const itemContent = isPlace
+        ? `${item} 방문하기`
+        : (item.endsWith('하기') ? item : `${item} 사용하기`);
+      
+      if (item && item.length > 0 && item.length < 30) {
+        missions.push({
+          type: isPlace ? 'item' : 'item', // UI 호환성을 위해 둘 다 item으로 처리 가능
+          content: itemContent,
+          originalValue: item,
+          bpReward: 10,
+        });
+      }
+      // 장소와 아이템 둘 다 찾을 수도 있으므로 loop 계속 가능하지만 
+      // 기존 로직은 첫 번째 매치만 사용하므로 break 유지 (필요시 중복 허용 가능)
+      break; 
     }
   }
 
   // ─────────────────────────────────────────────────────────────
   // 4. DO 실천 미션 추출 (5 BP)
+  // 현재 포맷: "DO: 가벼운 산책 (식신 — 이유)"
   // ─────────────────────────────────────────────────────────────
   const doPatterns = [
     /^DO:\s*(.+)/im,
@@ -143,7 +138,10 @@ export function generateMissionsFromHoroscope(horoscopeText) {
   }
 
   if (doMatch) {
-    const doContent = doMatch[1].trim().split(/[,\n]/)[0].trim();
+    let doContent = doMatch[1].trim().split(/[,\n]/)[0].trim();
+    // "(십신 — 이유)" 부분 제거
+    doContent = doContent.replace(/\s*\(.+?\)\s*$/, '').trim();
+
     if (doContent && doContent.length > 0 && doContent.length < 60) {
       missions.push({
         type: 'do',
@@ -156,6 +154,7 @@ export function generateMissionsFromHoroscope(horoscopeText) {
 
   // ─────────────────────────────────────────────────────────────
   // 5. DONT 주의 미션 추출 (5 BP)
+  // 현재 포맷: "DONT: 무리한 운동 (겁재 — 이유)"
   // ─────────────────────────────────────────────────────────────
   const dontPatterns = [
     /^DON'?T:\s*(.+)/im,
@@ -169,7 +168,10 @@ export function generateMissionsFromHoroscope(horoscopeText) {
   }
 
   if (dontMatch) {
-    const dontContent = dontMatch[1].trim().split(/[,\n]/)[0].trim();
+    let dontContent = dontMatch[1].trim().split(/[,\n]/)[0].trim();
+    // "(십신 — 이유)" 부분 제거
+    dontContent = dontContent.replace(/\s*\(.+?\)\s*$/, '').trim();
+
     if (dontContent && dontContent.length > 0 && dontContent.length < 60) {
       missions.push({
         type: 'dont',
@@ -180,7 +182,7 @@ export function generateMissionsFromHoroscope(horoscopeText) {
     }
   }
 
-  // 최대 5개 미션까지 반환 (color/menu/item + do/dont)
+  // 최대 5개 미션까지 반환
   return missions.slice(0, 5);
 }
 
