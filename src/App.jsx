@@ -129,19 +129,19 @@ export default function App() {
     toastTimer.current = setTimeout(() => setToast(null), TIMING.toastDuration);
   }, []);
 
-  // ?? Zustand State (App level) ??
+  // ── Zustand State (App level) ──
   const step = useAppStore((s) => s.step);
   const setStep = useAppStore((s) => s.setStep);
   const equippedTheme = useAppStore((s) => s.equippedTheme);
   const equippedAvatar = useAppStore((s) => s.equippedAvatar);
 
-  // showToast瑜?Zustand store??1??二쇱엯 (Context ?놁씠 而댄룷?뚰듃?먯꽌 吏곸젒 ?ъ슜 媛??
+  // showToast를 Zustand store에 직접 주입 (Context 없이 컴포넌트에서 직접 사용 가능)
   const _storeSetAuthFns    = useAppStore((s) => s.setAuthFns);
   const showUpgradeModal    = useAppStore((s) => s.showUpgradeModal);
   const setShowUpgradeModal = useAppStore((s) => s.setShowUpgradeModal);
   useEffect(() => { _storeSetAuthFns({ showToast }); }, [showToast, _storeSetAuthFns]);
 
-  // ?? 而ㅼ뒪? ????
+  // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
   const { user, profile, setProfile, form, setForm, otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
           otherForm, setOtherForm, showProfileModal, setShowProfileModal,
@@ -154,12 +154,12 @@ export default function App() {
           saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
           responseStyle, theme, onboarded, quizState, lifeStage, fontSize, saveSettings } = userProfile;
 
-  // isDark / onboardingDone / quiz ??userProfile?먯꽌 ?뚯깮
+  // isDark / onboardingDone / quiz 등 userProfile에서 추출
   const isDark          = theme === 'dark';
   const onboardingDone  = onboarded;
   const quiz            = quizState;
 
-  // ?? ?쇱쿂 ?ъ뼱 ?몃━嫄?(?⑤낫???꾨즺 ??step 0 泥??꾨떖 ??1?뚮쭔) ??
+  // ── 기능 투어 트리거 (온보딩 완료 후 step 0 최초 전달 시 1회만) ──
   useEffect(() => {
     if (step === 0 && onboardingDone && localStorage.getItem('byeolsoom_tour_v1') !== 'done') {
       const t = setTimeout(() => setShowTour(true), 700);
@@ -176,7 +176,7 @@ export default function App() {
   const sajuCtx = useSajuContext(form, profileWithMeta, activeProfileIdx, otherProfiles);
   const { today, saju, sun, moon, asc, age, formOk, formOkApprox, isApproximate, activeForm, activeSaju, activeSun, activeAge, ageRange, buildCtx } = sajuCtx;
 
-  // ?? 寃뚯씠誘명뵾耳?댁뀡 ?쒖뒪????
+  // ── 게이미피케이션 시스템 ──
   const gamification = useGamification(user, showToast);
   const {
     gamificationState, missions,
@@ -498,8 +498,8 @@ export default function App() {
             <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>Getting things ready</div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>Please wait a moment</div>
+            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>서비스를 준비하고 있어요</div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠시만 기다려 주세요</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
@@ -519,8 +519,8 @@ export default function App() {
             <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>Signing you in</div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>Please wait a moment</div>
+            <div style={{ fontSize: 'var(--md)', color: 'var(--t1)', fontWeight: 600, marginBottom: 8 }}>로그인 중입니다</div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)' }}>잠시만 기다려 주세요</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
@@ -612,7 +612,7 @@ export default function App() {
       </button>
 
       {step >= 1 && user && (
-        <div className="user-chip" onClick={() => setShowProfileModal(true)} title="Edit profile" style={{ cursor: 'pointer' }}>
+        <div className="user-chip" onClick={() => setShowProfileModal(true)} title="프로필 수정" style={{ cursor: 'pointer' }}>
           {equippedAvatar ? (
             <div style={{ fontSize: '1.2rem', lineHeight: 1 }}>{equippedAvatar.emoji}</div>
           ) : user.profileImage ? (
@@ -625,7 +625,7 @@ export default function App() {
       )}
       {step >= 1 && !user && (
         <button className="user-chip" onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }} style={{ border: '1px solid #FEE500', background: 'rgba(254,229,0,.1)' }}>
-          <span style={{ fontSize: '.75rem', color: 'var(--t2)' }}>Kakao Login</span>
+          <span style={{ fontSize: '.75rem', color: 'var(--t2)' }}>카카오 로그인</span>
         </button>
       )}
 
@@ -1189,7 +1189,7 @@ export default function App() {
         />
       )}
 
-      {/* ?? 移쒓뎄 珥덈? 紐⑤떖 ?? */}
+      {/* ── 친구 초대 모달 ── */}
       {showInviteModal && (
         <InviteModal
           user={user} showToast={showToast}
@@ -1197,7 +1197,7 @@ export default function App() {
         />
       )}
 
-      {/* ?쇨린 紐⑤떖 ?쒓굅????Step 17 DiaryPage濡??대룞 */}
+      {/* 일기 모달 삭제됨 Step 17 DiaryPage로 이동 */}
 
       {shareModal.open && (
         <ShareModal
@@ -1208,10 +1208,10 @@ export default function App() {
         />
       )}
 
-      {/* ?? BP ?ъ슜 ?뺤씤 紐⑤떖 ?? */}
+      {/* ── BP 사용 확인 모달 ── */}
       <BPConfirmModal />
 
-      {/* ?? ?섑샇???덈꺼??紐⑤떖 ?? */}
+      {/* ── 수호령 레벨업 모달 ── */}
       {guardianLevelUp && (
         <GuardianLevelUpModal
           fromLevel={guardianLevelUp.fromLevel}
@@ -1222,7 +1222,7 @@ export default function App() {
         />
       )}
 
-      {/* ?? ?숈쓽 ?앹뾽 ?? */}
+      {/* ── 동의 팝업 ── */}
       {showConsentModal && (
         <Suspense fallback={<PageSpinner />}>
           <ConsentModal
