@@ -116,9 +116,9 @@ export default function App() {
   const [showAllCats, setShowAllCats] = useState(false);
   const [quizInput, setQuizInput] = useState('');
   const [sidebarPrefs, setSidebarPrefs] = useState({ hiddenGroups: [] });
-  const [todayDiaryWritten, setTodayDiaryWritten] = useState(null); // null=誘명솗?? true/false
+  const [todayDiaryWritten, setTodayDiaryWritten] = useState(null); // null=미확인, true/false
   const [anonCompatShareData, setAnonCompatShareData] = useState(null);
-  const [diaryViewDate, setDiaryViewDate] = useState(null); // null=?ㅻ뒛, 'YYYY-MM-DD'=?뱀젙 ?좎쭨
+  const [diaryViewDate, setDiaryViewDate] = useState(null); // null=오늘, 'YYYY-MM-DD'=특정 날짜
   const toastTimer = useRef(null);
   const resultsRef = useRef(null);
   const askBtnRef = useRef(null);

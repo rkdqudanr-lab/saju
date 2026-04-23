@@ -5,7 +5,7 @@ import { parseHoroscopeForGamification } from "../../utils/missionGenerator.js";
 import { spendBP as spendBPUtil } from "../../utils/gamificationLogic.js";
 
 const BM_COST_PER_ASK = 10;
-const ERR_MSG = '蹂꾩씠 ?좎떆 ?ш퀬 ?덉뼱???뙔\n?좎떆 ???ㅼ떆 ?쒕룄?대킄??';
+const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!';
 
 export function useDailyConsultationHandler({
   formOk,
@@ -46,13 +46,13 @@ export function useDailyConsultationHandler({
       }
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
-        if (showToast) showToast(`BP媛 遺議깊빐?? (?꾩슂: ${BM_COST_PER_ASK} BP, 蹂댁쑀: ${currentBm} BP)`, "error");
+        if (showToast) showToast(`BP가 부족해요. (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, "error");
         return false;
       }
       const authClient = getAuthenticatedClient(user.id);
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, BM_COST_PER_ASK, "DAILY_HOROSCOPE");
       if (!ok) {
-        if (showToast) showToast("BP媛 遺議깊빐??", "error");
+        if (showToast) showToast("BP가 부족해요.", "error");
         return false;
       }
       const cur = useAppStore.getState().gamificationState || {};
@@ -65,7 +65,7 @@ export function useDailyConsultationHandler({
     if (typeof window.gtag === "function") window.gtag("event", "daily_horoscope_click");
     setDailyLoading(true);
     try {
-      const ans = await callApi("?ㅻ뒛 ?섎（ ?섏쓽 蹂꾩닲??", {
+      const ans = await callApi("오늘 하루 나의 별숨은?", {
         isDaily: true,
         transientItems: options.transientItems || [],
       });
@@ -110,12 +110,12 @@ export function useDailyConsultationHandler({
             saveDailyCache(user.id, "horoscope_score", String(gamData.score)).catch(() => {});
           }
         } catch (gamErr) {
-          console.error("[蹂꾩닲] 寃뚯씠誘명뵾耳?댁뀡 泥섎━ ?ㅻ쪟:", gamErr);
+          console.error("[별숨] 게이미피케이션 처리 오류:", gamErr);
         }
       }
 
       if (shouldSaveHistory) {
-        saveHistoryToSupabase(["?ㅻ뒛 ?섎（ ?섏쓽 蹂꾩닲??"], [ans], timeSlot);
+        saveHistoryToSupabase(["오늘 하루 나의 별숨은?"], [ans], timeSlot);
       }
 
       return true;
@@ -127,7 +127,7 @@ export function useDailyConsultationHandler({
   }, [callApi, dailyCount, dailyLoading, dailyMax, formOk, getTodayDateStr, onDailyLimitReached, onMissionsSaved, saveDailyCache, saveHistoryToSupabase, showToast, timeSlot, user?.id]);
 
   const askReview = useCallback(async (text, prompt) => {
-    const ans = await callApi(`[吏덈Ц]\n${prompt}\n\n[?ㅻ뒛 ?덉뿀????\n${text}`);
+    const ans = await callApi(`[질문]\n${prompt}\n\n[오늘 있었던 일]\n${text}`);
     const q = `오늘 하루 회고: ${text.slice(0, 30)}${text.length > 30 ? "…" : ""}`;
     saveHistoryToSupabase([q], [ans], timeSlot);
     return { question: q, answer: ans };
@@ -137,7 +137,7 @@ export function useDailyConsultationHandler({
     if (!formOk) return null;
     setDiaryReviewLoading(true);
     try {
-      const ans = await callApi(`[吏덈Ц]\n${prompt}\n\n[?ㅻ뒛 ?덉뿀????\n${text}`);
+      const ans = await callApi(`[질문]\n${prompt}\n\n[오늘 있었던 일]\n${text}`);
       setDiaryReviewResult(ans);
       if (user?.id) await saveDailyCache(user.id, "diary_review", ans);
       const q = `오늘 하루 회고: ${text.slice(0, 30)}${text.length > 30 ? "…" : ""}`;
@@ -152,7 +152,7 @@ export function useDailyConsultationHandler({
   }, [callApi, formOk, saveDailyCache, saveHistoryToSupabase, timeSlot, user?.id]);
 
   const askWeeklyReview = useCallback(async (text) => {
-    const ans = await callApi(`[?대쾲 二쇱쓽 寃쏀뿕怨?媛먯젙]\n${text}`, { isWeekly: true });
+    const ans = await callApi(`[이번 주의 경험과 감정]\n${text}`, { isWeekly: true });
     const q = `이번 주 회고: ${text.slice(0, 30)}${text.length > 30 ? "…" : ""}`;
     saveHistoryToSupabase([q], [ans], timeSlot);
     return { question: q, answer: ans };
