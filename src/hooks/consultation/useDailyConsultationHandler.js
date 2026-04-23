@@ -88,16 +88,21 @@ export function useDailyConsultationHandler({
 
           if (gamData.missions && gamData.missions.length > 0) {
             await client.from("missions").delete().eq("kakao_id", String(user.id)).eq("date", today);
-            for (const mission of gamData.missions) {
-              await client.from("missions").insert({
+            const uniqueMissions = Array.from(
+              new Map(gamData.missions.map((mission) => [mission.type, mission])).values()
+            );
+            const { error: missionError } = await client.from("missions").upsert(
+              uniqueMissions.map((mission) => ({
                 kakao_id: String(user.id),
                 date: today,
                 mission_type: mission.type,
                 mission_content: mission.content,
                 bp_reward: mission.bpReward || 10,
                 is_completed: false,
-              });
-            }
+              })),
+              { onConflict: "kakao_id,date,mission_type" }
+            );
+            if (missionError) throw missionError;
             if (typeof onMissionsSaved === "function") onMissionsSaved();
           }
 

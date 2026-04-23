@@ -125,12 +125,12 @@ export default function DailyHoroscopePage({
     if (!client) return;
     client
       .from('user_shop_inventory')
-      .select('id, item_id')
+      .select('item_id')
       .eq('kakao_id', String(kakaoId))
       .then(({ data, error }) => {
         if (error) { setOwnedRows([]); return; }
         const rows = (data || [])
-          .map((row) => ({ rowId: row.id, item: findItem(String(row.item_id)) }))
+          .map((row) => ({ rowId: String(row.item_id), item: findItem(String(row.item_id)) }))
           .filter((row) => row.item?.aspectKey);
         setOwnedRows(rows);
       })

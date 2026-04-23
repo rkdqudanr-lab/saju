@@ -380,10 +380,11 @@ export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE',
 
     // 로그 기록 (실패해도 구매 자체는 성공으로 처리)
     try {
+      const logReason = `${reason}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       await client.from('daily_bp_log').insert({
         kakao_id: String(kakaoId),
         bp_amount: -amount,
-        reason,
+        reason: logReason,
       });
     } catch { /* 로그 실패는 무시 */ }
 
