@@ -706,7 +706,7 @@ export function useConsultation(
 
   const { reportText, reportLoading, genReport } = reportHandler;
 
-  return {
+  return useMemo(() => ({
     timeSlot,
     loadingMsgIdx,
     step,
