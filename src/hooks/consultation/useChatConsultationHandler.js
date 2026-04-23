@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { getAuthToken } from "../useUserProfile.js";
 
-const CHAT_ERROR_MESSAGE = "?? ?좉퉸 ?곌껐???딄꼈?댁슂 ?뙔 ?ㅼ떆 ?쒕룄?대킄??";
+const CHAT_ERROR_MESSAGE = "별과 연결이 끊겼어요 🌙 다시 시도해봐요.";
 
 function sanitizeChatReply(text) {
   return String(text || "")
@@ -12,36 +12,36 @@ function sanitizeChatReply(text) {
 
 function compressChatHistory(history) {
   if (history.length <= 6) {
-    return history.map((m) => `[${m.role === "ai" ? "蹂꾩닲" : "??"}] ${m.text}`).join("\n");
+    return history.map((m) => `[${m.role === "ai" ? "별숨" : "나"}] ${m.text}`).join("\n");
   }
   const recent = history.slice(-6);
   const older = history.slice(0, -6);
   const summary = older.filter((m) => m.role === "ai").map((m) => m.text.slice(0, 70).replace(/\n/g, " ")).join(" / ");
-  const recentText = recent.map((m) => `[${m.role === "ai" ? "蹂꾩닲" : "??"}] ${m.text}`).join("\n");
-  return `[?댁쟾 ????붿빟] ${summary || "(?놁쓬)"}\n\n[理쒓렐 ???\n${recentText}`;
+  const recentText = recent.map((m) => `[${m.role === "ai" ? "별숨" : "나"}] ${m.text}`).join("\n");
+  return `[이전 대화 요약] ${summary || "(없음)"}\n\n[최근 대화]\n${recentText}`;
 }
 
 function buildChatPrompt(prevQAs, prevChat, userMsg) {
-  return `?뱀떊? 蹂꾩닲?낅땲?? ?ъ슜?먯쓽 ?ъ＜? 蹂꾩옄由щ? 源딆씠 ?꾨뒗 移쒗븳 移쒓뎄泥섎읆, 硫붿떊??먯꽌 ?고궎?移댄븯??吏㏐퀬 ?먯뿰?ㅻ읇寃??듯빐二쇱꽭??
+  return `당신은 별숨입니다. 사용자의 사주와 별자리를 깊이 아는 친한 친구처럼, 메신저에서 티키타카하며 짧고 자연스럽게 대화해주세요.
 
-諛섎뱶??吏??洹쒖튃:
-- 諛섎쭚? ?곗? 留먭퀬, ?ㅼ젙??議대뙎留먮쭔 ?ъ슜?섏꽭??
-- ?듬?? 1~3臾몄옣 ?대궡濡?吏㏐쾶 留먰븯?몄슂.
-- 泥?臾몄옣? 吏덈Ц??????듬쭔 諛붾줈 留먰븯?몄슂.
-- ?댁쑀, 洹쇨굅, 諛곌꼍 ?ㅻ챸? ?ъ슜?먭? "??, "?댁쑀", "洹쇨굅", "??洹몃젃寃?蹂댁뿬?"泥섎읆 吏곸젒 臾쇱뿀???뚮쭔 留먰븯?몄슂.
-- ?ъ슜?먭? ?댁쑀瑜?臾살? ?딆븯?쇰㈃ ?댁꽕, 遺꾩꽍, ?덉닔, 二쇱쓽?ы빆??癒쇱? 湲멸쾶 ?㏓텤?댁? 留덉꽭??
-- "[?붿빟]", "醫낇빀", "?ъ＜?댁슜", "?먯꽦??, "異붿쿇?됰룞" 媛숈? ?뚯젣紐⑹쓣 ?덈? ?곗? 留덉꽭??
-- 踰덊샇 紐⑸줉, 遺덈┸, 以꾨컮轅??섏뿴 ?놁씠 ?먯뿰?ㅻ윭??梨꾪똿 臾몄옣?쇰줈留??듯븯?몄슂.
-- 留먰닾???ㅼ젣 梨꾪똿泥섎읆 媛蹂띻퀬 吏㏐쾶, 怨쇳븯寃??뺣━???ㅻ챸泥대뒗 ?쇳븯?몄슂.
-- ?댁쟾 ?곷떞 ?먮쫫怨?諛⑷툑 吏덈Ц??諛붾줈 ?댁뼱???듯븯?몄슂.
+반드시 지킬 규칙:
+- 반말은 쓰지 말고, 다정다감한 존댓말만 사용하세요.
+- 답변은 1~3문장 이내로 짧게 말하세요.
+- 첫 문장은 질문에 대한 답만 바로 말하세요.
+- 이유, 근거, 배경 설명은 사용자가 "왜?", "이유", "근거", "왜 그렇게 보여?"처럼 직접 물었을 때만 말하세요.
+- 사용자가 이유를 묻지 않았다면 해설, 분석, 횟수, 주의사항을 먼저 길게 덧붙이지 마세요.
+- "[요약]", "종합", "사주내용", "구성성분", "추천행동" 같은 소제목을 절대 쓰지 마세요.
+- 번호 목록, 불렛, 줄바꿈 나열 없이 자연스러운 채팅 문장으로만 말하세요.
+- 말투는 실제 채팅처럼 가볍고 짧게, 과하게 정리된 설명체는 피하세요.
+- 이전 상담 흐름과 방금 질문을 바로 이어서 대화하세요.
 
-[?댁쟾 ?곷떞 ?붿빟]
+[이전 상담 요약]
 ${prevQAs}
 
-[?댁쟾 ???
+[이전 대화]
 ${prevChat}
 
-[?ъ슜??吏덈Ц]
+[사용자 질문]
 ${userMsg}`;
 }
 
@@ -84,8 +84,8 @@ export function useChatConsultationHandler({
     setChatInput("");
     setChatHistory((p) => [...p, { role: "user", text: userMsg }]);
     setChatLoading(true);
-    const prevQAs = selQs.map((q, i) => `[吏덈Ц ${i + 1}] ${q}\n[?듬?] ${answers[i] || ""}`).join("\n\n");
-    const prevChat = chatHistory.map((m) => `[${m.role === "ai" ? "蹂꾩닲" : "??"}] ${m.text}`).join("\n");
+    const prevQAs = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${answers[i] || ""}`).join("\n\n");
+    const prevChat = chatHistory.map((m) => `[${m.role === "ai" ? "별숨" : "나"}] ${m.text}`).join("\n");
     const chatPrompt = buildChatPrompt(prevQAs, prevChat, userMsg);
     try {
       const aiText = sanitizeChatReply(await callApi(chatPrompt, { isChat: true }));
@@ -104,8 +104,8 @@ export function useChatConsultationHandler({
 
   const generateChatSuggestions = useCallback(async () => {
     if (chatHistory.length > 0) return null;
-    const prevQAs = selQs.map((q, i) => `[吏덈Ц ${i + 1}] ${q}\n[?듬?] ${(answers[i] || "").slice(0, 300)}`).join("\n\n");
-    const prompt = `[?댁쟾 ?곷떞]\n${prevQAs}\n\n[?붿껌]\n?댁쟾 ?곷떞 ?댁슜怨??묐떟??諛뷀깢?쇰줈, ?ъ슜?먭? 蹂꾩닲?먭쾶 ?댁뼱???먯뿰?ㅻ읇寃?臾쇱뼱蹂?留뚰븳 ?꾩냽 吏덈Ц 5媛쒕? ?앹꽦?댁＜?몄슂.\n- ?ㅼ젣 梨꾪똿李쎌뿉 諛붾줈 ?뚮윭 蹂대궪 ???덇쾶 吏㏐퀬 ?먯뿰?ㅻ윭???쒓뎅??援ъ뼱泥대줈 ?묒꽦?댁＜?몄슂\n- 蹂닿퀬?쒖떇 ?쒗쁽 留먭퀬 ??뷀븯???⑥＜?몄슂\n- ?ㅻ챸怨?踰덊샇??鍮쇨퀬 ?띿뒪?몃쭔 ?곸뼱二쇱꽭??n1. [吏덈Ц?댁슜]\n2. [吏덈Ц?댁슜]\n3. [吏덈Ц?댁슜]\n4. [吏덈Ц?댁슜]\n5. [吏덈Ц?댁슜]`;
+    const prevQAs = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${(answers[i] || "").slice(0, 300)}`).join("\n\n");
+    const prompt = `[이전 상담]\n${prevQAs}\n\n[요청]\n이전 상담 내용과 답변을 바탕으로, 사용자가 별숨에게 이어서 자연스럽게 물어볼 만한 후속 질문 5개를 생성해주세요.\n- 실제 채팅창에 바로 눌러 보내볼 수 있게 짧고 자연스러운 한국어 구어체로 작성해주세요\n- 보고서식 표현 말고 대화하듯 써주세요\n- 설명과 번호는 빼고 텍스트만 적어주세요\n1. [질문내용]\n2. [질문내용]\n3. [질문내용]\n4. [질문내용]\n5. [질문내용]`;
     try {
       const text = await callApi(prompt, { isChat: true });
       const lines = text.split("\n").map((l) => l.replace(/^\d+\.\s*/, "").replace(/^[-\*]\s*/, "").trim()).filter(Boolean).slice(0, 5);
@@ -127,7 +127,7 @@ export function useChatConsultationHandler({
     if (typeof window.gtag === "function") window.gtag("event", "send_chat");
     const userMsg = rawText.trim();
     setChatInput("");
-    const prevQAs = selQs.map((q, i) => `[吏덈Ц ${i + 1}] ${q}\n[?듬?] ${(answers[i] || "").slice(0, 150)}`).join("\n\n");
+    const prevQAs = selQs.map((q, i) => `[질문 ${i + 1}] ${q}\n[답변] ${(answers[i] || "").slice(0, 150)}`).join("\n\n");
     const prevChat = compressChatHistory(chatHistory);
     const streamChatPrompt = buildChatPrompt(prevQAs, prevChat, userMsg);
     const chatContext = `${buildCtx()}\n\n[채팅 응답 규칙]\n이번 응답은 채팅 모드입니다. [요약], 제목, 섹션 헤더를 쓰지 말고 바로 대화체로 이어서 답하세요. 첫 문장을 요약처럼 시작하지 말고 자연스럽게 이어가세요.`;
@@ -143,7 +143,7 @@ export function useChatConsultationHandler({
       const headers = { "Content-Type": "application/json" };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch("/api/stream", {
+      const res = await fetch("/api/ask", { // stream.js 대신 ask.js 사용 (isChat 플래그로 처리 가능하게 변경됨)
         method: "POST",
         headers,
         signal,
@@ -158,11 +158,11 @@ export function useChatConsultationHandler({
       });
       if (res.status === 401) {
         if (typeof onSessionExpired === "function") onSessionExpired();
-        if (typeof showToast === "function") showToast("?몄뀡??留뚮즺?먯뼱?? ?ㅼ떆 濡쒓렇?명빐二쇱꽭???뙔", "warn");
+        if (typeof showToast === "function") showToast("세션이 만료되었어요 🌙 다시 로그인해주세요.", "warn");
         if (typeof onLoginRequired === "function") onLoginRequired();
         throw new Error("SESSION_EXPIRED");
       }
-      if (!res.ok) throw new Error("?ㅽ듃由щ컢 API ?ㅻ쪟");
+      if (!res.ok) throw new Error("스트림 API 오류");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();

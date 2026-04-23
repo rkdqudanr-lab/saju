@@ -282,7 +282,7 @@ function CompatCard({ post, myKakaoId, onLike, liked }) {
                 fontFamily: 'var(--ff)',
               }}
             >
-              💌 편지 보내기 (500 BP)
+              💌 편지 보내기 (50 BP)
             </button>
             <button
               onClick={() => onLike(post, 'follow')}
@@ -341,7 +341,7 @@ function LetterModal({ post, onClose, onSubmit, loading }) {
           인연에게 편지 보내기
         </div>
         <div style={{ fontSize: '11px', color: 'var(--t4)', textAlign: 'center', marginBottom: 16 }}>
-          전송 시 500 BP가 차감되고, 상대방에게 익명 편지가 전달돼요.
+          전송 시 50 BP가 차감되고, 상대방에게 익명 편지가 전달돼요.
         </div>
 
         <textarea
@@ -560,7 +560,7 @@ export default function AnonCompatPage({ showToast, shareData: incomingShareData
     setLetterLoading(true);
     try {
       const client = getAuthenticatedClient(kakaoId);
-      const { ok } = await spendBP(client, String(kakaoId), 500, `LETTER_${Date.now()}`, '편지 전송');
+      const { ok } = await spendBP(client, String(kakaoId), 50, `LETTER_${Date.now()}`, '편지 전송');
       if (!ok) {
         showToast?.('BP가 부족해요. 500 BP가 필요해요.', 'error');
         return;
@@ -620,7 +620,7 @@ export default function AnonCompatPage({ showToast, shareData: incomingShareData
   const compatTier = shareData ? getCompatTier(shareData.compatScore || 75) : getCompatTier(75);
 
   return (
-    <div className="page step-fade" style={{ paddingBottom: 40 }}>
+    <div className="page step-fade" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 16px))' }}>
       <div style={{ padding: '28px 24px 16px' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
           익명 궁합 광장

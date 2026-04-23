@@ -4,11 +4,11 @@ const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --ff:'Pretendard',-apple-system,sans-serif;
-  --bg:#0D0B14;--bg1:#13101E;--bg2:#1A1628;--bg3:#221E33;--bg4:#2A2340;
-  --line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.04);
-  --t1:#F0EBF8;--t2:#C8BEDE;--t3:#8A7FA0;--t4:#6B6090;
-  --gold:#E8B048;--gold2:#C89030;
-  --goldf:rgba(232,176,72,.1);--golds:rgba(232,176,72,.05);--acc:rgba(232,176,72,.2);
+  --bg:#07050A;--bg1:#0D0B14;--bg2:#151221;--bg3:#1C182B;--bg4:#25203A;
+  --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.05);
+  --t1:#F8F6FF;--t2:#D4CCE6;--t3:#A499C0;--t4:#7A6E9B;
+  --gold:#FFC85C;--gold2:#E8B048;
+  --goldf:rgba(255,200,92,.08);--golds:rgba(255,200,92,.04);--acc:rgba(255,200,92,.15);
   --lav:#9B8EC4;--lavf:rgba(155,142,196,.1);--lavacc:rgba(155,142,196,.25);
   --teal:#6BBFB5;--tealf:rgba(107,191,181,.1);--tealacc:rgba(107,191,181,.25);
   --rose:#E87B8A;--rosef:rgba(232,123,138,.1);--roseacc:rgba(232,123,138,.25);
@@ -35,7 +35,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 /* ══ 토스트 알림 ══ */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:999;max-width:340px;width:90%;padding:12px 20px;border-radius:var(--r1);font-size:var(--sm);text-align:center;animation:fadeUp .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom, 16px));left:50%;transform:translateX(-50%);z-index:999;max-width:340px;width:90%;padding:12px 20px;border-radius:var(--r1);font-size:var(--sm);text-align:center;animation:fadeUp .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.25)}
 .toast-error{background:#e05a3a;color:#fff}
 .toast-success{background:var(--gold);color:#0D0B14}
 .toast-warn{background:var(--rose);color:#fff}

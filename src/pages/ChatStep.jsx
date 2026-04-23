@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { ChatBubble } from '../components/AccItem.jsx';
 
 function getContextualChips(chatHistory) {
@@ -91,6 +91,15 @@ export default function ChatStep({
   const lastMsg = chatHistory[chatHistory.length - 1];
   const lastMsgIsStreaming = lastMsg?.streaming === true;
 
+  // 진입 시 pre-fill된 메시지가 있으면 자동 전송
+  const autoSent = useRef(false);
+  useEffect(() => {
+    if (chatInput && chatHistory.length === 0 && !chatLoading && !autoSent.current) {
+      autoSent.current = true;
+      handleSendChat(chatInput);
+    }
+  }, [chatInput, chatHistory.length, chatLoading, handleSendChat]);
+
   const { listening, unsupported, toggle: toggleVoice } = useVoiceInput((text) => {
     setChatInput((prev) => (prev ? `${prev} ${text}` : text));
   });
@@ -103,7 +112,7 @@ export default function ChatStep({
     <div className="chat-page">
       <div className="chat-page-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div className="chat-page-title">별숨에게 더 물어보기</div>
+          <div className="chat-page-title">별숨과 더 깊은 대화하기</div>
           {chatHistory.length > 0 && (
             <button className="res-top-btn" style={{ flexShrink: 0, marginTop: 2 }} onClick={handleSaveChatImage}>
               저장

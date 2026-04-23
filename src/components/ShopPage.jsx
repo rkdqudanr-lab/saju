@@ -26,7 +26,7 @@ import ShopItemGraphic from './ShopItemGraphic.jsx';
 
 // ─── 상수 ────────────────────────────────────────────────────
 const SPIRIT_COST_1 = 10, SPIRIT_COST_10 = 90;
-const SHOP_COST_1   = 20, SHOP_COST_10   = 180;
+const SHOP_COST_1   = 10, SHOP_COST_10   = 90;
 const DUPLICATE_REFUND = 5;
 
 const MAIN_TABS = [
@@ -729,7 +729,7 @@ export default function ShopPage({ showToast }) {
 
   // ─── 렌더 ────────────────────────────────────────────────────
   return (
-    <div className="page step-fade" style={{ paddingBottom: 52, alignItems: 'stretch' }}>
+    <div className="page step-fade" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 16px))', alignItems: 'stretch' }}>
       <div style={{ width: '100%', maxWidth: 460, margin: '0 auto', padding: '0 16px' }}>
 
       {/* 헤더 */}

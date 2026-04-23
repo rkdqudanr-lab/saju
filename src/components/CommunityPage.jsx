@@ -193,43 +193,54 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
   const hot = isHotPost(post);
 
   return (
-    <div style={{
-      background: 'var(--bg1)',
-      border: `1px solid ${hot ? 'rgba(232,176,72,.35)' : 'var(--line)'}`,
+    <div className={`glass ${hot ? 'glass-gold' : ''}`} style={{
       borderRadius: 'var(--r2, 16px)',
-      padding: '16px 16px 12px',
+      padding: '18px 18px 14px',
       display: 'flex',
       flexDirection: 'column',
-      gap: 8,
+      gap: 12,
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      boxShadow: hot ? '0 8px 32px rgba(232,176,72,0.15)' : '0 4px 16px rgba(0,0,0,0.1)',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
-      {/* 인기글 배지 */}
+      {/* 인기글 배지 - 상단 우측 고정 느낌으로 변경 */}
       {hot && (
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 4,
-          fontSize: '10px', fontWeight: 700, color: '#E06040',
-          marginBottom: -4,
+          position: 'absolute', top: 0, right: 0,
+          padding: '4px 12px',
+          background: 'linear-gradient(90deg, #E06040, #FFC85C)',
+          color: '#fff',
+          fontSize: '9px', fontWeight: 800,
+          borderRadius: '0 0 0 12px',
+          letterSpacing: '0.05em',
+          boxShadow: '0 2px 8px rgba(224,96,64,0.3)',
+          zIndex: 2,
         }}>
-          🔥 인기 게시글
+          HOT ✦ 인기
         </div>
       )}
+
       {/* 상단: 아바타 + 별자리/일간 + 팔로우 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
-          width: 32, height: 32, borderRadius: '50%',
+          width: 36, height: 36, borderRadius: '12px',
           background: `${avatarColor}22`,
-          border: `2px solid ${avatarColor}66`,
+          border: `1.5px solid ${avatarColor}44`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 14, flexShrink: 0, color: avatarColor, fontWeight: 700,
+          fontSize: 16, flexShrink: 0, color: avatarColor, fontWeight: 800,
+          boxShadow: `0 4px 12px ${avatarColor}15`,
         }}>
           {post.ilgan ? post.ilgan : '✦'}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>
+          <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>
             {post.nickname || '별숨 유저'}
           </div>
-          <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 1 }}>
-            {[post.sun_sign, post.ilgan ? `${post.ilgan}일간` : null].filter(Boolean).join(' · ')}
-            &nbsp;·&nbsp;{timeLabel}
+          <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>{[post.sun_sign, post.ilgan ? `${post.ilgan}일간` : null].filter(Boolean).join(' · ')}</span>
+            <span style={{ opacity: 0.4 }}>|</span>
+            <span>{timeLabel}</span>
           </div>
         </div>
         {myKakaoId && (isOther ? (
@@ -237,50 +248,52 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
             <button
               onClick={() => onSynergy(post)}
               style={{
-                padding: '4px 10px',
-                borderRadius: 20,
-                border: '1px solid var(--gold)',
+                padding: '6px 12px',
+                borderRadius: '10px',
+                border: '1.5px solid var(--gold)',
                 background: 'var(--goldf)',
                 cursor: 'pointer',
                 fontFamily: 'var(--ff)',
-                fontSize: '10px',
+                fontSize: '11px',
                 color: 'var(--gold)',
                 fontWeight: 700,
                 flexShrink: 0,
+                transition: 'all 0.2s',
               }}
             >
-              궁합
+              시너지
             </button>
             <button
               onClick={() => onFollow(post.kakao_id)}
               style={{
-                padding: '4px 10px',
-                borderRadius: 20,
-                border: `1px solid ${isFollowing ? 'var(--line)' : 'var(--acc)'}`,
-                background: isFollowing ? 'none' : 'var(--goldf)',
+                padding: '6px 12px',
+                borderRadius: '10px',
+                border: `1.5px solid ${isFollowing ? 'var(--line)' : 'var(--acc)'}`,
+                background: isFollowing ? 'rgba(255,255,255,0.05)' : 'var(--goldf)',
                 cursor: 'pointer',
                 fontFamily: 'var(--ff)',
-                fontSize: '10px',
+                fontSize: '11px',
                 color: isFollowing ? 'var(--t4)' : 'var(--gold)',
-                fontWeight: isFollowing ? 400 : 700,
+                fontWeight: isFollowing ? 500 : 700,
                 flexShrink: 0,
+                transition: 'all 0.2s',
               }}
             >
               {isFollowing ? '팔로잉' : '팔로우'}
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
             <button
               onClick={() => onEdit(post)}
               style={{
-                padding: '4px 10px',
-                borderRadius: 20,
+                padding: '5px 10px',
+                borderRadius: '8px',
                 border: '1px solid var(--line)',
-                background: 'none',
+                background: 'rgba(255,255,255,0.03)',
                 cursor: 'pointer',
                 fontFamily: 'var(--ff)',
-                fontSize: '10px',
+                fontSize: '11px',
                 color: 'var(--t3)',
                 flexShrink: 0,
               }}
@@ -290,13 +303,13 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
             <button
               onClick={() => onDelete(post.id)}
               style={{
-                padding: '4px 10px',
-                borderRadius: 20,
+                padding: '5px 10px',
+                borderRadius: '8px',
                 border: '1px solid var(--line)',
-                background: 'none',
+                background: 'rgba(224,96,58,0.05)',
                 cursor: 'pointer',
                 fontFamily: 'var(--ff)',
-                fontSize: '10px',
+                fontSize: '11px',
                 color: '#e05a3a',
                 flexShrink: 0,
               }}
@@ -310,88 +323,109 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
       {/* 운세 첨부 배지 */}
       {post.fortune_summary && (
         <div style={{
-          padding: '6px 10px',
-          borderRadius: 8,
-          background: 'var(--goldf)',
-          border: '1px solid var(--acc)',
-          fontSize: '10px',
+          padding: '8px 12px',
+          borderRadius: '12px',
+          background: 'rgba(232,176,72,0.08)',
+          border: '1px solid rgba(232,176,72,0.2)',
+          fontSize: '11px',
           color: 'var(--gold)',
           fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
         }}>
-          ✦ {post.fortune_summary}
+          <span style={{ fontSize: '14px' }}>✨</span>
+          <span>{post.fortune_summary}</span>
         </div>
       )}
 
       {/* 토픽 태그 */}
       {topic && (
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 4,
-          padding: '2px 10px', borderRadius: 12,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '4px 12px', borderRadius: '12px',
           background: 'var(--bg3)', border: '1px solid var(--line)',
-          fontSize: '10px', color: 'var(--t2)', fontWeight: 600,
+          fontSize: '11px', color: 'var(--t2)', fontWeight: 600,
           width: 'fit-content',
         }}>
-          {topic.emoji} {topic.value}
+          <span style={{ fontSize: '13px' }}>{topic.emoji}</span>
+          <span>{topic.value}</span>
         </div>
       )}
+
       {/* 본문 */}
       <div style={{
-        fontSize: 'var(--sm)',
+        fontSize: 'var(--md)',
         color: 'var(--t1)',
-        lineHeight: 1.7,
+        lineHeight: 1.75,
         wordBreak: 'break-all',
+        padding: '2px 0',
       }}>
         {postText}
       </div>
 
       {/* 하단: 좋아요 + 댓글 + 신고 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-        <button
-          onClick={() => onLike(post.id)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            padding: '5px 12px',
-            borderRadius: 20,
-            border: `1px solid ${liked ? 'var(--acc)' : 'var(--line)'}`,
-            background: liked ? 'var(--goldf)' : 'none',
-            cursor: 'pointer',
-            fontFamily: 'var(--ff)',
-            fontSize: 'var(--xs)',
-            color: liked ? 'var(--gold)' : 'var(--t3)',
-            fontWeight: liked ? 700 : 400,
-            transition: 'all 0.15s',
-          }}
-        >
-          ✦ {post.likes_count || 0}
-        </button>
-        <button
-          onClick={() => setShowComments(v => !v)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            padding: '5px 10px',
-            borderRadius: 20,
-            border: `1px solid ${showComments ? 'var(--line)' : 'var(--line)'}`,
-            background: 'none',
-            cursor: 'pointer',
-            fontFamily: 'var(--ff)',
-            fontSize: 'var(--xs)',
-            color: showComments ? 'var(--t1)' : 'var(--t3)',
-          }}
-        >
-          {showComments ? '닫기' : '댓글'}
-        </button>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        marginTop: 4,
+        paddingTop: 12,
+        borderTop: '1px solid var(--line2)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => onLike(post.id)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '6px 14px',
+              borderRadius: '20px',
+              border: `1.5px solid ${liked ? 'var(--acc)' : 'var(--line)'}`,
+              background: liked ? 'var(--goldf)' : 'rgba(255,255,255,0.02)',
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+              fontSize: 'var(--sm)',
+              color: liked ? 'var(--gold)' : 'var(--t3)',
+              fontWeight: liked ? 700 : 500,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>{liked ? '✦' : '✧'}</span>
+            <span>{post.likes_count || 0}</span>
+          </button>
+          <button
+            onClick={() => setShowComments(v => !v)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '6px 14px',
+              borderRadius: '20px',
+              border: '1.5px solid var(--line)',
+              background: showComments ? 'rgba(255,255,255,0.05)' : 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+              fontSize: 'var(--sm)',
+              color: showComments ? 'var(--t1)' : 'var(--t3)',
+              transition: 'all 0.2s',
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>💬</span>
+            <span>댓글</span>
+          </button>
+        </div>
+        
         {post.kakao_id !== myKakaoId && (
           <button
             onClick={() => onReport(post.id)}
             style={{
-              padding: '5px 10px',
-              borderRadius: 20,
+              padding: '6px 10px',
+              borderRadius: '10px',
               border: 'none',
               background: 'none',
               cursor: 'pointer',
               fontFamily: 'var(--ff)',
-              fontSize: '10px',
+              fontSize: '11px',
               color: 'var(--t4)',
+              opacity: 0.6,
             }}
           >
             신고
@@ -401,12 +435,19 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
 
       {/* 댓글 섹션 */}
       {showComments && (
-        <CommentsSection
-          postId={post.id}
-          myKakaoId={myKakaoId}
-          myNickname={myNickname}
-          showToast={showToast}
-        />
+        <div style={{ 
+          marginTop: 8, 
+          paddingTop: 12, 
+          borderTop: '1px solid var(--line2)',
+          animation: 'fadeIn 0.3s ease',
+        }}>
+          <CommentsSection
+            postId={post.id}
+            myKakaoId={myKakaoId}
+            myNickname={myNickname}
+            showToast={showToast}
+          />
+        </div>
       )}
     </div>
   );
@@ -995,7 +1036,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
     });
 
   return (
-    <div className="page step-fade" style={{ paddingBottom: 100 }}>
+    <div className="page step-fade" style={{ paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 16px))' }}>
       {/* 헤더 */}
       <div style={{ padding: '28px 20px 16px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>

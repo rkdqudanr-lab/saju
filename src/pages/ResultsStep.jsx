@@ -27,17 +27,49 @@ export default function ResultsStep({
   const { saju, sun, moon, asc, today, formOk } = useSajuCtx();
   const { gamificationState } = useGamCtx();
 
-  const [unlockedAnswers, setUnlockedAnswers] = useState(new Set([0]));
+  const [followUpQuestions, setFollowUpQuestions] = useState([]);
+  const [loadingFollowUp, setLoadingFollowUp] = useState(false);
 
-  const handleUnlock = async (i) => {
-    if (!user) { kakaoLogin(); return; }
-    const result = await spendBP(UNLOCK_COST, `answer_unlock_${i}`);
-    if (result.success) {
-      setUnlockedAnswers(prev => new Set([...prev, i]));
-      showToast(`이야기가 열렸어요. 남은 BP ${result.newBp}`, 'success');
+  // 첫 번째 답변이 타이핑 완료되면 후속 질문 생성
+  useEffect(() => {
+    if (typedSet.has(0) && followUpQuestions.length === 0 && !loadingFollowUp) {
+      const fetchFollowUp = async () => {
+        setLoadingFollowUp(true);
+        try {
+          // fetch('/api/ask', ...) 호출로 후속 질문 JSON 가져오기
+          const res = await fetch('/api/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userMessage: `방금 답변한 내용을 바탕으로 후속 질문 5개를 만들어줘. (답변 요약: ${answers[0].slice(0, 100)})`,
+              isFollowUpQ: true,
+              kakaoId: user?.id
+            })
+          });
+          const data = await res.json();
+          if (data.text) {
+            try {
+              const parsed = JSON.parse(data.text);
+              setFollowUpQuestions(parsed);
+            } catch (e) {
+              console.error('JSON Parse error for follow-up questions:', e);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch follow-up questions:', err);
+        } finally {
+          setLoadingFollowUp(false);
+        }
+      };
+      fetchFollowUp();
+    }
+  }, [typedSet, answers, followUpQuestions.length, loadingFollowUp, user?.id]);
+
+  const handleFollowUpClick = (q) => {
+    if (q.id === 'fq_custom') {
+      onEnterChat();
     } else {
-      showToast(result.message || 'BP가 부족해요', 'error');
-      setShowUpgradeModal(true);
+      onEnterChat(q.text);
     }
   };
 
@@ -142,6 +174,33 @@ export default function ResultsStep({
                     />
                     {openAcc === i && typedSet.has(i) && answers[i] && (
                       <div style={{ padding: '0 var(--sp4) var(--sp2)', borderBottom: '1px solid var(--line)' }}>
+                        <div style={{ padding: '8px 12px', background: 'rgba(232,176,72,0.05)', borderRadius: 'var(--r1)', marginBottom: 12 }}>
+                          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 8 }}>✦ 별숨이 추천하는 다음 질문</div>
+                          {loadingFollowUp ? (
+                            <div className="typing-dots" style={{ padding: '8px 0' }}><span /><span /><span /></div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              {followUpQuestions.map((fq) => (
+                                <button
+                                  key={fq.id}
+                                  onClick={() => handleFollowUpClick(fq)}
+                                  style={{
+                                    textAlign: 'left',
+                                    padding: '8px 12px',
+                                    borderRadius: 8,
+                                    border: '1px solid var(--line)',
+                                    background: 'var(--bg1)',
+                                    color: 'var(--t2)',
+                                    fontSize: 'var(--sm)',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {fq.text}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <FeedbackBtn qIdx={i} />
                           <button className="res-top-btn" style={{ fontSize: 'var(--xs)' }} onClick={() => shareCard(i)}>Q{i + 1} 이미지 저장</button>
@@ -175,7 +234,7 @@ export default function ResultsStep({
               >
                 <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>💬</span>
                 <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--gold)', marginBottom: 2 }}>별숨에게 더 물어보기</div>
+                  <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--gold)', marginBottom: 2 }}>별숨과 더 깊은 대화하기</div>
                   <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>방금 본 해석을 이어서 자연스럽게 대화해요</div>
                 </div>
                 <span style={{ fontSize: '1.1rem', color: 'var(--gold)', flexShrink: 0 }}>→</span>

@@ -455,7 +455,7 @@ export default function GachaPage({ showToast, consentFlags }) {
   const probTable   = isSaju ? SAJU_PROB_TABLE    : PROB_TABLE;
 
   return (
-    <div className="page step-fade" style={{ paddingBottom: 52, maxWidth: 480, margin: '0 auto' }}>
+    <div className="page step-fade" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 16px))', maxWidth: 480, margin: '0 auto' }}>
       {/* 헤더 */}
       <div style={{ padding: '22px 20px 0', textAlign: 'center' }}>
         <div style={{ fontSize: 44, marginBottom: 8, animation: 'floatGently 3s ease infinite' }}>

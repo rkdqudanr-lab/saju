@@ -33,28 +33,36 @@ function getTypingFrames(text) {
   return frames;
 }
 
-export default function useWordTyping(text, active, speed = 25) { // 스피드는 프레임 단위 (기본 25ms)
+export default function useWordTyping(text, active, speed = 25) { 
   const [shown, setShown] = useState('');
   const [done, setDone] = useState(false);
   const rafRef = useRef(null);
   const animRef = useRef({ idx: 0, nextTime: 0, frames: [] });
 
   const getDelay = (frame, isLastFrameOfChar, base) => {
-    if (!isLastFrameOfChar) return base; // 자소 타이핑 중엔 기본 딜레이
+    // 인간적인 느낌을 위한 랜덤 변동성 (80% ~ 120%)
+    const variance = 0.8 + Math.random() * 0.4;
+    let delay = base * variance;
+
+    if (!isLastFrameOfChar) return delay; 
+
     const lastChar = frame.slice(-1);
-    if (/[.!?…]/.test(lastChar)) return base + 350;
-    if (/[,]/.test(lastChar)) return base + 180;
-    if (/\n/.test(lastChar)) return base + 250;
-    if (/\s/.test(lastChar)) return base + 20;
-    return base + 15; // 글자 완성 후 살짝 딜레이
+    if (/[.!?…]/.test(lastChar)) delay += 400; // 문장 마침표 후 충분한 휴지기
+    else if (/[,]/.test(lastChar)) delay += 200; // 쉼표 후 약간의 휴지기
+    else if (/\n/.test(lastChar)) delay += 300; // 줄바꿈 후 휴지기
+    else if (/\s/.test(lastChar)) delay += 30;  // 공백 입력 시 리듬감
+    else delay += 20; // 글자 완성 후 보정
+
+    return delay;
   };
 
   useEffect(() => {
-    if (!active || !text) return;
-    setShown(''); setDone(false);
+    if (!active || !text) {
+      if (!active) { setShown(''); setDone(false); }
+      return;
+    }
     
     const frames = getTypingFrames(text);
-    // 기본 속도를 좀 더 자연스럽게 보정 (기존 130ms는 단어 단위였음)
     const typingSpeed = speed > 50 ? 25 : speed; 
     animRef.current = { idx: 0, nextTime: performance.now() + typingSpeed, frames };
 
@@ -67,6 +75,7 @@ export default function useWordTyping(text, active, speed = 25) { // 스피드�
         return;
       }
 
+      // 프레임 스킵 방지 및 속도 제어
       while (a.idx < a.frames.length && a.nextTime <= now) {
         const frame = a.frames[a.idx];
         const nextFrame = a.frames[a.idx + 1];

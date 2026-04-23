@@ -191,10 +191,32 @@ export default function BottomNav() {
   const user = useAppStore((s) => s.user);
   const formOkApprox = useAppStore((s) => s.formOkApprox);
   const [openDrawer, setOpenDrawer] = useState(null);
+  const [visible, setVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     setOpenDrawer(null);
   }, [step]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY < 10) {
+        setVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 60) {
+        // 스크롤 다운 중 (숨김)
+        setVisible(false);
+        if (openDrawer) setOpenDrawer(null); // 바가 숨겨지면 드로어도 닫음
+      } else if (currentScrollY < lastScrollY) {
+        // 스크롤 업 중 (보임)
+        setVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, openDrawer]);
 
   const tabs = [
     { id: 'today', label: '오늘', hasDrawer: true },
@@ -243,6 +265,8 @@ export default function BottomNav() {
           borderTop: '1px solid var(--line)',
           display: 'flex',
           paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
+          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transform: visible ? 'translateY(0)' : 'translateY(100%)',
         }}
       >
         {tabs.map((tab) => {
