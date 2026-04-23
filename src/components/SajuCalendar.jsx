@@ -241,7 +241,8 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   const userIlji = useMemo(() => {
     if (!form?.by || !form?.bm || !form?.bd) return null;
     try {
-      return getSaju(+form.by, +form.bm, +form.bd, form.bh ? Math.floor(+form.bh) : 12).ilji;
+      const s = getSaju(+form.by, +form.bm, +form.bd, form.bh ? Math.floor(+form.bh) : 12);
+      return s ? s.ilji : null;
     } catch { return null; }
   }, [form]);
 

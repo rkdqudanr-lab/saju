@@ -91,14 +91,17 @@ export default function ChatStep({
   const lastMsg = chatHistory[chatHistory.length - 1];
   const lastMsgIsStreaming = lastMsg?.streaming === true;
 
-  // 진입 시 pre-fill된 메시지가 있으면 자동 전송
+  // 진입 시 pre-fill된 메시지가 있으면 자동 전송 (마운트 시점의 값만 사용)
   const autoSent = useRef(false);
+  const initialInput = useRef(chatInput);
   useEffect(() => {
-    if (chatInput && chatHistory.length === 0 && !chatLoading && !autoSent.current) {
+    if (initialInput.current && chatHistory.length === 0 && !chatLoading && !autoSent.current) {
       autoSent.current = true;
-      handleSendChat(chatInput);
+      handleSendChat(initialInput.current);
     }
-  }, [chatInput, chatHistory.length, chatLoading, handleSendChat]);
+  }, [chatHistory.length, chatLoading, handleSendChat]);
+
+  const composingRef = useRef(false);
 
   const { listening, unsupported, toggle: toggleVoice } = useVoiceInput((text) => {
     setChatInput((prev) => (prev ? `${prev} ${text}` : text));
@@ -292,9 +295,16 @@ export default function ChatStep({
                 : '오늘 채팅을 모두 사용했어요'
             }
             value={chatInput}
-            onChange={(event) => setChatInput(event.target.value)}
+            onCompositionStart={() => { composingRef.current = true; }}
+            onCompositionEnd={(event) => {
+              composingRef.current = false;
+              setChatInput(event.target.value);
+            }}
+            onChange={(event) => {
+              if (!composingRef.current) setChatInput(event.target.value);
+            }}
             onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
+              if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();
                 handleSendChat();
               }

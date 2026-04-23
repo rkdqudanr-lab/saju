@@ -53,12 +53,14 @@ export default function DailyStarCardV2({
   onUseItem = null,
   pendingItems = [],
   onToggleItem = null,
+  scoreBoost = 0,
 }) {
   const [blocked, setBlocked] = useState(false);
   const setStep = useAppStore((s) => s.setStep);
   const parsed = parseDailyLines(result?.text || '');
 
   const score = parsed.score ?? result?.score ?? null;
+  const displayedScore = score !== null ? Math.min(100, score + (scoreBoost || 0)) : null;
   const summary = parsed.summary || '';
   const easternKi = parsed.easternKi;
   const westernSky = parsed.westernSky;
@@ -127,9 +129,14 @@ export default function DailyStarCardV2({
           <span className="dsc-header-dot" />
         </div>
 
-        {score !== null && (
+        {displayedScore !== null && (
           <div className="dsc-score">
-            별숨 점수 <strong>{score}</strong>
+            별숨 점수 <strong>{displayedScore}</strong>
+            {scoreBoost > 0 && (
+              <span style={{ marginLeft: 8, fontSize: '0.75em', color: 'var(--gold)', fontWeight: 700 }}>
+                +{scoreBoost}
+              </span>
+            )}
           </div>
         )}
 

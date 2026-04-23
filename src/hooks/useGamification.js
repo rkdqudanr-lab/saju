@@ -42,7 +42,7 @@ function getTodayDateStr() {
  */
 export function useGamification(user, showToast) {
   const [gamificationState, setGamificationState] = useState({
-    currentBp: 0,
+    currentBp: 1000,
     guardianLevel: 1,
     loginStreak: 0,
     totalMissionsCompleted: 0,
@@ -61,6 +61,19 @@ export function useGamification(user, showToast) {
   const initializeGamification = useCallback(async () => {
     // user가 바뀌어도 재초기화 — ref에 마지막 초기화한 userId 저장
     if (!user?.id || initLoadedRef.current === user.id) return;
+
+    if (user.id === 'test_user_id') {
+      initLoadedRef.current = user.id;
+      setGamificationState(prev => ({
+        ...prev,
+        currentBp: 1000,
+        guardianLevel: 1,
+        loginStreak: 5,
+        totalMissionsCompleted: 10,
+        nextLevelMissions: 5,
+      }));
+      return;
+    }
 
     initLoadedRef.current = user.id;
     setIsLoading(true);

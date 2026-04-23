@@ -86,6 +86,7 @@ export default function DailyHoroscopePage({
   // 정화 재점 상태
   const [isPurifying, setIsPurifying] = useState(false);
   const [pendingItems, setPendingItems] = useState([]);
+  const [appliedBoost, setAppliedBoost] = useState(0);
 
   const handleToggleItem = useCallback((row) => {
     setPendingItems(prev => {
@@ -95,26 +96,12 @@ export default function DailyHoroscopePage({
     });
   }, []);
 
-  const handleApplyPending = useCallback(async () => {
-    if (pendingItems.length === 0 || !askDailyHoroscope || isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
-    setIsPurifying(true);
-    const animPromise = new Promise(r => setTimeout(r, 1200));
-    try {
-      await askDailyHoroscope({
-        transientItems: pendingItems.map(p => p.item),
-        previousResult: dailyResult?.text,
-        skipBpCharge: true,
-        skipConfirm: true,
-        saveHistory: false,
-      });
-      setPendingItems([]);
-    } catch (e) {
-      console.error('[별숨] 아이템 일괄 적용 실패:', e);
-    } finally {
-      await animPromise;
-      setIsPurifying(false);
-    }
-  }, [pendingItems, askDailyHoroscope, isPurifying, dailyLoading, dailyCount, DAILY_MAX, dailyResult?.text]);
+  const handleApplyPending = useCallback(() => {
+    if (pendingItems.length === 0) return;
+    const totalBoost = pendingItems.reduce((sum, p) => sum + (p.item?.boost || 0), 0);
+    setAppliedBoost(prev => prev + totalBoost);
+    setPendingItems([]);
+  }, [pendingItems]);
 
   // 아이템 보관함 로드
   const [ownedRows, setOwnedRows] = useState(null);
@@ -137,7 +124,7 @@ export default function DailyHoroscopePage({
       .catch(() => setOwnedRows([]));
   }, [user?.kakaoId, user?.id, dailyResult]);
 
-  const canUseItems = !isPurifying && !dailyLoading && dailyCount < DAILY_MAX;
+  const canUseItems = !isPurifying && !dailyLoading;
 
   const handlePurify = useCallback(async () => {
     if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
@@ -249,6 +236,7 @@ export default function DailyHoroscopePage({
                   ownedRows={ownedRows}
                   onToggleItem={canUseItems ? handleToggleItem : null}
                   pendingItems={pendingItems}
+                  scoreBoost={appliedBoost}
                 />
 
                 {/* 장착된 메인 기운 공명 카드 */}
@@ -369,7 +357,6 @@ export default function DailyHoroscopePage({
         }}>
           <button
             onClick={handleApplyPending}
-            disabled={isPurifying || dailyLoading || dailyCount >= DAILY_MAX}
             style={{
               width: '100%',
               padding: '16px',
@@ -388,7 +375,10 @@ export default function DailyHoroscopePage({
             }}
           >
             <span>✦</span>
-            {pendingItems.length}개의 아이템 효과 반영하기
+            {pendingItems.length}개 아이템으로 점수 올리기
+            <span style={{ fontSize: 13, opacity: 0.85 }}>
+              +{pendingItems.reduce((s, p) => s + (p.item?.boost || 0), 0)}점
+            </span>
           </button>
         </div>
       )}
