@@ -96,12 +96,45 @@ export default function DailyHoroscopePage({
     });
   }, []);
 
-  const handleApplyPending = useCallback(() => {
-    if (pendingItems.length === 0) return;
-    const totalBoost = pendingItems.reduce((sum, p) => sum + (p.item?.boost || 0), 0);
-    setAppliedBoost(prev => prev + totalBoost);
-    setPendingItems([]);
-  }, [pendingItems]);
+  const handleApplyPending = useCallback(async () => {
+    if (pendingItems.length === 0 || isPurifying || dailyLoading) return;
+    setIsPurifying(true);
+    const kakaoId = user?.kakaoId || user?.id;
+    const client = getAuthenticatedClient(String(kakaoId));
+
+    try {
+      // 1. 아이템 소모 (Primary Key인 id로 삭제)
+      const rowIds = pendingItems.map(p => p.rowId);
+      const { error: delError } = await client
+        .from('user_shop_inventory')
+        .delete()
+        .in('id', rowIds)
+        .eq('kakao_id', String(kakaoId));
+
+      if (delError) throw delError;
+
+      // 2. AI 호출 (부스트 반영)
+      const transientItems = pendingItems.map(p => p.item);
+      await askDailyHoroscope?.({
+        skipBpCharge: true,
+        skipConfirm: true,
+        saveHistory: true,
+        transientItems,
+        previousResult: dailyResult?.text,
+      });
+
+      // 3. 상태 업데이트
+      const totalBoost = pendingItems.reduce((sum, p) => sum + (p.item?.boost || 0), 0);
+      setAppliedBoost(prev => prev + totalBoost);
+      setPendingItems([]);
+      setOwnedRows(prev => prev ? prev.filter(r => !rowIds.includes(r.rowId)) : null);
+
+    } catch (err) {
+      console.error('[별숨] 아이템 적용 실패:', err);
+    } finally {
+      setIsPurifying(false);
+    }
+  }, [pendingItems, isPurifying, dailyLoading, user, askDailyHoroscope, dailyResult]);
 
   // 아이템 보관함 로드
   const [ownedRows, setOwnedRows] = useState(null);
@@ -112,12 +145,12 @@ export default function DailyHoroscopePage({
     if (!client) return;
     client
       .from('user_shop_inventory')
-      .select('item_id')
+      .select('id, item_id')
       .eq('kakao_id', String(kakaoId))
       .then(({ data, error }) => {
         if (error) { setOwnedRows([]); return; }
         const rows = (data || [])
-          .map((row) => ({ rowId: String(row.item_id), item: findItem(String(row.item_id)) }))
+          .map((row) => ({ rowId: String(row.id), item: findItem(String(row.item_id)) }))
           .filter((row) => row.item?.aspectKey);
         setOwnedRows(rows);
       })
@@ -128,6 +161,7 @@ export default function DailyHoroscopePage({
 
   const handlePurify = useCallback(async () => {
     if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
+    setAppliedBoost(0);
     setIsPurifying(true);
     const animPromise = new Promise(r => setTimeout(r, 1200));
     try {
@@ -316,7 +350,7 @@ export default function DailyHoroscopePage({
                 )}
               </>
             ) : (
-              <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={askDailyHoroscope}>
+              <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={() => { setAppliedBoost(0); askDailyHoroscope(); }}>
                 오늘 기운 확인하기 ✦
               </button>
             )}
