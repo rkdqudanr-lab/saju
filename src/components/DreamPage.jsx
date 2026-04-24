@@ -7,6 +7,8 @@ import { ChatBubble } from "./AccItem.jsx";
 import { getAuthenticatedClient } from "../lib/supabase.js";
 import { spendBP } from "../utils/gamificationLogic.js";
 import { useAppStore } from "../store/useAppStore.js";
+import { readStreamResponse } from "../lib/streamTransport.js";
+import { getAuthToken } from "../hooks/useUserProfile.js";
 
 const FEATURE_COST = 10;
 
@@ -60,6 +62,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
 
   const { streamText: result, isStreaming: loading, streamError, startStream, resetStream } = useStreamResponse();
 
@@ -133,14 +136,22 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
 
   const handleChat = async (inputOverride) => {
     const msg = (inputOverride || chatInput).trim();
-    if (!msg || chatLoading || !callApiProp) return;
+    if (!msg || chatLoading || isThinking || !callApiProp) return;
 
     setChatInput('');
     setChatLoading(true);
-    setChatHistory(p => [...p, { role: 'user', content: msg }]);
+    setIsThinking(true);
+    setChatHistory(p => [...p, { role: 'user', content: msg }, { role: 'assistant', content: '', isStreaming: true }]);
+
+    // 2초 지연 (AI가 생각하는 시간)
+    await new Promise(r => setTimeout(r, 2000));
+    setIsThinking(false);
 
     try {
-      const prevHistory = chatHistory.map(m => `${m.role === 'user' ? '나' : '별숨'}: ${m.content}`).join('\n');
+      const prevHistory = chatHistory
+        .map(m => `[${m.role === 'user' ? '나' : '별숨'}] ${m.content}`)
+        .join('\n');
+      
       const contextPrompt = `[시스템 지시]
 너는 사용자의 꿈 해몽을 이어서 대화하는 별숨이다.
 - 자연스러운 채팅처럼 2~4문장으로 답할 것
@@ -153,16 +164,57 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
 
 [질문]
 ${msg}`;
-      const res = await callApiProp(contextPrompt, { isChat: true });
-      setChatHistory(p => [...p, { role: 'assistant', content: res }]);
-    } catch {
-      setChatHistory(p => [...p, { role: 'assistant', content: '별빛이 잠시 흐려졌어요. 다시 한 번 물어봐주세요.' }]);
+
+      const token = getAuthToken();
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const chatContext = `${buildCtx?.() || ''}\n\n[채팅 응답 규칙]\n이번 응답은 채팅 모드입니다. [요약], 제목, 섹션 헤더를 쓰지 말고 바로 대화체로 이어서 말해주세요.`;
+
+      const res = await fetch("/api/stream", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          userMessage: contextPrompt,
+          context: chatContext,
+          kakaoId: user?.id,
+          isChat: true,
+          clientHour: new Date().getHours(),
+        }),
+      });
+
+      if (!res.ok) throw new Error("STREAM_ERROR");
+
+      await readStreamResponse(res, {
+        onText: (text) => {
+          setChatHistory(prev => {
+            const lastIdx = prev.length - 1;
+            if (prev[lastIdx]?.role === 'assistant') {
+              return prev.map((m, i) => i === lastIdx ? { ...m, content: text } : m);
+            }
+            return prev;
+          });
+        }
+      });
+
+      setChatHistory(prev => {
+        const lastIdx = prev.length - 1;
+        return prev.map((m, i) => i === lastIdx ? { ...m, isStreaming: false } : m);
+      });
+    } catch (err) {
+      console.error("[DreamPage] Chat error:", err);
+      setChatHistory(p => {
+        const lastIdx = p.length - 1;
+        return p.map((m, i) => i === lastIdx ? { ...m, content: '별빛이 잠시 흐려졌어요. 다시 한 번 물어봐주세요.', isStreaming: false } : m);
+      });
     } finally {
       setChatLoading(false);
+      setIsThinking(false);
     }
   };
 
   const handleFollowUp = async (q) => {
+    if (chatLoading || isThinking) return;
     setChatOpen(true);
     await handleChat(q);
   };
@@ -290,7 +342,7 @@ ${msg}`;
           <div style={{ animation: 'fadeUp .4s ease' }}>
             {!loading && (
               <button
-                onClick={() => { resetStream(); setFollowUps([]); setChatHistory([]); setChatInput(''); setChatOpen(false); }}
+                onClick={() => { resetStream(); setFollowUps([]); setChatHistory([]); setChatInput(''); setChatOpen(false); setIsThinking(false); }}
                 style={{
                   width: '100%',
                   padding: '10px',
@@ -398,14 +450,14 @@ ${msg}`;
                       </div>
                     ) : (
                       <div style={{ maxWidth: '85%' }}>
-                        <ChatBubble text={m.content} isNew={i === chatHistory.length - 1} />
+                        <ChatBubble text={m.content} isNew={i === chatHistory.length - 1} isStreaming={m.isStreaming} />
                       </div>
                     )}
                   </div>
                 ))}
-                {chatLoading && (
+                {isThinking && (
                   <div style={{ display: 'flex', gap: 4, padding: '8px 12px' }}>
-                    <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+                    <div className="typing-dots"><span /><span /><span /></div>
                   </div>
                 )}
               </div>
@@ -430,16 +482,17 @@ ${msg}`;
                 />
                 <button
                   onClick={() => handleChat()}
-                  disabled={!chatInput.trim() || chatLoading}
+                  disabled={!chatInput.trim() || chatLoading || isThinking}
                   style={{
                     padding: '10px 16px',
                     borderRadius: 'var(--r1)',
                     cursor: 'pointer',
-                    background: 'var(--gold)',
+                    background: !chatInput.trim() || chatLoading || isThinking ? 'var(--line)' : 'var(--gold)',
                     color: '#1a1208',
                     fontWeight: 700,
                     fontSize: 'var(--xs)',
                     border: 'none',
+                    transition: 'all .2s',
                   }}
                 >
                   전송
