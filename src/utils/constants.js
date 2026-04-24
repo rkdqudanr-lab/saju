@@ -109,7 +109,7 @@ export const DIARY_PROMPT = (moonPhaseLabel = null, responseStyle = 'M') => {
 // ═══════════════════════════════════════════════════════════
 //  꿈 해몽 프롬프트
 // ═══════════════════════════════════════════════════════════
-export const DREAM_PROMPT = ({ dreamText, dreamMood, dreamTags, moonPhaseLabel }) =>
+export const DREAM_PROMPT = ({ dreamMood, dreamTags, moonPhaseLabel }) =>
   `사용자가 꾼 꿈 내용을 가져왔어요.
 ${dreamTags && dreamTags.length > 0 ? `꿈 속 요소: ${dreamTags.join(', ')}` : ''}
 ${dreamMood ? `깨어날 때의 감정: ${dreamMood}` : ''}
@@ -296,7 +296,7 @@ export function parseAccSummary(text) {
     return { score, summary, text: restText };
   }
 
-  // 2순위: 🀄 또는 ✦ 앵커 이전 첫 문장을 요약으로 추출 (신규 구조 대응)
+  // 2순위: 🀄 또는 ✦ 앵커 이전 첫 문장을 요약으로 추출
   const anchorIdx = processedText.search(/[🀄✦]/);
   if (anchorIdx > 10) {
     const beforeAnchor = processedText.slice(0, anchorIdx).trim();
@@ -323,13 +323,13 @@ export function parseAccSummary(text) {
 //  타이밍 상수 (애니메이션/타이핑 딜레이)
 // ═══════════════════════════════════════════════════════════
 export const TIMING = {
-  typingWord: 45,      // AccItem 기본 타이핑 — 한글 자소 프레임 (기존 28ms -> 45ms)
-  typingChat: 45,      // 채팅 버블 타이핑
-  typingReport: 45,    // 리포트 타이핑
-  sampleChar: 45,      // SamplePreview 기본 문자 딜레이
-  samplePunct: 250,    // 문장부호 딜레이 (. ! ?)
-  sampleComma: 120,    // 쉼표 딜레이
-  sampleNewline: 180,  // 개행 딜레이
+  typingWord: 55,      // AccItem 기본 타이핑 — 한글 자소 프레임
+  typingChat: 55,      // 채팅 버블 타이핑
+  typingReport: 55,    // 리포트 타이핑
+  sampleChar: 55,      // SamplePreview 기본 문자 딜레이
+  samplePunct: 280,    // 문장부호 딜레이 (. ! ?)
+  sampleComma: 130,    // 쉼표 딜레이
+  sampleNewline: 220,  // 개행 딜레이
   skeletonCycle: 2000, // 스켈레톤 애니메이션 주기
   toastDuration: 3500, // 토스트 자동 사라짐 (ms)
 };

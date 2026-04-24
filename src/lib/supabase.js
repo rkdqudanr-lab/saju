@@ -50,3 +50,12 @@ export function getAuthenticatedClient(kakaoId) {
   }
   return _authClientCache.get(key)
 }
+
+/** 로그아웃 시 호출 — stale 인증 클라이언트를 캐시에서 제거 */
+export function clearAuthClient(kakaoId) {
+  if (kakaoId) _authClientCache.delete(String(kakaoId))
+}
+
+export function clearAllAuthClients() {
+  _authClientCache.clear()
+}

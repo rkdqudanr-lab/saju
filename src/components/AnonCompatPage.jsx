@@ -413,7 +413,7 @@ function LetterModal({ post, onClose, onSubmit, loading }) {
 }
 
 export default function AnonCompatPage({ showToast, shareData: incomingShareData }) {
-  const { user } = useAppStore();
+  const user = useAppStore((s) => s.user);
   const [filter, setFilter] = useState('전체');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -562,7 +562,7 @@ export default function AnonCompatPage({ showToast, shareData: incomingShareData
       const client = getAuthenticatedClient(kakaoId);
       const { ok } = await spendBP(client, String(kakaoId), 50, `LETTER_${Date.now()}`, '편지 전송');
       if (!ok) {
-        showToast?.('BP가 부족해요. 500 BP가 필요해요.', 'error');
+        showToast?.('BP가 부족해요. 50 BP가 필요해요.', 'error');
         return;
       }
       const { error } = await client.from('anon_messages').insert({

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
+import { supabase, getAuthenticatedClient, clearAuthClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 
 const DEFAULT_PROFILE = { partner: '', partnerBy: '', partnerBm: '', partnerBd: '', workplace: '', worryText: '', mbti: '', selfDesc: '' };
@@ -387,6 +387,8 @@ export function useUserProfile() {
 
   const kakaoLogout = useCallback(() => {
     if (window.Kakao?.Auth) window.Kakao.Auth.logout(() => {});
+    const prevUser = getAuthUser();
+    if (prevUser?.id) clearAuthClient(prevUser.id);
     setUser(null);
     setForm(DEFAULT_FORM);
     setProfile(DEFAULT_PROFILE);
@@ -399,6 +401,8 @@ export function useUserProfile() {
   // ── 세션 만료 처리: 상태 정리 + 로그인 필요 알림 ──
   // API가 401을 반환하거나 JWT가 만료됐을 때 호출됨
   const handleSessionExpired = useCallback(() => {
+    const prevUser = getAuthUser();
+    if (prevUser?.id) clearAuthClient(prevUser.id);
     setUser(null);
     setForm(DEFAULT_FORM);
     setProfile(DEFAULT_PROFILE);

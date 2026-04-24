@@ -120,12 +120,15 @@ export function useConsultation(
       return;
     }
     const authClient = getAuthenticatedClient(user.id);
-    (authClient || supabase)
+    const client = authClient || supabase;
+    let query = client
       .from("consultation_history")
       .select("id, questions, answers, slot, created_at")
       .order("created_at", { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
+      .limit(50);
+    // supabaseId(UUID) 있으면 명시적 필터 추가 — RLS와 이중 안전
+    if (user.supabaseId) query = query.eq("user_id", user.supabaseId);
+    query.then(({ data }) => {
         if (!data?.length) return;
         const items = data.map((row) => {
           const dt = new Date(row.created_at);
@@ -146,7 +149,7 @@ export function useConsultation(
         console.error("[별숨] 상담 기록 로드 오류:", e);
         if (typeof showToast === "function") showToast("상담 기록을 불러오지 못했어요", "error");
       });
-  }, [showToast, user?.id]);
+  }, [showToast, user?.id, user?.supabaseId]);
 
   const callApi = useCallback(async (userMessage, opts = {}) => {
     if (!user?.id) {

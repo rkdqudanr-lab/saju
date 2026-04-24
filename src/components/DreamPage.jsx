@@ -119,7 +119,6 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
     setChatHistory([]);
 
     const prompt = DREAM_PROMPT({
-      dreamText,
       dreamMood: mood,
       dreamTags: selectedTags,
       moonPhaseLabel: moonPhase.label,

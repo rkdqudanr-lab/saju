@@ -166,6 +166,10 @@ Supabase `missions` 테이블. 매일 리셋되는 일일 미션.
 - **아이템 버튼 안 보임**: `aspectKey` 키 불일치(`money`→`wealth`, `work`→`career`).
 - **섹션 사라짐**: 프롬프트에 새 태그 추가했지만 `parseDailyLines`와 렌더링 미업데이트.
 - **무한 재렌더**: Zustand v5에서 객체 셀렉터 → `useShallow` 사용 필요.
+- **constants.js 수정 시 주의**: `parseAccSummary` 함수 내 if 블록 수정 시 닫는 `}` 누락하면 **모듈 전체 로드 실패** (22개 파일이 의존). 수정 후 반드시 `npm run build` 또는 vite dev 서버로 파싱 오류 없음 확인.
+- **DREAM_PROMPT 파라미터**: `dreamText`는 함수 내부에서 쓰지 않고 호출부에서 직접 `[꿈 내용]\n${dreamText}`로 붙임.
+- **로그아웃 후 Supabase 클라이언트 stale**: `kakaoLogout()` / `handleSessionExpired()` 호출 시 `clearAuthClient(user.id)` 자동 실행됨 (`useUserProfile.js`).
+- **Zustand 셀렉터**: leaf 컴포넌트에서 `const { user } = useAppStore()` 대신 `const user = useAppStore((s) => s.user)` 사용 (전체 스토어 구독 방지).
 
 ---
 

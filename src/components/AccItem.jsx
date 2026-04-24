@@ -26,7 +26,9 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
   const isError = ERR_PATTERN.test(text || '');
   const isTyping = shouldType && isOpen && !isError;
   const{shown,done,skipToEnd}=useWordTyping(text, isTyping, TIMING.typingWord);
-  const display = isError ? text : !shouldType ? text : isOpen ? shown : '';
+  const summary = (text && text.includes('[요약]')) ? text.match(/\[요약\]\s*(.*?)(?:\n|$)/)?.[1] : '';
+  const rawPreview = summary || (text ? text.replace(/\[[\w가-힣]+\][^\n]*/g, '').trim().slice(0, 40) : '');
+  const display = isError ? text : !shouldType ? text : isOpen ? shown : rawPreview;
   const isDone = isError || !shouldType || done;
   const bodyId = `acc-body-${idx}`;
 
@@ -49,7 +51,7 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
           <div className="acc-q-num">Q{idx+1}</div>
           <div className="acc-q-text">{q}</div>
           {!isOpen&&isError&&<div style={{fontSize:'var(--xs)',color:'#e06',marginTop:3}}>⚠ 오류 · 탭하여 다시 시도</div>}
-          {!isOpen&&!display&&!isError&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
+          {!isOpen&&!display&&!isError&&!text&&<div style={{fontSize:'var(--xs)',color:'var(--t4)',marginTop:3}}>이 이야기도 기다리고 있어요 ✦</div>}
         </div>
         <div className="acc-right">
           {isOpen&&!isDone&&<button className="skip-btn" aria-label="타이핑 건너뛰기" onClick={e=>{e.stopPropagation();skipToEnd();}}>바로 보기</button>}
@@ -95,10 +97,10 @@ export function ChatBubble({text,isNew,isStreaming=false}){
     const currentLength = (streamShown || '').length;
     if (currentLength >= targetLength) return;
 
-    // 스트리밍 텍스트와 현재 출력된 텍스트의 차이가 크면 속도를 높여 따라잡음
+    // 스트리밍 텍스트와 현재 출력된 텍스트의 차이가 크면 속도를 약간 높여 따라잡음 (인간적인 범주 내에서)
     const diff = targetLength - currentLength;
-    const speed = diff > 20 ? 5 : diff > 10 ? 15 : TIMING.typingChat;
-    const step = diff > 30 ? 3 : diff > 15 ? 2 : 1;
+    const speed = diff > 40 ? 25 : diff > 20 ? 40 : TIMING.typingChat;
+    const step = diff > 60 ? 2 : 1;
 
     timerRef.current = setTimeout(() => {
       setStreamShown((text || '').slice(0, Math.min(currentLength + step, targetLength)));
