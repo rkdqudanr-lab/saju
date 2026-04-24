@@ -295,21 +295,14 @@ export default function ChatStep({
                 : '오늘 채팅을 모두 사용했어요'
             }
             value={chatInput}
-            onCompositionStart={() => { composingRef.current = true; }}
-            onCompositionEnd={(event) => {
-              composingRef.current = false;
-              setChatInput(event.target.value);
-            }}
-            onChange={(event) => {
-              if (!composingRef.current) setChatInput(event.target.value);
-            }}
+            onChange={(event) => setChatInput(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();
                 handleSendChat();
               }
             }}
-            disabled={chatLeft <= 0 || chatLoading}
+            disabled={chatLeft <= 0}
           />
 
           {!unsupported && chatLeft > 0 && (

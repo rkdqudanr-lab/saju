@@ -370,11 +370,11 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
         <FeatureResultSheet
           type="special"
           eyebrow="BYEOLSOOM SPECIAL READING"
-          title={selectedType?.title || "\uBCC4\uC228 \uD2B9\uBCC4 \uC0C1\uB2F4"}
+          title={selectedType?.title || "별숨 특별 상담"}
           text={result}
           highlights={[
-            selectedType?.emoji ? { emoji: selectedType.emoji, label: "\uC120\uD0DD\uD55C \uC0C1\uB2F4", value: selectedType.title, caption: selectedType.desc } : null,
-            usedItem ? { emoji: "ticket", label: "\uC0AC\uC6A9\uD55C \uC0C1\uB2F4\uAD8C", value: "\uD2B9\uBCC4 \uC0C1\uB2F4\uAD8C 1\uAC1C \uC0AC\uC6A9" } : null,
+            selectedType?.emoji ? { emoji: selectedType.emoji, label: "선택한 상담", value: selectedType.title, caption: selectedType.desc } : null,
+            usedItem ? { emoji: "ticket", label: "사용한 상담권", value: "특별 상담권 1개 사용" } : null,
           ].filter(Boolean)}
           primaryAction={() => {
             setResult('');

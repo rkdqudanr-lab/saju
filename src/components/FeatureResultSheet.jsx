@@ -1,54 +1,55 @@
 import { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const THEMES = {
   tarot: {
-    accent: 'rgba(200,165,80,0.92)',
-    accentSoft: 'rgba(200,165,80,0.14)',
-    border: 'rgba(200,165,80,0.34)',
-    background: 'linear-gradient(180deg, rgba(13,11,30,0.98) 0%, rgba(22,17,38,0.99) 100%)',
-    glow: 'radial-gradient(circle, rgba(200,165,80,0.14), transparent 68%)',
+    accent: 'var(--gold)',
+    accentSoft: 'var(--goldf)',
+    border: 'var(--acc)',
+    background: 'radial-gradient(circle at 50% 0%, #1a1425 0%, var(--bg) 100%)',
+    glow: 'radial-gradient(circle, rgba(200,165,80,0.15), transparent 70%)',
   },
   dream: {
-    accent: 'rgba(171,149,255,0.92)',
-    accentSoft: 'rgba(171,149,255,0.12)',
-    border: 'rgba(171,149,255,0.28)',
-    background: 'linear-gradient(180deg, rgba(10,10,28,0.98) 0%, rgba(20,16,42,0.99) 100%)',
-    glow: 'radial-gradient(circle, rgba(171,149,255,0.14), transparent 68%)',
+    accent: 'var(--lav)',
+    accentSoft: 'var(--lavf)',
+    border: 'var(--lavacc)',
+    background: 'radial-gradient(circle at 50% 0%, #121026 0%, var(--bg) 100%)',
+    glow: 'radial-gradient(circle, rgba(171,149,255,0.15), transparent 70%)',
   },
   name: {
-    accent: 'rgba(232,176,72,0.92)',
-    accentSoft: 'rgba(232,176,72,0.12)',
-    border: 'rgba(232,176,72,0.28)',
-    background: 'linear-gradient(180deg, rgba(18,14,10,0.98) 0%, rgba(28,20,14,0.99) 100%)',
-    glow: 'radial-gradient(circle, rgba(232,176,72,0.13), transparent 68%)',
+    accent: 'var(--gold2)',
+    accentSoft: 'var(--goldf)',
+    border: 'var(--acc)',
+    background: 'radial-gradient(circle at 50% 0%, #1a1610 0%, var(--bg) 100%)',
+    glow: 'radial-gradient(circle, rgba(232,176,72,0.15), transparent 70%)',
   },
   taegil: {
-    accent: 'rgba(212,175,55,0.95)',
-    accentSoft: 'rgba(212,175,55,0.14)',
-    border: 'rgba(212,175,55,0.32)',
-    background: 'linear-gradient(180deg, rgba(10,12,24,0.98) 0%, rgba(20,24,48,0.99) 100%)',
-    glow: 'radial-gradient(circle, rgba(212,175,55,0.15), transparent 70%)',
+    accent: 'var(--gold)',
+    accentSoft: 'var(--goldf)',
+    border: 'var(--acc)',
+    background: 'radial-gradient(circle at 50% 0%, #0d0f1a 0%, var(--bg) 100%)',
+    glow: 'radial-gradient(circle, rgba(212,175,55,0.18), transparent 70%)',
   },
   prophecy: {
-    accent: 'rgba(124,183,255,0.92)',
-    accentSoft: 'rgba(124,183,255,0.12)',
-    border: 'rgba(124,183,255,0.28)',
-    background: 'linear-gradient(180deg, rgba(8,16,28,0.98) 0%, rgba(14,24,42,0.99) 100%)',
-    glow: 'radial-gradient(circle, rgba(124,183,255,0.13), transparent 68%)',
+    accent: 'var(--teal)',
+    accentSoft: 'var(--tealf)',
+    border: 'var(--tealacc)',
+    background: 'radial-gradient(circle at 50% 0%, #08121c 0%, var(--bg) 100%)',
+    glow: 'radial-gradient(circle, rgba(107,191,181,0.15), transparent 70%)',
   },
   special: {
-    accent: 'rgba(232,176,72,0.92)',
-    accentSoft: 'rgba(232,176,72,0.12)',
-    border: 'rgba(232,176,72,0.28)',
-    background: 'linear-gradient(180deg, rgba(14,10,24,0.98) 0%, rgba(24,18,38,0.99) 100%)',
-    glow: 'radial-gradient(circle, rgba(232,176,72,0.14), transparent 68%)',
+    accent: 'var(--gold)',
+    accentSoft: 'var(--goldf)',
+    border: 'var(--acc)',
+    background: 'radial-gradient(circle at 50% 0%, #120e1c 0%, var(--bg) 100%)',
+    glow: 'radial-gradient(circle, rgba(232,176,72,0.15), transparent 70%)',
   },
   default: {
-    accent: 'rgba(232,176,72,0.92)',
-    accentSoft: 'rgba(232,176,72,0.12)',
-    border: 'rgba(232,176,72,0.28)',
-    background: 'linear-gradient(180deg, rgba(15,11,29,0.98) 0%, rgba(22,17,38,0.99) 100%)',
-    glow: 'radial-gradient(circle, rgba(232,176,72,0.14), transparent 68%)',
+    accent: 'var(--gold)',
+    accentSoft: 'var(--goldf)',
+    border: 'var(--acc)',
+    background: 'var(--bg)',
+    glow: 'radial-gradient(circle, rgba(232,176,72,0.12), transparent 70%)',
   },
 };
 
@@ -114,183 +115,215 @@ export default function FeatureResultSheet({
       }));
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       style={{
         position: 'fixed',
         inset: 0,
         zIndex: 5000,
         background: theme.background,
         overflowY: 'auto',
-        padding: 'env(safe-area-inset-top, 16px) 18px calc(env(safe-area-inset-bottom, 20px) + 84px)',
+        padding: 'calc(env(safe-area-inset-top, 20px) + 20px) 20px calc(env(safe-area-inset-bottom, 20px) + 100px)',
       }}
     >
-      <div style={{ maxWidth: 560, margin: '0 auto', position: 'relative' }}>
-        <button
+      <div style={{ maxWidth: 500, margin: '0 auto', position: 'relative' }}>
+        <motion.button
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           onClick={onDismiss}
           style={{
-            position: 'sticky',
-            top: 8,
-            marginLeft: 'auto',
+            position: 'absolute',
+            top: -10,
+            right: 0,
             display: 'flex',
-            width: 38,
-            height: 38,
-            borderRadius: 999,
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
             alignItems: 'center',
             justifyContent: 'center',
-            border: `1px solid ${theme.border}`,
-            background: 'rgba(255,255,255,0.04)',
+            border: `1px solid var(--line)`,
+            background: 'var(--surface-float)',
             color: 'var(--t2)',
             cursor: 'pointer',
-            fontSize: 18,
-            zIndex: 2,
+            fontSize: 20,
+            zIndex: 10,
+            backdropFilter: 'blur(12px)',
           }}
           aria-label="닫기"
+          whileTap={{ scale: 0.9 }}
         >
           ×
-        </button>
+        </motion.button>
 
-        <div style={{ textAlign: 'center', marginTop: 8, marginBottom: 24 }}>
-          <div style={{ fontSize: 11, color: theme.accent, fontWeight: 800, letterSpacing: '.18em', marginBottom: 10 }}>
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          style={{ textAlign: 'center', marginBottom: 32 }}
+        >
+          <div style={{ fontSize: 10, color: theme.accent, fontWeight: 800, letterSpacing: '.2em', marginBottom: 12, textTransform: 'uppercase' }}>
             {eyebrow}
           </div>
-          <h2 style={{ margin: 0, fontSize: 'var(--lg)', color: 'var(--t1)', fontWeight: 800, lineHeight: 1.25 }}>
+          <h2 style={{ margin: 0, fontSize: 'var(--xl)', color: 'var(--t1)', fontWeight: 800, lineHeight: 1.3, wordBreak: 'keep-all' }}>
             {title}
           </h2>
           {resolvedSummary && (
             <div
               style={{
-                marginTop: 16,
-                padding: '0 8px',
+                marginTop: 20,
+                padding: '16px 20px',
+                background: 'var(--goldf)',
+                borderRadius: 'var(--r2)',
+                border: '1px solid var(--acc)',
                 color: 'var(--t1)',
                 fontSize: 'var(--md)',
-                fontWeight: 800,
-                lineHeight: 1.5,
+                fontWeight: 700,
+                lineHeight: 1.6,
                 wordBreak: 'keep-all',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
               }}
             >
-              <strong style={{ color: theme.accent, fontWeight: 900 }}>
-                {resolvedSummary}
-              </strong>
+              <span style={{ color: theme.accent }}>{resolvedSummary}</span>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {highlights.length > 0 && (
-          <div
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
               gap: 12,
-              marginBottom: 18,
+              marginBottom: 24,
             }}
           >
             {highlights.map((item, index) => (
               <div
                 key={`${item.label}-${index}`}
                 style={{
-                  padding: '16px 14px',
-                  borderRadius: 18,
-                  border: `1px solid ${theme.border}`,
-                  background: 'rgba(255,255,255,0.03)',
-                  boxShadow: '0 14px 40px rgba(0,0,0,0.18)',
+                  padding: '18px 16px',
+                  borderRadius: 'var(--r2)',
+                  border: `1px solid var(--line)`,
+                  background: 'var(--bg1)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
+                <div style={{ position: 'absolute', top: -20, right: -20, width: 60, height: 60, background: theme.glow, pointerEvents: 'none' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  {item.emoji && <span style={{ fontSize: 18 }}>{item.emoji}</span>}
-                  <div style={{ fontSize: 11, color: theme.accent, fontWeight: 800, letterSpacing: '.08em' }}>
+                  <div style={{ fontSize: 10, color: theme.accent, fontWeight: 800, letterSpacing: '.06em' }}>
                     {item.label}
                   </div>
                 </div>
-                <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 700, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 700, lineHeight: 1.4 }}>
                   {item.value}
                 </div>
                 {item.caption && (
-                  <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.55 }}>
+                  <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.5 }}>
                     {item.caption}
                   </div>
                 )}
               </div>
             ))}
-          </div>
+          </motion.div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {resolvedSections.map((section, index) => (
-            <div
+            <motion.div
               key={`${section.title}-${index}`}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 + index * 0.1 }}
               style={{
                 position: 'relative',
                 overflow: 'hidden',
-                padding: '20px 18px',
-                borderRadius: 22,
-                background: 'rgba(255,255,255,0.03)',
-                border: `1px solid ${theme.border}`,
+                padding: '24px 20px',
+                borderRadius: 'var(--r3)',
+                background: 'var(--bg1)',
+                border: `1px solid var(--line)`,
+                boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
               }}
             >
               <div
                 style={{
                   position: 'absolute',
-                  top: -40,
-                  right: -40,
-                  width: 120,
-                  height: 120,
+                  top: -60,
+                  right: -60,
+                  width: 160,
+                  height: 160,
                   background: theme.glow,
                   pointerEvents: 'none',
+                  opacity: 0.6,
                 }}
               />
               <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontSize: 11, color: theme.accent, fontWeight: 800, letterSpacing: '.1em', marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: theme.accent, fontWeight: 800, letterSpacing: '.12em', marginBottom: 12 }}>
                   {section.title}
                 </div>
-                <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
+                <div style={{ fontSize: 'var(--md)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
                   {section.body}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {(primaryAction || secondaryAction) && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 32 }}
+          >
             {primaryAction && (
-              <button
+              <motion.button
                 onClick={primaryAction}
+                whileTap={{ scale: 0.97 }}
                 style={{
                   width: '100%',
-                  padding: '16px',
-                  borderRadius: 999,
+                  padding: '18px',
+                  borderRadius: 'var(--r2)',
                   border: 'none',
-                  background: `linear-gradient(135deg, ${theme.accent}, rgba(255,210,120,0.92))`,
+                  background: `linear-gradient(135deg, ${theme.accent}, #fff7de)`,
                   color: '#1a1208',
                   fontSize: 'var(--sm)',
                   fontWeight: 800,
                   cursor: 'pointer',
+                  boxShadow: `0 8px 24px ${theme.accent}33`,
                 }}
               >
                 {primaryLabel}
-              </button>
+              </motion.button>
             )}
             {secondaryAction && (
-              <button
+              <motion.button
                 onClick={secondaryAction}
+                whileTap={{ scale: 0.97 }}
                 style={{
                   width: '100%',
-                  padding: '14px',
-                  borderRadius: 999,
-                  border: `1px solid ${theme.border}`,
-                  background: 'transparent',
+                  padding: '16px',
+                  borderRadius: 'var(--r2)',
+                  border: `1px solid var(--line)`,
+                  background: 'var(--bg2)',
                   color: 'var(--t2)',
-                  fontSize: 'var(--xs)',
+                  fontSize: 'var(--sm)',
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
               >
                 {secondaryLabel}
-              </button>
+              </motion.button>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

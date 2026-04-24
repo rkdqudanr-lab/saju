@@ -222,9 +222,12 @@ ${opts.previousResult}
 When generating the new result:
 1. For each item in [daily transient items], identify its 'target_category' and 'boost' value.
 2. Find the previous score for that category in the [previous result].
-3. ADD the boost value to the previous score. (Example: 60 + 10 = 70). The new score MUST be the sum, capped at 100.
-4. Update the description for that category to be significantly more positive and encouraging.
-5. Keep other category scores and details similar but you may slightly adjust them to maintain overall flow.`;
+3. ADD the boost value to the previous score. (Example: If Wealth was 65 and boost is 10, it MUST become 75).
+4. CRITICAL: Update the top-level [점수] tag to reflect the new average or sum. The final [점수] MUST be higher than before.
+5. Update the description for that category to be significantly more positive and encouraging.
+6. Keep other category scores and details similar but you may slightly adjust them to maintain overall flow.
+7. Format MUST be identical to the system prompt, including all tags.
+8. The final result MUST be a complete, new interpretation, not just the changes.`;
             }
             fullContext += itemInstr;
           }

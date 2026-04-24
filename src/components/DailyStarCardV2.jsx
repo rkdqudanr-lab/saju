@@ -4,6 +4,7 @@ import { useAppStore } from '../store/useAppStore.js';
 import { breakAtNatural } from '../utils/constants.js';
 import { BADTIME_THRESHOLD } from '../utils/gamificationLogic.js';
 import { parseDailyLines } from '../utils/parseDailyLines.js';
+import { AnimatedScore, TypingMessage } from './common/AnimatedText.jsx';
 
 const CATEGORY_META = [
   { key: 'overall', label: '종합운', icon: '✨' },
@@ -59,6 +60,8 @@ export default function DailyStarCardV2({
   const setStep = useAppStore((s) => s.setStep);
   const parsed = parseDailyLines(result?.text || '');
 
+  // parsed.score (텍스트 실시간 파싱) 우선, 없으면 gamification이 별도 설정한 result.score로 폴백
+  // useDailyConsultationHandler가 { ...prev, text } 로 업데이트하므로 flickering 없음
   const score = parsed.score ?? result?.score ?? null;
   const displayedScore = score !== null ? Math.min(100, score + (scoreBoost || 0)) : null;
   const summary = parsed.summary || '';
@@ -131,17 +134,19 @@ export default function DailyStarCardV2({
 
         {displayedScore !== null && (
           <div className="dsc-score">
-            별숨 점수 <strong>{displayedScore}</strong>
+            별숨 점수 <strong><AnimatedScore value={displayedScore} /></strong>
             {scoreBoost > 0 && (
               <span style={{ marginLeft: 8, fontSize: '0.75em', color: 'var(--gold)', fontWeight: 700 }}>
-                +{scoreBoost}
+                +<AnimatedScore value={scoreBoost} duration={0.8} />
               </span>
             )}
           </div>
         )}
 
         {summary && (
-          <div className="dsc-summary">{breakAtNatural(summary)}</div>
+          <div className="dsc-summary" style={{ padding: 0, background: 'none', border: 'none', boxShadow: 'none' }}>
+            <TypingMessage text={breakAtNatural(summary)} isSummary={true} />
+          </div>
         )}
 
         {easternKi && (
@@ -416,8 +421,8 @@ export default function DailyStarCardV2({
         )}
 
         {closingAdvice && (
-          <div className="dsc-closing">
-            {closingAdvice}
+          <div className="dsc-closing" style={{ padding: 0, background: 'none', border: 'none', boxShadow: 'none' }}>
+            <TypingMessage text={closingAdvice} isSummary={false} />
           </div>
         )}
       </div>

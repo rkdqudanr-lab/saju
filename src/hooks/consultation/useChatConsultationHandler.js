@@ -194,8 +194,8 @@ export function useChatConsultationHandler({
     setLatestChatIdx(-1);
     setChatLoading(true);
 
-    // 사용자가 요청한 자연스러운 연출을 위한 2초 지연 (AI가 생각하는 시간)
-    await new Promise(r => setTimeout(r, 2000));
+    // 사용자가 요청한 자연스러운 연출을 위한 1초 지연 (AI가 생각하는 시간)
+    await new Promise(r => setTimeout(r, 1000));
 
     try {
       if (streamAbortRef.current) streamAbortRef.current.abort();

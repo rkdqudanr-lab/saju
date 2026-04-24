@@ -7,7 +7,7 @@ import { detectBadtime } from "../utils/gamificationLogic.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
 import { getAuthenticatedClient } from "../lib/supabase.js";
-import { canUseDailySupabaseTables, getDailyDateKey, writeDailyLocalCache } from "../lib/dailyDataAccess.js";
+import { getDailyDateKey, writeDailyLocalCache } from "../lib/dailyDataAccess.js";
 import { findItem } from "../utils/gachaItems.js";
 
 export default function DailyHoroscopePage({
@@ -43,7 +43,6 @@ export default function DailyHoroscopePage({
     savedScoreDateRef.current = today;
     const kakaoId = user.kakaoId || user.id;
     writeDailyLocalCache(kakaoId, 'horoscope_score', String(dailyResult.score), today);
-    if (!canUseDailySupabaseTables()) return;
     getAuthenticatedClient(kakaoId)
       .from('daily_scores')
       .upsert(
@@ -128,13 +127,15 @@ export default function DailyHoroscopePage({
       setAppliedBoost(prev => prev + totalBoost);
       setPendingItems([]);
       setOwnedRows(prev => prev ? prev.filter(r => !rowIds.includes(r.rowId)) : null);
-
+      
+      showToast?.('기운 정화가 완료되었습니다. 점수가 상승했습니다!');
     } catch (err) {
       console.error('[별숨] 아이템 적용 실패:', err);
+      showToast?.('기운 정화 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsPurifying(false);
     }
-  }, [pendingItems, isPurifying, dailyLoading, user, askDailyHoroscope, dailyResult]);
+  }, [pendingItems, isPurifying, dailyLoading, user, askDailyHoroscope, dailyResult, showToast]);
 
   // 아이템 보관함 로드
   const [ownedRows, setOwnedRows] = useState(null);
@@ -390,6 +391,7 @@ export default function DailyHoroscopePage({
           animation: 'purifyFadeIn 0.3s ease',
         }}>
           <button
+            disabled={isPurifying || dailyLoading}
             onClick={handleApplyPending}
             style={{
               width: '100%',
@@ -401,7 +403,8 @@ export default function DailyHoroscopePage({
               fontWeight: 800,
               fontSize: 16,
               boxShadow: '0 8px 32px rgba(232,176,72,0.4)',
-              cursor: 'pointer',
+              cursor: (isPurifying || dailyLoading) ? 'not-allowed' : 'pointer',
+              opacity: (isPurifying || dailyLoading) ? 0.6 : 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

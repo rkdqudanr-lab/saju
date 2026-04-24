@@ -55,7 +55,9 @@ function getBallColor(n) {
   return '#9b9b9b';
 }
 
-export default function LottoPage({ consentFlags }) {
+const DRAW_COST = 10;
+
+export default function LottoPage({ consentFlags, spendBP, showToast }) {
   const { user, saju } = useAppStore();
   const [numbers, setNumbers] = useState(null);
   const [revealed, setRevealed] = useState(false);
@@ -67,14 +69,26 @@ export default function LottoPage({ consentFlags }) {
   const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const kakaoId = user?.kakaoId || user?.id || 'guest';
 
-  const handleDraw = () => {
+  const handleDraw = async () => {
+    if (spendBP) {
+      try {
+        const result = await spendBP(DRAW_COST, 'LOTTO_DRAW');
+        if (!result?.success) {
+          showToast?.(result?.message || 'BP가 부족해요');
+          return;
+        }
+      } catch (err) {
+        console.error('[LottoPage] spendBP 오류:', err);
+        showToast?.('BP 차감 중 오류가 발생했어요. 다시 시도해주세요.');
+        return;
+      }
+    }
     setSpinning(true);
     setRevealed(false);
     setNumbers(null);
     const nextCount = drawCount + 1;
     setDrawCount(nextCount);
     setTimeout(() => {
-      // drawId = 날짜 + 뽑기 횟수 → 버튼마다 다른 번호
       const drawId = `${dateStr}:${nextCount}`;
       setLastDrawId(drawId);
       setNumbers(getLottoNumbers(kakaoId, saju, drawId));
@@ -219,7 +233,7 @@ export default function LottoPage({ consentFlags }) {
             opacity: spinning ? 0.6 : 1,
           }}
         >
-          {spinning ? '뽑는 중...' : numbers ? '🍀 다시 뽑기' : '🍀 번호 뽑기'}
+          {spinning ? '뽑는 중...' : numbers ? `🍀 다시 뽑기 (${DRAW_COST} BP)` : `🍀 번호 뽑기 (${DRAW_COST} BP)`}
         </button>
 
         {/* 안내 */}
@@ -230,7 +244,7 @@ export default function LottoPage({ consentFlags }) {
           fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7,
         }}>
           <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 6 }}>안내</div>
-          오늘의 별숨 번호는 사주 일주·월주의 기운과 날짜를 결합해 생성돼요. 같은 날 같은 사람은 항상 동일한 번호가 나와요. 오락·재미 목적의 서비스이며 당첨을 보장하지 않습니다.
+          오늘의 별숨 번호는 사주 일주·월주의 기운과 날짜를 결합해 생성돼요. 오락·재미 목적의 서비스이며 당첨을 보장하지 않습니다.
         </div>
       </div>
 

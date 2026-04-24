@@ -71,7 +71,8 @@ export function useDailyConsultationHandler({
         previousResult: options.previousResult || null,
       });
       const newCount = shouldIncrementCount ? dailyCount + 1 : dailyCount;
-      setDailyResult({ text: ans });
+      // [PATCH] Preserve previous score during initial text update to prevent UI flickering
+      setDailyResult(prev => ({ ...prev, text: ans }));
       if (shouldIncrementCount) setDailyCount(newCount);
 
       if (user?.id) {
@@ -125,7 +126,8 @@ export function useDailyConsultationHandler({
       }
 
       return true;
-    } catch {
+    } catch (err) {
+      console.error("[askDailyHoroscope] Error:", err);
       return false;
     } finally {
       setDailyLoading(false);

@@ -1130,7 +1130,7 @@ export default function App() {
         {/* Step 39: 로또 번호 뽑기 */}
         {step === 39 && (
           <Suspense fallback={<PageSpinner />}>
-            <LottoPage consentFlags={consentFlags} />
+            <LottoPage consentFlags={consentFlags} spendBP={spendBP} showToast={showToast} />
           </Suspense>
         )}
 

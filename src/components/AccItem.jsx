@@ -37,9 +37,9 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
   };
 
   return(
-    <div className="acc-item">
+    <div className={`acc-item${isOpen ? ' open' : ''}`}>
       <button
-        className={`acc-trigger${isOpen?' open':''}`}
+        className={`acc-trigger${isOpen ? ' open' : ''}`}
         onClick={onToggle}
         onKeyDown={handleKeyDown}
         aria-expanded={isOpen}
@@ -91,13 +91,19 @@ export function ChatBubble({text,isNew,isStreaming=false}){
       if (timerRef.current) clearTimeout(timerRef.current);
       return;
     }
-    // 부모로부터 전달받은 text가 현재 보여주는 streamShown보다 길 때만 타이머 작동
-    if ((streamShown || '').length >= (text || '').length) return;
-    
+    const targetLength = (text || '').length;
+    const currentLength = (streamShown || '').length;
+    if (currentLength >= targetLength) return;
+
+    // 스트리밍 텍스트와 현재 출력된 텍스트의 차이가 크면 속도를 높여 따라잡음
+    const diff = targetLength - currentLength;
+    const speed = diff > 20 ? 5 : diff > 10 ? 15 : TIMING.typingChat;
+    const step = diff > 30 ? 3 : diff > 15 ? 2 : 1;
+
     timerRef.current = setTimeout(() => {
-      setStreamShown((text || '').slice(0, (streamShown || '').length + 1));
-    }, TIMING.typingChat);
-    
+      setStreamShown((text || '').slice(0, Math.min(currentLength + step, targetLength)));
+    }, speed);
+
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };

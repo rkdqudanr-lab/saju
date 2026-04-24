@@ -158,20 +158,20 @@ export default function FutureProphecyPage({
         <FeatureResultSheet
           type="prophecy"
           eyebrow="BYEOLSOOM PROPHECY"
-          title="\uBCC4\uC228\uC758 \uBBF8\uB798 \uC608\uC5B8"
+          title="별숨의 미래 예언"
           text={text}
           highlights={[
-            { emoji: "time", label: "\uC77D\uB294 \uC2DC\uAC04\uB300", value: period.label, caption: period.desc },
-            (form?.nickname || form?.name) ? { emoji: "star", label: "\uC774\uBC88 \uC608\uC5B8\uC758 \uC8FC\uC778\uACF5", value: form.nickname || form.name } : null,
+            { emoji: "time", label: "읽는 시간대", value: period.label, caption: period.desc },
+            (form?.nickname || form?.name) ? { emoji: "star", label: "이번 예언의 주인공", value: form.nickname || form.name } : null,
           ].filter(Boolean)}
           primaryAction={() => {
             setPhase("intro");
             setText("");
             setShowResultSheet(false);
           }}
-          primaryLabel="\uB2E4\uB978 \uBBF8\uB798 \uB2E4\uC2DC \uBCF4\uAE30"
+          primaryLabel="다른 미래 다시 보기"
           secondaryAction={shareResult && done ? () => shareResult("prophecy", text, selectedPeriod) : null}
-          secondaryLabel={shareResult && done ? "\uC774 \uC608\uC5B8 \uACF5\uC720\uD558\uAE30" : undefined}
+          secondaryLabel={shareResult && done ? "이 예언 공유하기" : undefined}
           onDismiss={() => setShowResultSheet(false)}
         />
       );
