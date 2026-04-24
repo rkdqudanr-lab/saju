@@ -111,83 +111,120 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
   if (loading) return <FeatureLoadingScreen type="taegil" />;
 
   return (
-    <div className="page step-fade">
-      <div className="inner">
+    <div className="page step-fade" style={{ paddingBottom: 100 }}>
+      <div className="inner" style={{ maxWidth: 520, margin: '0 auto', padding: '0 16px' }}>
         {/* 헤더 */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: '2rem', marginBottom: 8 }}>🗓️</div>
-          <h2 style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>택일 — 길일 찾기</h2>
-          <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>
-            중요한 날, 별숨이 가장 좋은 날을 골라드릴게요
+        <div style={{ textAlign: 'center', marginBottom: 36, marginTop: 20 }}>
+          <div style={{ 
+            width: 64, height: 64, borderRadius: 20, 
+            background: 'var(--goldf)', display: 'flex', 
+            alignItems: 'center', justifyContent: 'center', 
+            margin: '0 auto 16px', fontSize: '1.8rem',
+            border: '1px solid var(--acc)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+          }}>🗓️</div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--t1)', margin: 0, letterSpacing: '-0.02em' }}>길일 택일 — 최고의 날 찾기</h2>
+          <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 8, lineHeight: 1.6 }}>
+            중요한 일정, 별숨의 기운이 가장 길한 날을<br/>정성을 다해 골라드릴게요.
           </p>
         </div>
 
         {/* 이벤트 유형 선택 */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
-            ✦ 어떤 날을 잡으시나요?
+        <div style={{ 
+          marginBottom: 24, padding: '20px', borderRadius: 24, 
+          background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 800, marginBottom: 14, letterSpacing: '.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--gold)' }} />
+            어떤 특별한 날을 잡으시나요?
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {EVENT_TYPES.map(e => (
               <button
                 key={e.key}
                 onClick={() => setEventType(prev => prev === e.key ? '' : e.key)}
                 style={{
-                  padding: '10px 12px', borderRadius: 'var(--r1)', cursor: 'pointer',
-                  border: `1px solid ${eventType === e.key ? 'var(--gold)' : 'var(--line)'}`,
-                  background: eventType === e.key ? 'var(--goldf)' : 'var(--card)',
+                  padding: '12px 14px', borderRadius: 16, cursor: 'pointer',
+                  border: `1px solid ${eventType === e.key ? 'var(--gold)' : 'rgba(255,255,255,0.08)'}`,
+                  background: eventType === e.key ? 'var(--goldf)' : 'rgba(255,255,255,0.04)',
                   color: eventType === e.key ? 'var(--gold)' : 'var(--t2)',
-                  fontSize: 'var(--xs)', textAlign: 'left', transition: 'all .15s',
+                  fontSize: 'var(--xs)', textAlign: 'left', transition: 'all .2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  fontWeight: eventType === e.key ? 700 : 400,
                 }}
               >
-                {e.emoji} {e.key}
+                <span style={{ fontSize: '1.1rem' }}>{e.emoji}</span> {e.key}
               </button>
             ))}
           </div>
         </div>
 
         {/* 날짜 범위 */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
-            ✦ 검색 기간 (최대 14일)
+        <div style={{ 
+          marginBottom: 24, padding: '20px', borderRadius: 24, 
+          background: 'rgba(255,255,255,0.03)', border: '1px solid var(--line)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 800, marginBottom: 14, letterSpacing: '.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--gold)' }} />
+            검색 기간 설정 (최대 14일)
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              style={{ flex: 1, padding: '10px 12px', borderRadius: 'var(--r1)', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--t1)', fontSize: 'var(--xs)' }}
-            />
-            <span style={{ color: 'var(--t3)', fontSize: 'var(--xs)' }}>~</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              style={{ flex: 1, padding: '10px 12px', borderRadius: 'var(--r1)', border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--t1)', fontSize: 'var(--xs)' }}
-            />
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '12px 14px', borderRadius: 14, 
+                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', 
+                  color: 'var(--t1)', fontSize: 'var(--xs)', outline: 'none'
+                }}
+              />
+            </div>
+            <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>—</span>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '12px 14px', borderRadius: 14, 
+                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', 
+                  color: 'var(--t1)', fontSize: 'var(--xs)', outline: 'none'
+                }}
+              />
+            </div>
           </div>
         </div>
 
         {/* 후보 날짜 미리보기 */}
         {candidateDates.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 10 }}>
-              📋 분석 대상 날짜 ({candidateDates.length}일) — 사주 기운 순
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 14, paddingLeft: 4, fontWeight: 500 }}>
+              📋 분석 대상 {candidateDates.length}일 (기운이 좋은 순서)
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {candidateDates.slice(0, 6).map((d, i) => (
                 <div key={i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '8px 12px', borderRadius: 8,
-                  background: i === 0 ? 'var(--goldf)' : 'var(--card)',
-                  border: `1px solid ${i === 0 ? 'var(--acc)' : 'var(--line)'}`,
+                  padding: '14px 18px', borderRadius: 18,
+                  background: i === 0 ? 'var(--goldf)' : 'rgba(255,255,255,0.02)',
+                  border: i === 0 ? '1px solid var(--gold)' : '1px solid rgba(255,255,255,0.05)',
+                  boxShadow: i === 0 ? '0 4px 15px rgba(212,175,55,0.15)' : 'none',
+                  animation: `fadeUp 0.4s ease ${i * 0.05}s both`
                 }}>
-                  <span style={{ fontSize: 'var(--xs)', color: i === 0 ? 'var(--gold)' : 'var(--t2)' }}>
-                    {i === 0 && '🥇 '}{d.label}
-                  </span>
-                  <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>
-                    {d.sajuDesc} {scoreToStars(d.score)}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {i === 0 && <span style={{ fontSize: '1.2rem' }}>✨</span>}
+                    <span style={{ fontSize: 'var(--xs)', fontWeight: i === 0 ? 700 : 500, color: i === 0 ? 'var(--gold)' : 'var(--t2)' }}>
+                      {d.label}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 2 }}>{d.sajuDesc}</div>
+                    <div style={{ fontSize: '10px', letterSpacing: '1px' }}>{scoreToStars(d.score)}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -199,64 +236,69 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
           onClick={handleAsk}
           disabled={loading || !eventType}
           style={{
-            width: '100%', padding: '13px', borderRadius: 'var(--r1)', cursor: 'pointer',
+            width: '100%', padding: '18px', borderRadius: 20, cursor: 'pointer',
             background: loading || !eventType ? 'var(--line)' : 'linear-gradient(135deg, var(--gold), #c8953a)',
-            color: loading || !eventType ? 'var(--t3)' : '#1a1208',
-            fontWeight: 700, fontSize: 'var(--sm)', border: 'none', marginBottom: 24,
+            color: loading || !eventType ? 'var(--t4)' : '#1a1208',
+            fontWeight: 800, fontSize: 'var(--sm)', border: 'none', marginBottom: 32,
+            boxShadow: loading || !eventType ? 'none' : '0 10px 25px rgba(212,175,55,0.25)',
+            transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: loading ? 'scale(0.98)' : 'scale(1)'
           }}
         >
-          {loading ? '별숨이 길일을 찾고 있어요...' : '🗓️ 길일 분석 받기'}
+          {loading ? '별의 흐름을 읽는 중...' : '🗓️ 최고의 길일 분석 받기'}
         </button>
 
-        {/* 결과 */}
+        {/* 결과 인라인 (결과 시트 외에도 간단히 표시) */}
         {result && (
-          <div style={{ animation: 'fadeUp .4s ease' }}>
-            <div style={{
-              background: 'var(--card)', border: '1px solid var(--line)',
-              borderRadius: 'var(--r1)', padding: '16px', marginBottom: 12,
-            }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>
-                ✦ 별숨의 택일 분석
-              </div>
-              <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-                {result}
-              </div>
+          <div style={{ 
+            animation: 'fadeUp .5s ease', padding: '24px', borderRadius: 28,
+            background: 'var(--bg2)', border: '1px solid var(--acc)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 800, marginBottom: 14, letterSpacing: '.1em' }}>
+              ✦ 별숨의 택일 Insight
             </div>
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.9, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>
+              {result}
+            </div>
+            
             {/* 택일 카드 공유 */}
             {onShareCard && candidateDates[0] && (
               <button
                 onClick={() => onShareCard(candidateDates[0].label, eventType, form?.name)}
                 style={{
-                  width: '100%', padding: '10px', borderRadius: 'var(--r1)',
-                  border: '1px solid var(--line)', background: 'var(--bg2)',
-                  color: 'var(--t2)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  transition: 'all .15s',
+                  width: '100%', padding: '14px', borderRadius: 16, marginTop: 24,
+                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)',
+                  color: 'var(--t3)', fontSize: 'var(--xs)', fontWeight: 600,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  transition: 'all .2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--gold)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.color = 'var(--t2)'; }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.color = 'var(--gold)'; e.currentTarget.style.background = 'var(--goldf)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--t3)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
               >
-                📅 나의 최고의 날 카드로 저장
+                📅 나의 최고의 날 카드로 저장하기
               </button>
             )}
           </div>
         )}
+
+        {/* 결과 시트 (Overlay) */}
         {result && showResultSheet && (
           <FeatureResultSheet
             type="taegil"
             eyebrow="BYEOLSOOM TAEGIL"
-            title="\uBCC4\uC228\uC758 \uD0DD\uC77C \uACB0\uACFC"
+            title="별숨의 택일 결과"
             text={result}
             highlights={[
-              eventType ? { emoji: "calendar", label: "\uCC3E\uB294 \uC77C\uC815", value: eventType } : null,
-              candidateDates[0] ? { emoji: "best", label: "\uAC00\uC7A5 \uC88B\uC740 \uD6C4\uBCF4", value: candidateDates[0].label, caption: candidateDates[0].sajuDesc } : null,
-              candidateDates[1] ? { emoji: "plus", label: "\uD568\uAED8 \uBCFC \uB0A0\uC9DC", value: candidateDates[1].label } : null,
+              eventType ? { emoji: "📅", label: "찾는 일정", value: eventType } : null,
+              candidateDates[0] ? { emoji: "🥇", label: "가장 좋은 후보", value: candidateDates[0].label, caption: candidateDates[0].sajuDesc } : null,
+              candidateDates[1] ? { emoji: "🥈", label: "함께 볼 날짜", value: candidateDates[1].label } : null,
             ].filter(Boolean)}
             primaryAction={() => {
               setResult("");
               setShowResultSheet(false);
             }}
-            primaryLabel="\uB2E4\uB978 \uB0A0\uC9DC \uB2E4\uC2DC \uBCF4\uAE30"
+            primaryLabel="다른 날짜 다시 보기"
             onDismiss={() => setShowResultSheet(false)}
           />
         )}

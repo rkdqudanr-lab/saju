@@ -633,7 +633,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
         <FeatureResultSheet
           type="tarot"
           eyebrow="BYEOLSOOM TAROT"
-          title="\uBCC4\uC228 \uD0C0\uB85C\uC758 \uACC4\uC2DC"
+          title="별숨 타로의 계시"
           text={streamText || streamError}
           highlights={pickedCards.map((card, index) => ({
             emoji: card.emoji,
@@ -644,7 +644,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
           primaryAction={() => {
             resetTarotFlow();
           }}
-          primaryLabel="\uB2E4\uB978 \uCE74\uB4DC \uB2E4\uC2DC \uACE0\uB974\uAE30"
+          primaryLabel="다른 카드 다시 고르기"
           onDismiss={resetTarotFlow}
         />
 

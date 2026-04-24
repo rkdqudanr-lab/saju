@@ -23,11 +23,11 @@ const THEMES = {
     glow: 'radial-gradient(circle, rgba(232,176,72,0.13), transparent 68%)',
   },
   taegil: {
-    accent: 'rgba(108,196,143,0.92)',
-    accentSoft: 'rgba(108,196,143,0.12)',
-    border: 'rgba(108,196,143,0.26)',
-    background: 'linear-gradient(180deg, rgba(8,20,18,0.98) 0%, rgba(16,30,26,0.99) 100%)',
-    glow: 'radial-gradient(circle, rgba(108,196,143,0.13), transparent 68%)',
+    accent: 'rgba(212,175,55,0.95)',
+    accentSoft: 'rgba(212,175,55,0.14)',
+    border: 'rgba(212,175,55,0.32)',
+    background: 'linear-gradient(180deg, rgba(10,12,24,0.98) 0%, rgba(20,24,48,0.99) 100%)',
+    glow: 'radial-gradient(circle, rgba(212,175,55,0.15), transparent 70%)',
   },
   prophecy: {
     accent: 'rgba(124,183,255,0.92)',

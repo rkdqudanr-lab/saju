@@ -323,13 +323,13 @@ export function parseAccSummary(text) {
 //  타이밍 상수 (애니메이션/타이핑 딜레이)
 // ═══════════════════════════════════════════════════════════
 export const TIMING = {
-  typingWord: 22,      // AccItem 기본 타이핑 — 한글 자소 프레임 22ms
-  typingChat: 18,      // 채팅 버블 타이핑 — 한글 자소 프레임 18ms
-  typingReport: 18,    // 리포트 타이핑
-  sampleChar: 22,      // SamplePreview 기본 문자 딜레이
-  samplePunct: 220,    // 문장부호 딜레이 (. ! ?)
-  sampleComma: 100,    // 쉼표 딜레이
-  sampleNewline: 150,  // 개행 딜레이
+  typingWord: 28,      // AccItem 기본 타이핑 — 한글 자소 프레임 28ms
+  typingChat: 28,      // 채팅 버블 타이핑 — 한글 자소 프레임 28ms
+  typingReport: 28,    // 리포트 타이핑
+  sampleChar: 28,      // SamplePreview 기본 문자 딜레이
+  samplePunct: 250,    // 문장부호 딜레이 (. ! ?)
+  sampleComma: 120,    // 쉼표 딜레이
+  sampleNewline: 180,  // 개행 딜레이
   skeletonCycle: 2000, // 스켈레톤 애니메이션 주기
   toastDuration: 3500, // 토스트 자동 사라짐 (ms)
 };

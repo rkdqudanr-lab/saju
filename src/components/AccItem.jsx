@@ -76,7 +76,12 @@ export default function AccItem({q,text,idx,isOpen,onToggle,shouldType,onTypingD
 //  채팅 AI 버블
 // ═══════════════════════════════════════════════════════════
 export function ChatBubble({text,isNew,isStreaming=false}){
-  const{shown,done,skipToEnd}=useWordTyping(text,isNew&&!isStreaming,TIMING.typingChat);
+  const wasStreamingRef = useRef(false);
+  if (isStreaming) wasStreamingRef.current = true;
+
+  // 스트리밍이 이미 진행된 메시지는 종료 후 다시 타이핑 애니메이션을 트리거하지 않습니다.
+  const shouldType = isNew && !isStreaming && !wasStreamingRef.current;
+  const {shown, done, skipToEnd} = useWordTyping(text, shouldType, TIMING.typingChat);
   const [streamShown, setStreamShown] = useState('');
   const timerRef = useRef(null);
 
@@ -86,17 +91,20 @@ export function ChatBubble({text,isNew,isStreaming=false}){
       if (timerRef.current) clearTimeout(timerRef.current);
       return;
     }
+    // 부모로부터 전달받은 text가 현재 보여주는 streamShown보다 길 때만 타이머 작동
     if ((streamShown || '').length >= (text || '').length) return;
+    
     timerRef.current = setTimeout(() => {
       setStreamShown((text || '').slice(0, (streamShown || '').length + 1));
     }, TIMING.typingChat);
+    
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [text, isStreaming, streamShown]);
 
-  const display=isStreaming?streamShown:(isNew?shown:text);
-  const isDone=isStreaming?display===(text||''):(!isNew||done);
+  const display = isStreaming ? streamShown : (shouldType ? shown : text);
+  const isDone = isStreaming ? display === (text || '') : (!shouldType || done);
   return(
     <div>
       <div className="chat-bubble">{display}{!isDone&&<span className="typing-cursor"/>}</div>
