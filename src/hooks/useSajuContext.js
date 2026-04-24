@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useEffect } from "react";
-import { getTodayInfo, getSaju, ON } from "../utils/saju.js";
+import { getTodayInfo, getSaju, ON, calcSipsin } from "../utils/saju.js";
 import { getSun, getMoon, getAsc } from "../utils/astrology.js";
 import { useAppStore } from "../store/useAppStore.js";
 
@@ -60,6 +60,15 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     if (!(activeForm.bm && activeForm.bd)) return null;
     try { return getSun(+activeForm.bm, +activeForm.bd); } catch (e) { console.error('[별숨] activeSun 오류:', e); return null; }
   }, [activeForm]);
+  const activeMoon   = useMemo(() => {
+    const bd = activeForm.bd ? +activeForm.bd : (activeForm.by && activeForm.bm && !activeForm.bd ? 15 : null);
+    if (!(activeForm.by && activeForm.bm && bd)) return null;
+    try { return getMoon(+activeForm.by, +activeForm.bm, bd); } catch (e) { console.error('[별숨] activeMoon 오류:', e); return null; }
+  }, [activeForm]);
+  const activeAsc    = useMemo(() => {
+    if (!(!activeForm.noTime && activeForm.bh)) return null;
+    try { return getAsc(+activeForm.bh); } catch (e) { console.error('[별숨] activeAsc 오류:', e); return null; }
+  }, [activeForm]);
   const activeAge    = activeForm.by ? today.year - +activeForm.by : 0;
 
   // 나이대 분류: 언어 톤 조정용
@@ -77,7 +86,9 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
   const buildCtx = useCallback(() => {
     const af   = activeForm;
     const as_  = activeSaju;
-    const asSun = activeSun;
+    const asSun  = activeSun;
+    const asMoon = activeMoon;
+    const asAsc  = activeAsc;
     // 이름 sanitization: 프롬프트 인젝션 방지 (대괄호, 줄바꿈, 30자 초과 제거)
     const rawName = af.name || '';
     const safeName = rawName.replace(/[\[\]\n\r]/g, '').slice(0, 30);
@@ -95,10 +106,23 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
       c += `연주: ${as_.yeon.g}${as_.yeon.j} / 월주: ${as_.wol.g}${as_.wol.j} / 일주: ${as_.il.g}${as_.il.j} / 시주: ${as_.si.g}${as_.si.j}\n`;
       c += `타고난 기질: ${as_.ilganDesc}\n`;
       c += `강한 기운: ${ON[as_.dom]} / 약한 기운: ${ON[as_.lac]}\n\n`;
+
+      // 오늘의 십신 — AI가 임의로 생성하지 않도록 서버 전달 전 클라이언트에서 직접 계산
+      if (today.ilchin?.gan) {
+        const sipsin = calcSipsin(as_.ilgan, today.ilchin.gan);
+        if (sipsin) {
+          c += `[오늘의 십신 — 반드시 이 계산값 사용, AI 자체 판단 금지]\n`;
+          c += `${sipsin.name}(${sipsin.meaning})\n`;
+          c += `강한 운세 영역: ${sipsin.strongAreas}\n`;
+          c += `주의 운세 영역: ${sipsin.weakAreas}\n\n`;
+        }
+      }
     }
     if (asSun) {
-      c += `[별자리 기운]\n`;
-      c += `태양: ${asSun.n}(${asSun.s}) — ${asSun.desc}\n`;
+      c += `[별자리 기운 — 반드시 이 계산값 사용, AI 자체 판단 금지]\n`;
+      c += `태양: ${asSun.n}(${asSun.s}) [원소: ${asSun.elem}] — ${asSun.desc}\n`;
+      if (asMoon) c += `달: ${asMoon.n}(${asMoon.s}) [원소: ${asMoon.elem}] — ${asMoon.desc}\n`;
+      if (asAsc)  c += `상승: ${asAsc.n}(${asAsc.s}) [원소: ${asAsc.elem}] — ${asAsc.desc}\n`;
     }
     // MBTI 형식 검증 (ENFJ, ISTP 등 4자리 형식만 허용)
     if (profile.mbti && /^[EI][NS][TF][JP]$/i.test(profile.mbti)) {
@@ -150,7 +174,7 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     c += `1. 반드시 [요약] 태그로 시작하는 한 줄 요약을 맨 처음에 써요. [요약] 태그 자체는 그대로 출력해요 (UI에서 자동 파싱·처리됨).\n`;
     c += `2. 답변 시 모호한 표현을 피하고, 구체적인 날짜·방향·행동·감각(음식·향·소리 등) 중 하나를 반드시 포함하세요.\n`;
     return c;
-  }, [activeForm, activeSaju, activeSun, activeAge, profile, activeProfileIdx, ageRange]);
+  }, [activeForm, activeSaju, activeSun, activeMoon, activeAsc, activeAge, profile, activeProfileIdx, ageRange]);
 
 // ── Zustand 스토어에 사주/별자리 데이터 주입 ──────────────────
   // 💡 최상단 훅 호출을 제거하고 직접 getState()를 사용합니다.

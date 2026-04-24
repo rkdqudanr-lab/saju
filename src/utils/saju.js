@@ -44,6 +44,62 @@ function solarToLunarFE(y,m,d){
   return{lm:1,ld:1,isLeap:false};
 }
 
+// ── 일진(日辰) 계산 — 60甲子 순환 ─────────────────────────────
+// 기준: 2000-01-01 = 甲戌日 (천간 0=갑, 지지 10=술)
+const _IC_GANS = ['갑','을','병','정','무','기','경','신','임','계'];
+const _IC_JIS  = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
+const _IC_EL   = { 갑:'목',을:'목',병:'화',정:'화',무:'토',기:'토',경:'금',신:'금',임:'수',계:'수' };
+const _IC_DESC = { 목:'추진·시작하기 좋은 날', 화:'표현·활발하게 나서기 좋은 날', 토:'신중하게 기다리기 좋은 날', 금:'결단·마무리하기 좋은 날', 수:'직관을 믿고 조용히 준비하기 좋은 날' };
+
+function _calcIlchin(y, m, d) {
+  const diff = Math.round((Date.UTC(y, m-1, d) - Date.UTC(2000, 0, 1)) / 86400000);
+  const gan  = _IC_GANS[((diff)    % 10 + 10) % 10];
+  const ji   = _IC_JIS [((10+diff) % 12 + 12) % 12];
+  return { gan, ji, text: `${gan}${ji}일`, element: _IC_EL[gan], desc: _IC_DESC[_IC_EL[gan]] };
+}
+
+// ── 십신(十神) 계산 — 사용자 일간 × 오늘 천간 ─────────────────
+const _SHENG = { 목:'화', 화:'토', 토:'금', 금:'수', 수:'목' }; // 상생(내가 생하는)
+const _KE    = { 목:'토', 화:'금', 토:'수', 금:'목', 수:'화' }; // 상극(내가 극하는)
+
+/**
+ * 사용자 일간과 오늘 천간으로 십신을 계산해요.
+ * @param {string} myGan 사용자 일간 (예: '임')
+ * @param {string} todayGan 오늘 일진 천간 (예: '갑')
+ * @returns {{ name, meaning, strongAreas, weakAreas } | null}
+ */
+export function calcSipsin(myGan, todayGan) {
+  if (!myGan || !todayGan) return null;
+  const myEl    = _IC_EL[myGan];
+  const todayEl = _IC_EL[todayGan];
+  if (!myEl || !todayEl) return null;
+  const myIdx    = _IC_GANS.indexOf(myGan);
+  const todayIdx = _IC_GANS.indexOf(todayGan);
+  const same = (myIdx % 2) === (todayIdx % 2); // 음양 동일 여부
+
+  if (myEl === todayEl)
+    return same
+      ? { name:'비견', meaning:'자립·독립심 활성화',          strongAreas:'이동운·건강운',      weakAreas:'금전운' }
+      : { name:'겁재', meaning:'경쟁심·돌파력 자극',          strongAreas:'직장운·이동운',      weakAreas:'금전운·대인운' };
+  if (_SHENG[myEl] === todayEl)
+    return same
+      ? { name:'식신', meaning:'재능·표현·여유 활성화',       strongAreas:'창의운·학업운·대인운', weakAreas:'직장운' }
+      : { name:'상관', meaning:'창의·자기표현·변화 충동',     strongAreas:'창의운·이동운',      weakAreas:'직장운·대인운' };
+  if (_KE[myEl] === todayEl)
+    return same
+      ? { name:'편재', meaning:'새로운 재물·활발한 외부활동', strongAreas:'금전운·이동운',      weakAreas:'학업운' }
+      : { name:'정재', meaning:'안정적 재물·꼼꼼한 관리',    strongAreas:'금전운·직장운',      weakAreas:'이동운' };
+  if (_KE[todayEl] === myEl)
+    return same
+      ? { name:'편관', meaning:'규율·압박·도전',              strongAreas:'직장운·건강운',      weakAreas:'대인운·애정운' }
+      : { name:'정관', meaning:'명예·인정·체계',              strongAreas:'직장운·대인운',      weakAreas:'창의운' };
+  if (_SHENG[todayEl] === myEl)
+    return same
+      ? { name:'편인', meaning:'학습·분석·직관력',            strongAreas:'학업운·이동운',      weakAreas:'애정운' }
+      : { name:'정인', meaning:'지혜·배움·귀인',              strongAreas:'학업운·대인운',      weakAreas:'이동운' };
+  return null;
+}
+
 export function getTodayInfo() {
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
@@ -52,10 +108,11 @@ export function getTodayInfo() {
   const jeolgi = JEOLGI[((m-1)*2+(d>20?1:0))%24];
   const{lm,ld,isLeap}=solarToLunarFE(y,m,d);
   const lunar=`음력 ${isLeap?'윤':''}${lm}월 ${ld}일`;
+  const ilchin = _calcIlchin(y, m, d);
   return{
     solar:`${y}년 ${m}월 ${d}일 (${week}요일)`,
     lunar, jeolgi:`절기 근처: ${jeolgi}`,
-    year:y, month:m, day:d
+    year:y, month:m, day:d, week, ilchin
   };
 }
 
