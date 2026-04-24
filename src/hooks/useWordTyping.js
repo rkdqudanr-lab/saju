@@ -63,7 +63,7 @@ export default function useWordTyping(text, active, speed = 25) {
     }
     
     const frames = getTypingFrames(text);
-    const typingSpeed = speed > 50 ? 25 : speed; 
+    const typingSpeed = speed; 
     animRef.current = { idx: 0, nextTime: performance.now() + typingSpeed, frames };
 
     const tick = (now) => {

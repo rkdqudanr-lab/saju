@@ -63,7 +63,8 @@ export default function DailyStarCardV2({
   // parsed.score (텍스트 실시간 파싱) 우선, 없으면 gamification이 별도 설정한 result.score로 폴백
   // useDailyConsultationHandler가 { ...prev, text } 로 업데이트하므로 flickering 없음
   const score = parsed.score ?? result?.score ?? null;
-  const displayedScore = score !== null ? Math.min(100, score + (scoreBoost || 0)) : null;
+  const scoreBoostVal = Number(scoreBoost) || 0;
+  const displayedScore = (score !== null && !isNaN(score)) ? Math.min(100, Number(score) + scoreBoostVal) : null;
   const summary = parsed.summary || '';
   const easternKi = parsed.easternKi;
   const westernSky = parsed.westernSky;
@@ -134,7 +135,7 @@ export default function DailyStarCardV2({
 
         {displayedScore !== null && (
           <div className="dsc-score">
-            별숨 점수 <strong><AnimatedScore value={displayedScore} /></strong>
+            별숨 점수 <strong><AnimatedScore value={displayedScore || 0} /></strong>
             {scoreBoost > 0 && (
               <span style={{ marginLeft: 8, fontSize: '0.75em', color: 'var(--gold)', fontWeight: 700 }}>
                 +<AnimatedScore value={scoreBoost} duration={0.8} />

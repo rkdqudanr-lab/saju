@@ -109,14 +109,22 @@ export function ChatBubble({text,isNew,isStreaming=false}){
     };
   }, [text, isStreaming, streamShown]);
 
+  const handleSkip = () => {
+    if (isStreaming) {
+      setStreamShown(text || '');
+    } else {
+      skipToEnd();
+    }
+  };
+
   const display = isStreaming ? streamShown : (shouldType ? shown : text);
   const isDone = isStreaming ? display === (text || '') : (!shouldType || done);
   return(
     <div>
       <div className="chat-bubble">{display}{!isDone&&<span className="typing-cursor"/>}</div>
-      {!isDone&&!isStreaming&&(
+      {!isDone&&(
         <div className="chat-bubble-actions">
-          <button className="skip-btn" onClick={skipToEnd}>바로 보기</button>
+          <button className="skip-btn" onClick={handleSkip}>바로 보기</button>
         </div>
       )}
     </div>

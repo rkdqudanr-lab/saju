@@ -3,12 +3,118 @@ import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
 import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
 import FeatureLoadingScreen from "../components/FeatureLoadingScreen.jsx";
+import BoostItemSheet from "../components/BoostItemSheet.jsx";
 import { detectBadtime } from "../utils/gamificationLogic.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
 import { getAuthenticatedClient } from "../lib/supabase.js";
 import { getDailyDateKey, writeDailyLocalCache } from "../lib/dailyDataAccess.js";
 import { findItem } from "../utils/gachaItems.js";
+
+// ── 별숨 변화 팝업 ───────────────────────────────────────────────
+function BoostRegenModal({ isOpen, boostAmount, onConfirm, onClose, isLoading }) {
+  if (!isOpen) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 400,
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0 24px',
+        animation: 'purifyFadeIn 0.25s ease',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxWidth: 360,
+          background: 'var(--bg1)',
+          borderRadius: 20,
+          padding: '28px 24px 24px',
+          boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
+          border: '1px solid var(--acc)',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ fontSize: '2.2rem', marginBottom: 12 }}>✨</div>
+        <div style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--t1)', marginBottom: 8, lineHeight: 1.4 }}>
+          오늘 별숨의 변화가 있어요
+        </div>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7, marginBottom: 24 }}>
+          아이템으로 <span style={{ color: 'var(--gold)', fontWeight: 700 }}>+{boostAmount}점</span> 올랐어요.<br />
+          새로운 흐름으로 별숨을 다시 풀이해드릴까요?
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: '13px 0',
+              borderRadius: 12,
+              background: 'var(--bg2)',
+              border: '1px solid var(--line)',
+              color: 'var(--t3)',
+              fontWeight: 700,
+              fontSize: 'var(--xs)',
+              cursor: 'pointer',
+              fontFamily: 'var(--ff)',
+            }}
+          >
+            아니오
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isLoading}
+            style={{
+              flex: 1,
+              padding: '13px 0',
+              borderRadius: 12,
+              background: 'var(--gold)',
+              border: 'none',
+              color: '#fff',
+              fontWeight: 800,
+              fontSize: 'var(--xs)',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              fontFamily: 'var(--ff)',
+              opacity: isLoading ? 0.7 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+            }}
+          >
+            {isLoading ? (
+              <>
+                <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'orbSpin 0.7s linear infinite' }} />
+                불러오는 중
+              </>
+            ) : '네, 다시 볼래요'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── slideUp 애니메이션 키프레임 (한 번만 주입) ───────────────────
+let _slideUpInjected = false;
+function ensureSlideUpStyle() {
+  if (_slideUpInjected || typeof document === 'undefined') return;
+  _slideUpInjected = true;
+  const style = document.createElement('style');
+  style.textContent = `@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
+  document.head.appendChild(style);
+}
 
 export default function DailyHoroscopePage({
   today,
@@ -23,122 +129,66 @@ export default function DailyHoroscopePage({
   isBlockingBadtime = false,
   earnBP = null,
 }) {
-  const { user } = useUserCtx();
+  ensureSlideUpStyle();
+
+  const { user, showToast } = useUserCtx();
   const { saju = null } = useSajuCtx();
   const { gamificationState = {} } = useGamCtx();
   const equippedSajuItem = useAppStore((s) => s.equippedSajuItem);
   const setStep = useAppStore((s) => s.setStep);
-  const [badtimeModal, setBadtimeModal] = useState({
-    isOpen: false,
-    badtime: null,
-  });
-  const [activeTab, setActiveTab] = useState('horoscope'); // 'horoscope' | 'lucky'
+
+  const [badtimeModal, setBadtimeModal] = useState({ isOpen: false, badtime: null });
+  const [activeTab, setActiveTab] = useState('horoscope');
   const savedScoreDateRef = useRef(null);
 
-  // 일별 점수 저장 (daily_scores 테이블)
+  // 아이템 관련 state (순서 중요: handleApplyPending보다 먼저)
+  const [ownedRows, setOwnedRows] = useState(null);
+  const [pendingItems, setPendingItems] = useState([]);
+  const [appliedBoost, setAppliedBoost] = useState(0);
+  const [isPurifying, setIsPurifying] = useState(false);
+
+  // 시트 / 팝업 state
+  const [isBoostSheetOpen, setIsBoostSheetOpen] = useState(false);
+  const [showRegenModal, setShowRegenModal] = useState(false);
+  const [lastBatchBoost, setLastBatchBoost] = useState(0);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // 일별 점수 저장
   useEffect(() => {
     if (!dailyResult?.score || !user) return;
-    const today = getDailyDateKey();
-    if (savedScoreDateRef.current === today) return; // 같은 날 중복 방지
-    savedScoreDateRef.current = today;
+    const dateKey = getDailyDateKey(); // shadowing 방지를 위해 변수명 변경
+    if (savedScoreDateRef.current === dateKey) return;
+    savedScoreDateRef.current = dateKey;
     const kakaoId = user.kakaoId || user.id;
-    writeDailyLocalCache(kakaoId, 'horoscope_score', String(dailyResult.score), today);
-    getAuthenticatedClient(kakaoId)
+    if (!kakaoId) return; // kakaoId 없으면 중단
+
+    writeDailyLocalCache(kakaoId, 'horoscope_score', String(dailyResult.score), dateKey);
+    const client = getAuthenticatedClient(kakaoId);
+    if (!client) return;
+
+    client
       .from('daily_scores')
       .upsert(
-        { kakao_id: String(kakaoId), score_date: today, score: dailyResult.score },
+        { kakao_id: String(kakaoId), score_date: dateKey, score: dailyResult.score },
         { onConflict: 'kakao_id,score_date' }
       )
       .then(({ error }) => { if (error) console.warn('[별숨] daily_scores upsert:', error); });
   }, [dailyResult?.score, user]);
 
-  // 배드타임 감지 및 모달 표시
+  // 배드타임 감지
   useEffect(() => {
     if (dailyResult) {
       const score = dailyResult.score;
-      // score가 없으면 감지하지 않음 (undefined || 0 fallback 방지)
       const badtime = (score !== null && score !== undefined)
         ? detectBadtime(score, dailyResult.text || '')
         : null;
       if (badtime) {
-        setBadtimeModal({
-          isOpen: true,
-          badtime: badtime,
-        });
+        setBadtimeModal({ isOpen: true, badtime });
       }
     }
   }, [dailyResult]);
 
-  const handleBlockBadtime = async () => {
-    if (onBlockBadtime) {
-      await onBlockBadtime();
-      setBadtimeModal({ isOpen: false, badtime: null });
-    }
-  };
-
-  const handleRecharge = async () => {
-    if (onRechargeFreeBP) {
-      await onRechargeFreeBP();
-    }
-  };
-
-  // 정화 재점 상태
-  const [isPurifying, setIsPurifying] = useState(false);
-  const [pendingItems, setPendingItems] = useState([]);
-  const [appliedBoost, setAppliedBoost] = useState(0);
-
-  const handleToggleItem = useCallback((row) => {
-    setPendingItems(prev => {
-      const exists = prev.find(p => p.rowId === row.rowId);
-      if (exists) return prev.filter(p => p.rowId !== row.rowId);
-      return [...prev, row];
-    });
-  }, []);
-
-  const handleApplyPending = useCallback(async () => {
-    if (pendingItems.length === 0 || isPurifying || dailyLoading) return;
-    setIsPurifying(true);
-    const kakaoId = user?.kakaoId || user?.id;
-    const client = getAuthenticatedClient(String(kakaoId));
-
-    try {
-      // 1. 아이템 소모 (Primary Key인 id로 삭제)
-      const rowIds = pendingItems.map(p => p.rowId);
-      const { error: delError } = await client
-        .from('user_shop_inventory')
-        .delete()
-        .in('id', rowIds)
-        .eq('kakao_id', String(kakaoId));
-
-      if (delError) throw delError;
-
-      // 2. AI 호출 (부스트 반영)
-      const transientItems = pendingItems.map(p => p.item);
-      await askDailyHoroscope?.({
-        skipBpCharge: true,
-        skipConfirm: true,
-        saveHistory: true,
-        transientItems,
-        previousResult: dailyResult?.text,
-      });
-
-      // 3. 상태 업데이트
-      const totalBoost = pendingItems.reduce((sum, p) => sum + (p.item?.boost || 0), 0);
-      setAppliedBoost(prev => prev + totalBoost);
-      setPendingItems([]);
-      setOwnedRows(prev => prev ? prev.filter(r => !rowIds.includes(r.rowId)) : null);
-      
-      showToast?.('기운 정화가 완료되었습니다. 점수가 상승했습니다!');
-    } catch (err) {
-      console.error('[별숨] 아이템 적용 실패:', err);
-      showToast?.('기운 정화 중 오류가 발생했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsPurifying(false);
-    }
-  }, [pendingItems, isPurifying, dailyLoading, user, askDailyHoroscope, dailyResult, showToast]);
-
-  // 아이템 보관함 로드
-  const [ownedRows, setOwnedRows] = useState(null);
+  // 보관함 로드
   useEffect(() => {
     const kakaoId = user?.kakaoId || user?.id;
     if (!kakaoId || !dailyResult) return;
@@ -158,19 +208,114 @@ export default function DailyHoroscopePage({
       .catch(() => setOwnedRows([]));
   }, [user?.kakaoId, user?.id, dailyResult]);
 
-  const canUseItems = !isPurifying && !dailyLoading;
+  const handleBlockBadtime = async () => {
+    if (onBlockBadtime) {
+      await onBlockBadtime();
+      setBadtimeModal({ isOpen: false, badtime: null });
+    }
+  };
 
+  const handleRecharge = async () => {
+    if (onRechargeFreeBP) await onRechargeFreeBP();
+  };
+
+  const canUseItems = !isPurifying && !dailyLoading;
+  const currentScore = dailyResult?.score ?? null;
+  const isScoreMaxed = (currentScore ?? 0) + (appliedBoost || 0) >= 100;
+
+  const handleToggleItem = useCallback((row) => {
+    setPendingItems((prev) => {
+      const exists = prev.find((p) => p.rowId === row.rowId);
+      return exists ? prev.filter((p) => p.rowId !== row.rowId) : [...prev, row];
+    });
+  }, []);
+
+  // 아이템 소모 + 부분 AI 재생성
+  const handleApplyPending = useCallback(async () => {
+    if (pendingItems.length === 0 || isPurifying || dailyLoading) return;
+
+    const kakaoId = user?.kakaoId || user?.id;
+    if (!kakaoId) return;
+
+    setIsPurifying(true);
+    const client = getAuthenticatedClient(String(kakaoId));
+
+    try {
+      // 1. 아이템 소모 (user_shop_inventory에서 삭제)
+      const rowIds = pendingItems.map((p) => p.rowId);
+      const { error: delError } = await client
+        .from('user_shop_inventory')
+        .delete()
+        .in('id', rowIds)
+        .eq('kakao_id', String(kakaoId));
+      if (delError) throw delError;
+
+      // 2. AI 부분 재생성 (해당 카테고리 텍스트만 갱신, BP 미차감, 횟수 미증가)
+      const transientItems = pendingItems.map((p) => p.item);
+      await askDailyHoroscope?.({
+        skipBpCharge: true,
+        skipConfirm: true,
+        saveHistory: true,
+        incrementCount: false,
+        transientItems,
+        previousResult: dailyResult?.text,
+      });
+
+      // 3. 상태 갱신
+      const totalBoost = pendingItems.reduce((s, p) => s + (p.item?.boost || 0), 0);
+      setAppliedBoost((prev) => prev + totalBoost);
+      setOwnedRows((prev) => prev?.filter((r) => !rowIds.includes(r.rowId)) ?? null);
+      setPendingItems([]);
+      setIsBoostSheetOpen(false);
+
+      // 4. 20점 이상이면 전체 재생성 제안
+      if (totalBoost >= 20) {
+        setLastBatchBoost(totalBoost);
+        setShowRegenModal(true);
+      } else {
+        showToast?.('아이템 기운이 오늘 운세에 스며들었어요 ✦', 'success');
+      }
+    } catch (err) {
+      console.error('[별숨] 아이템 적용 실패:', err);
+      showToast?.('기운 정화 중 오류가 발생했어요. 다시 시도해주세요.', 'error');
+    } finally {
+      setIsPurifying(false);
+    }
+  }, [pendingItems, isPurifying, dailyLoading, user, askDailyHoroscope, dailyResult, showToast]);
+
+  // 전체 별숨 재생성 (20점 팝업 "네" 선택 시)
+  const handleFullRegenerate = useCallback(async () => {
+    setIsRegenerating(true);
+    try {
+      await askDailyHoroscope?.({
+        skipBpCharge: true,
+        skipConfirm: true,
+        saveHistory: true,
+        incrementCount: false,
+      });
+      setAppliedBoost(0);
+      setShowRegenModal(false);
+      showToast?.('새로운 별숨이 도착했어요 ✨', 'success');
+    } catch {
+      showToast?.('별숨을 다시 불러오지 못했어요. 잠시 후 시도해주세요.', 'error');
+    } finally {
+      setIsRegenerating(false);
+    }
+  }, [askDailyHoroscope, showToast]);
+
+  // 정화 재점 (기존)
   const handlePurify = useCallback(async () => {
     if (isPurifying || dailyLoading || dailyCount >= DAILY_MAX) return;
     setAppliedBoost(0);
     setIsPurifying(true);
-    const animPromise = new Promise(r => setTimeout(r, 1200));
+    const animPromise = new Promise((r) => setTimeout(r, 1200));
     try {
       await Promise.all([
         askDailyHoroscope?.({
           skipBpCharge: true,
           skipConfirm: true,
           saveHistory: false,
+          incrementCount: false,
         }),
         animPromise,
       ]);
@@ -181,10 +326,11 @@ export default function DailyHoroscopePage({
     }
   }, [isPurifying, dailyLoading, dailyCount, DAILY_MAX, askDailyHoroscope]);
 
-  // 로딩 중 → 풀스크린 로딩 화면
   if (dailyLoading && !isPurifying) {
     return <FeatureLoadingScreen type="daily" />;
   }
+
+  const showBoostButton = !!(dailyResult && !isScoreMaxed && ownedRows && ownedRows.length > 0);
 
   return (
     <div className="page step-fade" style={{ position: 'relative' }}>
@@ -207,6 +353,7 @@ export default function DailyHoroscopePage({
           </div>
         </div>
       )}
+
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 40, filter: isPurifying ? 'blur(4px)' : 'none', transition: 'filter 0.4s', pointerEvents: isPurifying ? 'none' : 'auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: '1.4rem', marginBottom: 8, color: 'var(--gold)' }}>✦</div>
@@ -214,31 +361,19 @@ export default function DailyHoroscopePage({
             오늘 하루 나의 별숨
           </div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-            {today.month}월 {today.day}일 · 매일 새로워져요
+            {today?.month || '--'}월 {today?.day || '--'}일 · 매일 새로워져요
           </div>
         </div>
 
         {/* 탭 네비게이션 */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '12px',
-            marginBottom: '20px',
-            borderBottom: '1px solid #eee',
-          }}
-        >
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', borderBottom: '1px solid #eee' }}>
           <button
             onClick={() => setActiveTab('horoscope')}
             style={{
-              flex: 1,
-              padding: '12px 0',
-              background: 'none',
-              border: 'none',
+              flex: 1, padding: '12px 0', background: 'none', border: 'none',
               borderBottom: activeTab === 'horoscope' ? '2px solid var(--gold)' : 'none',
               color: activeTab === 'horoscope' ? 'var(--gold)' : 'var(--t4)',
-              cursor: 'pointer',
-              fontWeight: activeTab === 'horoscope' ? '600' : '400',
-              fontSize: '13px',
+              cursor: 'pointer', fontWeight: activeTab === 'horoscope' ? '600' : '400', fontSize: '13px',
             }}
           >
             오늘의 운세
@@ -246,15 +381,10 @@ export default function DailyHoroscopePage({
           <button
             onClick={() => setActiveTab('lucky')}
             style={{
-              flex: 1,
-              padding: '12px 0',
-              background: 'none',
-              border: 'none',
+              flex: 1, padding: '12px 0', background: 'none', border: 'none',
               borderBottom: activeTab === 'lucky' ? '2px solid var(--gold)' : 'none',
               color: activeTab === 'lucky' ? 'var(--gold)' : 'var(--t4)',
-              cursor: 'pointer',
-              fontWeight: activeTab === 'lucky' ? '600' : '400',
-              fontSize: '13px',
+              cursor: 'pointer', fontWeight: activeTab === 'lucky' ? '600' : '400', fontSize: '13px',
             }}
           >
             🍀 행운 아이템
@@ -266,10 +396,45 @@ export default function DailyHoroscopePage({
           <>
             {dailyResult ? (
               <>
+                {/* 점수 올리기 버튼 */}
+                {showBoostButton && (
+                  <button
+                    type="button"
+                    onClick={() => setIsBoostSheetOpen(true)}
+                    disabled={isPurifying || dailyLoading}
+                    title="보유 아이템으로 오늘 운세 점수를 올려요"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      marginLeft: 'auto',
+                      marginBottom: 10,
+                      padding: '7px 14px',
+                      borderRadius: 999,
+                      background: 'var(--goldf)',
+                      border: '1px solid var(--acc)',
+                      color: 'var(--gold)',
+                      fontWeight: 700,
+                      fontSize: 'var(--xs)',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--ff)',
+                    }}
+                  >
+                    {/* + SVG 아이콘 */}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <circle cx="7" cy="7" r="6.5" stroke="currentColor" strokeWidth="1.2" />
+                      <path d="M7 4v6M4 7h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    점수 올리기
+                    {appliedBoost > 0 && (
+                      <span style={{ fontSize: 10, opacity: 0.8 }}>+{appliedBoost}점 적용됨</span>
+                    )}
+                  </button>
+                )}
+
                 <DailyStarCardV2
                   result={dailyResult}
                   ownedRows={ownedRows}
-                  onToggleItem={canUseItems ? handleToggleItem : null}
                   pendingItems={pendingItems}
                   scoreBoost={appliedBoost}
                 />
@@ -351,7 +516,22 @@ export default function DailyHoroscopePage({
                 )}
               </>
             ) : (
-              <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={() => { setAppliedBoost(0); askDailyHoroscope(); }}>
+              <button
+                className="cta-main"
+                style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }}
+                onClick={async () => {
+                  try {
+                    setAppliedBoost(0);
+                    await askDailyHoroscope?.();
+                  } catch (err) {
+                    if (err?.message === 'LOGIN_REQUIRED') {
+                      // useConsultation 내부에서 이미 처리했을 수 있지만 안전하게 한 번 더
+                    } else {
+                      showToast?.('운세를 불러오는 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.', 'error');
+                    }
+                  }
+                }}
+              >
                 오늘 기운 확인하기 ✦
               </button>
             )}
@@ -378,47 +558,28 @@ export default function DailyHoroscopePage({
         isBlocking={isBlockingBadtime}
       />
 
-      {/* 일괄 적용 버튼 */}
-      {pendingItems.length > 0 && (
-        <div style={{
-          position: 'fixed',
-          bottom: 100,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 100,
-          width: '90%',
-          maxWidth: 400,
-          animation: 'purifyFadeIn 0.3s ease',
-        }}>
-          <button
-            disabled={isPurifying || dailyLoading}
-            onClick={handleApplyPending}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: 16,
-              background: 'var(--gold)',
-              color: '#fff',
-              border: 'none',
-              fontWeight: 800,
-              fontSize: 16,
-              boxShadow: '0 8px 32px rgba(232,176,72,0.4)',
-              cursor: (isPurifying || dailyLoading) ? 'not-allowed' : 'pointer',
-              opacity: (isPurifying || dailyLoading) ? 0.6 : 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-            }}
-          >
-            <span>✦</span>
-            {pendingItems.length}개 아이템으로 점수 올리기
-            <span style={{ fontSize: 13, opacity: 0.85 }}>
-              +{pendingItems.reduce((s, p) => s + (p.item?.boost || 0), 0)}점
-            </span>
-          </button>
-        </div>
-      )}
+      {/* 점수 올리기 시트 */}
+      <BoostItemSheet
+        isOpen={isBoostSheetOpen}
+        onClose={() => { setIsBoostSheetOpen(false); setPendingItems([]); }}
+        ownedRows={ownedRows}
+        pendingItems={pendingItems}
+        onToggleItem={handleToggleItem}
+        onApply={handleApplyPending}
+        isApplying={isPurifying}
+        currentScore={currentScore}
+        appliedBoost={appliedBoost}
+        setStep={setStep}
+      />
+
+      {/* 별숨 변화 팝업 */}
+      <BoostRegenModal
+        isOpen={showRegenModal}
+        boostAmount={lastBatchBoost}
+        onConfirm={handleFullRegenerate}
+        onClose={() => setShowRegenModal(false)}
+        isLoading={isRegenerating}
+      />
     </div>
   );
 }

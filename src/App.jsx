@@ -897,6 +897,7 @@ export default function App() {
             isBlockingBadtime={isBlockingBadtime}
             freeRechargeAvailable={freeRechargeAvailable}
             earnBP={earnBP}
+            showToast={showToast}
           />
         )}
 
@@ -969,6 +970,7 @@ export default function App() {
             setStep={setStep}
             onRefresh={askDailyHoroscope}
             onSpendBp={spendBP}
+            showToast={showToast}
           />
         )}
 

@@ -50,6 +50,7 @@ export default function TodayDetailPage({
   setStep,
   onRefresh,
   onSpendBp,
+  showToast = null,
 }) {
   const user = useAppStore((s) => s.user);
   const kakaoId = user?.kakaoId || user?.id;

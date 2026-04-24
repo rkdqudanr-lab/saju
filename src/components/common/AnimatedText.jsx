@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 
 /**
  * 숫자가 부드럽게 올라가는 애니메이션 컴포넌트
@@ -41,7 +41,7 @@ export const AnimatedScore = ({ value, duration = 1.2 }) => {
 /**
  * 텍스트가 타이핑되듯 나타나는 메시지 컴포넌트
  */
-export const TypingMessage = ({ text, delay = 0.03, className = '', isSummary = false }) => {
+export const TypingMessage = ({ text, delay = 0.045, className = '', isSummary = false }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const hasCompletedRef = useRef(false);
@@ -64,8 +64,9 @@ export const TypingMessage = ({ text, delay = 0.03, className = '', isSummary = 
     setIsComplete(false);
     let index = 0;
     const timer = setInterval(() => {
-      setDisplayedText((prev) => prev + text[index]);
+      const char = text[index];
       index++;
+      setDisplayedText((prev) => prev + char);
       if (index >= text.length) {
         clearInterval(timer);
         setIsComplete(true);
