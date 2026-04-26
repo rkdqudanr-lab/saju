@@ -43,6 +43,58 @@ const MAJOR_ARCANA = [
 const POSITIONS = ['과거 — 지나온 흐름', '현재 — 지금의 기운', '미래 — 다가올 빛'];
 const ROMAN = ['0', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ', 'Ⅺ', 'Ⅻ', 'ⅩⅢ', 'ⅩⅣ', 'ⅩⅤ', 'ⅩⅥ', 'ⅩⅦ', 'ⅩⅧ', 'ⅩⅨ', 'ⅩⅩ', 'ⅩⅪ'];
 
+const TAROT_SEC_TAGS = ['질문요약','한줄답변','카드요약','과거카드','현재카드','미래카드','카드조합','성향보정','지금할일','피할일','별숨한마디'];
+
+function parseTarotSections(text) {
+  if (!text) return {};
+  const result = {};
+  for (let i = 0; i < TAROT_SEC_TAGS.length; i++) {
+    const tag = `[${TAROT_SEC_TAGS[i]}]`;
+    const start = text.indexOf(tag);
+    if (start === -1) continue;
+    const contentStart = start + tag.length;
+    let end = text.length;
+    for (let j = 0; j < TAROT_SEC_TAGS.length; j++) {
+      if (j === i) continue;
+      const nx = text.indexOf(`[${TAROT_SEC_TAGS[j]}]`, contentStart);
+      if (nx !== -1 && nx < end) end = nx;
+    }
+    result[TAROT_SEC_TAGS[i]] = text.slice(contentStart, end).trim();
+  }
+  return result;
+}
+
+function TarotSectionCard({ eyebrow, body, highlight, dark }) {
+  if (!body) return null;
+  const isActionList = body.match(/^\d+\.\s/m);
+  const baseStyle = {
+    padding: '14px 16px', marginBottom: 10, borderRadius: 14,
+    background: highlight
+      ? 'linear-gradient(135deg,rgba(200,165,80,0.15),rgba(180,140,220,0.1))'
+      : dark
+        ? 'rgba(255,255,255,0.04)'
+        : 'rgba(255,255,255,0.03)',
+    border: `1px solid ${highlight ? 'rgba(200,165,80,0.4)' : 'rgba(200,165,80,0.12)'}`,
+  };
+  return (
+    <div style={baseStyle}>
+      <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.85)', fontWeight: 700, letterSpacing: '.12em', marginBottom: 8, textTransform: 'uppercase' }}>{eyebrow}</div>
+      {isActionList ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          {body.split('\n').filter(l => l.trim()).map((line, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ color: 'rgba(200,165,80,0.9)', fontWeight: 700, flexShrink: 0, fontSize: '11px' }}>{line.match(/^\d+/)?.[0]}.</span>
+              <span style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.85)', lineHeight: 1.7 }}>{line.replace(/^\d+\.\s*/, '')}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.9)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>{body}</div>
+      )}
+    </div>
+  );
+}
+
 function shuffleDeck(userId = 'guest') {
   const today = new Date();
   const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
@@ -605,26 +657,69 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
             </div>
           )}
 
-          {(streamText || streamError) && (
-            <div style={{ margin: '20px 20px 0', padding: '20px 18px', background: 'linear-gradient(160deg, rgba(13,11,30,0.96), rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+          {(streamText || streamError) && (() => {
+            const secs = parseTarotSections(streamText || '');
+            const hasStructure = !!(secs['한줄답변'] || secs['카드조합']);
+            const wrapper = { margin: '20px 20px 0', background: 'linear-gradient(160deg,rgba(13,11,30,0.96),rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)', overflow: 'hidden' };
+            const hdr = (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '14px 18px 0' }}>
                 <div style={{ width: 20, height: 1, background: 'rgba(200,165,80,0.5)' }} />
                 <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.85)', fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase' }}>별숨의 타로 해석</div>
                 <div style={{ flex: 1, height: 1, background: 'rgba(200,165,80,0.5)' }} />
               </div>
-              {streamError
-                ? <div style={{ fontSize: 'var(--xs)', color: 'var(--rose)' }}>{streamError}</div>
-                : isStreaming
-                  ? <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div className="typing-dots"><span /><span /><span /></div>
-                      <span style={{ fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.7)', fontStyle: 'italic' }}>별숨이 카드를 읽는 중...</span>
+            );
+            if (streamError) return (
+              <div style={wrapper}>{hdr}<div style={{ padding: '12px 18px 18px', fontSize: 'var(--xs)', color: 'var(--rose)' }}>{streamError}</div></div>
+            );
+            if (isStreaming && !hasStructure) return (
+              <div style={wrapper}>{hdr}
+                <div style={{ padding: '12px 18px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div className="typing-dots"><span /><span /><span /></div>
+                  <span style={{ fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.7)', fontStyle: 'italic' }}>별숨이 카드를 읽는 중...</span>
+                </div>
+              </div>
+            );
+            if (!hasStructure) return (
+              <div style={wrapper}>{hdr}
+                <div style={{ padding: '12px 18px 18px', fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
+                  {streamText}
+                </div>
+              </div>
+            );
+            return (
+              <div style={wrapper}>
+                {hdr}
+                <div style={{ padding: '12px 18px 18px' }}>
+                  {/* 히어로 */}
+                  {secs['한줄답변'] && (
+                    <div style={{ textAlign: 'center', padding: '10px 0 14px', color: 'rgba(220,190,100,0.95)', fontWeight: 700, fontSize: 'var(--sm)', lineHeight: 1.6, borderBottom: '1px solid rgba(200,165,80,0.15)', marginBottom: 12 }}>
+                      {secs['한줄답변']}
                     </div>
-                  : <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-                      {streamText}
+                  )}
+                  {/* 카드별 해석 3열 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+                    <TarotSectionCard eyebrow="과거" body={secs['과거카드']} />
+                    <TarotSectionCard eyebrow="현재" body={secs['현재카드']} />
+                    <TarotSectionCard eyebrow="미래" body={secs['미래카드']} />
+                  </div>
+                  {/* 핵심: 카드 조합 흐름 */}
+                  <TarotSectionCard eyebrow="✦ 세 카드의 흐름" body={secs['카드조합']} highlight />
+                  {/* 성향 보정 + 행동 */}
+                  <TarotSectionCard eyebrow="내 성향으로 볼 때" body={secs['성향보정']} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <TarotSectionCard eyebrow="지금 할 일" body={secs['지금할일']} />
+                    <TarotSectionCard eyebrow="피할 것" body={secs['피할일']} />
+                  </div>
+                  {secs['별숨한마디'] && (
+                    <div style={{ textAlign: 'center', marginTop: 6, fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.75)', fontStyle: 'italic' }}>
+                      {secs['별숨한마디']}
                     </div>
-              }
-            </div>
-          )}
+                  )}
+                  {isStreaming && <div style={{ textAlign: 'center', marginTop: 4 }}><span className="typing-cursor" /></div>}
+                </div>
+              </div>
+            );
+          })()}
         </>
       )}
 

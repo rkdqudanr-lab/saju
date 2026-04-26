@@ -9,6 +9,27 @@ import FeatureResultSheet from "./FeatureResultSheet.jsx";
 //  🗓️ 택일 — 중요한 날, 별숨이 골라드릴게요
 // ═══════════════════════════════════════════════════════════
 
+const TAEGIL_SEC_TAGS = ['이벤트유형','종합추천','날짜비교','선택기준','피해야할조건','준비체크리스트','별숨한마디'];
+
+function parseTaegilSections(text) {
+  if (!text) return {};
+  const result = {};
+  for (let i = 0; i < TAEGIL_SEC_TAGS.length; i++) {
+    const tag = `[${TAEGIL_SEC_TAGS[i]}]`;
+    const start = text.indexOf(tag);
+    if (start === -1) continue;
+    const contentStart = start + tag.length;
+    let end = text.length;
+    for (let j = 0; j < TAEGIL_SEC_TAGS.length; j++) {
+      if (j === i) continue;
+      const nx = text.indexOf(`[${TAEGIL_SEC_TAGS[j]}]`, contentStart);
+      if (nx !== -1 && nx < end) end = nx;
+    }
+    result[TAEGIL_SEC_TAGS[i]] = text.slice(contentStart, end).trim();
+  }
+  return result;
+}
+
 const EVENT_TYPES = [
   { key: '결혼·혼인신고', emoji: '💍' },
   { key: '이사·입주', emoji: '🏠' },
@@ -248,19 +269,70 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
           {loading ? '별의 흐름을 읽는 중...' : '🗓️ 최고의 길일 분석 받기'}
         </button>
 
-        {/* 결과 인라인 (결과 시트 외에도 간단히 표시) */}
-        {result && (
-          <div style={{ 
-            animation: 'fadeUp .5s ease', padding: '24px', borderRadius: 28,
-            background: 'var(--bg2)', border: '1px solid var(--acc)',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.2)'
-          }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 800, marginBottom: 14, letterSpacing: '.1em' }}>
-              ✦ 별숨의 택일 Insight
-            </div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.9, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>
-              {result}
-            </div>
+        {/* 결과 */}
+        {result && (() => {
+          const secs = parseTaegilSections(result);
+          const hasStructure = !!(secs['종합추천'] || secs['날짜비교']);
+          const cardStyle = { background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 16, padding: '14px 16px', marginBottom: 10 };
+          const eyebrowStyle = { fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.05em' };
+          const bodyStyle = { fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.85, whiteSpace: 'pre-line', wordBreak: 'keep-all' };
+          return (
+          <div style={{ animation: 'fadeUp .5s ease', marginBottom: 16 }}>
+            {hasStructure ? (
+              <>
+                {/* 1순위 추천 히어로 카드 */}
+                {secs['종합추천'] && (
+                  <div style={{ background: 'linear-gradient(135deg,rgba(232,176,72,.12),rgba(200,160,255,.06))', border: '1px solid var(--acc)', borderRadius: 20, padding: '18px 16px', marginBottom: 12 }}>
+                    <div style={{ ...eyebrowStyle, marginBottom: 10 }}>✦ 별숨 추천 길일</div>
+                    <div style={{ ...bodyStyle }}>{secs['종합추천']}</div>
+                  </div>
+                )}
+                {/* 날짜 비교 */}
+                {secs['날짜비교'] && (
+                  <div style={cardStyle}>
+                    <div style={eyebrowStyle}>날짜별 비교</div>
+                    <div style={bodyStyle}>{secs['날짜비교']}</div>
+                  </div>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {secs['선택기준'] && (
+                    <div style={cardStyle}>
+                      <div style={eyebrowStyle}>선택 기준</div>
+                      <div style={bodyStyle}>{secs['선택기준']}</div>
+                    </div>
+                  )}
+                  {secs['피해야할조건'] && (
+                    <div style={cardStyle}>
+                      <div style={eyebrowStyle}>피해야 할 조건</div>
+                      <div style={bodyStyle}>{secs['피해야할조건']}</div>
+                    </div>
+                  )}
+                </div>
+                {secs['준비체크리스트'] && (
+                  <div style={cardStyle}>
+                    <div style={eyebrowStyle}>준비 체크리스트</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {secs['준비체크리스트'].split('\n').filter(l => l.trim()).map((line, i) => (
+                        <label key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
+                          <input type="checkbox" style={{ marginTop: 3, flexShrink: 0 }} />
+                          <span style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.7 }}>{line.replace(/^\d+\.\s*/, '')}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {secs['별숨한마디'] && (
+                  <div style={{ textAlign: 'center', padding: '12px 16px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 14, fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic' }}>
+                    {secs['별숨한마디']}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ padding: '24px', borderRadius: 28, background: 'var(--bg2)', border: '1px solid var(--acc)' }}>
+                <div style={{ ...eyebrowStyle, marginBottom: 14 }}>✦ 별숨의 택일 Insight</div>
+                <div style={bodyStyle}>{result}</div>
+              </div>
+            )}
             
             {/* 택일 카드 공유 */}
             {onShareCard && candidateDates[0] && (
@@ -280,7 +352,8 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
               </button>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* 결과 시트 (Overlay) */}
         {result && showResultSheet && (

@@ -332,31 +332,77 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
         </button>
 
         {/* 결과 */}
-        {result && (
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--line)',
-            borderRadius: 'var(--r1)', padding: '16px', animation: 'fadeUp .4s ease',
-          }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>
-              ✦ 별숨의 이름 풀이 — {name}{hanja.trim() ? ` (${hanja.trim()})` : ''}
+        {result && (() => {
+          const NAME_TAGS = ['이름요약','이름점수','발음분석','의미분석','획수분석','성향조화','보완점','개명조언','추천방향','별숨한마디'];
+          const secs = {};
+          for (let i = 0; i < NAME_TAGS.length; i++) {
+            const tag = `[${NAME_TAGS[i]}]`;
+            const start = result.indexOf(tag);
+            if (start === -1) continue;
+            const cs = start + tag.length;
+            let end = result.length;
+            for (let j = 0; j < NAME_TAGS.length; j++) {
+              if (j === i) continue;
+              const nx = result.indexOf(`[${NAME_TAGS[j]}]`, cs);
+              if (nx !== -1 && nx < end) end = nx;
+            }
+            secs[NAME_TAGS[i]] = result.slice(cs, end).trim();
+          }
+          const hasStructure = !!(secs['이름요약'] || secs['발음분석']);
+          const score = parseInt(secs['이름점수'] || '0', 10) || null;
+          const card = (eyebrow, body, hl) => body ? (
+            <div style={{
+              background: hl ? 'linear-gradient(135deg,rgba(232,176,72,.1),rgba(200,160,255,.06))' : 'var(--card)',
+              border: `1px solid ${hl ? 'var(--acc)' : 'var(--line)'}`,
+              borderRadius: 'var(--r1)', padding: '14px 16px', marginBottom: 10,
+            }}>
+              <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.05em' }}>{eyebrow}</div>
+              <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.85, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>{body}</div>
             </div>
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-              {result}
-            </div>
+          ) : null;
+          return (
+            <div style={{ animation: 'fadeUp .4s ease' }}>
+              {hasStructure ? (
+                <>
+                  {/* 히어로 */}
+                  <div style={{ background: 'linear-gradient(135deg,rgba(232,176,72,.12),rgba(200,160,255,.06))', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: 12, textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--gold)', marginBottom: 4 }}>{name}</div>
+                    {score > 0 && (
+                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--gold)', marginBottom: 6 }}>
+                        {score}<span style={{ fontSize: '.8rem', fontWeight: 400, color: 'var(--t3)', marginLeft: 3 }}>점</span>
+                      </div>
+                    )}
+                    {secs['이름요약'] && <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.6 }}>{secs['이름요약']}</div>}
+                  </div>
 
-            {/* 다른 이름 분석 */}
-            <button
-              onClick={() => { setResult(''); setName(''); setHanja(''); }}
-              style={{
-                marginTop: 16, padding: '8px 16px', borderRadius: 20,
-                border: '1px solid var(--line)', background: 'transparent',
-                color: 'var(--t3)', fontSize: 'var(--xs)', cursor: 'pointer',
-              }}
-            >
-              다른 이름 분석하기
-            </button>
-          </div>
-        )}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {card('발음 분석', secs['발음분석'])}
+                    {card('획수 분석', secs['획수분석'])}
+                  </div>
+                  {card('의미 분석', secs['의미분석'])}
+                  {card('✦ 성향과의 조화', secs['성향조화'], true)}
+                  {card('보완할 점', secs['보완점'])}
+                  {secs['개명조언'] && card('개명 조언', secs['개명조언'])}
+                  {secs['추천방향'] && card('추천 방향', secs['추천방향'])}
+                  {secs['별숨한마디'] && (
+                    <div style={{ textAlign: 'center', padding: '12px 16px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic', marginBottom: 10 }}>
+                      {secs['별숨한마디']}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '16px' }}>
+                  <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>✦ 별숨의 이름 풀이 — {name}</div>
+                  <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{result}</div>
+                </div>
+              )}
+              <button onClick={() => { setResult(''); setName(''); setHanja(''); }}
+                style={{ marginTop: 8, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t3)', fontSize: 'var(--xs)', cursor: 'pointer' }}>
+                다른 이름 분석하기
+              </button>
+            </div>
+          );
+        })()}
         {result && showAnalyzeSheet && (
           <FeatureResultSheet
             type="name"

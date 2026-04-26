@@ -9,27 +9,41 @@ import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 
 const YEARLY_COST = 80; // BP 차감액
 
-const MONTH_TAGS = [
-  '[총평]',
+const ALL_TAGS = [
+  '[연간요약]','[올해핵심키워드]',
+  '[상반기흐름]','[하반기흐름]','[분기별테마]',
+  '[좋은시기]','[주의시기]',
   '[1월]','[2월]','[3월]','[4월]','[5월]','[6월]',
   '[7월]','[8월]','[9월]','[10월]','[11월]','[12월]',
-  '[마무리]',
+  '[올해의선택기준]','[별숨마무리]',
+  // 구버전 호환
+  '[총평]','[마무리]',
 ];
+
+const MONTH_TAGS = ALL_TAGS; // alias
+
+const TAB_GROUPS = {
+  summary: { label: '요약', tags: ['[연간요약]','[올해핵심키워드]','[상반기흐름]','[하반기흐름]','[분기별테마]','[좋은시기]','[주의시기]','[총평]'] },
+  monthly: { label: '월별', tags: ['[1월]','[2월]','[3월]','[4월]','[5월]','[6월]','[7월]','[8월]','[9월]','[10월]','[11월]','[12월]'] },
+  wrap:    { label: '마무리', tags: ['[올해의선택기준]','[별숨마무리]','[마무리]'] },
+};
 
 /** 스트리밍 텍스트를 섹션별로 분리 */
 function parseSections(text) {
   if (!text) return {};
   const result = {};
-  let remaining = text;
-  for (let i = 0; i < MONTH_TAGS.length; i++) {
-    const tag = MONTH_TAGS[i];
-    const nextTag = MONTH_TAGS[i + 1];
-    const start = remaining.indexOf(tag);
+  for (let i = 0; i < ALL_TAGS.length; i++) {
+    const tag = ALL_TAGS[i];
+    const start = text.indexOf(tag);
     if (start === -1) continue;
     const contentStart = start + tag.length;
-    const end = nextTag ? remaining.indexOf(nextTag) : remaining.length;
-    const content = remaining.slice(contentStart, end === -1 ? undefined : end).trim();
-    result[tag] = content;
+    let end = text.length;
+    for (let j = 0; j < ALL_TAGS.length; j++) {
+      if (j === i) continue;
+      const nx = text.indexOf(ALL_TAGS[j], contentStart);
+      if (nx !== -1 && nx < end) end = nx;
+    }
+    result[tag] = text.slice(contentStart, end).trim();
   }
   return result;
 }
@@ -82,8 +96,9 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
   const year = new Date().getFullYear();
   const user = useAppStore((s) => s.user);
   const [started, setStarted] = useState(false);
-  const [paid, setPaid] = useState(false);   // BP 차감 완료 여부 — 재시도 시 재과금 방지
-  const [activeSection, setActiveSection] = useState('[총평]');
+  const [paid, setPaid] = useState(false);
+  const [activeSection, setActiveSection] = useState('[연간요약]');
+  const [activeTabGroup, setActiveTabGroup] = useState('summary');
 
   const { streamText, isStreaming, streamError, startStream, resetStream } = useStreamResponse();
 
@@ -99,7 +114,8 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
 
   const doStream = useCallback(async () => {
     resetStream();
-    setActiveSection('[총평]');
+    setActiveSection('[연간요약]');
+    setActiveTabGroup('summary');
     const ctx = buildCtx?.() || '';
     const userMessage = `${year}년 나의 연간 운세 리포트를 부탁해요.`;
     await startStream({
@@ -235,13 +251,43 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
           )}
         </div>
 
-        {/* 섹션 탭 스크롤 */}
+        {/* 그룹 탭 (요약 / 월별 / 마무리) */}
+        {availableTags.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+            {Object.entries(TAB_GROUPS).map(([key, g]) => {
+              const hasAny = g.tags.some(t => sections[t]);
+              if (!hasAny) return null;
+              return (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setActiveTabGroup(key);
+                    const first = g.tags.find(t => sections[t]);
+                    if (first) setActiveSection(first);
+                  }}
+                  style={{
+                    padding: '5px 14px', borderRadius: 14, fontSize: '12px', cursor: 'pointer',
+                    border: `1px solid ${activeTabGroup === key ? 'var(--gold)' : 'var(--line)'}`,
+                    background: activeTabGroup === key ? 'var(--goldf)' : 'var(--card)',
+                    color: activeTabGroup === key ? 'var(--gold)' : 'var(--t3)',
+                    fontWeight: activeTabGroup === key ? 700 : 400,
+                    transition: 'all .15s',
+                  }}
+                >
+                  {g.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 현재 그룹의 섹션 탭 */}
         {availableTags.length > 0 && (
           <div style={{
             display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8,
             marginBottom: 14, scrollbarWidth: 'none',
           }}>
-            {availableTags.map(t => (
+            {(TAB_GROUPS[activeTabGroup]?.tags || []).filter(t => sections[t]).map(t => (
               <MonthTab
                 key={t}
                 tag={t}
@@ -300,16 +346,10 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
           </div>
         )}
 
-        {/* 완료 후 전체 보기 버튼 */}
+        {/* 완료 후 현재 그룹 전체 표시 */}
         {!isStreaming && streamText && (
           <div style={{ marginTop: 16 }}>
-            <div style={{
-              fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700,
-              marginBottom: 10, letterSpacing: '.04em',
-            }}>
-              ✦ 전체 월별 리포트
-            </div>
-            {MONTH_TAGS.filter(t => sections[t]).map(t => (
+            {(TAB_GROUPS[activeTabGroup]?.tags || []).filter(t => sections[t] && t !== activeSection).map(t => (
               <SectionCard key={t} tag={t} content={sections[t]} isStreaming={false} />
             ))}
           </div>

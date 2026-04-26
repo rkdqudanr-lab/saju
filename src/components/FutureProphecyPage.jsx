@@ -10,6 +10,59 @@ import FeatureResultSheet from './FeatureResultSheet.jsx';
 
 const FEATURE_COST = 10;
 
+const PROPHECY_TAGS = ['예언기간','점수','한줄예언','기간해석','동양관점','서양관점','교차해석','지금할일','피할일','별숨한마디'];
+
+function parseProphecySections(text) {
+  if (!text) return {};
+  const result = {};
+  for (let i = 0; i < PROPHECY_TAGS.length; i++) {
+    const tag = `[${PROPHECY_TAGS[i]}]`;
+    const start = text.indexOf(tag);
+    if (start === -1) continue;
+    const contentStart = start + tag.length;
+    let end = text.length;
+    for (let j = 0; j < PROPHECY_TAGS.length; j++) {
+      if (j === i) continue;
+      const nx = text.indexOf(`[${PROPHECY_TAGS[j]}]`, contentStart);
+      if (nx !== -1 && nx < end) end = nx;
+    }
+    result[PROPHECY_TAGS[i]] = text.slice(contentStart, end).trim();
+  }
+  return result;
+}
+
+function ProphSectionCard({ eyebrow, body, highlight }) {
+  if (!body) return null;
+  return (
+    <div style={{
+      background: highlight ? 'linear-gradient(135deg,rgba(232,176,72,.1),rgba(200,160,255,.06))' : 'var(--card)',
+      border: `1px solid ${highlight ? 'var(--acc)' : 'var(--line)'}`,
+      borderRadius: 'var(--r1)', padding: '14px 16px', marginBottom: 10,
+    }}>
+      {eyebrow && <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.05em' }}>{eyebrow}</div>}
+      <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.85, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>{body}</div>
+    </div>
+  );
+}
+
+function ProphActionCard({ title, body }) {
+  if (!body) return null;
+  const items = body.split('\n').filter(l => l.trim()).map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+  return (
+    <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '14px 16px', marginBottom: 10 }}>
+      <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.05em' }}>{title}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <span style={{ color: 'var(--gold)', fontWeight: 700, flexShrink: 0, fontSize: 'var(--xs)' }}>{i + 1}.</span>
+            <span style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const PERIOD_OPTIONS = [
   { id: '1일', label: '1일', desc: '하루의 흐름', icon: 'moon' },
   { id: '3일', label: '3일', desc: '가까운 변화의 기운', icon: 'spark' },
@@ -177,9 +230,14 @@ export default function FutureProphecyPage({
       );
     }
 
+    const secs = parseProphecySections(shown);
+    const hasStructure = !!secs['한줄예언'];
+    const score = parseInt(secs['점수'] || '0', 10) || null;
+
     return (
       <div className="page-top">
-        <div className="inner" style={{ animation: 'fadeUp .5s ease' }}>
+        <div className="inner" style={{ animation: 'fadeUp .5s ease', paddingBottom: 80 }}>
+          {/* 헤더 */}
           <div style={{ textAlign: 'center', marginBottom: 'var(--sp3)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
               <ProphecyIcon kind={period.icon} size={44} />
@@ -188,19 +246,63 @@ export default function FutureProphecyPage({
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 6 }}>{period.label} 뒤, {period.desc}</div>
           </div>
 
-          <div className="letter-envelope">
-            <div className="letter-env-top" style={{ background: 'linear-gradient(135deg,var(--goldf),rgba(200,160,255,0.1))' }}>
-              <ProphecyIcon kind={period.icon} size={30} />
-            </div>
-            <div className="letter-body">
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 16, fontWeight: 600 }}>
-                {period.label} 뒤의 예언
+          {/* 구조화 결과 */}
+          {hasStructure ? (
+            <>
+              {/* 히어로 카드 */}
+              <div style={{
+                background: 'linear-gradient(135deg,rgba(232,176,72,.14),rgba(200,160,255,.08))',
+                border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
+                padding: '18px 16px', marginBottom: 12, textAlign: 'center',
+              }}>
+                {score > 0 && (
+                  <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--gold)', marginBottom: 6 }}>
+                    {score}
+                    <span style={{ fontSize: '1rem', fontWeight: 400, color: 'var(--t3)', marginLeft: 4 }}>점</span>
+                  </div>
+                )}
+                <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.6, wordBreak: 'keep-all' }}>
+                  {secs['한줄예언']}{!done && !secs['한줄예언'] && <span className="typing-cursor" />}
+                </div>
               </div>
-              <div className="letter-content" style={{ padding: 0 }}>
-                <p>{shown}{!done && <span className="typing-cursor" />}</p>
+
+              <ProphSectionCard eyebrow="예언 해석" body={secs['기간해석']} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                <ProphSectionCard eyebrow="동양 관점" body={secs['동양관점']} />
+                <ProphSectionCard eyebrow="서양 관점" body={secs['서양관점']} />
+              </div>
+              <ProphSectionCard eyebrow="✦ 두 관점의 교차점" body={secs['교차해석']} highlight />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <ProphActionCard title="지금 할 일" body={secs['지금할일']} />
+                <ProphActionCard title="피할 것" body={secs['피할일']} />
+              </div>
+              {secs['별숨한마디'] && (
+                <div style={{
+                  textAlign: 'center', padding: '14px 16px', marginTop: 4,
+                  background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)',
+                  fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic',
+                }}>
+                  {secs['별숨한마디']}
+                </div>
+              )}
+              {!done && <div style={{ textAlign: 'center', marginTop: 4 }}><span className="typing-cursor" /></div>}
+            </>
+          ) : (
+            /* 구버전 / 스트리밍 중 fallback — letter 스타일 */
+            <div className="letter-envelope">
+              <div className="letter-env-top" style={{ background: 'linear-gradient(135deg,var(--goldf),rgba(200,160,255,0.1))' }}>
+                <ProphecyIcon kind={period.icon} size={30} />
+              </div>
+              <div className="letter-body">
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 16, fontWeight: 600 }}>
+                  {period.label} 뒤의 예언
+                </div>
+                <div className="letter-content" style={{ padding: 0 }}>
+                  <p>{shown}{!done && <span className="typing-cursor" />}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'var(--sp2)' }}>
             {!done && text && (
@@ -211,20 +313,14 @@ export default function FutureProphecyPage({
             {done && text && (
               <>
                 {saveImage && (
-                  <button
-                    className="res-top-btn"
-                    style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
-                    onClick={() => saveImage('prophecy', text, selectedPeriod)}
-                  >
+                  <button className="res-top-btn" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
+                    onClick={() => saveImage('prophecy', text, selectedPeriod)}>
                     이미지 저장
                   </button>
                 )}
                 {shareResult && (
-                  <button
-                    className="res-top-btn primary"
-                    style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
-                    onClick={() => shareResult('prophecy', text, selectedPeriod)}
-                  >
+                  <button className="res-top-btn primary" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
+                    onClick={() => shareResult('prophecy', text, selectedPeriod)}>
                     공유하기
                   </button>
                 )}
@@ -233,18 +329,12 @@ export default function FutureProphecyPage({
           </div>
 
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button
-              className="res-btn"
-              style={{ flex: 1, padding: 14, borderRadius: 'var(--r1)' }}
-              onClick={() => { setPhase('intro'); setText(''); }}
-            >
+            <button className="res-btn" style={{ flex: 1, padding: 14, borderRadius: 'var(--r1)' }}
+              onClick={() => { setPhase('intro'); setText(''); }}>
               다른 미래 보기
             </button>
-            <button
-              className="res-btn"
-              style={{ flex: 1, padding: 14, borderRadius: 'var(--r1)' }}
-              onClick={onBack}
-            >
+            <button className="res-btn" style={{ flex: 1, padding: 14, borderRadius: 'var(--r1)' }}
+              onClick={onBack}>
               결과로 돌아가기
             </button>
           </div>

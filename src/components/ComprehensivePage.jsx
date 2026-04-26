@@ -24,12 +24,28 @@ function parseSections(text, tags) {
 }
 
 const COMP_SECTIONS = [
+  // 신규 태그 (종합 분석 v2)
+  { tag: '한줄정체성', icon: '⭐', title: '나를 한 줄로' },
+  { tag: '핵심성향', icon: '🌟', title: '핵심 성향' },
+  { tag: '교차해석', icon: '✦', title: '두 관점의 교차점', highlight: true },
+  { tag: '강점', icon: '💪', title: '강점' },
+  { tag: '반복패턴', icon: '🔄', title: '반복되는 패턴' },
+  { tag: '연애와관계', icon: '💫', title: '연애 · 관계' },
+  { tag: '일과직업', icon: '🌙', title: '일 · 직업' },
+  { tag: '돈관리', icon: '✨', title: '돈 관리' },
+  { tag: '건강과생활', icon: '🌿', title: '건강 · 생활' },
+  { tag: '올해적용법', icon: '🌊', title: '올해 적용법' },
+  { tag: '오늘부터할일', icon: '📋', title: '오늘부터 할 일' },
+  { tag: '별숨한마디', icon: '💌', title: '별숨의 한마디' },
+  // 구버전 태그 (하위 호환)
   { tag: '기질', icon: '🌟', title: '타고난 기질' },
   { tag: '연애', icon: '💫', title: '연애 · 결혼운' },
   { tag: '재물', icon: '✨', title: '재물운' },
   { tag: '직업', icon: '🌙', title: '직업 · 적성' },
   { tag: '건강', icon: '🌿', title: '건강운' },
   { tag: '올해', icon: '🌊', title: '올해의 흐름' },
+  { tag: '별숨의 시선', icon: '✦', title: '두 별지도의 교차점', highlight: true },
+  { tag: '숨겨진 그림자', icon: '🌗', title: '강점의 그늘' },
 ];
 
 const ASTRO_SECTIONS = [
@@ -49,15 +65,18 @@ function Spinner() {
   );
 }
 
-function SectionCard({ icon, title, text, delay = 0 }) {
+function SectionCard({ icon, title, text, delay = 0, highlight = false }) {
   if (!text) return null;
+  const isActionList = text.match(/^\d+\.\s/m);
   return (
     <div
       className="step-fade"
       style={{
         animationDelay: `${delay}ms`,
-        background: 'var(--bg2)',
-        border: '1px solid var(--line)',
+        background: highlight
+          ? 'linear-gradient(135deg,rgba(232,176,72,.1),rgba(200,160,255,.06))'
+          : 'var(--bg2)',
+        border: `1px solid ${highlight ? 'var(--acc)' : 'var(--line)'}`,
         borderRadius: 20,
         padding: 'var(--sp3)',
         marginBottom: 'var(--sp2)',
@@ -65,11 +84,23 @@ function SectionCard({ icon, title, text, delay = 0 }) {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: '1.1rem' }}>{icon}</span>
-        <span style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', letterSpacing: '.02em' }}>{title}</span>
+        <span style={{ fontSize: 'var(--sm)', fontWeight: 700, color: highlight ? 'var(--gold)' : 'var(--t1)', letterSpacing: '.02em' }}>{title}</span>
+        {highlight && <span style={{ fontSize: '9px', color: 'var(--gold)', border: '1px solid var(--acc)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.05em' }}>별숨 ONLY</span>}
       </div>
-      <p style={{ margin: 0, fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-        {text}
-      </p>
+      {isActionList ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {text.split('\n').filter(l => l.trim()).map((line, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ color: 'var(--gold)', fontWeight: 700, flexShrink: 0, fontSize: 'var(--xs)' }}>{line.match(/^\d+/)?.[0]}.</span>
+              <span style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{line.replace(/^\d+\.\s*/, '')}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p style={{ margin: 0, fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.85, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
+          {text}
+        </p>
+      )}
     </div>
   );
 }
@@ -172,8 +203,10 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>✦ 별숨의 종합 사주</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>타고난 본성부터 올해의 흐름까지</div>
           </div>
-          {COMP_SECTIONS.map(({ tag, icon, title }, i) => (
-            <SectionCard key={tag} icon={icon} title={title} text={sections[tag] || ''} delay={i * 80} />
+          {COMP_SECTIONS.map(({ tag, icon, title, highlight }, i) => (
+            sections[tag] ? (
+              <SectionCard key={tag} icon={icon} title={title} text={sections[tag]} delay={i * 60} highlight={!!highlight} />
+            ) : null
           ))}
           <button className="res-btn" onClick={fetch_} style={{ width: '100%', marginTop: 8 }}>다시 풀어보기</button>
         </>

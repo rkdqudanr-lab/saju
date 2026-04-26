@@ -50,6 +50,59 @@ function stripFollowUp(text) {
   return text.replace(/\[후속질문\].*/s, '').trim();
 }
 
+const DREAM_SEC_TAGS = ['꿈요약','감정점수','한줄해석','꿈요소','무의식해석','현실연결','주의할점','오늘할일','나에게묻기','별숨한마디'];
+
+function parseDreamSections(text) {
+  if (!text) return {};
+  const result = {};
+  for (let i = 0; i < DREAM_SEC_TAGS.length; i++) {
+    const tag = `[${DREAM_SEC_TAGS[i]}]`;
+    const start = text.indexOf(tag);
+    if (start === -1) continue;
+    const contentStart = start + tag.length;
+    let end = text.length;
+    for (let j = 0; j < DREAM_SEC_TAGS.length; j++) {
+      if (j === i) continue;
+      const nx = text.indexOf(`[${DREAM_SEC_TAGS[j]}]`, contentStart);
+      if (nx !== -1 && nx < end) end = nx;
+    }
+    result[DREAM_SEC_TAGS[i]] = text.slice(contentStart, end).trim();
+  }
+  return result;
+}
+
+function DreamSectionCard({ eyebrow, body, highlight }) {
+  if (!body) return null;
+  return (
+    <div style={{
+      background: highlight ? 'linear-gradient(135deg,rgba(232,176,72,.1),rgba(200,160,255,.06))' : 'var(--card)',
+      border: `1px solid ${highlight ? 'var(--acc)' : 'var(--line)'}`,
+      borderRadius: 'var(--r1)', padding: '14px 16px', marginBottom: 10,
+    }}>
+      <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.05em' }}>{eyebrow}</div>
+      <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.85, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>{body}</div>
+    </div>
+  );
+}
+
+function DreamActionCard({ title, body }) {
+  if (!body) return null;
+  const items = body.split('\n').filter(l => l.trim()).map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+  return (
+    <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '14px 16px', marginBottom: 10 }}>
+      <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.05em' }}>{title}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <span style={{ color: 'var(--gold)', fontWeight: 700, flexShrink: 0, fontSize: 'var(--xs)' }}>{i + 1}.</span>
+            <span style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, setStep, showToast, onShareCard, consentFlags }) {
   const today = new Date();
   const moonPhase = getMoonPhase(today.getFullYear(), today.getMonth() + 1, today.getDate());
@@ -363,23 +416,62 @@ ${msg}`;
               </button>
             )}
 
-            <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: 16 }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>
-                별숨의 꿈해몽 점수
-              </div>
-              <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>
-                {loading ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div className="typing-dots"><span /><span /><span /></div>
-                    <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontStyle: 'italic' }}>별숨이 꿈의 결을 읽고 있어요...</span>
+            {loading && !result ? null : streamError ? (
+              <div style={{ background: 'var(--card)', border: '1px solid var(--rose)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, color: 'var(--rose)', fontSize: 'var(--sm)' }}>{streamError}</div>
+            ) : (() => {
+              const secs = parseDreamSections(mainText);
+              const hasStructure = !!(secs['한줄해석'] || secs['무의식해석']);
+              if (!hasStructure) {
+                return (
+                  <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: 16 }}>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>별숨의 꿈해몽</div>
+                    <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>
+                      {mainText}{loading && <span className="typing-cursor" />}
+                    </div>
                   </div>
-                ) : streamError ? (
-                  <div style={{ color: 'var(--rose)' }}>{streamError}</div>
-                ) : (
-                  mainText
-                )}
-              </div>
-            </div>
+                );
+              }
+              const score = parseInt(secs['감정점수'] || '0', 10) || null;
+              return (
+                <>
+                  {/* 히어로 카드 */}
+                  <div style={{
+                    background: 'linear-gradient(135deg,rgba(180,140,200,.12),rgba(232,176,72,.08))',
+                    border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
+                    padding: '16px', marginBottom: 10, textAlign: 'center',
+                  }}>
+                    {score > 0 && (
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gold)', marginBottom: 4 }}>
+                        {score}<span style={{ fontSize: '.9rem', fontWeight: 400, color: 'var(--t3)', marginLeft: 3 }}>점</span>
+                      </div>
+                    )}
+                    {secs['한줄해석'] && (
+                      <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.6 }}>{secs['한줄해석']}</div>
+                    )}
+                    {loading && !secs['한줄해석'] && <span className="typing-cursor" />}
+                  </div>
+
+                  <DreamSectionCard eyebrow="꿈 요소 분석" body={secs['꿈요소']} />
+                  <DreamSectionCard eyebrow="무의식 해석" body={secs['무의식해석']} highlight />
+                  <DreamSectionCard eyebrow="현실과의 연결" body={secs['현실연결']} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <DreamActionCard title="오늘 할 일" body={secs['오늘할일']} />
+                    <DreamActionCard title="주의할 점" body={secs['주의할점']} />
+                  </div>
+                  <DreamActionCard title="나에게 묻기" body={secs['나에게묻기']} />
+                  {secs['별숨한마디'] && (
+                    <div style={{
+                      textAlign: 'center', padding: '12px 16px', marginTop: 4,
+                      background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)',
+                      fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic',
+                    }}>
+                      {secs['별숨한마디']}
+                    </div>
+                  )}
+                  {loading && <div style={{ textAlign: 'center', marginTop: 4 }}><span className="typing-cursor" /></div>}
+                </>
+              );
+            })()}
 
             {!streamError && <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 8 }}>더 궁금한 점이 있나요?</div>
