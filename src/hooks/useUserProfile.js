@@ -446,8 +446,9 @@ export function useUserProfile() {
     if (!by || !bm || !bd) return true;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
-      const { error } = await (authClient || supabase).from('users').upsert({
-        kakao_id:    currentUser.id,
+      if (!authClient) return false;
+      const { error } = await authClient.from('users').upsert({
+        kakao_id:    String(currentUser.id),
         birth_year:  parseInt(by, 10),
         birth_month: parseInt(bm, 10),
         birth_day:   parseInt(bd, 10),
@@ -469,8 +470,9 @@ export function useUserProfile() {
     if (!supabase || !currentUser?.id) return;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
-      const { error } = await (authClient || supabase).from('user_profiles').upsert({
-        kakao_id:            currentUser.id,
+      if (!authClient) return;
+      const { error } = await authClient.from('user_profiles').upsert({
+        kakao_id:            String(currentUser.id),
         mbti:                profileData.mbti || null,
         self_desc:           profileData.selfDesc || null,
         partner_name:        consentFlags?.partner ? (profileData.partner || null) : null,
@@ -492,8 +494,9 @@ export function useUserProfile() {
     if (!supabase || !currentUser?.id || !questionId) return;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
-      const { error } = await (authClient || supabase).from('daily_quiz_answers').upsert({
-        kakao_id:    currentUser.id,
+      if (!authClient) return;
+      const { error } = await authClient.from('daily_quiz_answers').upsert({
+        kakao_id:    String(currentUser.id),
         question_id: questionId,
         answer,
         answered_at: new Date().toISOString(),
@@ -513,7 +516,7 @@ export function useUserProfile() {
       if (kakaoId) {
         try {
           const authClient = getAuthenticatedClient(kakaoId);
-          await (authClient || supabase).from('users').upsert({ kakao_id: kakaoId, consent_flags: saved, updated_at: new Date().toISOString() }, { onConflict: 'kakao_id', ignoreDuplicates: false });
+          if (authClient) await authClient.from('users').upsert({ kakao_id: String(kakaoId), consent_flags: saved, updated_at: new Date().toISOString() }, { onConflict: 'kakao_id', ignoreDuplicates: false });
         } catch (e) {
           console.error('[별숨] 동의 저장 오류:', e);
         }

@@ -166,11 +166,13 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   useEffect(() => {
     if (!user?.id) return;
     const authClient = getAuthenticatedClient(user.id);
-    (authClient || supabase)
+    if (!authClient) return;
+    authClient
       .from('calendar_events')
       .select('date, title, id')
       .eq('kakao_id', String(user.id))
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.warn('[Calendar] 이벤트 로드 실패:', error.message); return; }
         const fresh = {};
         (data || []).forEach(row => {
           const key = row.date;
@@ -190,15 +192,18 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
     const lastDay = new Date(viewYear, viewMonth, 0).getDate();
     const dateTo = `${ym}-${String(lastDay).padStart(2, '0')}`;
 
+    if (!authClient) return;
+
     // 오늘 별숨 카드 기록 (cache_type = 'horoscope')
-    (authClient || supabase)
+    authClient
       .from('daily_cache')
       .select('cache_date, content')
       .eq('kakao_id', String(user.id))
       .eq('cache_type', 'horoscope')
       .gte('cache_date', dateFrom)
       .lte('cache_date', dateTo)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.warn('[Calendar] 운세 로드 실패:', error.message); return; }
         const fresh = {};
         (data || []).forEach(row => { fresh[row.cache_date] = row.content; });
         setDailyFortunes(fresh);
@@ -206,13 +211,14 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
       .catch(e => console.error('[별숨] 달력 운세 로드 오류:', e));
 
     // 일기 기록
-    (authClient || supabase)
+    authClient
       .from('diary_entries')
       .select('id, date, mood, weather, energy, content, gratitude, tomorrow_goal')
       .eq('kakao_id', String(user.id))
       .gte('date', dateFrom)
       .lte('date', dateTo)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.warn('[Calendar] 일기 로드 실패:', error.message); return; }
         const fresh = {};
         (data || []).forEach(row => { fresh[row.date] = row; });
         setDiaryEntries(fresh);
@@ -220,14 +226,15 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
       .catch(e => console.error('[별숨] 달력 일기 로드 오류:', e));
 
     // 별숨 해석 기록 (diary_review)
-    (authClient || supabase)
+    authClient
       .from('daily_cache')
       .select('cache_date, content')
       .eq('kakao_id', String(user.id))
       .eq('cache_type', 'diary_review')
       .gte('cache_date', dateFrom)
       .lte('cache_date', dateTo)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.warn('[Calendar] 일기 해석 로드 실패:', error.message); return; }
         const fresh = {};
         (data || []).forEach(row => { fresh[row.cache_date] = row.content; });
         setDiaryReviews(fresh);

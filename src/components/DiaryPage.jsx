@@ -176,9 +176,11 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
       if (client) {
         const payload = { kakao_id: String(user.id), date: targetDate, ...entry };
         if (todayEntry?.id) {
-          await client.from('diary_entries').update(entry).eq('id', todayEntry.id).eq('kakao_id', String(user.id));
+          const { error: updateErr } = await client.from('diary_entries').update(entry).eq('id', todayEntry.id).eq('kakao_id', String(user.id));
+          if (updateErr) throw new Error(updateErr.message);
         } else {
-          const { data: inserted } = await client.from('diary_entries').insert(payload).select('id').single();
+          const { data: inserted, error: insertErr } = await client.from('diary_entries').insert(payload).select('id').single();
+          if (insertErr) throw new Error(insertErr.message);
           if (inserted?.id) {
             setTodayEntry({ id: inserted.id, ...payload });
             onDiaryComplete?.();

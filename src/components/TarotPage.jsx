@@ -13,6 +13,16 @@ import { getAuthenticatedClient } from '../lib/supabase.js';
 import { spendBP } from '../utils/gamificationLogic.js';
 import FeatureResultSheet from './FeatureResultSheet.jsx';
 
+function TarotImage({ src, alt, onError, loading = 'lazy', style, pictureStyle }) {
+  const webpSrc = src ? src.replace(/\.jpg$/i, '.webp') : null;
+  return (
+    <picture style={pictureStyle}>
+      {webpSrc && <source srcSet={webpSrc} type="image/webp" />}
+      <img src={src} alt={alt} onError={onError} loading={loading} decoding="async" style={style} />
+    </picture>
+  );
+}
+
 const FEATURE_COST = 10;
 
 const MAJOR_ARCANA = [
@@ -458,7 +468,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                     {card ? (
                       imgErrors[card.id]
                         ? <div style={{ fontSize: 26 }}>{card.emoji}</div>
-                        : <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                        : <TarotImage src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     ) : (
                       <div style={{ fontSize: '16px', color: 'rgba(200,165,80,0.18)' }}>✦</div>
@@ -580,8 +590,9 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                 <div style={{ fontSize: '8px', color: 'rgba(200,165,80,0.55)', textAlign: 'center', padding: '6px 0 3px', letterSpacing: '.1em', zIndex: 2 }}>{ROMAN[card.id]}</div>
                 {imgErrors[card.id]
                   ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, zIndex: 2 }}>{card.emoji}</div>
-                  : <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
-                      style={{ flex: 1, width: 'calc(100% - 10px)', margin: '0 5px', objectFit: 'cover', borderRadius: 6, minHeight: 0, zIndex: 2 }} />
+                  : <TarotImage src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                      pictureStyle={{ flex: 1, minHeight: 0, zIndex: 2, display: 'block' }}
+                      style={{ width: 'calc(100% - 10px)', margin: '0 5px', objectFit: 'cover', borderRadius: 6, display: 'block' }} />
                 }
                 <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,165,80,0.4), transparent)', margin: '4px 8px', zIndex: 2 }} />
                 <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(220,190,100,0.9)', textAlign: 'center', padding: '0 4px 8px', zIndex: 2 }}>{card.name}</div>
@@ -610,7 +621,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                 <div style={{ flexShrink: 0, width: 44, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(200,165,80,0.4)' }}>
                   {imgErrors[card.id]
                     ? <div style={{ width: 44, height: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{card.emoji}</div>
-                    : <img src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
+                    : <TarotImage src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
                         style={{ width: '100%', aspectRatio: '5/8', objectFit: 'cover', display: 'block' }} />
                   }
                 </div>
@@ -803,7 +814,8 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
               </div>
               {imgErrors[modalCard.id]
                 ? <div style={{ width: '100%', aspectRatio: '5/8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 56 }}>{modalCard.emoji}</div>
-                : <img src={modalCard.img} alt={modalCard.name} style={{ width: 'calc(100% - 12px)', margin: '0 6px 6px', aspectRatio: '5/8', objectFit: 'cover', borderRadius: 8, display: 'block' }} />
+                : <TarotImage src={modalCard.img} alt={modalCard.name} loading="eager"
+                    style={{ width: 'calc(100% - 12px)', margin: '0 6px 6px', aspectRatio: '5/8', objectFit: 'cover', borderRadius: 8, display: 'block' }} />
               }
             </div>
 

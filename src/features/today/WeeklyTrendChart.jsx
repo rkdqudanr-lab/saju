@@ -17,13 +17,16 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
       setTrend(last7.reverse().map((date) => { const v = cachedMap[date]; return v == null ? null : Number(v); }));
       return;
     }
-    getAuthenticatedClient(String(kakaoId))
+    const trendClient = getAuthenticatedClient(String(kakaoId));
+    if (!trendClient) { setTrend([]); return; }
+    trendClient
       .from('daily_cache')
       .select('cache_date, content')
       .eq('kakao_id', String(kakaoId))
       .eq('cache_type', 'horoscope_score')
       .in('cache_date', last7)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setTrend([]); return; }
         const map = {};
         (data || []).forEach((row) => { map[row.cache_date] = Number(row.content); });
         const today = new Date().toISOString().slice(0, 10);

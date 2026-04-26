@@ -1,22 +1,10 @@
-import { getTimeSlot } from './time.js';
-
 // ═══════════════════════════════════════════════════════════
-//  📚 히스토리 유틸 — localStorage 미사용, Supabase 전용
+//  📚 히스토리 유틸 — Supabase 전용
 // ═══════════════════════════════════════════════════════════
-
-/**
- * @typedef {{ id: number, date: string, ts: number, slot: string, questions: string[], answers: string[] }} HistoryItem
- */
-
-export function loadHistory() { return []; }
-export function saveHistory(_items) {}
-export function addHistory(_questions, _answers) {}
-export function deleteHistory(_id) {}
-export function getHistoryCount() { return 0; }
 
 /**
  * 전체 기록을 JSON 파일로 다운로드해요.
- * @param {HistoryItem[]} items - Supabase에서 불러온 기록
+ * @param {{ id: number, date: string, questions: string[], answers: string[] }[]} items
  */
 export function exportHistory(items = []) {
   const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });

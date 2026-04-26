@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { loadHistory, deleteHistory } from "../utils/history.js";
+import { exportHistory } from "../utils/history.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { useAppStore } from "../store/useAppStore.js";
 import Icon from "./Icon.jsx";
@@ -57,7 +57,7 @@ function getDateRange(filter) {
 }
 
 export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther, onSettings, histItems: histItemsProp, onDeleteAllHistory, sidebarPrefs, todayDiaryWritten }) {
-  const [histItems, setHistItems] = useState(() => histItemsProp || loadHistory());
+  const [histItems, setHistItems] = useState(() => histItemsProp || []);
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'week' | 'month'
@@ -130,8 +130,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
 
   const del = (id, e) => {
     e.stopPropagation();
-    deleteHistory(id);
-    setHistItems(loadHistory());
+    setHistItems(prev => prev.filter(h => h.id !== id));
   };
 
   const handleDeleteAll = async (e) => {

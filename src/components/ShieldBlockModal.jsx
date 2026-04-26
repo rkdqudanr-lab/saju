@@ -130,10 +130,29 @@ export default function ShieldBlockModal({
             </div>
             <div style={{ color: 'var(--t4)', fontSize: 'var(--sm)' }}>→</div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>정화에 필요한 BP</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>필요 BP</div>
               <div style={{ fontSize: 'var(--xl)', fontWeight: 700, color: 'var(--gold)' }}>
                 ✦ {cost}
               </div>
+            </div>
+          </div>
+          {/* BP 충족률 게이지 */}
+          <div style={{ marginTop: 12, marginBottom: 4 }}>
+            <div style={{ height: 8, background: 'var(--bg3)', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.min(100, Math.round((currentBp / Math.max(1, cost)) * 100))}%`,
+                background: canBlock ? 'var(--gold)' : 'var(--lav)',
+                borderRadius: 4,
+                transition: 'width 0.5s ease',
+              }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+              <span>0</span>
+              <span style={{ color: canBlock ? 'var(--gold)' : 'var(--lav)', fontWeight: 700 }}>
+                {Math.min(100, Math.round((currentBp / Math.max(1, cost)) * 100))}%
+              </span>
+              <span>{cost}</span>
             </div>
           </div>
           {!canBlock && (

@@ -64,16 +64,6 @@ export const GUARDIAN_LEVEL_EFFECTS = {
 export const BADTIME_THRESHOLD = 50;
 
 // ════════════════════════════════════════════════════════════════
-// 손실 회피 심리 메시지
-// ════════════════════════════════════════════════════════════════
-export const LOSS_AVERSION_MESSAGES = {
-  BADTIME_DETECTED: '악운 시간대가 감지됐어요. 액막이를 발동하시겠어요?',
-  NO_BP: 'BP가 부족합니다. 무료 충전을 기다리거나 미션을 완료해주세요.',
-  MISSED_MISSION: '오늘의 미션을 완료하지 않으면 내일 BP 획득이 어려워져요.',
-  LEVEL_DOWN_WARNING: '로그인 스트릭이 끊기면 레벨 유지에 영향을 줄 수 있어요.',
-};
-
-// ════════════════════════════════════════════════════════════════
 // 함수: 배드타임 감지
 // ════════════════════════════════════════════════════════════════
 /**
@@ -281,72 +271,6 @@ export function getBPGaugeColor(currentBp, level) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 함수: 미션 타입별 설명
-// ════════════════════════════════════════════════════════════════
-export const MISSION_TYPE_LABELS = {
-  color: { label: '색상 처방', emoji: '🎨' },
-  menu: { label: '음식 처방', emoji: '🍽️' },
-  item: { label: '라이프 아이템', emoji: '🌿' },
-  do: { label: '오늘의 실천', emoji: '✅' },
-  dont: { label: '오늘의 주의', emoji: '⚠️' },
-};
-
-/**
- * 미션 타입을 라벨 + 이모지로 변환
- * @param {string} type - mission_type ('color' | 'menu' | 'item')
- * @returns {Object} { label, emoji }
- */
-export function getMissionTypeLabel(type) {
-  return MISSION_TYPE_LABELS[type] || { label: '미션', emoji: '✨' };
-}
-
-// ════════════════════════════════════════════════════════════════
-// 함수: 액막이 후 변환된 운명 메시지 생성
-// ════════════════════════════════════════════════════════════════
-/**
- * 배드타임 증상 → 긍정적 운명으로 변환
- * @param {string} badtimeSymptom - 배드타임 증상 (예: '불안감')
- * @returns {string} 변환된 운명 메시지
- */
-export function generateTransformedFortuneMessage(badtimeSymptom) {
-  const transformations = {
-    '불안감': '안정감',
-    '혼란': '명확함',
-    '갈등': '조화',
-    '실수': '정확함',
-    '지연': '신속함',
-    '손실': '이득',
-    '외로움': '연결',
-    '피로': '활기',
-  };
-
-  const positive = transformations[badtimeSymptom] || '긍정적 기운';
-  return `별숨이 ${badtimeSymptom}을(를) ${positive}으로 바꿨어요 ✨`;
-}
-
-// ════════════════════════════════════════════════════════════════
-// 함수: 손실 회피 심리 강화 메시지
-// ════════════════════════════════════════════════════════════════
-/**
- * 배드타임 감지 시 사용자의 행동을 유도하는 메시지
- * @param {number} score - 운세 점수
- * @param {number} currentBp - 현재 BP
- * @returns {string} 유도 메시지
- */
-export function generateLossAversionMessage(score, currentBp) {
-  if (score < 30) {
-    return '⚠️ 심각한 악운이 감지되었어요. 지금 액막이를 발동하세요!';
-  }
-  if (score < BADTIME_THRESHOLD) {
-    if (currentBp >= BADTIME_BLOCK_COST.DEFAULT) {
-      return '⚠️ 악운이 감지되었어요. 액막이로 운명을 바꿀 수 있습니다.';
-    }
-    return '⚠️ 악운이 감지되었어요. BP를 충전하고 액막이를 발동하세요.';
-  }
-  return '✨ 오늘은 모든 시간이 안전해요!';
-}
-
-// ════════════════════════════════════════════════════════════════
 // 함수: BP 차감 (별숨 숍 구매)
 // ════════════════════════════════════════════════════════════════
 /**
@@ -400,15 +324,11 @@ export default {
   GUARDIAN_LEVEL_THRESHOLDS,
   FREE_BP_RECHARGE,
   BADTIME_THRESHOLD,
-  LOSS_AVERSION_MESSAGES,
   detectBadtime,
   calculateLevelPromotion,
   formatGuardianLevelText,
   calculateLevelProgress,
   calculateLoginStreak,
   getBPGaugeColor,
-  getMissionTypeLabel,
-  generateTransformedFortuneMessage,
-  generateLossAversionMessage,
   spendBP,
 };

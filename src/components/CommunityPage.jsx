@@ -875,12 +875,14 @@ export default function CommunityPage({ showToast, dailyResult }) {
 
   async function loadFollowing() {
     if (!kakaoId) return;
+    const followClient = getAuthenticatedClient(String(kakaoId));
+    if (!followClient) return;
     try {
-      const { data } = await supabase
+      const { data, error } = await followClient
         .from('user_follows')
         .select('following_kakao_id')
         .eq('follower_kakao_id', String(kakaoId));
-      if (data) setFollowingIds(new Set(data.map(f => f.following_kakao_id)));
+      if (!error && data) setFollowingIds(new Set(data.map(f => f.following_kakao_id)));
     } catch { /* 조용히 실패 */ }
   }
 
@@ -908,12 +910,14 @@ export default function CommunityPage({ showToast, dailyResult }) {
 
   async function loadMyLikes() {
     if (!kakaoId) return;
+    const likesClient = getAuthenticatedClient(String(kakaoId));
+    if (!likesClient) return;
     try {
-      const { data } = await supabase
+      const { data, error } = await likesClient
         .from('post_reactions')
         .select('post_id')
         .eq('kakao_id', String(kakaoId));
-      if (data) setMyLikedIds(new Set(data.map(r => r.post_id)));
+      if (!error && data) setMyLikedIds(new Set(data.map(r => r.post_id)));
     } catch {
       // 조용히 실패
     }
@@ -940,27 +944,32 @@ export default function CommunityPage({ showToast, dailyResult }) {
   async function handleLike(postId) {
     if (!kakaoId) { showToast('로그인이 필요해요', 'info'); return; }
     const client = getAuthenticatedClient(kakaoId);
+    if (!client) return;
     const already = myLikedIds.has(postId);
 
+    // 낙관적 UI 업데이트 (즉각 반응)
     if (already) {
-      await client.from('post_reactions').delete()
-        .eq('post_id', postId).eq('kakao_id', String(kakaoId));
-      await client.from('community_posts')
-        .update({ likes_count: posts.find(p => p.id === postId)?.likes_count - 1 || 0 })
-        .eq('id', postId);
       setMyLikedIds(prev => { const s = new Set(prev); s.delete(postId); return s; });
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes_count: Math.max(0, (p.likes_count || 0) - 1) } : p));
+      await client.from('post_reactions').delete()
+        .eq('post_id', postId).eq('kakao_id', String(kakaoId));
     } else {
       const { error } = await client.from('post_reactions').insert({
         post_id: postId, kakao_id: String(kakaoId),
       });
       if (error?.code === '23505') return; // 중복
-      await client.from('community_posts')
-        .update({ likes_count: (posts.find(p => p.id === postId)?.likes_count || 0) + 1 })
-        .eq('id', postId);
       setMyLikedIds(prev => new Set([...prev, postId]));
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes_count: (p.likes_count || 0) + 1 } : p));
       showToast('+5 BP 적립! 공감해줘서 고마워요', 'success');
+    }
+
+    // 클라이언트 산술 대신 집계 쿼리로 정확한 count를 DB에 반영 (race condition 방지)
+    const { count } = await client.from('post_reactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', postId);
+    if (count !== null) {
+      await client.from('community_posts').update({ likes_count: count }).eq('id', postId);
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes_count: count } : p));
     }
   }
 

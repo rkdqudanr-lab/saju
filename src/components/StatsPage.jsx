@@ -197,6 +197,7 @@ export default function StatsPage({ callApi }) {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     const kakaoId = user.kakaoId || user.id;
+    if (!kakaoId) { setLoading(false); return; }
     loadHistory(kakaoId);
     loadScores(kakaoId);
   }, [user?.id]);
@@ -223,11 +224,13 @@ export default function StatsPage({ callApi }) {
       const yearAgo = new Date();
       yearAgo.setFullYear(yearAgo.getFullYear() - 1);
       const client = getAuthenticatedClient(kakaoId);
-      const { data } = await client
+      if (!client) return;
+      const { data, error } = await client
         .from('daily_scores')
         .select('score_date, score')
         .gte('score_date', yearAgo.toISOString().slice(0, 10))
         .order('score_date', { ascending: true });
+      if (error) { console.warn('[Stats] daily_scores 로드 실패:', error.message); return; }
       if (data) setScores(data);
     } catch {
       // 조용히 실패

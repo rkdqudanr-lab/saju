@@ -245,10 +245,10 @@ export default function DailyStarCardV2({
                 <div key={key} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
                     <span style={{ fontSize: 13, color: 'var(--t2)', minWidth: 40, fontWeight: 600 }}>{label}</span>
-                    <div style={{ flex: 1, height: 6, background: 'var(--bg3)', borderRadius: 3, position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, height: 10, background: 'var(--bg3)', borderRadius: 5, position: 'relative', overflow: 'hidden' }}>
                       <div style={{
                         position: 'absolute', left: 0, top: 0, height: '100%',
-                        width: `${scoreValue}%`, background: scoreColor, borderRadius: 3, zIndex: 1
+                        width: `${scoreValue}%`, background: scoreColor, borderRadius: 5, zIndex: 1
                       }} />
                       {pendingBoost > 0 && (
                         <div style={{
@@ -260,7 +260,7 @@ export default function DailyStarCardV2({
                         }} />
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 100, justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, justifyContent: 'flex-end' }}>
                       {pendingBoost > 0 && (
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', animation: 'dsc-text-pulse 1.5s infinite' }}>
                           {totalPredicted}점

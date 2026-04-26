@@ -95,14 +95,17 @@ export default function TodayDetailPage({
       } catch { setUsedItems([]); }
       return;
     }
-    getAuthenticatedClient(String(kakaoId))
+    const supaClientA = getAuthenticatedClient(String(kakaoId));
+    if (!supaClientA) { setUsedItems([]); return; }
+    supaClientA
       .from('daily_cache')
       .select('content')
       .eq('kakao_id', String(kakaoId))
       .eq('cache_date', new Date().toISOString().slice(0, 10))
       .eq('cache_type', TODAY_AXIS_CACHE)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.warn('[TodayDetail] daily_cache 로드 실패:', error.message); setUsedItems([]); return; }
         try {
           const map = JSON.parse(data?.content || '{}');
           setUsedItems(
@@ -117,11 +120,14 @@ export default function TodayDetailPage({
   // 보유 아이템 로드
   useEffect(() => {
     if (!kakaoId || !dailyResult) return;
-    getAuthenticatedClient(String(kakaoId))
+    const supaClientB = getAuthenticatedClient(String(kakaoId));
+    if (!supaClientB) { setOwnedRows([]); return; }
+    supaClientB
       .from('user_shop_inventory')
       .select('item_id')
       .eq('kakao_id', String(kakaoId))
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.warn('[TodayDetail] 보유 아이템 로드 실패:', error.message); setOwnedRows([]); return; }
         setOwnedRows(
           (data || [])
             .map((row) => ({ rowId: String(row.item_id), item: findItem(String(row.item_id)) }))
@@ -154,9 +160,11 @@ export default function TodayDetailPage({
       );
       writeDailyLocalCache(String(kakaoId), TODAY_AXIS_CACHE, JSON.stringify(nextMap), getDailyDateKey());
       if (canUseDailySupabaseTables()) {
-        await getAuthenticatedClient(String(kakaoId))
-          .from('daily_cache')
-          .upsert({ kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: TODAY_AXIS_CACHE, content: JSON.stringify(nextMap) }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        const upsertClientA = getAuthenticatedClient(String(kakaoId));
+        if (upsertClientA) {
+          await upsertClientA.from('daily_cache')
+            .upsert({ kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: TODAY_AXIS_CACHE, content: JSON.stringify(nextMap) }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        }
       }
       setUsedItems(nextUsedItems);
       setSelectedRow(null);
@@ -224,9 +232,11 @@ export default function TodayDetailPage({
       );
       writeDailyLocalCache(String(kakaoId), TODAY_AXIS_CACHE, JSON.stringify(nextMap), getDailyDateKey());
       if (canUseDailySupabaseTables()) {
-        await getAuthenticatedClient(String(kakaoId))
-          .from('daily_cache')
-          .upsert({ kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: TODAY_AXIS_CACHE, content: JSON.stringify(nextMap) }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        const upsertClientB = getAuthenticatedClient(String(kakaoId));
+        if (upsertClientB) {
+          await upsertClientB.from('daily_cache')
+            .upsert({ kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: TODAY_AXIS_CACHE, content: JSON.stringify(nextMap) }, { onConflict: 'kakao_id,cache_date,cache_type' });
+        }
       }
       setUsedItems(nextUsedItems);
       setBoostPhase(null);

@@ -150,7 +150,8 @@ export function useGamification(user, showToast) {
 
       try {
         const authClient = getAuthenticatedClient(user.id);
-        const client = authClient || supabase;
+        if (!authClient) return { success: false, message: '인증 오류가 발생했어요' };
+        const client = authClient;
         const today = getTodayDateStr();
 
         // daily_bp_log에 기록
