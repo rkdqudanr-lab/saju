@@ -23,6 +23,7 @@ import { loadAnalysisCache, saveAnalysisCache } from "./lib/analysisCache.js";
 
 // components (static)
 import Icon              from "./components/Icon.jsx";
+import ChatTransitionSVG from "./components/ChatTransitionSVG.jsx";
 import StarCanvas         from "./components/StarCanvas.jsx";
 import SkeletonLoader     from "./components/SkeletonLoader.jsx";
 import Sidebar            from "./components/Sidebar.jsx";
@@ -547,11 +548,7 @@ export default function App() {
 
       {chatTransitioning && (
         <div className="chat-transition-overlay" aria-hidden="true">
-          <div className="chat-transition-orb">
-            <div className="chat-transition-ring" />
-            <div className="chat-transition-core" />
-            <div className="chat-transition-star">*</div>
-          </div>
+          <ChatTransitionSVG />
           <div style={{
             marginTop: 24,
             color: 'var(--gold)',

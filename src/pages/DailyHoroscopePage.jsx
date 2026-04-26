@@ -170,7 +170,7 @@ export default function DailyHoroscopePage({
       .from('daily_scores')
       .upsert(
         { kakao_id: String(kakaoId), score_date: dateKey, score: dailyResult.score },
-        { onConflict: 'kakao_id,score_date' }
+        { onConflict: 'kakao_id,score_date', ignoreDuplicates: true }
       )
       .then(({ error }) => { if (error) console.warn('[별숨] daily_scores upsert:', error); });
   }, [dailyResult?.score, user]);
@@ -196,12 +196,12 @@ export default function DailyHoroscopePage({
     if (!client) return;
     client
       .from('user_shop_inventory')
-      .select('id, item_id')
+      .select('item_id')
       .eq('kakao_id', String(kakaoId))
       .then(({ data, error }) => {
         if (error) { setOwnedRows([]); return; }
         const rows = (data || [])
-          .map((row) => ({ rowId: String(row.id), item: findItem(String(row.item_id)) }))
+          .map((row) => ({ rowId: row.item_id, item: findItem(String(row.item_id)) }))
           .filter((row) => row.item?.aspectKey);
         setOwnedRows(rows);
       })
@@ -246,7 +246,7 @@ export default function DailyHoroscopePage({
       const { error: delError } = await client
         .from('user_shop_inventory')
         .delete()
-        .in('id', rowIds)
+        .in('item_id', rowIds)
         .eq('kakao_id', String(kakaoId));
       if (delError) throw delError;
 

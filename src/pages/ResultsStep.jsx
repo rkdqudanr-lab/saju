@@ -52,7 +52,7 @@ export default function ResultsStep({
   kakaoLogin, genReport, resetSession, onEnterChat,
 }) {
   const { user, form, showToast } = useUserCtx();
-  const { saju, sun, moon, asc, today, formOk } = useSajuCtx();
+  const { saju, sun, moon, asc, today, formOk, buildCtx } = useSajuCtx();
   const { gamificationState } = useGamCtx();
 
   const [followUpQuestions, setFollowUpQuestions] = useState([]);
@@ -68,9 +68,12 @@ export default function ResultsStep({
       const fetchFollowUp = async () => {
         setLoadingFollowUp(true);
         try {
+          const originalQ = selQs[0] || '';
+          const answerSnippet = (answers[0] || '').slice(0, 200);
           const data = await postAsk({
-            userMessage: `방금 답변한 내용을 바탕으로 후속 질문 5개를 만들어줘. (답변 요약: ${answers[0].slice(0, 100)})`,
+            userMessage: `[원래 질문]\n${originalQ}\n\n[방금 내가 한 답변 요약]\n${answerSnippet}\n\n위 원래 질문의 주제와 직접 관련된 후속 질문 5개를 만들어줘.`,
             isFollowUpQ: true,
+            context: buildCtx ? buildCtx() : '',
             kakaoId: user?.id,
           });
           if (data.text) {

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find c:\\\\\\\\Users\\\\\\\\rkdqu\\\\\\\\Desktop\\\\\\\\saju-main -name \"aiRequest.js\" -o -name \"askApi.js\")",
+      "Bash(find c:\\\\\\\\Users\\\\\\\\rkdqu\\\\\\\\Desktop\\\\\\\\saju-main -name \"askApi.js\" -type f)",
+      "Bash(find c:\\\\\\\\Users\\\\\\\\rkdqu\\\\\\\\Desktop\\\\\\\\saju-main\\\\\\\\lib -name \"askApi.js\" -o -name \"ask*.js\")",
+      "Bash(grep -r \"방금 답변한 내용\" c:\\\\\\\\Users\\\\\\\\rkdqu\\\\\\\\Desktop\\\\\\\\saju-main --include=\"*.js\" --include=\"*.jsx\")",
+      "Bash(grep -A 30 \"fetchFollowUp\" c:\\\\\\\\Users\\\\\\\\rkdqu\\\\\\\\Desktop\\\\\\\\saju-main\\\\\\\\src\\\\\\\\pages\\\\\\\\ResultsStep.jsx)"
+    ]
+  }
+}
