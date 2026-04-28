@@ -1,4 +1,5 @@
 import { useAppStore } from '../store/useAppStore.js';
+import { STEP } from '../utils/steps.js';
 
 const MAX_SCORE = 50;
 
@@ -63,7 +64,7 @@ export default function PrecisionNudge() {
           <span style={{ color: meta.color, fontWeight: 600 }}> (+{nextPts}점이면 다음 레벨)</span>
         </div>
         <button
-          onClick={() => setStep(13)}
+          onClick={() => setStep(STEP.NATAL)}
           style={{
             flexShrink: 0,
             padding: '7px 14px',

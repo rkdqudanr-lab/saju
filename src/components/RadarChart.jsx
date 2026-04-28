@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { getSaju, CGO, JJO, OC } from "../utils/saju.js";
+import { STEP } from "../utils/steps.js";
 
 // ─────────────────────────────────────────────
 // 오행 상생(相生) / 상극(相克) 관계
@@ -155,7 +156,7 @@ export default function RadarChart({ form, otherProfiles, setStep, onAddOther })
         <div className="inner" style={{ textAlign: 'center', paddingTop: 60 }}>
           <div style={{ fontSize: '2rem', marginBottom: 12 }}>🕸️</div>
           <div style={{ color: 'var(--t2)' }}>먼저 나의 생년월일을 입력해야 해요</div>
-          <button className="btn-main" style={{ marginTop: 20, width: 'auto', padding: '12px 32px' }} onClick={() => setStep(1)}>프로필 입력하기 ✦</button>
+          <button className="btn-main" style={{ marginTop: 20, width: 'auto', padding: '12px 32px' }} onClick={() => setStep(STEP.PROFILE)}>프로필 입력하기 ✦</button>
         </div>
       </div>
     );

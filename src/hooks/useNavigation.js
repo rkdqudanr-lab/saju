@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { STEP } from "../utils/steps.js";
 
 /**
  * URL 파라미터 파싱, 브라우저 히스토리 동기화, 스크롤, GA4 추적을
@@ -22,41 +23,41 @@ export function useNavigation({ step, setStep, resultsRef, showToast, loginError
 
   // ── 그룹 코드 진입 ──
   useEffect(() => {
-    if (groupCode) setStep(11);
+    if (groupCode) setStep(STEP.GROUP);
   }, [groupCode, setStep]);
 
   // ── 화면 전환 시 스크롤 맨 위로 ──
   useEffect(() => {
-    if (step !== 3) window.scrollTo({ top: 0, behavior: 'instant' });
+    if (step !== STEP.LOADING) window.scrollTo({ top: 0, behavior: 'instant' });
   }, [step]);
 
   // ── 결과 자동 스크롤 ──
   useEffect(() => {
-    if (step === 4 && resultsRef.current) {
+    if (step === STEP.RESULT && resultsRef.current) {
       setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
     }
   }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── GA4 step 변경 추적 ──
   useEffect(() => {
-    if (step === 3) return;
+    if (step === STEP.LOADING) return;
     if (typeof window.gtag === 'function') window.gtag('event', 'step_change', { step });
-    if (step === 2 && typeof window.gtag === 'function') window.gtag('event', 'step2_enter');
-    if (step === 5 && typeof window.gtag === 'function') window.gtag('event', 'chat_page_enter');
-    if (step === 6 && typeof window.gtag === 'function') window.gtag('event', 'report_page_enter');
-    if (step === 7 && typeof window.gtag === 'function') window.gtag('event', 'compat_page_enter');
+    if (step === STEP.QUESTION && typeof window.gtag === 'function') window.gtag('event', 'step2_enter');
+    if (step === STEP.CHAT && typeof window.gtag === 'function') window.gtag('event', 'chat_page_enter');
+    if (step === STEP.DEEP_INTERVIEW && typeof window.gtag === 'function') window.gtag('event', 'report_page_enter');
+    if (step === STEP.COMPAT && typeof window.gtag === 'function') window.gtag('event', 'compat_page_enter');
   }, [step]);
 
   // ── 브라우저 히스토리 동기화 ──
   useEffect(() => {
-    if (step === 3) return;
+    if (step === STEP.LOADING) return;
     if (isPopState.current) { isPopState.current = false; return; }
     window.history.pushState({ step }, '', window.location.pathname);
   }, [step]);
 
   useEffect(() => {
     const handlePopState = (e) => {
-      const prevStep = e.state?.step ?? 0;
+      const prevStep = e.state?.step ?? STEP.HOME;
       isPopState.current = true;
       setStep(prevStep);
     };

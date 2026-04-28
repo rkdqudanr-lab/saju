@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import ShieldBlockModal from "../components/ShieldBlockModal.jsx";
 import LuckyItemsCard from "../components/LuckyItemsCard.jsx";
+import { STEP } from "../utils/steps.js";
 import FeatureLoadingScreen from "../components/FeatureLoadingScreen.jsx";
 import BoostItemSheet from "../components/BoostItemSheet.jsx";
 import { detectBadtime } from "../utils/gamificationLogic.js";
@@ -469,7 +470,7 @@ export default function DailyHoroscopePage({
                       </div>
                     </div>
                     <button
-                      onClick={() => setStep(38)}
+                      onClick={() => setStep(STEP.ITEM_INVENTORY)}
                       style={{
                         flexShrink: 0, fontSize: '10px', color: 'var(--t4)',
                         background: 'none', border: '1px solid var(--line)',
@@ -485,7 +486,7 @@ export default function DailyHoroscopePage({
                 {/* 기운 미장착 시 유도 */}
                 {!equippedSajuItem && (
                   <button
-                    onClick={() => setStep(38)}
+                    onClick={() => setStep(STEP.ITEM_INVENTORY)}
                     style={{
                       width: '100%', marginTop: 10, padding: '10px 14px',
                       background: 'none', border: '1px dashed var(--line)',

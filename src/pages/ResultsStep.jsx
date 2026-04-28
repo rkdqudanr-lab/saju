@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ON } from "../utils/saju.js";
 import { parseAccSummary, breakAtNatural, SIGN_MOOD } from "../utils/constants.js";
 import AccItem, { FeedbackBtn } from "../components/AccItem.jsx";
+import { STEP } from "../utils/steps.js";
 import PrecisionNudge from "../components/PrecisionNudge.jsx";
 import { postAsk } from "../lib/askApi.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
@@ -262,7 +263,7 @@ export default function ResultsStep({
           <div className="res-actions">
             <div style={{ marginBottom: 'var(--sp2)', animation: 'fadeUp .4s ease' }}>
               <button
-                onClick={() => (typeof onEnterChat === 'function' ? onEnterChat() : setStep(5))}
+                onClick={() => (typeof onEnterChat === 'function' ? onEnterChat() : setStep(STEP.CHAT))}
                 style={{
                   width: '100%',
                   padding: '14px',
@@ -294,9 +295,9 @@ export default function ResultsStep({
             )}
 
             <div className="res-btns">
-              <button className="res-btn" onClick={() => { setSelQs([]); setDiy(''); resetSession(); setStep(formOk ? 2 : 1); }}>다른 질문</button>
+              <button className="res-btn" onClick={() => { setSelQs([]); setDiy(''); resetSession(); setStep(formOk ? STEP.QUESTION : STEP.PROFILE); }}>다른 질문</button>
               <button className="res-btn" onClick={() => setShowSidebar(true)}>지난 이야기</button>
-              <button className="res-btn" onClick={() => setStep(0)}>홈으로</button>
+              <button className="res-btn" onClick={() => setStep(STEP.HOME)}>홈으로</button>
             </div>
 
             <div className="kakao-channel-remind">
@@ -311,8 +312,8 @@ export default function ResultsStep({
             <div className="feature-guide">
               <div className="feature-guide-title">별숨의 다른 기능들</div>
               <div className="feature-guide-grid">
-                <button className="fg-card" onClick={() => setStep(35)}><span className="fg-icon" style={{ fontSize: 18 }}>🔤</span><div className="fg-info"><div className="fg-name">이름 풀이</div><div className="fg-desc">기운에 맞는 이름 흐름을 확인해요</div></div></button>
-                <button className="fg-card" onClick={() => setStep(7)}><span className="fg-icon" style={{ fontSize: 18 }}>💕</span><div className="fg-info"><div className="fg-name">사이 별점</div><div className="fg-desc">두 사람의 흐름을 사주와 별자리로 봐요</div></div></button>
+                <button className="fg-card" onClick={() => setStep(STEP.NAME_FORTUNE)}><span className="fg-icon" style={{ fontSize: 18 }}>🔤</span><div className="fg-info"><div className="fg-name">이름 풀이</div><div className="fg-desc">기운에 맞는 이름 흐름을 확인해요</div></div></button>
+                <button className="fg-card" onClick={() => setStep(STEP.COMPAT)}><span className="fg-icon" style={{ fontSize: 18 }}>💕</span><div className="fg-info"><div className="fg-name">사이 별점</div><div className="fg-desc">두 사람의 흐름을 사주와 별자리로 봐요</div></div></button>
                 <button className="fg-card" onClick={() => setShowSidebar(true)}><span className="fg-icon" style={{ fontSize: 18 }}>📚</span><div className="fg-info"><div className="fg-name">지난 이야기</div><div className="fg-desc">내가 별숨에게 물었던 기록 보기</div></div></button>
                 <button className="fg-card" onClick={handleCopyAll}>
                   <span className="fg-icon">{copyDone ? '✓' : '📋'}</span>

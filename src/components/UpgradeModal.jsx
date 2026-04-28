@@ -1,4 +1,5 @@
 import { PKGS } from "../utils/constants.js";
+import { STEP } from "../utils/steps.js";
 
 export default function UpgradeModal({ pkg, setPkg, setStep, onClose }) {
   return (
@@ -18,7 +19,7 @@ export default function UpgradeModal({ pkg, setPkg, setStep, onClose }) {
             </div>
           ))}
         </div>
-        <button className="btn-main" onClick={() => { onClose(); setStep(5); }}>이 이용권으로 계속 대화하기 ✦</button>
+        <button className="btn-main" onClick={() => { onClose(); setStep(STEP.CHAT); }}>이 이용권으로 계속 대화하기 ✦</button>
         <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 8 }} onClick={onClose}>괜찮아요, 나중에 할게요</button>
       </div>
     </div>

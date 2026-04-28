@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
+import { STEP } from '../utils/steps.js';
 import { ReportBody } from './AccItem.jsx';
 import { exportReadingAsTxt } from '../utils/constants.js';
 
@@ -371,7 +372,7 @@ ${qaPairs}
                 fontFamily: 'var(--ff)',
                 cursor: 'pointer',
               }}
-              onClick={() => setStep(4)}
+              onClick={() => setStep(STEP.RESULT)}
             >
               결과로 돌아가기
             </button>

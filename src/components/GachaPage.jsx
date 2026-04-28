@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { spendBP } from '../utils/gamificationLogic.js';
+import { STEP } from '../utils/steps.js';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 import {
   GACHA_POOL,   GRADE_CONFIG,      PROB_TABLE,      pullOne,     pull10,      GRADE_ORDER,
@@ -366,7 +367,7 @@ function SynthGuide({ gradeConfig, gradeOrder, setStep }) {
         })}
       </div>
       <button
-        onClick={() => setStep(38)}
+        onClick={() => setStep(STEP.ITEM_INVENTORY)}
         style={{
           marginTop: 10, padding: '8px 16px', background: 'var(--goldf)', border: '1px solid var(--acc)',
           borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
@@ -489,11 +490,11 @@ export default function GachaPage({ showToast, consentFlags }) {
             )}
           </div>
           {equippedSajuItem ? (
-            <button onClick={() => setStep(38)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 20, padding: '3px 8px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 20, padding: '3px 8px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
               내 아이템
             </button>
           ) : (
-            <button onClick={() => setStep(38)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
+            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
               장착하기
             </button>
           )}
@@ -614,7 +615,7 @@ export default function GachaPage({ showToast, consentFlags }) {
           </div>
         </div>
         <button
-          onClick={() => setStep(31)}
+          onClick={() => setStep(STEP.SHOP)}
           style={{
             flexShrink: 0, padding: '6px 12px', borderRadius: 20,
             background: 'none', border: '1px solid var(--line)',

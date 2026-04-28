@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { STEP } from "../utils/steps.js";
 
 // ── 오행 테마 정의 ──
 const ELEMENT_THEMES = {
@@ -33,7 +34,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginBottom: 20 }}>
             생년월일을 입력해서<br/>당신의 사주 명함을 만들어봐요
           </div>
-          <button className="res-btn" style={{ width: '100%' }} onClick={() => setStep(1)}>← 뒤로</button>
+          <button className="res-btn" style={{ width: '100%' }} onClick={() => setStep(STEP.PROFILE)}>← 뒤로</button>
         </div>
       </div>
     );
@@ -166,7 +167,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
           <button className="up-btn" onClick={handleSave}>
             🎴 명함 카드 저장
           </button>
-          <button className="res-btn" onClick={() => setStep(0)}>
+          <button className="res-btn" onClick={() => setStep(STEP.HOME)}>
             ← 홈으로
           </button>
         </div>

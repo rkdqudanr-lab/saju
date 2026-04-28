@@ -182,7 +182,7 @@ Supabase `missions` 테이블. 매일 리셋되는 일일 미션.
 | 1 | `TodayDetailPage.jsx` | AxisInsightPanel, DailyRadarChart, WeeklyTrendChart, ItemPicker → `src/features/today/` | 1337줄 → 229줄 | ✅ 완료 |
 | 2 | `ItemInventoryPage.jsx` | OwnedItemCard, ItemDetailModal, UseItemModal, SynthesisModal → `src/features/inventory/` | 1735줄 → 347줄 | ✅ 완료 |
 | 3 | `GroupBulseumPage.jsx` | MemberForm, RelationGraph, TeamChemiSummary, DetailPanel, GroupAnalysisPanel → `src/features/group/` | 1454줄 → 418줄 | ✅ 완료 |
-| 4 | `App.jsx` | daily horoscope 훅, 핸들러들 → `src/hooks/useDailyHoroscope.js` | 1165줄 (대부분 이미 훅으로 위임됨) | ⏭ 스킵 |
+| 4 | `App.jsx` | 라우팅 → `AppRouter.jsx`, 모달 → `AppModals.jsx`, 훅 → `useModalState/useThemeEffects/useGuardianMessage`, 상수 → `steps.js` | 1054줄 → 310줄 | ✅ 완료 |
 | 5 | `DailyStarCardV2.jsx` | parseDailyLines, parseCategoryLine → `src/utils/parseDailyLines.js` | 파싱 로직 독립 테스트 가능 | ✅ 완료 |
 
 ### 생성된 feature 파일 목록

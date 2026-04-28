@@ -2,6 +2,7 @@
 import { DAILY_QUESTIONS, PROFILE_QUESTIONS_IDS } from "../utils/constants.js";
 import { postAsk } from "../lib/askApi.js";
 import { useAppStore } from "../store/useAppStore.js";
+import { STEP } from "../utils/steps.js";
 
 // 20문 20답용 질문 목록 (DAILY_QUESTIONS에서 선별)
 const PROFILE_QS = DAILY_QUESTIONS.filter(q => PROFILE_QUESTIONS_IDS.includes(q.id));
@@ -210,7 +211,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
             {answeredCount}개의 이야기를 들었어요.<br />
             앞으로 모든 운세에 자동으로 반영될 거예요.
           </div>
-          <button className="profile-save-btn" onClick={() => { onClose(); setStep(6); }}>
+          <button className="profile-save-btn" onClick={() => { onClose(); setStep(STEP.DEEP_INTERVIEW); }}>
             심층인터뷰 시작하기
           </button>
           <button className="profile-save-btn" style={{ background: 'none', border: '1px solid var(--acc)', color: 'var(--gold)', marginTop: 8 }} onClick={onClose}>

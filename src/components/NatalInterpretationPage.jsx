@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { OC, OE, ON, ILGAN_DESC } from "../utils/saju.js";
 import { useAppStore } from "../store/useAppStore.js";
+import { STEP } from "../utils/steps.js";
 
 // ── 오행 테마 ──
 const ELEMENT_THEME = {
@@ -56,11 +57,11 @@ const LEVEL_META = {
   high: { label: '초정밀', color: 'var(--gold)', bar: 'var(--gold)' },
 };
 const DATA_POINTS = [
-  { key: 'birth_date',     label: '생년월일',         pts: 10, icon: '📅', step: 1 },
-  { key: 'birth_time',     label: '생시 (태어난 시간)', pts: 20, icon: '⏰', step: 1 },
-  { key: 'current_concern',label: '현재 고민 키워드',   pts: 10, icon: '💭', step: 1 },
-  { key: 'life_stage',     label: '인생 단계 선택',    pts: 5,  icon: '🌱', step: 1 },
-  { key: 'other_profile',  label: '다른 사람 정보 추가', pts: 5,  icon: '👥', step: 1 },
+  { key: 'birth_date',     label: '생년월일',           pts: 10, icon: '📅', step: STEP.PROFILE },
+  { key: 'birth_time',     label: '생시 (태어난 시간)', pts: 20, icon: '⏰', step: STEP.PROFILE },
+  { key: 'current_concern',label: '현재 고민 키워드',   pts: 10, icon: '💭', step: STEP.PROFILE },
+  { key: 'life_stage',     label: '인생 단계 선택',     pts: 5,  icon: '🌱', step: STEP.PROFILE },
+  { key: 'other_profile',  label: '다른 사람 정보 추가', pts: 5,  icon: '👥', step: STEP.PROFILE },
 ];
 
 // ── 메인 컴포넌트 ──

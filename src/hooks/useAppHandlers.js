@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { parseAccSummary, PKGS, DAILY_QUESTIONS, SIGN_MOOD } from "../utils/constants.js";
+import { STEP } from "../utils/steps.js";
 import { saveShareCard, saveReportImage, saveProphecyImage, saveCompatImage, saveChatImage, captureShareCard } from "../utils/imageExport.js";
 import { getTodayStr } from "../utils/quiz.js";
 
@@ -64,7 +65,7 @@ export function useAppHandlers({
   // ── 온보딩 완료 ──
   const handleOnboardingFinish = useCallback(() => {
     saveSettings({ onboarded: true });
-    setStep(0);
+    setStep(STEP.HOME);
   }, [saveSettings, setStep]);
 
   // ── 퀴즈 답변 ──

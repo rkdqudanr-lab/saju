@@ -1,3 +1,5 @@
+import { STEP } from '../../utils/steps.js';
+
 export default function BoostCTA({
   hasBoostedToday,
   canPurify,
@@ -85,7 +87,7 @@ export default function BoostCTA({
       {/* 보조 버튼 행: 내 아이템 보기 + 정화재점 */}
       <div style={{ display: 'flex', gap: 8 }}>
         <button
-          onClick={() => setStep(38)}
+          onClick={() => setStep(STEP.ITEM_INVENTORY)}
           style={{
             flex: 1,
             padding: '10px 12px',

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore.js';
+import { STEP } from '../utils/steps.js';
 import { breakAtNatural } from '../utils/constants.js';
 import { BADTIME_THRESHOLD } from '../utils/gamificationLogic.js';
 import { parseDailyLines } from '../utils/parseDailyLines.js';
@@ -294,7 +295,7 @@ export default function DailyStarCardV2({
                         ) : (
                           <button
                             type="button"
-                            onClick={() => setStep(40)}
+                            onClick={() => setStep(STEP.GACHA)}
                             style={{
                               flexShrink: 0,
                               padding: '4px 9px',

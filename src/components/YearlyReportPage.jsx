@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useStreamResponse } from "../hooks/useStreamResponse.js";
 import { useAppStore } from "../store/useAppStore.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
+import { STEP } from "../utils/steps.js";
 
 // ═══════════════════════════════════════════════════════════
 //  📅 연간 종합 리포트 — 별숨이 한 해를 읽어요
@@ -357,7 +358,7 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
 
         {/* 뒤로 가기 */}
         <button
-          onClick={() => setStep(0)}
+          onClick={() => setStep(STEP.HOME)}
           style={{
             width: '100%', padding: '12px', marginTop: 12,
             borderRadius: 'var(--r1)', border: '1px solid var(--line)',

@@ -2,6 +2,7 @@ import { Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'rea
 import DailyStarCardV2 from '../components/DailyStarCardV2.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
+import { STEP } from '../utils/steps.js';
 import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import '../styles/TodayDetailPage.css';
 import { findItem, pullOne, pullOneSaju } from '../utils/gachaItems.js';
@@ -273,7 +274,7 @@ export default function TodayDetailPage({
       />
 
       <div className="today-detail-header">
-        <button className="today-detail-back-btn" onClick={() => setStep(0)} aria-label="홈으로 돌아가기">←</button>
+        <button className="today-detail-back-btn" onClick={() => setStep(STEP.HOME)} aria-label="홈으로 돌아가기">←</button>
         <span className="today-detail-title">오늘 하루 나의 별숨</span>
         <div style={{ width: 40 }} />
       </div>
@@ -335,7 +336,7 @@ export default function TodayDetailPage({
       </div>
 
       <div className="today-detail-footer">
-        <button className="today-detail-btn-home" onClick={() => setStep(0)}>홈으로</button>
+        <button className="today-detail-btn-home" onClick={() => setStep(STEP.HOME)}>홈으로</button>
         {usedItems.length > 0 && canPurify && (
           <button className="today-detail-btn-home" onClick={handlePurify} disabled={isPurifying} style={{ background: 'var(--goldf)', border: '1px solid var(--acc)', color: 'var(--gold)', marginLeft: 8, opacity: isPurifying ? 0.7 : 1 }}>
             {isPurifying ? '재점 중...' : '정화재점'}

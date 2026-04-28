@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import { useAppStore } from '../store/useAppStore.js';
+import { STEP } from '../utils/steps.js';
 import {
   GRADE_CONFIG, GRADE_ORDER, SAJU_GRADE_CONFIG, SAJU_GRADE_ORDER,
   ALL_GACHA_POOL, findItem,
@@ -238,7 +239,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
             { label: 'MAIN SPIRIT', color: 'rgba(232,176,72,0.22)', bg: 'linear-gradient(135deg, rgba(232,176,72,0.12), rgba(232,176,72,0.04))', tc: 'var(--gold)', title: equippedSajuItem ? equippedSajuItem.name : '아직 메인 기운이 없어요', hint: equippedSajuItem ? '모든 AI 결과에 반영 중' : '내 아이템에서 바로 장착할 수 있어요', onClick: () => equippedSajuItem && setDetailItem(equippedSajuItem), cursor: equippedSajuItem ? 'pointer' : 'default' },
             { label: 'TODAY SLOT', color: 'rgba(180,142,240,0.22)', bg: 'linear-gradient(135deg, rgba(180,142,240,0.12), rgba(180,142,240,0.04))', tc: '#B48EF0', title: equippedDailyItems.length > 1 ? `${equippedDailyItems.length}개 축 아이템 발동 중` : (equippedDailyItem?.name || equippedTalismanItem?.name || '오늘 발동한 아이템이 없어요'), hint: equippedDailyItem || equippedTalismanItem ? '오늘 하루 결과에 반영 중' : '일일 발동 버튼으로 바로 적용해요', onClick: () => (equippedDailyItem || equippedTalismanItem) && setDetailItem(equippedDailyItem || equippedTalismanItem), cursor: equippedDailyItem || equippedTalismanItem ? 'pointer' : 'default' },
             { label: 'COLLECTION', color: 'var(--line)', bg: 'var(--bg2)', tc: 'var(--t4)', title: `${items.length}개 보유 중`, hint: `기운 ${spiritCount}개 · 기타 ${utilityCount}개`, onClick: () => setShowCollection(true), cursor: 'pointer' },
-            { label: 'SYNTH LAB', color: canSynth ? 'rgba(126,200,164,0.35)' : 'var(--line)', bg: canSynth ? 'linear-gradient(135deg, rgba(126,200,164,0.14), rgba(126,200,164,0.05))' : 'var(--bg2)', tc: canSynth ? '#7EC8A4' : 'var(--t4)', title: canSynth ? `${synthableGrades.length}개 조합이 가능해요` : '합성 재료가 아직 부족해요', hint: canSynth ? '내 아이템에서 바로 합성하기' : '별숨샵에서 재료를 더 모아보세요', onClick: () => canSynth ? setShowSynth(true) : setStep(31), cursor: 'pointer' },
+            { label: 'SYNTH LAB', color: canSynth ? 'rgba(126,200,164,0.35)' : 'var(--line)', bg: canSynth ? 'linear-gradient(135deg, rgba(126,200,164,0.14), rgba(126,200,164,0.05))' : 'var(--bg2)', tc: canSynth ? '#7EC8A4' : 'var(--t4)', title: canSynth ? `${synthableGrades.length}개 조합이 가능해요` : '합성 재료가 아직 부족해요', hint: canSynth ? '내 아이템에서 바로 합성하기' : '별숨샵에서 재료를 더 모아보세요', onClick: () => canSynth ? setShowSynth(true) : setStep(STEP.SHOP), cursor: 'pointer' },
           ].map((card) => (
             <button key={card.label} onClick={card.onClick} style={{ textAlign: 'left', padding: '14px', borderRadius: 'var(--r2)', border: `1px solid ${card.color}`, background: card.bg, cursor: card.cursor, minHeight: 108, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '10px', color: card.tc, fontWeight: 700, letterSpacing: '.08em', marginBottom: 6 }}>{card.label}</div>
@@ -313,7 +314,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontWeight: 600, marginBottom: 6 }}>{category === '전체' ? '보유한 아이템이 없어요' : `${category} 아이템이 없어요`}</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 20 }}>뽑기에서 아이템을 모아봐요!</div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-              <button onClick={() => setStep(31)} style={{ padding: '9px 18px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>별숨샵 열기 →</button>
+              <button onClick={() => setStep(STEP.SHOP)} style={{ padding: '9px 18px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>별숨샵 열기 →</button>
               <button onClick={() => setShowCollection(true)} style={{ padding: '9px 18px', background: 'var(--bg3)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>도감 보기 →</button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
+import { STEP } from "../utils/steps.js";
 
 // ═══════════════════════════════════════════════════════════
 //  📚 일기 모아보기 — 과거 일기 목록 페이지 (Step 20)
@@ -178,7 +179,7 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
             <div style={{ fontSize: '1.6rem', marginBottom: 16, color: 'var(--t4)' }}>✦</div>
             <div style={{ fontSize: 'var(--md)', fontWeight: 600, marginBottom: 8 }}>아직 일기가 없어요</div>
             <div style={{ fontSize: 'var(--sm)', marginBottom: 20, lineHeight: 1.7 }}>오늘의 하루를 별숨에게 처음 전해봐요</div>
-            <button className="btn-main" onClick={() => setStep(17)} style={{ maxWidth: 200 }}>
+            <button className="btn-main" onClick={() => setStep(STEP.DIARY)} style={{ maxWidth: 200 }}>
               오늘 일기 쓰기 ✦
             </button>
           </div>
@@ -222,7 +223,7 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
                     return (
                       <div
                         key={entry.id}
-                        onClick={() => { onSelectEntry?.(entry.date); setStep(17); }}
+                        onClick={() => { onSelectEntry?.(entry.date); setStep(STEP.DIARY); }}
                         style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px 16px', cursor: 'pointer', transition: 'border-color .15s, background .15s' }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.background = 'var(--goldf)'; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.background = 'var(--bg2)'; }}
@@ -259,7 +260,7 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
             ))}
 
             {/* 오늘 일기 쓰기 버튼 */}
-            <button className="btn-main" onClick={() => setStep(17)} style={{ marginTop: 8 }}>
+            <button className="btn-main" onClick={() => setStep(STEP.DIARY)} style={{ marginTop: 8 }}>
               오늘 일기 쓰기 ✦
             </button>
           </>

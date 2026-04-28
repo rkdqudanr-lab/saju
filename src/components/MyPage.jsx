@@ -8,6 +8,7 @@ import GuardianLevelBadge from './GuardianLevelBadge.jsx';
 import BPDisplay from './BPDisplay.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { usePushNotification } from '../hooks/usePushNotification.js';
+import { STEP } from '../utils/steps.js';
 import { getStreakTier, getNextStreakMilestone, STREAK_FREEZE_COST } from '../utils/gamificationLogic.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 
@@ -471,11 +472,11 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
       {/* ── 나의 성장 메뉴 ── */}
       <div style={{ padding: '16px 20px 0' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>✦ 나의 별숨</div>
-        <MenuRow icon="✦" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달·상승 별자리 해석" onClick={() => setStep(13)} />
-        <MenuRow icon="🌊" label="나의 대운 흐름" sub="10년 단위 대운 사이클 분석" onClick={() => setStep(30)} />
-        <MenuRow icon="🎴" label="사주 명함 카드" sub="나만의 사주 명함 만들기" onClick={() => setStep(21)} />
-        <MenuRow icon="◈" label="별숨 타로" sub="타로 카드로 보는 오늘의 메시지" onClick={() => setStep(34)} />
-        <MenuRow icon="◇" label="나의 별숨 통계" sub="운세 흐름·상담 패턴 분석" onClick={() => setStep(28)} />
+        <MenuRow icon="✦" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달·상승 별자리 해석" onClick={() => setStep(STEP.NATAL)} />
+        <MenuRow icon="🌊" label="나의 대운 흐름" sub="10년 단위 대운 사이클 분석" onClick={() => setStep(STEP.DAEUN)} />
+        <MenuRow icon="🎴" label="사주 명함 카드" sub="나만의 사주 명함 만들기" onClick={() => setStep(STEP.SAJU_CARD)} />
+        <MenuRow icon="◈" label="별숨 타로" sub="타로 카드로 보는 오늘의 메시지" onClick={() => setStep(STEP.TAROT)} />
+        <MenuRow icon="◇" label="나의 별숨 통계" sub="운세 흐름·상담 패턴 분석" onClick={() => setStep(STEP.STATS)} />
       </div>
 
       {/* ── 메뉴 리스트 ── */}
@@ -485,25 +486,25 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
           icon="📝"
           label="내 사주 정보 수정"
           sub="생년월일·시간 등 기본 정보 변경"
-          onClick={() => setStep(1)}
+          onClick={() => setStep(STEP.PROFILE)}
         />
         <MenuRow
           icon="🏛️"
           label="별숨 광장"
           sub="별자리별 오늘 기운 한마디 나누기"
-          onClick={() => setStep(29)}
+          onClick={() => setStep(STEP.COMMUNITY)}
         />
         <MenuRow
           icon="⚙️"
           label="앱 설정"
           sub="다크모드, 응답 스타일, 알림 등"
-          onClick={() => setStep(19)}
+          onClick={() => setStep(STEP.SETTINGS)}
         />
         <MenuRow
           icon="✧"
           label="문의하기"
           sub="버그 신고 · 기능 제안 · 고객 지원"
-          onClick={() => setStep(22)}
+          onClick={() => setStep(STEP.INQUIRY)}
         />
         <MenuRow
           icon="🚪"

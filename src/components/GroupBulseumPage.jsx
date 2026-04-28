@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { getSaju } from '../utils/saju.js';
 import { getSun } from '../utils/astrology.js';
 import { supabase } from '../lib/supabase.js';
+import { STEP } from '../utils/steps.js';
 import {
   OHAENG_COLOR, OHAENG_CHAR, REL_COLOR, REL_LABEL,
   pairScore, relType, roleOf, getCompatTier, getGroupLocalKey, genInviteCode,
@@ -272,7 +273,7 @@ export default function GroupBulseumPage({ setStep, initialCode, user }) {
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>이름과 생년월일만 입력하면 돼요.</div>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>초대 링크 복사로 바로 모을 수 있어요.</div>
             </div>
-            <button className="res-btn" style={{ width: '100%', marginTop: 16 }} onClick={() => setStep(0)}>메인으로</button>
+            <button className="res-btn" style={{ width: '100%', marginTop: 16 }} onClick={() => setStep(STEP.HOME)}>메인으로</button>
           </div>
         </div>
       </div>

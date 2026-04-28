@@ -8,69 +8,70 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppStore } from '../store/useAppStore.js';
 import Icon from './Icon.jsx';
+import { STEP, STEP_GROUPS } from '../utils/steps.js';
 
 const MENU_GROUPS = {
   today: {
     label: '별숨질문',
     items: [
-      { icon: 'home', label: '홈', step: 0 },
-      { icon: 'sun', label: '오늘 하루 나의 별숨', step: 18 },
-      { icon: 'pencil', label: '나의 하루를 별숨에게', step: 17 },
-      { icon: 'book-open', label: '일기 모아보기', step: 20 },
-      { icon: 'calendar', label: '별숨 달력', step: 10 },
+      { icon: 'home', label: '홈', step: STEP.HOME },
+      { icon: 'sun', label: '오늘 하루 나의 별숨', step: STEP.DAILY_HOROSCOPE },
+      { icon: 'pencil', label: '나의 하루를 별숨에게', step: STEP.DIARY },
+      { icon: 'book-open', label: '일기 모아보기', step: STEP.DIARY_LIST },
+      { icon: 'calendar', label: '별숨 달력', step: STEP.CALENDAR },
     ],
   },
   consult: {
     label: '별숨 상담',
     items: [
-      { icon: 'chat', label: '별숨에게 물어보기', step: 2 },
-      { icon: 'chart-bar', label: '월간 리포트', step: 41 },
-      { icon: 'sparkles', label: '별숨의 예언', step: 8 },
-      { icon: 'layers', label: '종합 분석', step: 14 },
-      { icon: 'moon', label: '꿈 해몽', step: 24 },
-      { icon: 'calendar-check', label: '택일', step: 25 },
-      { icon: 'user', label: '이름 풀이', step: 26 },
-      { icon: 'cards', label: '별숨 타로', step: 34 },
-      { icon: 'trending-up', label: '대운 흐름', step: 30 },
-      { icon: 'heart', label: '궁합', step: 7 },
-      { icon: 'cake', label: '기념일 운세', step: 12 },
-      { icon: 'ticket', label: '로또 번호 뽑기', step: 39 },
+      { icon: 'chat', label: '별숨에게 물어보기', step: STEP.QUESTION },
+      { icon: 'chart-bar', label: '월간 리포트', step: STEP.REPORT },
+      { icon: 'sparkles', label: '별숨의 예언', step: STEP.FUTURE_PROPHECY },
+      { icon: 'layers', label: '종합 분석', step: STEP.COMPREHENSIVE },
+      { icon: 'moon', label: '꿈 해몽', step: STEP.DREAM },
+      { icon: 'calendar-check', label: '택일', step: STEP.TAEGIL },
+      { icon: 'user', label: '이름 풀이', step: STEP.NAME_FORTUNE },
+      { icon: 'cards', label: '별숨 타로', step: STEP.TAROT },
+      { icon: 'trending-up', label: '대운 흐름', step: STEP.DAEUN },
+      { icon: 'heart', label: '궁합', step: STEP.COMPAT },
+      { icon: 'cake', label: '기념일 운세', step: STEP.ANNIVERSARY },
+      { icon: 'ticket', label: '로또 번호 뽑기', step: STEP.LOTTO },
     ],
   },
   growth: {
     label: '별숨성장',
     items: [
-      { icon: 'presentation-chart', label: '별숨성장 대시보드', step: 37 },
-      { icon: 'star', label: '나의 별숨', step: 13 },
-      { icon: 'chart-pie', label: '별숨 통계', step: 28 },
-      { icon: 'shopping-bag', label: '별숨샵', step: 31 },
-      { icon: 'gift', label: '내 아이템', step: 38 },
+      { icon: 'presentation-chart', label: '별숨성장 대시보드', step: STEP.GROWTH_DASHBOARD },
+      { icon: 'star', label: '나의 별숨', step: STEP.NATAL },
+      { icon: 'chart-pie', label: '별숨 통계', step: STEP.STATS },
+      { icon: 'shopping-bag', label: '별숨샵', step: STEP.SHOP },
+      { icon: 'gift', label: '내 아이템', step: STEP.ITEM_INVENTORY },
     ],
   },
   square: {
     label: '별숨광장',
     items: [
-      { icon: 'grid', label: '별숨 광장', step: 29 },
-      { icon: 'heart-users', label: '익명 궁합 광장', step: 32 },
-      { icon: 'users', label: '우리 모임 별숨', step: 11 },
-      { icon: 'envelope', label: '별숨 편지', step: 35 },
+      { icon: 'grid', label: '별숨 광장', step: STEP.COMMUNITY },
+      { icon: 'heart-users', label: '익명 궁합 광장', step: STEP.ANON_COMPAT },
+      { icon: 'users', label: '우리 모임 별숨', step: STEP.GROUP },
+      { icon: 'envelope', label: '별숨 편지', step: STEP.LETTER },
     ],
   },
   settings: {
     label: '별숨설정',
     items: [
-      { icon: 'user-circle', label: '마이페이지', step: 27 },
-      { icon: 'cog', label: '설정', step: 19 },
+      { icon: 'user-circle', label: '마이페이지', step: STEP.MY_PAGE },
+      { icon: 'cog', label: '설정', step: STEP.SETTINGS },
     ],
   },
 };
 
 const TAB_STEPS = {
-  today: [0, 17, 18, 20, 10, 23],
-  consult: [2, 3, 4, 5, 6, 7, 8, 12, 14, 24, 25, 26, 30, 34, 39, 41],
-  growth: [13, 28, 31, 37, 38, 40],
-  square: [11, 29, 32, 35],
-  settings: [19, 27],
+  today:    STEP_GROUPS.TAB_TODAY,
+  consult:  STEP_GROUPS.TAB_CONSULT,
+  growth:   STEP_GROUPS.TAB_GROWTH,
+  square:   STEP_GROUPS.TAB_SQUARE,
+  settings: STEP_GROUPS.TAB_SETTINGS,
 };
 
 const TAB_ICONS = {
@@ -85,12 +86,12 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
   const group = MENU_GROUPS[groupId];
   if (!group) return null;
 
-  const requiresLogin = new Set([2, 6, 8, 13, 14, 17, 18, 20, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35]);
+  const requiresLogin = new Set([STEP.QUESTION, STEP.DEEP_INTERVIEW, STEP.FUTURE_PROPHECY, STEP.NATAL, STEP.COMPREHENSIVE, STEP.DIARY, STEP.DAILY_HOROSCOPE, STEP.DIARY_LIST, STEP.DREAM, STEP.TAEGIL, STEP.NAME_FORTUNE, STEP.MY_PAGE, STEP.STATS, STEP.COMMUNITY, STEP.DAEUN, STEP.ANON_COMPAT, STEP.SPECIAL_READING, STEP.TAROT, STEP.LETTER]);
 
   const handleNav = (item) => {
     let targetStep = item.step;
-    if (requiresLogin.has(targetStep) && !user) targetStep = 1;
-    if (targetStep === 2 && !formOkApprox) targetStep = 1;
+    if (requiresLogin.has(targetStep) && !user) targetStep = STEP.PROFILE;
+    if (targetStep === STEP.QUESTION && !formOkApprox) targetStep = STEP.PROFILE;
     onNav(targetStep);
     onClose();
   };
@@ -236,7 +237,7 @@ export default function BottomNav() {
   function handleTabPress(tab) {
     if (tab.id === 'settings') {
       setOpenDrawer(null);
-      setStep(user ? 19 : 1);
+      setStep(user ? STEP.SETTINGS : STEP.PROFILE);
       return;
     }
     setOpenDrawer((prev) => (prev === tab.id ? null : tab.id));

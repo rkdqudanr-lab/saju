@@ -2,6 +2,7 @@ import { Suspense, useEffect, useState } from "react";
 import { getAuthenticatedClient } from "../lib/supabase.js";
 import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, readDailyLocalCacheMap } from "../lib/dailyDataAccess.js";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
+import { STEP } from "../utils/steps.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
 import { isTodayAnswered } from "../utils/quiz.js";
@@ -258,7 +259,7 @@ export default function LandingPage({
         {/* 추정 모드 배너 */}
         {isApproximate && (
           <div
-            onClick={() => setStep(1)}
+            onClick={() => setStep(STEP.PROFILE)}
             style={{
               margin: '0 0 12px', padding: '10px 16px',
               background: 'var(--goldf)', border: '1px solid var(--acc)',
@@ -306,7 +307,7 @@ export default function LandingPage({
                   </div>
                   {dailyResult?.score != null && (
                     <button
-                      onClick={() => setStep(23)}
+                      onClick={() => setStep(STEP.TODAY_DETAIL)}
                       style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${scoreColor(dailyResult.score)}44`, borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'var(--ff)' }}
                     >
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: scoreColor(dailyResult.score), flexShrink: 0, display: 'inline-block' }} />
@@ -324,7 +325,7 @@ export default function LandingPage({
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={() => { setEditingMyProfile(true); setStep(1); }} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>수정</button>
+                  <button onClick={() => { setEditingMyProfile(true); setStep(STEP.PROFILE); }} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>수정</button>
                   <button onClick={kakaoLogout} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>로그아웃</button>
                 </div>
               </div>
@@ -477,13 +478,13 @@ export default function LandingPage({
                           <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>✦ 오늘 일기를 별숨에게 들려줬어요</div>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button
-                              onClick={() => setStep(40)}
+                              onClick={() => setStep(STEP.GACHA)}
                               style={{ flex: 2, padding: '10px 12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                             >
                               <span>🎰</span><span>별숨 뽑기로 기운 더하기</span>
                             </button>
                             {!equippedSajuItem ? (
-                              <button onClick={() => setStep(38)} style={{ flex: 1, padding: '10px 8px', background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>기운 장착</button>
+                              <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flex: 1, padding: '10px 8px', background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>기운 장착</button>
                             ) : (
                               <div style={{ flex: 1, padding: '10px 8px', background: 'var(--bg2)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                                 <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji || '✦'}</span>
@@ -526,7 +527,7 @@ export default function LandingPage({
                                   <div style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700, marginBottom: 6, letterSpacing: '.04em' }}>✦ 별숨의 해석</div>
                                   <DiaryReviewPreview text={diaryReviewResult} />
                                 </div>
-                                <button onClick={() => setStep(17)} style={{ width: '100%', padding: '10px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--gold)', cursor: 'pointer', fontWeight: 600 }}>
+                                <button onClick={() => setStep(STEP.DIARY)} style={{ width: '100%', padding: '10px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--gold)', cursor: 'pointer', fontWeight: 600 }}>
                                   별숨의 해석 전체 보기 →
                                 </button>
                               </>
@@ -597,7 +598,7 @@ export default function LandingPage({
                   )}
                 </>
               ) : (
-                <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={() => setStep(1)}>
+                <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }} onClick={() => setStep(STEP.PROFILE)}>
                   지금 시작하기 ✦
                 </button>
               )}
@@ -637,7 +638,7 @@ export default function LandingPage({
                   로그인 유지하기
                 </span>
               </div>
-              <button className="land-ghost-link" onClick={() => setStep(1)}>
+              <button className="land-ghost-link" onClick={() => setStep(STEP.PROFILE)}>
                 로그인 없이 먼저 체험하기 →
               </button>
             </div>

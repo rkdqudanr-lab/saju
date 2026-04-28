@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { CATS_ALL, breakAtNatural } from "../utils/constants.js";
+import { STEP } from "../utils/steps.js";
 import { calcBiorhythm, BIORHYTHM_CHANNELS, toBarWidth, getBiorhythmStatus, BIORHYTHM_STATUS_LABEL } from "../utils/biorhythm.js";
 
 // ─────────────────────────────────────────────
@@ -391,7 +392,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
 
   const askAboutEvent = (eventTitle, score, d) => {
     const q = `${viewMonth}월 ${d}일에 '${eventTitle}' 일정이 있어요. 이날 나의 사주 기운이 ${score}점인데, 이 일정이 잘 될까요?`;
-    if (askQuick) { askQuick(q); setStep(3); }
+    if (askQuick) { askQuick(q); setStep(STEP.LOADING); }
   };
 
   // ── 이번 달의 별숨 날짜 보기 (상황별 AI 분석) ──
@@ -800,7 +801,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                   {user?.id && (
                     <div style={{ display: 'flex', gap: 2 }}>
                       <button
-                        onClick={() => { setDiaryViewDate?.(selectedKey); setStep(17); }}
+                        onClick={() => { setDiaryViewDate?.(selectedKey); setStep(STEP.DIARY); }}
                         style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '0.75rem', padding: '2px 6px', fontFamily: 'var(--ff)' }}
                         aria-label="일기 수정"
                       >✎ 수정</button>
@@ -861,7 +862,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
             {/* ── 오늘 기록이 없으면 일기 쓰러 가기 버튼 ── */}
             {!selectedDiary && selectedKey === todayKey && user?.id && (
               <button
-                onClick={() => setStep(17)}
+                onClick={() => setStep(STEP.DIARY)}
                 style={{
                   width: '100%', marginBottom: 14, padding: '10px 14px',
                   background: 'var(--bg1)', border: '1px dashed var(--lav, #9b8ec4)',
@@ -989,7 +990,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
-              onClick={() => setStep(17)}
+              onClick={() => setStep(STEP.DIARY)}
               style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
             >
               <span style={{ fontSize: '1rem' }}>📓</span>
@@ -1000,7 +1001,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               <span style={{ marginLeft: 'auto', color: 'var(--t4)' }}>›</span>
             </button>
             <button
-              onClick={() => setStep(18)}
+              onClick={() => setStep(STEP.DAILY_HOROSCOPE)}
               style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
             >
               <span style={{ fontSize: '1rem' }}>✦</span>
@@ -1011,7 +1012,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               <span style={{ marginLeft: 'auto', color: 'var(--t4)' }}>›</span>
             </button>
             <button
-              onClick={() => setStep(2)}
+              onClick={() => setStep(STEP.QUESTION)}
               style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
             >
               <span style={{ fontSize: '1rem', color: 'var(--t3)' }}>◈</span>

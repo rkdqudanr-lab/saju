@@ -8,6 +8,7 @@ import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { postAskText } from '../lib/askApi.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
+import { STEP } from '../utils/steps.js';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 import FeatureResultSheet from './FeatureResultSheet.jsx';
 
@@ -264,7 +265,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
     if (!kakaoId || loading) return;
     if (!form?.by) {
       showToast?.('생년월일을 입력해야 이용할 수 있어요', 'info');
-      setStep(1);
+      setStep(STEP.PROFILE);
       return;
     }
     setLoading(true);
@@ -398,7 +399,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
             심층 사주·별자리 분석을 받을 수 있어요.
           </div>
           <button
-            onClick={() => setStep(31)}
+            onClick={() => setStep(STEP.SHOP)}
             style={{
               padding: '12px 24px',
               background: 'var(--goldf)',

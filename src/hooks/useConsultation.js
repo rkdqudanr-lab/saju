@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { stripMarkdown, PKGS, TIMING, LOAD_STATES } from "../utils/constants.js";
+import { STEP } from "../utils/steps.js";
 import { useAppStore } from "../store/useAppStore.js";
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
@@ -433,7 +434,7 @@ When generating the new result:
       }
 
       if (typeof window.gtag === "function") window.gtag("event", "ask_claude", { question_count: selQs.length });
-      setStep(3);
+      setStep(STEP.LOADING);
       setAnswers([]);
       setTypedSet(new Set());
       setOpenAcc(0);
@@ -442,7 +443,7 @@ When generating the new result:
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, totalCost, "ASK_CLAUDE");
       if (!ok) {
         if (showToast) showToast("BP가 부족해요.", "error");
-        setStep(2);
+        setStep(STEP.QUESTION);
         return;
       }
 
@@ -453,7 +454,7 @@ When generating the new result:
       });
     } else {
       if (typeof window.gtag === "function") window.gtag("event", "ask_claude", { question_count: selQs.length });
-      setStep(3);
+      setStep(STEP.LOADING);
       setAnswers([]);
       setTypedSet(new Set());
       setOpenAcc(0);
@@ -497,7 +498,7 @@ When generating the new result:
     if (typeof window.gtag === "function") window.gtag("event", "ask_quick", { question: q.slice(0, 30) });
     if (!formOk) {
       setSelQs([q.trim()]);
-      setStep(1);
+      setStep(STEP.PROFILE);
       return;
     }
 
@@ -523,7 +524,7 @@ When generating the new result:
     }
 
     setSelQs([q.trim()]);
-    setStep(3);
+    setStep(STEP.LOADING);
     setAnswers([]);
     setTypedSet(new Set());
     setOpenAcc(0);
@@ -540,12 +541,12 @@ When generating the new result:
 
   const askTimeSlot = useCallback(async (prompt) => {
     if (!formOk) {
-      setStep(1);
+      setStep(STEP.PROFILE);
       return;
     }
     const q = TIME_CONFIG[timeSlot].label;
     setSelQs([q]);
-    setStep(3);
+    setStep(STEP.LOADING);
     setAnswers([]);
     setTypedSet(new Set());
     setOpenAcc(0);
@@ -561,7 +562,7 @@ When generating the new result:
 
   const askDailyHoroscope = useCallback(async (options = {}) => {
     if (!formOk) {
-      setStep(1);
+      setStep(STEP.PROFILE);
       return;
     }
     await dailyHandler.askDailyHoroscope(options);
@@ -569,12 +570,12 @@ When generating the new result:
 
   const askReview = useCallback(async (text, prompt) => {
     if (!formOk) {
-      setStep(1);
+      setStep(STEP.PROFILE);
       return;
     }
     const q = `오늘 하루 회고: ${text.slice(0, 30)}${text.length > 30 ? "…" : ""}`;
     setSelQs([q]);
-    setStep(3);
+    setStep(STEP.LOADING);
     setAnswers([]);
     setTypedSet(new Set());
     setOpenAcc(0);
@@ -590,7 +591,7 @@ When generating the new result:
 
   const askDiaryReview = useCallback(async (text, prompt) => {
     if (!formOk) {
-      setStep(1);
+      setStep(STEP.PROFILE);
       return;
     }
     await dailyHandler.askDiaryReview(text, prompt);
@@ -598,12 +599,12 @@ When generating the new result:
 
   const askWeeklyReview = useCallback(async (text) => {
     if (!formOk) {
-      setStep(1);
+      setStep(STEP.PROFILE);
       return;
     }
     const q = `이번 주 회고: ${text.slice(0, 30)}${text.length > 30 ? "…" : ""}`;
     setSelQs([q]);
-    setStep(3);
+    setStep(STEP.LOADING);
     setAnswers([]);
     setTypedSet(new Set());
     setOpenAcc(0);

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import '../styles/TodayIntroPage.css';
+import { STEP } from '../utils/steps.js';
 
 /**
  * TodayIntroPage - "오늘의 별숨" 인트로 페이지
@@ -21,7 +22,7 @@ export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoadin
 
   // 이미 오늘 운세를 물어봤으면 메인으로 이동 (캐시 로딩이 비동기라 [dailyResult]로 감시)
   useEffect(() => {
-    if (dailyResult && !asked.current) setStep(0);
+    if (dailyResult && !asked.current) setStep(STEP.HOME);
   }, [dailyResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleKnowMore = async () => {
@@ -30,7 +31,7 @@ export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoadin
     asked.current = true;
     try {
       if (askDailyHoroscope) await askDailyHoroscope();
-      setStep(23);
+      setStep(STEP.TODAY_DETAIL);
     } catch {
       setError(true);
     }
@@ -84,7 +85,7 @@ export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoadin
           </button>
           <button
             className="today-intro-btn-secondary"
-            onClick={() => setStep(0)}
+            onClick={() => setStep(STEP.HOME)}
           >
             나중에 볼게요
           </button>

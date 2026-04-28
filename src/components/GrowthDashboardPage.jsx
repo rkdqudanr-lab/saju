@@ -8,6 +8,7 @@ import MissionDashboard from './MissionDashboard.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { FREE_BP_RECHARGE } from '../utils/gamificationLogic.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
+import { STEP } from '../utils/steps.js';
 
 const GROWTH_STAGES = [
   { minMissions: 0, label: '새싹 별숨', emoji: '🌱', color: '#74B77B', desc: '별숨과 첫 리듬을 맞춰가는 시작 단계예요.' },
@@ -268,10 +269,10 @@ function StageRoadmap({ totalMissions }) {
 
 function QuickActions({ setStep }) {
   const actions = [
-    { icon: '🔮', label: '오늘의 별숨', desc: '오늘 운세 확인', step: 13 },
-    { icon: '📈', label: '별숨 통계', desc: '질문 패턴 보기', step: 28 },
-    { icon: '🛍️', label: '별숨 숍', desc: 'BP 사용처 보기', step: 31 },
-    { icon: '🎒', label: '아이템 보관함', desc: '보유 아이템 확인', step: 38 },
+    { icon: '🔮', label: '오늘의 별숨', desc: '오늘 운세 확인', step: STEP.NATAL },
+    { icon: '📈', label: '별숨 통계', desc: '질문 패턴 보기', step: STEP.STATS },
+    { icon: '🛍️', label: '별숨 숍', desc: 'BP 사용처 보기', step: STEP.SHOP },
+    { icon: '🎒', label: '아이템 보관함', desc: '보유 아이템 확인', step: STEP.ITEM_INVENTORY },
   ];
 
   return (
@@ -874,7 +875,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
           {tab === 'missions' ? (
             <MissionDashboard
               missions={safeMissions}
-              onDiaryClick={() => setStep(22)}
+              onDiaryClick={() => setStep(STEP.INQUIRY)}
               hasDiaryToday={safeMissions.some((mission) => mission.mission_type === 'diary' && mission.is_completed)}
             />
           ) : null}

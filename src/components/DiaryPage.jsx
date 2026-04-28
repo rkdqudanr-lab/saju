@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { DIARY_PROMPT, getMoonPhase } from "../utils/constants.js";
+import { STEP } from "../utils/steps.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { postAskText } from "../lib/askApi.js";
 import { useUserCtx, useSajuCtx } from "../context/AppContext.jsx";
@@ -235,7 +236,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
       setSubmitted(true);
       setIsEditing(false);
       if (embedded && setStep) {
-        setStep(17);
+        setStep(STEP.DIARY);
       }
     } else {
       setSubmitted(true);
@@ -252,7 +253,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
     try {
       await client.from('diary_entries').delete().eq('id', todayEntry.id).eq('kakao_id', String(user.id));
       showToast?.('일기가 삭제됐어요', 'info');
-      setStep(20);
+      setStep(STEP.DIARY_LIST);
     } catch {
       showToast?.('삭제에 실패했어요...', 'error');
     }
@@ -565,8 +566,8 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
       {/* 해석 후 연결 버튼 */}
       {!isPastEntry && diaryReviewResult && !diaryReviewLoading && !embedded && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(10)}>🗓️ 별숨달력에서 보기</button>
-          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(20)}>📚 일기 모아보기</button>
+          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(STEP.CALENDAR)}>🗓️ 별숨달력에서 보기</button>
+          <button className="res-btn" style={{ flex: 1 }} onClick={() => setStep(STEP.DIARY_LIST)}>📚 일기 모아보기</button>
         </div>
       )}
 
@@ -812,14 +813,14 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
                   <button
                     className="res-btn"
                     style={{ flex: 1 }}
-                    onClick={() => setStep(10)}
+                    onClick={() => setStep(STEP.CALENDAR)}
                   >
                     🗓️ 별숨달력에서 보기
                   </button>
                   <button
                     className="res-btn"
                     style={{ flex: 1 }}
-                    onClick={() => setStep(0)}
+                    onClick={() => setStep(STEP.HOME)}
                   >
                     ← 홈으로
                   </button>
@@ -832,7 +833,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
             <button
               className="res-btn"
               style={{ width: '100%' }}
-              onClick={() => setStep(0)}
+              onClick={() => setStep(STEP.HOME)}
             >
               ← 홈으로
             </button>

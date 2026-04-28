@@ -1,5 +1,6 @@
 import { OC, OE, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
+import { STEP } from "../utils/steps.js";
 
 function getDaysInMonth(year, month) {
   if (!month) return 31;
@@ -83,7 +84,7 @@ export default function ProfileStep({
               </button>
             )}
 
-            <button className="btn-main" style={{ marginTop: 'var(--sp3)' }} onClick={() => { setSelQs([]); setStep(2); }}>
+            <button className="btn-main" style={{ marginTop: 'var(--sp3)' }} onClick={() => { setSelQs([]); setStep(STEP.QUESTION); }}>
               {activeProfileIdx === 0 ? `${form.nickname || form.name || '나'}의 별숨 보기 ✦` : `${otherProfiles[activeProfileIdx - 1]?.name || '이 사람'}의 별숨 보기 ✦`}
             </button>
           </div>
@@ -210,8 +211,8 @@ export default function ProfileStep({
                   if (ok === false) { showToast?.('저장에 실패했어요. 다시 시도해봐요', 'error'); return; }
                 }
                 if (editingMyProfile) { setEditingMyProfile(false); }
-                else if (!onboardingDone) { setSelQs([]); setStep(15); }
-                else { setSelQs([]); setStep(2); }
+                else if (!onboardingDone) { setSelQs([]); setStep(STEP.ONBOARDING); }
+                else { setSelQs([]); setStep(STEP.QUESTION); }
               }}>
               {editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}
             </button>

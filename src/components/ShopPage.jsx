@@ -11,6 +11,7 @@ import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { spendBP } from '../utils/gamificationLogic.js';
+import { STEP } from '../utils/steps.js';
 import {
   GACHA_POOL, GRADE_CONFIG, PROB_TABLE, pullOne, pull10, GRADE_ORDER,
   SAJU_POOL, SAJU_GRADE_CONFIG, SAJU_PROB_TABLE, pullOneSaju, pull10Saju, SAJU_GRADE_ORDER,
@@ -716,7 +717,7 @@ export default function ShopPage({ showToast }) {
       setOwnedIds(prev => new Set([...prev, String(item.id)]));
       setConfirmItem(null);
       showToast?.(`${item.name} 구매 완료! ✦`, 'success');
-      setTimeout(() => setStep(33), 800);
+      setTimeout(() => setStep(STEP.SPECIAL_READING), 800);
     } catch { showToast?.('구매에 실패했어요.', 'error'); }
     finally { setBuying(false); }
   }
@@ -753,7 +754,7 @@ export default function ShopPage({ showToast }) {
           <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', flex: 1 }}>
             <strong style={{ color: 'var(--gold)' }}>{equippedSajuItem.name}</strong> 기운이 AI 답변에 반영 중
           </span>
-          <button onClick={() => setStep(38)} style={{ fontSize: '10px', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 16, padding: '3px 8px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+          <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ fontSize: '10px', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 16, padding: '3px 8px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
             변경
           </button>
         </div>
@@ -836,7 +837,7 @@ export default function ShopPage({ showToast }) {
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
               뽑은 기운은 내 아이템에서 합성하고 장착해요
             </div>
-            <button onClick={() => setStep(38)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'var(--goldf)', border: '1px solid var(--acc)', color: 'var(--gold)', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'var(--goldf)', border: '1px solid var(--acc)', color: 'var(--gold)', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--ff)', cursor: 'pointer' }}>
               내 아이템 →
             </button>
           </div>
@@ -946,7 +947,7 @@ export default function ShopPage({ showToast }) {
                     item={item}
                     isEquipped={equippedIds[item.category] === item.id}
                     onEquip={() => handleEquip(item)}
-                    onUse={() => setStep(33)}
+                    onUse={() => setStep(STEP.SPECIAL_READING)}
                   />
                 ))}
               </div>
@@ -958,7 +959,7 @@ export default function ShopPage({ showToast }) {
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
               장착 중인 테마와 보유 아이템을 한곳에서 관리해요
             </div>
-            <button onClick={() => setStep(38)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'none', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: '11px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'none', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: '11px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
               관리하러 가기 →
             </button>
           </div>

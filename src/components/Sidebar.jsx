@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { exportHistory } from "../utils/history.js";
+import { STEP } from "../utils/steps.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { useAppStore } from "../store/useAppStore.js";
 import Icon from "./Icon.jsx";
@@ -220,11 +221,11 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {openGroups.today && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: 'home',      label: '홈',                s: 0 },
+                    { icon: 'home',      label: '홈',                s: STEP.HOME },
                     { icon: 'sun',       label: '오늘 하루 나의 별숨', s: 'fortune' },
-                    { icon: 'pencil',    label: '나의 하루를 별숨에게', s: 17, badge: todayDiaryWritten === false },
-                    { icon: 'book-open', label: '일기 모아보기',       s: 20 },
-                    { icon: 'calendar',  label: '별숨 달력',           s: 10 },
+                    { icon: 'pencil',    label: '나의 하루를 별숨에게', s: STEP.DIARY, badge: todayDiaryWritten === false },
+                    { icon: 'book-open', label: '일기 모아보기',       s: STEP.DIARY_LIST },
+                    { icon: 'calendar',  label: '별숨 달력',           s: STEP.CALENDAR },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -254,11 +255,11 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {openGroups.consult && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: 'chat',         label: '별숨에게 물어보기',     s: 2  },
-                    { icon: 'chart-bar',    label: '월간 리포트',           s: 41 },
-                    { icon: 'document-chart', label: '연간 종합 리포트',    s: 36 },
-                    { icon: 'sparkles',     label: '별숨의 예언',           s: 8  },
-                    { icon: 'layers',       label: '종합 분석 (사주·점성술)', s: 14 },
+                    { icon: 'chat',           label: '별숨에게 물어보기',       s: STEP.QUESTION },
+                    { icon: 'chart-bar',      label: '월간 리포트',             s: STEP.REPORT },
+                    { icon: 'document-chart', label: '연간 종합 리포트',        s: STEP.YEARLY_REPORT },
+                    { icon: 'sparkles',       label: '별숨의 예언',             s: STEP.FUTURE_PROPHECY },
+                    { icon: 'layers',         label: '종합 분석 (사주·점성술)', s: STEP.COMPREHENSIVE },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -279,10 +280,10 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
                     </div>
                   </li>
                   {[
-                    { icon: 'moon',           label: '꿈 해몽',           s: 24 },
-                    { icon: 'calendar-check', label: '택일 (길일 찾기)',   s: 25 },
-                    { icon: 'user',           label: '이름 풀이 (성명학)', s: 26 },
-                    { icon: 'cards',          label: '별숨 타로',         s: 34 },
+                    { icon: 'moon',           label: '꿈 해몽',           s: STEP.DREAM },
+                    { icon: 'calendar-check', label: '택일 (길일 찾기)',   s: STEP.TAEGIL },
+                    { icon: 'user',           label: '이름 풀이 (성명학)', s: STEP.NAME_FORTUNE },
+                    { icon: 'cards',          label: '별숨 타로',         s: STEP.TAROT },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -311,10 +312,10 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {openGroups.growth && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: 'star',          label: 'MyBlueprint — 나의 별숨', s: 13 },
-                    { icon: 'trending-up',   label: '나의 대운 흐름',           s: 30 },
-                    { icon: 'heart',         label: '1대1 별숨 (궁합)',         s: 7  },
-                    { icon: 'cake',          label: '기념일 운세',              s: 12 },
+                    { icon: 'star',        label: 'MyBlueprint — 나의 별숨', s: STEP.NATAL },
+                    { icon: 'trending-up', label: '나의 대운 흐름',           s: STEP.DAEUN },
+                    { icon: 'heart',       label: '1대1 별숨 (궁합)',         s: STEP.COMPAT },
+                    { icon: 'cake',        label: '기념일 운세',              s: STEP.ANNIVERSARY },
                   ].map(m => (
                     <li key={m.s}>
                       <button
@@ -343,12 +344,12 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
               {openGroups.square && (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {[
-                    { icon: 'grid',         label: '별숨 광장',        s: 29 },
-                    { icon: 'envelope',     label: '별숨편지',         s: 35 },
-                    { icon: 'heart-users',  label: '익명 궁합 광장',   s: 32 },
-                    { icon: 'globe',        label: '우리 모임의 별숨은?', s: 11 },
-                    { icon: 'shopping-bag', label: '별숨 숍',          s: 31 },
-                    { icon: 'chart-pie',    label: '나의 별숨 통계',   s: 28 },
+                    { icon: 'grid',         label: '별숨 광장',           s: STEP.COMMUNITY },
+                    { icon: 'envelope',     label: '별숨편지',            s: STEP.LETTER },
+                    { icon: 'heart-users',  label: '익명 궁합 광장',      s: STEP.ANON_COMPAT },
+                    { icon: 'globe',        label: '우리 모임의 별숨은?', s: STEP.GROUP },
+                    { icon: 'shopping-bag', label: '별숨 숍',             s: STEP.SHOP },
+                    { icon: 'chart-pie',    label: '나의 별숨 통계',      s: STEP.STATS },
                   ].map(m => (
                     <li key={m.s}>
                       <button
