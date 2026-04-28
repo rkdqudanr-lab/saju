@@ -266,9 +266,10 @@ function MoreFeaturesCard() {
 export default function OnboardingCards({ saju, sun, onFinish }) {
   const [idx, setIdx] = useState(0);
   const TOTAL = 3;
+  const isLast = idx === TOTAL - 1;
 
   const next = () => {
-    if (idx < TOTAL - 1) setIdx((i) => i + 1);
+    if (!isLast) setIdx((i) => i + 1);
     else onFinish?.();
   };
 
@@ -280,28 +281,43 @@ export default function OnboardingCards({ saju, sun, onFinish }) {
 
   return (
     <div className="page step-fade">
-      <div className="inner" style={{ paddingTop: 20, paddingBottom: 80 }}>
-        {/* 진행 표시 점 */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: 6,
-            marginBottom: 24,
-          }}
-        >
-          {Array.from({ length: TOTAL }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: i === idx ? 20 : 6,
-                height: 6,
-                borderRadius: 3,
-                background: i === idx ? "var(--gold)" : "var(--line)",
-                transition: "all .3s ease",
-              }}
-            />
-          ))}
+      <div className="inner" style={{ paddingTop: 16, paddingBottom: 80 }}>
+        {/* 상단: 진행 점 + 건너뛰기 */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            {Array.from({ length: TOTAL }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setIdx(i)}
+                aria-label={`${i + 1}번째 카드로 이동`}
+                style={{
+                  width: i === idx ? 20 : 6,
+                  height: 6,
+                  borderRadius: 3,
+                  background: i === idx ? "var(--gold)" : "var(--line)",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  transition: "all .3s ease",
+                  flexShrink: 0,
+                }}
+              />
+            ))}
+          </div>
+          <button
+            onClick={onFinish}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--t4)",
+              fontSize: "var(--xs)",
+              fontFamily: "var(--ff)",
+              cursor: "pointer",
+              padding: "4px 0",
+            }}
+          >
+            건너뛰기
+          </button>
         </div>
 
         {/* 카드 콘텐츠 */}
@@ -309,11 +325,29 @@ export default function OnboardingCards({ saju, sun, onFinish }) {
           {cards[idx]}
         </div>
 
-        {/* 다음 / 다시 보지 않기 버튼 */}
-        <div style={{ marginTop: 28 }}>
+        {/* 버튼 그룹 */}
+        <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 10 }}>
           <button className="btn-main" onClick={next} style={{ width: "100%" }}>
-            {idx === 0 ? "다음 →" : "다시 보지 않기"}
+            {isLast ? "별숨 시작하기 ✦" : "다음 →"}
           </button>
+          {isLast && (
+            <button
+              onClick={onFinish}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--t4)",
+                fontSize: "var(--xs)",
+                fontFamily: "var(--ff)",
+                cursor: "pointer",
+                padding: "6px",
+                textAlign: "center",
+                width: "100%",
+              }}
+            >
+              다시 보지 않기
+            </button>
+          )}
         </div>
       </div>
     </div>

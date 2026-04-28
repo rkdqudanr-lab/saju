@@ -1,5 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { ChatBubble } from '../components/AccItem.jsx';
+import { useAppStore } from '../store/useAppStore.js';
+import { STEP } from '../utils/steps.js';
 
 function getContextualChips(chatHistory) {
   const hasHistory = chatHistory.length > 0;
@@ -87,6 +89,8 @@ export default function ChatStep({
   handleSaveChatImage,
   chatEndRef,
 }) {
+  const setStep = useAppStore((s) => s.setStep);
+  const gamificationState = useAppStore((s) => s.gamificationState);
   const chips = getContextualChips(chatHistory);
   const lastMsg = chatHistory[chatHistory.length - 1];
   const lastMsgIsStreaming = lastMsg?.streaming === true;
@@ -143,6 +147,17 @@ export default function ChatStep({
           >
             <div style={{ fontSize: '2rem', marginBottom: 12 }}>✦</div>
             방금 본 흐름을 바탕으로 자연스럽게 이어서 물어보세요.
+          </div>
+        )}
+
+        {chatHistory.length > 0 && chatHistory[0]?.restored && (
+          <div style={{
+            margin: '0 0 8px', padding: '8px 14px',
+            background: 'var(--bg2)', border: '1px solid var(--line)',
+            borderRadius: 'var(--r1)', fontSize: '10px', color: 'var(--t4)',
+            textAlign: 'center',
+          }}>
+            ↺ 이전 대화를 이어가고 있어요
           </div>
         )}
 
@@ -237,16 +252,51 @@ export default function ChatStep({
         )}
 
         {chatLeft <= 0 && (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '8px 16px',
-              fontSize: 'var(--xs)',
-              color: 'var(--t4)',
-              borderTop: '1px solid var(--line)',
-            }}
-          >
-            오늘 채팅을 모두 사용했어요.
+          <div style={{ padding: '10px 16px', borderTop: '1px solid var(--line)' }}>
+            <div style={{
+              background: 'var(--bg2)',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--r1)',
+              padding: '14px 16px',
+            }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4, textAlign: 'center' }}>
+                ✦ 오늘 채팅을 모두 사용했어요
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 12, textAlign: 'center' }}>
+                미션을 완료하면 BP를 얻어 더 많은 기능을 쓸 수 있어요
+                {gamificationState?.currentBp > 0 && (
+                  <span style={{ color: 'var(--gold)', fontWeight: 600 }}> · 현재 {gamificationState.currentBp} BP</span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => setStep(STEP.GROWTH_DASHBOARD)}
+                  style={{
+                    flex: 1, padding: '9px 8px',
+                    background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+                    borderRadius: 'var(--r1)', color: 'var(--gold)',
+                    fontSize: 'var(--xs)', fontWeight: 700,
+                    fontFamily: 'var(--ff)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  }}
+                >
+                  <span>🎯</span><span>미션으로 BP 획득</span>
+                </button>
+                <button
+                  onClick={() => setStep(STEP.GACHA)}
+                  style={{
+                    flex: 1, padding: '9px 8px',
+                    background: 'none', border: '1px solid var(--line)',
+                    borderRadius: 'var(--r1)', color: 'var(--t2)',
+                    fontSize: 'var(--xs)', fontWeight: 600,
+                    fontFamily: 'var(--ff)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  }}
+                >
+                  <span>🎰</span><span>별숨 뽑기</span>
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

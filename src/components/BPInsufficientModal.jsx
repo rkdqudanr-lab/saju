@@ -1,9 +1,10 @@
 /**
- * BPInsufficientModal 컴포넌트
- * BP가 부족할 때 표시되는 모달
+ * BPInsufficientModal — BP 부족 시 표시되는 모달
+ * 앱 다크 테마(CSS variables) 사용
  */
-
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useAppStore } from '../store/useAppStore.js';
+import { STEP } from '../utils/steps.js';
 
 export default function BPInsufficientModal({
   isOpen = false,
@@ -13,246 +14,172 @@ export default function BPInsufficientModal({
   freeRechargeTimeRemaining = null,
   onClose,
   onRecharge,
-  onMissionNavigate,
   isRecharging = false,
 }) {
-  const [showAnimation, setShowAnimation] = useState(false);
+  const setStep = useAppStore((s) => s.setStep);
 
   useEffect(() => {
-    if (isOpen) {
-      setShowAnimation(true);
-    }
-  }, [isOpen]);
-
-  const shortage = requiredBp - currentBp;
+    if (!isOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
+  const shortage = requiredBp - currentBp;
+
+  const goMissions = () => {
+    onClose?.();
+    setStep(STEP.GROWTH_DASHBOARD);
+  };
+
+  const goGacha = () => {
+    onClose?.();
+    setStep(STEP.GACHA);
+  };
+
   return (
     <>
-      {/* 오버레이 */}
       <div
         onClick={onClose}
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 999,
-          animation: 'fadeIn 0.2s ease',
+          position: 'fixed', inset: 0, zIndex: 9990,
+          background: 'rgba(0,0,0,0.55)',
+          animation: 'fadeIn 0.18s ease',
         }}
       />
-
-      {/* 모달 */}
       <div
         style={{
           position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: '#fff',
-          borderRadius: '12px',
-          padding: '24px',
-          maxWidth: '320px',
-          width: '90%',
-          zIndex: 1000,
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-          animation: 'slideUp 0.3s ease',
+          bottom: 0, left: 0, right: 0,
+          zIndex: 9991,
+          maxWidth: 480, margin: '0 auto',
+          background: 'var(--bg1)',
+          borderRadius: '20px 20px 0 0',
+          padding: '20px 20px calc(20px + max(env(safe-area-inset-bottom), 16px))',
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.3)',
+          animation: 'slideUpDrawer 0.22s ease',
         }}
       >
+        {/* 핸들 바 */}
+        <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--line)', margin: '0 auto 18px' }} />
+
         {/* 헤더 */}
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <div
-            style={{
-              fontSize: '2rem',
-              marginBottom: '12px',
-              color: 'var(--gold)',
-              animation: 'bounce 1s ease-in-out infinite',
-            }}
-          >
-            ✦
-          </div>
-          <h2
-            style={{
-              fontSize: '18px',
-              fontWeight: '700',
-              color: '#0D0B14',
-              margin: '0 0 8px 0',
-            }}
-          >
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>✦</div>
+          <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 6 }}>
             BP가 부족해요
-          </h2>
-          <p
-            style={{
-              fontSize: '13px',
-              color: '#666',
-              margin: 0,
-              lineHeight: 1.5,
-            }}
-          >
-            질문하기 위해서는 {requiredBp} BP이 필요합니다
-          </p>
-        </div>
-
-        {/* BP 현황 */}
-        <div
-          style={{
-            backgroundColor: '#f5f5f5',
-            borderRadius: '8px',
-            padding: '12px',
-            marginBottom: '20px',
-            fontSize: '12px',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <div>
-              <div style={{ color: '#999', marginBottom: '4px' }}>현재 BP</div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#4A8EC4' }}>
-                {currentBp}
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', color: '#999' }}>
-              →
-            </div>
-            <div>
-              <div style={{ color: '#999', marginBottom: '4px' }}>필요 BP</div>
-              <div style={{ fontSize: '18px', fontWeight: '700', color: '#E05A3A' }}>
-                {requiredBp}
-              </div>
-            </div>
           </div>
-          <div
-            style={{
-              textAlign: 'center',
-              color: '#E05A3A',
-              fontSize: '11px',
-              fontWeight: '600',
-            }}
-          >
-            {shortage}개 부족
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
+            질문하려면 <strong style={{ color: 'var(--gold)' }}>{requiredBp} BP</strong>가 필요해요
+            {shortage > 0 && <span> · <span style={{ color: 'var(--rose)' }}>{shortage}개 부족</span></span>}
           </div>
         </div>
 
-        {/* 옵션 섹션 */}
-        <div style={{ marginBottom: '20px' }}>
-          {/* 무료 충전 옵션 */}
-          {freeRechargeAvailable ? (
-            <div
-              style={{
-                backgroundColor: '#E5F5E5',
-                border: '1px solid #C0E0C0',
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '12px',
-              }}
-            >
-              <div style={{ fontSize: '12px', color: '#2D6B2D', fontWeight: '600', marginBottom: '4px' }}>
-                💚 무료 BP 충전 가능!
-              </div>
-              <div style={{ fontSize: '11px', color: '#4A7C4A', lineHeight: 1.4 }}>
-                레벨에 따라 {Math.ceil(shortage / 5)} 이상의 BP를 무료로 충전할 수 있어요.
-              </div>
-            </div>
-          ) : (
-            <div
-              style={{
-                backgroundColor: '#FFE5E5',
-                border: '1px solid #FFCCCC',
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '12px',
-              }}
-            >
-              <div style={{ fontSize: '12px', color: '#E05A3A', fontWeight: '600', marginBottom: '4px' }}>
-                ⏰ 무료 충전 대기 중
-              </div>
-              <div style={{ fontSize: '11px', color: '#C44A6A', lineHeight: 1.4 }}>
-                다음 무료 충전까지 {freeRechargeTimeRemaining || '수 시간'} 남았어요.
-              </div>
-            </div>
-          )}
-
-          {/* 미션 옵션 */}
-          <div
-            style={{
-              backgroundColor: '#E5E5FF',
-              border: '1px solid #C0C0FF',
-              borderRadius: '8px',
-              padding: '12px',
-            }}
-          >
-            <div style={{ fontSize: '12px', color: '#2D2D6B', fontWeight: '600', marginBottom: '4px' }}>
-              ◇ 미션 완료로 획득
-            </div>
-            <div style={{ fontSize: '11px', color: '#4A4A7C', lineHeight: 1.4 }}>
-              일일 미션을 완료하면 +10 BP을 획득할 수 있어요.
-            </div>
+        {/* BP 현황 바 */}
+        <div style={{
+          background: 'var(--bg2)', borderRadius: 'var(--r1)',
+          border: '1px solid var(--line)', padding: '12px 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: 16,
+        }}>
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 3, letterSpacing: '.04em' }}>현재 BP</div>
+            <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--gold)' }}>{currentBp}</div>
+          </div>
+          <div style={{ color: 'var(--t4)', fontSize: 'var(--sm)' }}>→</div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 3, letterSpacing: '.04em' }}>필요 BP</div>
+            <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--rose)' }}>{requiredBp}</div>
           </div>
         </div>
 
-        {/* 버튼 그룹 */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        {/* 충전 상태 안내 */}
+        {freeRechargeAvailable ? (
+          <div style={{
+            background: 'rgba(95,173,122,0.08)', border: '1px solid rgba(95,173,122,0.3)',
+            borderRadius: 'var(--r1)', padding: '10px 14px', marginBottom: 12,
+            fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.5,
+          }}>
+            <span style={{ fontWeight: 700, color: '#5FAD7A' }}>💚 무료 BP 충전 가능!</span>
+            <span style={{ color: 'var(--t3)' }}> 지금 바로 충전하면 계속 질문할 수 있어요.</span>
+          </div>
+        ) : freeRechargeTimeRemaining && (
+          <div style={{
+            background: 'var(--bg2)', border: '1px solid var(--line)',
+            borderRadius: 'var(--r1)', padding: '10px 14px', marginBottom: 12,
+            fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5,
+          }}>
+            ⏰ 다음 무료 충전까지 <strong style={{ color: 'var(--t1)' }}>{freeRechargeTimeRemaining}</strong> 남았어요
+          </div>
+        )}
+
+        {/* CTA 버튼 그룹 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {freeRechargeAvailable && (
             <button
               onClick={onRecharge}
               disabled={isRecharging}
               style={{
-                flex: 1,
-                padding: '12px',
-                backgroundColor: '#5FAD7A',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '600',
-                cursor: isRecharging ? 'not-allowed' : 'pointer',
+                width: '100%', padding: '13px',
+                background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+                borderRadius: 'var(--r1)', color: 'var(--gold)',
+                fontWeight: 700, fontSize: 'var(--sm)',
+                fontFamily: 'var(--ff)', cursor: isRecharging ? 'not-allowed' : 'pointer',
                 opacity: isRecharging ? 0.6 : 1,
-                fontSize: '13px',
               }}
             >
-              {isRecharging ? '충전 중...' : '무료 충전'}
+              {isRecharging ? '충전 중...' : '💚 무료 충전하기'}
             </button>
           )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={goMissions}
+              style={{
+                flex: 1, padding: '11px 8px',
+                background: 'var(--bg2)', border: '1px solid var(--line)',
+                borderRadius: 'var(--r1)', color: 'var(--t2)',
+                fontSize: 'var(--xs)', fontWeight: 600,
+                fontFamily: 'var(--ff)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              }}
+            >
+              <span>🎯</span><span>미션으로 BP 획득</span>
+            </button>
+            <button
+              onClick={goGacha}
+              style={{
+                flex: 1, padding: '11px 8px',
+                background: 'var(--bg2)', border: '1px solid var(--line)',
+                borderRadius: 'var(--r1)', color: 'var(--t2)',
+                fontSize: 'var(--xs)', fontWeight: 600,
+                fontFamily: 'var(--ff)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              }}
+            >
+              <span>🎰</span><span>별숨 뽑기</span>
+            </button>
+          </div>
           <button
             onClick={onClose}
             style={{
-              flex: 1,
-              padding: '12px',
-              backgroundColor: '#f5f5f5',
-              color: '#666',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '13px',
+              width: '100%', padding: '11px',
+              background: 'none', border: '1px solid var(--line)',
+              borderRadius: 'var(--r1)', color: 'var(--t4)',
+              fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
             }}
           >
-            {freeRechargeAvailable ? '닫기' : '나중에'}
+            나중에
           </button>
         </div>
       </div>
 
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-          from {
-            transform: translate(-50%, -45%);
-            opacity: 0;
-          }
-          to {
-            transform: translate(-50%, -50%);
-            opacity: 1;
-          }
-        }
-
-        @keyframes bounce {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUpDrawer {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
       `}</style>
     </>

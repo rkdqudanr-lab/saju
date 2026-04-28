@@ -23,7 +23,7 @@ export const ASPECT_META = {
 };
 
 export const LOW_AXIS_SCORE_THRESHOLD = 45;
-export const TODAY_AXIS_CACHE = 'daily_axis_activations';
+export const TODAY_AXIS_CACHE = 'item_boosts';
 
 const AXIS_GUIDE_COPY = {
   overall: {
@@ -91,7 +91,8 @@ const AXIS_GUIDE_COPY = {
   },
 };
 
-export function getDailyAxisScores(baseScore, equippedItems) {
+// boostMap: { [aspectKey]: { itemId, boost, name, emoji } }
+export function getDailyAxisScores(baseScore, boostMap) {
   const todayDate = new Date().toISOString().slice(0, 10);
   const getDailyNoise = (idx) => {
     const val = Number(todayDate.replace(/-/g, '')) + idx;
@@ -100,17 +101,9 @@ export function getDailyAxisScores(baseScore, equippedItems) {
 
   return AXES_9.map((axis, idx) => {
     const base = Math.max(20, Math.min(85, (baseScore || 60) + getDailyNoise(idx)));
-    let bonus = 0;
-    let boostItem = null;
-    (equippedItems || []).forEach((item) => {
-      if (item.aspectKey === axis.key) {
-        bonus += item.boost || 0;
-        if (!boostItem) boostItem = item;
-      } else if (item.category === 'talisman' && item.type === axis.key) {
-        bonus += item.boost || 10;
-        if (!boostItem) boostItem = item;
-      }
-    });
+    const entry = (boostMap || {})[axis.key];
+    const bonus = entry ? (entry.boost || 0) : 0;
+    const boostItem = entry ? { name: entry.name, emoji: entry.emoji, boost: entry.boost } : null;
     return {
       key: axis.key,
       label: axis.label,

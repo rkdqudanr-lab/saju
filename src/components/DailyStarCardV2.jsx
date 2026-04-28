@@ -51,6 +51,7 @@ export default function DailyStarCardV2({
   currentBp = 0,
   className = '',
   axisScores = [],
+  boostMap = {},
   ownedRows = null,
   onUseItem = null,
   pendingItems = [],
@@ -325,6 +326,18 @@ export default function DailyStarCardV2({
                       wordBreak: 'keep-all',
                     }}>
                       {cat.desc}
+                    </div>
+                  )}
+                  {boostMap[key] && (
+                    <div style={{
+                      fontSize: 11,
+                      color: 'var(--gold)',
+                      fontWeight: 600,
+                      lineHeight: 1.5,
+                      paddingLeft: 50,
+                      marginTop: 3,
+                    }}>
+                      ✨ {boostMap[key].emoji} {boostMap[key].name}의 기운이 깃들었어요 (+{boostMap[key].boost}점)
                     </div>
                   )}
                 </div>

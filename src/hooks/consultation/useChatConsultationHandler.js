@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { getAuthToken } from "../useUserProfile.js";
 import { readStreamResponse } from "../../lib/streamTransport.js";
+import { loadAnalysisCache, saveAnalysisCache } from "../../lib/analysisCache.js";
+
+const CHAT_SESSION_KEY = 'last_chat_session';
 
 const CHAT_ERROR_MESSAGE = "별과 연결이 잠시 끊겼어요. 다시 시도해볼까요?";
 
@@ -75,6 +78,12 @@ function applyFinalChatMessage(setChatHistory, setLatestChatIdx, text) {
   });
 }
 
+function persistChatSession(userId, questions, messages) {
+  if (!userId || !questions?.length) return;
+  const clean = messages.filter((m) => !m.streaming).map(({ role, text }) => ({ role, text }));
+  saveAnalysisCache(userId, CHAT_SESSION_KEY, JSON.stringify({ questions, messages: clean }));
+}
+
 export function useChatConsultationHandler({
   buildCtx,
   user,
@@ -96,6 +105,28 @@ export function useChatConsultationHandler({
   const chatLeft = maxChat - chatUsed;
   const chatEndRef = useRef(null);
   const streamAbortRef = useRef(null);
+
+  // 세션 복원: 같은 질문 세트의 채팅이 캐시에 있으면 불러오기
+  useEffect(() => {
+    if (!user?.id || !selQs?.length) return;
+    loadAnalysisCache(user.id, CHAT_SESSION_KEY).then((raw) => {
+      if (!raw) return;
+      try {
+        const saved = JSON.parse(raw);
+        const sameSession =
+          Array.isArray(saved.questions) &&
+          saved.questions.length === selQs.length &&
+          saved.questions.every((q, i) => q === selQs[i]);
+        if (sameSession && Array.isArray(saved.messages) && saved.messages.length > 0) {
+          const restored = saved.messages.map((m, i) => i === 0 ? { ...m, restored: true } : m);
+          setChatHistory(restored);
+          setChatUsed(restored.filter((m) => m.role === "user").length);
+          setLatestChatIdx(restored.length - 1);
+        }
+      } catch {}
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => () => {
     if (streamAbortRef.current) streamAbortRef.current.abort();
@@ -130,6 +161,7 @@ export function useChatConsultationHandler({
       setChatHistory((prev) => {
         const updated = [...prev, { role: "ai", text: aiText }];
         setLatestChatIdx(updated.length - 1);
+        persistChatSession(user?.id, selQs, updated);
         return updated;
       });
     } catch {
@@ -137,7 +169,7 @@ export function useChatConsultationHandler({
     } finally {
       setChatLoading(false);
     }
-  }, [answers, callApi, chatHistory, chatInput, chatLeft, chatLoading, selQs, setShowUpgradeModal]);
+  }, [answers, callApi, chatHistory, chatInput, chatLeft, chatLoading, selQs, setShowUpgradeModal, user?.id]);
 
   const generateChatSuggestions = useCallback(async () => {
     if (chatHistory.length > 0) return null;
@@ -244,6 +276,7 @@ export function useChatConsultationHandler({
       if (!signal.aborted) {
         setChatUsed((prev) => prev + 1);
         applyFinalChatMessage(setChatHistory, setLatestChatIdx, streamResult.text || "");
+        setChatHistory((prev) => { persistChatSession(user?.id, selQs, prev); return prev; });
       }
     } catch (err) {
       if (err?.name === "AbortError") return;
@@ -263,7 +296,8 @@ export function useChatConsultationHandler({
   const resetSession = useCallback(() => {
     setChatHistory([]);
     setChatUsed(0);
-  }, []);
+    if (user?.id) saveAnalysisCache(user.id, CHAT_SESSION_KEY, null);
+  }, [user?.id]);
 
   return useMemo(() => ({
     chatHistory,

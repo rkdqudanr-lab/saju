@@ -196,44 +196,14 @@ export function useConsultation(
           fullContext += `\n\n[오늘 부적 효과: ${talisman.name}]\n효과: ${talisman.description}\n이 부적의 기운이 오늘의 해석과 조언에 자연스럽게 반영되도록 해주세요.`;
         }
 
-        const sajuItem = useAppStore.getState().equippedSajuItem;
-        if (sajuItem) {
-          const itemEffect = sajuItem.effect || sajuItem.description || "";
-          fullContext += `\n\n[메인 기운: ${sajuItem.name} ${sajuItem.emoji || ""}]\n기운: ${itemEffect}\n이 에너지가 전체 해석에 자연스럽게 반영되도록 해주세요.`;
-        }
-
-        if (opts.isDaily && Array.isArray(opts.transientItems) && opts.transientItems.length > 0) {
-          const transientSummary = opts.transientItems
-            .map((item, index) => {
-              const parts = [item?.name].filter(Boolean);
-              if (item?.effect) parts.push(`effect: ${item.effect}`);
-              else if (item?.description) parts.push(`description: ${item.description}`);
-              if (item?.boost) parts.push(`boost: +${item.boost}`);
-              if (item?.aspectKey) parts.push(`target_category: ${item.aspectKey}`);
-              return `${index + 1}. ${parts.join(" / ")}`.trim();
-            })
-            .filter(Boolean)
-            .join("\n");
-          if (transientSummary) {
-            let itemInstr = `\n\n[daily transient items]\n${transientSummary}\nPlease reflect these temporary item effects naturally in today's interpretation.`;
-            if (opts.previousResult) {
-              itemInstr += `\n\n[important instruction for re-evaluation]
-The user is using an item to boost their fortune.
-Previous result for reference:
-"""
-${opts.previousResult}
-"""
-When generating the new result:
-1. For each item in [daily transient items], identify its 'target_category' and 'boost' value.
-2. Find the previous score for that category in the [previous result].
-3. ADD the boost value to the previous score. (Example: If Wealth was 65 and boost is 10, it MUST become 75).
-4. CRITICAL: Update the top-level [점수] tag to reflect the new average or sum. The final [점수] MUST be higher than before.
-5. Update the description for that category to be significantly more positive and encouraging.
-6. Keep other category scores and details similar but you may slightly adjust them to maintain overall flow.
-7. Format MUST be identical to the system prompt, including all tags.
-8. The final result MUST be a complete, new interpretation, not just the changes.`;
-            }
-            fullContext += itemInstr;
+        // 정화재점 시 boostMap 컨텍스트 반영 (발동=소비된 아이템들의 boost 기록)
+        if (opts.isDaily && opts.boostMap && typeof opts.boostMap === 'object') {
+          const boostEntries = Object.entries(opts.boostMap)
+            .filter(([, entry]) => entry?.name && entry?.boost)
+            .map(([aspectKey, entry]) => `• ${entry.emoji || ''} ${entry.name} → ${aspectKey} 카테고리 +${entry.boost}점`)
+            .join('\n');
+          if (boostEntries) {
+            fullContext += `\n\n[정화재점 — 오늘 발동된 아이템]\n${boostEntries}\n위 아이템의 기운이 이미 오늘 하루에 스며든 상태예요. 해당 카테고리의 점수는 발동된 boost 수치만큼 더 높게 책정하고, 설명도 그에 맞게 더 긍정적으로 풀어주세요. 다른 카테고리는 자연스럽게 유지하세요.`;
           }
         }
 

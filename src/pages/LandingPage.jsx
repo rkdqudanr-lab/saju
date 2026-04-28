@@ -1,19 +1,20 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { getAuthenticatedClient } from "../lib/supabase.js";
-import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, readDailyLocalCacheMap } from "../lib/dailyDataAccess.js";
+import { canUseDailySupabaseTables, readDailyLocalCacheMap } from "../lib/dailyDataAccess.js";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
 import { STEP } from "../utils/steps.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
 import { useAppStore } from "../store/useAppStore.js";
 import { isTodayAnswered } from "../utils/quiz.js";
 import { getKeepLogin, setKeepLogin } from "../hooks/useUserProfile.js";
-import { findItem } from "../utils/gachaItems.js";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
+import { parseDailyLines } from "../utils/parseDailyLines.js";
 import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
-import MissionDashboard from "../components/MissionDashboard.jsx";
 import SamplePreview from "../components/SamplePreview.jsx";
-import SajuCalendar from "../components/SajuCalendar.jsx";
+
+const MissionDashboard = lazy(() => import("../components/MissionDashboard.jsx"));
+const SajuCalendar     = lazy(() => import("../components/SajuCalendar.jsx"));
 
 function PageSpinner() {
   return (
@@ -118,12 +119,8 @@ export default function LandingPage({
   const { user, form, profile, showToast, kakaoLogin, kakaoLogout } = useUserCtx();
   const { saju, sun, today, buildCtx, formOk, formOkApprox, isApproximate } = useSajuCtx();
   const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0, todayMissionsDone: 0 }, missions = [] } = useGamCtx();
-  const equippedTalisman = useAppStore((s) => s.equippedTalisman);
-  const equippedSajuItem = useAppStore((s) => s.equippedSajuItem);
-  const setEquippedTalisman = useAppStore((s) => s.setEquippedTalisman);
   const setEquippedTheme = useAppStore((s) => s.setEquippedTheme);
   const setEquippedAvatar = useAppStore((s) => s.setEquippedAvatar);
-  const setEquippedSajuItem = useAppStore((s) => s.setEquippedSajuItem);
   const [keepLogin, setKeepLoginState] = useState(getKeepLogin());
   const nightMode = isNightMode();
   const nearbyJeolgi = getNearbyJeolgi();
@@ -137,8 +134,23 @@ export default function LandingPage({
   const TABS = nightMode ? TABS_NIGHT : TABS_DAY;
   const [activeTab, setActiveTab] = useState(TABS[0]);
 
+  const shareDaily = useCallback(async (dailyResult) => {
+    if (!dailyResult) return;
+    const parsed = parseDailyLines(dailyResult.text || '');
+    const score = parsed.score ?? dailyResult.score;
+    const summary = parsed.summary || (dailyResult.text || '').slice(0, 80);
+    const dateStr = today ? `${today.month}월 ${today.day}일` : '';
+    const text = `✦ 오늘의 별숨${dateStr ? ` · ${dateStr}` : ''}\n${summary}${score != null ? `\n\n별숨점수 ${score}점` : ''}\n\n— 별숨 앱`;
+    if (navigator.share) {
+      try { await navigator.share({ title: '별숨 ✦', text }); } catch {}
+    } else {
+      await navigator.clipboard?.writeText(text);
+      showToast?.('클립보드에 복사됐어요', 'success');
+    }
+  }, [today, showToast]);
+
   useEffect(() => {
-    if (!user) { setEquippedTalisman(null); return; }
+    if (!user) return;
     const kakaoId = String(user.kakaoId || user.id);
     const client = getAuthenticatedClient(kakaoId);
     if (!client) return;
@@ -154,43 +166,17 @@ export default function LandingPage({
         const shopItemsMap = new Map((allShopItems || []).map(i => [i.id, i]));
 
         const equipped = (data || []).map(r => {
-          const matched = shopItemsMap.get(r.item_id) || findItem(r.item_id) || findShopItem(r.item_id);
+          const matched = shopItemsMap.get(r.item_id) || findShopItem(r.item_id);
           return matched ? { ...matched, is_equipped: r.is_equipped } : null;
         }).filter(Boolean);
-        
-        useAppStore.getState().setEquippedItems?.(equipped);
-        // 부적(하위호환 유지용)
-        const talisman = equipped.find(r => r.category === 'talisman');
-        setEquippedTalisman(talisman || null);
 
-        // 오늘 발동 기운 복원 (Supabase daily_cache → Zustand, 부적보다 우선)
-        const todayStr = getDailyDateKey();
-        const dailyActivation = canUseDailySupabaseTables()
-          ? (await safeClient
-              .from('daily_cache')
-              .select('content')
-              .eq('kakao_id', kakaoId)
-              .eq('cache_date', todayStr)
-              .eq('cache_type', 'daily_activation')
-              .maybeSingle()).data?.content
-          : readDailyLocalCache(kakaoId, 'daily_activation', todayStr);
-        if (dailyActivation) {
-          const activatedItem = findItem(dailyActivation);
-          if (activatedItem) setEquippedTalisman(activatedItem);
-        }
-        
-        // 커스텀 장착 파츠
         const theme = equipped.find(r => r.category === 'theme');
         setEquippedTheme(theme || null);
-        
+
         const avatar = equipped.find(r => r.category === 'avatar');
         setEquippedAvatar(avatar || null);
-        
-        // 인벤토리 별숨 뽑기(우주/사주) 기운 장착 (category가 등급을 의미하거나, grade 속성 보유)
-        const gachaItem = equipped.find(r => ['space', 'saju'].includes(r.system) || r.grade);
-        setEquippedSajuItem(gachaItem || null);
       });
-  }, [user?.id, setEquippedTalisman, setEquippedTheme, setEquippedAvatar, setEquippedSajuItem]);
+  }, [user?.id, setEquippedTheme, setEquippedAvatar]);
 
   // 7일 운세 점수 히스토리 로드
   useEffect(() => {
@@ -352,33 +338,6 @@ export default function LandingPage({
                 );
               })()}
               
-              {/* 장착 중인 부적 연출 */}
-              {equippedTalisman && (
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 14px', marginTop: 6, marginBottom: 10,
-                  background: 'linear-gradient(135deg, rgba(232,176,72,0.1), rgba(232,176,72,0.02))',
-                  border: '1px solid rgba(232,176,72,0.3)',
-                  borderRadius: 'var(--r1)',
-                  boxShadow: '0 4px 16px rgba(232,176,72,0.15)',
-                  animation: 'dsc-breathe 4s ease-in-out infinite'
-                }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: '50%', background: 'var(--bg2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.2rem', flexShrink: 0,
-                    boxShadow: '0 0 10px rgba(232,176,72,0.5)',
-                    animation: 'floatGently 3s ease-in-out infinite'
-                  }}>
-                    {equippedTalisman.emoji}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 2 }}>✦ 오늘의 기운 발동 중</div>
-                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>{equippedTalisman.name}</div>
-                  </div>
-                </div>
-              )}
-
               {form.by ? (
                 <>
                   {/* ── 탭 바 ── */}
@@ -416,13 +375,41 @@ export default function LandingPage({
                             <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
                           </div>
                         ) : dailyResult ? (
-                          <DailyStarCardV2
-                            result={dailyResult}
-                            onBlockBadtime={onBlockBadtime}
-                            isBlocking={isBlockingBadtime}
-                            canBlockBadtime={onBlockBadtime != null}
-                            currentBp={gamificationState.currentBp}
-                          />
+                          <>
+                            <DailyStarCardV2
+                              result={dailyResult}
+                              onBlockBadtime={onBlockBadtime}
+                              isBlocking={isBlockingBadtime}
+                              canBlockBadtime={onBlockBadtime != null}
+                              currentBp={gamificationState.currentBp}
+                            />
+                            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                              <button
+                                onClick={() => shareDaily(dailyResult)}
+                                style={{
+                                  flex: 1, padding: '9px 12px',
+                                  background: 'none', border: '1px solid var(--line)',
+                                  borderRadius: 'var(--r1)', color: 'var(--t3)',
+                                  fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+                                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                }}
+                              >
+                                <span>↑</span><span>공유하기</span>
+                              </button>
+                              <button
+                                onClick={() => setStep(STEP.DAILY_HOROSCOPE)}
+                                style={{
+                                  flex: 2, padding: '9px 12px',
+                                  background: 'var(--goldf)', border: '1px solid var(--acc)',
+                                  borderRadius: 'var(--r1)', color: 'var(--gold)',
+                                  fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)',
+                                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                }}
+                              >
+                                <span>✦</span><span>상세 보기</span>
+                              </button>
+                            </div>
+                          </>
                         ) : (
                           <button className="cta-main" style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '18px', fontSize: 'var(--md)', fontWeight: 700 }} onClick={askDailyHoroscope}>
                             오늘 별숨의 기운 확인하기 ✦
@@ -466,12 +453,14 @@ export default function LandingPage({
                   {/* ── 탭: 오늘의 미션 ── */}
                   {activeTab === 'mission' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp2)' }}>
+                      <Suspense fallback={<PageSpinner />}>
                       <MissionDashboard
                         missions={missions}
                         onMissionComplete={onCompleteMission}
                         onDiaryClick={() => { setActiveTab('diary'); }}
                         hasDiaryToday={hasDiaryToday}
                       />
+                      </Suspense>
                       {/* 일기 완료 → 뽑기 유도 CTA */}
                       {hasDiaryToday && (
                         <div style={{ paddingTop: 8, borderTop: '1px solid var(--line)', marginTop: 6, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -483,14 +472,7 @@ export default function LandingPage({
                             >
                               <span>🎰</span><span>별숨 뽑기로 기운 더하기</span>
                             </button>
-                            {!equippedSajuItem ? (
-                              <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flex: 1, padding: '10px 8px', background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>기운 장착</button>
-                            ) : (
-                              <div style={{ flex: 1, padding: '10px 8px', background: 'var(--bg2)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                                <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji || '✦'}</span>
-                                <span style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 600 }}>장착 중</span>
-                              </div>
-                            )}
+                            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flex: 1, padding: '10px 8px', background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>보관함</button>
                           </div>
                         </div>
                       )}
@@ -577,12 +559,14 @@ export default function LandingPage({
                   {/* ── 탭: 별숨달력 ── */}
                   {activeTab === 'calendar' && (
                     <div style={{ marginTop: 4 }}>
-                      <SajuCalendar
-                        form={form} setStep={setStep}
-                        askQuick={askQuick} user={user}
-                        callApi={callApi} showToast={showToast}
-                        setDiaryViewDate={setDiaryViewDate}
-                      />
+                      <Suspense fallback={<PageSpinner />}>
+                        <SajuCalendar
+                          form={form} setStep={setStep}
+                          askQuick={askQuick} user={user}
+                          callApi={callApi} showToast={showToast}
+                          setDiaryViewDate={setDiaryViewDate}
+                        />
+                      </Suspense>
                     </div>
                   )}
 
