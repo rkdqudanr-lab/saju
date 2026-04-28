@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { getAuthenticatedClient } from "../lib/supabase.js";
-import { canUseDailySupabaseTables, readDailyLocalCacheMap } from "../lib/dailyDataAccess.js";
+import { canUseDailySupabaseTables, readDailyLocalCacheMap, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from "../lib/dailyDataAccess.js";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
 import { STEP } from "../utils/steps.js";
 import { useUserCtx, useSajuCtx, useGamCtx } from "../context/AppContext.jsx";
@@ -9,6 +9,8 @@ import { isTodayAnswered } from "../utils/quiz.js";
 import { getKeepLogin, setKeepLogin } from "../hooks/useUserProfile.js";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import { parseDailyLines } from "../utils/parseDailyLines.js";
+import { findItem } from "../utils/gachaItems.js";
+import { TODAY_AXIS_CACHE, ASPECT_META } from "../features/today/getDailyAxisScores.js";
 import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
 import SamplePreview from "../components/SamplePreview.jsx";
@@ -86,6 +88,18 @@ function getNearbyJeolgi() {
   return null;
 }
 
+// boostMap 캐시 저장
+async function saveBoostMap(kakaoId, boostMap) {
+  const content = JSON.stringify(boostMap);
+  writeDailyLocalCache(String(kakaoId), TODAY_AXIS_CACHE, content, getDailyDateKey());
+  if (!canUseDailySupabaseTables()) return;
+  const client = getAuthenticatedClient(String(kakaoId));
+  await client?.from('daily_cache').upsert(
+    { kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: TODAY_AXIS_CACHE, content },
+    { onConflict: 'kakao_id,cache_date,cache_type' },
+  );
+}
+
 // 운세 점수 → 색상
 function scoreColor(score) {
   if (score >= 80) return '#f0b429';
@@ -123,6 +137,11 @@ export default function LandingPage({
   const setEquippedAvatar = useAppStore((s) => s.setEquippedAvatar);
   const [keepLogin, setKeepLoginState] = useState(getKeepLogin());
   const nightMode = isNightMode();
+  const [boostMap, setBoostMap] = useState({});
+  const [ownedRows, setOwnedRows] = useState([]);
+  const [showItemPicker, setShowItemPicker] = useState(false);
+  const [isUsingItem, setIsUsingItem] = useState(false);
+  const [boostedScore, setBoostedScore] = useState(null);
   const nearbyJeolgi = getNearbyJeolgi();
   const [scoreHistory, setScoreHistory] = useState([]);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
@@ -205,6 +224,85 @@ export default function LandingPage({
       })
       .catch(() => {});
   }, [user?.id]);
+
+  // boostMap 로드 (오늘 발동된 아이템)
+  useEffect(() => {
+    if (!user || !dailyResult) return;
+    const kakaoId = String(user.kakaoId || user.id);
+    if (!canUseDailySupabaseTables()) {
+      try {
+        const parsed = JSON.parse(readDailyLocalCache(kakaoId, TODAY_AXIS_CACHE, getDailyDateKey()) || '{}');
+        setBoostMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
+      } catch { setBoostMap({}); }
+      return;
+    }
+    getAuthenticatedClient(kakaoId)
+      ?.from('daily_cache')
+      .select('content')
+      .eq('kakao_id', kakaoId)
+      .eq('cache_date', getDailyDateKey())
+      .eq('cache_type', TODAY_AXIS_CACHE)
+      .maybeSingle()
+      .then(({ data }) => {
+        try {
+          const parsed = JSON.parse(data?.content || '{}');
+          setBoostMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
+        } catch { setBoostMap({}); }
+      })
+      .catch(() => setBoostMap({}));
+  }, [user?.id, dailyResult?.score]);
+
+  // 보유 아이템 로드 (aspectKey 있는 것만)
+  useEffect(() => {
+    if (!user || !dailyResult) return;
+    const kakaoId = String(user.kakaoId || user.id);
+    getAuthenticatedClient(kakaoId)
+      ?.from('user_shop_inventory')
+      .select('id, item_id')
+      .eq('kakao_id', kakaoId)
+      .then(({ data, error }) => {
+        if (error) { setOwnedRows([]); return; }
+        setOwnedRows(
+          (data || [])
+            .map((row) => ({ rowId: String(row.id), item: findItem(String(row.item_id)) }))
+            .filter((row) => row.item?.aspectKey),
+        );
+      })
+      .catch(() => setOwnedRows([]));
+  }, [user?.id, dailyResult?.score]);
+
+  // 아이템 발동: 소비 + 즉시 점수 반영
+  const handleUseItem = useCallback(async (row) => {
+    if (!user || !row?.item || isUsingItem) return;
+    const kakaoId = String(user.kakaoId || user.id);
+    const item = row.item;
+    if (!item.aspectKey || !item.boost) return;
+    setIsUsingItem(true);
+    try {
+      if (canUseDailySupabaseTables()) {
+        await getAuthenticatedClient(kakaoId)
+          ?.from('user_shop_inventory')
+          .delete()
+          .eq('kakao_id', kakaoId)
+          .eq('id', String(row.rowId));
+      }
+      const nextBoostMap = {
+        ...boostMap,
+        [item.aspectKey]: { itemId: String(item.id), boost: item.boost, name: item.name, emoji: item.emoji },
+      };
+      await saveBoostMap(kakaoId, nextBoostMap);
+      setBoostMap(nextBoostMap);
+      setOwnedRows((prev) => prev.filter((r) => r.rowId !== row.rowId));
+      setBoostedScore((prev) => Math.min(100, (prev ?? dailyResult?.score ?? 0) + item.boost));
+      setShowItemPicker(false);
+      const label = ASPECT_META[item.aspectKey]?.label || item.aspectKey;
+      showToast?.(`${item.emoji} ${item.name} 발동! ${label}운 +${item.boost}점 반영됐어요`, 'success');
+    } catch {
+      showToast?.('아이템 발동 중 오류가 발생했어요.', 'error');
+    } finally {
+      setIsUsingItem(false);
+    }
+  }, [user, boostMap, dailyResult, isUsingItem, showToast]);
 
   // 오늘 점수 받으면 히스토리에 즉시 반영
   useEffect(() => {
@@ -291,16 +389,29 @@ export default function LandingPage({
                   <div className="llc-sub">
                     {form.by && saju ? (saju.ilganPoetic ? `${saju.ilganPoetic}` : '') : '별숨이 당신을 기억해요'}
                   </div>
-                  {dailyResult?.score != null && (
-                    <button
-                      onClick={() => setStep(STEP.TODAY_DETAIL)}
-                      style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${scoreColor(dailyResult.score)}44`, borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'var(--ff)' }}
-                    >
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: scoreColor(dailyResult.score), flexShrink: 0, display: 'inline-block' }} />
-                      <span style={{ fontSize: '11px', color: scoreColor(dailyResult.score), fontWeight: 700 }}>오늘 {dailyResult.score}점</span>
-                      <span style={{ fontSize: '10px', color: 'var(--t4)' }}>자세히 →</span>
-                    </button>
-                  )}
+                  {dailyResult?.score != null && (() => {
+                    const ds = boostedScore ?? dailyResult.score;
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => setStep(STEP.TODAY_DETAIL)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${scoreColor(ds)}44`, borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'var(--ff)' }}
+                        >
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: scoreColor(ds), flexShrink: 0, display: 'inline-block' }} />
+                          <span style={{ fontSize: '11px', color: scoreColor(ds), fontWeight: 700 }}>오늘 {ds}점</span>
+                          <span style={{ fontSize: '10px', color: 'var(--t4)' }}>자세히 →</span>
+                        </button>
+                        {ownedRows.length > 0 && (
+                          <button
+                            onClick={() => setShowItemPicker(true)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'var(--ff)' }}
+                          >
+                            <span style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 700 }}>+ 기운 올리기</span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {dailyResult == null && !dailyLoading && form.by && (
                     <button
                       onClick={askDailyHoroscope}
@@ -681,6 +792,54 @@ export default function LandingPage({
                   <div className="rev-nick">{r.nick}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 아이템 피커 바텀시트 ── */}
+      {showItemPicker && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 9100, display: 'flex', alignItems: 'flex-end' }}
+          onClick={() => setShowItemPicker(false)}
+        >
+          <div
+            style={{ width: '100%', background: 'var(--bg1)', borderRadius: '20px 20px 0 0', padding: '20px 16px 32px', maxHeight: '72vh', overflowY: 'auto', animation: 'fadeUp .2s ease' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>기운 아이템 쓰기</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 2 }}>오늘 운세 점수를 즉시 올려드려요</div>
+              </div>
+              <button onClick={() => setShowItemPicker(false)} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '50%', width: 30, height: 30, cursor: 'pointer', color: 'var(--t4)', fontFamily: 'var(--ff)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {ownedRows.map((row) => {
+                const item = row.item;
+                const alreadyUsed = !!boostMap[item.aspectKey];
+                const label = ASPECT_META[item.aspectKey]?.label || item.aspectKey;
+                return (
+                  <div
+                    key={row.rowId}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--bg2)', borderRadius: 16, border: `1px solid ${alreadyUsed ? 'var(--line)' : 'var(--acc)'}`, opacity: alreadyUsed ? 0.5 : 1 }}
+                  >
+                    <span style={{ fontSize: 28, flexShrink: 0 }}>{item.emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>{item.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 2 }}>{label}운 +{item.boost}점</div>
+                      {alreadyUsed && <div style={{ fontSize: '10px', color: 'var(--gold)', marginTop: 2 }}>오늘 이미 이 카테고리에 발동됐어요</div>}
+                    </div>
+                    <button
+                      onClick={() => !alreadyUsed && handleUseItem(row)}
+                      disabled={alreadyUsed || isUsingItem}
+                      style={{ padding: '8px 16px', borderRadius: 999, border: '1px solid var(--acc)', background: alreadyUsed ? 'var(--bg3)' : 'var(--goldf)', color: alreadyUsed ? 'var(--t4)' : 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)', cursor: alreadyUsed ? 'not-allowed' : 'pointer', flexShrink: 0 }}
+                    >
+                      {isUsingItem ? '...' : alreadyUsed ? '완료' : '쓰기'}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
