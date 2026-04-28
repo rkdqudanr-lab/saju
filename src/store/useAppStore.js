@@ -74,17 +74,7 @@ export const useAppStore = create((set, get) => ({
   // ── 장착 시스템 전역 상태 ────────────────────────────────
   equippedTheme: null,
   setEquippedTheme: (val) => set({ equippedTheme: val }),
-  
+
   equippedAvatar: null,
   setEquippedAvatar: (val) => set({ equippedAvatar: val }),
-  
-  equippedSajuItem: null, // "내 기운"으로 장착된 우주 또는 사주 아이템
-  setEquippedSajuItem: (val) => set({ equippedSajuItem: val }),
-
-  // ── (deprecated) 하위 호환용 ──
-  equippedItems: [],
-  setEquippedItems: (val) => set({ equippedItems: val }),
-
-  equippedTalisman: null,
-  setEquippedTalisman: (val) => set({ equippedTalisman: val }),
 }));

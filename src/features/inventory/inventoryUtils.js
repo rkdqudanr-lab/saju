@@ -12,15 +12,19 @@ export const CAT_LABEL = {
   fragment: '조각', rare: '희귀', legendary: '전설',
 };
 
+// 구버전 캐시 키 (하위호환용, 실제 사용 안 함)
 export const DAILY_AXIS_CACHE = 'daily_axis_activations';
+// 신규 캐시 키: { [aspectKey]: { itemId, boost, name, emoji } }
+export const ITEM_BOOSTS_CACHE = 'item_boosts';
 
 export const SYNTH_RATES = {
   satellite: 1.0, planet: 0.5, galaxy: 0.1,
   ohaeng: 1.0, cheongan: 0.5, jiji: 0.1,
 };
 
-export function isItemDailyActive(item, dailyActMap) {
-  if (!item?.aspectKey || !dailyActMap || typeof dailyActMap !== 'object') return false;
-  const activeId = dailyActMap[item.aspectKey];
-  return !!activeId && (activeId === item.id || activeId === item.id.split('::')[0]);
+// boostMap: { [aspectKey]: { itemId, boost, name, emoji } }
+export function isItemDailyActive(item, boostMap) {
+  if (!item?.aspectKey || !boostMap || typeof boostMap !== 'object') return false;
+  const entry = boostMap[item.aspectKey];
+  return !!entry && String(entry.itemId) === String(item.id);
 }

@@ -382,7 +382,6 @@ function SynthGuide({ gradeConfig, gradeOrder, setStep }) {
 export default function GachaPage({ showToast, consentFlags }) {
   const user             = useAppStore(s => s.user);
   const setStep          = useAppStore(s => s.setStep);
-  const equippedSajuItem = useAppStore(s => s.equippedSajuItem);
   const gamificationState = useAppStore(s => s.gamificationState);
   const kakaoId = user?.kakaoId || user?.id;
 
@@ -480,24 +479,11 @@ export default function GachaPage({ showToast, consentFlags }) {
       {user && (
         <div style={{ margin: '14px 20px 0', padding: '11px 14px', background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
-            {equippedSajuItem ? (
-              <>
-                <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{equippedSajuItem.emoji} {equippedSajuItem.name}</span>
-                <span> 기운 장착 중 · 뽑기로 더 강화해요</span>
-              </>
-            ) : (
-              <span>뽑은 아이템을 <strong style={{ color: 'var(--gold)' }}>메인 기운</strong>으로 장착하면 AI 답변에 반영돼요</span>
-            )}
+            뽑은 아이템을 <strong style={{ color: 'var(--gold)' }}>발동</strong>하면 오늘 운세 점수에 반영돼요
           </div>
-          {equippedSajuItem ? (
-            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 20, padding: '3px 8px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-              내 아이템
-            </button>
-          ) : (
-            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
-              장착하기
-            </button>
-          )}
+          <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
+            내 아이템
+          </button>
         </div>
       )}
 

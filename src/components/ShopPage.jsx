@@ -546,8 +546,6 @@ function BuyModal({ item, currentBP, onConfirm, onClose, buying }) {
 export default function ShopPage({ showToast }) {
   const user    = useAppStore(s => s.user);
   const setStep = useAppStore(s => s.setStep);
-  const equippedSajuItem = useAppStore(s => s.equippedSajuItem);
-
   const [activeTab,   setActiveTab]   = useState('spirit');
   const [spiritTab,   setSpiritTab]   = useState('space'); // 'space'|'saju'
   const [currentBP,   setCurrentBP]   = useState(0);
@@ -746,19 +744,6 @@ export default function ShopPage({ showToast }) {
           </div>
         </div>
       </div>
-
-      {/* 장착 기운 상태 */}
-      {equippedSajuItem && (
-        <div style={{ marginBottom: 12, padding: '9px 12px', background: 'rgba(232,176,72,0.06)', border: '1px solid rgba(232,176,72,0.25)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: '1rem' }}>{equippedSajuItem.emoji}</span>
-          <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', flex: 1 }}>
-            <strong style={{ color: 'var(--gold)' }}>{equippedSajuItem.name}</strong> 기운이 AI 답변에 반영 중
-          </span>
-          <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ fontSize: '10px', color: 'var(--t4)', background: 'none', border: '1px solid var(--line)', borderRadius: 16, padding: '3px 8px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-            변경
-          </button>
-        </div>
-      )}
 
       {/* 메인 탭 */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '0 0 14px', borderBottom: '1px solid var(--line)', margin: '0 -16px', paddingLeft: 16, paddingRight: 16 }}>

@@ -1,7 +1,7 @@
 import { AXES_9, getDailyAxisScores } from './getDailyAxisScores.js';
 
-export default function DailyRadarChart({ baseScore, equippedItems }) {
-  const scores = getDailyAxisScores(baseScore, equippedItems);
+export default function DailyRadarChart({ baseScore, boostMap }) {
+  const scores = getDailyAxisScores(baseScore, boostMap);
   const cx = 130, cy = 130, r = 90;
   const n = AXES_9.length;
   const angleStep = (2 * Math.PI) / n;

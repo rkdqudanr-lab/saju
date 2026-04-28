@@ -67,8 +67,7 @@ export function useDailyConsultationHandler({
     try {
       const ans = await callApi("오늘 하루 나의 별숨은?", {
         isDaily: true,
-        transientItems: options.transientItems || [],
-        previousResult: options.previousResult || null,
+        boostMap: options.boostMap || null,
       });
       const newCount = shouldIncrementCount ? dailyCount + 1 : dailyCount;
       // [PATCH] Preserve previous score during initial text update to prevent UI flickering
