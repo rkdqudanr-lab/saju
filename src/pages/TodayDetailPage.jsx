@@ -120,13 +120,13 @@ export default function TodayDetailPage({
     if (!kakaoId || !dailyResult) return;
     getAuthenticatedClient(String(kakaoId))
       ?.from('user_shop_inventory')
-      .select('item_id')
+      .select('id, item_id')
       .eq('kakao_id', String(kakaoId))
       .then(({ data, error }) => {
         if (error) { setOwnedRows([]); return; }
           setOwnedRows(
           (data || [])
-            .map((row) => ({ rowId: String(row.item_id), item: findItem(String(row.item_id)) }))
+            .map((row) => ({ rowId: String(row.id), item: findItem(String(row.item_id)) }))
             .filter((row) => row.item?.aspectKey),
         );
       })
@@ -152,7 +152,7 @@ export default function TodayDetailPage({
           ?.from('user_shop_inventory')
           .delete()
           .eq('kakao_id', String(kakaoId))
-          .eq('item_id', String(item.id));
+          .eq('id', String(row.rowId));
       }
 
       const nextBoostMap = {

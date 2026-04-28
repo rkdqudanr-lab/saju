@@ -191,11 +191,6 @@ export function useConsultation(
           // ignore history injection failures
         }
 
-        const talisman = useAppStore.getState().equippedTalisman;
-        if (opts.isDaily && talisman) {
-          fullContext += `\n\n[오늘 부적 효과: ${talisman.name}]\n효과: ${talisman.description}\n이 부적의 기운이 오늘의 해석과 조언에 자연스럽게 반영되도록 해주세요.`;
-        }
-
         // 정화재점 시 boostMap 컨텍스트 반영 (발동=소비된 아이템들의 boost 기록)
         if (opts.isDaily && opts.boostMap && typeof opts.boostMap === 'object') {
           const boostEntries = Object.entries(opts.boostMap)
