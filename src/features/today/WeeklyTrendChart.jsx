@@ -73,10 +73,21 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const toY = (val) => 100 - ((val - min) / range) * 80 - 10;
   const toX = (i) => 8 + (i / 6) * 84;
 
-  const allPoints = trend
-    .map((val, i) => val !== null ? `${toX(i)},${toY(val)}` : null)
-    .filter(Boolean)
-    .join(' ');
+  // Split into contiguous segments so gaps don't produce cross-gap lines
+  const segments = [];
+  let seg = [];
+  trend.forEach((val, i) => {
+    if (val !== null) {
+      seg.push({ i, val });
+    } else if (seg.length) {
+      segments.push(seg);
+      seg = [];
+    }
+  });
+  if (seg.length) segments.push(seg);
+
+  // Identify indices that are the first point of a new segment (after a gap)
+  const segmentStarts = new Set(segments.filter((s) => s.length > 0).map((s) => s[0].i));
 
   const todayVal = trend[6];
   const yesterdayVal = trend.slice(0, 6).reverse().find((v) => v !== null);
@@ -97,13 +108,19 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
       </div>
       <div style={{ position: 'relative', width: '100%', height: 60 }}>
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
-          {allPoints && <polyline fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={allPoints} style={{ opacity: 0.8 }} />}
+          {segments.map((s, si) => {
+            const pts = s.map(({ i, val }) => `${toX(i)},${toY(val)}`).join(' ');
+            return <polyline key={si} fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={pts} style={{ opacity: 0.8 }} />;
+          })}
           {trend.map((val, i) => {
             if (val === null) return null;
             const x = toX(i), y = toY(val);
-            return i === 6
-              ? <circle key={i} cx={x} cy={y} r="4" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2" />
-              : <circle key={i} cx={x} cy={y} r="2.5" fill="var(--gold)" opacity="0.5" />;
+            if (i === 6)
+              return <circle key={i} cx={x} cy={y} r="4" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2" />;
+            // segment starts (after a gap) get a slightly more visible dot
+            if (segmentStarts.has(i) && i !== 0)
+              return <circle key={i} cx={x} cy={y} r="3" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="1.5" opacity="0.8" />;
+            return <circle key={i} cx={x} cy={y} r="2.5" fill="var(--gold)" opacity="0.5" />;
           })}
         </svg>
       </div>

@@ -460,6 +460,37 @@ export default function TodayDetailPage({
     }
   }, [axisTextOverrides, boostMap, dailyResult?.score, kakaoId, parsedDaily.categories, pickerAxis, refreshAxisHeadline, showToast]);
 
+  const handleJeonghwaRejeom = useCallback(async () => {
+    const boostedAxisKeys = Object.keys(boostMap);
+    if (!boostedAxisKeys.length) return;
+
+    const missingTextKeys = boostedAxisKeys.filter((key) => !axisTextOverrides[key]);
+    if (missingTextKeys.length === 0) {
+      showToast?.('아이템 기운이 이미 반영돼 있어요', 'success');
+      return;
+    }
+
+    setIsApplyingAxis(true);
+    try {
+      const nextOverrides = { ...axisTextOverrides };
+      for (const axisKey of missingTextKeys) {
+        const axisScore = axisScores.find((s) => s.key === axisKey);
+        if (!axisScore) continue;
+        const fakeRows = (axisScore.appliedItems || []).map((item) => ({ item }));
+        // eslint-disable-next-line no-await-in-loop
+        const headline = await refreshAxisHeadline(axisKey, axisScore, fakeRows, todayScore);
+        if (headline) nextOverrides[axisKey] = headline;
+      }
+      setAxisTextOverrides(nextOverrides);
+      if (kakaoId) await saveJsonCache(kakaoId, TODAY_AXIS_TEXT_CACHE, nextOverrides);
+      showToast?.('아이템 기운이 반영됐어요', 'success');
+    } catch {
+      showToast?.('정화 중 오류가 발생했어요', 'error');
+    } finally {
+      setIsApplyingAxis(false);
+    }
+  }, [axisScores, axisTextOverrides, boostMap, kakaoId, refreshAxisHeadline, showToast, todayScore]);
+
   if (dailyLoading && !dailyResult) {
     return <PageSpinner />;
   }
@@ -513,36 +544,18 @@ export default function TodayDetailPage({
           <Suspense fallback={<PageSpinner />}>
             <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 18, marginBottom: 16, border: '1px solid var(--line)' }}>
               <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>TODAY SCORE</div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
-                <div>
-                  <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--t1)', lineHeight: 1 }}>{todayScore}점</div>
-                  <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 6 }}>
-                    세부 운세 {actionableScores.length}개 평균으로 계산되는 오늘의 총점이에요.
-                  </div>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--t1)', lineHeight: 1 }}>{todayScore}점</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 6 }}>
+                  세부 운세 {actionableScores.length}개 평균으로 계산되는 오늘의 총점이에요.
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onRefresh?.({ skipBpCharge: true, skipConfirm: true, saveHistory: false, incrementCount: false, ignoreDailyLimit: true })}
-                  style={{
-                    padding: '9px 12px',
-                    borderRadius: 12,
-                    border: '1px solid var(--line)',
-                    background: 'transparent',
-                    color: 'var(--t3)',
-                    fontSize: 'var(--xs)',
-                    fontFamily: 'var(--ff)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  기본 운세 다시 보기
-                </button>
               </div>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{overallGuide.summary}</div>
               {Object.keys(boostMap).length > 0 && (
                 <button
                   type="button"
-                  onClick={() => onRefresh?.({ skipBpCharge: true, skipConfirm: true, saveHistory: false, incrementCount: false, ignoreDailyLimit: true, boostMap })}
-                  disabled={dailyLoading}
+                  onClick={handleJeonghwaRejeom}
+                  disabled={isApplyingAxis}
                   style={{
                     marginTop: 12,
                     width: '100%',
@@ -554,11 +567,11 @@ export default function TodayDetailPage({
                     fontSize: 'var(--xs)',
                     fontWeight: 700,
                     fontFamily: 'var(--ff)',
-                    cursor: dailyLoading ? 'not-allowed' : 'pointer',
-                    opacity: dailyLoading ? 0.5 : 1,
+                    cursor: isApplyingAxis ? 'not-allowed' : 'pointer',
+                    opacity: isApplyingAxis ? 0.5 : 1,
                   }}
                 >
-                  {dailyLoading ? '정화 중...' : '✦ 아이템 기운 반영해서 정화 재점'}
+                  {isApplyingAxis ? '정화 중...' : '✦ 아이템 기운 반영해서 정화 재점'}
                 </button>
               )}
             </div>
