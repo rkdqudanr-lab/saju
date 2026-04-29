@@ -57,6 +57,8 @@ export default function DailyStarCardV2({
   pendingItems = [],
   onToggleItem = null,
   scoreBoost = 0,
+  categoryTextOverrides = {},
+  synergyOverride = null,
 }) {
   const [blocked, setBlocked] = useState(false);
   const setStep = useAppStore((s) => s.setStep);
@@ -70,8 +72,18 @@ export default function DailyStarCardV2({
   const summary = parsed.summary || '';
   const easternKi = parsed.easternKi;
   const westernSky = parsed.westernSky;
-  const categories = parsed.categories;
-  const synergy = parsed.synergy;
+  const categories = parsed.categories
+    ? Object.fromEntries(
+        Object.entries(parsed.categories).map(([key, value]) => [
+          key,
+          {
+            ...value,
+            desc: categoryTextOverrides?.[key] || value?.desc || '',
+          },
+        ]),
+      )
+    : null;
+  const synergy = synergyOverride || parsed.synergy;
   const badtime = result?.badtime || parsed.badtime;
   const closingAdvice = parsed.closingAdvice;
   const items = parsed.items;

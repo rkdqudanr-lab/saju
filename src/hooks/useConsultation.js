@@ -191,6 +191,10 @@ export function useConsultation(
           // ignore history injection failures
         }
 
+        if (typeof opts.context === 'string' && opts.context.trim()) {
+          fullContext += `\n\n[추가 작업 맥락]\n${opts.context.trim()}`;
+        }
+
         // 정화재점 시 boostMap 컨텍스트 반영 (발동=소비된 아이템들의 boost 기록)
         if (opts.isDaily && opts.boostMap && typeof opts.boostMap === 'object') {
           const boostEntries = Object.entries(opts.boostMap)
@@ -223,6 +227,7 @@ export function useConsultation(
             isSlot: opts.isSlot || false,
             isWeekly: opts.isWeekly || false,
             isDaily: opts.isDaily || false,
+            isDailyAxisRefresh: opts.isDailyAxisRefresh || false,
             isDaeun: opts.isDaeun || false,
             isAnalytics: opts.isAnalytics || false,
             isTarot: opts.isTarot || false,

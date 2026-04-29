@@ -86,6 +86,7 @@ export function useUserProfile() {
   const [responseStyle, setResponseStyle] = useState('M');
   // 테마: 기본값 다크모드 (별숨 앱 의도에 맞게). 로그인 후 DB에 저장된 값으로 덮어씀.
   const [theme, setTheme] = useState('dark');
+  const [instantTyping, setInstantTyping] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [quizState, setQuizState] = useState(DEFAULT_QUIZ);
   const [lifeStage, setLifeStage] = useState('free');
@@ -156,7 +157,7 @@ export function useUserProfile() {
           // 기존 저장된 사용자 데이터를 먼저 조회 (저장된 닉네임 보존을 위해)
           const { data: saved } = await (authClient || supabase)
             .from('users')
-            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
+            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state, instant_typing')
             .eq('kakao_id', String(data.id))
             .maybeSingle();
 
@@ -207,6 +208,7 @@ export function useUserProfile() {
           }
           if (saved?.response_style) setResponseStyle(saved.response_style);
           if (saved?.theme) setTheme(saved.theme);
+          if (saved?.instant_typing != null) setInstantTyping(saved.instant_typing);
           if (saved?.onboarded != null) setOnboarded(saved.onboarded);
           if (saved?.quiz_state) setQuizState(saved.quiz_state);
           if (saved?.life_stage) setLifeStage(saved.life_stage);
@@ -235,7 +237,7 @@ export function useUserProfile() {
     (async () => {
       const [usersRes, profilesRes, othersRes] = await Promise.allSettled([
         client.from('users')
-          .select('birth_year, birth_month, birth_day, birth_hour, gender, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state')
+          .select('birth_year, birth_month, birth_day, birth_hour, gender, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state, instant_typing')
           .eq('kakao_id', String(user.id))
           .maybeSingle(),
         client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).maybeSingle(),
@@ -262,6 +264,7 @@ export function useUserProfile() {
         else setShowConsentModal(true); // DB에 동의 정보 없으면 항상 모달 표시
         if (data?.response_style) setResponseStyle(data.response_style);
         if (data?.theme) setTheme(data.theme);
+        if (data?.instant_typing != null) setInstantTyping(data.instant_typing);
         if (data?.onboarded != null) setOnboarded(data.onboarded);
         if (data?.quiz_state) setQuizState(data.quiz_state);
         if (data?.life_stage) setLifeStage(data.life_stage);
@@ -340,11 +343,12 @@ export function useUserProfile() {
     }
   }, []);
 
-  // ── 개인 설정 저장 (responseStyle / theme / onboarded / quizState / lifeStage / fontSize) ──
+  // ── 개인 설정 저장 (responseStyle / theme / instantTyping / onboarded / quizState / lifeStage / fontSize) ──
   const saveSettings = useCallback(async (updates) => {
     const currentUser = getAuthUser();
     if (updates.responseStyle !== undefined) setResponseStyle(updates.responseStyle);
     if (updates.theme         !== undefined) setTheme(updates.theme);
+    if (updates.instantTyping !== undefined) setInstantTyping(updates.instantTyping);
     if (updates.onboarded     !== undefined) setOnboarded(updates.onboarded);
     if (updates.quizState     !== undefined) setQuizState(updates.quizState);
     if (updates.lifeStage     !== undefined) setLifeStage(updates.lifeStage);
@@ -353,6 +357,7 @@ export function useUserProfile() {
     const dbUpdates = {};
     if (updates.responseStyle !== undefined) dbUpdates.response_style = updates.responseStyle;
     if (updates.theme         !== undefined) dbUpdates.theme           = updates.theme;
+    if (updates.instantTyping !== undefined) dbUpdates.instant_typing = updates.instantTyping;
     if (updates.onboarded     !== undefined) dbUpdates.onboarded       = updates.onboarded;
     if (updates.quizState     !== undefined) dbUpdates.quiz_state      = updates.quizState;
     if (updates.lifeStage     !== undefined) dbUpdates.life_stage      = updates.lifeStage;
@@ -532,6 +537,7 @@ export function useUserProfile() {
   useEffect(() => { useAppStore.getState().setProfile(profile); }, [profile]);
   useEffect(() => { useAppStore.getState().setForm(form); }, [form]);
   useEffect(() => { useAppStore.getState().setIsDark(theme === 'dark'); }, [theme]);
+  useEffect(() => { useAppStore.getState().setInstantTyping(instantTyping); }, [instantTyping]);
   
   useEffect(() => { 
     useAppStore.getState().setAuthFns({ kakaoLogin, kakaoLogout, saveProfileToSupabase }); 
@@ -568,9 +574,9 @@ export function useUserProfile() {
     loginError, setLoginError,
     loginLoading,
     profileSyncing,
-    responseStyle, theme, onboarded, quizState, lifeStage, fontSize,
+    responseStyle, theme, instantTyping, onboarded, quizState, lifeStage, fontSize,
     saveSettings,
     kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile,
     saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
-  }), [user, profile, form, otherProfiles, activeProfileIdx, otherForm, editingOtherIdx, showProfileModal, showOtherProfileModal, showConsentModal, consentFlags, handleConsentConfirm, loginError, loginLoading, profileSyncing, responseStyle, theme, onboarded, quizState, lifeStage, fontSize, saveSettings, kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile, saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer]);
+  }), [user, profile, form, otherProfiles, activeProfileIdx, otherForm, editingOtherIdx, showProfileModal, showOtherProfileModal, showConsentModal, consentFlags, handleConsentConfirm, loginError, loginLoading, profileSyncing, responseStyle, theme, instantTyping, onboarded, quizState, lifeStage, fontSize, saveSettings, kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile, saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer]);
 }

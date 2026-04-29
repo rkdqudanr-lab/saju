@@ -10,6 +10,10 @@ export const AXES_9 = [
   { key: 'create',  label: '창의' },
 ];
 
+export const ACTIONABLE_AXIS_KEYS = AXES_9
+  .map((axis) => axis.key)
+  .filter((key) => key !== 'overall');
+
 export const ASPECT_META = {
   overall: { label: '종합', emoji: '✨' },
   wealth:  { label: '금전', emoji: '💰' },
@@ -91,8 +95,59 @@ const AXIS_GUIDE_COPY = {
   },
 };
 
+function getAiCategoryBaseScore(categoryEntry) {
+  if (!categoryEntry) return null;
+  if (typeof categoryEntry.score === 'number' && Number.isFinite(categoryEntry.score)) {
+    return Math.max(20, Math.min(100, categoryEntry.score));
+  }
+  if (typeof categoryEntry.stars === 'number' && Number.isFinite(categoryEntry.stars)) {
+    return Math.max(20, Math.min(100, categoryEntry.stars * 20));
+  }
+  return null;
+}
+
+function getBoostItems(entry) {
+  if (!entry || typeof entry !== 'object') return [];
+  if (Array.isArray(entry.items)) {
+    return entry.items
+      .filter(Boolean)
+      .map((item) => ({
+        itemId: String(item.itemId || item.id || ''),
+        boost: Number(item.boost) || 0,
+        name: item.name || '',
+        emoji: item.emoji || '',
+        grade: item.grade || '',
+      }))
+      .filter((item) => item.itemId && item.boost > 0);
+  }
+  if (entry.itemId && entry.boost) {
+    return [{
+      itemId: String(entry.itemId),
+      boost: Number(entry.boost) || 0,
+      name: entry.name || '',
+      emoji: entry.emoji || '',
+      grade: entry.grade || '',
+    }];
+  }
+  return [];
+}
+
+function getBoostSummary(entry) {
+  const items = getBoostItems(entry);
+  const totalBoost = items.reduce((sum, item) => sum + (item.boost || 0), 0);
+  if (!items.length) {
+    return { items: [], totalBoost: 0, latestItem: null };
+  }
+  const latestItem = items[items.length - 1] || null;
+  return {
+    items,
+    totalBoost,
+    latestItem,
+  };
+}
+
 // boostMap: { [aspectKey]: { itemId, boost, name, emoji } }
-export function getDailyAxisScores(baseScore, boostMap) {
+export function getDailyAxisScores(baseScore, boostMap, categoryScores = null) {
   const todayDate = new Date().toISOString().slice(0, 10);
   const getDailyNoise = (idx) => {
     const val = Number(todayDate.replace(/-/g, '')) + idx;
@@ -100,10 +155,16 @@ export function getDailyAxisScores(baseScore, boostMap) {
   };
 
   return AXES_9.map((axis, idx) => {
-    const base = Math.max(20, Math.min(85, (baseScore || 60) + getDailyNoise(idx)));
+    const aiBase = getAiCategoryBaseScore(categoryScores?.[axis.key]);
+    const base = aiBase ?? Math.max(20, Math.min(85, (baseScore || 60) + getDailyNoise(idx)));
     const entry = (boostMap || {})[axis.key];
-    const bonus = entry ? (entry.boost || 0) : 0;
-    const boostItem = entry ? { name: entry.name, emoji: entry.emoji, boost: entry.boost } : null;
+    const { items: appliedItems, totalBoost, latestItem } = getBoostSummary(entry);
+    const bonus = totalBoost;
+    const boostItem = latestItem ? {
+      name: latestItem.name,
+      emoji: latestItem.emoji,
+      boost: latestItem.boost,
+    } : null;
     return {
       key: axis.key,
       label: axis.label,
@@ -111,8 +172,15 @@ export function getDailyAxisScores(baseScore, boostMap) {
       total: Math.min(100, Math.round(base + bonus)),
       bonus: Math.round(bonus),
       boostItem,
+      appliedItems,
     };
   });
+}
+
+export function getAverageFortuneScore(scores = []) {
+  const actionable = (scores || []).filter((score) => ACTIONABLE_AXIS_KEYS.includes(score.key));
+  if (!actionable.length) return 0;
+  return Math.round(actionable.reduce((sum, score) => sum + (score.total || 0), 0) / actionable.length);
 }
 
 export function getAxisInsight(score) {

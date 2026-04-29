@@ -1,11 +1,10 @@
-import { AXES_9, getDailyAxisScores } from './getDailyAxisScores.js';
-
-export default function DailyRadarChart({ baseScore, boostMap }) {
-  const scores = getDailyAxisScores(baseScore, boostMap);
+export default function DailyRadarChart({ scores = [] }) {
   const cx = 130, cy = 130, r = 90;
-  const n = AXES_9.length;
+  const n = scores.length || 1;
   const angleStep = (2 * Math.PI) / n;
   const toXY = (angle, radius) => ({ x: cx + radius * Math.sin(angle), y: cy - radius * Math.cos(angle) });
+
+  if (!scores.length) return null;
 
   const basePoints = scores.map((s, i) => { const p = toXY(angleStep * i, (s.base / 100) * r); return `${p.x},${p.y}`; }).join(' ');
   const totalPoints = scores.map((s, i) => { const p = toXY(angleStep * i, (s.total / 100) * r); return `${p.x},${p.y}`; }).join(' ');
@@ -29,7 +28,7 @@ export default function DailyRadarChart({ baseScore, boostMap }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 14 }}>
         {[
-          { label: '9개 영역 평균', value: `${Math.round(scores.reduce((s, sc) => s + sc.total, 0) / scores.length)}점` },
+          { label: `${scores.length}개 영역 평균`, value: `${Math.round(scores.reduce((s, sc) => s + sc.total, 0) / scores.length)}점` },
           { label: '가장 약한 영역', value: `${weakest.label} ${weakest.total}점` },
           { label: '가장 강한 영역', value: `${strongest.label} ${strongest.total}점` },
         ].map(({ label, value }) => (

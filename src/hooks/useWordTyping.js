@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useAppStore } from "../store/useAppStore.js";
 
 // ═══════════════════════════════════════════════════════════
 //  한글 자소 단위 타이핑 훅 (사람이 직접 치는 듯한 효과)
@@ -34,6 +35,7 @@ function getTypingFrames(text) {
 }
 
 export default function useWordTyping(text, active, speed = 25) { 
+  const instantTyping = useAppStore((s) => s.instantTyping);
   const [shown, setShown] = useState('');
   const [done, setDone] = useState(false);
   const rafRef = useRef(null);
@@ -59,6 +61,12 @@ export default function useWordTyping(text, active, speed = 25) {
   useEffect(() => {
     if (!active || !text) {
       if (!active) { setShown(''); setDone(false); }
+      return;
+    }
+
+    if (instantTyping) {
+      setShown(text);
+      setDone(true);
       return;
     }
     
@@ -93,7 +101,7 @@ export default function useWordTyping(text, active, speed = 25) {
 
     rafRef.current = requestAnimationFrame(tick);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [text, active, speed]);
+  }, [text, active, speed, instantTyping]);
 
   const skipToEnd = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);

@@ -69,11 +69,11 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
     return null;
   }, [partner]);
   const partnerSun = useMemo(() => {
-    if (partner.bm && partner.bd) {
-      try { return getSun(+partner.bm, +partner.bd); } catch { return null; }
+    if (partner.by && partner.bm && partner.bd) {
+      try { return getSun(+partner.by, +partner.bm, +partner.bd); } catch { return null; }
     }
     return null;
-  }, [partner.bm, partner.bd]);
+  }, [partner.by, partner.bm, partner.bd]);
   const partnerOk = partner.by && partner.bm && partner.bd && partner.gender;
 
   const compatScore = useMemo(() => {

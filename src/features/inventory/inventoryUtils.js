@@ -1,7 +1,14 @@
 export const FORTUNE_LABELS = {
-  wealth: '재물운', love: '애정운', career: '직장운',
-  study: '학업운', health: '건강운', social: '대인운',
-  travel: '이동운', general: '기타 아이템',
+  overall: '종합운',
+  wealth: '재물운',
+  love: '애정운',
+  career: '직장운',
+  study: '학업운',
+  health: '건강운',
+  social: '대인운',
+  travel: '이동운',
+  create: '창의운',
+  general: '기타 아이템',
 };
 
 export const CAT_LABEL = {
