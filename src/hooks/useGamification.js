@@ -337,9 +337,9 @@ export function useGamification(user, showToast) {
           await earnBP(bpGain, 'login');
         }
 
-        // 스트릭 마일스톤 보너스 (7/14/21일 연속 → 100 BP 보너스)
+        // 스트릭 마일스톤 보너스
         const achievedStreak = newStreak > 0 ? newStreak : ((gamificationState.loginStreak || 0) + 1);
-        const STREAK_MILESTONES = { 7: 100, 14: 100, 21: 100 };
+        const STREAK_MILESTONES = { 3: 30, 7: 100, 14: 100, 21: 100, 30: 300 };
         if (STREAK_MILESTONES[achievedStreak]) {
           await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);
           if (showToast) showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');

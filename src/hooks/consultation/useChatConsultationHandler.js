@@ -42,7 +42,10 @@ function compressChatHistory(history) {
   return `[이전 대화 요약] ${summary || "(없음)"}\n\n[최근 대화]\n${recentText}`;
 }
 
-function buildChatPrompt(prevQAs, prevChat, userMsg) {
+function buildChatPrompt(prevQAs, prevChat, userMsg, dailySeed = '') {
+  const seedSection = dailySeed
+    ? `\n[오늘의 별숨 — 이 맥락을 바탕으로 코칭 질문을 자연스럽게 이어가세요]\n${dailySeed}\n`
+    : '';
   return `당신은 별숨입니다. 사용자의 사주와 별자리를 깊이 이해하는 친한 친구처럼, 메신저 대화창에서 톡하듯 짧고 자연스럽게 대답해주세요.
 
 반드시 지킬 규칙:
@@ -55,7 +58,8 @@ function buildChatPrompt(prevQAs, prevChat, userMsg) {
 - 번호 목록, 불릿, 줄바꿈 나열 없이 자연스러운 채팅 문장으로만 말해주세요.
 - 말투는 실제 채팅처럼 가볍고 짧게, 교과서처럼 정리된 설명체는 피해주세요.
 - 이전 상담 흐름과 방금 질문을 바로 이어서 대화해주세요.
-
+- [오늘의 별숨] 맥락이 있다면, 운세에서 낮은 영역을 자연스럽게 언급하며 사용자가 그 부분을 구체적으로 말하도록 유도하세요.
+${seedSection}
 [이전 상담 요약]
 ${prevQAs}
 
@@ -96,6 +100,7 @@ export function useChatConsultationHandler({
   selQs,
   answers,
   setShowUpgradeModal,
+  dailyResult = null,
 }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [chatInput, setChatInput] = useState("");
@@ -105,6 +110,15 @@ export function useChatConsultationHandler({
   const chatLeft = maxChat - chatUsed;
   const chatEndRef = useRef(null);
   const streamAbortRef = useRef(null);
+
+  // 오늘 운세 시드 — 처음 채팅 진입 시 AI 코칭 컨텍스트로 주입
+  const dailySeed = useMemo(() => {
+    if (!dailyResult?.text || !dailyResult?.score) return '';
+    const lines = dailyResult.text.split('\n').map(l => l.trim()).filter(Boolean);
+    const summaryLine = lines.find(l => l.startsWith('[요약]') || l.startsWith('요약:')) || '';
+    const summary = summaryLine.replace(/^\[?요약\]?[:：]?\s*/i, '').slice(0, 80);
+    return `오늘 별숨 점수: ${dailyResult.score}점${summary ? `\n오늘 요약: ${summary}` : ''}`;
+  }, [dailyResult?.score, dailyResult?.text]);
 
   // 세션 복원: 같은 질문 세트의 채팅이 캐시에 있으면 불러오기
   useEffect(() => {
@@ -153,7 +167,8 @@ export function useChatConsultationHandler({
     const prevChat = chatHistory
       .map((message) => `[${message.role === "ai" ? "별숨" : "나"}] ${message.text}`)
       .join("\n");
-    const chatPrompt = buildChatPrompt(prevQAs, prevChat, userMsg);
+    const seed = chatHistory.length === 0 ? dailySeed : '';
+    const chatPrompt = buildChatPrompt(prevQAs, prevChat, userMsg, seed);
 
     try {
       const aiText = sanitizeChatReply(await callApi(chatPrompt, { isChat: true }));
@@ -219,7 +234,8 @@ export function useChatConsultationHandler({
       .map((question, index) => `[질문 ${index + 1}] ${question}\n[답변] ${(answers[index] || "").slice(0, 150)}`)
       .join("\n\n");
     const prevChat = compressChatHistory(chatHistory);
-    const streamChatPrompt = buildChatPrompt(prevQAs, prevChat, userMsg);
+    const seed = chatHistory.length === 0 ? dailySeed : '';
+    const streamChatPrompt = buildChatPrompt(prevQAs, prevChat, userMsg, seed);
     const chatContext = `${buildCtx()}\n\n[채팅 응답 규칙]\n이번 응답은 채팅 모드입니다. [요약], 제목, 섹션 헤더를 쓰지 말고 바로 대화체로 이어서 말해주세요. 첫 문장을 요약처럼 시작하지 말고 자연스럽게 이어가세요.`;
 
     setChatHistory((prev) => [...prev, { role: "user", text: userMsg }, { role: "ai", text: "", streaming: true }]);

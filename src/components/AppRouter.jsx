@@ -51,6 +51,7 @@ const GrowthDashboardPage     = lazy(() => import("./GrowthDashboardPage.jsx"));
 const ItemInventoryPage       = lazy(() => import("./ItemInventoryPage.jsx"));
 const LottoPage               = lazy(() => import("./LottoPage.jsx"));
 const GachaPage               = lazy(() => import("./GachaPage.jsx"));
+const SajuStoryPage           = lazy(() => import("./SajuStoryPage.jsx"));
 
 function PageSpinner() {
   return (
@@ -159,6 +160,7 @@ export default function AppRouter({ ctx }) {
           onCompleteMission={handleCompleteMission}
           onFreeRecharge={handleFreeRecharge}
           onDiaryComplete={handleDiaryComplete}
+          onEarnBP={earnBP}
           hasDiaryToday={hasDiaryToday}
           isBlockingBadtime={isBlockingBadtime}
           freeRechargeAvailable={freeRechargeAvailable}
@@ -531,6 +533,13 @@ export default function AppRouter({ ctx }) {
       {step === STEP.GACHA && (
         <Suspense fallback={<PageSpinner />}>
           <GachaPage showToast={showToast} />
+        </Suspense>
+      )}
+
+      {/* SAJU_STORY */}
+      {step === STEP.SAJU_STORY && (
+        <Suspense fallback={<PageSpinner />}>
+          <SajuStoryPage callApi={callApi} showToast={showToast} />
         </Suspense>
       )}
 

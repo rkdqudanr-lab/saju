@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { getAuthenticatedClient } from "../lib/supabase.js";
 import { canUseDailySupabaseTables, readDailyLocalCacheMap, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from "../lib/dailyDataAccess.js";
 import { getDailyWord, CATS_ALL, REVIEWS, DAILY_QUESTIONS } from "../utils/constants.js";
@@ -8,9 +8,10 @@ import { useAppStore } from "../store/useAppStore.js";
 import { isTodayAnswered } from "../utils/quiz.js";
 import { getKeepLogin, setKeepLogin } from "../hooks/useUserProfile.js";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
+import ReflectionPopup from "../components/ReflectionPopup.jsx";
 import { parseDailyLines } from "../utils/parseDailyLines.js";
 import { findItem } from "../utils/gachaItems.js";
-import { TODAY_AXIS_CACHE, ASPECT_META } from "../features/today/getDailyAxisScores.js";
+import { getDailyAxisScores, TODAY_AXIS_CACHE, ASPECT_META } from "../features/today/getDailyAxisScores.js";
 import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
 import SamplePreview from "../components/SamplePreview.jsx";
@@ -124,6 +125,7 @@ export default function LandingPage({
   onCompleteMission = null,
   onFreeRecharge = null,
   onDiaryComplete = null,
+  onEarnBP = null,
   hasDiaryToday = false,
   isBlockingBadtime = false,
   freeRechargeAvailable = true,
@@ -139,12 +141,19 @@ export default function LandingPage({
   const nightMode = isNightMode();
   const [boostMap, setBoostMap] = useState({});
   const [ownedRows, setOwnedRows] = useState([]);
-  const [showItemPicker, setShowItemPicker] = useState(false);
+  const [pendingItems, setPendingItems] = useState([]);
   const [isUsingItem, setIsUsingItem] = useState(false);
   const [boostedScore, setBoostedScore] = useState(null);
+
+  const baseScore = boostedScore ?? dailyResult?.score ?? 0;
+  const axisScores = useMemo(
+    () => getDailyAxisScores(baseScore, boostMap),
+    [baseScore, boostMap],
+  );
   const nearbyJeolgi = getNearbyJeolgi();
   const [scoreHistory, setScoreHistory] = useState([]);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [showReflection, setShowReflection] = useState(false);
 
   // 탭 순서: 낮엔 [오늘별숨, 오늘의 미션, 별숨달력, 나의하루] / 밤엔 [나의하루, 오늘별숨, 오늘의 미션, 별숨달력]
   const TABS_DAY   = ['daily', 'mission', 'calendar', 'diary'];
@@ -204,7 +213,7 @@ export default function LandingPage({
     const last7 = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      return d.toISOString().slice(0, 10);
+      return getDailyDateKey(d);
     });
     if (!canUseDailySupabaseTables()) {
       const map = readDailyLocalCacheMap(kakaoId, 'horoscope_score', last7);
@@ -271,6 +280,47 @@ export default function LandingPage({
       .catch(() => setOwnedRows([]));
   }, [user?.id, dailyResult?.score]);
 
+  // 카테고리별 "+" 버튼 토글 (A안: 선택 → 일괄 적용)
+  const handleToggleItem = useCallback((row) => {
+    setPendingItems((prev) => {
+      const exists = prev.find((p) => p.rowId === row.rowId);
+      return exists ? prev.filter((p) => p.rowId !== row.rowId) : [...prev, row];
+    });
+  }, []);
+
+  // pendingItems 일괄 발동 (AI 재호출 없음 — 점수만 반영)
+  const handleApplyPending = useCallback(async () => {
+    if (!user || !pendingItems.length || isUsingItem) return;
+    const kakaoId = String(user.kakaoId || user.id);
+    setIsUsingItem(true);
+    try {
+      if (canUseDailySupabaseTables()) {
+        await getAuthenticatedClient(kakaoId)
+          ?.from('user_shop_inventory')
+          .delete()
+          .eq('kakao_id', kakaoId)
+          .in('id', pendingItems.map((r) => String(r.rowId)));
+      }
+      const nextBoostMap = { ...boostMap };
+      let totalBoost = 0;
+      for (const row of pendingItems) {
+        const item = row.item;
+        nextBoostMap[item.aspectKey] = { itemId: String(item.id), boost: item.boost, name: item.name, emoji: item.emoji };
+        totalBoost += item.boost;
+      }
+      await saveBoostMap(kakaoId, nextBoostMap);
+      setBoostMap(nextBoostMap);
+      setOwnedRows((prev) => prev.filter((r) => !pendingItems.find((p) => p.rowId === r.rowId)));
+      setBoostedScore((prev) => Math.min(100, (prev ?? dailyResult?.score ?? 0) + totalBoost));
+      setPendingItems([]);
+      showToast?.(`✨ ${pendingItems.length}개 기운 발동! +${totalBoost}점 반영됐어요`, 'success');
+    } catch {
+      showToast?.('아이템 발동 중 오류가 발생했어요.', 'error');
+    } finally {
+      setIsUsingItem(false);
+    }
+  }, [user, pendingItems, boostMap, dailyResult, isUsingItem, showToast]);
+
   // 아이템 발동: 소비 + 즉시 점수 반영
   const handleUseItem = useCallback(async (row) => {
     if (!user || !row?.item || isUsingItem) return;
@@ -294,7 +344,6 @@ export default function LandingPage({
       setBoostMap(nextBoostMap);
       setOwnedRows((prev) => prev.filter((r) => r.rowId !== row.rowId));
       setBoostedScore((prev) => Math.min(100, (prev ?? dailyResult?.score ?? 0) + item.boost));
-      setShowItemPicker(false);
       const label = ASPECT_META[item.aspectKey]?.label || item.aspectKey;
       showToast?.(`${item.emoji} ${item.name} 발동! ${label}운 +${item.boost}점 반영됐어요`, 'success');
     } catch {
@@ -325,6 +374,55 @@ export default function LandingPage({
     }, 800);
     return () => clearTimeout(t);
   }, [user?.id, gamificationState.loginStreak]);
+
+  // 어제 운세 피드백 팝업 (하루 1회, 스트릭 팝업과 충돌 방지로 2초 뒤)
+  useEffect(() => {
+    if (!user || !scoreHistory.length) return;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = getDailyDateKey(yesterday);
+    const yesterdayEntry = scoreHistory.find((s) => s.date === yesterdayKey);
+    if (!yesterdayEntry?.score) return;
+
+    const kakaoId = String(user.kakaoId || user.id);
+    const existing = readDailyLocalCache(kakaoId, 'reflection_feedback', yesterdayKey);
+    if (existing) return;
+
+    const t = setTimeout(() => setShowReflection(true), 2000);
+    return () => clearTimeout(t);
+  }, [user?.id, scoreHistory]);
+
+  // 어제 운세 피드백 제출
+  const handleReflectionAnswer = useCallback(async (answer) => {
+    setShowReflection(false);
+    if (!user || answer === 'skip') return;
+    const kakaoId = String(user.kakaoId || user.id);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = getDailyDateKey(yesterday);
+
+    writeDailyLocalCache(kakaoId, 'reflection_feedback', answer, yesterdayKey);
+    if (canUseDailySupabaseTables()) {
+      getAuthenticatedClient(kakaoId)?.from('daily_cache').upsert(
+        { kakao_id: kakaoId, cache_date: yesterdayKey, cache_type: 'reflection_feedback', content: answer },
+        { onConflict: 'kakao_id,cache_date,cache_type' },
+      );
+    }
+
+    if (answer === 'match') {
+      await onEarnBP?.(2, 'reflection_correct');
+    }
+  }, [user, onEarnBP]);
+
+  // reflection 팝업에 넘길 어제 데이터
+  const yesterdayKey = useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() - 1);
+    return getDailyDateKey(d);
+  }, []);
+  const yesterdayEntry = useMemo(
+    () => scoreHistory.find((s) => s.date === yesterdayKey),
+    [scoreHistory, yesterdayKey],
+  );
 
   return (
     <div className="page step-fade">
@@ -401,14 +499,6 @@ export default function LandingPage({
                           <span style={{ fontSize: '11px', color: scoreColor(ds), fontWeight: 700 }}>오늘 {ds}점</span>
                           <span style={{ fontSize: '10px', color: 'var(--t4)' }}>자세히 →</span>
                         </button>
-                        {ownedRows.length > 0 && (
-                          <button
-                            onClick={() => setShowItemPicker(true)}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', cursor: 'pointer', fontFamily: 'var(--ff)' }}
-                          >
-                            <span style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 700 }}>+ 기운 올리기</span>
-                          </button>
-                        )}
                       </div>
                     );
                   })()}
@@ -429,7 +519,8 @@ export default function LandingPage({
               {/* 출석 스트릭 위젯 */}
               {gamificationState.loginStreak >= 1 && (() => {
                 const streak = gamificationState.loginStreak;
-                const nextMilestone = streak < 7 ? 7 : streak < 14 ? 14 : streak < 21 ? 21 : null;
+                const MILESTONES = [3, 7, 14, 21, 30];
+                const nextMilestone = MILESTONES.find((m) => m > streak) || null;
                 const remaining = nextMilestone ? nextMilestone - streak : 0;
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,120,50,.08)', border: '1px solid rgba(255,120,50,.2)', borderRadius: 'var(--r1)', marginBottom: 10 }}>
@@ -439,11 +530,11 @@ export default function LandingPage({
                     </div>
                     {nextMilestone && (
                       <span style={{ fontSize: '11px', color: 'var(--t4)' }}>
-                        +{remaining}일 후 +100 BP 보너스
+                        +{remaining}일 후 {nextMilestone === 3 ? '+30 BP' : nextMilestone === 30 ? '+300 BP' : '+100 BP'} 보너스
                       </span>
                     )}
                     {!nextMilestone && (
-                      <span style={{ fontSize: '11px', color: '#ff7832', fontWeight: 700 }}>21일 달성! 최고 기록 🎉</span>
+                      <span style={{ fontSize: '11px', color: '#ff7832', fontWeight: 700 }}>30일 달성! 전설의 수호자 🎉</span>
                     )}
                   </div>
                 );
@@ -493,7 +584,33 @@ export default function LandingPage({
                               isBlocking={isBlockingBadtime}
                               canBlockBadtime={onBlockBadtime != null}
                               currentBp={gamificationState.currentBp}
+                              ownedRows={ownedRows}
+                              pendingItems={pendingItems}
+                              onToggleItem={handleToggleItem}
+                              axisScores={axisScores}
+                              boostMap={boostMap}
                             />
+                            {pendingItems.length > 0 && (
+                              <button
+                                onClick={handleApplyPending}
+                                disabled={isUsingItem}
+                                style={{
+                                  width: '100%', marginTop: 8, padding: '11px 14px',
+                                  background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+                                  borderRadius: 'var(--r1)', color: 'var(--gold)',
+                                  fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)',
+                                  cursor: isUsingItem ? 'not-allowed' : 'pointer',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                  opacity: isUsingItem ? 0.6 : 1,
+                                }}
+                              >
+                                <span>✦</span>
+                                <span>
+                                  {pendingItems.length}개 기운 발동하기
+                                  (+{pendingItems.reduce((s, r) => s + (r.item?.boost || 0), 0)}점)
+                                </span>
+                              </button>
+                            )}
                             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                               <button
                                 onClick={() => shareDaily(dailyResult)}
@@ -659,7 +776,33 @@ export default function LandingPage({
                                 isBlocking={isBlockingBadtime}
                                 canBlockBadtime={onBlockBadtime != null}
                                 currentBp={gamificationState.currentBp}
+                                ownedRows={ownedRows}
+                                pendingItems={pendingItems}
+                                onToggleItem={handleToggleItem}
+                                axisScores={axisScores}
+                                boostMap={boostMap}
                               />
+                              {pendingItems.length > 0 && (
+                                <button
+                                  onClick={handleApplyPending}
+                                  disabled={isUsingItem}
+                                  style={{
+                                    width: '100%', marginTop: 8, padding: '11px 14px',
+                                    background: 'var(--goldf)', border: '1.5px solid var(--acc)',
+                                    borderRadius: 'var(--r1)', color: 'var(--gold)',
+                                    fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)',
+                                    cursor: isUsingItem ? 'not-allowed' : 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                    opacity: isUsingItem ? 0.6 : 1,
+                                  }}
+                                >
+                                  <span>✦</span>
+                                  <span>
+                                    {pendingItems.length}개 기운 발동하기
+                                    (+{pendingItems.reduce((s, r) => s + (r.item?.boost || 0), 0)}점)
+                                  </span>
+                                </button>
+                              )}
                             </div>
                           )}
                         </>
@@ -797,53 +940,6 @@ export default function LandingPage({
         </div>
       )}
 
-      {/* ── 아이템 피커 바텀시트 ── */}
-      {showItemPicker && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 9100, display: 'flex', alignItems: 'flex-end' }}
-          onClick={() => setShowItemPicker(false)}
-        >
-          <div
-            style={{ width: '100%', background: 'var(--bg1)', borderRadius: '20px 20px 0 0', padding: '20px 16px 32px', maxHeight: '72vh', overflowY: 'auto', animation: 'fadeUp .2s ease' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>기운 아이템 쓰기</div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 2 }}>오늘 운세 점수를 즉시 올려드려요</div>
-              </div>
-              <button onClick={() => setShowItemPicker(false)} style={{ background: 'none', border: '1px solid var(--line)', borderRadius: '50%', width: 30, height: 30, cursor: 'pointer', color: 'var(--t4)', fontFamily: 'var(--ff)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {ownedRows.map((row) => {
-                const item = row.item;
-                const alreadyUsed = !!boostMap[item.aspectKey];
-                const label = ASPECT_META[item.aspectKey]?.label || item.aspectKey;
-                return (
-                  <div
-                    key={row.rowId}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'var(--bg2)', borderRadius: 16, border: `1px solid ${alreadyUsed ? 'var(--line)' : 'var(--acc)'}`, opacity: alreadyUsed ? 0.5 : 1 }}
-                  >
-                    <span style={{ fontSize: 28, flexShrink: 0 }}>{item.emoji}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>{item.name}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 2 }}>{label}운 +{item.boost}점</div>
-                      {alreadyUsed && <div style={{ fontSize: '10px', color: 'var(--gold)', marginTop: 2 }}>오늘 이미 이 카테고리에 발동됐어요</div>}
-                    </div>
-                    <button
-                      onClick={() => !alreadyUsed && handleUseItem(row)}
-                      disabled={alreadyUsed || isUsingItem}
-                      style={{ padding: '8px 16px', borderRadius: 999, border: '1px solid var(--acc)', background: alreadyUsed ? 'var(--bg3)' : 'var(--goldf)', color: alreadyUsed ? 'var(--t4)' : 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)', cursor: alreadyUsed ? 'not-allowed' : 'pointer', flexShrink: 0 }}
-                    >
-                      {isUsingItem ? '...' : alreadyUsed ? '완료' : '쓰기'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── 연속 출석 팝업 ── */}
       {showStreakPopup && (
@@ -862,34 +958,36 @@ export default function LandingPage({
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7, marginBottom: 18 }}>
               {(() => {
                 const s = gamificationState.loginStreak;
-                if (s === 7) return '✦ 7일 달성 보너스 +100 BP을 받았어요!';
-                if (s === 14) return '✦ 14일 달성 보너스 +100 BP을 받았어요!';
-                if (s === 21) return '✦ 21일 달성 보너스 +100 BP을 받았어요!';
-                const next = s < 7 ? 7 : s < 14 ? 14 : s < 21 ? 21 : null;
+                const MILESTONE_MSG = { 3: '+30 BP', 7: '+100 BP', 14: '+100 BP', 21: '+100 BP', 30: '+300 BP' };
+                if (MILESTONE_MSG[s]) return `✦ ${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요!`;
+                const MILESTONES = [3, 7, 14, 21, 30];
+                const next = MILESTONES.find((m) => m > s);
                 return next
-                  ? `앞으로 ${next - s}일 더 출석하면 +100 BP 보너스를 받아요`
-                  : `21일을 넘었어요! 대단한 출석왕이에요 🌟`;
+                  ? `앞으로 ${next - s}일 더 출석하면 ${MILESTONE_MSG[next]} 보너스를 받아요`
+                  : `30일을 넘었어요! 전설의 별숨 수호자예요 🌟`;
               })()}
             </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 14 }}>
-              {[7, 14, 21].map(milestone => {
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+              {[{ day: 3, bp: 30 }, { day: 7, bp: 100 }, { day: 14, bp: 100 }, { day: 21, bp: 100 }, { day: 30, bp: 300 }].map(({ day, bp }) => {
                 const s = gamificationState.loginStreak;
-                const done = s >= milestone;
-                const active = !done && (milestone === (s < 7 ? 7 : s < 14 ? 14 : s < 21 ? 21 : null));
+                const done = s >= day;
+                const active = !done && s < day && [3, 7, 14, 21, 30].find((m) => m > s) === day;
                 return (
-                  <div key={milestone} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <div key={day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                     <div style={{
-                      width: 40, height: 40, borderRadius: '50%',
+                      width: 36, height: 36, borderRadius: '50%',
                       background: done ? 'var(--gold)' : active ? 'var(--goldf)' : 'var(--bg2)',
                       border: `2px solid ${done ? 'var(--gold)' : active ? 'var(--acc)' : 'var(--line)'}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: done ? '1.1rem' : 'var(--xs)',
+                      fontSize: done ? '1rem' : '10px',
                       color: done ? '#fff' : active ? 'var(--gold)' : 'var(--t4)',
                       fontWeight: 700,
                     }}>
-                      {done ? '✓' : `${milestone}`}
+                      {done ? '✓' : `${day}`}
                     </div>
-                    <div style={{ fontSize: '9px', color: done ? 'var(--gold)' : 'var(--t4)' }}>{milestone}일</div>
+                    <div style={{ fontSize: '8px', color: done ? 'var(--gold)' : 'var(--t4)', textAlign: 'center' }}>
+                      {day}일<br />+{bp}
+                    </div>
                   </div>
                 );
               })}
@@ -902,6 +1000,15 @@ export default function LandingPage({
             </button>
           </div>
         </div>
+      )}
+
+      {/* ── 어제 운세 피드백 팝업 ── */}
+      {showReflection && yesterdayEntry?.score && (
+        <ReflectionPopup
+          yesterdayScore={yesterdayEntry.score}
+          yesterdayDate={yesterdayKey}
+          onAnswer={handleReflectionAnswer}
+        />
       )}
     </div>
   );

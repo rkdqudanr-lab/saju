@@ -229,6 +229,7 @@ export function useConsultation(
             isDream: opts.isDream || false,
             isName: opts.isName || false,
             isTaegil: opts.isTaegil || false,
+            isSajuChapter: opts.isSajuChapter || false,
             responseStyle: style,
             precision_level: useAppStore.getState().dataPrecision?.level || "low",
             clientHour: new Date().getHours(),
@@ -367,6 +368,7 @@ export function useConsultation(
     selQs,
     answers,
     setShowUpgradeModal,
+    dailyResult: dailyHandler.dailyResult,
   });
 
   const reportHandler = useReportConsultationHandler({

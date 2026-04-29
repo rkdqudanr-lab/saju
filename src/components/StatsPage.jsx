@@ -193,6 +193,7 @@ export default function StatsPage({ callApi }) {
   const [insight, setInsight] = useState('');
   const [insightLoading, setInsightLoading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [reflections, setReflections] = useState([]);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -200,6 +201,7 @@ export default function StatsPage({ callApi }) {
     if (!kakaoId) { setLoading(false); return; }
     loadHistory(kakaoId);
     loadScores(kakaoId);
+    loadReflections(kakaoId);
   }, [user?.id]);
 
   async function loadHistory(kakaoId) {
@@ -216,6 +218,23 @@ export default function StatsPage({ callApi }) {
       // 조용히 실패
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadReflections(kakaoId) {
+    try {
+      const client = getAuthenticatedClient(kakaoId);
+      if (!client) return;
+      const { data, error } = await client
+        .from('daily_cache')
+        .select('cache_date, content')
+        .eq('kakao_id', String(kakaoId))
+        .eq('cache_type', 'reflection_feedback')
+        .order('cache_date', { ascending: false })
+        .limit(90);
+      if (!error && data) setReflections(data);
+    } catch {
+      // 조용히 실패
     }
   }
 
@@ -407,6 +426,49 @@ export default function StatsPage({ callApi }) {
               <ScoreHeatmap scores={scores} />
             </div>
           )}
+
+          {/* 운세 실현 트래커 */}
+          {reflections.length > 0 && (() => {
+            const counts = { match: 0, unsure: 0, miss: 0 };
+            reflections.forEach(r => { if (counts[r.content] !== undefined) counts[r.content]++; });
+            const total = counts.match + counts.unsure + counts.miss;
+            const matchPct = total > 0 ? Math.round((counts.match / total) * 100) : 0;
+            const missPct  = total > 0 ? Math.round((counts.miss  / total) * 100) : 0;
+            const BARS = [
+              { label: '😊 비슷했어요', count: counts.match, pct: matchPct, color: 'var(--gold)' },
+              { label: '😐 모르겠어요', count: counts.unsure, pct: total > 0 ? Math.round((counts.unsure / total) * 100) : 0, color: '#4A8EC4' },
+              { label: '😮 달랐어요',   count: counts.miss,  pct: missPct,  color: '#E05A3A' },
+            ];
+            return (
+              <div style={{ padding: '20px 20px 0' }}>
+                <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>운세 적중률</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 14 }}>
+                  총 {total}일 응답 · 맞은 날 {counts.match}일 ({matchPct}%)
+                </div>
+                {/* 적중률 큰 숫자 */}
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 16 }}>
+                  <span style={{ fontSize: '2.4rem', fontWeight: 800, color: matchPct >= 50 ? 'var(--gold)' : 'var(--t2)' }}>
+                    {matchPct}%
+                  </span>
+                  <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>적중</span>
+                </div>
+                {/* 바 차트 */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {BARS.map(({ label, count, pct, color }) => (
+                    <div key={label}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, color: 'var(--t3)' }}>{label}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--t2)' }}>{count}일 ({pct}%)</span>
+                      </div>
+                      <div style={{ height: 8, background: 'var(--bg3)', borderRadius: 4, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 4, transition: 'width .5s ease' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* AI 인사이트 */}
           <div style={{ padding: '20px 20px 0' }}>
