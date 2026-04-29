@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { getAuthToken } from "../useUserProfile.js";
 import { readStreamResponse } from "../../lib/streamTransport.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../../lib/analysisCache.js";
 
@@ -250,9 +249,7 @@ export function useChatConsultationHandler({
       streamAbortRef.current = new AbortController();
       const signal = streamAbortRef.current.signal;
 
-      const token = getAuthToken();
       const headers = { "Content-Type": "application/json" };
-      if (token) headers.Authorization = `Bearer ${token}`;
 
       const res = await fetch("/api/stream", {
         method: "POST",

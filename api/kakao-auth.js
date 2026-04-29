@@ -4,6 +4,20 @@
 
 import { signJWT } from '../lib/jwt.js';
 
+function appendAuthCookie(res, token) {
+  const secure = process.env.NODE_ENV === 'production';
+  const parts = [
+    `byeolsoom_jwt=${token ? encodeURIComponent(token) : ''}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+  ];
+  if (secure) parts.push('Secure');
+  if (token) parts.push('Max-Age=86400');
+  else parts.push('Max-Age=0');
+  res.setHeader('Set-Cookie', parts.join('; '));
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -65,12 +79,14 @@ export default async function handler(req, res) {
     let token = null;
     if (jwtSecret) {
       token = signJWT({ sub: kakaoId, nickname }, jwtSecret, 86400);
+      appendAuthCookie(res, token);
     } else {
       // 로컬 개발 환경: JWT_SECRET 미설정 시 토큰 생략 (경고만 출력)
       console.warn('[별숨] JWT_SECRET 환경변수가 없어요. 토큰 없이 응답합니다.');
+      appendAuthCookie(res, '');
     }
 
-    return res.status(200).json({ id: kakaoId, nickname, profileImage, token });
+    return res.status(200).json({ id: kakaoId, nickname, profileImage });
 
   } catch (err) {
     console.error('카카오 인증 오류:', err);

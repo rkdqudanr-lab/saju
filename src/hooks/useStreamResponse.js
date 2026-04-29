@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef } from "react";
-import { getAuthToken } from "./useUserProfile.js";
 import { useAppStore } from "../store/useAppStore.js";
 import { DEFAULT_STREAM_ERROR, readStreamResponse } from "../lib/streamTransport.js";
 
@@ -21,9 +20,7 @@ export function useStreamResponse() {
     setIsStreaming(true);
 
     try {
-      const token = getAuthToken();
       const headers = { "Content-Type": "application/json" };
-      if (token) headers.Authorization = `Bearer ${token}`;
 
       const res = await fetch("/api/stream", {
         method: "POST",

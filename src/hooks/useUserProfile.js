@@ -16,13 +16,10 @@ function setAuthUser(val) {
   if (val === null) { try { localStorage.removeItem('byeolsoom_user'); } catch {} }
 }
 export function getAuthToken() {
-  try { return localStorage.getItem('byeolsoom_jwt') || null; } catch { return null; }
+  return null;
 }
 function setAuthToken(token) {
-  try {
-    if (token) { localStorage.setItem('byeolsoom_jwt', token); }
-    else { localStorage.removeItem('byeolsoom_jwt'); }
-  } catch {}
+  try { localStorage.removeItem('byeolsoom_jwt'); } catch {}
 }
 export function getKeepLogin() {
   try { return localStorage.getItem('byeolsoom_keep_login') === 'true'; } catch { return false; }
@@ -55,12 +52,7 @@ export function useUserProfile() {
   // 단, 로그인 유지하기가 켜져 있으면 만료 체크를 건너뜀 (서버 401 시 자동 로그아웃)
   const [user, setUser] = useState(() => {
     const storedUser = getAuthUser();
-    const token = getAuthToken();
-    if (token && isJwtExpired(token) && !getKeepLogin()) {
-      try { localStorage.removeItem('byeolsoom_user'); } catch {}
-      try { localStorage.removeItem('byeolsoom_jwt'); } catch {}
-      return null;
-    }
+    try { localStorage.removeItem('byeolsoom_jwt'); } catch {}
     return storedUser;
   });
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
@@ -145,7 +137,6 @@ export function useUserProfile() {
         const res  = await fetch('/api/kakao-auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, redirectUri: window.location.origin }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || '인증 실패');
-        if (data.token) setAuthToken(data.token);
         const rawImage = data.profileImage || null;
         const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: rawImage ? rawImage.replace(/^http:\/\//, 'https://') : null };
         setUser(userData);
@@ -392,6 +383,7 @@ export function useUserProfile() {
 
   const kakaoLogout = useCallback(() => {
     if (window.Kakao?.Auth) window.Kakao.Auth.logout(() => {});
+    fetch('/api/logout', { method: 'POST' }).catch(() => {});
     const prevUser = getAuthUser();
     if (prevUser?.id) clearAuthClient(prevUser.id);
     setUser(null);
@@ -406,6 +398,7 @@ export function useUserProfile() {
   // ── 세션 만료 처리: 상태 정리 + 로그인 필요 알림 ──
   // API가 401을 반환하거나 JWT가 만료됐을 때 호출됨
   const handleSessionExpired = useCallback(() => {
+    fetch('/api/logout', { method: 'POST' }).catch(() => {});
     const prevUser = getAuthUser();
     if (prevUser?.id) clearAuthClient(prevUser.id);
     setUser(null);

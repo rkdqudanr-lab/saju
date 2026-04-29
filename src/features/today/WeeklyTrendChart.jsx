@@ -71,15 +71,12 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const max = Math.max(...validVals), min = Math.min(...validVals);
   const range = max - min || 1;
   const toY = (val) => 100 - ((val - min) / range) * 80 - 10;
-  const toX = (i) => 5 + (i / 6) * 90;
+  const toX = (i) => 8 + (i / 6) * 84;
 
-  const segments = [];
-  let seg = [];
-  trend.forEach((val, i) => {
-    if (val !== null) { seg.push(`${toX(i)},${toY(val)}`); }
-    else { if (seg.length > 1) segments.push(seg.join(' ')); seg = []; }
-  });
-  if (seg.length > 1) segments.push(seg.join(' '));
+  const allPoints = trend
+    .map((val, i) => val !== null ? `${toX(i)},${toY(val)}` : null)
+    .filter(Boolean)
+    .join(' ');
 
   const todayVal = trend[6];
   const yesterdayVal = trend.slice(0, 6).reverse().find((v) => v !== null);
@@ -99,8 +96,8 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
         {todayVal !== null && <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>{todayVal}점</div>}
       </div>
       <div style={{ position: 'relative', width: '100%', height: 60 }}>
-        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {segments.map((pts, idx) => <polyline key={idx} fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={pts} style={{ opacity: 0.8 }} />)}
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
+          {allPoints && <polyline fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={allPoints} style={{ opacity: 0.8 }} />}
           {trend.map((val, i) => {
             if (val === null) return null;
             const x = toX(i), y = toY(val);

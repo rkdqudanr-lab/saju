@@ -8,7 +8,6 @@ import { getAuthenticatedClient } from "../lib/supabase.js";
 import { spendBP } from "../utils/gamificationLogic.js";
 import { useAppStore } from "../store/useAppStore.js";
 import { readStreamResponse } from "../lib/streamTransport.js";
-import { getAuthToken } from "../hooks/useUserProfile.js";
 
 const FEATURE_COST = 10;
 
@@ -217,9 +216,7 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
 [질문]
 ${msg}`;
 
-      const token = getAuthToken();
       const headers = { "Content-Type": "application/json" };
-      if (token) headers.Authorization = `Bearer ${token}`;
 
       const chatContext = `${buildCtx?.() || ''}\n\n[채팅 응답 규칙]\n이번 응답은 채팅 모드입니다. [요약], 제목, 섹션 헤더를 쓰지 말고 바로 대화체로 이어서 말해주세요.`;
 

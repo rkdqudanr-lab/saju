@@ -522,7 +522,7 @@ export default function TodayDetailPage({
                 </div>
                 <button
                   type="button"
-                  onClick={() => onRefresh?.({ skipBpCharge: true, skipConfirm: true, saveHistory: false, incrementCount: false })}
+                  onClick={() => onRefresh?.({ skipBpCharge: true, skipConfirm: true, saveHistory: false, incrementCount: false, ignoreDailyLimit: true })}
                   style={{
                     padding: '9px 12px',
                     borderRadius: 12,
@@ -538,6 +538,29 @@ export default function TodayDetailPage({
                 </button>
               </div>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{overallGuide.summary}</div>
+              {Object.keys(boostMap).length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onRefresh?.({ skipBpCharge: true, skipConfirm: true, saveHistory: false, incrementCount: false, ignoreDailyLimit: true, boostMap })}
+                  disabled={dailyLoading}
+                  style={{
+                    marginTop: 12,
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 12,
+                    border: '1px solid var(--acc)',
+                    background: 'var(--goldf)',
+                    color: 'var(--gold)',
+                    fontSize: 'var(--xs)',
+                    fontWeight: 700,
+                    fontFamily: 'var(--ff)',
+                    cursor: dailyLoading ? 'not-allowed' : 'pointer',
+                    opacity: dailyLoading ? 0.5 : 1,
+                  }}
+                >
+                  {dailyLoading ? '정화 중...' : '✦ 아이템 기운 반영해서 정화 재점'}
+                </button>
+              )}
             </div>
 
             <DailyRadarChart scores={actionableScores} />
