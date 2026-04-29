@@ -96,7 +96,7 @@ export function getDailyAxisScores(baseScore, boostMap) {
   const todayDate = new Date().toISOString().slice(0, 10);
   const getDailyNoise = (idx) => {
     const val = Number(todayDate.replace(/-/g, '')) + idx;
-    return (((val * 9301 + 49297) % 233280) / 233280) * 16 - 8;
+    return (((val * 9301 + 49297) % 233280) / 233280) * 30 - 15;
   };
 
   return AXES_9.map((axis, idx) => {

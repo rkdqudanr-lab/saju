@@ -332,6 +332,7 @@ export default function TodayDetailPage({
               boostMap={boostMap}
               ownedRows={ownedRows}
               onUseItem={canUseItems ? handleUseItem : null}
+              onToggleItem={canUseItems ? handleUseItem : null}
             />
           </Suspense>
         ) : (
