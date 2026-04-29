@@ -472,7 +472,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
       {/* ── 나의 성장 메뉴 ── */}
       <div style={{ padding: '16px 20px 0' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>✦ 나의 별숨</div>
-        <MenuRow icon="✦" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달·상승 별자리 해석" onClick={() => setStep(STEP.NATAL)} />
+        <MenuRow icon="✦" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달 별자리 해석" onClick={() => setStep(STEP.NATAL)} />
         <MenuRow icon="🌊" label="나의 대운 흐름" sub="10년 단위 대운 사이클 분석" onClick={() => setStep(STEP.DAEUN)} />
         <MenuRow icon="🎴" label="사주 명함 카드" sub="나만의 사주 명함 만들기" onClick={() => setStep(STEP.SAJU_CARD)} />
         <MenuRow icon="◈" label="별숨 타로" sub="타로 카드로 보는 오늘의 메시지" onClick={() => setStep(STEP.TAROT)} />

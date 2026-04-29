@@ -243,7 +243,9 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
       const now = new Date().getFullYear();
       const sunSummary  = sun  ? `태양(본질): ${sun.n}(${sun.s}) — ${sun.desc}` : '';
       const moonSummary = moon ? `달(감정): ${moon.n}(${moon.s}) — ${moon.desc}` : '달 정보 없음(태양 기반으로 감정 해석 부탁)';
-      const ascSummary  = asc  ? `상승(첫인상): ${asc.n}(${asc.s}) — ${asc.desc}` : '상승 정보 없음(태양 기반으로 첫인상 해석 부탁)';
+      const ascSummary  = asc
+        ? `상승(첫인상): ${asc.n}(${asc.s}) — ${asc.desc}`
+        : '상승궁 정보 없음(출생지 정보가 없어 상승궁은 확정하지 말고, 태양·달 기반 인상 해석은 보조적으로만 부탁)';
       const userMsg = `나의 종합 점성술 리포트를 작성해주세요. ${sunSummary}. ${moonSummary}. ${ascSummary}. 현재 ${now}년.`;
       const text = await postAskText({
         userMessage: userMsg,
@@ -293,7 +295,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
           )}
           {!moon && !asc && (
             <div style={{ background: 'var(--bg2)', border: '1px solid rgba(180,140,50,0.2)', borderRadius: 10, padding: '6px 14px', fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-              태어난 시각을 입력하면 달·상승도 볼 수 있어요
+              달자리는 계산해드리고 있어요. 상승궁은 출생지 정보가 있어야 정확히 볼 수 있어요.
             </div>
           )}
         </div>

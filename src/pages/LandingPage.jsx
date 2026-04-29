@@ -11,7 +11,8 @@ import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import ReflectionPopup from "../components/ReflectionPopup.jsx";
 import { parseDailyLines } from "../utils/parseDailyLines.js";
 import { findItem } from "../utils/gachaItems.js";
-import { getDailyAxisScores, TODAY_AXIS_CACHE, ASPECT_META } from "../features/today/getDailyAxisScores.js";
+import { ACTIONABLE_AXIS_KEYS, ASPECT_META, getAverageFortuneScore, getDailyAxisScores, TODAY_AXIS_CACHE } from "../features/today/getDailyAxisScores.js";
+import { TODAY_AXIS_TEXT_CACHE, deriveByeolsoomPick } from "../features/today/fortuneAxisTools.js";
 import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
 import SamplePreview from "../components/SamplePreview.jsx";
@@ -140,15 +141,36 @@ export default function LandingPage({
   const [keepLogin, setKeepLoginState] = useState(getKeepLogin());
   const nightMode = isNightMode();
   const [boostMap, setBoostMap] = useState({});
+  const [axisTextOverrides, setAxisTextOverrides] = useState({});
   const [ownedRows, setOwnedRows] = useState([]);
   const [pendingItems, setPendingItems] = useState([]);
   const [isUsingItem, setIsUsingItem] = useState(false);
   const [boostedScore, setBoostedScore] = useState(null);
 
   const baseScore = boostedScore ?? dailyResult?.score ?? 0;
+  const parsedDaily = useMemo(
+    () => parseDailyLines(dailyResult?.text || ''),
+    [dailyResult?.text],
+  );
   const axisScores = useMemo(
-    () => getDailyAxisScores(baseScore, boostMap),
-    [baseScore, boostMap],
+    () => getDailyAxisScores(baseScore, boostMap, parsedDaily.categories),
+    [baseScore, boostMap, parsedDaily.categories],
+  );
+  const todayScore = useMemo(
+    () => getAverageFortuneScore(axisScores),
+    [axisScores],
+  );
+  const actionableScores = useMemo(
+    () => axisScores.filter((score) => ACTIONABLE_AXIS_KEYS.includes(score.key)),
+    [axisScores],
+  );
+  const scoreBoostDelta = useMemo(() => {
+    const originalScore = parsedDaily.score ?? dailyResult?.score ?? 0;
+    return todayScore && originalScore ? todayScore - originalScore : 0;
+  }, [dailyResult?.score, parsedDaily.score, todayScore]);
+  const derivedPick = useMemo(
+    () => deriveByeolsoomPick(actionableScores, parsedDaily.synergy),
+    [actionableScores, parsedDaily.synergy],
   );
   const nearbyJeolgi = getNearbyJeolgi();
   const [scoreHistory, setScoreHistory] = useState([]);
@@ -165,7 +187,7 @@ export default function LandingPage({
   const shareDaily = useCallback(async (dailyResult) => {
     if (!dailyResult) return;
     const parsed = parseDailyLines(dailyResult.text || '');
-    const score = parsed.score ?? dailyResult.score;
+    const score = todayScore || parsed.score || dailyResult.score;
     const summary = parsed.summary || (dailyResult.text || '').slice(0, 80);
     const dateStr = today ? `${today.month}월 ${today.day}일` : '';
     const text = `✦ 오늘의 별숨${dateStr ? ` · ${dateStr}` : ''}\n${summary}${score != null ? `\n\n별숨점수 ${score}점` : ''}\n\n— 별숨 앱`;
@@ -175,7 +197,7 @@ export default function LandingPage({
       await navigator.clipboard?.writeText(text);
       showToast?.('클립보드에 복사됐어요', 'success');
     }
-  }, [today, showToast]);
+  }, [today, showToast, todayScore]);
 
   useEffect(() => {
     if (!user) return;
@@ -259,6 +281,36 @@ export default function LandingPage({
         } catch { setBoostMap({}); }
       })
       .catch(() => setBoostMap({}));
+  }, [user?.id, dailyResult?.score]);
+
+  useEffect(() => {
+    if (!user || !dailyResult) return;
+    const kakaoId = String(user.kakaoId || user.id);
+    if (!canUseDailySupabaseTables()) {
+      try {
+        const parsed = JSON.parse(readDailyLocalCache(kakaoId, TODAY_AXIS_TEXT_CACHE, getDailyDateKey()) || '{}');
+        setAxisTextOverrides(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
+      } catch {
+        setAxisTextOverrides({});
+      }
+      return;
+    }
+    getAuthenticatedClient(kakaoId)
+      ?.from('daily_cache')
+      .select('content')
+      .eq('kakao_id', kakaoId)
+      .eq('cache_date', getDailyDateKey())
+      .eq('cache_type', TODAY_AXIS_TEXT_CACHE)
+      .maybeSingle()
+      .then(({ data }) => {
+        try {
+          const parsed = JSON.parse(data?.content || '{}');
+          setAxisTextOverrides(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
+        } catch {
+          setAxisTextOverrides({});
+        }
+      })
+      .catch(() => setAxisTextOverrides({}));
   }, [user?.id, dailyResult?.score]);
 
   // 보유 아이템 로드 (aspectKey 있는 것만)
@@ -355,13 +407,13 @@ export default function LandingPage({
 
   // 오늘 점수 받으면 히스토리에 즉시 반영
   useEffect(() => {
-    if (!dailyResult?.score) return;
+    if (!todayScore) return;
     const today = new Date().toISOString().slice(0, 10);
     setScoreHistory(prev => {
       if (!prev.length) return prev;
-      return prev.map(item => item.date === today ? { ...item, score: dailyResult.score } : item);
+      return prev.map(item => item.date === today ? { ...item, score: todayScore } : item);
     });
-  }, [dailyResult?.score]);
+  }, [todayScore]);
 
   // 로그인 후 연속 출석 팝업 (하루 1회)
   useEffect(() => {
@@ -488,7 +540,7 @@ export default function LandingPage({
                     {form.by && saju ? (saju.ilganPoetic ? `${saju.ilganPoetic}` : '') : '별숨이 당신을 기억해요'}
                   </div>
                   {dailyResult?.score != null && (() => {
-                    const ds = boostedScore ?? dailyResult.score;
+                    const ds = todayScore || boostedScore || dailyResult.score;
                     return (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                         <button
@@ -584,11 +636,11 @@ export default function LandingPage({
                               isBlocking={isBlockingBadtime}
                               canBlockBadtime={onBlockBadtime != null}
                               currentBp={gamificationState.currentBp}
-                              ownedRows={ownedRows}
-                              pendingItems={pendingItems}
-                              onToggleItem={handleToggleItem}
                               axisScores={axisScores}
                               boostMap={boostMap}
+                              scoreBoost={scoreBoostDelta}
+                              categoryTextOverrides={axisTextOverrides}
+                              synergyOverride={derivedPick}
                             />
                             {pendingItems.length > 0 && (
                               <button
@@ -625,7 +677,7 @@ export default function LandingPage({
                                 <span>↑</span><span>공유하기</span>
                               </button>
                               <button
-                                onClick={() => setStep(STEP.DAILY_HOROSCOPE)}
+                                onClick={() => setStep(STEP.TODAY_DETAIL)}
                                 style={{
                                   flex: 2, padding: '9px 12px',
                                   background: 'var(--goldf)', border: '1px solid var(--acc)',
@@ -776,11 +828,11 @@ export default function LandingPage({
                                 isBlocking={isBlockingBadtime}
                                 canBlockBadtime={onBlockBadtime != null}
                                 currentBp={gamificationState.currentBp}
-                                ownedRows={ownedRows}
-                                pendingItems={pendingItems}
-                                onToggleItem={handleToggleItem}
                                 axisScores={axisScores}
                                 boostMap={boostMap}
+                                scoreBoost={scoreBoostDelta}
+                                categoryTextOverrides={axisTextOverrides}
+                                synergyOverride={derivedPick}
                               />
                               {pendingItems.length > 0 && (
                                 <button

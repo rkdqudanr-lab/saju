@@ -4,6 +4,7 @@ import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { CATS_ALL, breakAtNatural } from "../utils/constants.js";
 import { STEP } from "../utils/steps.js";
 import { calcBiorhythm, BIORHYTHM_CHANNELS, toBarWidth, getBiorhythmStatus, BIORHYTHM_STATUS_LABEL } from "../utils/biorhythm.js";
+import { parseBirthTime } from "../utils/birthTime.js";
 
 // ─────────────────────────────────────────────
 // 일진 점수 계산 (5단계 색상)
@@ -249,7 +250,8 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   const userIlji = useMemo(() => {
     if (!form?.by || !form?.bm || !form?.bd) return null;
     try {
-      const s = getSaju(+form.by, +form.bm, +form.bd, form.bh ? Math.floor(+form.bh) : 12);
+      const [h, min] = parseBirthTime(form.noTime, form.bh);
+      const s = getSaju(+form.by, +form.bm, +form.bd, h, min);
       return s ? s.ilji : null;
     } catch { return null; }
   }, [form]);

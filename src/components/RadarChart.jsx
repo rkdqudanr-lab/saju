@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { getSaju, CGO, JJO, OC } from "../utils/saju.js";
+import { parseBirthTime } from "../utils/birthTime.js";
 import { STEP } from "../utils/steps.js";
 
 // ─────────────────────────────────────────────
@@ -132,7 +133,10 @@ export default function RadarChart({ form, otherProfiles, setStep, onAddOther })
 
   const mySaju = useMemo(() => {
     if (!form?.by || !form?.bm || !form?.bd) return null;
-    try { return getSaju(+form.by, +form.bm, +form.bd, form.bh ? Math.floor(+form.bh) : 12); }
+    try {
+      const [h, min] = parseBirthTime(form.noTime, form.bh);
+      return getSaju(+form.by, +form.bm, +form.bd, h, min);
+    }
     catch { return null; }
   }, [form]);
 
@@ -140,7 +144,10 @@ export default function RadarChart({ form, otherProfiles, setStep, onAddOther })
 
   const otherSaju = useMemo(() => {
     return validOthers.map(p => {
-      try { return getSaju(+p.by, +p.bm, +p.bd, p.bh ? Math.floor(+p.bh) : 12); }
+      try {
+        const [h, min] = parseBirthTime(p.noTime, p.bh);
+        return getSaju(+p.by, +p.bm, +p.bd, h, min);
+      }
       catch { return null; }
     });
   }, [validOthers]);

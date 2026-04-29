@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { getSaju } from '../utils/saju.js';
 import { getSun } from '../utils/astrology.js';
+import { parseBirthTime } from '../utils/birthTime.js';
 import { supabase } from '../lib/supabase.js';
 import { STEP } from '../utils/steps.js';
 import {
@@ -31,8 +32,9 @@ export default function GroupBulseumPage({ setStep, initialCode, user }) {
 
   const enrichedMembers = useMemo(() => members.map((m) => {
     try {
-      const saju = getSaju(+m.birth_year, +m.birth_month, +m.birth_day, m.birth_hour != null ? +m.birth_hour : 12);
-      const sun = getSun(+m.birth_month, +m.birth_day);
+      const [h, min] = parseBirthTime(false, m.birth_hour);
+      const saju = getSaju(+m.birth_year, +m.birth_month, +m.birth_day, h, min);
+      const sun = getSun(+m.birth_year, +m.birth_month, +m.birth_day);
       return { ...m, saju, sun };
     } catch {
       return { ...m, saju: null, sun: null };

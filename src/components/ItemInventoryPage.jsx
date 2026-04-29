@@ -14,6 +14,7 @@ import ItemDetailModal from '../features/inventory/ItemDetailModal.jsx';
 import UseItemModal    from '../features/inventory/UseItemModal.jsx';
 import SynthesisModal  from '../features/inventory/SynthesisModal.jsx';
 import { FORTUNE_LABELS, ITEM_BOOSTS_CACHE } from '../features/inventory/inventoryUtils.js';
+import { mergeBoostEntry } from '../features/today/fortuneAxisTools.js';
 
 const SEGMENTS = [
   { id: '전체',   label: '전체' },
@@ -36,6 +37,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const [showSynth, setShowSynth] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
   const [sortMode, setSortMode] = useState('recommended');
+  const [fortuneFilter, setFortuneFilter] = useState('all');
   // boostMap: { [aspectKey]: { itemId, boost, name, emoji } }
   const [boostMap, setBoostMap] = useState({});
   const today = getDailyDateKey();
@@ -82,6 +84,19 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
 
   useEffect(() => { loadInventory(); }, [loadInventory]);
 
+  useEffect(() => {
+    if (category !== '전체' && fortuneFilter !== 'all') {
+      setFortuneFilter('all');
+    }
+  }, [category, fortuneFilter]);
+
+  useEffect(() => {
+    if (fortuneFilter === 'all') return;
+    if (!groupedItems.some(([key]) => key === fortuneFilter)) {
+      setFortuneFilter('all');
+    }
+  }, [fortuneFilter, groupedItems]);
+
   // 아이템 발동 = 소비: 인벤토리 삭제 + boostMap 캐시 저장
   async function handleActivate(item) {
     if (!kakaoId || !item?.aspectKey || !item?.boost) return;
@@ -96,7 +111,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
       }
       const nextMap = {
         ...boostMap,
-        [item.aspectKey]: { itemId: String(item.id), boost: item.boost, name: item.name, emoji: item.emoji },
+        [item.aspectKey]: mergeBoostEntry(boostMap?.[item.aspectKey], [{ rowId: String(item.id), item }]),
       };
       writeDailyLocalCache(kakaoId, ITEM_BOOSTS_CACHE, JSON.stringify(nextMap), today);
       if (canUseDailySupabaseTables()) {
@@ -147,6 +162,19 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const groupedItems = Object.entries(
     sortedFiltered.reduce((acc, item) => { const k = item.aspectKey || 'general'; if (!acc[k]) acc[k] = []; acc[k].push(item); return acc; }, {})
   ).sort(([a], [b]) => a === 'general' ? 1 : b === 'general' ? -1 : (FORTUNE_LABELS[a] || a).localeCompare(FORTUNE_LABELS[b] || b, 'ko'));
+
+  const fortuneOptions = useMemo(() => ([
+    { id: 'all', label: '전체' },
+    ...groupedItems.map(([key, group]) => ({
+      id: key,
+      label: `${FORTUNE_LABELS[key] || key} (${group.length})`,
+    })),
+  ]), [groupedItems]);
+
+  const visibleGroupedItems = useMemo(() => {
+    if (fortuneFilter === 'all') return groupedItems;
+    return groupedItems.filter(([key]) => key === fortuneFilter);
+  }, [fortuneFilter, groupedItems]);
 
   const itemGridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', gap: 10, alignItems: 'stretch' };
   const cardProps = (item, idx, prefix) => ({
@@ -281,7 +309,33 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
           </div>
         ) : category === '전체' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            {groupedItems.map(([key, group]) => (
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
+              {fortuneOptions.map((option) => {
+                const isActive = fortuneFilter === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setFortuneFilter(option.id)}
+                    style={{
+                      flexShrink: 0,
+                      padding: '7px 11px',
+                      borderRadius: 999,
+                      border: `1px solid ${isActive ? 'var(--acc)' : 'var(--line)'}`,
+                      background: isActive ? 'var(--goldf)' : 'var(--bg2)',
+                      color: isActive ? 'var(--gold)' : 'var(--t4)',
+                      fontWeight: isActive ? 700 : 500,
+                      fontSize: 'var(--xs)',
+                      fontFamily: 'var(--ff)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            {visibleGroupedItems.map(([key, group]) => (
               <section key={key} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                   <div>

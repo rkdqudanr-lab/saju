@@ -1,17 +1,8 @@
 import { useMemo, useCallback, useEffect } from "react";
 import { getTodayInfo, getSaju, ON, calcSipsin } from "../utils/saju.js";
-import { getSun, getMoon, getAsc } from "../utils/astrology.js";
+import { getSun, getMoon } from "../utils/astrology.js";
 import { useAppStore } from "../store/useAppStore.js";
-
-// 폼 bh 값(소수점 시간, 예: "9.5000")을 정수 [시, 분]으로 변환 (KST 기준)
-function parseBh(noTime, bh) {
-  if (noTime || bh === '' || bh == null) return [12, 0];
-  const dec = +bh;
-  if (isNaN(dec)) return [12, 0];
-  const h = Math.floor(dec);
-  const min = Math.round((dec - h) * 60);
-  return [h, min];
-}
+import { parseBirthTime } from "../utils/birthTime.js";
 
 export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
   const today = useMemo(() => getTodayInfo(), []);
@@ -24,24 +15,30 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     if (!(form.by && form.bm && (form.bd || isApproximate))) return null;
     try {
       const bd = form.bd ? +form.bd : 15;
-      const [h, min] = parseBh(form.noTime || isApproximate, form.bh);
+      const [h, min] = parseBirthTime(form.noTime || isApproximate, form.bh);
       return getSaju(+form.by, +form.bm, bd, h, min);
     } catch (e) { console.error('[별숨] getSaju 오류:', e); return null; }
   }, [form, isApproximate]);
   const sun  = useMemo(() => {
     const bd = form.bd || approxBd;
-    if (!(form.bm && bd)) return null;
-    try { return getSun(+form.bm, +bd); } catch (e) { console.error('[별숨] getSun 오류:', e); return null; }
-  }, [form.bm, form.bd, approxBd]);
+    if (!(form.by && form.bm && bd)) return null;
+    try {
+      const [h, min] = parseBirthTime(form.noTime || isApproximate, form.bh);
+      return getSun(+form.by, +form.bm, +bd, h, min);
+    } catch (e) { console.error('[별숨] getSun 오류:', e); return null; }
+  }, [form.by, form.bm, form.bd, form.bh, form.noTime, approxBd, isApproximate]);
   const moon = useMemo(() => {
     const bd = form.bd || approxBd;
     if (!(form.by && form.bm && bd)) return null;
-    try { return getMoon(+form.by, +form.bm, +bd); } catch (e) { console.error('[별숨] getMoon 오류:', e); return null; }
-  }, [form.by, form.bm, form.bd, approxBd]);
+    try {
+      const [h, min] = parseBirthTime(form.noTime || isApproximate, form.bh);
+      return getMoon(+form.by, +form.bm, +bd, h, min);
+    } catch (e) { console.error('[별숨] getMoon 오류:', e); return null; }
+  }, [form.by, form.bm, form.bd, form.bh, form.noTime, approxBd, isApproximate]);
   const asc  = useMemo(() => {
     if (!(!form.noTime && form.bh)) return null;
-    try { return getAsc(+form.bh); } catch (e) { console.error('[별숨] getAsc 오류:', e); return null; }
-  }, [form]);
+    return null;
+  }, [form.noTime, form.bh]);
   const age  = form.by ? today.year - +form.by : 0;
   const formOk = !!(form.by && form.bm && form.bd);
   // 년+월만 있어도 체험 가능
@@ -52,23 +49,29 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
     const f = activeForm;
     if (!(f.by && f.bm && f.bd)) return null;
     try {
-      const [h, min] = parseBh(f.noTime, f.bh);
+      const [h, min] = parseBirthTime(f.noTime, f.bh);
       return getSaju(+f.by, +f.bm, +f.bd, h, min);
     } catch (e) { console.error('[별숨] activeSaju 오류:', e); return null; }
   }, [activeForm]);
   const activeSun    = useMemo(() => {
-    if (!(activeForm.bm && activeForm.bd)) return null;
-    try { return getSun(+activeForm.bm, +activeForm.bd); } catch (e) { console.error('[별숨] activeSun 오류:', e); return null; }
+    if (!(activeForm.by && activeForm.bm && activeForm.bd)) return null;
+    try {
+      const [h, min] = parseBirthTime(activeForm.noTime, activeForm.bh);
+      return getSun(+activeForm.by, +activeForm.bm, +activeForm.bd, h, min);
+    } catch (e) { console.error('[별숨] activeSun 오류:', e); return null; }
   }, [activeForm]);
   const activeMoon   = useMemo(() => {
     const bd = activeForm.bd ? +activeForm.bd : (activeForm.by && activeForm.bm && !activeForm.bd ? 15 : null);
     if (!(activeForm.by && activeForm.bm && bd)) return null;
-    try { return getMoon(+activeForm.by, +activeForm.bm, bd); } catch (e) { console.error('[별숨] activeMoon 오류:', e); return null; }
+    try {
+      const [h, min] = parseBirthTime(activeForm.noTime, activeForm.bh);
+      return getMoon(+activeForm.by, +activeForm.bm, bd, h, min);
+    } catch (e) { console.error('[별숨] activeMoon 오류:', e); return null; }
   }, [activeForm]);
   const activeAsc    = useMemo(() => {
     if (!(!activeForm.noTime && activeForm.bh)) return null;
-    try { return getAsc(+activeForm.bh); } catch (e) { console.error('[별숨] activeAsc 오류:', e); return null; }
-  }, [activeForm]);
+    return null;
+  }, [activeForm.noTime, activeForm.bh]);
   const activeAge    = activeForm.by ? today.year - +activeForm.by : 0;
 
   // 나이대 분류: 언어 톤 조정용

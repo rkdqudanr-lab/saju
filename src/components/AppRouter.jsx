@@ -9,7 +9,6 @@ import { STEP } from "../utils/steps.js";
 
 // static imports (항상 로드)
 import SkeletonLoader      from "./SkeletonLoader.jsx";
-import DailyHoroscopePage  from "../pages/DailyHoroscopePage.jsx";
 import TodayDetailPage     from "../pages/TodayDetailPage.jsx";
 import ReportStep          from "../pages/ReportStep.jsx";
 import ChatStep            from "../pages/ChatStep.jsx";
@@ -81,7 +80,7 @@ export default function AppRouter({ ctx }) {
     formOk, formOkApprox, onboardingDone,
     otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
     consentFlags, saveOtherProfile, saveProfileToSupabase,
-    responseStyle, lifeStage, fontSize, saveSettings,
+    responseStyle, lifeStage, fontSize, instantTyping, saveSettings,
     setShowProfileModal, setShowOtherProfileModal,
     editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
 
@@ -351,37 +350,41 @@ export default function AppRouter({ ctx }) {
 
       {/* DAILY_HOROSCOPE */}
       {step === STEP.DAILY_HOROSCOPE && (
-        <DailyHoroscopePage
-          today={today}
+        <TodayDetailPage
           dailyResult={dailyResult} dailyLoading={dailyLoading}
           dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
-          askDailyHoroscope={askDailyHoroscope}
-          currentBp={gamificationState?.currentBp || 0}
+          gamificationState={gamificationState}
           onBlockBadtime={handleBlockBadtime} isBlockingBadtime={isBlockingBadtime}
-          freeRechargeAvailable={freeRechargeAvailable} earnBP={earnBP} showToast={showToast}
+          setStep={setStep} onRefresh={askDailyHoroscope} onSpendBp={spendBP} showToast={showToast} callApi={callApi}
         />
       )}
 
       {/* SETTINGS */}
       {step === STEP.SETTINGS && (
         <Suspense fallback={<PageSpinner />}>
-          <SettingsPage
-            form={form} setForm={setForm} user={user}
-            saveProfileToSupabase={saveProfileToSupabase}
-            onBack={() => setStep(STEP.HOME)}
-            showToast={showToast}
-            responseStyle={responseStyle}
-            onStyleChange={(val) => saveSettings({ responseStyle: val })}
-            sidebarPrefs={sidebarPrefs}
-            onSidebarPrefsChange={(prefs) => {
-              setSidebarPrefs(prefs);
-              if (user?.id) saveAnalysisCache(user.id, 'sidebar_prefs', JSON.stringify(prefs));
-            }}
-            lifeStage={lifeStage}
-            onLifeStageChange={(val) => saveSettings({ lifeStage: val })}
-            fontSize={fontSize}
-            onFontSizeChange={(val) => saveSettings({ fontSize: val })}
-          />
+          <div className="page step-fade" style={{ paddingTop: 56 }}>
+            <div className="inner" style={{ paddingTop: 16, paddingBottom: 60 }}>
+            <SettingsPage
+              form={form} setForm={setForm} user={user}
+              saveProfileToSupabase={saveProfileToSupabase}
+              onBack={() => setStep(STEP.HOME)}
+              showToast={showToast}
+              responseStyle={responseStyle}
+              onStyleChange={(val) => saveSettings({ responseStyle: val })}
+              instantTyping={instantTyping}
+              onInstantTypingChange={(val) => saveSettings({ instantTyping: val })}
+              sidebarPrefs={sidebarPrefs}
+              onSidebarPrefsChange={(prefs) => {
+                setSidebarPrefs(prefs);
+                if (user?.id) saveAnalysisCache(user.id, 'sidebar_prefs', JSON.stringify(prefs));
+              }}
+              lifeStage={lifeStage}
+              onLifeStageChange={(val) => saveSettings({ lifeStage: val })}
+              fontSize={fontSize}
+              onFontSizeChange={(val) => saveSettings({ fontSize: val })}
+            />
+            </div>
+          </div>
         </Suspense>
       )}
 
@@ -413,7 +416,7 @@ export default function AppRouter({ ctx }) {
           dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
           gamificationState={gamificationState}
           onBlockBadtime={handleBlockBadtime} isBlockingBadtime={isBlockingBadtime}
-          setStep={setStep} onRefresh={askDailyHoroscope} onSpendBp={spendBP} showToast={showToast}
+          setStep={setStep} onRefresh={askDailyHoroscope} onSpendBp={spendBP} showToast={showToast} callApi={callApi}
         />
       )}
 
@@ -559,3 +562,4 @@ export default function AppRouter({ ctx }) {
     </div>
   );
 }
+

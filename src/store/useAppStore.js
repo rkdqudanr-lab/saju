@@ -15,6 +15,7 @@ export const useAppStore = create((set, get) => ({
   profile: null,
   form: {},
   isDark: true,
+  instantTyping: false,
   showToast: null,
   kakaoLogin: null,
   kakaoLogout: null,
@@ -24,6 +25,7 @@ export const useAppStore = create((set, get) => ({
   setProfile: (profile) => set({ profile }),
   setForm: (form) => set({ form }),
   setIsDark: (isDark) => set({ isDark }),
+  setInstantTyping: (instantTyping) => set({ instantTyping }),
   setAuthFns: (fns) => set(fns),
 
   // ── 사주 / 별자리 (useSajuContext에서 주입) ──────────────────

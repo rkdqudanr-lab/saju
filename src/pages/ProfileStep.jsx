@@ -8,10 +8,24 @@ function getDaysInMonth(year, month) {
   return new Date(parseInt(year), parseInt(month), 0).getDate();
 }
 
+function hasBirthTimeAnswer(form) {
+  return !!(form?.noTime || form?.bh);
+}
+
+function isProfileReady(form) {
+  const year = parseInt(form?.by, 10);
+  const month = parseInt(form?.bm, 10);
+  const day = parseInt(form?.bd, 10);
+  const validYear = String(form?.by || "").length === 4 && year >= 1800 && year <= 2040;
+  const validMonth = month >= 1 && month <= 12;
+  const validDay = day >= 1 && day <= getDaysInMonth(form?.by, form?.bm);
+  return !!(validYear && validMonth && validDay && hasBirthTimeAnswer(form) && form?.gender);
+}
+
 export default function ProfileStep({
   form, setForm,
   user, saju, sun, moon, asc,
-  formOk, editingMyProfile, setEditingMyProfile,
+  editingMyProfile, setEditingMyProfile,
   fieldTouched, setFieldTouched,
   otherProfiles, setOtherProfiles,
   activeProfileIdx, setActiveProfileIdx,
@@ -21,6 +35,8 @@ export default function ProfileStep({
   saveProfileToSupabase,
   showToast,
 }) {
+  const profileReady = isProfileReady(form);
+
   return (
     <div className="page step-fade">
       <div className="inner">
@@ -28,7 +44,7 @@ export default function ProfileStep({
           {[0, 1, 2].map(i => <div key={i} className={`dot ${i === 0 ? 'active' : 'todo'}`} />)}
         </div>
 
-        {formOk && (
+        {profileReady && (
           <div className="card" style={{ marginBottom: 'var(--sp2)' }}>
             <div className="card-title" style={{ fontSize: 'var(--md)' }}>누구의 별숨을 볼까요?</div>
 
@@ -57,7 +73,7 @@ export default function ProfileStep({
             </div>
 
             {otherProfiles.map((p, i) => {
-              const pSun = p.bm && p.bd ? getSun(+p.bm, +p.bd) : null;
+              const pSun = p.by && p.bm && p.bd ? getSun(+p.by, +p.bm, +p.bd) : null;
               return (
                 <div key={i} className={`profile-pick-card ${activeProfileIdx === i + 1 ? 'active' : ''}`} onClick={() => setActiveProfileIdx(i + 1)}>
                   <div className="ppc-left">
@@ -90,7 +106,7 @@ export default function ProfileStep({
           </div>
         )}
 
-        {(!formOk || editingMyProfile) && (
+        {(!profileReady || editingMyProfile) && (
           <div className="card">
             <div className="card-title">{editingMyProfile ? '내 프로필 수정' : '반가워요'}</div>
             <div className="card-sub">생년월일만 있으면 사주와 별자리를 함께 읽어드릴게요</div>
@@ -204,8 +220,12 @@ export default function ProfileStep({
               </div>
             )}
             <button className="btn-main"
-              disabled={editingMyProfile ? !formOk : !(formOk && fieldTouched.by && fieldTouched.bm && fieldTouched.bd)}
+              disabled={!profileReady}
               onClick={async () => {
+                if (!profileReady) {
+                  showToast?.('태어난 시각(또는 모름 선택)과 성별을 모두 입력해주세요', 'error');
+                  return;
+                }
                 if (user) {
                   const ok = await saveProfileToSupabase(form, user);
                   if (ok === false) { showToast?.('저장에 실패했어요. 다시 시도해봐요', 'error'); return; }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { getAuthenticatedClient, supabase } from '../lib/supabase.js';
 
 // 광장 사주 정보 공개 설정 로컬 저장
@@ -99,6 +99,8 @@ export default function SettingsPage({
   showToast,
   responseStyle: responseStyleProp = 'M',
   onStyleChange,
+  instantTyping = false,
+  onInstantTypingChange,
   sidebarPrefs,
   onSidebarPrefsChange,
   lifeStage: lifeStageProp = 'free',
@@ -728,6 +730,36 @@ export default function SettingsPage({
             </div>
             <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.5, marginTop: 4 }}>
               꺼두면 광장에서 별자리·일간 정보 없이 닉네임만 표시돼요.
+            </div>
+          </div>
+        )}
+
+        {tab === 2 && (
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>
+            <div className="card-title">바로보기</div>
+            <div className="card-sub" style={{ marginBottom: 8 }}>
+              별숨에게 질문할 때 타이핑 효과를 켜거나 끌 수 있어요.
+            </div>
+            <div
+              className="toggle-row"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                const next = !instantTyping;
+                onInstantTypingChange?.(next);
+              }}
+            >
+              <button
+                className={`toggle ${instantTyping ? 'on' : 'off'}`}
+                role="switch"
+                aria-checked={instantTyping}
+                aria-label="바로보기"
+                onClick={e => {
+                  e.stopPropagation();
+                  const next = !instantTyping;
+                  onInstantTypingChange?.(next);
+                }}
+              />
+              <span className="toggle-label">바로보기 {instantTyping ? '끄기' : '켜기'}</span>
             </div>
           </div>
         )}
