@@ -348,7 +348,7 @@ export default function AppRouter({ ctx }) {
         </Suspense>
       )}
 
-      {/* DAILY_HOROSCOPE */}
+      {/* DAILY_HOROSCOPE (18) — 레거시 진입점, TODAY_DETAIL과 동일 컴포넌트 */}
       {step === STEP.DAILY_HOROSCOPE && (
         <TodayDetailPage
           dailyResult={dailyResult} dailyLoading={dailyLoading}

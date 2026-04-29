@@ -10,8 +10,7 @@ import { getKeepLogin, setKeepLogin } from "../hooks/useUserProfile.js";
 import DailyStarCardV2 from "../components/DailyStarCardV2.jsx";
 import ReflectionPopup from "../components/ReflectionPopup.jsx";
 import { parseDailyLines } from "../utils/parseDailyLines.js";
-import { findItem } from "../utils/gachaItems.js";
-import { ACTIONABLE_AXIS_KEYS, ASPECT_META, getAverageFortuneScore, getDailyAxisScores, TODAY_AXIS_CACHE } from "../features/today/getDailyAxisScores.js";
+import { ACTIONABLE_AXIS_KEYS, getAverageFortuneScore, getDailyAxisScores, TODAY_AXIS_CACHE } from "../features/today/getDailyAxisScores.js";
 import { TODAY_AXIS_TEXT_CACHE, deriveByeolsoomPick } from "../features/today/fortuneAxisTools.js";
 import BPDisplay from "../components/BPDisplay.jsx";
 import GuardianLevelBadge from "../components/GuardianLevelBadge.jsx";
@@ -90,17 +89,6 @@ function getNearbyJeolgi() {
   return null;
 }
 
-// boostMap 캐시 저장
-async function saveBoostMap(kakaoId, boostMap) {
-  const content = JSON.stringify(boostMap);
-  writeDailyLocalCache(String(kakaoId), TODAY_AXIS_CACHE, content, getDailyDateKey());
-  if (!canUseDailySupabaseTables()) return;
-  const client = getAuthenticatedClient(String(kakaoId));
-  await client?.from('daily_cache').upsert(
-    { kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: TODAY_AXIS_CACHE, content },
-    { onConflict: 'kakao_id,cache_date,cache_type' },
-  );
-}
 
 // 운세 점수 → 색상
 function scoreColor(score) {
@@ -142,12 +130,8 @@ export default function LandingPage({
   const nightMode = isNightMode();
   const [boostMap, setBoostMap] = useState({});
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
-  const [ownedRows, setOwnedRows] = useState([]);
-  const [pendingItems, setPendingItems] = useState([]);
-  const [isUsingItem, setIsUsingItem] = useState(false);
-  const [boostedScore, setBoostedScore] = useState(null);
 
-  const baseScore = boostedScore ?? dailyResult?.score ?? 0;
+  const baseScore = dailyResult?.score ?? 0;
   const parsedDaily = useMemo(
     () => parseDailyLines(dailyResult?.text || ''),
     [dailyResult?.text],
@@ -313,102 +297,10 @@ export default function LandingPage({
       .catch(() => setAxisTextOverrides({}));
   }, [user?.id, dailyResult?.score]);
 
-  // 보유 아이템 로드 (aspectKey 있는 것만)
-  useEffect(() => {
-    if (!user || !dailyResult) return;
-    const kakaoId = String(user.kakaoId || user.id);
-    getAuthenticatedClient(kakaoId)
-      ?.from('user_shop_inventory')
-      .select('item_id')
-      .eq('kakao_id', kakaoId)
-      .then(({ data, error }) => {
-        if (error) { setOwnedRows([]); return; }
-        setOwnedRows(
-          (data || [])
-            .map((row) => ({ rowId: String(row.item_id), item: findItem(String(row.item_id)) }))
-            .filter((row) => row.item?.aspectKey),
-        );
-      })
-      .catch(() => setOwnedRows([]));
-  }, [user?.id, dailyResult?.score]);
-
-  // 카테고리별 "+" 버튼 토글 (A안: 선택 → 일괄 적용)
-  const handleToggleItem = useCallback((row) => {
-    setPendingItems((prev) => {
-      const exists = prev.find((p) => p.rowId === row.rowId);
-      return exists ? prev.filter((p) => p.rowId !== row.rowId) : [...prev, row];
-    });
-  }, []);
-
-  // pendingItems 일괄 발동 (AI 재호출 없음 — 점수만 반영)
-  const handleApplyPending = useCallback(async () => {
-    if (!user || !pendingItems.length || isUsingItem) return;
-    const kakaoId = String(user.kakaoId || user.id);
-    setIsUsingItem(true);
-    try {
-      if (canUseDailySupabaseTables()) {
-        await getAuthenticatedClient(kakaoId)
-          ?.from('user_shop_inventory')
-          .delete()
-          .eq('kakao_id', kakaoId)
-          .in('item_id', pendingItems.map((r) => String(r.rowId)));
-      }
-      const nextBoostMap = { ...boostMap };
-      let totalBoost = 0;
-      for (const row of pendingItems) {
-        const item = row.item;
-        nextBoostMap[item.aspectKey] = { itemId: String(item.id), boost: item.boost, name: item.name, emoji: item.emoji };
-        totalBoost += item.boost;
-      }
-      await saveBoostMap(kakaoId, nextBoostMap);
-      setBoostMap(nextBoostMap);
-      setOwnedRows((prev) => prev.filter((r) => !pendingItems.find((p) => p.rowId === r.rowId)));
-      setBoostedScore((prev) => Math.min(100, (prev ?? dailyResult?.score ?? 0) + totalBoost));
-      setPendingItems([]);
-      showToast?.(`✨ ${pendingItems.length}개 기운 발동! +${totalBoost}점 반영됐어요`, 'success');
-    } catch {
-      showToast?.('아이템 발동 중 오류가 발생했어요.', 'error');
-    } finally {
-      setIsUsingItem(false);
-    }
-  }, [user, pendingItems, boostMap, dailyResult, isUsingItem, showToast]);
-
-  // 아이템 발동: 소비 + 즉시 점수 반영
-  const handleUseItem = useCallback(async (row) => {
-    if (!user || !row?.item || isUsingItem) return;
-    const kakaoId = String(user.kakaoId || user.id);
-    const item = row.item;
-    if (!item.aspectKey || !item.boost) return;
-    setIsUsingItem(true);
-    try {
-      if (canUseDailySupabaseTables()) {
-        await getAuthenticatedClient(kakaoId)
-          ?.from('user_shop_inventory')
-          .delete()
-          .eq('kakao_id', kakaoId)
-          .eq('item_id', String(row.rowId));
-      }
-      const nextBoostMap = {
-        ...boostMap,
-        [item.aspectKey]: { itemId: String(item.id), boost: item.boost, name: item.name, emoji: item.emoji },
-      };
-      await saveBoostMap(kakaoId, nextBoostMap);
-      setBoostMap(nextBoostMap);
-      setOwnedRows((prev) => prev.filter((r) => r.rowId !== row.rowId));
-      setBoostedScore((prev) => Math.min(100, (prev ?? dailyResult?.score ?? 0) + item.boost));
-      const label = ASPECT_META[item.aspectKey]?.label || item.aspectKey;
-      showToast?.(`${item.emoji} ${item.name} 발동! ${label}운 +${item.boost}점 반영됐어요`, 'success');
-    } catch {
-      showToast?.('아이템 발동 중 오류가 발생했어요.', 'error');
-    } finally {
-      setIsUsingItem(false);
-    }
-  }, [user, boostMap, dailyResult, isUsingItem, showToast]);
-
   // 오늘 점수 받으면 히스토리에 즉시 반영
   useEffect(() => {
     if (!todayScore) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getDailyDateKey();
     setScoreHistory(prev => {
       if (!prev.length) return prev;
       return prev.map(item => item.date === today ? { ...item, score: todayScore } : item);
@@ -418,7 +310,7 @@ export default function LandingPage({
   // 로그인 후 연속 출석 팝업 (하루 1회)
   useEffect(() => {
     if (!user || !gamificationState.loginStreak) return;
-    const popupKey = `streak_popup_${new Date().toISOString().slice(0,10)}`;
+    const popupKey = `streak_popup_${getDailyDateKey()}`;
     if (localStorage.getItem(popupKey)) return;
     const t = setTimeout(() => {
       setShowStreakPopup(true);
@@ -540,7 +432,7 @@ export default function LandingPage({
                     {form.by && saju ? (saju.ilganPoetic ? `${saju.ilganPoetic}` : '') : '별숨이 당신을 기억해요'}
                   </div>
                   {dailyResult?.score != null && (() => {
-                    const ds = todayScore || boostedScore || dailyResult.score;
+                    const ds = todayScore || dailyResult.score;
                     return (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                         <button
@@ -638,34 +530,20 @@ export default function LandingPage({
                               currentBp={gamificationState.currentBp}
                               axisScores={axisScores}
                               boostMap={boostMap}
-                              ownedRows={ownedRows}
-                              pendingItems={pendingItems}
-                              onToggleItem={handleToggleItem}
                               scoreBoost={scoreBoostDelta}
                               categoryTextOverrides={axisTextOverrides}
                               synergyOverride={derivedPick}
                             />
-                            {pendingItems.length > 0 && (
-                              <button
-                                onClick={handleApplyPending}
-                                disabled={isUsingItem}
-                                style={{
-                                  width: '100%', marginTop: 8, padding: '11px 14px',
-                                  background: 'var(--goldf)', border: '1.5px solid var(--acc)',
-                                  borderRadius: 'var(--r1)', color: 'var(--gold)',
-                                  fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)',
-                                  cursor: isUsingItem ? 'not-allowed' : 'pointer',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                  opacity: isUsingItem ? 0.6 : 1,
-                                }}
-                              >
-                                <span>✦</span>
-                                <span>
-                                  {pendingItems.length}개 기운 발동하기
-                                  (+{pendingItems.reduce((s, r) => s + (r.item?.boost || 0), 0)}점)
-                                </span>
-                              </button>
-                            )}
+                            {(() => {
+                              const appliedCount = Object.keys(boostMap).length;
+                              const totalBoostApplied = Object.values(boostMap).reduce((s, v) => s + (Number(v?.boost) || 0), 0);
+                              return appliedCount > 0 ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 999, fontSize: 11, color: 'var(--gold)', fontWeight: 700, marginTop: 6, alignSelf: 'flex-start' }}>
+                                  <span>✦</span>
+                                  <span>오늘 {appliedCount}개 기운 적용 중 (+{totalBoostApplied}점)</span>
+                                </div>
+                              ) : null;
+                            })()}
                             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                               <button
                                 onClick={() => shareDaily(dailyResult)}
@@ -689,7 +567,7 @@ export default function LandingPage({
                                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                                 }}
                               >
-                                <span>✦</span><span>상세 보기</span>
+                                <span>✦</span><span>상세 보기 · 기운 올리기</span>
                               </button>
                             </div>
                           </>
@@ -833,34 +711,10 @@ export default function LandingPage({
                                 currentBp={gamificationState.currentBp}
                                 axisScores={axisScores}
                                 boostMap={boostMap}
-                                ownedRows={ownedRows}
-                                pendingItems={pendingItems}
-                                onToggleItem={handleToggleItem}
                                 scoreBoost={scoreBoostDelta}
                                 categoryTextOverrides={axisTextOverrides}
                                 synergyOverride={derivedPick}
                               />
-                              {pendingItems.length > 0 && (
-                                <button
-                                  onClick={handleApplyPending}
-                                  disabled={isUsingItem}
-                                  style={{
-                                    width: '100%', marginTop: 8, padding: '11px 14px',
-                                    background: 'var(--goldf)', border: '1.5px solid var(--acc)',
-                                    borderRadius: 'var(--r1)', color: 'var(--gold)',
-                                    fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)',
-                                    cursor: isUsingItem ? 'not-allowed' : 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                    opacity: isUsingItem ? 0.6 : 1,
-                                  }}
-                                >
-                                  <span>✦</span>
-                                  <span>
-                                    {pendingItems.length}개 기운 발동하기
-                                    (+{pendingItems.reduce((s, r) => s + (r.item?.boost || 0), 0)}점)
-                                  </span>
-                                </button>
-                              )}
                             </div>
                           )}
                         </>

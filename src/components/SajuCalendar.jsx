@@ -1003,7 +1003,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               <span style={{ marginLeft: 'auto', color: 'var(--t4)' }}>›</span>
             </button>
             <button
-              onClick={() => setStep(STEP.DAILY_HOROSCOPE)}
+              onClick={() => setStep(STEP.TODAY_DETAIL)}
               style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
             >
               <span style={{ fontSize: '1rem' }}>✦</span>

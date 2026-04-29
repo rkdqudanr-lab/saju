@@ -4,6 +4,11 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 > **세션 시작 시 반드시 먼저 읽을 것**: [`docs/DASHBOARD.md`](docs/DASHBOARD.md)
 > 전체 기능 Q&A, 키 매핑, 버그 패턴, 리팩토링 로드맵이 정리되어 있음.
+>
+> **한글 파일 수정 최우선 원칙**
+> - 한글이 포함된 파일은 반드시 UTF-8로만 읽고/수정/저장할 것
+> - 인코딩을 확실히 보장할 수 없는 도구/방식으로는 한글 파일을 수정하지 말 것
+> - 수정 직후 깨진 한글(`�`, `ì`, `ë`, `ê`, `Ã`, `Â` 등)이 없는지 즉시 확인할 것
 
 ## Project Overview
 
@@ -20,9 +25,12 @@ npm run preview    # Preview production build locally
 
 ## Encoding Rules
 
-- Always save new or edited text/code files as UTF-8.
-- Never overwrite Korean text files using a different encoding such as CP949/EUC-KR/ANSI.
-- If Korean text appears garbled, check the file encoding first before changing the content.
+- 모든 신규/수정 텍스트 파일은 반드시 UTF-8로 저장한다.
+- 가능하면 UTF-8(BOM 없음) 기준을 유지하고, 한글이 포함된 파일을 CP949/EUC-KR/ANSI로 다시 저장하지 않는다.
+- 한글이 들어 있는 기존 파일은 파일 전체 재작성보다 필요한 부분만 정확히 수정해 인코딩 변형 위험을 줄인다.
+- PowerShell, 스크립트, 에디터 설정 등 파일 입출력 경로에서도 UTF-8을 명시한다. 인코딩을 보장할 수 없는 도구로는 한글 파일을 수정하지 않는다.
+- 수정 직후 diff 또는 파일 재열람으로 `�`, `ì`, `ë`, `ê`, `Ã`, `Â` 같은 깨짐 문자가 없는지 반드시 검증한다.
+- 한글이 깨져 보이면 내용을 먼저 바꾸지 말고 인코딩 문제 여부를 확인한 뒤, 의미를 복구해서 UTF-8로 정상 저장한다.
 
 No test runner is configured. There is a standalone script:
 ```bash

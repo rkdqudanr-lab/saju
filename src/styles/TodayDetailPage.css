@@ -62,6 +62,7 @@
   display: flex;
   flex-direction: column;
   padding: var(--sp3);
+  padding-bottom: calc(var(--sp3) + 20px);
   overflow-y: auto;
   gap: var(--sp2);
 }

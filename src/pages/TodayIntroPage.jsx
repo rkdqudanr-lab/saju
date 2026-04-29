@@ -20,9 +20,9 @@ export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoadin
     setToday(`${year}년 ${month}월 ${date}일 (${days[now.getDay()]})`);
   }, []);
 
-  // 이미 오늘 운세를 물어봤으면 메인으로 이동 (캐시 로딩이 비동기라 [dailyResult]로 감시)
+  // 이미 오늘 운세 캐시가 있으면 바로 상세로 이동
   useEffect(() => {
-    if (dailyResult && !asked.current) setStep(STEP.HOME);
+    if (dailyResult && !asked.current) setStep(STEP.TODAY_DETAIL);
   }, [dailyResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleKnowMore = async () => {

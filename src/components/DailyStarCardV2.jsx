@@ -24,14 +24,14 @@ const LOW_SCORE_THRESHOLD = 45;
 const LEGACY_ICONS = ['✨', '🍽️', '🌿', '🔢', '💬'];
 const LEGACY_COLORS = ['var(--lav)', 'var(--teal)', 'var(--gold)', 'var(--gold)', 'var(--rose)'];
 const SYNERGY_META = [
-  { key: 'food', label: '\uC74C\uC2DD', icon: '\u{1F372}', tint: 'var(--gold)' },
-  { key: 'place', label: '\uC7A5\uC18C', icon: '\u{1F4CD}', tint: 'var(--teal)' },
-  { key: 'color', label: '\uC0C9', icon: '\u{1F3A8}', tint: 'var(--lav)' },
-  { key: 'item', label: '\uC544\uC774\uD15C', icon: '\u{1F9FF}', tint: 'var(--gold)' },
-  { key: 'number', label: '\uC22B\uC790', icon: '\u{1F522}', tint: 'var(--teal)' },
-  { key: 'direction', label: '\uBC29\uD5A5', icon: '\u{1F9ED}', tint: 'var(--mint)' },
-  { key: 'communication', label: '\uC18C\uD1B5', icon: '\u{1F4AC}', tint: 'var(--rose)' },
-  { key: 'action', label: '\uD589\uB3D9', icon: '\u2728', tint: 'var(--gold)' },
+  { key: 'food', label: '음식', icon: '🍲', tint: 'var(--gold)' },
+  { key: 'place', label: '장소', icon: '📍', tint: 'var(--teal)' },
+  { key: 'color', label: '색', icon: '🎨', tint: 'var(--lav)' },
+  { key: 'item', label: '아이템', icon: '🧿', tint: 'var(--gold)' },
+  { key: 'number', label: '숫자', icon: '🔢', tint: 'var(--teal)' },
+  { key: 'direction', label: '방향', icon: '🧭', tint: 'var(--mint)' },
+  { key: 'communication', label: '소통', icon: '💬', tint: 'var(--rose)' },
+  { key: 'action', label: '행동', icon: '✨', tint: 'var(--gold)' },
 ];
 
 function splitSynergyValue(value) {
@@ -52,20 +52,21 @@ export default function DailyStarCardV2({
   className = '',
   axisScores = [],
   boostMap = {},
-  ownedRows = null,
-  onUseItem = null,
-  pendingItems = [],
-  onToggleItem = null,
   scoreBoost = 0,
   categoryTextOverrides = {},
   synergyOverride = null,
+  // kept for backward-compat, not used
+  ownedRows = null,
+  pendingItems = [],
+  onToggleItem = null,
+  onUseItem = null,
 }) {
+  void ownedRows; void pendingItems; void onToggleItem; void onUseItem;
+
   const [blocked, setBlocked] = useState(false);
   const setStep = useAppStore((s) => s.setStep);
   const parsed = parseDailyLines(result?.text || '');
 
-  // parsed.score (텍스트 실시간 파싱) 우선, 없으면 gamification이 별도 설정한 result.score로 폴백
-  // useDailyConsultationHandler가 { ...prev, text } 로 업데이트하므로 flickering 없음
   const score = parsed.score ?? result?.score ?? null;
   const scoreBoostVal = Number(scoreBoost) || 0;
   const displayedScore = (score !== null && !isNaN(score)) ? Math.min(100, Number(score) + scoreBoostVal) : null;
@@ -76,10 +77,7 @@ export default function DailyStarCardV2({
     ? Object.fromEntries(
         Object.entries(parsed.categories).map(([key, value]) => [
           key,
-          {
-            ...value,
-            desc: categoryTextOverrides?.[key] || value?.desc || '',
-          },
+          { ...value, desc: categoryTextOverrides?.[key] || value?.desc || '' },
         ]),
       )
     : null;
@@ -90,31 +88,6 @@ export default function DailyStarCardV2({
 
   const hasBadtime = badtime && score !== null && !Number.isNaN(score) && score < BADTIME_THRESHOLD;
   const hasStructuredData = !!(categories || synergy);
-  const categoryActionRows = categories
-    ? CATEGORY_META.map(({ key, label }) => {
-        const cat = categories[key];
-        if (!cat) return null;
-        const axisScore = axisScores.find((s) => s.key === key);
-        const catScore = cat.score ?? (cat.stars != null ? Math.max(20, Math.min(100, cat.stars * 20)) : null);
-        const scoreValue = axisScore?.total ?? catScore ?? 50;
-        const matchingRow = ownedRows?.find((r) => r.item?.aspectKey === key) || null;
-        return {
-          key,
-          label,
-          scoreValue,
-          isLow: scoreValue <= LOW_SCORE_THRESHOLD,
-          matchingRow,
-          boost: matchingRow?.item?.boost || 0,
-        };
-      }).filter(Boolean)
-    : [];
-  const primaryActionRow = categoryActionRows
-    .filter((entry) => entry.matchingRow)
-    .sort((a, b) => {
-      if (a.isLow !== b.isLow) return a.isLow ? -1 : 1;
-      if (a.scoreValue !== b.scoreValue) return a.scoreValue - b.scoreValue;
-      return b.boost - a.boost;
-    })[0] || null;
 
   const handleBlockBadtime = useCallback(async () => {
     if (isBlocking || !onBlockBadtime) return;
@@ -204,43 +177,13 @@ export default function DailyStarCardV2({
         )}
 
         {categories && (
-          <div style={{
-            background: 'var(--bg2)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--r2)',
-            padding: 16,
-            marginBottom: 16,
-          }}>
+          <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: 16, marginBottom: 16 }}>
             <div className="dsc-section-title-row">
-              <div style={{
-                fontSize: 'var(--xs)',
-                fontWeight: 700,
-                color: 'var(--gold)',
-                letterSpacing: '.06em',
-              }}>
-                {'\uC624\uB298\uC758 \uC6B4\uC138'}
+              <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)', letterSpacing: '.06em' }}>
+                오늘의 운세
               </div>
-              {primaryActionRow && onUseItem && (
-                <button
-                  type="button"
-                  className="dsc-inline-action-btn"
-                  onClick={() => onUseItem(primaryActionRow.matchingRow)}
-                >
-                  {primaryActionRow.isLow ? `${primaryActionRow.label} \uC544\uC774\uD15C \uC0AC\uC6A9` : '\uC544\uC774\uD15C \uC0AC\uC6A9'}
-                </button>
-              )}
             </div>
-            <div style={{
-              fontSize: 'var(--xs)',
-              fontWeight: 700,
-              color: 'var(--gold)',
-              letterSpacing: '.06em',
-              display: 'none',
-              marginBottom: 12,
-            }}>
-              ✦ 오늘의 운세
-            </div>
-            {CATEGORY_META.map(({ key, label, icon }) => {
+            {CATEGORY_META.map(({ key, label }) => {
               const cat = categories[key];
               if (!cat) return null;
               const axisScore = axisScores.find((s) => s.key === key);
@@ -248,108 +191,28 @@ export default function DailyStarCardV2({
               const scoreValue = axisScore?.total ?? catScore ?? 50;
               const bonus = axisScore?.bonus || 0;
               const isLow = scoreValue <= LOW_SCORE_THRESHOLD;
-              const scoreColor = bonus > 0 ? 'var(--gold)' : isLow ? '#c46b4f' : 'var(--t2)';
-              const matchingRow = ownedRows?.find((r) => r.item?.aspectKey === key);
-              const isPending = pendingItems.some(pi => pi.rowId === matchingRow?.rowId);
-              const boostVal = matchingRow?.item?.boost || 0;
-              const pendingBoost = isPending ? boostVal : 0;
-              const totalPredicted = Math.min(100, scoreValue + pendingBoost);
+              const barColor = bonus > 0 ? 'var(--gold)' : isLow ? '#c46b4f' : 'var(--t2)';
+              const boostEntry = boostMap[key];
 
               return (
                 <div key={key} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
                     <span style={{ fontSize: 13, color: 'var(--t2)', minWidth: 40, fontWeight: 600 }}>{label}</span>
-                    <div style={{ flex: 1, height: 10, background: 'var(--bg3)', borderRadius: 5, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{
-                        position: 'absolute', left: 0, top: 0, height: '100%',
-                        width: `${scoreValue}%`, background: scoreColor, borderRadius: 5, zIndex: 1
-                      }} />
-                      {pendingBoost > 0 && (
-                        <div style={{
-                          position: 'absolute', left: `${scoreValue}%`, top: 0, height: '100%',
-                          width: `${Math.min(100 - scoreValue, pendingBoost)}%`,
-                          background: 'var(--gold)', borderRadius: '0 3px 3px 0',
-                          animation: 'dsc-boost-pulse 1.5s ease-in-out infinite',
-                          zIndex: 0
-                        }} />
-                      )}
+                    <div style={{ flex: 1, height: 10, background: 'var(--bg3)', borderRadius: 5, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${scoreValue}%`, background: barColor, borderRadius: 5 }} />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, justifyContent: 'flex-end' }}>
-                      {pendingBoost > 0 && (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', animation: 'dsc-text-pulse 1.5s infinite' }}>
-                          {totalPredicted}점
-                        </span>
-                      )}
-                      <span style={{ minWidth: 34, textAlign: 'right', fontSize: 12, fontWeight: 800, color: scoreColor, opacity: pendingBoost > 0 ? 0.5 : 1 }}>
-                        {scoreValue}점
-                      </span>
-                      {onToggleItem && (
-                        matchingRow ? (
-                          <button
-                            type="button"
-                            onClick={() => onToggleItem(matchingRow)}
-                            style={{
-                              flexShrink: 0,
-                              padding: '4px 9px',
-                              borderRadius: 999,
-                              border: isPending ? '1px solid var(--gold)' : '1px solid var(--acc)',
-                              background: isPending ? 'var(--gold)' : 'var(--goldf)',
-                              color: isPending ? '#fff' : 'var(--gold)',
-                              fontSize: 10,
-                              fontWeight: 700,
-                              fontFamily: 'var(--ff)',
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap',
-                              transition: 'all 0.2s',
-                            }}
-                          >
-                            {isPending ? '취소' : `선택 (+${matchingRow.item.boost})`}
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setStep(STEP.GACHA)}
-                            style={{
-                              flexShrink: 0,
-                              padding: '4px 9px',
-                              borderRadius: 999,
-                              border: '1px solid var(--line)',
-                              background: 'var(--bg3)',
-                              color: 'var(--t4)',
-                              fontSize: 10,
-                              fontWeight: 700,
-                              fontFamily: 'var(--ff)',
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            아이템 얻기
-                          </button>
-                        )
-                      )}
-                    </div>
+                    <span style={{ minWidth: 34, textAlign: 'right', fontSize: 12, fontWeight: 800, color: barColor }}>
+                      {scoreValue}점
+                    </span>
                   </div>
                   {cat.desc && (
-                    <div style={{
-                      fontSize: 11,
-                      color: 'var(--t3)',
-                      lineHeight: 1.5,
-                      paddingLeft: 50,
-                      wordBreak: 'keep-all',
-                    }}>
+                    <div style={{ fontSize: 11, color: 'var(--t3)', lineHeight: 1.5, paddingLeft: 50, wordBreak: 'keep-all' }}>
                       {cat.desc}
                     </div>
                   )}
-                  {boostMap[key] && (
-                    <div style={{
-                      fontSize: 11,
-                      color: 'var(--gold)',
-                      fontWeight: 600,
-                      lineHeight: 1.5,
-                      paddingLeft: 50,
-                      marginTop: 3,
-                    }}>
-                      ✨ {boostMap[key].emoji} {boostMap[key].name}의 기운이 깃들었어요 (+{boostMap[key].boost}점)
+                  {boostEntry && (
+                    <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 600, lineHeight: 1.5, paddingLeft: 50, marginTop: 3 }}>
+                      ✨ {boostEntry.emoji} {boostEntry.name}{boostEntry.items?.length > 1 ? ` 외 ${boostEntry.items.length - 1}개` : ''}의 기운이 깃들었어요 (+{boostEntry.boost}점)
                     </div>
                   )}
                 </div>
@@ -361,8 +224,8 @@ export default function DailyStarCardV2({
         {synergy && (
           <div className="dsc-section dsc-section-synergy">
             <div className="dsc-section-header">
-              <span className="dsc-section-icon">{'\u{1FA84}'}</span>
-              <span className="dsc-section-title-text">{'\uBCC4\uC228\uD53D'}</span>
+              <span className="dsc-section-icon">🪄</span>
+              <span className="dsc-section-title-text">별숨픽</span>
             </div>
             <div className="dsc-synergy-grid">
               {SYNERGY_META
@@ -370,7 +233,6 @@ export default function DailyStarCardV2({
                 .filter(({ value }) => value)
                 .map(({ label, icon, tint, value }) => {
                   const { primary, description } = splitSynergyValue(value);
-
                   return (
                     <div key={label} className="dsc-synergy-card" style={{ '--dsc-synergy-tint': tint }}>
                       <div className="dsc-synergy-card-top">
@@ -412,11 +274,9 @@ export default function DailyStarCardV2({
         {hasBadtime && (
           <div className="dsc-badtime">
             <div className="dsc-badtime-title">주의 흐름</div>
-
             {badtime?.symptom && (
               <div className="dsc-badtime-symptom">징후: {badtime.symptom}</div>
             )}
-
             {!blocked && (
               <motion.button
                 onClick={handleBlockBadtime}
@@ -432,13 +292,11 @@ export default function DailyStarCardV2({
                 {isBlocking ? '액막이 발동 중...' : '액막이 발동 (BP -20)'}
               </motion.button>
             )}
-
             {blocked && (
               <div className="dsc-block-done">
                 {badtime?.transformation || '별숨이 주의 흐름을 한 번 눌러줬어요.'}
               </div>
             )}
-
             {(!canBlockBadtime || currentBp < 20) && (
               <div className="dsc-bp-hint">
                 BP를 충전하거나 미션을 완료하면 액막이를 발동할 수 있어요.

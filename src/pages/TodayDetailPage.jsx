@@ -417,13 +417,11 @@ export default function TodayDetailPage({
     setIsApplyingAxis(true);
 
     try {
-      if (canUseDailySupabaseTables()) {
-        await getAuthenticatedClient(String(kakaoId))
-          ?.from('user_shop_inventory')
-          .delete()
-          .eq('kakao_id', String(kakaoId))
-          .in('item_id', rowIds);
-      }
+      await getAuthenticatedClient(String(kakaoId))
+        ?.from('user_shop_inventory')
+        .delete()
+        .eq('kakao_id', String(kakaoId))
+        .in('item_id', rowIds);
 
       const nextBoostMap = {
         ...boostMap,
@@ -480,24 +478,6 @@ export default function TodayDetailPage({
         onApply={handleApplyAxisItems}
         onGoGacha={() => setStep(STEP.GACHA)}
       />
-
-      {isApplyingAxis && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 360,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'rgba(0, 0, 0, 0.55)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-        }}>
-          <div style={{ width: 42, height: 42, border: '3px solid rgba(255,255,255,0.2)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', marginBottom: 12 }} />
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700 }}>항목 한줄을 다시 읽는 중...</div>
-        </div>
-      )}
 
       <div className="today-detail-header">
         <button className="today-detail-back-btn" onClick={() => setStep(STEP.HOME)} aria-label="홈으로 돌아가기">←</button>

@@ -76,7 +76,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
       const { data: inv } = await client.from('user_shop_inventory').select('item_id, unlocked_at').eq('kakao_id', String(kakaoId)).order('unlocked_at', { ascending: false });
       setItems((inv || []).map((r) => {
         const info = shopItemsMap.get(r.item_id) || findItem(r.item_id);
-        return info ? { ...info, _invItemId: r.item_id, id: info.id || r.item_id } : null;
+        return info ? { ...info, _invItemId: r.item_id, id: info.id || r.item_id, unlocked_at: r.unlocked_at } : null;
       }).filter(Boolean));
     } catch { showToast?.('아이템 목록을 불러오지 못했어요', 'error'); }
     finally { setLoading(false); }
@@ -102,13 +102,11 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
     if (!kakaoId || !item?.aspectKey || !item?.boost) return;
     setToggling(item.id);
     try {
-      if (canUseDailySupabaseTables()) {
-        await getAuthenticatedClient(kakaoId)
-          ?.from('user_shop_inventory')
-          .delete()
-          .eq('kakao_id', String(kakaoId))
-          .eq('item_id', String(item.id));
-      }
+      await getAuthenticatedClient(kakaoId)
+        ?.from('user_shop_inventory')
+        .delete()
+        .eq('kakao_id', String(kakaoId))
+        .eq('item_id', String(item.id));
       const nextMap = {
         ...boostMap,
         [item.aspectKey]: mergeBoostEntry(boostMap?.[item.aspectKey], [{ rowId: String(item.id), item }]),

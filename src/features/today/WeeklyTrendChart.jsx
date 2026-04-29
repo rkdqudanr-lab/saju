@@ -7,18 +7,31 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
 
   useEffect(() => {
     if (!kakaoId) { setTrend([]); return; }
+    let cancelled = false;
+
     const last7 = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(); d.setDate(d.getDate() - i); return d.toISOString().slice(0, 10);
+      const d = new Date(); d.setDate(d.getDate() - i); return getDailyDateKey(d);
     });
+    // oldest→today order, non-mutating
+    const orderedDates = [...last7].reverse();
+    const todayKey = orderedDates[6];
+
+    const buildTrend = (map) => orderedDates.map((date) => (map[date] != null ? Number(map[date]) : null));
+
     if (!canUseDailySupabaseTables()) {
       const cachedMap = readDailyLocalCacheMap(String(kakaoId), 'horoscope_score', last7);
-      const today = getDailyDateKey();
-      if (todayScore != null) cachedMap[today] = String(todayScore);
-      setTrend(last7.reverse().map((date) => { const v = cachedMap[date]; return v == null ? null : Number(v); }));
+      if (todayScore != null) cachedMap[todayKey] = String(todayScore);
+      setTrend(buildTrend(cachedMap));
       return;
     }
+
     const trendClient = getAuthenticatedClient(String(kakaoId));
-    if (!trendClient) { setTrend([]); return; }
+    if (!trendClient) {
+      const fallback = orderedDates.map((date) => (date === todayKey && todayScore != null ? todayScore : null));
+      setTrend(fallback);
+      return;
+    }
+
     trendClient
       .from('daily_cache')
       .select('cache_date, content')
@@ -26,20 +39,22 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
       .eq('cache_type', 'horoscope_score')
       .in('cache_date', last7)
       .then(({ data, error }) => {
-        if (error) { setTrend([]); return; }
+        if (cancelled) return;
         const map = {};
-        (data || []).forEach((row) => { map[row.cache_date] = Number(row.content); });
-        const today = new Date().toISOString().slice(0, 10);
-        if (todayScore != null) map[today] = todayScore;
-        setTrend(last7.reverse().map((date) => map[date] ?? null));
+        if (!error) {
+          (data || []).forEach((row) => { map[row.cache_date] = Number(row.content); });
+        }
+        if (todayScore != null) map[todayKey] = todayScore;
+        setTrend(buildTrend(map));
       })
-      .catch(() => setTrend([]));
-  }, [kakaoId, todayScore]);
+      .catch(() => {
+        if (cancelled) return;
+        const fallback = orderedDates.map((date) => (date === todayKey && todayScore != null ? todayScore : null));
+        setTrend(fallback);
+      });
 
-  useEffect(() => {
-    if (todayScore == null || !trend) return;
-    setTrend((prev) => { if (!prev) return prev; const next = [...prev]; next[6] = todayScore; return next; });
-  }, [todayScore]);
+    return () => { cancelled = true; };
+  }, [kakaoId, todayScore]);
 
   if (trend === null) {
     return (
@@ -56,7 +71,6 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const max = Math.max(...validVals), min = Math.min(...validVals);
   const range = max - min || 1;
   const toY = (val) => 100 - ((val - min) / range) * 80 - 10;
-
   const toX = (i) => 5 + (i / 6) * 90;
 
   const segments = [];

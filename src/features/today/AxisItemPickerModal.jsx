@@ -31,6 +31,8 @@ export default function AxisItemPickerModal({
 
   if (!axis) return null;
 
+  const isMaxed = currentScore >= 100;
+
   const toggleRow = (rowId) => {
     const safeId = String(rowId);
     setSelectedIds((prev) => (
@@ -79,8 +81,10 @@ export default function AxisItemPickerModal({
           <div>
             <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>AXIS ITEM PICKER</div>
             <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: 'var(--t1)' }}>{axis.label} 점수 올리기</div>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 4, lineHeight: 1.6 }}>
-              현재 {currentScore}점에서 시작해요. 필요한 만큼만 골라서 100점까지 채울 수 있어요.
+            <div style={{ fontSize: 'var(--xs)', color: isMaxed ? 'var(--gold)' : 'var(--t3)', marginTop: 4, lineHeight: 1.6 }}>
+              {isMaxed
+                ? '이미 100점이에요! 다른 축을 올려보세요.'
+                : `현재 ${currentScore}점에서 시작해요. 필요한 만큼만 골라서 100점까지 채울 수 있어요.`}
             </div>
           </div>
           <button
@@ -119,7 +123,7 @@ export default function AxisItemPickerModal({
           <button
             type="button"
             onClick={handleAutoSelect}
-            disabled={!rows.length}
+            disabled={!rows.length || isMaxed}
             style={{
               flex: 1,
               padding: '10px 12px',
@@ -130,8 +134,8 @@ export default function AxisItemPickerModal({
               fontWeight: 700,
               fontSize: 'var(--xs)',
               fontFamily: 'var(--ff)',
-              cursor: rows.length ? 'pointer' : 'not-allowed',
-              opacity: rows.length ? 1 : 0.45,
+              cursor: (rows.length && !isMaxed) ? 'pointer' : 'not-allowed',
+              opacity: (rows.length && !isMaxed) ? 1 : 0.45,
             }}
           >
             최대 선택
@@ -253,7 +257,7 @@ export default function AxisItemPickerModal({
             <button
               type="button"
               onClick={() => onApply?.(selectedRows)}
-              disabled={!selectedRows.length || isApplying}
+              disabled={!selectedRows.length || isApplying || isMaxed}
               style={{
                 flex: 1.4,
                 padding: '11px 12px',
@@ -264,11 +268,11 @@ export default function AxisItemPickerModal({
                 fontWeight: 800,
                 fontSize: 'var(--xs)',
                 fontFamily: 'var(--ff)',
-                cursor: (!selectedRows.length || isApplying) ? 'not-allowed' : 'pointer',
-                opacity: (!selectedRows.length || isApplying) ? 0.45 : 1,
+                cursor: (!selectedRows.length || isApplying || isMaxed) ? 'not-allowed' : 'pointer',
+                opacity: (!selectedRows.length || isApplying || isMaxed) ? 0.45 : 1,
               }}
             >
-              {isApplying ? '적용 중...' : `${axis.label}에 적용하기`}
+              {isApplying ? '적용 중...' : isMaxed ? '이미 100점' : `${axis.label}에 적용하기`}
             </button>
           </div>
         )}

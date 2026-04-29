@@ -1,3 +1,5 @@
+import { getDailyDateKey } from '../../lib/dailyDataAccess.js';
+
 export const AXES_9 = [
   { key: 'overall', label: '종합' },
   { key: 'wealth',  label: '금전' },
@@ -148,7 +150,7 @@ function getBoostSummary(entry) {
 
 // boostMap: { [aspectKey]: { itemId, boost, name, emoji } }
 export function getDailyAxisScores(baseScore, boostMap, categoryScores = null) {
-  const todayDate = new Date().toISOString().slice(0, 10);
+  const todayDate = getDailyDateKey();
   const getDailyNoise = (idx) => {
     const val = Number(todayDate.replace(/-/g, '')) + idx;
     return (((val * 9301 + 49297) % 233280) / 233280) * 30 - 15;

@@ -425,7 +425,7 @@ export default function App() {
           onClose={() => setShowSidebar(false)}
           onNav={(s, item) => {
             if (s === 'history' && item) { setHistItem(item); setStep(STEP.HISTORY); }
-            else if (s === 'fortune') { formOkApprox ? setStep(STEP.DAILY_HOROSCOPE) : setStep(STEP.PROFILE); }
+            else if (s === 'fortune') { formOkApprox ? setStep(STEP.TODAY_DETAIL) : setStep(STEP.PROFILE); }
             else if (s === STEP.PROFILE && formOkApprox && otherProfiles.length === 0) { setSelQs([]); setStep(STEP.QUESTION); }
             else if (typeof s === 'number' && STEP_GROUPS.REQUIRES_FORM.includes(s) && !formOkApprox) { setStep(STEP.PROFILE); }
             else { setStep(s); }

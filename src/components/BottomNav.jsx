@@ -15,7 +15,7 @@ const MENU_GROUPS = {
     label: '별숨질문',
     items: [
       { icon: 'home', label: '홈', step: STEP.HOME },
-      { icon: 'sun', label: '오늘 하루 나의 별숨', step: STEP.DAILY_HOROSCOPE },
+      { icon: 'sun', label: '오늘 하루 나의 별숨', step: STEP.TODAY_DETAIL },
       { icon: 'pencil', label: '나의 하루를 별숨에게', step: STEP.DIARY },
       { icon: 'book-open', label: '일기 모아보기', step: STEP.DIARY_LIST },
       { icon: 'calendar', label: '별숨 달력', step: STEP.CALENDAR },
@@ -86,7 +86,7 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
   const group = MENU_GROUPS[groupId];
   if (!group) return null;
 
-  const requiresLogin = new Set([STEP.QUESTION, STEP.DEEP_INTERVIEW, STEP.FUTURE_PROPHECY, STEP.NATAL, STEP.COMPREHENSIVE, STEP.DIARY, STEP.DAILY_HOROSCOPE, STEP.DIARY_LIST, STEP.DREAM, STEP.TAEGIL, STEP.NAME_FORTUNE, STEP.MY_PAGE, STEP.STATS, STEP.COMMUNITY, STEP.DAEUN, STEP.ANON_COMPAT, STEP.SPECIAL_READING, STEP.TAROT, STEP.LETTER]);
+  const requiresLogin = new Set([STEP.QUESTION, STEP.DEEP_INTERVIEW, STEP.FUTURE_PROPHECY, STEP.NATAL, STEP.COMPREHENSIVE, STEP.DIARY, STEP.DAILY_HOROSCOPE, STEP.TODAY_DETAIL, STEP.DIARY_LIST, STEP.DREAM, STEP.TAEGIL, STEP.NAME_FORTUNE, STEP.MY_PAGE, STEP.STATS, STEP.COMMUNITY, STEP.DAEUN, STEP.ANON_COMPAT, STEP.SPECIAL_READING, STEP.TAROT, STEP.LETTER]);
 
   const handleNav = (item) => {
     let targetStep = item.step;
