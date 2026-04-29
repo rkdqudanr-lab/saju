@@ -319,13 +319,13 @@ export default function LandingPage({
     const kakaoId = String(user.kakaoId || user.id);
     getAuthenticatedClient(kakaoId)
       ?.from('user_shop_inventory')
-      .select('id, item_id')
+      .select('item_id')
       .eq('kakao_id', kakaoId)
       .then(({ data, error }) => {
         if (error) { setOwnedRows([]); return; }
         setOwnedRows(
           (data || [])
-            .map((row) => ({ rowId: String(row.id), item: findItem(String(row.item_id)) }))
+            .map((row) => ({ rowId: String(row.item_id), item: findItem(String(row.item_id)) }))
             .filter((row) => row.item?.aspectKey),
         );
       })
@@ -351,7 +351,7 @@ export default function LandingPage({
           ?.from('user_shop_inventory')
           .delete()
           .eq('kakao_id', kakaoId)
-          .in('id', pendingItems.map((r) => String(r.rowId)));
+          .in('item_id', pendingItems.map((r) => String(r.rowId)));
       }
       const nextBoostMap = { ...boostMap };
       let totalBoost = 0;
@@ -386,7 +386,7 @@ export default function LandingPage({
           ?.from('user_shop_inventory')
           .delete()
           .eq('kakao_id', kakaoId)
-          .eq('id', String(row.rowId));
+          .eq('item_id', String(row.rowId));
       }
       const nextBoostMap = {
         ...boostMap,
@@ -638,6 +638,9 @@ export default function LandingPage({
                               currentBp={gamificationState.currentBp}
                               axisScores={axisScores}
                               boostMap={boostMap}
+                              ownedRows={ownedRows}
+                              pendingItems={pendingItems}
+                              onToggleItem={handleToggleItem}
                               scoreBoost={scoreBoostDelta}
                               categoryTextOverrides={axisTextOverrides}
                               synergyOverride={derivedPick}
@@ -830,6 +833,9 @@ export default function LandingPage({
                                 currentBp={gamificationState.currentBp}
                                 axisScores={axisScores}
                                 boostMap={boostMap}
+                                ownedRows={ownedRows}
+                                pendingItems={pendingItems}
+                                onToggleItem={handleToggleItem}
                                 scoreBoost={scoreBoostDelta}
                                 categoryTextOverrides={axisTextOverrides}
                                 synergyOverride={derivedPick}

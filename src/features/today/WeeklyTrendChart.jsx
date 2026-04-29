@@ -57,10 +57,12 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const range = max - min || 1;
   const toY = (val) => 100 - ((val - min) / range) * 80 - 10;
 
+  const toX = (i) => 5 + (i / 6) * 90;
+
   const segments = [];
   let seg = [];
   trend.forEach((val, i) => {
-    if (val !== null) { seg.push(`${(i / 6) * 100},${toY(val)}`); }
+    if (val !== null) { seg.push(`${toX(i)},${toY(val)}`); }
     else { if (seg.length > 1) segments.push(seg.join(' ')); seg = []; }
   });
   if (seg.length > 1) segments.push(seg.join(' '));
@@ -87,7 +89,7 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
           {segments.map((pts, idx) => <polyline key={idx} fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={pts} style={{ opacity: 0.8 }} />)}
           {trend.map((val, i) => {
             if (val === null) return null;
-            const x = (i / 6) * 100, y = toY(val);
+            const x = toX(i), y = toY(val);
             return i === 6
               ? <circle key={i} cx={x} cy={y} r="4" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2" />
               : <circle key={i} cx={x} cy={y} r="2.5" fill="var(--gold)" opacity="0.5" />;
