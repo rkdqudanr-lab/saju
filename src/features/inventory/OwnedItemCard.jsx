@@ -1,11 +1,11 @@
-import { GRADE_CONFIG } from '../../utils/gachaItems.js';
+import { GRADE_CONFIG, SAJU_GRADE_CONFIG } from '../../utils/gachaItems.js';
 import GachaGraphic from '../../components/GachaGraphic.jsx';
 import { CAT_LABEL, FORTUNE_LABELS, isItemDailyActive } from './inventoryUtils.js';
 
 export default function OwnedItemCard({ item, toggling, onUse, boostMap, onActivate, onDetail, compact }) {
   const isTalisman = item.category === 'talisman';
   const isGachaItem = !!item.grade;
-  const cfg = item.grade ? GRADE_CONFIG[item.grade] : null;
+  const cfg = item.grade ? (GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade]) : null;
   const isDailyActive = isItemDailyActive(item, boostMap);
   const canActivate = !isDailyActive && (isGachaItem || isTalisman) && item.aspectKey && item.boost;
 

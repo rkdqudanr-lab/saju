@@ -621,16 +621,7 @@ export function useConsultation(
       next.add(idx);
       return next;
     });
-    const next = idx + 1;
-    if (next < selQs.length) {
-      setTimeout(() => {
-        setOpenAcc(next);
-        setTimeout(() => {
-          setOpenAcc((p) => (p === next ? -1 : p));
-        }, 800);
-      }, 400);
-    }
-  }, [selQs.length]);
+  }, []);
 
   const handleAccToggle = useCallback((i) => {
     setOpenAcc((p) => (p === i ? -1 : i));

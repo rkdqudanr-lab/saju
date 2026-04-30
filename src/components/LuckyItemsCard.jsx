@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { parseDailyLines } from '../utils/parseDailyLines.js';
 
 // ═══════════════════════════════════════════════════════════
 //  🍀 오늘의 행운 아이템 — 사주·절기 기반 결정론적 계산
@@ -92,24 +93,6 @@ export function calcLuckyItems(today, saju) {
   return { ohaeng: dayOhaeng, data, luckyNum, word };
 }
 
-/** dailyResult.text의 [별숨픽] 섹션에서 항목 추출 */
-function parseSynergyFromResult(text) {
-  if (!text) return null;
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  const idx = lines.findIndex(l => l.startsWith('[별숨픽]') || l.startsWith('[별숨 픽]'));
-  if (idx === -1) return null;
-  const end = lines.findIndex((l, i) => i > idx && l.startsWith('['));
-  const section = lines.slice(idx + 1, end === -1 ? undefined : end);
-  const s = { food: '', place: '', color: '', number: '', direction: '' };
-  for (const line of section) {
-    if (line.startsWith('음식:')) s.food = line.replace('음식:', '').split('—')[0].trim();
-    else if (line.startsWith('장소:')) s.place = line.replace('장소:', '').split('—')[0].trim();
-    else if (line.startsWith('색:')) s.color = line.replace('색:', '').split('—')[0].trim();
-    else if (line.startsWith('숫자:')) s.number = line.replace('숫자:', '').trim();
-    else if (line.startsWith('방향:')) s.direction = line.replace('방향:', '').trim();
-  }
-  return (s.food || s.color || s.number) ? s : null;
-}
 
 /** Canvas API로 공유 카드 PNG 생성 */
 function generateShareCard({ ohaeng, data, luckyNum, word, displayColor, displayNumber, displayDirection, displayFood, todayStr }) {
@@ -248,7 +231,7 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
   const { ohaeng, data, luckyNum, word } = calcLuckyItems(today, saju);
 
   // API 결과 우선, 없으면 클라이언트 계산 fallback
-  const apiSynergy = parseSynergyFromResult(dailyResult?.text);
+  const apiSynergy = parseDailyLines(dailyResult?.text).synergy;
   const fromApi = !!apiSynergy;
 
   const displayFood = apiSynergy?.food || data.food.items.join(' · ');

@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { NAME_FORTUNE_PROMPT } from "../utils/constants.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
-import FeatureResultSheet from "./FeatureResultSheet.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  📛 이름 풀이 — 성명학으로 이름 속 기운 읽기
@@ -71,19 +70,16 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
   const [hanja, setHanja] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showAnalyzeSheet, setShowAnalyzeSheet] = useState(true);
 
   // ── 작명 상태 ──
   const [createLastName, setCreateLastName] = useState(form?.name?.charAt(0) || '');
   const [createResult, setCreateResult] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
-  const [showCreateSheet, setShowCreateSheet] = useState(true);
 
   // ── 영어이름 상태 ──
   const [engName, setEngName] = useState(form?.name || '');
   const [engResult, setEngResult] = useState('');
   const [engLoading, setEngLoading] = useState(false);
-  const [showEngSheet, setShowEngSheet] = useState(true);
 
   const strokes = useMemo(() => name ? calcStrokes(name) : 0, [name]);
   const sounds  = useMemo(() => name ? getNameOhaeng(name) : '', [name]);
@@ -93,7 +89,6 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
     if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
     setLoading(true);
     setResult('');
-    setShowAnalyzeSheet(true);
     try {
       const prompt = NAME_FORTUNE_PROMPT({ name, hanja: hanja.trim(), strokes, sounds, sajuCtx: '' });
       const text = await callApiProp(prompt, { isName: true });
@@ -115,7 +110,6 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
     if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
     setCreateLoading(true);
     setCreateResult('');
-    setShowCreateSheet(true);
     try {
       const sajuCtx = buildCtx?.() || '';
       const prompt = `사주 기반 작명을 부탁드려요.
@@ -153,7 +147,6 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
     if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
     setEngLoading(true);
     setEngResult('');
-    setShowEngSheet(true);
     try {
       const sajuCtx = buildCtx?.() || '';
       const prompt = `이름과 사주를 기반으로 어울리는 영어 이름을 추천해주세요.
@@ -332,7 +325,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
         </button>
 
         {/* 결과 */}
-        {result && !showAnalyzeSheet && (() => {
+        {result && (() => {
           const NAME_TAGS = ['이름요약','이름점수','발음분석','의미분석','획수분석','성향조화','보완점','개명조언','추천방향','별숨한마디'];
           const secs = {};
           for (let i = 0; i < NAME_TAGS.length; i++) {
@@ -403,27 +396,6 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
             </div>
           );
         })()}
-        {result && showAnalyzeSheet && (
-          <FeatureResultSheet
-            type="name"
-            eyebrow="BYEOLSOOM NAME READING"
-            title={`${name}${hanja.trim() ? ` (${hanja.trim()})` : ''} 이름 결과`}
-            text={result}
-            highlights={[
-              { emoji: '✍️', label: '획수 합계', value: `${strokes}획` },
-              sounds ? { emoji: '🪵', label: '이름 오행', value: sounds } : null,
-              hanja.trim() ? { emoji: '漢', label: '한자 이름', value: hanja.trim() } : null,
-            ].filter(Boolean)}
-            primaryAction={() => {
-              setResult('');
-              setName('');
-              setHanja('');
-              setShowAnalyzeSheet(false);
-            }}
-            primaryLabel="다른 이름 분석하기"
-            onDismiss={() => setShowAnalyzeSheet(false)}
-          />
-        )}
         </>}
 
         {/* ── 탭: 작명 추천 ── */}
@@ -468,7 +440,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               ✦ 사주 기반 작명 받기
             </button>
 
-            {createResult && !showCreateSheet && (
+            {createResult && (
               <div style={{
                 background: 'var(--card)', border: '1px solid var(--line)',
                 borderRadius: 'var(--r1)', padding: '16px', animation: 'fadeUp .4s ease',
@@ -486,24 +458,6 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
                   다시 추천받기
                 </button>
               </div>
-            )}
-            {createResult && showCreateSheet && (
-              <FeatureResultSheet
-                type="name"
-                eyebrow="BYEOLSOOM NAME MAKER"
-                title="사주 기반 이름 추천"
-                text={createResult}
-                highlights={[
-                  { emoji: '🌿', label: '추천 기준', value: '사주 보완 + 이름의 결' },
-                  createLastName.trim() ? { emoji: '성', label: '반영한 성씨', value: createLastName.trim() } : { emoji: '✨', label: '추천 방식', value: '자유 제안형 추천' },
-                ]}
-                primaryAction={() => {
-                  setCreateResult('');
-                  setShowCreateSheet(false);
-                }}
-                primaryLabel="추천 다시 받기"
-                onDismiss={() => setShowCreateSheet(false)}
-              />
             )}
           </div>
         )}
@@ -553,7 +507,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               🌏 어울리는 영어 이름 받기
             </button>
 
-            {engResult && !showEngSheet && (
+            {engResult && (
               <div style={{
                 background: 'var(--card)', border: '1px solid var(--line)',
                 borderRadius: 'var(--r1)', padding: '16px', animation: 'fadeUp .4s ease',
@@ -571,24 +525,6 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
                   다시 추천받기
                 </button>
               </div>
-            )}
-            {engResult && showEngSheet && (
-              <FeatureResultSheet
-                type="name"
-                eyebrow="BYEOLSOOM ENGLISH NAME"
-                title={`${engName}에게 어울리는 영어 이름`}
-                text={engResult}
-                highlights={[
-                  { emoji: '🔤', label: '기준 이름', value: engName.trim() },
-                  { emoji: '🌟', label: '추천 포인트', value: '발음 + 이미지 + 사주 조화' },
-                ]}
-                primaryAction={() => {
-                  setEngResult('');
-                  setShowEngSheet(false);
-                }}
-                primaryLabel="영어 이름 다시 받기"
-                onDismiss={() => setShowEngSheet(false)}
-              />
             )}
           </div>
         )}

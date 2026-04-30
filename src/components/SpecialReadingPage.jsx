@@ -10,7 +10,6 @@ import { postAskText } from '../lib/askApi.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 import { STEP } from '../utils/steps.js';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
-import FeatureResultSheet from './FeatureResultSheet.jsx';
 
 // ── 사주 기반 행운 번호 생성 유틸 ──
 function seededRandom(seed) {
@@ -227,7 +226,6 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [usedItem, setUsedItem] = useState(null);
-  const [showResultSheet, setShowResultSheet] = useState(true);
 
   const kakaoId = user?.kakaoId || user?.id;
 
@@ -270,7 +268,6 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
     }
     setLoading(true);
     setResult('');
-    setShowResultSheet(true);
     setUsedItem(inventoryId);
     setSelectedType(readingType);
 
@@ -366,25 +363,6 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
             </div>
           </div>
         </div>
-      )}
-      {result && showResultSheet && (
-        <FeatureResultSheet
-          type="special"
-          eyebrow="BYEOLSOOM SPECIAL READING"
-          title={selectedType?.title || "별숨 특별 상담"}
-          text={result}
-          highlights={[
-            selectedType?.emoji ? { emoji: selectedType.emoji, label: "선택한 상담", value: selectedType.title, caption: selectedType.desc } : null,
-            usedItem ? { emoji: "ticket", label: "사용한 상담권", value: "특별 상담권 1개 사용" } : null,
-          ].filter(Boolean)}
-          primaryAction={() => {
-            setResult('');
-            setSelectedType(null);
-            setShowResultSheet(false);
-          }}
-          primaryLabel="다른 특별 상담 받기"
-          onDismiss={() => setShowResultSheet(false)}
-        />
       )}
 
       {/* 아이템 미보유 */}

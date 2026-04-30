@@ -4,7 +4,6 @@ import { TAEGIL_PROMPT } from "../utils/constants.js";
 import { getDailyDateKey } from "../lib/dailyDataAccess.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
-import FeatureResultSheet from "./FeatureResultSheet.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  🗓️ 택일 — 중요한 날, 별숨이 골라드릴게요
@@ -83,7 +82,6 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
   });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showResultSheet, setShowResultSheet] = useState(true);
 
   // 후보 날짜 목록 (최대 14일, 날짜별 사주 정보)
   const candidateDates = useMemo(() => {
@@ -111,7 +109,6 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
     if (!callApi) { showToast('로그인이 필요해요', 'info'); return; }
     setLoading(true);
     setResult('');
-    setShowResultSheet(true);
     try {
       const top = candidateDates.slice(0, 6);
       const prompt = TAEGIL_PROMPT({ eventType, candidateDates: top, sajuCtx: buildCtx?.() || '' });
@@ -356,26 +353,6 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
           );
         })()}
 
-        {/* 결과 시트 (Overlay) */}
-        {result && showResultSheet && (
-          <FeatureResultSheet
-            type="taegil"
-            eyebrow="BYEOLSOOM TAEGIL"
-            title="별숨의 택일 결과"
-            text={result}
-            highlights={[
-              eventType ? { emoji: "📅", label: "찾는 일정", value: eventType } : null,
-              candidateDates[0] ? { emoji: "🥇", label: "가장 좋은 후보", value: candidateDates[0].label, caption: candidateDates[0].sajuDesc } : null,
-              candidateDates[1] ? { emoji: "🥈", label: "함께 볼 날짜", value: candidateDates[1].label } : null,
-            ].filter(Boolean)}
-            primaryAction={() => {
-              setResult("");
-              setShowResultSheet(false);
-            }}
-            primaryLabel="다른 날짜 다시 보기"
-            onDismiss={() => setShowResultSheet(false)}
-          />
-        )}
       </div>
     </div>
   );

@@ -1,12 +1,9 @@
 import { useState, useCallback } from 'react';
-import useWordTyping from '../hooks/useWordTyping.js';
-import { TIMING } from '../utils/constants.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { spendBP } from '../utils/gamificationLogic.js';
 import { useAppStore } from '../store/useAppStore.js';
-import FeatureResultSheet from './FeatureResultSheet.jsx';
 
 const FEATURE_COST = 10;
 
@@ -146,14 +143,11 @@ export default function FutureProphecyPage({
   const [selectedPeriod, setPeriod] = useState(null);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showResultSheet, setShowResultSheet] = useState(true);
-  const { shown, done, skipToEnd } = useWordTyping(text, !!text && !loading, TIMING.typingWord);
 
   const fetchProphecy = useCallback(async (period) => {
     setLoading(true);
     setText('');
     setPhase('result');
-    setShowResultSheet(true);
     try {
       if (user?.id) {
         const confirmed = await useAppStore.getState().showBPConfirm(FEATURE_COST, 1);
@@ -206,31 +200,7 @@ export default function FutureProphecyPage({
 
   if (phase === 'result') {
     const period = PERIOD_OPTIONS.find((item) => item.id === selectedPeriod) || PERIOD_OPTIONS[0];
-    if (done && text && showResultSheet) {
-      return (
-        <FeatureResultSheet
-          type="prophecy"
-          eyebrow="BYEOLSOOM PROPHECY"
-          title="별숨의 미래 예언"
-          text={text}
-          highlights={[
-            { emoji: "time", label: "읽는 시간대", value: period.label, caption: period.desc },
-            (form?.nickname || form?.name) ? { emoji: "star", label: "이번 예언의 주인공", value: form.nickname || form.name } : null,
-          ].filter(Boolean)}
-          primaryAction={() => {
-            setPhase("intro");
-            setText("");
-            setShowResultSheet(false);
-          }}
-          primaryLabel="다른 미래 다시 보기"
-          secondaryAction={shareResult && done ? () => shareResult("prophecy", text, selectedPeriod) : null}
-          secondaryLabel={shareResult && done ? "이 예언 공유하기" : undefined}
-          onDismiss={() => setShowResultSheet(false)}
-        />
-      );
-    }
-
-    const secs = parseProphecySections(shown);
+    const secs = parseProphecySections(text);
     const hasStructure = !!secs['한줄예언'];
     const score = parseInt(secs['점수'] || '0', 10) || null;
 
@@ -262,7 +232,7 @@ export default function FutureProphecyPage({
                   </div>
                 )}
                 <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.6, wordBreak: 'keep-all' }}>
-                  {secs['한줄예언']}{!done && !secs['한줄예언'] && <span className="typing-cursor" />}
+                  {secs['한줄예언']}
                 </div>
               </div>
 
@@ -285,7 +255,6 @@ export default function FutureProphecyPage({
                   {secs['별숨한마디']}
                 </div>
               )}
-              {!done && <div style={{ textAlign: 'center', marginTop: 4 }}><span className="typing-cursor" /></div>}
             </>
           ) : (
             /* 구버전 / 스트리밍 중 fallback — letter 스타일 */
@@ -298,35 +267,28 @@ export default function FutureProphecyPage({
                   {period.label} 뒤의 예언
                 </div>
                 <div className="letter-content" style={{ padding: 0 }}>
-                  <p>{shown}{!done && <span className="typing-cursor" />}</p>
+                  <p>{text}</p>
                 </div>
               </div>
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'var(--sp2)' }}>
-            {!done && text && (
-              <button className="btn-main" style={{ marginTop: 0, flex: 1 }} onClick={skipToEnd}>
-                결과 바로 보기
-              </button>
-            )}
-            {done && text && (
-              <>
-                {saveImage && (
-                  <button className="res-top-btn" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
-                    onClick={() => saveImage('prophecy', text, selectedPeriod)}>
-                    이미지 저장
-                  </button>
-                )}
-                {shareResult && (
-                  <button className="res-top-btn primary" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
-                    onClick={() => shareResult('prophecy', text, selectedPeriod)}>
-                    공유하기
-                  </button>
-                )}
-              </>
-            )}
-          </div>
+          {text && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'var(--sp2)' }}>
+              {saveImage && (
+                <button className="res-top-btn" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
+                  onClick={() => saveImage('prophecy', text, selectedPeriod)}>
+                  이미지 저장
+                </button>
+              )}
+              {shareResult && (
+                <button className="res-top-btn primary" style={{ flex: 1, padding: 12, borderRadius: 'var(--r1)', fontSize: 'var(--xs)' }}
+                  onClick={() => shareResult('prophecy', text, selectedPeriod)}>
+                  공유하기
+                </button>
+              )}
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button className="res-btn" style={{ flex: 1, padding: 14, borderRadius: 'var(--r1)' }}

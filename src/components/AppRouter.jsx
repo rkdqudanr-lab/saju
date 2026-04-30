@@ -4,8 +4,16 @@
  * 나머지 의존성은 App.jsx가 만든 ctx 객체로 전달합니다.
  */
 import { lazy, Suspense, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAppStore } from "../store/useAppStore.js";
 import { STEP } from "../utils/steps.js";
+
+const PAGE_ANIM = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  exit:    { opacity: 0, y: -8 },
+  transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] },
+};
 
 // static imports (항상 로드)
 import SkeletonLoader      from "./SkeletonLoader.jsx";
@@ -139,6 +147,8 @@ export default function AppRouter({ ctx }) {
 
   return (
     <div className="app" id="main-content" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 16px))' }}>
+      <AnimatePresence mode="wait" initial={false}>
+      <motion.div key={step} {...PAGE_ANIM} style={{ minHeight: '100%' }}>
 
       {/* HOME */}
       {step === STEP.HOME && (
@@ -556,6 +566,9 @@ export default function AppRouter({ ctx }) {
       <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', padding: '20px 20px 40px', letterSpacing: '0.02em' }}>
         별숨의 모든 운세 및 점술 콘텐츠는 엔터테인먼트 목적이며, 결과에 따른 법적 책임을 지지 않습니다.
       </div>
+
+      </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

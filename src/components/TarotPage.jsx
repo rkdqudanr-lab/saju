@@ -11,7 +11,6 @@ import { useStreamResponse } from '../hooks/useStreamResponse.js';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { spendBP } from '../utils/gamificationLogic.js';
-import FeatureResultSheet from './FeatureResultSheet.jsx';
 
 function TarotImage({ src, alt, onError, loading = 'lazy', style, pictureStyle }) {
   const webpSrc = src ? src.replace(/\.jpg$/i, '.webp') : null;
@@ -163,7 +162,6 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
   const [imgErrors, setImgErrors]   = useState({});
   const [modalCard, setModalCard]   = useState(null);   // 확대 보기 카드
   const [modalMode, setModalMode]   = useState('image'); // 'image' | 'detail'
-  const [showResultSheet, setShowResultSheet] = useState(true);
   const timerRef = useRef([]);
 
   const { streamText, isStreaming, streamError, startStream, resetStream } = useStreamResponse();
@@ -198,12 +196,10 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
     setPicks([]);
     setHoveredIdx(null);
     setPhase('idle');
-    setShowResultSheet(true);
   }, [resetStream]);
 
   const askReading = useCallback(async () => {
     if (isStreaming) return;
-    setShowResultSheet(true);
     if (user?.id) {
       const confirmed = await useAppStore.getState().showBPConfirm(FEATURE_COST, 1);
       if (!confirmed) return;
@@ -671,7 +667,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
             </div>
           )}
 
-          {(streamText || streamError) && !showResultSheet && (() => {
+          {(streamText || streamError) && (() => {
             const secs = parseTarotSections(streamText || '');
             const hasStructure = !!(secs['한줄답변'] || secs['카드조합']);
             const wrapper = { margin: '20px 20px 0', background: 'linear-gradient(160deg,rgba(13,11,30,0.96),rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)', overflow: 'hidden' };
@@ -698,6 +694,14 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                 <div style={{ padding: '12px 18px 18px', fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.95)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
                   {streamText}
                 </div>
+                {!isStreaming && (
+                  <button
+                    onClick={resetTarotFlow}
+                    style={{ display: 'block', margin: '0 auto 14px', padding: '8px 22px', background: 'rgba(200,165,80,0.1)', border: '1px solid rgba(200,165,80,0.35)', borderRadius: 20, color: 'rgba(200,165,80,0.85)', fontSize: 'var(--xs)', cursor: 'pointer', letterSpacing: '.05em' }}
+                  >
+                    ✦ 다시 뽑기
+                  </button>
+                )}
               </div>
             );
             return (
@@ -730,6 +734,14 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                     </div>
                   )}
                   {isStreaming && <div style={{ textAlign: 'center', marginTop: 4 }}><span className="typing-cursor" /></div>}
+                  {!isStreaming && (
+                    <button
+                      onClick={resetTarotFlow}
+                      style={{ display: 'block', margin: '14px auto 0', padding: '8px 22px', background: 'rgba(200,165,80,0.1)', border: '1px solid rgba(200,165,80,0.35)', borderRadius: 20, color: 'rgba(200,165,80,0.85)', fontSize: 'var(--xs)', cursor: 'pointer', letterSpacing: '.05em' }}
+                    >
+                      ✦ 다시 뽑기
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -738,28 +750,6 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
       )}
 
 
-      {phase === 'done' && (streamText || streamError) && showResultSheet && (
-        <FeatureResultSheet
-          type="tarot"
-          eyebrow="BYEOLSOOM TAROT"
-          title="별숨 타로의 계시"
-          text={streamText || streamError}
-          highlights={pickedCards.map((card, index) => ({
-            emoji: card.emoji,
-            label: `Card ${index + 1}`,
-            value: card.name,
-            caption: card.meaning,
-          }))}
-          primaryAction={() => {
-            resetTarotFlow();
-          }}
-          primaryLabel="다른 카드 다시 고르기"
-          onDismiss={() => setShowResultSheet(false)}
-        />
-
-
-
-      )}
 
       <div style={{ margin: '20px 20px 0', padding: '10px 14px', background: 'rgba(200,165,80,0.04)', border: '1px solid rgba(200,165,80,0.1)', borderRadius: 10, textAlign: 'center' }}>
         <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.7 }}>

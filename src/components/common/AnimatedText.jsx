@@ -38,70 +38,22 @@ export const AnimatedScore = ({ value, duration = 1.2 }) => {
 };
 
 /**
- * 텍스트가 타이핑되듯 나타나는 메시지 컴포넌트
+ * 텍스트가 부드럽게 플로팅되며 나타나는 메시지 컴포넌트
+ * (이전 타이핑 애니메이션 대체)
  */
-export const TypingMessage = ({ text, delay = 0.045, className = '', isSummary = false }) => {
+export const TypingMessage = ({ text, className = '', isSummary = false }) => {
   const instantTyping = useAppStore((s) => s.instantTyping);
-  const [displayedText, setDisplayedText] = useState('');
-  const [isComplete, setIsComplete] = useState(false);
-  const hasCompletedRef = useRef(false);
 
-  useEffect(() => {
-    if (!text) {
-      setDisplayedText('');
-      setIsComplete(false);
-      hasCompletedRef.current = false;
-      return;
-    }
-
-    if (instantTyping) {
-      setDisplayedText(text);
-      setIsComplete(true);
-      hasCompletedRef.current = true;
-      return;
-    }
-
-    if (hasCompletedRef.current) {
-      setDisplayedText(text);
-      return;
-    }
-
-    setDisplayedText('');
-    setIsComplete(false);
-    let index = 0;
-    const timer = setInterval(() => {
-      const char = text[index];
-      index++;
-      setDisplayedText((prev) => prev + char);
-      if (index >= text.length) {
-        clearInterval(timer);
-        setIsComplete(true);
-        hasCompletedRef.current = true;
-      }
-    }, delay * 1000);
-
-    return () => clearInterval(timer);
-  }, [text, delay, instantTyping]);
+  if (!text) return null;
 
   return (
     <motion.div
       className={`typing-message-wrapper ${className} ${isSummary ? 'summary-bubble' : 'advice-bubble'}`}
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      initial={instantTyping ? false : { opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
     >
-      <div className="message-content">
-        {displayedText}
-        {!isComplete && !instantTyping && (
-          <motion.span
-            animate={{ opacity: [1, 0] }}
-            transition={{ repeat: Infinity, duration: 0.6 }}
-            className="typing-cursor"
-          >
-            ●
-          </motion.span>
-        )}
-      </div>
+      <div className="message-content">{text}</div>
     </motion.div>
   );
 };

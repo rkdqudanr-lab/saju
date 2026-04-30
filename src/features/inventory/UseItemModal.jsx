@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { GRADE_CONFIG } from '../../utils/gachaItems.js';
+import { GRADE_CONFIG, SAJU_GRADE_CONFIG } from '../../utils/gachaItems.js';
+
+const FALLBACK_CFG = { border: 'var(--line)', color: 'var(--t3)', bg: 'var(--bg3)', label: '' };
 
 export default function UseItemModal({ item, callApi, onClose, showToast }) {
   const [loading, setLoading] = useState(false);
   const [effect, setEffect] = useState('');
-  const cfg = GRADE_CONFIG[item.grade] || GRADE_CONFIG.fragment;
+  const cfg = GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade] || FALLBACK_CFG;
 
   useEffect(() => {
     if (!callApi) return;
