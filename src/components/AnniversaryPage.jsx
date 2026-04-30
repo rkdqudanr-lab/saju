@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { getSaju, CG, JJ, CGH, JJH, OC, ON, ILGAN_DESC } from "../utils/saju.js";
+import { getDailyDateKey } from "../lib/dailyDataAccess.js";
 
 const ANNIVERSARY_TYPES = [
   { key: "결혼기념일", emoji: "💍" },
@@ -36,7 +37,7 @@ export default function AnniversaryPage({
   const [loading, setLoading] = useState(false);
   const [isFutureMode, setIsFutureMode] = useState(false);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getDailyDateKey();
 
   const parsed = useMemo(() => {
     if (!anniversaryDate) return null;

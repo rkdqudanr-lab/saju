@@ -163,6 +163,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
   const [imgErrors, setImgErrors]   = useState({});
   const [modalCard, setModalCard]   = useState(null);   // 확대 보기 카드
   const [modalMode, setModalMode]   = useState('image'); // 'image' | 'detail'
+  const [showResultSheet, setShowResultSheet] = useState(true);
   const timerRef = useRef([]);
 
   const { streamText, isStreaming, streamError, startStream, resetStream } = useStreamResponse();
@@ -197,10 +198,12 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
     setPicks([]);
     setHoveredIdx(null);
     setPhase('idle');
+    setShowResultSheet(true);
   }, [resetStream]);
 
   const askReading = useCallback(async () => {
     if (isStreaming) return;
+    setShowResultSheet(true);
     if (user?.id) {
       const confirmed = await useAppStore.getState().showBPConfirm(FEATURE_COST, 1);
       if (!confirmed) return;
@@ -668,7 +671,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
             </div>
           )}
 
-          {(streamText || streamError) && (() => {
+          {(streamText || streamError) && !showResultSheet && (() => {
             const secs = parseTarotSections(streamText || '');
             const hasStructure = !!(secs['한줄답변'] || secs['카드조합']);
             const wrapper = { margin: '20px 20px 0', background: 'linear-gradient(160deg,rgba(13,11,30,0.96),rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)', overflow: 'hidden' };
@@ -735,7 +738,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
       )}
 
 
-      {phase === 'done' && (streamText || streamError) && (
+      {phase === 'done' && (streamText || streamError) && showResultSheet && (
         <FeatureResultSheet
           type="tarot"
           eyebrow="BYEOLSOOM TAROT"
@@ -751,7 +754,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
             resetTarotFlow();
           }}
           primaryLabel="다른 카드 다시 고르기"
-          onDismiss={resetTarotFlow}
+          onDismiss={() => setShowResultSheet(false)}
         />
 
 

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { getSaju } from "../utils/saju.js";
 import { TAEGIL_PROMPT } from "../utils/constants.js";
+import { getDailyDateKey } from "../lib/dailyDataAccess.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 import FeatureResultSheet from "./FeatureResultSheet.jsx";
@@ -72,13 +73,13 @@ function scoreToStars(score) {
 
 export default function TaegillPage({ form, buildCtx, callApi: callApiProp, showToast, onShareCard, user, consentFlags }) {
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = getDailyDateKey(today);
 
   const [eventType, setEventType] = useState('');
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() + 30);
-    return d.toISOString().slice(0, 10);
+    return getDailyDateKey(d);
   });
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);

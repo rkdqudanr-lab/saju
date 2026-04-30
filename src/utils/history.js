@@ -1,3 +1,5 @@
+import { getDailyDateKey } from '../lib/dailyDataAccess.js';
+
 // ═══════════════════════════════════════════════════════════
 //  📚 히스토리 유틸 — Supabase 전용
 // ═══════════════════════════════════════════════════════════
@@ -11,7 +13,7 @@ export function exportHistory(items = []) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `byeolsoom_history_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `byeolsoom_history_${getDailyDateKey()}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

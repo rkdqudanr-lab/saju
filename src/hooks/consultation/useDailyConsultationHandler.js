@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useAppStore } from "../../store/useAppStore.js";
 import { supabase, getAuthenticatedClient } from "../../lib/supabase.js";
+import { getDailyDateKey, canUseDailySupabaseTables } from "../../lib/dailyDataAccess.js";
 import { parseHoroscopeForGamification } from "../../utils/missionGenerator.js";
 import { spendBP as spendBPUtil } from "../../utils/gamificationLogic.js";
 
@@ -114,6 +115,13 @@ export function useDailyConsultationHandler({
 
           if (gamData.score != null) {
             saveDailyCache(user.id, "horoscope_score", String(gamData.score)).catch(() => {});
+            if (canUseDailySupabaseTables()) {
+              const scoreDate = getDailyDateKey();
+              await client.from("daily_scores").upsert(
+                { kakao_id: String(user.id), score_date: scoreDate, score: gamData.score },
+                { onConflict: "kakao_id,score_date" }
+              );
+            }
           }
         } catch (gamErr) {
           console.error("[별숨] 게이미피케이션 처리 오류:", gamErr);

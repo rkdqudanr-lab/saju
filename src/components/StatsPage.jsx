@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
+import { getDailyDateKey } from '../lib/dailyDataAccess.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { saveStatsCard } from '../utils/imageExport.js';
 
@@ -32,7 +33,7 @@ function ScoreHeatmap({ scores }) {
   for (let i = 364; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
+    days.push(getDailyDateKey(d));
   }
 
   const scoreMap = {};
@@ -248,7 +249,7 @@ export default function StatsPage({ callApi }) {
       const { data, error } = await client
         .from('daily_scores')
         .select('score_date, score')
-        .gte('score_date', yearAgo.toISOString().slice(0, 10))
+        .gte('score_date', getDailyDateKey(yearAgo))
         .order('score_date', { ascending: true });
       if (error) { console.warn('[Stats] daily_scores 로드 실패:', error.message); return; }
       if (data) setScores(data);

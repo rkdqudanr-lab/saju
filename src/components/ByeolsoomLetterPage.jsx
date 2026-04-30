@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
+import { getDailyDateKey } from '../lib/dailyDataAccess.js';
 import { useAppStore } from '../store/useAppStore.js';
 
 // ═══════════════════════════════════════════════════════════
@@ -298,7 +299,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
   // 월요일 자동 매칭: 월요일 아침에 접속하면 내 pending 편지 매칭 시도
   useEffect(() => {
     if (!myKakaoId || !isMonday) return;
-    const lastMatchKey = `byeolsoom_letter_monday_match_${myKakaoId}_${new Date().toISOString().slice(0, 10)}`;
+    const lastMatchKey = `byeolsoom_letter_monday_match_${myKakaoId}_${getDailyDateKey()}`;
     if (sessionStorage.getItem(lastMatchKey)) return; // 오늘 이미 실행
     sessionStorage.setItem(lastMatchKey, '1');
 

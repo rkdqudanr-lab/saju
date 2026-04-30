@@ -332,7 +332,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
         </button>
 
         {/* 결과 */}
-        {result && (() => {
+        {result && !showAnalyzeSheet && (() => {
           const NAME_TAGS = ['이름요약','이름점수','발음분석','의미분석','획수분석','성향조화','보완점','개명조언','추천방향','별숨한마디'];
           const secs = {};
           for (let i = 0; i < NAME_TAGS.length; i++) {
@@ -468,7 +468,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               ✦ 사주 기반 작명 받기
             </button>
 
-            {createResult && (
+            {createResult && !showCreateSheet && (
               <div style={{
                 background: 'var(--card)', border: '1px solid var(--line)',
                 borderRadius: 'var(--r1)', padding: '16px', animation: 'fadeUp .4s ease',
@@ -553,7 +553,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               🌏 어울리는 영어 이름 받기
             </button>
 
-            {engResult && (
+            {engResult && !showEngSheet && (
               <div style={{
                 background: 'var(--card)', border: '1px solid var(--line)',
                 borderRadius: 'var(--r1)', padding: '16px', animation: 'fadeUp .4s ease',

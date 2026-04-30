@@ -1,3 +1,5 @@
+import { getDailyDateKey } from '../lib/dailyDataAccess.js';
+
 // ── 오늘의 한마디 (날짜 기반 순환) ──
 export const DAILY_WORDS = [
   "오늘은 오래 미룬 연락 하나를 보내기 좋은 날이에요.",
@@ -687,7 +689,7 @@ export function exportReadingAsTxt(title, text) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${title || '별숨결과'}_${new Date().toISOString().slice(0, 10)}.txt`;
+  link.download = `${title || '별숨결과'}_${getDailyDateKey()}.txt`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -733,7 +735,7 @@ export function saveSajuNameCard(name, saju, sun) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${name}_사주명함_${new Date().toISOString().slice(0, 10)}.png`;
+    link.download = `${name}_사주명함_${getDailyDateKey()}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

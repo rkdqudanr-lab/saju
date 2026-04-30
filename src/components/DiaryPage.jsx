@@ -3,6 +3,7 @@ import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { DIARY_PROMPT, getMoonPhase } from "../utils/constants.js";
 import { STEP } from "../utils/steps.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
+import { getDailyDateKey } from "../lib/dailyDataAccess.js";
 import { postAskText } from "../lib/askApi.js";
 import { useUserCtx, useSajuCtx } from "../context/AppContext.jsx";
 
@@ -85,7 +86,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
   const [followUpHistory, setFollowUpHistory] = useState([]);
   const [followUpLoading, setFollowUpLoading] = useState(false);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getDailyDateKey();
   const targetDate = viewDate || today;
   const isPastEntry = !!(viewDate && viewDate !== today);
 
@@ -104,7 +105,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
         let streak = 0;
         const cur = new Date(today);
         while (true) {
-          const d = cur.toISOString().slice(0, 10);
+          const d = getDailyDateKey(cur);
           if (!dateSet.has(d)) break;
           streak++;
           cur.setDate(cur.getDate() - 1);

@@ -3,7 +3,7 @@
  * 프로필 요약 / 수호자 대시보드 / 메뉴 리스트
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GuardianLevelBadge from './GuardianLevelBadge.jsx';
 import BPDisplay from './BPDisplay.jsx';
 import { useAppStore } from '../store/useAppStore.js';
@@ -11,6 +11,7 @@ import { usePushNotification } from '../hooks/usePushNotification.js';
 import { STEP } from '../utils/steps.js';
 import { getStreakTier, getNextStreakMilestone, STREAK_FREEZE_COST } from '../utils/gamificationLogic.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
+import { getDailyDateKey } from '../lib/dailyDataAccess.js';
 
 // ── 기운 성장 그래프 위젯 ──────────────────────────────────────────
 function GrowthWidget({ userId }) {
@@ -27,7 +28,7 @@ function GrowthWidget({ userId }) {
         const { data } = await client
           .from('daily_scores')
           .select('score_date, score')
-          .gte('score_date', d.toISOString().slice(0, 10))
+          .gte('score_date', getDailyDateKey(d))
           .order('score_date', { ascending: true });
         if (data) setScores(data);
       } catch {

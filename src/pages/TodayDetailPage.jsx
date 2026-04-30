@@ -116,14 +116,21 @@ async function saveJsonCache(kakaoId, cacheType, payload) {
 
 async function saveTodayScore(kakaoId, score) {
   if (!kakaoId || !Number.isFinite(score)) return;
-  const content = String(Math.max(0, Math.min(100, Math.round(score))));
+  const normalizedScore = Math.max(0, Math.min(100, Math.round(score)));
+  const content = String(normalizedScore);
   writeDailyLocalCache(String(kakaoId), 'horoscope_score', content, getDailyDateKey());
   if (!canUseDailySupabaseTables()) return;
   const client = getAuthenticatedClient(String(kakaoId));
-  await client?.from('daily_cache').upsert(
-    { kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: 'horoscope_score', content },
-    { onConflict: 'kakao_id,cache_date,cache_type' },
-  );
+  await Promise.all([
+    client?.from('daily_cache').upsert(
+      { kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: 'horoscope_score', content },
+      { onConflict: 'kakao_id,cache_date,cache_type' },
+    ),
+    client?.from('daily_scores').upsert(
+      { kakao_id: String(kakaoId), score_date: getDailyDateKey(), score: normalizedScore },
+      { onConflict: 'kakao_id,score_date' },
+    ),
+  ]);
 }
 
 function splitPickValue(value) {
@@ -774,30 +781,9 @@ export default function TodayDetailPage({
             {(dailyResult?.badtime || parsedDaily.badtime) && (
               <div style={{ background: 'rgba(201,160,220,0.08)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid rgba(201,160,220,0.18)' }}>
                 <div style={{ fontSize: 10, color: '#c9a0dc', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>주의 흐름</div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7, marginBottom: 10 }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7 }}>
                   {(dailyResult?.badtime || parsedDaily.badtime)?.symptom || '오늘은 예민한 흐름이 살짝 감지돼요.'}
                 </div>
-                {onBlockBadtime && (
-                  <button
-                    type="button"
-                    onClick={onBlockBadtime}
-                    disabled={isBlockingBadtime}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: 12,
-                      border: '1px solid rgba(201,160,220,0.22)',
-                      background: 'rgba(201,160,220,0.12)',
-                      color: '#c9a0dc',
-                      fontSize: 'var(--xs)',
-                      fontWeight: 700,
-                      fontFamily: 'var(--ff)',
-                      cursor: isBlockingBadtime ? 'not-allowed' : 'pointer',
-                      opacity: isBlockingBadtime ? 0.45 : 1,
-                    }}
-                  >
-                    {isBlockingBadtime ? '액막이 발동 중...' : '액막이 발동하기'}
-                  </button>
-                )}
               </div>
             )}
           </Suspense>

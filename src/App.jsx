@@ -20,6 +20,7 @@ import { useGuardianMessage } from "./hooks/useGuardianMessage.js";
 
 // supabase
 import { supabase, getAuthenticatedClient } from "./lib/supabase.js";
+import { getDailyDateKey } from "./lib/dailyDataAccess.js";
 
 // analysis cache
 import { loadAnalysisCache, saveAnalysisCache } from "./lib/analysisCache.js";
@@ -255,7 +256,7 @@ export default function App() {
           .eq('kakao_id', String(user.id))
           .maybeSingle();
         if (!userData?.free_bp_recharge_at) { setFreeRechargeAvailable(true); return; }
-        const today = new Date().toISOString().slice(0, 10);
+        const today = getDailyDateKey();
         const lastRechargeDate = userData.free_bp_recharge_at?.slice(0, 10);
         setFreeRechargeAvailable(lastRechargeDate !== today);
       } catch (error) {
@@ -271,7 +272,7 @@ export default function App() {
     if (!user?.id) { setTodayDiaryWritten(null); return; }
     const client = getAuthenticatedClient(user.id) || supabase;
     if (!client) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getDailyDateKey();
     client.from('diary_entries').select('id').eq('kakao_id', String(user.id)).eq('date', today).maybeSingle()
       .then(({ data }) => setTodayDiaryWritten(!!data)).catch(() => {});
   }, [user?.id]);

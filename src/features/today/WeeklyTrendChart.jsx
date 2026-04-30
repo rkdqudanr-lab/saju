@@ -3,8 +3,9 @@ import { getAuthenticatedClient } from '../../lib/supabase.js';
 import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCacheMap } from '../../lib/dailyDataAccess.js';
 
 const PAD_X = 10;
-const SVG_H = 60;
-const PAD_Y = 8;
+const SVG_H = 80;
+const PAD_Y = 18;
+const LABEL_H = 14;
 
 export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const [trend, setTrend] = useState(null);
@@ -50,16 +51,15 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
     }
 
     trendClient
-      .from('daily_cache')
-      .select('cache_date, content')
+      .from('daily_scores')
+      .select('score_date, score')
       .eq('kakao_id', String(kakaoId))
-      .eq('cache_type', 'horoscope_score')
-      .in('cache_date', last7)
+      .in('score_date', last7)
       .then(({ data, error }) => {
         if (cancelled) return;
         const map = {};
         if (!error) {
-          (data || []).forEach((row) => { map[row.cache_date] = Number(row.content); });
+          (data || []).forEach((row) => { map[row.score_date] = Number(row.score); });
         }
         if (todayScore != null) map[todayKey] = todayScore;
         setTrend(buildTrend(map));
@@ -131,7 +131,6 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
         {todayVal !== null && <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>{todayVal}점</div>}
       </div>
       <div ref={containerRef} style={{ position: 'relative', width: '100%', height: SVG_H }}>
-        {/* Use measured pixel width so circles and strokes are not distorted */}
         <svg width={svgWidth} height={SVG_H} viewBox={`0 0 ${svgWidth} ${SVG_H}`}>
           {segments.map((s, si) => {
             const pts = s.map(({ i, val }) => `${toX(i)},${toY(val)}`).join(' ');
@@ -140,11 +139,27 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
           {trend.map((val, i) => {
             if (val === null) return null;
             const x = toX(i), y = toY(val);
-            if (i === 6)
-              return <circle key={i} cx={x} cy={y} r="4" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2" />;
-            if (segmentStarts.has(i) && i !== 0)
-              return <circle key={i} cx={x} cy={y} r="3" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="1.5" opacity="0.8" />;
-            return <circle key={i} cx={x} cy={y} r="2.5" fill="var(--gold)" opacity="0.5" />;
+            const isToday = i === 6;
+            const labelY = y <= PAD_Y + LABEL_H ? y + LABEL_H + 2 : y - 6;
+            return (
+              <g key={i}>
+                {isToday
+                  ? <circle cx={x} cy={y} r="4" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2" />
+                  : segmentStarts.has(i) && i !== 0
+                    ? <circle cx={x} cy={y} r="3" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="1.5" opacity="0.8" />
+                    : <circle cx={x} cy={y} r="2.5" fill="var(--gold)" opacity="0.5" />}
+                <text
+                  x={x} y={labelY}
+                  textAnchor="middle"
+                  fontSize="8"
+                  fill={isToday ? 'var(--gold)' : 'var(--t4)'}
+                  fontWeight={isToday ? '700' : '400'}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {val}
+                </text>
+              </g>
+            );
           })}
         </svg>
       </div>

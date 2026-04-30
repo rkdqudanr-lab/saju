@@ -264,7 +264,7 @@ export function deriveByeolsoomPick(scores = [], fallback = null) {
   const backupTheme = PICK_THEME[backup?.key] || focusTheme;
   const boosterTheme = PICK_THEME[booster?.key] || focusTheme;
   const hasMomentum = (focusAxis?.bonus || 0) > 0 || (strongest?.total || 0) >= 78;
-  const preferFallbackFields = Boolean(fallback) && !isRecovery && !hasMomentum && spread <= 14;
+  const preferFallbackFields = Boolean(fallback);
   const seed = createPickSeed(actionable);
 
   const derived = {
