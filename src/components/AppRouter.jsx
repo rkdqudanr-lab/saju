@@ -143,26 +143,15 @@ export default function AppRouter({ ctx }) {
       {step === STEP.HOME && (
         <LandingPage
           otherProfiles={otherProfiles}
-          quiz={quiz} quizInput={quizInput} setQuizInput={setQuizInput}
-          dailyResult={dailyResult} dailyLoading={dailyLoading}
-          dailyCount={dailyCount} DAILY_MAX={DAILY_MAX}
-          diaryReviewResult={diaryReviewResult} diaryReviewLoading={diaryReviewLoading}
-          showDailyCard={showDailyCard} setShowDailyCard={setShowDailyCard}
-          setDiy={setDiy}
-          setEditingMyProfile={setEditingMyProfile} setShowProfileModal={setShowProfileModal}
-          askQuick={askQuick} callApi={callApi} setDiaryViewDate={setDiaryViewDate}
-          askDailyHoroscope={askDailyHoroscope} askDiaryReview={askDiaryReview} askWeeklyReview={askWeeklyReview}
-          resetDiaryReview={resetDiaryReview}
-          handleQuizAnswer={ctx.handleQuizAnswer} handleQuizSkip={ctx.handleQuizSkip}
-          DiaryPageLazy={DiaryPage}
-          onBlockBadtime={handleBlockBadtime}
-          onCompleteMission={handleCompleteMission}
+          dailyResult={dailyResult}
+          dailyLoading={dailyLoading}
+          askDailyHoroscope={askDailyHoroscope}
           onFreeRecharge={handleFreeRecharge}
-          onDiaryComplete={handleDiaryComplete}
+          freeRechargeAvailable={freeRechargeAvailable}
           onEarnBP={earnBP}
           hasDiaryToday={hasDiaryToday}
-          isBlockingBadtime={isBlockingBadtime}
-          freeRechargeAvailable={freeRechargeAvailable}
+          setEditingMyProfile={setEditingMyProfile}
+          setShowProfileModal={setShowProfileModal}
         />
       )}
 

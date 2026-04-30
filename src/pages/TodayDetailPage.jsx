@@ -227,7 +227,17 @@ export default function TodayDetailPage({
   const kakaoId = user?.kakaoId || user?.id;
   const prevTodayScoreRef = useRef(0);
 
-  const [boostMap, setBoostMap] = useState({});
+  const [boostMap, setBoostMap] = useState(() => {
+    const uid = kakaoId;
+    if (!uid) return {};
+    try {
+      const raw = readDailyLocalCache(String(uid), TODAY_AXIS_CACHE, getDailyDateKey());
+      const parsed = JSON.parse(raw || '{}');
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  });
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
   const [ownedRows, setOwnedRows] = useState([]);
   const [pickerAxisKey, setPickerAxisKey] = useState(null);
@@ -759,7 +769,7 @@ export default function TodayDetailPage({
               </div>
             </section>
 
-            <WeeklyTrendChart kakaoId={kakaoId} todayScore={todayScore} />
+            <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult ? todayScore : null} />
 
             {(dailyResult?.badtime || parsedDaily.badtime) && (
               <div style={{ background: 'rgba(201,160,220,0.08)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid rgba(201,160,220,0.18)' }}>

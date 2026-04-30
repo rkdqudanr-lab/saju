@@ -1,5 +1,5 @@
 import { buildAiRequestContext, validateAiRequest } from "../lib/aiRequest.js";
-import { verifyUser } from "../lib/auth.js";
+import { authenticateRequest } from "../lib/auth.js";
 
 async function checkRateLimit(ip) {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "로그인이 필요해요." });
   }
 
-  const authResult = await verifyUser(req);
+  const authResult = await authenticateRequest(req, res);
   if (!authResult.ok) {
     return res.status(401).json({ error: "로그인이 필요해요." });
   }
@@ -59,7 +59,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "ANTHROPIC_API_KEY 환경변수가 필요해요." });
   }
 
-  const { systemWithContext, maxTokens } = await buildAiRequestContext(data);
+  const authedData = { ...data, kakaoId: authResult.kakaoId || data.kakaoId };
+  const { systemWithContext, maxTokens } = await buildAiRequestContext(authedData);
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache, no-transform");

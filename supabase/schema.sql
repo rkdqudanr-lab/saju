@@ -26,6 +26,31 @@ alter table users add column if not exists theme text default 'light';
 alter table users add column if not exists onboarded boolean default false;
 alter table users add column if not exists quiz_state jsonb;
 
+-- ── user_sessions (로그인 유지용 refresh 세션) ───────────────────
+create table if not exists user_sessions (
+  id                 uuid primary key default gen_random_uuid(),
+  kakao_id           text not null,
+  session_token_hash text unique not null,
+  remember_login     boolean default true,
+  expires_at         timestamptz not null,
+  revoked_at         timestamptz,
+  user_agent         text,
+  ip_address         text,
+  created_at         timestamptz default now(),
+  last_used_at       timestamptz default now()
+);
+
+create index if not exists idx_user_sessions_kakao_id on user_sessions(kakao_id);
+create index if not exists idx_user_sessions_expires_at on user_sessions(expires_at);
+
+alter table user_sessions enable row level security;
+
+-- ── user_sessions 정리용 수동/스케줄 실행 SQL ─────────────────────
+-- 예: Supabase Scheduled Job에서 하루 1회 실행
+delete from user_sessions
+where expires_at < now()
+   or (revoked_at is not null and revoked_at < now() - interval '7 days');
+
 -- ── consultation_history ─────────────────────────────────────────
 create table if not exists consultation_history (
   id         uuid primary key default gen_random_uuid(),

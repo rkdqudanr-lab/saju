@@ -7,7 +7,7 @@ const DEFAULT_FORM    = { name: '', nickname: '', by: '', bm: '', bd: '', bh: ''
 const DEFAULT_OTHER   = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_QUIZ    = { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
 
-// ── 인증 세션 + JWT 토큰 localStorage 관리 ──
+// ── 인증 세션 + 로그인 유지 플래그 localStorage 관리 ──
 function getAuthUser() {
   try { return JSON.parse(localStorage.getItem('byeolsoom_user')); } catch { return null; }
 }
@@ -31,7 +31,7 @@ export function setKeepLogin(val) {
   } catch {}
 }
 
-// ── JWT 만료 여부 확인 (client-side, 서명 검증 없이 exp만 체크) ──
+// ── JWT 만료 여부 확인 (현재는 서버 세션 확인이 우선이며, 유틸만 보존) ──
 export function isJwtExpired(token) {
   if (!token || typeof token !== 'string') return true;
   const parts = token.split('.');
@@ -84,6 +84,39 @@ export function useUserProfile() {
   const [lifeStage, setLifeStage] = useState('free');
   const [fontSize, setFontSize] = useState('standard');
 
+  useEffect(() => {
+    const storedUser = getAuthUser();
+    const params = new URLSearchParams(window.location.search);
+    if (!storedUser?.id || params.get('code')) {
+      setProfileSyncing(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/session', { method: 'GET', credentials: 'same-origin' });
+        if (!res.ok) throw new Error(`SESSION_INVALID_${res.status}`);
+        if (!cancelled) setProfileSyncing(true);
+      } catch {
+        if (cancelled) return;
+        fetch('/api/logout', { method: 'POST' }).catch(() => {});
+        if (storedUser?.id) clearAuthClient(storedUser.id);
+        setUser(null);
+        setForm(DEFAULT_FORM);
+        setProfile(DEFAULT_PROFILE);
+        setOtherProfiles([]);
+        setConsentFlags(null);
+        setAuthUser(null);
+        setAuthToken(null);
+        setProfileSyncing(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []);
+
   // ── 카카오 SDK 초기화 ──
   useEffect(() => {
     const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
@@ -134,7 +167,15 @@ export function useUserProfile() {
 
     (async () => {
       try {
-        const res  = await fetch('/api/kakao-auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, redirectUri: window.location.origin }) });
+        const res  = await fetch('/api/kakao-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            redirectUri: window.location.origin,
+            keepLogin: getKeepLogin(),
+          }),
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || '인증 실패');
         const rawImage = data.profileImage || null;

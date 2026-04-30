@@ -1,9 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getAuthenticatedClient } from '../../lib/supabase.js';
 import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCacheMap } from '../../lib/dailyDataAccess.js';
 
+const PAD_X = 10;
+const SVG_H = 60;
+const PAD_Y = 8;
+
 export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const [trend, setTrend] = useState(null);
+  const containerRef = useRef(null);
+  const [svgWidth, setSvgWidth] = useState(280);
+
+  // Measure container width to avoid preserveAspectRatio="none" distortion
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setSvgWidth(Math.round(entry.contentRect.width));
+    });
+    ro.observe(el);
+    setSvgWidth(Math.round(el.getBoundingClientRect().width) || 280);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!kakaoId) { setTrend([]); return; }
@@ -12,7 +30,6 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
     const last7 = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(); d.setDate(d.getDate() - i); return getDailyDateKey(d);
     });
-    // oldest→today order, non-mutating
     const orderedDates = [...last7].reverse();
     const todayKey = orderedDates[6];
 
@@ -68,10 +85,18 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   if (!trend.some((v) => v !== null)) return null;
 
   const validVals = trend.filter((v) => v !== null);
-  const max = Math.max(...validVals), min = Math.min(...validVals);
-  const range = max - min || 1;
-  const toY = (val) => 100 - ((val - min) / range) * 80 - 10;
-  const toX = (i) => 8 + (i / 6) * 84;
+  const rawMax = Math.max(...validVals);
+  const rawMin = Math.min(...validVals);
+  // Ensure minimum visible range so small differences don't exaggerate
+  const midVal = (rawMax + rawMin) / 2;
+  const halfRange = Math.max((rawMax - rawMin) / 2, 10);
+  const chartMin = Math.max(0, midVal - halfRange);
+  const chartMax = Math.min(100, midVal + halfRange);
+  const range = chartMax - chartMin || 1;
+
+  const plotH = SVG_H - 2 * PAD_Y;
+  const toX = (i) => PAD_X + (i / 6) * (svgWidth - 2 * PAD_X);
+  const toY = (val) => PAD_Y + plotH - ((val - chartMin) / range) * plotH;
 
   // Split into contiguous segments so gaps don't produce cross-gap lines
   const segments = [];
@@ -86,7 +111,6 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   });
   if (seg.length) segments.push(seg);
 
-  // Identify indices that are the first point of a new segment (after a gap)
   const segmentStarts = new Set(segments.filter((s) => s.length > 0).map((s) => s[0].i));
 
   const todayVal = trend[6];
@@ -106,18 +130,18 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
         </div>
         {todayVal !== null && <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>{todayVal}점</div>}
       </div>
-      <div style={{ position: 'relative', width: '100%', height: 60 }}>
-        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
+      <div ref={containerRef} style={{ position: 'relative', width: '100%', height: SVG_H }}>
+        {/* Use measured pixel width so circles and strokes are not distorted */}
+        <svg width={svgWidth} height={SVG_H} viewBox={`0 0 ${svgWidth} ${SVG_H}`}>
           {segments.map((s, si) => {
             const pts = s.map(({ i, val }) => `${toX(i)},${toY(val)}`).join(' ');
-            return <polyline key={si} fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={pts} style={{ opacity: 0.8 }} />;
+            return <polyline key={si} fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={pts} style={{ opacity: 0.8 }} />;
           })}
           {trend.map((val, i) => {
             if (val === null) return null;
             const x = toX(i), y = toY(val);
             if (i === 6)
               return <circle key={i} cx={x} cy={y} r="4" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2" />;
-            // segment starts (after a gap) get a slightly more visible dot
             if (segmentStarts.has(i) && i !== 0)
               return <circle key={i} cx={x} cy={y} r="3" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="1.5" opacity="0.8" />;
             return <circle key={i} cx={x} cy={y} r="2.5" fill="var(--gold)" opacity="0.5" />;

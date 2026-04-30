@@ -1,27 +1,13 @@
 // api/kakao-auth.js
-// 카카오 인가코드(code)로 액세스토큰 받고 유저정보 조회 → JWT 발급
-// 환경변수: KAKAO_REST_API_KEY, JWT_SECRET
+// 카카오 인가코드(code)로 액세스토큰 받고 유저정보 조회 → access/refresh 세션 발급
+// 환경변수: KAKAO_REST_API_KEY, JWT_SECRET, SUPABASE_SERVICE_ROLE_KEY
 
-import { signJWT } from '../lib/jwt.js';
-
-function appendAuthCookie(res, token) {
-  const secure = process.env.NODE_ENV === 'production';
-  const parts = [
-    `byeolsoom_jwt=${token ? encodeURIComponent(token) : ''}`,
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Lax',
-  ];
-  if (secure) parts.push('Secure');
-  if (token) parts.push('Max-Age=86400');
-  else parts.push('Max-Age=0');
-  res.setHeader('Set-Cookie', parts.join('; '));
-}
+import { establishLoginSession } from '../lib/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { code, redirectUri } = req.body;
+  const { code, redirectUri, keepLogin } = req.body;
   if (!code) return res.status(400).json({ error: 'code가 없어요' });
 
   const restKey = process.env.KAKAO_REST_API_KEY;
@@ -74,17 +60,8 @@ export default async function handler(req, res) {
       profileImage = profileImage.replace('http://', 'https://');
     }
 
-    // ── STEP 3: JWT 발급 (24시간 유효) ──
-    const jwtSecret = process.env.JWT_SECRET;
-    let token = null;
-    if (jwtSecret) {
-      token = signJWT({ sub: kakaoId, nickname }, jwtSecret, 86400);
-      appendAuthCookie(res, token);
-    } else {
-      // 로컬 개발 환경: JWT_SECRET 미설정 시 토큰 생략 (경고만 출력)
-      console.warn('[별숨] JWT_SECRET 환경변수가 없어요. 토큰 없이 응답합니다.');
-      appendAuthCookie(res, '');
-    }
+    // ── STEP 3: access / refresh 세션 발급 ──
+    await establishLoginSession(req, res, { kakaoId, rememberLogin: keepLogin === true });
 
     return res.status(200).json({ id: kakaoId, nickname, profileImage });
 
