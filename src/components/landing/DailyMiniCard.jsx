@@ -33,7 +33,15 @@ export default function DailyMiniCard({
   // 로딩 중
   if (loading) {
     return (
-      <div className="daily-mini-shimmer" aria-busy="true" aria-label="오늘의 별숨 불러오는 중" />
+      <div className="daily-mini-loading" aria-busy="true" aria-label="오늘의 별숨 불러오는 중">
+        <div className="daily-mini-loading-orbit" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="daily-mini-loading-text">오늘의 별숨을 읽는 중</div>
+        <div className="daily-mini-loading-sub">사주와 별자리 흐름을 맞춰보고 있어요</div>
+      </div>
     );
   }
 

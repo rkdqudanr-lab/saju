@@ -84,7 +84,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
         max_tokens: maxTokens,
-        ...(data.isDaily ? { temperature: 0.3 } : {}),
+        ...(data.isDaily ? { temperature: 0.65 } : {}),
         stream: true,
         system: [{ type: "text", text: systemWithContext, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: data.userMessage }],

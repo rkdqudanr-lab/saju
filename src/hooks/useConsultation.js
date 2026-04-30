@@ -195,6 +195,10 @@ export function useConsultation(
           fullContext += `\n\n[추가 작업 맥락]\n${opts.context.trim()}`;
         }
 
+        if (opts.isDaily) {
+          fullContext += "\n\n[일일 운세 출력 우선 규칙]\n위 맥락의 일반 특별 지침보다 일일 운세 시스템 프롬프트의 필수 구조가 우선입니다. 반드시 [점수] 태그로 시작하고, [점수] 다음에 [요약]을 출력하세요.";
+        }
+
         // 정화재점 시 boostMap 컨텍스트 반영 (발동=소비된 아이템들의 boost 기록)
         if (opts.isDaily && opts.boostMap && typeof opts.boostMap === 'object') {
           const boostEntries = Object.entries(opts.boostMap)
@@ -237,6 +241,7 @@ export function useConsultation(
             isSajuChapter: opts.isSajuChapter || false,
             responseStyle: style,
             precision_level: useAppStore.getState().dataPrecision?.level || "low",
+            gender: useAppStore.getState().form?.gender || null,
             clientHour: new Date().getHours(),
         });
 

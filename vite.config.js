@@ -62,7 +62,7 @@ export default defineConfig({
                   const newBody = JSON.stringify({
                     model: 'claude-haiku-4-5-20251001',
                     max_tokens: maxTokens,
-                    ...(validation.data.isDaily ? { temperature: 0.3 } : {}),
+                    ...(validation.data.isDaily ? { temperature: 0.65 } : {}),
                     system: [{ type: 'text', text: systemWithContext }],
                     messages: [{ role: 'user', content: validation.data.userMessage }],
                   });

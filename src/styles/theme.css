@@ -984,12 +984,32 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
   cursor:pointer;transition:opacity var(--trans-fast);
 }
 .daily-mini-cta:hover{opacity:.85}
-@keyframes daily-mini-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.daily-mini-shimmer{
-  height:130px;border-radius:var(--r2);
-  background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);
-  background-size:200% 100%;animation:daily-mini-shimmer 1.5s infinite;
+@keyframes daily-mini-orbit{to{transform:rotate(360deg)}}
+@keyframes daily-mini-pulse{0%,100%{opacity:.45;transform:scale(.86)}50%{opacity:1;transform:scale(1.08)}}
+.daily-mini-loading{
+  min-height:130px;border-radius:var(--r2);border:1px solid var(--acc);
+  background:linear-gradient(160deg,var(--bg2) 0%,var(--bg1) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px 18px;text-align:center;box-shadow:0 4px 24px rgba(232,176,72,.06);
 }
+.daily-mini-loading-orbit{
+  width:48px;height:48px;border-radius:50%;position:relative;margin-bottom:12px;
+  border:1px solid rgba(232,176,72,.24);animation:daily-mini-orbit 3.2s linear infinite;
+}
+.daily-mini-loading-orbit::before{
+  content:"";position:absolute;inset:10px;border-radius:50%;
+  background:radial-gradient(circle at 35% 28%,rgba(232,176,72,.75),rgba(155,142,196,.42),rgba(30,22,54,.92));
+  box-shadow:0 0 24px rgba(232,176,72,.16);
+}
+.daily-mini-loading-orbit span{
+  position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 10px rgba(232,176,72,.5);animation:daily-mini-pulse 1.6s ease-in-out infinite;
+}
+.daily-mini-loading-orbit span:nth-child(1){top:-3px;left:50%;margin-left:-3px}
+.daily-mini-loading-orbit span:nth-child(2){right:2px;bottom:7px;animation-delay:.25s}
+.daily-mini-loading-orbit span:nth-child(3){left:2px;bottom:7px;animation-delay:.5s}
+.daily-mini-loading-text{font-size:var(--sm);font-weight:700;color:var(--t1)}
+.daily-mini-loading-sub{font-size:var(--xs);color:var(--t4);line-height:1.55;margin-top:4px}
 
 /* 랜딩 헤더 */
 .lh-wrap{display:flex;align-items:center;gap:12px;padding:6px 2px 2px}
@@ -1040,4 +1060,3 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 .land-daily-msg{padding:14px 16px;border-top:1px solid var(--line2);text-align:center}
 .land-daily-msg-label{font-size:10px;color:var(--gold);font-weight:600;letter-spacing:.08em;margin-bottom:5px}
 .land-daily-msg-text{font-size:var(--sm);color:var(--t3);font-style:italic;line-height:1.8}
-
