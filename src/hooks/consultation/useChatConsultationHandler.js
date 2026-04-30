@@ -49,6 +49,8 @@ function buildChatPrompt(prevQAs, prevChat, userMsg, dailySeed = '') {
 
 반드시 지킬 규칙:
 - 반말은 쓰지 말고, 다정한 존댓말만 사용해주세요.
+- 사용자가 반말이나 친한 말투로 말해도 따라하지 말고 끝까지 존댓말을 유지해주세요.
+- 문장 끝은 "~해요", "~예요", "~드릴게요", "~해보세요" 같은 존댓말로만 마무리해주세요.
 - 답변은 1~3문장 이내로 짧게 말해주세요.
 - 첫 문장은 질문에 대한 대답만 바로 말해주세요.
 - 이유, 근거, 배경 설명은 사용자가 "왜", "이유", "근거", "왜 그렇게 보여?"처럼 직접 물었을 때만 말해주세요.
@@ -235,7 +237,7 @@ export function useChatConsultationHandler({
     const prevChat = compressChatHistory(chatHistory);
     const seed = chatHistory.length === 0 ? dailySeed : '';
     const streamChatPrompt = buildChatPrompt(prevQAs, prevChat, userMsg, seed);
-    const chatContext = `${buildCtx()}\n\n[채팅 응답 규칙]\n이번 응답은 채팅 모드입니다. [요약], 제목, 섹션 헤더를 쓰지 말고 바로 대화체로 이어서 말해주세요. 첫 문장을 요약처럼 시작하지 말고 자연스럽게 이어가세요.`;
+    const chatContext = `${buildCtx()}\n\n[채팅 응답 규칙]\n이번 응답은 채팅 모드입니다. [요약], 제목, 섹션 헤더를 쓰지 말고 바로 대화체로 이어서 말해주세요. 첫 문장을 요약처럼 시작하지 말고 자연스럽게 이어가세요. 반말은 금지하고, 사용자가 어떤 말투로 쓰더라도 끝까지 존댓말만 유지해주세요.`;
 
     setChatHistory((prev) => [...prev, { role: "user", text: userMsg }, { role: "ai", text: "", streaming: true }]);
     setLatestChatIdx(-1);

@@ -331,25 +331,23 @@ export default function LandingPage({
       accent: hasDiaryToday,
     },
     {
+      icon: '💬',
+      title: '별숨에게 질문하기',
+      sub: '무엇이든 물어보세요',
+      onClick: () => setStep(STEP.QUESTION),
+    },
+    {
       icon: '📅',
       title: '별숨 달력',
       sub: '운세 기록 한눈에 보기',
       onClick: () => setStep(STEP.CALENDAR),
-    },
-    {
-      icon: '🎰',
-      title: '별숨 뽑기',
-      sub: hasDiaryToday ? '오늘 뽑기 가능 ✦' : '일기 작성 후 가능해요',
-      onClick: () => setStep(STEP.GACHA),
-      accent: hasDiaryToday,
-      ariaLabel: `별숨 뽑기${hasDiaryToday ? ', 오늘 가능' : ''}`,
     },
   ], [totalMissions, completedMissions, remainingMissions, hasDiaryToday, setStep]);
 
   const secondaryTiles = useMemo(() => [
     { icon: '⭐', title: '나의 별숨', sub: '사주·천체 종합 분석', onClick: () => setStep(STEP.NATAL) },
     { icon: '📊', title: '별숨 통계', sub: '지난 운세 흐름 보기', onClick: () => setStep(STEP.STATS) },
-    { icon: '🛍', title: '별숨샵', sub: '기운 아이템 구경하기', onClick: () => setStep(STEP.SHOP) },
+    { icon: '🛍', title: '별숨샵', sub: '아이템 & 뽑기', onClick: () => setStep(STEP.SHOP) },
     { icon: '🎁', title: '내 아이템', sub: '보관함 & 장착 관리', onClick: () => setStep(STEP.ITEM_INVENTORY) },
   ], [setStep]);
 
@@ -473,14 +471,12 @@ export default function LandingPage({
           onFreeRecharge={onFreeRecharge}
         />
 
-        {/* 3. 알림 캐러셀 (조건부) */}
+        {/* 3. 알림 캐러셀 (절기/생일만) */}
         <AlertCarousel
           isApproximate={isApproximate}
           jeolgi={nearbyJeolgi}
           birthdays={upcomingBirthdays}
-          reflectionPending={!showReflection && !!yesterdayEntry?.score}
           onApproximate={() => setStep(STEP.PROFILE)}
-          onReflection={() => setShowReflection(true)}
         />
 
         {/* 4. 주요 기능 2×2 타일 */}

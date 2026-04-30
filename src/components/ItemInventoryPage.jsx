@@ -14,7 +14,17 @@ import ItemDetailModal from '../features/inventory/ItemDetailModal.jsx';
 import UseItemModal    from '../features/inventory/UseItemModal.jsx';
 import SynthesisModal  from '../features/inventory/SynthesisModal.jsx';
 import { FORTUNE_LABELS, ITEM_BOOSTS_CACHE } from '../features/inventory/inventoryUtils.js';
-import { mergeBoostEntry } from '../features/today/fortuneAxisTools.js';
+
+function buildBoostEntry(prevEntry, item) {
+  const prevItems = Array.isArray(prevEntry?.items) ? prevEntry.items.filter(Boolean) : [];
+  const boost = Number(item?.boost) || 0;
+  if (!item?.id || !boost) return prevEntry || { itemId: '', boost: 0, name: '', emoji: '✨', items: [] };
+  const newItem = { itemId: String(item.id), id: String(item.id), boost, name: item.name || '', emoji: item.emoji || '', grade: item.grade || '' };
+  const nextItems = [...prevItems, newItem];
+  const totalBoost = nextItems.reduce((s, i) => s + (i.boost || 0), 0);
+  const latest = nextItems[nextItems.length - 1];
+  return { itemId: latest?.itemId || '', boost: totalBoost, name: latest?.name || '', emoji: latest?.emoji || '✨', items: nextItems };
+}
 
 const SEGMENTS = [
   { id: '전체',   label: '전체' },
@@ -109,7 +119,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
         .eq('item_id', String(item.id));
       const nextMap = {
         ...boostMap,
-        [item.aspectKey]: mergeBoostEntry(boostMap?.[item.aspectKey], [{ rowId: String(item.id), item }]),
+        [item.aspectKey]: buildBoostEntry(boostMap?.[item.aspectKey], item),
       };
       writeDailyLocalCache(kakaoId, ITEM_BOOSTS_CACHE, JSON.stringify(nextMap), today);
       if (canUseDailySupabaseTables()) {

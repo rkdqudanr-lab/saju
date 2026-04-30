@@ -26,9 +26,7 @@ export default function AlertCarousel({
   isApproximate = false,
   jeolgi = null,          // { name, meaning, diffDays }
   birthdays = [],         // [{ label, dday }] dday <= 30
-  reflectionPending = false,
   onApproximate,          // () => void — 프로필 수정으로 이동
-  onReflection,           // () => void — reflection 팝업 열기
 }) {
   const cards = [];
 
@@ -73,19 +71,6 @@ export default function AlertCarousel({
       />,
     );
   });
-
-  // 4) 어제 운세 피드백 미응답
-  if (reflectionPending) {
-    cards.push(
-      <AlertCard
-        key="reflection"
-        icon="💬"
-        title="어제 별숨이 맞았나요?"
-        desc="피드백을 남기면 +2 BP를 드려요"
-        onClick={onReflection}
-      />,
-    );
-  }
 
   if (!cards.length) return null;
 
