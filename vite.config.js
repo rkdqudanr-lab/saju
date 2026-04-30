@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { buildAiRequestContext, validateAiRequest } from './lib/aiRequest.js'
 
 export default defineConfig({
   plugins: [
@@ -55,20 +56,30 @@ export default defineConfig({
             req.on('end', () => {
               try {
                 const parsed = JSON.parse(Buffer.concat(body).toString());
-                const newBody = JSON.stringify({
-                  model: 'claude-sonnet-4-20250514',
-                  max_tokens: 1200,
-                  system: parsed.system,
-                  messages: [{ role: 'user', content: parsed.userMessage }],
+                const validation = validateAiRequest(parsed);
+                if (!validation.ok) throw new Error(validation.reason);
+                buildAiRequestContext(validation.data).then(({ systemWithContext, maxTokens }) => {
+                  const newBody = JSON.stringify({
+                    model: 'claude-haiku-4-5-20251001',
+                    max_tokens: maxTokens,
+                    ...(validation.data.isDaily ? { temperature: 0.3 } : {}),
+                    system: [{ type: 'text', text: systemWithContext }],
+                    messages: [{ role: 'user', content: validation.data.userMessage }],
+                  });
+                  proxyReq.setHeader('Content-Type', 'application/json');
+                  proxyReq.setHeader('x-api-key', process.env.ANTHROPIC_API_KEY || '');
+                  proxyReq.setHeader('anthropic-version', '2023-06-01');
+                  proxyReq.setHeader('anthropic-beta', 'prompt-caching-2024-07-31');
+                  proxyReq.setHeader('Content-Length', Buffer.byteLength(newBody));
+                  proxyReq.write(newBody);
+                  proxyReq.end();
+                }).catch((e) => {
+                  console.error('Proxy AI context error:', e);
+                  proxyReq.destroy(e);
                 });
-                proxyReq.setHeader('Content-Type', 'application/json');
-                proxyReq.setHeader('x-api-key', process.env.ANTHROPIC_API_KEY || '');
-                proxyReq.setHeader('anthropic-version', '2023-06-01');
-                proxyReq.setHeader('Content-Length', Buffer.byteLength(newBody));
-                proxyReq.write(newBody);
-                proxyReq.end();
               } catch (e) {
                 console.error('Proxy error:', e);
+                proxyReq.destroy(e);
               }
             });
           });

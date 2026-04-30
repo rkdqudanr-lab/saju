@@ -192,6 +192,7 @@ export default function StatsPage({ callApi }) {
   const [scores, setScores] = useState([]);
   const [insight, setInsight] = useState('');
   const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState('');
   const [sharing, setSharing] = useState(false);
   const [reflections, setReflections] = useState([]);
 
@@ -311,6 +312,7 @@ export default function StatsPage({ callApi }) {
     if (!user) return;
     setInsightLoading(true);
     setInsight('');
+    setInsightError('');
 
     const summary = [
       `총 상담 횟수: ${total}회`,
@@ -322,9 +324,10 @@ export default function StatsPage({ callApi }) {
       const res = await callApi(`나의 별숨 상담 패턴을 분석해줘:\n${summary}`, {
         isAnalytics: true,
       });
-      setInsight(res?.text || '');
-    } catch {
-      // 조용히 실패
+      setInsight(typeof res === 'string' ? res : '');
+    } catch (error) {
+      console.error('[Stats] AI 패턴 인사이트 요청 실패:', error);
+      setInsightError('인사이트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setInsightLoading(false);
     }
@@ -473,23 +476,30 @@ export default function StatsPage({ callApi }) {
           {/* AI 인사이트 */}
           <div style={{ padding: '20px 20px 0' }}>
             {!insight && !insightLoading && (
-              <button
-                onClick={handleInsight}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  background: 'var(--goldf)',
-                  border: '1.5px solid var(--acc)',
-                  borderRadius: 'var(--r1)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--ff)',
-                  fontSize: 'var(--sm)',
-                  color: 'var(--gold)',
-                  fontWeight: 700,
-                }}
-              >
-                ✦ AI 패턴 인사이트 보기
-              </button>
+              <>
+                <button
+                  onClick={handleInsight}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    background: 'var(--goldf)',
+                    border: '1.5px solid var(--acc)',
+                    borderRadius: 'var(--r1)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--ff)',
+                    fontSize: 'var(--sm)',
+                    color: 'var(--gold)',
+                    fontWeight: 700,
+                  }}
+                >
+                  ✦ AI 패턴 인사이트 보기
+                </button>
+                {insightError && (
+                  <div style={{ marginTop: 10, fontSize: 'var(--xs)', color: '#E05A3A', lineHeight: 1.6 }}>
+                    {insightError}
+                  </div>
+                )}
+              </>
             )}
 
             {insightLoading && (
