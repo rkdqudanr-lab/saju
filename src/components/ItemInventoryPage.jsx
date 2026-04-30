@@ -100,13 +100,6 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
     }
   }, [category, fortuneFilter]);
 
-  useEffect(() => {
-    if (fortuneFilter === 'all') return;
-    if (!groupedItems.some(([key]) => key === fortuneFilter)) {
-      setFortuneFilter('all');
-    }
-  }, [fortuneFilter, groupedItems]);
-
   // 아이템 발동 = 소비: 인벤토리 삭제 + boostMap 캐시 저장
   async function handleActivate(item) {
     if (!kakaoId || !item?.aspectKey || !item?.boost) return;
@@ -170,6 +163,13 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const groupedItems = Object.entries(
     sortedFiltered.reduce((acc, item) => { const k = item.aspectKey || 'general'; if (!acc[k]) acc[k] = []; acc[k].push(item); return acc; }, {})
   ).sort(([a], [b]) => a === 'general' ? 1 : b === 'general' ? -1 : (FORTUNE_LABELS[a] || a).localeCompare(FORTUNE_LABELS[b] || b, 'ko'));
+
+  useEffect(() => {
+    if (fortuneFilter === 'all') return;
+    if (!groupedItems.some(([key]) => key === fortuneFilter)) {
+      setFortuneFilter('all');
+    }
+  }, [fortuneFilter, groupedItems]);
 
   const fortuneOptions = useMemo(() => ([
     { id: 'all', label: '전체' },
