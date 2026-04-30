@@ -127,9 +127,13 @@ Supabase `missions` 테이블. 매일 리셋되는 일일 미션.
 
 ### [22] 스텝별 주요 페이지 맵은?
 0=홈/메인, 1~3=온보딩, 4=결과, 5=채팅, 10=랜딩,  
-13=나의별숨, 28=통계, 31=샵, 38=아이템보관함, 40=가챠,  
-41=커뮤니티, 42=다이어리, 44=달력, 50=설정, 60=오늘하루상세.  
-`src/hooks/useNavigation.js` 참조.
+13=나의별숨, 17=일기, 20=일기목록, 23=오늘하루상세, 28=통계, 31=샵, 37=성장대시보드, 38=아이템보관함, 40=가챠,  
+41=리포트, 42=사주이야기, **43=미션(전용)**.  
+`src/hooks/useNavigation.js` 및 `src/utils/steps.js` 참조.
+
+`STEP.MISSIONS(43)` — 오늘 미션 전용 페이지(`src/pages/MissionPage.jsx`).  
+랜딩 "오늘 미션" 타일이 여기로 연결됨. 미션 완료(onCompleteMission) 가능.  
+성장 단계 미니 배지 → GROWTH_DASHBOARD 링크 포함.
 
 ### [23] 로컬 개발 환경은?
 `.env` 파일: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `ANTHROPIC_API_KEY`.  
@@ -220,3 +224,11 @@ Supabase `missions` 테이블. 매일 리셋되는 일일 미션.
 **`src/utils/parseDailyLines.js`**
 - `parseCategoryLine(line)` — 카테고리 줄 파싱
 - `parseDailyLines(text)` — 전체 일일운세 텍스트 파싱
+
+**`src/pages/MissionPage.jsx`** (STEP.MISSIONS = 43)
+- 오늘 미션 전용 페이지. MissionDashboard + 성장단계 미니 배지 포함.
+- `onCompleteMission`, `hasDiaryToday` props를 AppRouter에서 전달.
+
+**`src/components/landing/LevelCard.jsx`**
+- 랜딩 홈의 LevelCard. 별숨 성장 단계를 행성 오브 애니메이션으로 표시.
+- DailyMiniCard 아래, LandingHeader 위에 위치. 클릭 → GROWTH_DASHBOARD.

@@ -18,7 +18,7 @@ import {
   getDailyAxisScores,
   TODAY_AXIS_CACHE,
 } from '../features/today/getDailyAxisScores.js';
-import { TODAY_AXIS_TEXT_CACHE, deriveByeolsoomPick } from '../features/today/fortuneAxisTools.js';
+import { TODAY_AXIS_TEXT_CACHE } from '../features/today/fortuneAxisTools.js';
 import SamplePreview from '../components/SamplePreview.jsx';
 import ReflectionPopup from '../components/ReflectionPopup.jsx';
 
@@ -27,6 +27,7 @@ import DailyMiniCard from '../components/landing/DailyMiniCard.jsx';
 import AlertCarousel from '../components/landing/AlertCarousel.jsx';
 import QuickActionGrid from '../components/landing/QuickActionGrid.jsx';
 import WeeklyScoreSummary from '../components/landing/WeeklyScoreSummary.jsx';
+import LevelCard from '../components/landing/LevelCard.jsx';
 
 // 시간대 판별: 17시 이후 or 6시 이전이면 '밤' 모드
 function isNightMode() {
@@ -168,14 +169,13 @@ export default function LandingPage({
       return;
     }
     getAuthenticatedClient(kakaoId)
-      ?.from('daily_cache')
-      .select('cache_date, content')
+      ?.from('daily_scores')
+      .select('score_date, score')
       .eq('kakao_id', kakaoId)
-      .eq('cache_type', 'horoscope_score')
-      .in('cache_date', last7)
+      .in('score_date', last7)
       .then(({ data }) => {
         const map = {};
-        (data || []).forEach((r) => { map[r.cache_date] = Number(r.content); });
+        (data || []).forEach((r) => { map[r.score_date] = Number(r.score); });
         setScoreHistory(last7.reverse().map((date) => ({ date, score: map[date] ?? null })));
       })
       .catch(() => {});
@@ -318,7 +318,7 @@ export default function LandingPage({
         : remainingMissions > 0
           ? `✦ ${remainingMissions}개 남았어요`
           : '오늘 미션 완료! ✦',
-      onClick: () => setStep(STEP.GROWTH_DASHBOARD),
+      onClick: () => setStep(STEP.MISSIONS),
       progressFill: totalMissions > 0 ? (completedMissions / totalMissions) * 100 : 0,
       accent: totalMissions > 0 && remainingMissions === 0,
       ariaLabel: `오늘 미션, ${completedMissions}/${totalMissions} 완료`,
@@ -462,7 +462,10 @@ export default function LandingPage({
           scoreBoostDelta={scoreBoostDelta}
         />
 
-        {/* 2. 미니 헤더 */}
+        {/* 2. 별숨 레벨 카드 */}
+        <LevelCard />
+
+        {/* 3. 미니 헤더 */}
         <LandingHeader
           onEditProfile={() => { setEditingMyProfile(true); setStep(STEP.PROFILE); }}
           onLogout={kakaoLogout}
@@ -471,7 +474,7 @@ export default function LandingPage({
           onFreeRecharge={onFreeRecharge}
         />
 
-        {/* 3. 알림 캐러셀 (절기/생일만) */}
+        {/* 4. 알림 캐러셀 (절기/생일만) */}
         <AlertCarousel
           isApproximate={isApproximate}
           jeolgi={nearbyJeolgi}

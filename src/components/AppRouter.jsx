@@ -47,6 +47,7 @@ const TarotPage               = lazy(() => import("./TarotPage.jsx"));
 const ByeolsoomLetterPage     = lazy(() => import("./ByeolsoomLetterPage.jsx"));
 const YearlyReportPage        = lazy(() => import("./YearlyReportPage.jsx"));
 const GrowthDashboardPage     = lazy(() => import("./GrowthDashboardPage.jsx"));
+const MissionPage             = lazy(() => import("../pages/MissionPage.jsx"));
 const ItemInventoryPage       = lazy(() => import("./ItemInventoryPage.jsx"));
 const LottoPage               = lazy(() => import("./LottoPage.jsx"));
 const GachaPage               = lazy(() => import("./GachaPage.jsx"));
@@ -497,6 +498,13 @@ export default function AppRouter({ ctx }) {
       {step === STEP.YEARLY_REPORT && (
         <Suspense fallback={<PageSpinner />}>
           <YearlyReportPage form={form} buildCtx={buildCtx} showToast={showToast} spendBP={spendBP} currentBp={gamificationState?.currentBp || 0} setStep={setStep} />
+        </Suspense>
+      )}
+
+      {/* MISSIONS */}
+      {step === STEP.MISSIONS && (
+        <Suspense fallback={<PageSpinner />}>
+          <MissionPage onCompleteMission={handleCompleteMission} hasDiaryToday={hasDiaryToday} />
         </Suspense>
       )}
 
