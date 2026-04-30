@@ -12,6 +12,7 @@ import {
   FREE_BP_RECHARGE,
   GUARDIAN_LEVEL_THRESHOLDS,
   STREAK_FREEZE_COST,
+  STREAK_BRIDGE_ITEM_ID,
   calculateLevelPromotion,
   calculateLoginStreak,
   calculateLevelProgress,
@@ -126,7 +127,7 @@ export function useGamification(user, showToast) {
       }));
 
       // 일일 로그인 스트릭 및 BP 획득
-      await updateLoginStreakAndEarnBP(user.id, userData?.last_login_date);
+      await updateLoginStreakAndEarnBP(user.id, userData?.last_login_date, userData?.login_streak || 0);
 
       // 오늘의 미션 로드
       await loadTodayMissions(user.id);
@@ -296,12 +297,12 @@ export function useGamification(user, showToast) {
   // 4. 로그인 스트릭 업데이트 및 일일 로그인 BP 획득
   // ─────────────────────────────────────────────────────────────
   const updateLoginStreakAndEarnBP = useCallback(
-    async (kakaoId, lastLoginDateStr) => {
+    async (kakaoId, lastLoginDateStr, currentLoginStreak = gamificationState.loginStreak || 0) => {
       try {
         const authClient = getAuthenticatedClient(kakaoId);
         const client = authClient || supabase;
 
-        const { newStreak, isFirstLoginToday, bpGain, isConsecutiveDay } =
+        const { newStreak, isFirstLoginToday, bpGain, isConsecutiveDay, missedDays } =
           calculateLoginStreak(lastLoginDateStr);
 
         // 이미 오늘 로그인했으면 스킵
@@ -310,7 +311,26 @@ export function useGamification(user, showToast) {
         }
 
         // users 테이블 업데이트
-        if (isConsecutiveDay) {
+        let bridgedStreak = false;
+        if (!isConsecutiveDay && missedDays === 1) {
+          const { data: bridgeItem } = await client
+            .from('user_shop_inventory')
+            .select('item_id')
+            .eq('kakao_id', String(kakaoId))
+            .eq('item_id', STREAK_BRIDGE_ITEM_ID)
+            .maybeSingle();
+
+          if (bridgeItem) {
+            await client
+              .from('user_shop_inventory')
+              .delete()
+              .eq('kakao_id', String(kakaoId))
+              .eq('item_id', STREAK_BRIDGE_ITEM_ID);
+            bridgedStreak = true;
+          }
+        }
+
+        if (isConsecutiveDay || bridgedStreak) {
           // 스트릭 증가
           await client.rpc('increment_login_streak', { kid: String(kakaoId) });
         } else {
@@ -338,7 +358,12 @@ export function useGamification(user, showToast) {
         }
 
         // 스트릭 마일스톤 보너스
-        const achievedStreak = newStreak > 0 ? newStreak : ((gamificationState.loginStreak || 0) + 1);
+        const achievedStreak = bridgedStreak
+          ? (currentLoginStreak + 1)
+          : (newStreak > 0 ? newStreak : (currentLoginStreak + 1));
+        if (bridgedStreak && showToast) {
+          showToast(`출석 연결권을 사용해 ${achievedStreak}일 연속 출석을 이어갔어요`, 'success');
+        }
         const STREAK_MILESTONES = { 3: 30, 7: 100, 14: 100, 21: 100, 30: 300 };
         if (STREAK_MILESTONES[achievedStreak]) {
           await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);

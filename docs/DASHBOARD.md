@@ -59,12 +59,14 @@ kakaoId는 반드시 truthy 확인 후 전달: `const kakaoId = user?.kakaoId ||
 `src/hooks/useGamification.js` + `src/utils/gamificationLogic.js`.  
 채팅 1회 = -3BP, 배드타임 액막이 = -20BP, 일기 = +5BP, 미션 완료 = +BP.  
 `gamificationState.currentBp`가 현재 BP. Supabase `user_gamification` 테이블에 저장.
+출석 연결권(`streak_bridge_ticket`)은 별숨 숍에서 구매하는 1회용 아이템. 하루만 출석을 놓친 뒤 다음 로그인하면 `user_shop_inventory`에서 자동 삭제되고 기존 연속 출석을 +1로 이어준다.
 
 ### [9] 가챠/아이템 시스템은?
 `src/utils/gachaItems.js` — 모든 아이템 정의, `findItem(id)` 함수.  
 `src/components/GachaPage.jsx` — 뽑기 UI.  
 `src/components/ItemInventoryPage.jsx` — 보관함, 장착, 합성, 컬렉션 (1735줄, 분리 필요).  
 아이템 장착: `useAppStore`의 `equippedItems`, `equippedTalisman`, `equippedSajuItem`.
+통합 숍(`src/components/ShopPage.jsx`)은 카드형 뽑기 종류 선택 UI를 사용하며, DB 구매 아이템 카테고리로 `special_reading`, `streak_repair`를 표시한다.
 
 ### [10] 오늘 하루 나의 별숨(TodayDetailPage) 구조는?
 step=60 진입. `getDailyAxisScores(baseScore, equippedItems)` → 9개 영역 점수 계산.  

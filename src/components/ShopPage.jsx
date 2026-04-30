@@ -10,7 +10,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
-import { spendBP } from '../utils/gamificationLogic.js';
+import { spendBP, STREAK_BRIDGE_ITEM_ID } from '../utils/gamificationLogic.js';
 import { STEP } from '../utils/steps.js';
 import {
   GACHA_POOL, GRADE_CONFIG, PROB_TABLE, pullOne, pull10, GRADE_ORDER,
@@ -31,11 +31,11 @@ const SHOP_COST_1   = 10, SHOP_COST_10   = 90;
 const DUPLICATE_REFUND = 5;
 
 const MAIN_TABS = [
-  { id: 'spirit',   label: '기운 뽑기',   emoji: '🌌' },
-  { id: 'theme',    label: '테마 뽑기',   emoji: '🎨' },
-  { id: 'avatar',   label: '아바타 뽑기', emoji: '👤' },
-  { id: 'effect',   label: '이펙트 뽑기', emoji: '✨' },
-  { id: 'inv',      label: '보관함',      emoji: '🗃️' },
+  { id: 'spirit', label: '기운 뽑기', emoji: '🌌', desc: '운세에 반영되는 우주·사주 아이템', accent: 'rgba(180,142,240,0.9)' },
+  { id: 'theme', label: '테마 뽑기', emoji: '🎨', desc: '앱 분위기와 색감 꾸미기', accent: 'rgba(232,176,72,0.9)' },
+  { id: 'avatar', label: '아바타 뽑기', emoji: '👤', desc: '프로필에 쓰는 상징 아바타', accent: 'rgba(123,164,212,0.9)' },
+  { id: 'effect', label: '이펙트 뽑기', emoji: '✨', desc: '화면 위에 흐르는 장식 효과', accent: 'rgba(126,200,164,0.9)' },
+  { id: 'inv', label: '보관함', emoji: '🗃️', desc: '구매·보유 아이템 관리', accent: 'rgba(155,173,206,0.9)' },
 ];
 
 const CAT_DESC = {
@@ -43,6 +43,7 @@ const CAT_DESC = {
   avatar:          '내 프로필 아바타가 바뀌어요',
   effect:          '화면에 아름다운 이펙트가 표시돼요',
   special_reading: '특별한 AI 상담을 1회 사용할 수 있어요',
+  streak_repair:   '하루 놓친 연속 출석을 자동으로 이어줘요',
 };
 const RARITY_LABEL = { common: '일반', rare: '레어', legendary: '레전더리' };
 const RARITY_COLOR = { common: 'var(--t4)', rare: '#B48EF0', legendary: '#E8B048' };
@@ -442,10 +443,52 @@ function SpiritItemPreview({ pool, gradeConfig, gradeOrder }) {
   );
 }
 
+// ─── 뽑기 종류 선택 카드 ──────────────────────────────────────
+function GachaTypeSelector({ activeTab, onSelect }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 9, padding: '4px 0 14px', borderBottom: '1px solid var(--line)' }}>
+      {MAIN_TABS.map(tab => {
+        const active = activeTab === tab.id;
+        return (
+          <button key={tab.id} onClick={() => onSelect(tab.id)} style={{
+            minHeight: 78,
+            padding: '11px 10px',
+            borderRadius: 'var(--r1)',
+            border: `1.5px solid ${active ? tab.accent : 'var(--line)'}`,
+            background: active ? `linear-gradient(135deg, ${tab.accent.replace('0.9', '0.18')}, var(--bg2))` : 'var(--bg2)',
+            color: active ? 'var(--t1)' : 'var(--t3)',
+            fontFamily: 'var(--ff)',
+            cursor: 'pointer',
+            textAlign: 'left',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: 7,
+            boxShadow: active ? `0 0 16px ${tab.accent.replace('0.9', '0.16')}` : 'none',
+            transition: 'transform .16s ease, border-color .16s ease, background .16s ease',
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <span style={{ fontSize: 17, lineHeight: 1 }}>{tab.emoji}</span>
+                <span style={{ fontSize: 'var(--xs)', fontWeight: 800, whiteSpace: 'nowrap' }}>{tab.label}</span>
+              </span>
+              {active && <span style={{ width: 7, height: 7, borderRadius: '50%', background: tab.accent, boxShadow: `0 0 8px ${tab.accent}` }} />}
+            </span>
+            <span style={{ fontSize: '10px', lineHeight: 1.35, color: active ? 'var(--t2)' : 'var(--t4)', wordBreak: 'keep-all' }}>
+              {tab.desc}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── 보관함 아이템 카드 ───────────────────────────────────────
 function InvCard({ item, isEquipped, onEquip, onUse }) {
   const canEquip  = ['theme','avatar','effect'].includes(item.category);
   const isSpecial = item.category === 'special_reading';
+  const isStreakRepair = item.category === 'streak_repair';
   const rarityColor = RARITY_COLOR[item.rarity] || 'var(--t4)';
   const rarityLabel = RARITY_LABEL[item.rarity];
 
@@ -502,6 +545,22 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
         }}>
           ✦ 지금 사용하기 →
         </button>
+      )}
+      {isStreakRepair && (
+        <div style={{
+          padding: '8px',
+          textAlign: 'center',
+          fontSize: 'var(--xs)',
+          width: '100%',
+          color: 'var(--gold)',
+          fontWeight: 700,
+          border: '1px solid var(--acc)',
+          borderRadius: 'var(--r1)',
+          background: 'var(--goldf)',
+          boxSizing: 'border-box',
+        }}>
+          자동 사용 대기 중
+        </div>
       )}
     </div>
   );
@@ -578,7 +637,7 @@ export default function ShopPage({ showToast }) {
       setCurrentBP(bpRes.data?.current_bp ?? 0);
       const inv = invRes.data || [];
       setOwnedIds(new Set(inv.map(r => String(r.item_id))));
-      setDbItems((dbItemsRes.data || []).filter(i => i.category === 'special_reading'));
+      setDbItems((dbItemsRes.data || []).filter(i => ['special_reading', 'streak_repair'].includes(i.category)));
 
       const equippedMap = { theme: null, avatar: null, effect: null };
       const equippedRaw = inv.filter(r => r.is_equipped).map(r => String(r.item_id));
@@ -705,6 +764,11 @@ export default function ShopPage({ showToast }) {
   // ── 특별 상담 구매 ────────────────────────────────────────────
   async function handleBuySpecial(item) {
     if (!kakaoId) { showToast?.('로그인 후 구매할 수 있어요', 'info'); return; }
+    if (item.id === STREAK_BRIDGE_ITEM_ID && ownedIds.has(STREAK_BRIDGE_ITEM_ID)) {
+      showToast?.('이미 출석 연결권을 보유 중이에요', 'info');
+      setConfirmItem(null);
+      return;
+    }
     setBuying(true);
     try {
       const client = getAuthenticatedClient(kakaoId);
@@ -714,8 +778,12 @@ export default function ShopPage({ showToast }) {
       setCurrentBP(newBP ?? currentBP - item.bp_cost);
       setOwnedIds(prev => new Set([...prev, String(item.id)]));
       setConfirmItem(null);
-      showToast?.(`${item.name} 구매 완료! ✦`, 'success');
-      setTimeout(() => setStep(STEP.SPECIAL_READING), 800);
+      if (item.category === 'special_reading') {
+        showToast?.(`${item.name} 구매 완료! ✦`, 'success');
+        setTimeout(() => setStep(STEP.SPECIAL_READING), 800);
+      } else {
+        showToast?.(`${item.name} 구매 완료! 하루 놓친 출석에 자동으로 사용돼요`, 'success');
+      }
     } catch { showToast?.('구매에 실패했어요.', 'error'); }
     finally { setBuying(false); }
   }
@@ -745,22 +813,8 @@ export default function ShopPage({ showToast }) {
         </div>
       </div>
 
-      {/* 메인 탭 */}
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', padding: '0 0 14px', borderBottom: '1px solid var(--line)', margin: '0 -16px', paddingLeft: 16, paddingRight: 16 }}>
-        {MAIN_TABS.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-            flexShrink: 0, padding: '9px 14px', borderRadius: 22,
-            border: `1px solid ${activeTab === tab.id ? 'var(--acc)' : 'var(--line)'}`,
-            background: activeTab === tab.id ? 'var(--goldf)' : 'var(--bg2)',
-            color: activeTab === tab.id ? 'var(--gold)' : 'var(--t3)',
-            fontSize: 'var(--xs)', fontWeight: activeTab === tab.id ? 700 : 400,
-            cursor: 'pointer', fontFamily: 'var(--ff)', whiteSpace: 'nowrap',
-            transition: 'all .15s',
-          }}>
-            {tab.emoji} {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* 뽑기 종류 선택 */}
+      <GachaTypeSelector activeTab={activeTab} onSelect={setActiveTab} />
 
       {/* ── 기운 뽑기 탭 ──────────────────────────────────────── */}
       {activeTab === 'spirit' && (
@@ -882,7 +936,7 @@ export default function ShopPage({ showToast }) {
       {activeTab === 'inv' && (
         <>
           <div style={{ display: 'flex', gap: 8, padding: '16px 0 0', overflowX: 'auto', scrollbarWidth: 'none' }}>
-            {[{id:'all',label:'전체'},{id:'theme',label:'테마'},{id:'avatar',label:'아바타'},{id:'effect',label:'이펙트'},{id:'special_reading',label:'특별 상담'}].map(f => (
+            {[{id:'all',label:'전체'},{id:'theme',label:'테마'},{id:'avatar',label:'아바타'},{id:'effect',label:'이펙트'},{id:'special_reading',label:'특별 상담'},{id:'streak_repair',label:'출석 연결'}].map(f => (
               <button key={f.id} onClick={() => setInvFilter(f.id)} style={{
                 flexShrink: 0, padding: '7px 14px', borderRadius: 20,
                 border: `1px solid ${invFilter === f.id ? 'var(--acc)' : 'var(--line)'}`,
@@ -894,14 +948,17 @@ export default function ShopPage({ showToast }) {
             ))}
           </div>
 
-          {/* 특별 상담 구매 섹션 */}
-          {(invFilter === 'all' || invFilter === 'special_reading') && dbItems.filter(i => !ownedIds.has(String(i.id))).length > 0 && (
+          {/* 특별 상담·출석 연결권 구매 섹션 */}
+          {(invFilter === 'all' || invFilter === 'special_reading' || invFilter === 'streak_repair') && dbItems.filter(i => !ownedIds.has(String(i.id)) && (invFilter === 'all' || i.category === invFilter)).length > 0 && (
             <div style={{ margin: '14px 0 0' }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>✦ 특별 상담 구매</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>✦ 바로 구매</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                {dbItems.filter(i => !ownedIds.has(String(i.id))).map(item => (
+                {dbItems.filter(i => !ownedIds.has(String(i.id)) && (invFilter === 'all' || i.category === invFilter)).map(item => (
                   <div key={item.id} style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px', display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'center', minHeight: 160 }}>
                     <div style={{ fontSize: 28 }}>{item.emoji}</div>
+                    <div style={{ fontSize: '10px', color: item.category === 'streak_repair' ? 'var(--gold)' : 'var(--t4)', fontWeight: 700 }}>
+                      {item.category === 'streak_repair' ? '출석 보호' : '특별 상담'}
+                    </div>
                     <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item.name}</div>
                     <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.5, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{item.description}</div>
                     <button onClick={() => setConfirmItem(item)} style={{

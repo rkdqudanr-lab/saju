@@ -191,6 +191,7 @@ export function calculateLevelProgress(currentLevel, totalMissions, badtimeBlock
 
 /** BP 소비로 스트릭 1회 끊김 방지 */
 export const STREAK_FREEZE_COST = 15;
+export const STREAK_BRIDGE_ITEM_ID = 'streak_bridge_ticket';
 
 /** 스트릭 구간별 색상 및 타이틀 */
 export const STREAK_TIERS = [
@@ -240,12 +241,14 @@ export function calculateLoginStreak(lastLoginDateStr) {
   const yesterdayStr = yesterday.toISOString().split('T')[0];
 
   const isConsecutive = lastLoginDateStr === yesterdayStr;
+  const missedDays = Math.max(0, Math.floor((today - lastDate) / 86400000) - 1);
 
   return {
     newStreak: isConsecutive ? -1 : 1, // -1은 DB에서 업데이트할 값 (increment 필요)
     bpGain: BP_EARNING_RULES.DAILY_LOGIN,
     isFirstLoginToday: true,
     isConsecutiveDay: isConsecutive,
+    missedDays,
   };
 }
 
@@ -329,6 +332,7 @@ export default {
   formatGuardianLevelText,
   calculateLevelProgress,
   calculateLoginStreak,
+  STREAK_BRIDGE_ITEM_ID,
   getBPGaugeColor,
   spendBP,
 };

@@ -997,6 +997,7 @@ insert into shop_items (id, name, description, category, bp_cost, emoji, rarity)
   ('avatar_star',     '별 아바타',           '반짝이는 별 아이콘 아바타',           'avatar',          30,  '⭐', 'common'),
   ('special_yearly',  '연간 대운 상세 분석', '올해와 내년 대운 심층 AI 분석',      'special_reading', 100, '🔮', 'legendary'),
   ('special_nameday', '내 이름의 운명',      '이름 획수·음양오행 심층 분석',       'special_reading', 80,  '📛', 'rare'),
+  ('streak_bridge_ticket', '출석 연결권', '하루 놓친 출석을 자동으로 이어주는 1회용 아이템', 'streak_repair', 120, '🔗', 'rare'),
   ('effect_star',     '별 이펙트 카드',      '공유카드에 별 파티클 이펙트 추가',   'effect',          20,  '✨', 'common'),
   ('effect_aurora',   '오로라 이펙트 카드',  '공유카드에 오로라 그라디언트 추가',  'effect',          35,  '🌈', 'rare'),
   ('talisman_1',      '재입고 금두꺼비',     '오늘의 재물운 폭발 부적',            'talisman',        15,  '🐸', 'rare'),
