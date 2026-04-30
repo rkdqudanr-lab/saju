@@ -42,10 +42,11 @@ const MENU_GROUPS = {
     label: '별숨성장',
     items: [
       { icon: 'presentation-chart', label: '별숨성장 대시보드', step: STEP.GROWTH_DASHBOARD },
+      { icon: 'sparkles', label: '별숨공간', step: STEP.BYEOLSOOM_SPACE },
       { icon: 'star', label: '나의 별숨', step: STEP.NATAL },
       { icon: 'chart-pie', label: '별숨 통계', step: STEP.STATS },
       { icon: 'shopping-bag', label: '별숨샵', step: STEP.SHOP },
-      { icon: 'gift', label: '내 아이템', step: STEP.ITEM_INVENTORY },
+      { icon: 'gift', label: '오브제함', step: STEP.ITEM_INVENTORY },
     ],
   },
   square: {

@@ -136,6 +136,63 @@
   border-radius: 2px;
 }
 
+.today-long-reading {
+  flex-shrink: 0;
+  border-radius: var(--r2);
+  border: 1px solid rgba(180, 140, 50, 0.2);
+  background:
+    linear-gradient(180deg, rgba(232, 176, 72, 0.08) 0%, rgba(255,255,255,0.015) 100%),
+    var(--bg2);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.today-long-reading__kicker {
+  font-size: 10px;
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.today-long-reading__title {
+  font-size: var(--md);
+  color: var(--t1);
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 14px;
+}
+
+.today-long-reading__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.today-long-reading__section {
+  padding-top: 14px;
+  border-top: 1px solid rgba(180, 140, 50, 0.14);
+}
+
+.today-long-reading__section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.today-long-reading__section-title {
+  font-size: var(--xs);
+  color: var(--gold);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.today-long-reading__text {
+  margin: 0;
+  font-size: var(--sm);
+  color: var(--t2);
+  line-height: 1.9;
+}
+
 .today-axis-section {
   flex-shrink: 0;
   border-radius: 24px;

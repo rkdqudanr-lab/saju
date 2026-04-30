@@ -5,14 +5,12 @@ import { getAuthenticatedClient } from '../lib/supabase.js';
 import { STEP } from '../utils/steps.js';
 import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import '../styles/TodayDetailPage.css';
-import { findItem } from '../utils/gachaItems.js';
 
 import DailyRadarChart from '../features/today/DailyRadarChart.jsx';
 import WeeklyTrendChart from '../features/today/WeeklyTrendChart.jsx';
 import GoldenParticles from '../features/today/GoldenParticles.jsx';
-import AxisItemPickerModal from '../features/today/AxisItemPickerModal.jsx';
-import { ACTIONABLE_AXIS_KEYS, ASPECT_META, TODAY_AXIS_CACHE, getAverageFortuneScore, getDailyAxisScores } from '../features/today/getDailyAxisScores.js';
-import { TODAY_AXIS_TEXT_CACHE, deriveByeolsoomPick, mergeBoostEntry } from '../features/today/fortuneAxisTools.js';
+import { ACTIONABLE_AXIS_KEYS, ASPECT_META, getAverageFortuneScore, getDailyAxisScores } from '../features/today/getDailyAxisScores.js';
+import { TODAY_AXIS_TEXT_CACHE, deriveByeolsoomPick } from '../features/today/fortuneAxisTools.js';
 
 const PICK_FIELD_META = [
   { key: 'food', label: '음식', icon: '🍽', tone: 'gold' },
@@ -72,11 +70,6 @@ function getFallbackHeadline(axisKey, parsedDaily) {
   return `${getFortuneLabel(axisKey)}의 흐름을 다시 읽는 중이에요.`;
 }
 
-function parseAxisRefreshHeadline(text) {
-  const match = String(text || '').match(/\[한줄\]\s*([\s\S]+)/);
-  return (match?.[1] || text || '').split('\n')[0].trim();
-}
-
 async function loadJsonCache(kakaoId, cacheType) {
   if (!kakaoId) return {};
   if (!canUseDailySupabaseTables()) {
@@ -100,18 +93,6 @@ async function loadJsonCache(kakaoId, cacheType) {
   } catch {
     return {};
   }
-}
-
-async function saveJsonCache(kakaoId, cacheType, payload) {
-  if (!kakaoId) return;
-  const content = JSON.stringify(payload || {});
-  writeDailyLocalCache(String(kakaoId), cacheType, content, getDailyDateKey());
-  if (!canUseDailySupabaseTables()) return;
-  const client = getAuthenticatedClient(String(kakaoId));
-  await client?.from('daily_cache').upsert(
-    { kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: cacheType, content },
-    { onConflict: 'kakao_id,cache_date,cache_type' },
-  );
 }
 
 async function saveTodayScore(kakaoId, score) {
@@ -147,16 +128,9 @@ function splitPickValue(value) {
 function getAxisCardState(axis, pick, rankByKey) {
   const isCare = axis.key === pick?.careKey;
   const isFocus = axis.key === pick?.focusKey;
-  const isBoosted = (axis.bonus || 0) > 0;
 
   if (isCare && axis.total <= 46) {
     return { tone: 'care', badge: '보강 필요', caption: '오늘 가장 예민한 축이에요' };
-  }
-  if (isBoosted && isFocus) {
-    return { tone: 'boost', badge: '상승 반영', caption: `아이템으로 +${axis.bonus}점 올라왔어요` };
-  }
-  if (isBoosted) {
-    return { tone: 'boost', badge: '부스트 반영', caption: `아이템으로 +${axis.bonus}점 보정됐어요` };
   }
   if (isFocus || rankByKey[axis.key] === 1) {
     return { tone: 'focus', badge: '오늘 강세', caption: '반응이 빠르게 오는 구간이에요' };
@@ -167,40 +141,48 @@ function getAxisCardState(axis, pick, rankByKey) {
   return { tone: 'steady', badge: '균형권', caption: '지금은 무리 없이 유지되는 축이에요' };
 }
 
-function getAxisActionCopy(axis, pick) {
-  if (!axis.availableRows.length) {
-    return {
-      title: '먼저 아이템 풀을 채우기',
-      description: `${axis.fullLabel}용 아이템이 아직 없어 뽑기에서 기반을 채워두면 좋아요.`,
-      button: '별숨 뽑기',
-    };
-  }
-  if (axis.key === pick?.careKey) {
-    return {
-      title: '오늘 가장 먼저 받쳐줄 축',
-      description: '별숨픽도 이 축의 긴장을 낮추는 방향으로 맞춰졌어요.',
-      button: '보강 아이템 고르기',
-    };
-  }
-  if ((axis.bonus || 0) > 0) {
-    return {
-      title: '이미 올린 흐름에 가속 붙이기',
-      description: '지금 탄력을 더 얹으면 한줄 체감이 가장 크게 바뀔 축이에요.',
-      button: '추가 조합하기',
-    };
-  }
-  if (axis.key === pick?.focusKey) {
-    return {
-      title: '상승세를 더 멀리 보내기',
-      description: '오늘 점수가 잘 반응하는 축이라 선택 체감이 빠르게 와요.',
-      button: '아이템 조합하기',
-    };
-  }
-  return {
-    title: '필요할 때만 가볍게 조정',
-    description: '밸런스를 해치지 않는 선에서 한두 개만 얹어도 충분해요.',
-    button: '아이템 고르기',
-  };
+function compactText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, sun, moon, asc }) {
+  const eastern = parsedDaily?.easternKi || {};
+  const western = parsedDaily?.westernSky || {};
+  const sortedAxes = [...(axisScores || [])].sort((a, b) => (b.total || 0) - (a.total || 0));
+  const strongest = sortedAxes[0];
+  const care = [...(axisScores || [])].sort((a, b) => (a.total || 0) - (b.total || 0))[0];
+  const strongestLabel = strongest?.fullLabel || strongest?.label || '강하게 올라오는 운';
+  const careLabel = care?.fullLabel || care?.label || '살짝 돌봐야 할 운';
+  const sunLabel = sun ? `${sun.s || ''} ${sun.n || ''}`.trim() : '';
+  const moonLabel = moon ? `${moon.s || ''} ${moon.n || ''}`.trim() : '';
+  const ascLabel = asc ? `${asc.s || ''} ${asc.n || ''}`.trim() : '';
+  const sajuLabel = saju?.dom ? `${saju.dom} 기운` : '';
+
+  const easternBase = compactText(eastern.kiun || eastern.sinshin);
+  const westernBase = compactText(western.flow || western.planet);
+  const doAction = compactText(eastern.doAction || overallGuide?.do);
+  const dontAction = compactText(eastern.dontAction || overallGuide?.caution);
+  const strongDesc = compactText(strongest?.headline || parsedDaily?.categories?.[strongest?.key]?.desc);
+  const careDesc = compactText(care?.headline || parsedDaily?.categories?.[care?.key]?.desc);
+
+  return [
+    {
+      title: '오늘의 사주 기운',
+      body: easternBase
+        ? `동양의 흐름으로 보면 오늘은 ${easternBase}이 중심에 서는 날이에요. ${sajuLabel ? `타고난 ${sajuLabel}과 만나면서 ` : ''}${strongestLabel} 쪽은 비교적 빠르게 반응하고, ${careLabel} 쪽은 무리해서 밀어붙이기보다 리듬을 살피는 편이 좋아요. ${doAction ? `오늘은 ${doAction} 쪽으로 움직일수록 길이 열립니다.` : ''}`
+        : `오늘은 사주 흐름에서 ${strongestLabel}이 먼저 살아나는 날이에요. 반대로 ${careLabel}은 작은 말투나 컨디션 변화에도 흔들릴 수 있으니, 큰 결정보다는 흐름을 정돈하는 데 힘을 두면 좋아요.`,
+    },
+    {
+      title: '오늘의 점성술 흐름',
+      body: westernBase
+        ? `서양 점성술로는 ${westernBase}의 흐름이 깔려 있어요. ${sunLabel ? `기본 성향인 ${sunLabel}` : '타고난 별자리 성향'}${moonLabel ? `, 감정 리듬인 ${moonLabel}` : ''}${ascLabel ? `, 바깥에 드러나는 ${ascLabel}` : ''}이 서로 맞물리며 오늘의 반응 속도를 만듭니다. ${strongDesc || '그래서 오늘은 익숙한 방식만 고집하기보다, 들어오는 신호를 조금 더 섬세하게 읽는 편이 유리해요.'}`
+        : `별자리 흐름에서는 감정과 판단의 속도가 평소보다 또렷하게 갈릴 수 있어요. ${sunLabel ? `${sunLabel}의 기본 기질은 ` : ''}오늘 필요한 선택을 밀어주지만, ${careLabel}에서는 상대의 반응을 한 번 더 확인하는 태도가 중요합니다.`,
+    },
+    {
+      title: '그래서 오늘은',
+      body: `${overallGuide?.summary || '오늘은 무리하게 판을 키우기보다, 잘 되는 흐름을 붙잡고 예민한 부분을 천천히 정리하는 날이에요.'} ${careDesc ? `${careLabel}에서는 ${careDesc}` : `${careLabel}에서는 서두르기보다 한 박자 늦춰 보는 게 좋습니다.`} ${dontAction ? `다만 ${dontAction} 흐름은 피하면 좋아요.` : ''}`,
+    },
+  ].filter((section) => compactText(section.body));
 }
 
 function PickField({ label, value, icon, tone }) {
@@ -227,28 +209,17 @@ export default function TodayDetailPage({
   setStep,
   onRefresh,
   showToast = null,
-  callApi = null,
 }) {
   const user = useAppStore((s) => s.user);
   const today = useAppStore((s) => s.today);
+  const saju = useAppStore((s) => s.saju);
+  const sun = useAppStore((s) => s.sun);
+  const moon = useAppStore((s) => s.moon);
+  const asc = useAppStore((s) => s.asc);
   const kakaoId = user?.kakaoId || user?.id;
   const prevTodayScoreRef = useRef(0);
 
-  const [boostMap, setBoostMap] = useState(() => {
-    const uid = kakaoId;
-    if (!uid) return {};
-    try {
-      const raw = readDailyLocalCache(String(uid), TODAY_AXIS_CACHE, getDailyDateKey());
-      const parsed = JSON.parse(raw || '{}');
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-    } catch {
-      return {};
-    }
-  });
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
-  const [ownedRows, setOwnedRows] = useState([]);
-  const [pickerAxisKey, setPickerAxisKey] = useState(null);
-  const [isApplyingAxis, setIsApplyingAxis] = useState(false);
   const [showParticles, setShowParticles] = useState(false);
 
   const parsedDaily = useMemo(
@@ -257,8 +228,8 @@ export default function TodayDetailPage({
   );
 
   const axisScores = useMemo(
-    () => getDailyAxisScores(dailyResult?.score || 0, boostMap, parsedDaily.categories),
-    [dailyResult?.score, boostMap, parsedDaily.categories],
+    () => getDailyAxisScores(dailyResult?.score || 0, {}, parsedDaily.categories),
+    [dailyResult?.score, parsedDaily.categories],
   );
 
   const actionableScores = useMemo(
@@ -282,6 +253,11 @@ export default function TodayDetailPage({
     [actionableScores, parsedDaily.synergy],
   );
 
+  const dailyLongReading = useMemo(
+    () => buildDailyLongReading({ parsedDaily, axisScores: actionableScores, overallGuide, saju, sun, moon, asc }),
+    [parsedDaily, actionableScores, overallGuide, saju, sun, moon, asc],
+  );
+
   const axisRankMap = useMemo(
     () => Object.fromEntries(
       [...actionableScores]
@@ -291,52 +267,30 @@ export default function TodayDetailPage({
     [actionableScores],
   );
 
-  const rowsByAxis = useMemo(() => (
-    (ownedRows || []).reduce((acc, row) => {
-      const key = row.item?.aspectKey;
-      if (!key) return acc;
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(row);
-      return acc;
-    }, {})
-  ), [ownedRows]);
-
   const axisCards = useMemo(() => actionableScores.map((score) => {
     const fullLabel = getFortuneLabel(score.key);
-    const availableRows = rowsByAxis[score.key] || [];
     const status = getAxisCardState(score, byeolsoomPick, axisRankMap);
     const toneMeta = AXIS_TONE_META[status.tone] || AXIS_TONE_META.steady;
-    const actionCopy = getAxisActionCopy({ ...score, fullLabel, availableRows }, byeolsoomPick);
-    const baseFillWidth = Math.max(0, Math.min(100, (score.total || 0) - (score.bonus || 0)));
-    const bonusFillWidth = Math.max(0, Math.min(100 - baseFillWidth, score.bonus || 0));
+    const baseFillWidth = Math.max(0, Math.min(100, score.total || 0));
 
     return {
       ...score,
       rank: axisRankMap[score.key] || actionableScores.length,
       fullLabel,
       headline: axisTextOverrides?.[score.key] || getFallbackHeadline(score.key, parsedDaily),
-      availableRows,
       status,
       toneMeta,
-      actionCopy,
       baseFillWidth,
-      bonusFillWidth,
     };
-  }), [actionableScores, axisRankMap, axisTextOverrides, byeolsoomPick, parsedDaily, rowsByAxis]);
-
-  const pickerAxis = axisCards.find((axis) => axis.key === pickerAxisKey) || null;
+  }), [actionableScores, axisRankMap, axisTextOverrides, byeolsoomPick, parsedDaily]);
 
   useEffect(() => {
     let cancelled = false;
     if (!kakaoId) return undefined;
 
     (async () => {
-      const [loadedBoostMap, loadedTextOverrides] = await Promise.all([
-        loadJsonCache(kakaoId, TODAY_AXIS_CACHE),
-        loadJsonCache(kakaoId, TODAY_AXIS_TEXT_CACHE),
-      ]);
+      const loadedTextOverrides = await loadJsonCache(kakaoId, TODAY_AXIS_TEXT_CACHE);
       if (cancelled) return;
-      setBoostMap(loadedBoostMap && typeof loadedBoostMap === 'object' ? loadedBoostMap : {});
       setAxisTextOverrides(loadedTextOverrides && typeof loadedTextOverrides === 'object' ? loadedTextOverrides : {});
     })();
 
@@ -344,26 +298,6 @@ export default function TodayDetailPage({
       cancelled = true;
     };
   }, [kakaoId]);
-
-  useEffect(() => {
-    if (!kakaoId || !dailyResult) return;
-    getAuthenticatedClient(String(kakaoId))
-      ?.from('user_shop_inventory')
-      .select('item_id')
-      .eq('kakao_id', String(kakaoId))
-      .then(({ data, error }) => {
-        if (error) {
-          setOwnedRows([]);
-          return;
-        }
-        setOwnedRows(
-          (data || [])
-            .map((row) => ({ rowId: String(row.item_id), item: findItem(String(row.item_id)) }))
-            .filter((row) => row.item?.aspectKey && ACTIONABLE_AXIS_KEYS.includes(row.item.aspectKey)),
-        );
-      })
-      .catch(() => setOwnedRows([]));
-  }, [kakaoId, dailyResult]);
 
   useEffect(() => {
     if (!dailyResult || !kakaoId || !Number.isFinite(todayScore)) return;
@@ -391,122 +325,6 @@ export default function TodayDetailPage({
     }
   }, [dailyResult, overallGuide.summary, showToast, today, todayScore]);
 
-  const refreshAxisHeadline = useCallback(async (axisKey, nextAxisScore, selectedRows, nextTotalScore) => {
-    if (!callApi || !nextAxisScore) return null;
-    const axisLabel = getFortuneLabel(axisKey);
-    const currentHeadline = axisTextOverrides?.[axisKey] || getFallbackHeadline(axisKey, parsedDaily);
-    const itemSummary = selectedRows
-      .map((row) => `${row.item?.name || '이름 없는 아이템'}(+${row.item?.boost || 0})`)
-      .join(', ');
-    const scoreSummary = actionableScores
-      .map((score) => `${getFortuneLabel(score.key)} ${score.key === axisKey ? nextAxisScore.total : score.total}점`)
-      .join(' / ');
-
-    const context = [
-      `[선택된 운세 항목] ${axisLabel}`,
-      `[새 점수] ${nextAxisScore.total}점`,
-      `[오늘 전체 평균 점수] ${nextTotalScore}점`,
-      `[기존 한줄] ${currentHeadline}`,
-      `[사용한 아이템] ${itemSummary}`,
-      `[전체 항목 점수] ${scoreSummary}`,
-      `[오늘 전체 요약] ${overallGuide.summary}`,
-      `[DO] ${overallGuide.do}`,
-      `[주의] ${overallGuide.caution}`,
-    ].join('\n');
-
-    try {
-      const answer = await callApi(`${axisLabel} 한줄만 다시 써줘`, {
-        isDailyAxisRefresh: true,
-        context,
-      });
-      const headline = parseAxisRefreshHeadline(answer);
-      return headline || null;
-    } catch {
-      return null;
-    }
-  }, [actionableScores, axisTextOverrides, callApi, overallGuide, parsedDaily]);
-
-  const handleApplyAxisItems = useCallback(async (selectedRows) => {
-    if (!pickerAxis || !selectedRows.length || !kakaoId) return;
-    const rowIds = selectedRows.map((row) => String(row.rowId));
-    const axisKey = pickerAxis.key;
-
-    setIsApplyingAxis(true);
-
-    try {
-      await getAuthenticatedClient(String(kakaoId))
-        ?.from('user_shop_inventory')
-        .delete()
-        .eq('kakao_id', String(kakaoId))
-        .in('item_id', rowIds);
-
-      const nextBoostMap = {
-        ...boostMap,
-        [axisKey]: mergeBoostEntry(boostMap?.[axisKey], selectedRows),
-      };
-
-      await saveJsonCache(kakaoId, TODAY_AXIS_CACHE, nextBoostMap);
-
-      const nextScores = getDailyAxisScores(dailyResult?.score || 0, nextBoostMap, parsedDaily.categories);
-      const nextAxisScore = nextScores.find((score) => score.key === axisKey);
-      const nextTotalScore = getAverageFortuneScore(nextScores);
-
-      setBoostMap(nextBoostMap);
-      setOwnedRows((prev) => prev.filter((row) => !rowIds.includes(String(row.rowId))));
-      setPickerAxisKey(null);
-
-      const nextHeadline = await refreshAxisHeadline(axisKey, nextAxisScore, selectedRows, nextTotalScore);
-      if (nextHeadline) {
-        const nextOverrides = {
-          ...axisTextOverrides,
-          [axisKey]: nextHeadline,
-        };
-        setAxisTextOverrides(nextOverrides);
-        await saveJsonCache(kakaoId, TODAY_AXIS_TEXT_CACHE, nextOverrides);
-      }
-
-      showToast?.(
-        `${pickerAxis.fullLabel}에 ${selectedRows.length}개 아이템을 적용했어요. 지금 ${nextAxisScore?.total || pickerAxis.total}점이에요.`,
-        'success',
-      );
-    } catch (error) {
-      console.error('[오늘 상세] axis item apply failed:', error);
-      showToast?.('아이템 적용 중 오류가 발생했어요.', 'error');
-    } finally {
-      setIsApplyingAxis(false);
-    }
-  }, [axisTextOverrides, boostMap, dailyResult?.score, kakaoId, parsedDaily.categories, pickerAxis, refreshAxisHeadline, showToast]);
-
-  const handleJeonghwaRejeom = useCallback(async () => {
-    const boostedAxisKeys = Object.keys(boostMap);
-    if (!boostedAxisKeys.length) return;
-
-    const missingTextKeys = boostedAxisKeys.filter((key) => !axisTextOverrides[key]);
-    if (missingTextKeys.length === 0) {
-      showToast?.('아이템 기운이 이미 반영돼 있어요', 'success');
-      return;
-    }
-
-    setIsApplyingAxis(true);
-    try {
-      const nextOverrides = { ...axisTextOverrides };
-      for (const axisKey of missingTextKeys) {
-        const axisScore = axisScores.find((s) => s.key === axisKey);
-        if (!axisScore) continue;
-        const fakeRows = (axisScore.appliedItems || []).map((item) => ({ item }));
-        // eslint-disable-next-line no-await-in-loop
-        const headline = await refreshAxisHeadline(axisKey, axisScore, fakeRows, todayScore);
-        if (headline) nextOverrides[axisKey] = headline;
-      }
-      setAxisTextOverrides(nextOverrides);
-      if (kakaoId) await saveJsonCache(kakaoId, TODAY_AXIS_TEXT_CACHE, nextOverrides);
-      showToast?.('아이템 기운이 반영됐어요', 'success');
-    } catch {
-      showToast?.('정화 중 오류가 발생했어요', 'error');
-    } finally {
-      setIsApplyingAxis(false);
-    }
-  }, [axisScores, axisTextOverrides, boostMap, kakaoId, refreshAxisHeadline, showToast, todayScore]);
 
   if (dailyLoading && !dailyResult) {
     return <PageSpinner />;
@@ -517,15 +335,6 @@ export default function TodayDetailPage({
   return (
     <div className="today-detail-container">
       <GoldenParticles active={showParticles} onComplete={() => setShowParticles(false)} />
-      <AxisItemPickerModal
-        axis={pickerAxis}
-        currentScore={pickerAxis?.total || 0}
-        rows={pickerAxis?.availableRows || []}
-        isApplying={isApplyingAxis}
-        onClose={() => !isApplyingAxis && setPickerAxisKey(null)}
-        onApply={handleApplyAxisItems}
-        onGoGacha={() => setStep(STEP.GACHA)}
-      />
 
       <div className="today-detail-header">
         <button className="today-detail-back-btn" onClick={() => setStep(STEP.HOME)} aria-label="홈으로 돌아가기">←</button>
@@ -568,30 +377,22 @@ export default function TodayDetailPage({
                 </div>
               </div>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{overallGuide.summary}</div>
-              {Object.keys(boostMap).length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleJeonghwaRejeom}
-                  disabled={isApplyingAxis}
-                  style={{
-                    marginTop: 12,
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 12,
-                    border: '1px solid var(--acc)',
-                    background: 'var(--goldf)',
-                    color: 'var(--gold)',
-                    fontSize: 'var(--xs)',
-                    fontWeight: 700,
-                    fontFamily: 'var(--ff)',
-                    cursor: isApplyingAxis ? 'not-allowed' : 'pointer',
-                    opacity: isApplyingAxis ? 0.5 : 1,
-                  }}
-                >
-                  {isApplyingAxis ? '정화 중...' : '✦ 아이템 기운 반영해서 정화 재점'}
-                </button>
-              )}
             </div>
+
+            {dailyLongReading.length > 0 && (
+              <section className="today-long-reading" aria-label="오늘 하루 장문 해석">
+                <div className="today-long-reading__kicker">TODAY READING</div>
+                <div className="today-long-reading__title">오늘의 사주와 별자리 흐름</div>
+                <div className="today-long-reading__body">
+                  {dailyLongReading.map((section) => (
+                    <article key={section.title} className="today-long-reading__section">
+                      <div className="today-long-reading__section-title">{section.title}</div>
+                      <p className="today-long-reading__text">{section.body}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <DailyRadarChart scores={actionableScores} />
 
@@ -612,16 +413,9 @@ export default function TodayDetailPage({
                 <div>
                   <div className="today-axis-section__kicker">AXIS FORTUNES</div>
                   <div className="today-axis-section__copy">
-                    필요한 축만 골라 점수를 보강하고, 그 축의 한줄 흐름만 더 날카롭게 바꿀 수 있어요.
+                    오늘 강하게 올라오는 축과 조심히 다뤄야 할 축을 한눈에 정리했어요.
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setStep(STEP.ITEM_INVENTORY)}
-                  className="today-axis-section__ghost-btn"
-                >
-                  내 아이템 정리 보기
-                </button>
               </div>
 
               <div className="today-axis-list">
@@ -648,8 +442,7 @@ export default function TodayDetailPage({
                               <span className="today-axis-card__badge">{axis.status.badge}</span>
                             </div>
                             <div className="today-axis-card__meta">
-                              기본 {axis.base}점
-                              {axis.bonus > 0 ? ` · 아이템 +${axis.bonus}점` : ' · 아직 부스트 없음'}
+                              오늘 흐름 {axis.total}점
                             </div>
                           </div>
                         </div>
@@ -662,56 +455,21 @@ export default function TodayDetailPage({
 
                       <div className="today-axis-card__meter">
                         <div className="today-axis-card__meter-base" style={{ width: `${axis.baseFillWidth}%` }} />
-                        {axis.bonus > 0 && (
-                          <div
-                            className="today-axis-card__meter-bonus"
-                            style={{
-                              left: `${axis.baseFillWidth}%`,
-                              width: `${axis.bonusFillWidth}%`,
-                            }}
-                          />
-                        )}
                       </div>
 
                       <div className="today-axis-card__headline">{axis.headline}</div>
 
                       <div className="today-axis-card__chips">
-                        <span className="today-axis-card__meta-chip">보유 {axis.availableRows.length}개</span>
                         {axis.key === byeolsoomPick?.careKey && (
                           <span className="today-axis-card__meta-chip today-axis-card__meta-chip--accent">
-                            오늘 별숨픽 보강 축
+                            오늘 받쳐줄 축
                           </span>
                         )}
                         {axis.key === byeolsoomPick?.focusKey && axis.key !== byeolsoomPick?.careKey && (
                           <span className="today-axis-card__meta-chip today-axis-card__meta-chip--accent">
-                            오늘 별숨픽 드라이브 축
+                            오늘 밀어줄 축
                           </span>
                         )}
-                        {axis.appliedItems?.length > 0
-                          ? axis.appliedItems.map((item, index) => (
-                              <span key={`${axis.key}-${item.itemId}-${index}`} className="today-axis-card__boost-chip">
-                                {item.emoji || '✨'} {item.name || '아이템'} +{item.boost}
-                              </span>
-                            ))
-                          : (
-                              <span className="today-axis-card__meta-chip">적용 아이템 없음</span>
-                            )}
-                      </div>
-
-                      <div className="today-axis-card__footer">
-                        <div className="today-axis-card__footer-copy">
-                          <div className="today-axis-card__footer-title">{axis.actionCopy.title}</div>
-                          <div className="today-axis-card__footer-desc">{axis.actionCopy.description}</div>
-                        </div>
-                        <button
-                          type="button"
-                          className="today-axis-card__cta"
-                          onClick={() => (axis.availableRows.length ? setPickerAxisKey(axis.key) : setStep(STEP.GACHA))}
-                          disabled={isApplyingAxis}
-                          aria-label={axis.availableRows.length ? `${axis.fullLabel} 아이템 선택` : `${axis.fullLabel} 아이템 뽑기`}
-                        >
-                          {axis.availableRows.length ? axis.actionCopy.button : '별숨 뽑기'}
-                        </button>
                       </div>
                     </div>
                   </article>
@@ -746,12 +504,6 @@ export default function TodayDetailPage({
                   <div className="today-pick-pivot__card">
                     <div className="today-pick-pivot__label">받쳐줄 축</div>
                     <div className="today-pick-pivot__value">{byeolsoomPick.careLabel}</div>
-                  </div>
-                )}
-                {byeolsoomPick?.boostLabel && (
-                  <div className="today-pick-pivot__card">
-                    <div className="today-pick-pivot__label">부스트 축</div>
-                    <div className="today-pick-pivot__value">{byeolsoomPick.boostLabel}</div>
                   </div>
                 )}
               </div>

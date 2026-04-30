@@ -83,7 +83,7 @@ function SmallResultCard({ item, index, revealed, gradeConfig, onClick }) {
 }
 
 // ─── 공용 — 결과 오버레이 ─────────────────────────────────────
-function ResultOverlay({ results, gradeConfig, onClose }) {
+function ResultOverlay({ results, gradeConfig, onClose, onGoSpace }) {
   const [revealed, setRevealed] = useState(new Set());
   const isSingle    = results.length === 1;
   const allRevealed = revealed.size === results.length;
@@ -151,7 +151,7 @@ function ResultOverlay({ results, gradeConfig, onClose }) {
                   <div style={{
                     padding: '5px 12px', borderRadius: 20, background: cfg.bg,
                     border: `1px solid ${cfg.border}`, fontSize: '11px', color: cfg.color, fontWeight: 600, textAlign: 'center',
-                  }}>{item.effectLabel}</div>
+                  }}>별숨공간 오브제 소재</div>
                 </>
               ) : (
                 <>
@@ -186,11 +186,11 @@ function ResultOverlay({ results, gradeConfig, onClose }) {
           >✦ 모두 공개</button>
         )}
         {allRevealed && (
-          <button onClick={onClose} style={{
+          <button onClick={onGoSpace} style={{
             width: '100%', padding: '13px', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
             borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
             fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
-          }}>보관함에서 확인하기 →</button>
+          }}>별숨공간에 배치하기 →</button>
         )}
       </div>
     </div>,
@@ -288,7 +288,7 @@ function GachaBanner({ currentBP, pulling, onPull, bgStyle, accentColor, title, 
   );
 }
 
-// ─── 공용 — 아이템 미리보기 ─────────────────────────────────
+// ─── 공용 — 오브제 소재 미리보기 ─────────────────────────────
 function ItemPreview({ pool, gradeConfig, gradeOrder, probTable }) {
   const [activeGrade, setActiveGrade] = useState(gradeOrder[0]);
   const cfg = gradeConfig[activeGrade];
@@ -304,7 +304,7 @@ function ItemPreview({ pool, gradeConfig, gradeOrder, probTable }) {
   return (
     <div style={{ padding: '18px 20px 0' }}>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
-        ✦ 등장 아이템 미리보기
+        ✦ 등장 오브제 소재 미리보기
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         {gradeOrder.map(grade => {
@@ -413,7 +413,7 @@ export default function GachaPage({ showToast, consentFlags }) {
       user,
       consentFlags,
       questions: [`별숨 뽑기: ${lastPullMeta.label} ${lastPullMeta.count}회`],
-      answers: [`획득 아이템: ${resultSummary}`],
+      answers: [`획득 오브제 소재: ${resultSummary}`],
     }).catch(() => {});
   }, [consentFlags, lastPullMeta, results, user]);
 
@@ -431,11 +431,12 @@ export default function GachaPage({ showToast, consentFlags }) {
         ? (count === 1 ? [pullOneSaju()] : pull10Saju())
         : (count === 1 ? [pullOne()]     : pull10());
 
-      await client.from('user_shop_inventory').insert(
+      await client.from('user_shop_inventory').upsert(
         pulled.map(item => ({
           kakao_id: String(kakaoId), item_id: item.id,
           is_equipped: false, unlocked_at: new Date().toISOString(),
-        }))
+        })),
+        { onConflict: 'kakao_id,item_id', ignoreDuplicates: true },
       );
 
       setCurrentBP(newBP ?? currentBP - cost);
@@ -479,10 +480,10 @@ export default function GachaPage({ showToast, consentFlags }) {
       {user && (
         <div style={{ margin: '14px 20px 0', padding: '11px 14px', background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
-            뽑은 아이템을 <strong style={{ color: 'var(--gold)' }}>발동</strong>하면 오늘 운세 점수에 반영돼요
+            뽑은 소재는 <strong style={{ color: 'var(--gold)' }}>별숨공간 오브제</strong>로 배치할 수 있어요
           </div>
-          <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
-            내 아이템
+          <button onClick={() => setStep(STEP.BYEOLSOOM_SPACE)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
+            별숨공간
           </button>
         </div>
       )}
@@ -494,8 +495,8 @@ export default function GachaPage({ showToast, consentFlags }) {
         border: '1px solid var(--line)',
       }}>
         {[
-          { key: 'space', label: '🌌 우주 뽑기' },
-          { key: 'saju',  label: '☯️ 사주 뽑기' },
+          { key: 'space', label: '🌌 우주 오브제' },
+          { key: 'saju',  label: '☯️ 사주 오브제' },
         ].map(t => (
           <button
             key={t.key}
@@ -523,8 +524,8 @@ export default function GachaPage({ showToast, consentFlags }) {
           currentBP={currentBP} pulling={pulling} onPull={doPull}
           bgStyle={{ background: 'linear-gradient(135deg, #1a0c10 0%, #100a0a 55%, #1a100a 100%)', border: '1px solid rgba(212,165,106,.3)' }}
           accentColor="rgba(212,165,106,0.9)"
-          title="사주명리 가챠"
-          subtitle={`${SAJU_POOL.length}종 사주 아이템`}
+          title="사주명리 오브제"
+          subtitle={`${SAJU_POOL.length}종 사주 오브제 소재`}
           statsLine={`오행 ${SAJU_POOL.filter(i=>i.grade==='ohaeng').length}종 · 천간 ${SAJU_POOL.filter(i=>i.grade==='cheongan').length}종 · 지지 ${SAJU_POOL.filter(i=>i.grade==='jiji').length}종 · 육십갑자 ${SAJU_POOL.filter(i=>i.grade==='gapja').length}종`}
           single10Label={{ color: 'rgba(123,164,212,.85)', text: '천간 이상 보장' }}
         />
@@ -533,8 +534,8 @@ export default function GachaPage({ showToast, consentFlags }) {
           currentBP={currentBP} pulling={pulling} onPull={doPull}
           bgStyle={{ background: 'linear-gradient(135deg, #0d0830 0%, #0d0b20 55%, #150a2e 100%)', border: '1px solid rgba(180,142,240,.3)' }}
           accentColor="rgba(180,142,240,0.9)"
-          title="우주 수집 가챠"
-          subtitle={`${GACHA_POOL.length}종 천체 아이템`}
+          title="우주 수집 오브제"
+          subtitle={`${GACHA_POOL.length}종 천체 오브제 소재`}
           statsLine={`위성 ${GACHA_POOL.filter(i=>i.grade==='satellite').length}종 · 행성 ${GACHA_POOL.filter(i=>i.grade==='planet').length}종 · 은하 ${GACHA_POOL.filter(i=>i.grade==='galaxy').length}종 · 성운 ${GACHA_POOL.filter(i=>i.grade==='nebula').length}종`}
           single10Label={{ color: 'rgba(126,200,164,.85)', text: '행성 이상 보장' }}
         />
@@ -583,9 +584,6 @@ export default function GachaPage({ showToast, consentFlags }) {
         gradeOrder={gradeOrder} probTable={probTable}
       />
 
-      {/* ── 합성 안내 ── */}
-      <SynthGuide gradeConfig={gradeConfig} gradeOrder={gradeOrder} setStep={setStep} />
-
       {/* ── 숍 교차 안내 ── */}
       <div style={{
         margin: '14px 20px 0', padding: '12px 14px',
@@ -594,10 +592,10 @@ export default function GachaPage({ showToast, consentFlags }) {
       }}>
         <div>
           <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t2)', marginBottom: 2 }}>
-            🛍️ 테마 · 아바타 · 이펙트 아이템도 있어요
+            🛍️ 별숨공간을 더 채울 재료가 있어요
           </div>
           <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>
-            별숨 숍에서 직접 구매하거나 랜덤 뽑기로 모아봐요
+            숍과 뽑기로 모은 소재를 공간 장식으로 전환해요
           </div>
         </div>
         <button
@@ -618,6 +616,10 @@ export default function GachaPage({ showToast, consentFlags }) {
           results={results}
           gradeConfig={gradeConfig}
           onClose={() => setResults(null)}
+          onGoSpace={() => {
+            setResults(null);
+            setStep(STEP.BYEOLSOOM_SPACE);
+          }}
         />
       )}
     </div>

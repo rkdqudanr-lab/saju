@@ -56,6 +56,7 @@ const ByeolsoomLetterPage     = lazy(() => import("./ByeolsoomLetterPage.jsx"));
 const YearlyReportPage        = lazy(() => import("./YearlyReportPage.jsx"));
 const GrowthDashboardPage     = lazy(() => import("./GrowthDashboardPage.jsx"));
 const MissionPage             = lazy(() => import("../pages/MissionPage.jsx"));
+const ByeolsoomSpacePage      = lazy(() => import("../pages/ByeolsoomSpacePage.jsx"));
 const ItemInventoryPage       = lazy(() => import("./ItemInventoryPage.jsx"));
 const LottoPage               = lazy(() => import("./LottoPage.jsx"));
 const GachaPage               = lazy(() => import("./GachaPage.jsx"));
@@ -522,6 +523,13 @@ export default function AppRouter({ ctx }) {
       {step === STEP.GROWTH_DASHBOARD && (
         <Suspense fallback={<PageSpinner />}>
           <GrowthDashboardPage onRechargeFreeBP={handleFreeRecharge} />
+        </Suspense>
+      )}
+
+      {/* BYEOLSOOM_SPACE */}
+      {step === STEP.BYEOLSOOM_SPACE && (
+        <Suspense fallback={<PageSpinner />}>
+          <ByeolsoomSpacePage />
         </Suspense>
       )}
 

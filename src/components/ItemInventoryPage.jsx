@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
-import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { STEP } from '../utils/steps.js';
 import {
@@ -13,18 +12,7 @@ import OwnedItemCard   from '../features/inventory/OwnedItemCard.jsx';
 import ItemDetailModal from '../features/inventory/ItemDetailModal.jsx';
 import UseItemModal    from '../features/inventory/UseItemModal.jsx';
 import SynthesisModal  from '../features/inventory/SynthesisModal.jsx';
-import { FORTUNE_LABELS, ITEM_BOOSTS_CACHE } from '../features/inventory/inventoryUtils.js';
-
-function buildBoostEntry(prevEntry, item) {
-  const prevItems = Array.isArray(prevEntry?.items) ? prevEntry.items.filter(Boolean) : [];
-  const boost = Number(item?.boost) || 0;
-  if (!item?.id || !boost) return prevEntry || { itemId: '', boost: 0, name: '', emoji: '✨', items: [] };
-  const newItem = { itemId: String(item.id), id: String(item.id), boost, name: item.name || '', emoji: item.emoji || '', grade: item.grade || '' };
-  const nextItems = [...prevItems, newItem];
-  const totalBoost = nextItems.reduce((s, i) => s + (i.boost || 0), 0);
-  const latest = nextItems[nextItems.length - 1];
-  return { itemId: latest?.itemId || '', boost: totalBoost, name: latest?.name || '', emoji: latest?.emoji || '✨', items: nextItems };
-}
+import { FORTUNE_LABELS } from '../features/inventory/inventoryUtils.js';
 
 const SEGMENTS = [
   { id: '전체',   label: '전체' },
@@ -41,40 +29,12 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState('전체');
   const [showSortRow, setShowSortRow] = useState(false);
-  const [toggling, setToggling] = useState(null);
   const [useItem, setUseItem] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
   const [showSynth, setShowSynth] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
   const [sortMode, setSortMode] = useState('recommended');
   const [fortuneFilter, setFortuneFilter] = useState('all');
-  // boostMap: { [aspectKey]: { itemId, boost, name, emoji } }
-  const [boostMap, setBoostMap] = useState({});
-  const today = getDailyDateKey();
-
-  // 오늘 발동 이력 로드
-  useEffect(() => {
-    if (!kakaoId) return;
-    if (!canUseDailySupabaseTables()) {
-      try {
-        const parsed = JSON.parse(readDailyLocalCache(kakaoId, ITEM_BOOSTS_CACHE, today) || '{}');
-        setBoostMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
-      } catch { setBoostMap({}); }
-      return;
-    }
-    getAuthenticatedClient(kakaoId)?.from('daily_cache').select('content')
-      .eq('kakao_id', String(kakaoId)).eq('cache_date', today).eq('cache_type', ITEM_BOOSTS_CACHE)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.content) {
-          try {
-            const parsed = JSON.parse(data.content);
-            setBoostMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
-          } catch { setBoostMap({}); }
-        }
-      })
-      .catch(() => setBoostMap({}));
-  }, [kakaoId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadInventory = useCallback(async () => {
     if (!kakaoId) return;
@@ -88,7 +48,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
         const info = shopItemsMap.get(r.item_id) || findItem(r.item_id);
         return info ? { ...info, _invItemId: r.item_id, id: info.id || r.item_id, unlocked_at: r.unlocked_at } : null;
       }).filter(Boolean));
-    } catch { showToast?.('아이템 목록을 불러오지 못했어요', 'error'); }
+    } catch { showToast?.('오브제 목록을 불러오지 못했어요', 'error'); }
     finally { setLoading(false); }
   }, [kakaoId, showToast]);
 
@@ -99,34 +59,6 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
       setFortuneFilter('all');
     }
   }, [category, fortuneFilter]);
-
-  // 아이템 발동 = 소비: 인벤토리 삭제 + boostMap 캐시 저장
-  async function handleActivate(item) {
-    if (!kakaoId || !item?.aspectKey || !item?.boost) return;
-    setToggling(item.id);
-    try {
-      await getAuthenticatedClient(kakaoId)
-        ?.from('user_shop_inventory')
-        .delete()
-        .eq('kakao_id', String(kakaoId))
-        .eq('item_id', String(item.id));
-      const nextMap = {
-        ...boostMap,
-        [item.aspectKey]: buildBoostEntry(boostMap?.[item.aspectKey], item),
-      };
-      writeDailyLocalCache(kakaoId, ITEM_BOOSTS_CACHE, JSON.stringify(nextMap), today);
-      if (canUseDailySupabaseTables()) {
-        await getAuthenticatedClient(kakaoId)?.from('daily_cache').upsert(
-          { kakao_id: String(kakaoId), cache_date: today, cache_type: ITEM_BOOSTS_CACHE, content: JSON.stringify(nextMap) },
-          { onConflict: 'kakao_id,cache_date,cache_type' },
-        );
-      }
-      setBoostMap(nextMap);
-      setItems((prev) => prev.filter((i) => String(i.id) !== String(item.id)));
-      showToast?.(`${item.emoji} ${item.name} 발동! 오늘 하루 상세에서 확인해보세요 ✦`, 'success');
-    } catch { showToast?.('처리 중 오류가 발생했어요.', 'error'); }
-    finally { setToggling(null); }
-  }
 
   // 파생 상태
   const isGachaId = (id) => ALL_GACHA_POOL.some((g) => g.id === id);
@@ -147,18 +79,16 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   ];
   const canSynth = synthableGrades.length > 0;
 
-  const todayBoostEntries = Object.entries(boostMap);
-
   const sortedFiltered = useMemo(() => {
     const gradeRank = (i) => GRADE_ORDER.includes(i.grade) ? 100 - GRADE_ORDER.indexOf(i.grade) : SAJU_GRADE_ORDER.includes(i.grade) ? 100 - SAJU_GRADE_ORDER.indexOf(i.grade) : 0;
-    const priority = (i) => (i.boost || 0) * 100 + gradeRank(i);
+    const priority = (i) => gradeRank(i);
     return [...filtered].sort((a, b) => {
       if (sortMode === 'name') return String(a.name || '').localeCompare(String(b.name || ''), 'ko');
       if (sortMode === 'recent') return new Date(b.unlocked_at || 0).getTime() - new Date(a.unlocked_at || 0).getTime();
-      if (sortMode === 'grade') return gradeRank(b) - gradeRank(a) || (b.boost || 0) - (a.boost || 0);
+      if (sortMode === 'grade') return gradeRank(b) - gradeRank(a);
       return priority(b) - priority(a) || String(a.name || '').localeCompare(String(b.name || ''), 'ko');
     });
-  }, [boostMap, filtered, sortMode]);
+  }, [filtered, sortMode]);
 
   const groupedItems = Object.entries(
     sortedFiltered.reduce((acc, item) => { const k = item.aspectKey || 'general'; if (!acc[k]) acc[k] = []; acc[k].push(item); return acc; }, {})
@@ -187,8 +117,10 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
   const itemGridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', gap: 10, alignItems: 'stretch' };
   const cardProps = (item, idx, prefix) => ({
     key: `${prefix}-${item.id}-${idx}`,
-    item, toggling: toggling === item.id,
-    onUse: setUseItem, boostMap, onActivate: handleActivate, onDetail: setDetailItem, compact: true,
+    item,
+    onUse: setUseItem,
+    onDetail: setDetailItem,
+    compact: true,
   });
 
   return (
@@ -196,7 +128,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
       {/* 헤더 */}
       <div style={{ margin: '20px 24px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)' }}>🎁 내 아이템</div>
+          <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)' }}>🎁 오브제함</div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 3 }}>보유 {items.length}개</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -214,21 +146,6 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
           </button>
         </div>
       </div>
-
-      {/* 오늘 발동 현황 */}
-      {todayBoostEntries.length > 0 && (
-        <div style={{ margin: '0 24px 14px', padding: '12px 14px', borderRadius: 'var(--r2)', border: '1px solid rgba(232,176,72,0.3)', background: 'linear-gradient(135deg, rgba(232,176,72,0.08), rgba(232,176,72,0.02))' }}>
-          <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 8 }}>✨ 오늘 발동된 기운</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {todayBoostEntries.map(([key, entry]) => (
-              <div key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: 'rgba(232,176,72,0.15)', border: '1px solid rgba(232,176,72,0.3)', fontSize: '11px', color: 'var(--gold)', fontWeight: 600 }}>
-                {entry.emoji} {FORTUNE_LABELS[key] || key} +{entry.boost}점
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 8 }}>정화재점 시 오늘 운세 전체에 반영돼요</div>
-        </div>
-      )}
 
       {/* 세그먼트 컨트롤 + 정렬 */}
       <div style={{ margin: '0 24px 10px' }}>
@@ -297,7 +214,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
         )}
       </div>
 
-      {/* 아이템 그리드 */}
+      {/* 오브제 그리드 */}
       <div style={{ padding: '6px 24px 0' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--t4)', fontSize: 'var(--sm)' }}>
@@ -307,9 +224,9 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
           <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>{category === '전체' ? '🎁' : '🔍'}</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', fontWeight: 600, marginBottom: 6 }}>
-              {category === '전체' ? '보유한 아이템이 없어요' : `${category} 아이템이 없어요`}
+              {category === '전체' ? '보유한 오브제가 없어요' : `${category} 오브제가 없어요`}
             </div>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 20 }}>뽑기에서 아이템을 모아봐요!</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 20 }}>뽑기에서 오브제를 모아봐요!</div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
               <button onClick={() => setStep(STEP.SHOP)} style={{ padding: '9px 18px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>별숨샵 열기 →</button>
               <button onClick={() => setShowCollection(true)} style={{ padding: '9px 18px', background: 'var(--bg3)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>도감 보기 →</button>
@@ -348,11 +265,6 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                   <div>
                     <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>{FORTUNE_LABELS[key] || key}</div>
-                    {boostMap[key] && (
-                      <div style={{ fontSize: '10px', color: 'var(--gold)', marginTop: 2 }}>
-                        ✨ 오늘 {boostMap[key].name} 발동됨 (+{boostMap[key].boost}점)
-                      </div>
-                    )}
                   </div>
                   <div style={{ flexShrink: 0, fontSize: '11px', color: 'var(--gold)', fontWeight: 700 }}>{group.length}개</div>
                 </div>
@@ -370,9 +282,6 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
         <ItemDetailModal
           item={detailItem}
           onClose={() => setDetailItem(null)}
-          onActivate={handleActivate}
-          toggling={toggling === detailItem?.id}
-          boostMap={boostMap}
         />
       )}
       {useItem && <UseItemModal item={useItem} callApi={callApi} onClose={() => setUseItem(null)} showToast={showToast} />}

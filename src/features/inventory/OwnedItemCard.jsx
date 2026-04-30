@@ -1,20 +1,19 @@
 import { GRADE_CONFIG, SAJU_GRADE_CONFIG } from '../../utils/gachaItems.js';
 import GachaGraphic from '../../components/GachaGraphic.jsx';
-import { CAT_LABEL, FORTUNE_LABELS, isItemDailyActive } from './inventoryUtils.js';
+import { CAT_LABEL, FORTUNE_LABELS } from './inventoryUtils.js';
 
-export default function OwnedItemCard({ item, toggling, onUse, boostMap, onActivate, onDetail, compact }) {
+export default function OwnedItemCard({ item, onUse, onDetail, compact }) {
   const isTalisman = item.category === 'talisman';
   const isGachaItem = !!item.grade;
   const cfg = item.grade ? (GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade]) : null;
-  const isDailyActive = isItemDailyActive(item, boostMap);
-  const canActivate = !isDailyActive && (isGachaItem || isTalisman) && item.aspectKey && item.boost;
+  const compactNameColor = item.affixColor || 'var(--t1)';
 
   if (compact) {
     return (
       <div
         onClick={() => onDetail?.(item)}
         style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.68)), var(--bg1)',
           border: `1px solid ${cfg?.border || 'var(--line)'}`,
           borderRadius: 14,
           padding: '10px 6px 8px',
@@ -22,6 +21,7 @@ export default function OwnedItemCard({ item, toggling, onUse, boostMap, onActiv
           position: 'relative', cursor: 'pointer',
           minHeight: 92, justifyContent: 'flex-start',
           transition: 'all 0.15s',
+          boxShadow: '0 8px 18px rgba(25, 18, 32, 0.05)',
         }}
       >
         {cfg && (
@@ -35,10 +35,13 @@ export default function OwnedItemCard({ item, toggling, onUse, boostMap, onActiv
             : <GachaGraphic item={item} size={34} />}
         </div>
         <div style={{
-          fontSize: '10px', fontWeight: 700, color: item.affixColor || 'var(--t2)',
+          fontSize: '10px', fontWeight: 800, color: compactNameColor,
           textAlign: 'center', lineHeight: 1.3,
           overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           wordBreak: 'keep-all', width: '100%', marginTop: 2,
+          padding: '2px 4px', borderRadius: 8,
+          background: 'rgba(255,255,255,0.72)',
+          textShadow: '0 1px 0 rgba(255,255,255,0.85)',
         }}>
           {item.name}
         </div>
@@ -96,28 +99,8 @@ export default function OwnedItemCard({ item, toggling, onUse, boostMap, onActiv
         <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>{item.description}</div>
       )}
 
-      {item.boost && (
-        <div style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 700 }}>
-          +{item.boost}점 부스트
-        </div>
-      )}
-
       <div style={{ marginTop: 'auto' }}>
-        {canActivate ? (
-          <button
-            onClick={() => onActivate?.(item)}
-            disabled={toggling}
-            style={{
-              width: '100%', padding: '9px',
-              background: 'var(--goldf)', border: '1.5px solid var(--acc)',
-              borderRadius: 'var(--r1)', color: 'var(--gold)',
-              fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
-              cursor: toggling ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {toggling ? '처리 중...' : '🔮 발동하기'}
-          </button>
-        ) : !isGachaItem && !isTalisman ? (
+        {!isGachaItem && !isTalisman ? (
           <button
             onClick={() => onUse?.(item)}
             style={{
@@ -127,7 +110,7 @@ export default function OwnedItemCard({ item, toggling, onUse, boostMap, onActiv
               fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
             }}
           >
-            ✦ 사용하기
+            ✦ 살펴보기
           </button>
         ) : null}
       </div>

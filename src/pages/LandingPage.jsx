@@ -347,8 +347,8 @@ export default function LandingPage({
   const secondaryTiles = useMemo(() => [
     { icon: '⭐', title: '나의 별숨', sub: '사주·천체 종합 분석', onClick: () => setStep(STEP.NATAL) },
     { icon: '📊', title: '별숨 통계', sub: '지난 운세 흐름 보기', onClick: () => setStep(STEP.STATS) },
-    { icon: '🛍', title: '별숨샵', sub: '아이템 & 뽑기', onClick: () => setStep(STEP.SHOP) },
-    { icon: '🎁', title: '내 아이템', sub: '보관함 & 장착 관리', onClick: () => setStep(STEP.ITEM_INVENTORY) },
+    { icon: '🛍', title: '별숨샵', sub: '오브제 & 뽑기', onClick: () => setStep(STEP.SHOP) },
+    { icon: '🎁', title: '별숨공간', sub: '오브제 배치 & 펫', onClick: () => setStep(STEP.BYEOLSOOM_SPACE) },
   ], [setStep]);
 
   // ── 비로그인 화면 ──

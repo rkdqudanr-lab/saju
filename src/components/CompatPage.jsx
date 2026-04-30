@@ -22,6 +22,68 @@ function getDaysInMonth(year, month) {
   return new Date(parseInt(year), parseInt(month), 0).getDate();
 }
 
+function extractJsonPayload(text = '') {
+  const jsonFence = String(text).match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (jsonFence?.[1]) return jsonFence[1].trim();
+
+  const raw = String(text).trim();
+  const start = raw.indexOf('{');
+  if (start < 0) return raw;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < raw.length; i += 1) {
+    const ch = raw[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === '{') {
+      depth += 1;
+    } else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return raw.slice(start, i + 1);
+    }
+  }
+  return raw.slice(start).trim();
+}
+
+function asTextList(value) {
+  if (Array.isArray(value)) return value.map((v) => String(v || '').trim()).filter(Boolean);
+  if (!value) return [];
+  return [String(value).trim()].filter(Boolean);
+}
+
+function parseStoryResult(text = '') {
+  const parsed = JSON.parse(extractJsonPayload(text));
+  return {
+    todayVibe: String(parsed.todayVibe || '').trim(),
+    story: String(parsed.story || '').trim(),
+    moments: asTextList(parsed.moments),
+    tip: String(parsed.tip || '').trim(),
+    chemistry: String(parsed.chemistry || '').trim(),
+  };
+}
+
+function buildStoryHistoryText(result) {
+  return [
+    result.todayVibe,
+    result.story,
+    ...asTextList(result.moments),
+    result.tip,
+    result.chemistry,
+  ].filter(Boolean).join('\n');
+}
+
 // ═══════════════════════════════════════════════════════════
 //  💞 1대1 별숨 — 두 별의 인연 읽기
 // ═══════════════════════════════════════════════════════════
@@ -110,7 +172,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
     const timeout = setTimeout(() => ctrl.abort(), 28000);
     try {
       const data = await postAsk({
-        userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요.`,
+        userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요. 응답은 시스템 형식의 JSON 객체만 보내주세요.`,
         context: buildPartnerCtx(),
         isChat: false, isReport: false, isScenario: false, isStory: true,
         kakaoId: user?.id || null,
@@ -118,22 +180,9 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
       }, { signal: ctrl.signal });
       saveRecentPartner(partner);
       try {
-        const raw = data.text.replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(raw);
-        const historyText = [
-          parsed.todayVibe || '',
-          parsed.story || '',
-          ...(parsed.moments || []),
-          parsed.tip || '',
-          parsed.chemistry || '',
-        ].filter(Boolean).join('\n');
-        setStoryResult({
-          todayVibe: parsed.todayVibe || '',
-          story: parsed.story || '',
-          moments: parsed.moments || [],
-          tip: parsed.tip || '',
-          chemistry: parsed.chemistry || '',
-        });
+        const nextResult = parseStoryResult(data.text || '');
+        const historyText = buildStoryHistoryText(nextResult);
+        setStoryResult(nextResult);
         saveConsultationHistoryEntry({
           user,
           consentFlags,

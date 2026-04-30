@@ -273,7 +273,7 @@ function QuickActions({ setStep }) {
     { icon: '📖', label: '나의 별숨 이야기', desc: '사주로 쓴 나의 서사', step: STEP.SAJU_STORY },
     { icon: '📈', label: '별숨 통계', desc: '질문 패턴 보기', step: STEP.STATS },
     { icon: '🛍️', label: '별숨 숍', desc: 'BP 사용처 보기', step: STEP.SHOP },
-    { icon: '🎒', label: '아이템 보관함', desc: '보유 아이템 확인', step: STEP.ITEM_INVENTORY },
+    { icon: '🎒', label: '별숨공간', desc: '오브제 배치와 펫 관리', step: STEP.BYEOLSOOM_SPACE },
   ];
 
   return (
