@@ -14,7 +14,7 @@ export const useAppStore = create((set, get) => ({
   user: null,
   profile: null,
   form: {},
-  isDark: true,
+  isDark: false,
   instantTyping: false,
   showToast: null,
   kakaoLogin: null,

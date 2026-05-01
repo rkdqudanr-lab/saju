@@ -76,8 +76,8 @@ export function useUserProfile() {
 
   // ── 개인 설정 (Supabase 저장) ──
   const [responseStyle, setResponseStyle] = useState('M');
-  // 테마: 기본값 다크모드 (별숨 앱 의도에 맞게). 로그인 후 DB에 저장된 값으로 덮어씀.
-  const [theme, setTheme] = useState('dark');
+  // 테마: 기본값 라이트모드. 로그인 후 DB에 저장된 값이 있으면 덮어씀.
+  const [theme, setTheme] = useState('light');
   const [instantTyping, setInstantTyping] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [quizState, setQuizState] = useState(DEFAULT_QUIZ);

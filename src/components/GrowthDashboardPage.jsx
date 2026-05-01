@@ -55,6 +55,11 @@ function parseDateKey(dateKey) {
   return new Date(year, (month || 1) - 1, day || 1);
 }
 
+function formatChartDateLabel(dateKey) {
+  const date = parseDateKey(dateKey);
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
 function sectionCardStyle(extra = {}) {
   return {
     background:
@@ -329,24 +334,28 @@ function ScoreTrendChart({ data, dates }) {
     return <EmptyPanel title="최근 7일 별숨점수 흐름" body="아직 기록이 없어요. 오늘의 별숨을 확인하면 여기부터 흐름이 쌓여요." />;
   }
 
-  const chartWidth = 320;
-  const chartHeight = 164;
-  const paddingX = 18;
-  const topY = 18;
-  const bottomY = 112;
-  const usableWidth = chartWidth - paddingX * 2;
+  const chartWidth = 340;
+  const chartHeight = 196;
+  const leftX = 38;
+  const rightX = 320;
+  const topY = 22;
+  const bottomY = 126;
+  const usableWidth = rightX - leftX;
   const usableHeight = bottomY - topY;
   const min = Math.min(...valid.map((item) => item.value));
   const max = Math.max(...valid.map((item) => item.value));
-  const range = Math.max(8, max - min);
+  const yMin = Math.max(0, Math.floor((min - 6) / 10) * 10);
+  const yMax = Math.min(100, Math.ceil((max + 6) / 10) * 10);
+  const range = Math.max(10, yMax - yMin);
+  const yTicks = [yMax, Math.round((yMax + yMin) / 2), yMin];
   const coords = valid.map(({ value, index }) => {
-    const x = dates.length === 1 ? chartWidth / 2 : paddingX + (index / (dates.length - 1)) * usableWidth;
-    const y = bottomY - ((value - min) / range) * usableHeight;
+    const x = dates.length === 1 ? (leftX + rightX) / 2 : leftX + (index / (dates.length - 1)) * usableWidth;
+    const y = bottomY - ((value - yMin) / range) * usableHeight;
     return { x, y, value, index };
   });
 
   const points = coords.map((point) => `${point.x},${point.y}`).join(' ');
-  const areaPoints = `${paddingX},${bottomY} ${points} ${chartWidth - paddingX},${bottomY}`;
+  const areaPoints = `${leftX},${bottomY} ${points} ${rightX},${bottomY}`;
   const today = coords.find((point) => point.index === dates.length - 1);
   const previous = [...coords].reverse().find((point) => point.index < dates.length - 1);
   const direction = today && previous ? (today.value >= previous.value ? '상승세' : '조정세') : '누적 중';
@@ -376,7 +385,7 @@ function ScoreTrendChart({ data, dates }) {
         ) : null}
       </div>
 
-      <div style={{ height: 164 }}>
+      <div style={{ height: 196 }}>
         <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`} aria-hidden="true">
           <defs>
             <linearGradient id="growth-score-fill" x1="0" x2="0" y1="0" y2="1">
@@ -384,18 +393,29 @@ function ScoreTrendChart({ data, dates }) {
               <stop offset="100%" stopColor="rgba(176,120,32,0.02)" />
             </linearGradient>
           </defs>
-          {[topY, topY + usableHeight / 2, bottomY].map((y) => (
-            <line
-              key={y}
-              x1={paddingX}
-              y1={y}
-              x2={chartWidth - paddingX}
-              y2={y}
-              stroke="var(--line)"
-              strokeDasharray="8 14"
-              strokeLinecap="round"
-            />
-          ))}
+          <text x={leftX} y={12} fill="var(--t4)" fontSize="9" fontWeight="700">Y축 · 점수</text>
+          <text x={rightX} y={166} textAnchor="end" fill="var(--t4)" fontSize="9" fontWeight="700">X축 · 날짜</text>
+          {yTicks.map((tick) => {
+            const y = bottomY - ((tick - yMin) / range) * usableHeight;
+            return (
+              <g key={tick}>
+                <text x={leftX - 8} y={y + 3} textAnchor="end" fill="var(--t4)" fontSize="9" fontWeight="700">
+                  {tick}
+                </text>
+                <line
+                  x1={leftX}
+                  y1={y}
+                  x2={rightX}
+                  y2={y}
+                  stroke="var(--line)"
+                  strokeDasharray="7 12"
+                  strokeLinecap="round"
+                />
+              </g>
+            );
+          })}
+          <line x1={leftX} y1={topY} x2={leftX} y2={bottomY} stroke="var(--line)" />
+          <line x1={leftX} y1={bottomY} x2={rightX} y2={bottomY} stroke="var(--line)" />
           <polygon points={areaPoints} fill="url(#growth-score-fill)" />
           <polyline
             points={points}
@@ -407,6 +427,16 @@ function ScoreTrendChart({ data, dates }) {
           />
           {coords.map((point) => (
             <g key={`${point.index}-${point.value}`}>
+              <text
+                x={point.x}
+                y={Math.max(12, point.y - 11)}
+                textAnchor="middle"
+                fill={point.index === dates.length - 1 ? 'var(--gold)' : 'var(--t3)'}
+                fontSize="9"
+                fontWeight="800"
+              >
+                {point.value}
+              </text>
               <circle
                 cx={point.x}
                 cy={point.y}
@@ -415,12 +445,22 @@ function ScoreTrendChart({ data, dates }) {
                 stroke={point.index === dates.length - 1 ? 'var(--gold)' : 'rgba(176,120,32,0.48)'}
                 strokeWidth={point.index === dates.length - 1 ? 4 : 3}
               />
+              <text
+                x={point.x}
+                y={bottomY + 18}
+                textAnchor="middle"
+                fill={point.index === dates.length - 1 ? 'var(--gold)' : 'var(--t4)'}
+                fontSize="9"
+                fontWeight={point.index === dates.length - 1 ? 800 : 700}
+              >
+                {formatChartDateLabel(dates[point.index])}
+              </text>
             </g>
           ))}
         </svg>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6, marginTop: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6, marginTop: 2 }}>
         {dates.map((dateKey, index) => {
           const date = parseDateKey(dateKey);
           const isToday = index === dates.length - 1;
@@ -429,7 +469,7 @@ function ScoreTrendChart({ data, dates }) {
               <div style={{ fontSize: '10px', fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--gold)' : 'var(--t3)' }}>
                 {DAY_LABELS[date.getDay()]}
               </div>
-              <div style={{ marginTop: 3, fontSize: '10px', color: 'var(--t4)' }}>{String(date.getDate()).padStart(2, '0')}</div>
+              <div style={{ marginTop: 3, fontSize: '10px', color: 'var(--t4)' }}>{formatChartDateLabel(dateKey)}</div>
             </div>
           );
         })}
