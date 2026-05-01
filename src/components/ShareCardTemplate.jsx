@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 
 /**
- * 인스타그램 1:1 (1080x1080) 카드뉴스 템플릿
+ * 인스타그램 피드 4:5 (1080x1350) 카드뉴스 템플릿
  * position: fixed + left: -9999px 로 off-screen에 숨겨두고
  * html2canvas 로 캡처해 이미지로 저장하는 용도.
  *
@@ -80,7 +80,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
         left: '-9999px',
         top: '-9999px',
         width:  '1080px',
-        height: '1080px',
+        height: '1350px',
         overflow: 'hidden',
         fontFamily: 'Pretendard, -apple-system, sans-serif',
         background: theme.bg,
@@ -120,7 +120,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '90px 80px 70px',
+        padding: '110px 84px 82px',
       }}>
 
         {/* 상단: 브랜드 + 로고 */}
@@ -202,7 +202,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
               {displayTitle}
             </div>
             <p style={{
-              fontSize: '34px',
+              fontSize: '38px',
               fontWeight: 400,
               color: '#F0EBF8',
               lineHeight: 1.75,

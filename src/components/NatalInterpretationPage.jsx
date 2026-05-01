@@ -340,7 +340,10 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
         {/* ── AI 분석으로 이동 버튼 ── */}
         <div style={{ display: 'flex', gap: 10, marginTop: 28, marginBottom: 10 }}>
           <button
-            onClick={() => onGoStep && onGoStep(14)}
+            onClick={() => {
+              try { sessionStorage.setItem('byeolsoom_comprehensive_tab', 'saju'); } catch {}
+              onGoStep && onGoStep(14);
+            }}
             style={{
               flex: 1,
               padding: '14px 10px',
@@ -359,7 +362,10 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
             별숨의 종합사주 ✦
           </button>
           <button
-            onClick={() => onGoStep && onGoStep(14)}
+            onClick={() => {
+              try { sessionStorage.setItem('byeolsoom_comprehensive_tab', 'astro'); } catch {}
+              onGoStep && onGoStep(14);
+            }}
             style={{
               flex: 1,
               padding: '14px 10px',

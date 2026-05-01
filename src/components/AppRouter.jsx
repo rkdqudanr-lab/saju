@@ -57,6 +57,7 @@ const YearlyReportPage        = lazy(() => import("./YearlyReportPage.jsx"));
 const GrowthDashboardPage     = lazy(() => import("./GrowthDashboardPage.jsx"));
 const MissionPage             = lazy(() => import("../pages/MissionPage.jsx"));
 const ByeolsoomSpacePage      = lazy(() => import("../pages/ByeolsoomSpacePage.jsx"));
+const ScoreTrendPage          = lazy(() => import("../pages/ScoreTrendPage.jsx"));
 const ItemInventoryPage       = lazy(() => import("./ItemInventoryPage.jsx"));
 const LottoPage               = lazy(() => import("./LottoPage.jsx"));
 const GachaPage               = lazy(() => import("./GachaPage.jsx"));
@@ -90,7 +91,7 @@ export default function AppRouter({ ctx }) {
     formOk, formOkApprox, onboardingDone,
     otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
     consentFlags, saveOtherProfile, saveProfileToSupabase,
-    responseStyle, lifeStage, fontSize, instantTyping, saveSettings,
+    responseStyle, theme, lifeStage, fontSize, instantTyping, saveSettings,
     setShowProfileModal, setShowOtherProfileModal,
     editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
 
@@ -164,6 +165,7 @@ export default function AppRouter({ ctx }) {
           hasDiaryToday={hasDiaryToday}
           setEditingMyProfile={setEditingMyProfile}
           setShowProfileModal={setShowProfileModal}
+          onEnterChat={ctx.handleEnterChat}
         />
       )}
 
@@ -372,6 +374,8 @@ export default function AppRouter({ ctx }) {
               showToast={showToast}
               responseStyle={responseStyle}
               onStyleChange={(val) => saveSettings({ responseStyle: val })}
+              theme={theme}
+              onThemeChange={(val) => saveSettings({ theme: val })}
               instantTyping={instantTyping}
               onInstantTypingChange={(val) => saveSettings({ instantTyping: val })}
               sidebarPrefs={sidebarPrefs}
@@ -558,6 +562,13 @@ export default function AppRouter({ ctx }) {
       {step === STEP.SAJU_STORY && (
         <Suspense fallback={<PageSpinner />}>
           <SajuStoryPage callApi={callApi} showToast={showToast} />
+        </Suspense>
+      )}
+
+      {/* SCORE_TREND */}
+      {step === STEP.SCORE_TREND && (
+        <Suspense fallback={<PageSpinner />}>
+          <ScoreTrendPage />
         </Suspense>
       )}
 

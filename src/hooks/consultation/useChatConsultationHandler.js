@@ -5,6 +5,11 @@ import { loadAnalysisCache, saveAnalysisCache } from "../../lib/analysisCache.js
 const CHAT_SESSION_KEY = 'last_chat_session';
 
 const CHAT_ERROR_MESSAGE = "별과 연결이 잠시 끊겼어요. 다시 시도해볼까요?";
+const LOCAL_LAYOUT_MODE = import.meta.env.DEV;
+
+function isLocalLayoutUser(user) {
+  return LOCAL_LAYOUT_MODE && user?.id === "test_user_id";
+}
 
 function sanitizeChatReply(text) {
   if (!text) return "";
@@ -247,6 +252,20 @@ export function useChatConsultationHandler({
     await new Promise(r => setTimeout(r, 1000));
 
     try {
+      if (isLocalLayoutUser(user)) {
+        const mockText = "로컬 레이아웃 점검용 채팅 응답입니다. 실제 API 호출 없이 말풍선, 입력창, 스크롤 위치, 저장 흐름만 확인할 수 있게 채웠어요.";
+        setChatHistory((prev) => {
+          const updated = prev.map((message, index) => (
+            index === prev.length - 1 ? { role: "ai", text: mockText, streaming: false } : message
+          ));
+          persistChatSession(user?.id, selQs, updated);
+          return updated;
+        });
+        setChatUsed((prev) => prev + 1);
+        setLatestChatIdx(chatHistory.length + 1);
+        return;
+      }
+
       if (streamAbortRef.current) streamAbortRef.current.abort();
       streamAbortRef.current = new AbortController();
       const signal = streamAbortRef.current.signal;

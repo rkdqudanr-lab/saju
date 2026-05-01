@@ -1,6 +1,14 @@
 import { useUserCtx, useSajuCtx, useGamCtx } from '../../context/AppContext.jsx';
 import { useAppStore } from '../../store/useAppStore.js';
 
+const STREAK_BONUSES = [
+  { day: 3, bonus: 30 },
+  { day: 7, bonus: 100 },
+  { day: 14, bonus: 100 },
+  { day: 21, bonus: 100 },
+  { day: 30, bonus: 300 },
+];
+
 export default function LandingHeader({
   onEditProfile,
   onLogout,
@@ -10,12 +18,17 @@ export default function LandingHeader({
 }) {
   const { user, form } = useUserCtx();
   const { saju, today } = useSajuCtx();
-  const { gamificationState } = useGamCtx();
+  const { gamificationState, missions = [] } = useGamCtx();
   const equippedAvatar = useAppStore((s) => s.equippedAvatar);
 
   const streak = gamificationState?.loginStreak ?? 0;
-  const level = gamificationState?.guardianLevel ?? 1;
   const currentBp = bp ?? gamificationState?.currentBp ?? 0;
+  const completedMissions = missions.filter((m) => m.is_completed).length;
+  const totalMissions = missions.length;
+  const nextStreakBonus = STREAK_BONUSES.find((item) => item.day > streak);
+  const streakBonusText = nextStreakBonus && nextStreakBonus.day - streak <= 2
+    ? `${nextStreakBonus.day - streak}일 뒤 +${nextStreakBonus.bonus}`
+    : '';
 
   const ilgan = saju?.ilganPoetic || '';
   const dateLabel = today ? `${today.month}월 ${today.day}일` : '';
@@ -41,10 +54,15 @@ export default function LandingHeader({
         {sub && <div className="lh-sub">{sub}</div>}
         <div className="lh-chips">
           {streak >= 1 && (
-            <span className="lh-chip streak">🔥 {streak}일 연속</span>
+            <span className="lh-chip streak">
+              🔥 {streak}일 연속
+              {streakBonusText && <span className="lh-streak-next">{streakBonusText}</span>}
+            </span>
           )}
-          {level >= 2 && (
-            <span className="lh-chip level">★ Lv.{level} 수호자</span>
+          {totalMissions > 0 && (
+            <span className={`lh-chip${completedMissions === totalMissions ? ' level' : ''}`}>
+              ✅ {completedMissions}/{totalMissions} 미션
+            </span>
           )}
           <button
             type="button"

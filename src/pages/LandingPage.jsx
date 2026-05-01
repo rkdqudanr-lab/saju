@@ -62,18 +62,6 @@ function getNearbyJeolgi() {
   return null;
 }
 
-function getBdayDday(bm, bd) {
-  if (!bm || !bd) return null;
-  const now = new Date();
-  const thisYear = new Date(now.getFullYear(), parseInt(bm) - 1, parseInt(bd));
-  thisYear.setHours(0, 0, 0, 0);
-  const today0 = new Date(now); today0.setHours(0, 0, 0, 0);
-  const next = thisYear >= today0
-    ? thisYear
-    : new Date(now.getFullYear() + 1, parseInt(bm) - 1, parseInt(bd));
-  return Math.round((next - today0) / 86400000);
-}
-
 export default function LandingPage({
   otherProfiles,
   dailyResult,
@@ -85,6 +73,7 @@ export default function LandingPage({
   hasDiaryToday = false,
   setEditingMyProfile,
   setShowProfileModal,
+  onEnterChat,
 }) {
   const setStep = useAppStore((s) => s.setStep);
   const setEquippedTheme = useAppStore((s) => s.setEquippedTheme);
@@ -131,6 +120,41 @@ export default function LandingPage({
     const orig = parsedDaily.score ?? dailyResult?.score ?? 0;
     return todayScore && orig ? todayScore - orig : 0;
   }, [dailyResult?.score, parsedDaily.score, todayScore]);
+
+  // ── 핵심 축 점수 (상위 2개 / 하위 1개) ──
+  const topAxes = useMemo(() => {
+    if (!dailyResult || !axisScores.length) return [];
+    return [...axisScores]
+      .filter((s) => s.key !== 'overall' && s.score >= 70)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 2);
+  }, [axisScores, dailyResult]);
+
+  const bottomAxes = useMemo(() => {
+    if (!dailyResult || !axisScores.length) return [];
+    return [...axisScores]
+      .filter((s) => s.key !== 'overall' && s.score <= 50)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 1);
+  }, [axisScores, dailyResult]);
+
+  // ── Smart Suggestion ──
+  const suggestion = useMemo(() => {
+    if (!user) return null;
+    const hour = new Date().getHours();
+
+    if (!hasDiaryToday && hour >= 17 && dailyResult) {
+      return { icon: '📓', text: '오늘 하루를 기록하면 +5 BP를 받아요', step: STEP.DIARY };
+    }
+    const validScores = scoreHistory.filter((s) => s.score !== null);
+    if (validScores.length >= 3) {
+      const last3 = validScores.slice(-3);
+      if (last3[0].score > last3[1].score && last3[1].score > last3[2].score) {
+        return { icon: '💬', text: '최근 3일 흐름이 내려가고 있어요. 별숨에게 물어볼까요?', step: STEP.QUESTION };
+      }
+    }
+    return null;
+  }, [hasDiaryToday, scoreHistory, user?.id, dailyResult]);
 
   // ── useEffect: equipped items ──
   useEffect(() => {
@@ -296,20 +320,36 @@ export default function LandingPage({
   const totalMissions = missions.length;
   const remainingMissions = totalMissions - completedMissions;
 
-  // ── 생일 D-Day ──
-  const upcomingBirthdays = useMemo(() => {
-    const all = [
-      { label: form?.nickname || form?.name || '나', bm: form?.bm, bd: form?.bd },
-      ...(otherProfiles || []).map((p) => ({ label: p.name || '이름없음', bm: p.bm, bd: p.bd })),
+  const recommendedFeature = useMemo(() => {
+    const features = [
+      { icon: '📊', label: '별숨 통계', sub: '지난 운세 흐름을 확인해요', step: STEP.STATS },
+      { icon: '⭐', label: '나의 별숨', sub: '사주와 천체 분석을 살펴봐요', step: STEP.NATAL },
+      { icon: '📖', label: '별숨 도감', sub: '컬렉션 완성을 이어가요', step: STEP.BYEOLSOOM_SPACE },
+      { icon: '🛍', label: '별숨샵', sub: '오늘 쓸 오브제를 골라봐요', step: STEP.SHOP },
+      { icon: '📅', label: '별숨 달력', sub: '이번 주 운세 기록을 돌아봐요', step: STEP.CALENDAR },
+      { icon: '📓', label: '나의 하루', sub: '오늘의 감정을 남겨봐요', step: STEP.DIARY },
     ];
-    return all
-      .map((p) => ({ label: p.label, dday: getBdayDday(p.bm, p.bd) }))
-      .filter((c) => c.dday !== null && c.dday <= 30)
-      .sort((a, b) => a.dday - b.dday);
-  }, [form?.bm, form?.bd, form?.nickname, form?.name, otherProfiles]);
+    const seed = today?.day ?? new Date().getDate();
+    return features[seed % features.length];
+  }, [today?.day]);
 
   // ── 타일 정의 ──
   const primaryTiles = useMemo(() => [
+    {
+      icon: '💬',
+      title: '별숨에게 질문하기',
+      sub: '지금 제일 궁금한 걸 바로 물어보세요',
+      onClick: () => setStep(STEP.QUESTION),
+      accent: true,
+    },
+    {
+      icon: '❓',
+      title: '오늘의 추천질문',
+      sub: '연애·일·돈 고민을 빠르게 골라요',
+      onClick: () => setStep(STEP.QUESTION),
+      badge: '자주 묻는 질문',
+      ariaLabel: '오늘의 추천질문 보기',
+    },
     {
       icon: '✅',
       title: '오늘 미션',
@@ -331,18 +371,20 @@ export default function LandingPage({
       accent: hasDiaryToday,
     },
     {
-      icon: '💬',
-      title: '별숨에게 질문하기',
-      sub: '무엇이든 물어보세요',
-      onClick: () => setStep(STEP.QUESTION),
-    },
-    {
       icon: '📅',
       title: '별숨 달력',
       sub: '운세 기록 한눈에 보기',
       onClick: () => setStep(STEP.CALENDAR),
     },
-  ], [totalMissions, completedMissions, remainingMissions, hasDiaryToday, setStep]);
+    {
+      icon: recommendedFeature.icon,
+      title: '오늘의 추천 별숨기능',
+      sub: recommendedFeature.sub,
+      onClick: () => setStep(recommendedFeature.step),
+      badge: recommendedFeature.label,
+      ariaLabel: `오늘의 추천 별숨기능, ${recommendedFeature.label}`,
+    },
+  ], [totalMissions, completedMissions, remainingMissions, hasDiaryToday, recommendedFeature, setStep]);
 
   const secondaryTiles = useMemo(() => [
     { icon: '⭐', title: '나의 별숨', sub: '사주·천체 종합 분석', onClick: () => setStep(STEP.NATAL) },
@@ -446,26 +488,12 @@ export default function LandingPage({
     );
   }
 
-  // ── 로그인 + 프로필 완성 화면 (Toss 스타일) ──
+  // ── 로그인 + 프로필 완성 화면 ──
   return (
     <div className="page step-fade" style={{ justifyContent: 'flex-start', paddingTop: 0 }}>
       <div className="land-home">
 
-        {/* 1. 히어로: 오늘의 별숨 미니카드 */}
-        <DailyMiniCard
-          dailyResult={dailyResult}
-          todayScore={todayScore}
-          loading={dailyLoading}
-          onAsk={askDailyHoroscope}
-          onClick={() => setStep(STEP.TODAY_DETAIL)}
-          boostCount={Object.keys(boostMap).length}
-          scoreBoostDelta={scoreBoostDelta}
-        />
-
-        {/* 2. 별숨 레벨 카드 */}
-        <LevelCard />
-
-        {/* 3. 미니 헤더 */}
+        {/* 1. 보상 바 헤더 */}
         <LandingHeader
           onEditProfile={() => { setEditingMyProfile(true); setStep(STEP.PROFILE); }}
           onLogout={kakaoLogout}
@@ -474,27 +502,59 @@ export default function LandingPage({
           onFreeRecharge={onFreeRecharge}
         />
 
-        {/* 4. 알림 캐러셀 (절기/생일만) */}
+        {/* 2. 히어로: 오늘의 별숨 미니카드 */}
+        <DailyMiniCard
+          dailyResult={dailyResult}
+          todayScore={todayScore}
+          loading={dailyLoading}
+          onAsk={askDailyHoroscope}
+          onClick={() => setStep(STEP.TODAY_DETAIL)}
+          boostCount={Object.keys(boostMap).length}
+          scoreBoostDelta={scoreBoostDelta}
+          topAxes={topAxes}
+          bottomAxes={bottomAxes}
+          onQuickAsk={onEnterChat}
+        />
+
+        {/* 3. 알림 캐러셀 (절기/생일만) */}
         <AlertCarousel
           isApproximate={isApproximate}
           jeolgi={nearbyJeolgi}
-          birthdays={upcomingBirthdays}
+          birthdays={[]}
           onApproximate={() => setStep(STEP.PROFILE)}
         />
 
-        {/* 4. 주요 기능 2×2 타일 */}
+        {/* 4. Smart Suggestion */}
+        {suggestion && (
+          <div
+            role={suggestion.step ? 'button' : undefined}
+            tabIndex={suggestion.step ? 0 : undefined}
+            className="smart-suggestion"
+            onClick={suggestion.step ? () => setStep(suggestion.step) : undefined}
+            onKeyDown={suggestion.step ? (e) => e.key === 'Enter' && setStep(suggestion.step) : undefined}
+          >
+            <span className="smart-suggestion-icon">{suggestion.icon}</span>
+            <span className="smart-suggestion-text">{suggestion.text}</span>
+            {suggestion.step && <span className="smart-suggestion-arrow">›</span>}
+          </div>
+        )}
+
+        {/* 5. 주요 기능 2×2 타일 */}
         <QuickActionGrid tiles={primaryTiles} />
 
-        {/* 5. 7일 점수 요약 */}
+        {/* 6. 7일 점수 요약 */}
         <WeeklyScoreSummary
           scoreHistory={scoreHistory}
-          onClick={() => setStep(STEP.STATS)}
+          onClick={() => setStep(STEP.SCORE_TREND)}
         />
 
-        {/* 6. 보조 기능 2×2 타일 */}
+        {/* 7. 별숨 레벨 카드 */}
+        <LevelCard />
+
+        {/* 8. 보조 기능 2×2 타일 */}
         <QuickActionGrid tiles={secondaryTiles} />
 
-        {/* 7. 오늘의 별 메시지 */}
+        {/* 9. 오늘의 별 메시지 */}
         <div className="land-daily-msg">
           <div className="land-daily-msg-label">
             ✦ {today?.month}월 {today?.day}일의 별 메시지

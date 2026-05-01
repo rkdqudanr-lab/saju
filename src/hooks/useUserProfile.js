@@ -6,6 +6,28 @@ const DEFAULT_PROFILE = { partner: '', partnerBy: '', partnerBm: '', partnerBd: 
 const DEFAULT_FORM    = { name: '', nickname: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_OTHER   = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_QUIZ    = { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
+const LOCAL_MAIN_SCREEN_ENABLED = import.meta.env.DEV;
+const LOCAL_DEV_USER = {
+  id: 'test_user_id',
+  nickname: '로컬 별님',
+  profileImage: null,
+};
+const LOCAL_DEV_FORM = {
+  name: '로컬 별님',
+  nickname: '로컬 별님',
+  by: '1995',
+  bm: '5',
+  bd: '15',
+  bh: '12',
+  gender: 'female',
+  noTime: false,
+};
+const LOCAL_DEV_PROFILE = {
+  ...DEFAULT_PROFILE,
+  mbti: 'INFP',
+  selfDesc: '로컬 메인화면 확인용 임시 프로필',
+  worryText: '오늘의 흐름',
+};
 
 // ── 인증 세션 + 로그인 유지 플래그 localStorage 관리 ──
 function getAuthUser() {
@@ -53,10 +75,11 @@ export function useUserProfile() {
   const [user, setUser] = useState(() => {
     const storedUser = getAuthUser();
     try { localStorage.removeItem('byeolsoom_jwt'); } catch {}
+    if (LOCAL_MAIN_SCREEN_ENABLED) return LOCAL_DEV_USER;
     return storedUser;
   });
-  const [profile, setProfile] = useState(DEFAULT_PROFILE);
-  const [form, setForm] = useState(DEFAULT_FORM);
+  const [profile, setProfile] = useState(() => LOCAL_MAIN_SCREEN_ENABLED ? LOCAL_DEV_PROFILE : DEFAULT_PROFILE);
+  const [form, setForm] = useState(() => LOCAL_MAIN_SCREEN_ENABLED ? LOCAL_DEV_FORM : DEFAULT_FORM);
   const [otherProfiles, setOtherProfiles] = useState([]);
   const [activeProfileIdx, setActiveProfileIdx]       = useState(0);
   const [otherForm, setOtherForm]                     = useState(DEFAULT_OTHER);
@@ -71,7 +94,7 @@ export function useUserProfile() {
   );
   // 이미 로그인된 유저의 Supabase 프로필 동기화 중 여부 (새로고침 시 버튼 플래시 방지)
   const [profileSyncing, setProfileSyncing] = useState(() =>
-    !!getAuthUser() && !new URLSearchParams(window.location.search).has('code')
+    !LOCAL_MAIN_SCREEN_ENABLED && !!getAuthUser() && !new URLSearchParams(window.location.search).has('code')
   );
 
   // ── 개인 설정 (Supabase 저장) ──
@@ -79,7 +102,7 @@ export function useUserProfile() {
   // 테마: 기본값 라이트모드. 로그인 후 DB에 저장된 값이 있으면 덮어씀.
   const [theme, setTheme] = useState('light');
   const [instantTyping, setInstantTyping] = useState(false);
-  const [onboarded, setOnboarded] = useState(false);
+  const [onboarded, setOnboarded] = useState(LOCAL_MAIN_SCREEN_ENABLED);
   const [quizState, setQuizState] = useState(DEFAULT_QUIZ);
   const [lifeStage, setLifeStage] = useState('free');
   const [fontSize, setFontSize] = useState('standard');
@@ -87,6 +110,10 @@ export function useUserProfile() {
   useEffect(() => {
     const storedUser = getAuthUser();
     const params = new URLSearchParams(window.location.search);
+    if (LOCAL_MAIN_SCREEN_ENABLED) {
+      setProfileSyncing(false);
+      return;
+    }
     if (!storedUser?.id || params.get('code')) {
       setProfileSyncing(false);
       return;
@@ -260,6 +287,10 @@ export function useUserProfile() {
   // ── 앱 로드 시 Supabase에서 전체 사용자 데이터 병렬 동기화 ──
   useEffect(() => {
     if (!supabase || !user?.id) return;
+    if (LOCAL_MAIN_SCREEN_ENABLED && user.id === LOCAL_DEV_USER.id) {
+      setProfileSyncing(false);
+      return;
+    }
     const params = new URLSearchParams(window.location.search);
     if (params.get('code')) return;
 

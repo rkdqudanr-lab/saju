@@ -99,6 +99,8 @@ export default function SettingsPage({
   showToast,
   responseStyle: responseStyleProp = 'M',
   onStyleChange,
+  theme: themeProp = 'light',
+  onThemeChange,
   instantTyping = false,
   onInstantTypingChange,
   sidebarPrefs,
@@ -188,6 +190,7 @@ export default function SettingsPage({
 
   const lifeStage = lifeStageProp || 'free';
   const fontSize = fontSizeProp || 'standard';
+  const theme = themeProp || 'light';
 
   // form prop이 지연 전달될 때 localForm 동기화
   useEffect(() => {
@@ -201,6 +204,11 @@ export default function SettingsPage({
     onStyleChange?.(val);
     showToast?.('스타일이 저장됐어요 ✦', 'success');
   }, [onStyleChange, showToast]);
+
+  const handleThemeChange = useCallback((val) => {
+    onThemeChange?.(val);
+    showToast?.(val === 'dark' ? '다크 모드로 바꿨어요' : '라이트 모드로 바꿨어요', 'success');
+  }, [onThemeChange, showToast]);
 
   const handleSaveProfile = useCallback(async () => {
     if (!localForm.by || !localForm.bm || !localForm.bd) {
@@ -611,6 +619,55 @@ export default function SettingsPage({
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 2 추가 섹션: 화면 모드 ── */}
+        {tab === 2 && (
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>
+            <div className="card-title">화면 모드</div>
+            <div className="card-sub" style={{ marginBottom: 12 }}>
+              앱 전체의 밝은 화면과 어두운 화면을 선택해요.
+            </div>
+            <div
+              role="group"
+              aria-label="화면 모드 선택"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 6,
+                padding: 4,
+                borderRadius: 14,
+                border: '1px solid var(--line)',
+                background: 'var(--bg2)',
+              }}
+            >
+              {[
+                { value: 'light', label: '라이트' },
+                { value: 'dark', label: '다크' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={theme === opt.value}
+                  onClick={() => handleThemeChange(opt.value)}
+                  style={{
+                    border: 'none',
+                    borderRadius: 10,
+                    padding: '10px 12px',
+                    fontFamily: 'var(--ff)',
+                    fontSize: 'var(--xs)',
+                    fontWeight: theme === opt.value ? 800 : 500,
+                    color: theme === opt.value ? 'var(--gold)' : 'var(--t3)',
+                    background: theme === opt.value ? 'var(--bg1)' : 'transparent',
+                    boxShadow: theme === opt.value ? '0 1px 5px rgba(0,0,0,.14)' : 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
         )}

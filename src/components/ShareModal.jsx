@@ -2,6 +2,7 @@ import { downloadDataUrl } from '../utils/imageExport';
 
 export default function ShareModal({ shareModal, onClose, showToast, cardDataUrl }) {
   const hasCard = !!cardDataUrl;
+  const shareUrl = shareModal.url || `${window.location.origin}/?from=share`;
 
   function handleSaveImage() {
     const today = new Date();
@@ -25,7 +26,7 @@ export default function ShareModal({ shareModal, onClose, showToast, cardDataUrl
 
         {hasCard ? (
           <>
-            {/* 1:1 카드 미리보기 */}
+            {/* 인스타 4:5 카드 미리보기 */}
             <div style={{
               borderRadius: 'var(--r1)',
               overflow: 'hidden',
@@ -47,7 +48,7 @@ export default function ShareModal({ shareModal, onClose, showToast, cardDataUrl
                 className="btn-main"
                 style={{ background: 'var(--bg3)', color: 'var(--t1)' }}
                 onClick={() => {
-                  navigator.clipboard?.writeText(window.location.origin)
+                  navigator.clipboard?.writeText(shareUrl)
                     .then(() => showToast?.('별숨 링크가 복사됐어요! 친구에게 공유해주세요 ✦', 'success'));
                   onClose();
                 }}
@@ -69,13 +70,16 @@ export default function ShareModal({ shareModal, onClose, showToast, cardDataUrl
             </div>
             <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 'var(--sp2)', fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.75, marginBottom: 'var(--sp3)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
               {shareModal.text}
+              <br />
+              <br />
+              {shareUrl}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button className="btn-main" onClick={() => { navigator.clipboard?.writeText(shareModal.text).then(() => showToast?.('복사됐어요! 친구에게 붙여넣기 해주세요 💌', 'success')); onClose(); }}>
-                텍스트 복사하기
+              <button className="btn-main" onClick={() => { navigator.clipboard?.writeText(`${shareModal.text}\n${shareUrl}`).then(() => showToast?.('공유 문구와 링크를 복사했어요', 'success')); onClose(); }}>
+                링크 포함해서 복사하기
               </button>
-              <button className="btn-main" style={{ background: 'var(--bg3)', color: 'var(--t1)' }} onClick={() => { navigator.clipboard?.writeText(window.location.origin).then(() => showToast?.('별숨 링크가 복사됐어요! 친구에게 공유해주세요 ✦', 'success')); onClose(); }}>
-                별숨 링크 공유하기
+              <button className="btn-main" style={{ background: 'var(--bg3)', color: 'var(--t1)' }} onClick={() => { navigator.clipboard?.writeText(shareUrl).then(() => showToast?.('별숨 링크가 복사됐어요', 'success')); onClose(); }}>
+                링크만 복사하기
               </button>
               <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }} onClick={onClose}>
                 닫기

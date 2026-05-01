@@ -286,6 +286,10 @@ export function getBPGaugeColor(currentBp, level) {
  * @returns {Promise<{ok: boolean, newBP: number|null}>}
  */
 export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE', note = '') {
+  if (import.meta.env.DEV && String(kakaoId) === 'test_user_id') {
+    return { ok: true, newBP: null };
+  }
+
   try {
     // 현재 BP 조회
     const { data: userData } = await client

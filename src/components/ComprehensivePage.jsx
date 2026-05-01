@@ -334,7 +334,15 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
 
 // ── 메인 컴포넌트 ──
 export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx, user, consentFlags }) {
-  const [activeTab, setActiveTab] = useState('saju');
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('byeolsoom_comprehensive_tab');
+      sessionStorage.removeItem('byeolsoom_comprehensive_tab');
+      return saved === 'astro' ? 'astro' : 'saju';
+    } catch {
+      return 'saju';
+    }
+  });
 
   return (
     <div className="page-top">

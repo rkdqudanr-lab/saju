@@ -143,20 +143,20 @@ export function useAppHandlers({
   // ── 공유 ──
   const shareResult = useCallback((type, text, label = '') => {
     if (typeof window.gtag === 'function') window.gtag('event', 'share', { type });
-    const appUrl = window.location.origin;
+    const appUrl = `${window.location.origin}/?from=share`;
     let shareText = '';
     if (type === 'prophecy') {
-      shareText = `✦ 별숨의 예언 — ${label}\n\n${(text || '').slice(0, 100)}...\n\n나만의 사주+별자리 운세 → ${appUrl}`;
+      shareText = `✦ 별숨의 예언 — ${label}\n\n${(text || '').slice(0, 100)}...\n\n나만의 사주+별자리 운세`;
     } else if (type === 'compat') {
-      shareText = `✦ 우리가 만나면 — ${label}\n\n${(text || '').slice(0, 100)}\n\n별숨에서 나의 궁합을 봐요 → ${appUrl}`;
+      shareText = `✦ 우리가 만나면 — ${label}\n\n${(text || '').slice(0, 100)}\n\n별숨에서 나의 궁합을 봐요`;
     } else {
       const ans = answers[0] ? parseAccSummary(answers[0]).text.slice(0, 100) : '';
-      shareText = `✦ 오늘의 별숨\n\n${ans}...\n\n나만의 사주+별자리 운세 → ${appUrl}`;
+      shareText = `✦ 오늘의 별숨\n\n${ans}...\n\n나만의 사주+별자리 운세`;
     }
     if (navigator.share) {
       navigator.share({ title: '별숨 ✦', text: shareText, url: appUrl }).catch(() => {});
     } else {
-      setShareModal({ open: true, title: '별숨 ✦', text: shareText });
+      setShareModal({ open: true, title: '별숨 ✦', text: shareText, url: appUrl });
     }
   }, [answers, setShareModal]);
 

@@ -7,6 +7,11 @@ import { spendBP as spendBPUtil } from "../../utils/gamificationLogic.js";
 
 const BM_COST_PER_ASK = 10;
 const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!';
+const LOCAL_LAYOUT_MODE = import.meta.env.DEV;
+
+function isLocalLayoutUser(user) {
+  return LOCAL_LAYOUT_MODE && user?.id === 'test_user_id';
+}
 
 export function useDailyConsultationHandler({
   formOk,
@@ -35,7 +40,7 @@ export function useDailyConsultationHandler({
       return false;
     }
 
-    const shouldChargeBp = !options.skipBpCharge;
+    const shouldChargeBp = !options.skipBpCharge && !isLocalLayoutUser(user);
     const shouldConfirm = !options.skipConfirm;
     const shouldSaveHistory = options.saveHistory !== false;
     const shouldIncrementCount = options.incrementCount !== false;
@@ -83,8 +88,25 @@ export function useDailyConsultationHandler({
 
         try {
           const gamData = parseHoroscopeForGamification(ans);
+          if (isLocalLayoutUser(user)) {
+            setDailyResult((prev) => ({
+              ...prev,
+              score: gamData.score,
+              ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
+            }));
+            return true;
+          }
+
           const authClient = getAuthenticatedClient(user.id);
           const client = authClient || supabase;
+          if (!client) {
+            setDailyResult((prev) => ({
+              ...prev,
+              score: gamData.score,
+              ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
+            }));
+            return true;
+          }
           const today = getTodayDateStr();
 
           if (gamData.missions && gamData.missions.length > 0) {

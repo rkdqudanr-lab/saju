@@ -20,6 +20,139 @@ import { useReportConsultationHandler } from "./consultation/useReportConsultati
 const BM_COST_PER_ASK = 10;
 const ERR_MSG = "별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!";
 export const DAILY_MAX = 999;
+const LOCAL_LAYOUT_MODE = import.meta.env.DEV;
+
+function isLocalLayoutUser(user) {
+  return LOCAL_LAYOUT_MODE && user?.id === "test_user_id";
+}
+
+function getLocalLayoutAnswer(userMessage, opts = {}) {
+  if (opts.isDaily) {
+    return `[점수]
+종합운: 74 — 오늘은 무리하게 밀어붙이기보다 흐름을 정리할수록 안정감이 커져요.
+
+[요약]
+오늘은 해야 할 일을 한 번에 끝내려 하기보다, 순서를 다시 잡는 쪽이 더 잘 맞아요.
+
+[동양의 기운]
+십신: 식신 — 표현하고 정리하는 힘이 살아나요.
+기운: 화 기운이 강해 말과 행동이 빨라질 수 있어요.
+DO: 오전에 할 일을 세 가지로 줄이기
+DONT: 즉흥적으로 약속 늘리기
+
+[서양의 하늘]
+행성: 금성 — 관계에서 부드러운 말이 힘이 됩니다.
+흐름: 익숙한 루틴 안에서 작은 변화를 주기 좋아요.
+
+[카테고리 운세]
+종합운: 74 — 차분히 정리하면 흐름이 좋아져요.
+재물운: 68 — 큰 지출보다 작은 절약이 유리해요.
+연애운: 72 — 먼저 안부를 묻는 말이 관계를 부드럽게 해요.
+커리어운: 77 — 미뤄둔 문서나 계획을 정리하기 좋아요.
+학업운: 70 — 짧게 반복할수록 집중이 살아나요.
+건강운: 66 — 목과 어깨 긴장을 풀어주세요.
+대인운: 75 — 선을 분명히 하면 오히려 편해져요.
+이동운: 62 — 동선은 여유 있게 잡는 편이 좋아요.
+창작운: 81 — 떠오른 아이디어를 메모하면 쓸모가 커져요.
+
+[별숨픽]
+음식: 따뜻한 국물
+장소: 조용한 카페
+색: 골드 베이지
+아이템: 작은 노트
+숫자: 5
+방향: 동쪽
+소통: 먼저 짧게 안부 묻기
+행동: 할 일 세 개만 적기
+요약: 작은 정리가 큰 흐름을 바꿔요.`;
+  }
+
+  if (opts.isReport) {
+    return `[월간요약]
+이번 달은 속도를 높이기보다 기준을 다시 잡는 달입니다. 관계, 일, 생활 루틴을 정리하면 다음 선택이 더 선명해져요.
+
+[월간점수]
+종합운: 76
+재물운: 69
+연애운: 73
+커리어운: 78
+학업운: 71
+건강운: 67
+대인운: 75
+이동운: 64
+창작운: 82
+
+[이번달핵심]
+좋아 보이는 선택보다 오래 유지할 수 있는 선택을 고르세요.
+
+[주차별가이드]
+1주차: 일정 정리
+2주차: 관계 조율
+3주차: 일의 기준 재설정
+4주차: 휴식과 회복
+
+[관계와감정]
+말을 아끼는 것보다 정확히 말하는 편이 낫습니다.
+
+[일과돈]
+새로운 투자보다 기존 지출 점검이 먼저예요.
+
+[건강과생활]
+수면 리듬과 어깨 긴장을 함께 관리하세요.
+
+[이번달피할것]
+모든 일을 혼자 떠안는 태도
+
+[이번달실천]
+매주 한 번, 일정과 감정을 같이 정리하기
+
+[행운색]
+따뜻한 금색
+
+[행운아이템]
+얇은 노트
+
+[별숨한마디]
+이번 달의 힘은 빠른 결정보다 오래 가는 기준에서 나옵니다.`;
+  }
+
+  if (opts.isChat) {
+    return "지금은 로컬 레이아웃 점검용 응답이에요. 실제 상담처럼 보이도록 짧게 답변을 채웠고, 채팅 말풍선과 후속 입력 흐름을 확인하시면 됩니다.";
+  }
+
+  if (opts.isDream) {
+    return "[요약]\n꿈은 최근 마음속에 남아 있던 긴장과 기대가 섞여 나타난 장면으로 보여요.\n\n[해석]\n반복해서 떠오른 이미지는 아직 정리되지 않은 선택지를 뜻합니다.\n\n[실천]\n오늘은 결정하기보다 기록해두는 편이 좋아요.";
+  }
+
+  if (opts.isTarot) {
+    return "[카드]\nThe Star\n\n[해석]\n지금은 큰 결론보다 회복과 방향 확인이 중요한 시기입니다.\n\n[조언]\n작은 신호를 놓치지 말고 천천히 움직이세요.";
+  }
+
+  if (opts.isName) {
+    return "[이름풀이]\n이 이름은 부드럽게 관계를 잇는 힘과 꾸준히 쌓아가는 기운이 강합니다.\n\n[조언]\n처음보다 시간이 지날수록 신뢰가 드러나는 이름 흐름이에요.";
+  }
+
+  if (opts.isTaegil) {
+    return "[택일결과]\n오전보다 오후 시간이 안정적입니다.\n\n[추천]\n준비와 확인이 필요한 일은 14시 이후가 좋아요.\n\n[주의]\n급하게 결정하는 일정은 피하세요.";
+  }
+
+  if (opts.isDaeun) {
+    return "[대운요약]\n앞으로의 흐름은 기반을 다지고 선택지를 좁히는 방향으로 움직입니다.\n\n[핵심]\n넓히는 운보다 정리하는 운이 먼저 들어와요.\n\n[조언]\n무리한 확장보다 지속 가능한 루틴을 만드세요.";
+  }
+
+  const cleanQuestion = String(userMessage || "").replace(/^\[질문\]\s*/m, "").trim();
+  return `[요약]
+${cleanQuestion ? `"${cleanQuestion.slice(0, 42)}"에 대한` : "지금 흐름에 대한"} 로컬 샘플 답변입니다.
+
+[흐름]
+현재는 큰 결론보다 상황을 정리하고 우선순위를 세우는 쪽이 더 잘 맞습니다. 마음이 급해질수록 하나씩 확인하는 방식이 안정적이에요.
+
+[조언]
+오늘 안에 끝낼 일 하나와 미뤄도 되는 일 하나를 구분해보세요. 그 선택만으로도 부담이 줄어듭니다.
+
+[실천]
+메모장에 지금 가장 신경 쓰이는 일을 세 줄로 적고, 첫 번째 행동만 바로 해보세요.`;
+}
 
 function sanitizeChatResponse(text) {
   return String(text || "")
@@ -156,6 +289,11 @@ export function useConsultation(
     if (!user?.id) {
       if (typeof onLoginRequired === "function") onLoginRequired();
       throw new Error("LOGIN_REQUIRED");
+    }
+
+    if (isLocalLayoutUser(user)) {
+      await new Promise((r) => setTimeout(r, opts.isChat ? 450 : 650));
+      return getLocalLayoutAnswer(userMessage, opts);
     }
 
     const maxRetries = 3;
@@ -399,7 +537,7 @@ export function useConsultation(
   const askClaude = useCallback(async () => {
     if (!selQs.length) return;
 
-    if (user?.id) {
+    if (user?.id && !isLocalLayoutUser(user)) {
       const totalCost = selQs.length * BM_COST_PER_ASK;
       const confirmed = await useAppStore.getState().showBPConfirm(totalCost, selQs.length);
       if (!confirmed) return;
@@ -479,7 +617,7 @@ export function useConsultation(
       return;
     }
 
-    if (user?.id) {
+    if (user?.id && !isLocalLayoutUser(user)) {
       const confirmed = await useAppStore.getState().showBPConfirm(BM_COST_PER_ASK, 1);
       if (!confirmed) return;
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;

@@ -33,6 +33,12 @@ function getTodayDateStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+const LOCAL_LAYOUT_MODE = import.meta.env.DEV;
+
+function isLocalLayoutUser(user) {
+  return LOCAL_LAYOUT_MODE && user?.id === 'test_user_id';
+}
+
 /**
  * useGamification 훅
  * 게이미피케이션 시스템의 모든 로직을 담당
@@ -662,6 +668,12 @@ export function useGamification(user, showToast) {
       if (!user?.id) return { success: false, message: '로그인이 필요합니다' };
       const current = gamificationState.currentBp || 0;
       if (current < amount) return { success: false, message: '별 포인트가 부족해요' };
+
+      if (isLocalLayoutUser(user)) {
+        const newBp = current - amount;
+        setGamificationState(prev => ({ ...prev, currentBp: newBp }));
+        return { success: true, newBp };
+      }
 
       try {
         const authClient = getAuthenticatedClient(user.id);

@@ -63,10 +63,10 @@ function formatChartDateLabel(dateKey) {
 function sectionCardStyle(extra = {}) {
   return {
     background:
-      'linear-gradient(180deg, color-mix(in srgb, var(--bg1) 82%, white 18%) 0%, var(--bg1) 100%)',
-    border: '1px solid color-mix(in srgb, var(--line) 55%, var(--gold) 18%)',
-    borderRadius: 20,
-    boxShadow: '0 12px 30px rgba(17, 12, 30, 0.08)',
+      'linear-gradient(180deg,var(--home-card-gloss),rgba(255,255,255,.012)),var(--home-surface)',
+    border: '1px solid var(--home-card-line)',
+    borderRadius: 18,
+    boxShadow: '0 8px 24px var(--home-card-shadow)',
     ...extra,
   };
 }
@@ -75,13 +75,13 @@ function tabButtonStyle(active, color) {
   return {
     flex: 1,
     minWidth: 0,
-    padding: '10px 9px',
-    borderRadius: 999,
-    border: active ? `1px solid ${color}44` : '1px solid transparent',
-    background: active ? `${color}18` : 'transparent',
+    padding: '11px 9px',
+    borderRadius: 14,
+    border: active ? `1px solid ${color}30` : '1px solid transparent',
+    background: active ? `${color}14` : 'transparent',
     color: active ? color : 'var(--t3)',
     fontSize: '12px',
-    fontWeight: active ? 800 : 600,
+    fontWeight: active ? 900 : 700,
     fontFamily: 'var(--ff)',
     cursor: 'pointer',
     transition: 'all .2s ease',
@@ -93,27 +93,42 @@ function MetricCard({ icon, value, label, accent, note }) {
     <div
       style={{
         ...sectionCardStyle(),
-        padding: '16px 15px',
+        padding: '12px 10px',
         minWidth: 0,
+        minHeight: 92,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
       }}
     >
       <div
         style={{
-          width: 38,
-          height: 38,
-          borderRadius: 12,
+          width: 30,
+          height: 30,
+          borderRadius: 11,
           display: 'grid',
           placeItems: 'center',
-          fontSize: 18,
-          marginBottom: 12,
+          fontSize: 15,
+          marginBottom: 8,
           background: `${accent}16`,
           boxShadow: `inset 0 0 0 1px ${accent}2a`,
         }}
       >
         {icon}
       </div>
-      <div style={{ fontSize: '24px', lineHeight: 1, fontWeight: 900, color: accent }}>{value}</div>
-      <div style={{ marginTop: 7, fontSize: '12px', fontWeight: 700, color: 'var(--t2)' }}>{label}</div>
+      <div style={{ fontSize: '21px', lineHeight: 1, fontWeight: 900, color: accent, letterSpacing: 0 }}>{value}</div>
+      <div
+        style={{
+          marginTop: 6,
+          fontSize: '10px',
+          fontWeight: 850,
+          color: 'var(--t2)',
+          lineHeight: 1.25,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
+      </div>
       {note ? <div style={{ marginTop: 4, fontSize: '11px', color: 'var(--t4)' }}>{note}</div> : null}
     </div>
   );
@@ -125,10 +140,10 @@ function ConstellationBadge({ stage }) {
   return (
     <div
       style={{
-        width: 78,
-        height: 78,
+        width: 68,
+        height: 68,
         flexShrink: 0,
-        borderRadius: 24,
+        borderRadius: 22,
         display: 'grid',
         placeItems: 'center',
         position: 'relative',
@@ -139,8 +154,8 @@ function ConstellationBadge({ stage }) {
       <div
         style={{
           position: 'absolute',
-          inset: 9,
-          borderRadius: 20,
+          inset: 8,
+          borderRadius: 18,
           background: `linear-gradient(145deg, ${stage.color}24, rgba(255,255,255,0.04))`,
           filter: 'blur(1px)',
         }}
@@ -149,7 +164,7 @@ function ConstellationBadge({ stage }) {
         style={{
           position: 'relative',
           zIndex: 1,
-          fontSize: 36,
+          fontSize: 32,
           animation: 'floatGently 3.6s ease-in-out infinite',
         }}
       >
@@ -167,7 +182,7 @@ function GrowthProgress({ totalMissions }) {
     : 100;
 
   return (
-    <div>
+    <div style={{ width: '100%', minWidth: 0 }}>
       <div
         style={{
           display: 'flex',
@@ -724,15 +739,16 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
   }, [dates, user?.id, user?.supabaseId]);
 
   return (
-    <div className="page step-fade" style={{ padding: '22px 16px 36px', justifyContent: 'flex-start' }}>
+    <div className="page step-fade" style={{ padding: '86px 16px 36px', justifyContent: 'flex-start' }}>
       <div style={{ width: '100%', maxWidth: MAX_CONTENT_WIDTH }}>
         <div
           style={{
             ...sectionCardStyle({
-              padding: '22px 18px',
+              padding: '20px 18px 18px',
               overflow: 'hidden',
               position: 'relative',
-              background: `radial-gradient(circle at top right, ${stage.color}18 0%, transparent 34%), linear-gradient(180deg, color-mix(in srgb, var(--bg1) 86%, white 14%) 0%, var(--bg1) 100%)`,
+              borderRadius: 24,
+              background: `radial-gradient(circle at 88% 10%, ${stage.color}16 0%, transparent 34%), linear-gradient(145deg,var(--home-card-gloss),rgba(255,255,255,.012) 44%), var(--home-surface-strong)`,
             }),
           }}
         >
@@ -749,27 +765,41 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
             }}
           />
 
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: '11px', fontWeight: 800, color: stage.color, letterSpacing: '.08em' }}>BYEOLSOOM GROWTH</div>
-            <div style={{ marginTop: 6, fontSize: 'var(--xl)', lineHeight: 1.2, fontWeight: 900, color: 'var(--t1)' }}>
-              별숨 성장 대시보드
+          <div style={{ position: 'relative', zIndex: 1, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+              <div style={{ fontSize: '10px', fontWeight: 900, color: stage.color, letterSpacing: '.1em' }}>BYEOLSOOM GROWTH</div>
+              <span
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: 999,
+                  background: `${stage.color}14`,
+                  border: `1px solid ${stage.color}24`,
+                  color: stage.color,
+                  fontSize: '10px',
+                  fontWeight: 900,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                완료 {totalMissionsCompleted}
+              </span>
             </div>
-            <div style={{ marginTop: 8, maxWidth: 380, fontSize: '12px', lineHeight: 1.7, color: 'var(--t3)' }}>
-              흩어진 정보 대신 한 화면에서 성장 단계, 활동 흐름, 미션 상태를 편하게 보도록 레이아웃을 정리했어요.
+            <div style={{ fontSize: 'clamp(27px, 7vw, 34px)', lineHeight: 1.05, fontWeight: 950, color: 'var(--t1)', letterSpacing: 0 }}>
+              별숨 성장
             </div>
+            <div style={{ marginTop: 7, fontSize: '13px', lineHeight: 1.55, color: 'var(--t3)' }}>오늘의 루틴과 성장 흐름</div>
 
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 14,
-                marginTop: 18,
+                gap: 12,
+                marginTop: 16,
                 flexWrap: 'wrap',
               }}
             >
               <ConstellationBadge stage={stage} />
 
-              <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
                     display: 'flex',
@@ -791,10 +821,12 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
                   >
                     {stage.emoji} {stage.label}
                   </span>
-                  <span style={{ fontSize: '11px', color: 'var(--t4)' }}>완료 미션 {totalMissionsCompleted}개</span>
+                  <span style={{ fontSize: '11px', color: 'var(--t4)', whiteSpace: 'nowrap' }}>
+                    다음 {getNextStage(totalMissionsCompleted)?.minMissions - totalMissionsCompleted || 0}개
+                  </span>
                 </div>
 
-                <div style={{ fontSize: '12px', lineHeight: 1.7, color: 'var(--t2)', marginBottom: 12 }}>{stage.desc}</div>
+                <div style={{ fontSize: '12px', lineHeight: 1.5, color: 'var(--t2)', marginBottom: 10 }}>{stage.desc}</div>
                 <GrowthProgress totalMissions={totalMissionsCompleted} />
               </div>
             </div>
@@ -804,8 +836,8 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))',
-            gap: 10,
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: 8,
             marginTop: 12,
           }}
         >
@@ -817,14 +849,14 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
         <button
           onClick={onRechargeFreeBP}
           style={{
-            marginTop: 14,
+            marginTop: 12,
             width: '100%',
-            border: '1px solid rgba(176,120,32,0.2)',
-            borderRadius: 18,
-            padding: '15px 16px',
-            background: 'linear-gradient(180deg, var(--goldf), color-mix(in srgb, var(--bg1) 88%, var(--gold) 12%))',
+            border: '1px solid var(--acc)',
+            borderRadius: 16,
+            padding: '11px 14px',
+            background: 'var(--goldf)',
             color: 'var(--gold)',
-            fontSize: '12px',
+            fontSize: '11px',
             fontWeight: 900,
             fontFamily: 'var(--ff)',
             cursor: 'pointer',
@@ -837,16 +869,16 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
         <div
           style={{
             ...sectionCardStyle(),
-            marginTop: 14,
-            padding: 8,
+            marginTop: 12,
+            padding: 6,
             display: 'flex',
             gap: 6,
           }}
         >
           {[
-            { id: 'growth', label: '🌱 성장' },
-            { id: 'stats', label: '📊 통계' },
-            { id: 'missions', label: '🎯 미션' },
+            { id: 'growth', label: '성장' },
+            { id: 'stats', label: '통계' },
+            { id: 'missions', label: '미션' },
           ].map((item) => (
             <button key={item.id} onClick={() => setTab(item.id)} style={tabButtonStyle(tab === item.id, stage.color)}>
               {item.label}
@@ -854,32 +886,32 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
           ))}
         </div>
 
-        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {tab === 'growth' ? (
             <>
               <div
                 style={{
                   ...sectionCardStyle(),
-                  padding: 18,
+                  padding: 16,
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                   gap: 10,
                 }}
               >
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)', marginBottom: 6 }}>연속 방문</div>
-                  <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 900, color: '#E98143' }}>{loginStreak}일</div>
+                  <div style={{ fontSize: 26, lineHeight: 1, fontWeight: 900, color: '#E98143' }}>{loginStreak}일</div>
                   <div style={{ marginTop: 8, fontSize: '12px', lineHeight: 1.6, color: 'var(--t4)' }}>
-                    오늘도 들어오면 흐름이 이어져요. 꾸준함이 성장 단계를 가장 빠르게 올려줘요.
+                    오늘도 들어오면 흐름이 이어져요.
                   </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--t2)', marginBottom: 6 }}>오늘 미션 진행</div>
-                  <div style={{ fontSize: 28, lineHeight: 1, fontWeight: 900, color: stage.color }}>
+                  <div style={{ fontSize: 26, lineHeight: 1, fontWeight: 900, color: stage.color }}>
                     {completedToday}/{safeMissions.length || 0}
                   </div>
                   <div style={{ marginTop: 8, fontSize: '12px', lineHeight: 1.6, color: 'var(--t4)' }}>
-                    오늘 할 수 있는 행동을 하나씩 쌓으면 BP와 성장 단계가 같이 올라가요.
+                    작은 행동을 하나씩 쌓아요.
                   </div>
                 </div>
               </div>
