@@ -51,6 +51,33 @@ const AXIS_TONE_META = {
   },
 };
 
+/** 조디악 기호 제거 + 핵심 구문 자동 굵게 처리 → React 노드 배열 반환 */
+function renderBoldText(text) {
+  if (!text) return null;
+
+  // 1. 조디악 / 별자리 유니코드 기호 제거
+  let t = text
+    .replace(/[♈♉♊♋♌♍♎♏♐♑♒♓]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  // 2. 핵심 구문 ** 마킹
+  // ~ㄹ/~을 수 있어요 (가능성 서술)
+  t = t.replace(/([^.。,，]*?[가-힣]{1,}[질을]?\s*수\s+있어요)/g, m => `**${m.trim()}**`);
+  // 축 특성: "X 쪽은 비교적/빠르게 Y하고/Y하며"
+  t = t.replace(/([가-힣]{1,6}\s*쪽은\s*[가-힣\s]{3,25}(?:하고|하며|반응하고|올라오고|작동하고|나타나고))/g, m => `**${m.trim()}**`);
+  // 행동 명사구: "~기" 앞에 4자 이상 명사구 + 쪽으로/으로
+  t = t.replace(/([가-힣\s]{4,25}기)(?=\s*(?:쪽으로|으로|를|이\s|가\s))/g, m => `**${m.trim()}**`);
+
+  // 3. ** ** → <strong> 변환
+  return t.split(/(\*\*[^*]+\*\*)/).map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} style={{ fontWeight: 700, color: 'var(--t1)' }}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
 function PageSpinner() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '30vh' }}>
@@ -440,7 +467,7 @@ export default function TodayDetailPage({
                   {dailyLongReading.map((section) => (
                     <article key={section.title} className="today-long-reading__section">
                       <div className="today-long-reading__section-title">{section.title}</div>
-                      <p className="today-long-reading__text">{section.body}</p>
+                      <p className="today-long-reading__text">{renderBoldText(section.body)}</p>
                     </article>
                   ))}
                 </div>

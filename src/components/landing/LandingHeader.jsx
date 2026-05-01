@@ -15,6 +15,7 @@ export default function LandingHeader({
   bp,
   freeRechargeAvailable = true,
   onFreeRecharge,
+  onStreakClick,
 }) {
   const { user, form } = useUserCtx();
   const { saju, today } = useSajuCtx();
@@ -54,7 +55,14 @@ export default function LandingHeader({
         {sub && <div className="lh-sub">{sub}</div>}
         <div className="lh-chips">
           {streak >= 1 && (
-            <span className="lh-chip streak">
+            <span
+              className="lh-chip streak"
+              onClick={onStreakClick}
+              style={onStreakClick ? { cursor: 'pointer' } : undefined}
+              role={onStreakClick ? 'button' : undefined}
+              tabIndex={onStreakClick ? 0 : undefined}
+              onKeyDown={onStreakClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onStreakClick(); } : undefined}
+            >
               🔥 {streak}일 연속
               {streakBonusText && <span className="lh-streak-next">{streakBonusText}</span>}
             </span>

@@ -501,6 +501,7 @@ export default function LandingPage({
           bp={gamificationState.currentBp}
           freeRechargeAvailable={freeRechargeAvailable}
           onFreeRecharge={onFreeRecharge}
+          onStreakClick={() => setStep(STEP.SCORE_TREND)}
         />
 
         {/* 2. 히어로: 오늘의 별숨 미니카드 */}
