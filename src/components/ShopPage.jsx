@@ -85,10 +85,11 @@ function PullResultOverlay({ results, system, onClose }) {
   }, [isSingle]);
 
   // item에서 config(color,bg,border,label) 추출
+  const DEFAULT_CFG = { color: 'var(--t3)', bg: 'var(--bg2)', border: 'var(--line)', label: '아이템' };
   function getCfg(item) {
-    if (item.grade)   return (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[item.grade]   || {};
-    if (item.rarity)  return SHOP_GRADE_CONFIG[item.rarity] || {};
-    return {};
+    if (item.grade)  return (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[item.grade]  || DEFAULT_CFG;
+    if (item.rarity) return SHOP_GRADE_CONFIG[item.rarity] || DEFAULT_CFG;
+    return DEFAULT_CFG;
   }
   function isShopItem(item) { return !!item.rarity && !item.grade; }
 

@@ -162,7 +162,7 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace }) {
             </div>
           );
         })() : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 7, width: '100%' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 7, width: '100%' }}>
             {results.map((item, i) => (
               <SmallResultCard
                 key={i} item={item} index={i} revealed={revealed.has(i)}
@@ -322,7 +322,7 @@ function ItemPreview({ pool, gradeConfig, gradeOrder, probTable }) {
           );
         })}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', gap: 8 }}>
         {previewBodies.map(item => (
           <div key={item.bodyId} style={{
             background: 'var(--bg2)', border: `1px solid ${cfg.border}`,

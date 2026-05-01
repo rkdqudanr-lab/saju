@@ -37,7 +37,7 @@ export default function MissionDashboard({
 
   const completedCount = missions.filter(m => m.is_completed).length;
   const total = missions.length;
-  const completionPct = Math.round((completedCount / total) * 100);
+  const completionPct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
   const milestoneReached = completionPct >= 50;
 
   // 미션을 do/dont와 처방(color/menu/item)으로 분리해서 표시
@@ -166,6 +166,9 @@ export default function MissionDashboard({
         {/* 처방 미션 (색상/음식/아이템) */}
         {prescriptions.length > 0 && (
           <>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--t4)', letterSpacing: '.06em', textTransform: 'uppercase', paddingLeft: 2 }}>
+              오늘의 처방
+            </div>
             {prescriptions.map(m => <MissionRow key={m.id} mission={m} />)}
           </>
         )}
@@ -174,8 +177,11 @@ export default function MissionDashboard({
         {behavioral.length > 0 && (
           <>
             {prescriptions.length > 0 && (
-              <div style={{ height: '1px', background: 'var(--line)', margin: '2px 0' }} />
+              <div style={{ height: '1px', background: 'var(--line)', margin: '4px 0 2px' }} />
             )}
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--t4)', letterSpacing: '.06em', textTransform: 'uppercase', paddingLeft: 2 }}>
+              오늘의 실천
+            </div>
             {behavioral.map(m => <MissionRow key={m.id} mission={m} />)}
           </>
         )}
