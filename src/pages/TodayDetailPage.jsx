@@ -203,6 +203,8 @@ function PickField({ label, value, icon, tone }) {
 export default function TodayDetailPage({
   dailyResult,
   dailyLoading,
+  dailyCount = 0,
+  DAILY_MAX = 999,
   gamificationState,
   onBlockBadtime = null,
   isBlockingBadtime,
@@ -325,6 +327,27 @@ export default function TodayDetailPage({
     }
   }, [dailyResult, overallGuide.summary, showToast, today, todayScore]);
 
+  const handleReaskDaily = useCallback(async () => {
+    if (!onRefresh || dailyLoading) return;
+    if (dailyCount >= DAILY_MAX) {
+      showToast?.('오늘 다시 볼 수 있는 횟수를 모두 사용했어요.', 'warn');
+      return;
+    }
+    try {
+      const ok = await onRefresh({
+        saveHistory: true,
+        incrementCount: true,
+      });
+      if (ok === false) {
+        showToast?.('오늘 운세를 다시 불러오지 못했어요. 잠시 후 시도해주세요.', 'error');
+      }
+    } catch (err) {
+      if (err?.message !== 'LOGIN_REQUIRED' && err?.message !== 'SESSION_EXPIRED') {
+        showToast?.('오늘 운세를 다시 불러오지 못했어요. 잠시 후 시도해주세요.', 'error');
+      }
+    }
+  }, [DAILY_MAX, dailyCount, dailyLoading, onRefresh, showToast]);
+
 
   if (dailyLoading && !dailyResult) {
     return <PageSpinner />;
@@ -378,6 +401,25 @@ export default function TodayDetailPage({
               </div>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{overallGuide.summary}</div>
             </div>
+
+            {onRefresh && (
+              <section className="today-reask-card" aria-label="오늘 운세 다시 물어보기">
+                <div>
+                  <div className="today-reask-card__title">오늘 운세 다시 물어보기</div>
+                  <div className="today-reask-card__desc">
+                    같은 생년월일로 오늘의 별숨을 새롭게 풀이해요. 10BP가 소모됩니다.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="today-reask-card__button"
+                  onClick={handleReaskDaily}
+                  disabled={dailyLoading || dailyCount >= DAILY_MAX}
+                >
+                  {dailyLoading ? '다시 읽는 중...' : '다시 물어보기 · 10BP'}
+                </button>
+              </section>
+            )}
 
             {dailyLongReading.length > 0 && (
               <section className="today-long-reading" aria-label="오늘 하루 장문 해석">

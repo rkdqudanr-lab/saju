@@ -2,288 +2,294 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { STEP } from '../utils/steps.js';
-import { findItem } from '../utils/gachaItems.js';
-import { SPACE_OBJECTS, SPACE_SERIES, getSpaceObjectsBySeries, mapLegacyGachaToSpaceObject } from '../utils/byeolsoomSpaceItems.js';
-import { ZODIAC_PETS, findZodiacPet } from '../utils/zodiacPets.js';
-import { claimStardust, readSpaceProgress, saveSpaceProgress } from '../utils/spaceProgress.js';
-import ByeolsoomCore from '../features/space/ByeolsoomCore.jsx';
-import SpaceLayoutPreview, { DEFAULT_SPACE_LAYOUT, SPACE_SLOT_META } from '../features/space/SpaceLayoutPreview.jsx';
-import SeriesCollectionPanel from '../features/space/SeriesCollectionPanel.jsx';
-import PetPanel from '../features/space/PetPanel.jsx';
-import StardustPanel from '../features/space/StardustPanel.jsx';
+import {
+  COLLECTION_DEFS,
+  GRADE_CONFIG, GRADE_ORDER,
+  SAJU_GRADE_CONFIG, SAJU_GRADE_ORDER,
+  findItem,
+} from '../utils/gachaItems.js';
 
-function getLayoutStorageKey(kakaoId) {
-  return `byeolsoom_space_layout_${kakaoId || 'guest'}`;
-}
+const GRADE_LABEL_MAP = {
+  ...Object.fromEntries(GRADE_ORDER.map((g) => [g, GRADE_CONFIG[g].label])),
+  ...Object.fromEntries(SAJU_GRADE_ORDER.map((g) => [g, SAJU_GRADE_CONFIG[g].label])),
+};
 
-function getPetStorageKey(kakaoId) {
-  return `byeolsoom_space_pet_${kakaoId || 'guest'}`;
-}
+const GRADE_COLOR_MAP = {
+  ...Object.fromEntries(GRADE_ORDER.map((g) => [g, GRADE_CONFIG[g].color])),
+  ...Object.fromEntries(SAJU_GRADE_ORDER.map((g) => [g, SAJU_GRADE_CONFIG[g].color])),
+};
 
-function MiniObject({ item }) {
+const GRADE_BORDER_MAP = {
+  ...Object.fromEntries(GRADE_ORDER.map((g) => [g, GRADE_CONFIG[g].border])),
+  ...Object.fromEntries(SAJU_GRADE_ORDER.map((g) => [g, SAJU_GRADE_CONFIG[g].border])),
+};
+
+function GradeSlot({ gradeKey, item, owned }) {
+  const label = GRADE_LABEL_MAP[gradeKey] || gradeKey;
+  const color = GRADE_COLOR_MAP[gradeKey] || 'var(--t4)';
+  const border = GRADE_BORDER_MAP[gradeKey] || 'var(--line)';
   return (
     <div style={{
-      minWidth: 72,
-      borderRadius: 14,
-      border: '1px solid var(--line)',
-      background: 'var(--bg1)',
-      padding: '10px 8px',
-      textAlign: 'center',
+      flex: 1,
+      borderRadius: 12,
+      border: `1.5px solid ${owned ? border : 'var(--line)'}`,
+      background: owned ? `rgba(${hexToRgb(color)}, 0.10)` : 'var(--bg1)',
+      padding: '8px 4px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 5,
+      opacity: owned ? 1 : 0.45,
     }}>
-      <div style={{ fontSize: 22, marginBottom: 7 }}>{item.emoji}</div>
-      <div style={{ fontSize: 10, color: 'var(--t2)', lineHeight: 1.35, fontWeight: 700 }}>{item.name}</div>
+      <div style={{ fontSize: owned ? 20 : 16 }}>{owned ? (item?.emoji || '✦') : '？'}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: owned ? color : 'var(--t4)', letterSpacing: '.03em' }}>
+        {label}
+      </div>
     </div>
+  );
+}
+
+function hexToRgb(color) {
+  if (!color || !color.startsWith('#')) return '155,173,206';
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  return `${r},${g},${b}`;
+}
+
+function CollectionCard({ def, ownedIds, onComplete, completedSet }) {
+  const gradeOrder = def.system === 'saju' ? SAJU_GRADE_ORDER : GRADE_ORDER;
+  const ownedCount = def.requiredIds.filter((id) => ownedIds.has(id)).length;
+  const total = def.requiredIds.length;
+  const complete = ownedCount === total;
+  const alreadyClaimed = completedSet.has(def.id);
+  const pct = Math.round((ownedCount / total) * 100);
+
+  return (
+    <article style={{
+      borderRadius: 18,
+      border: `1.5px solid ${complete ? 'var(--acc)' : 'var(--line)'}`,
+      background: complete ? 'var(--goldf)' : 'var(--bg2)',
+      padding: 14,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 900 }}>
+            {def.emoji} {def.name}
+          </div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.5, marginTop: 3 }}>
+            {def.description}
+          </div>
+        </div>
+        <div style={{ flexShrink: 0, textAlign: 'right' }}>
+          {complete ? (
+            <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 900 }}>완성 ✦</div>
+          ) : (
+            <div style={{ fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 900 }}>{ownedCount}/{total}</div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ height: 6, borderRadius: 999, background: 'var(--bg1)', border: '1px solid var(--line)', overflow: 'hidden', marginBottom: 10 }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: complete ? 'var(--gold)' : 'linear-gradient(90deg, rgba(232,176,72,0.45), var(--gold))', borderRadius: 999, transition: 'width .4s ease' }} />
+      </div>
+
+      <div style={{ display: 'flex', gap: 6 }}>
+        {def.requiredIds.map((reqId, i) => {
+          const gradeKey = gradeOrder[i];
+          const owned = ownedIds.has(reqId);
+          const resolvedItem = owned ? findItem(reqId) : null;
+          return <GradeSlot key={reqId} gradeKey={gradeKey} item={resolvedItem} owned={owned} />;
+        })}
+      </div>
+
+      {complete && !alreadyClaimed && (
+        <button
+          type="button"
+          onClick={() => onComplete(def)}
+          style={{
+            marginTop: 12, width: '100%',
+            padding: '10px', borderRadius: 12,
+            border: '1.5px solid var(--acc)', background: 'var(--gold)',
+            color: '#1a1108', fontWeight: 800, fontSize: 'var(--sm)',
+            fontFamily: 'var(--ff)', cursor: 'pointer',
+          }}
+        >
+          보상 받기 — BP {def.reward.bp}
+        </button>
+      )}
+      {complete && alreadyClaimed && (
+        <div style={{ marginTop: 10, textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>
+          칭호: {def.reward.title}
+        </div>
+      )}
+    </article>
   );
 }
 
 export default function ByeolsoomSpacePage() {
   const setStep = useAppStore((s) => s.setStep);
   const user = useAppStore((s) => s.user);
-  const saju = useAppStore((s) => s.saju);
+  const earnBP = useAppStore((s) => s.earnBP);
   const kakaoId = user?.kakaoId || user?.id;
-  const [layout, setLayout] = useState(DEFAULT_SPACE_LAYOUT);
-  const [selectedSlotKey, setSelectedSlotKey] = useState('large2');
-  const [selectedPetId, setSelectedPetId] = useState('rabbit_pet');
-  const [spaceProgress, setSpaceProgress] = useState(() => readSpaceProgress(null));
-  const [ownedObjects, setOwnedObjects] = useState([]);
-  const [loadingOwned, setLoadingOwned] = useState(false);
 
-  const featuredSeries = useMemo(() => SPACE_SERIES.slice(0, 3), []);
-  const sampleObjects = useMemo(() => SPACE_OBJECTS.slice(0, 8), []);
-  const selectedSlot = SPACE_SLOT_META.find((slot) => slot.key === selectedSlotKey) || null;
-  const selectedPet = findZodiacPet(selectedPetId) || ZODIAC_PETS[3] || ZODIAC_PETS[0] || null;
-
-  useEffect(() => {
+  const [tab, setTab] = useState('cosmic');
+  const [ownedIds, setOwnedIds] = useState(new Set());
+  const [loading, setLoading] = useState(false);
+  const [completedSet, setCompletedSet] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(getLayoutStorageKey(kakaoId)) || '{}');
-      setLayout({ ...DEFAULT_SPACE_LAYOUT, ...(saved && typeof saved === 'object' ? saved : {}) });
-    } catch {
-      setLayout(DEFAULT_SPACE_LAYOUT);
-    }
-  }, [kakaoId]);
+      const saved = JSON.parse(localStorage.getItem(`byeolsoom_completed_${kakaoId || 'guest'}`) || '[]');
+      return new Set(Array.isArray(saved) ? saved : []);
+    } catch { return new Set(); }
+  });
+  const [claimToast, setClaimToast] = useState(null);
 
   useEffect(() => {
-    try {
-      const savedPetId = localStorage.getItem(getPetStorageKey(kakaoId));
-      if (findZodiacPet(savedPetId)) setSelectedPetId(savedPetId);
-      else setSelectedPetId('rabbit_pet');
-    } catch {
-      setSelectedPetId('rabbit_pet');
-    }
-  }, [kakaoId]);
-
-  useEffect(() => {
-    setSpaceProgress(readSpaceProgress(kakaoId));
-  }, [kakaoId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!kakaoId) {
-      setOwnedObjects([]);
-      return undefined;
-    }
-    setLoadingOwned(true);
+    if (!kakaoId) { setOwnedIds(new Set()); return; }
+    setLoading(true);
     getAuthenticatedClient(String(kakaoId))
       ?.from('user_shop_inventory')
       .select('item_id')
       .eq('kakao_id', String(kakaoId))
       .then(({ data }) => {
-        if (cancelled) return;
-        const mapped = (data || [])
-          .map((row) => mapLegacyGachaToSpaceObject(findItem(String(row.item_id))))
-          .filter(Boolean);
-        const deduped = Array.from(new Map(mapped.map((item) => [item.id, item])).values());
-        setOwnedObjects(deduped);
+        const ids = new Set((data || []).map((r) => String(r.item_id).split('::')[0]));
+        setOwnedIds(ids);
       })
-      .catch(() => {
-        if (!cancelled) setOwnedObjects([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingOwned(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .catch(() => setOwnedIds(new Set()))
+      .finally(() => setLoading(false));
   }, [kakaoId]);
 
-  const saveLayout = useCallback((nextLayout) => {
-    setLayout(nextLayout);
+  const handleComplete = useCallback((def) => {
+    if (completedSet.has(def.id)) return;
+    const next = new Set([...completedSet, def.id]);
+    setCompletedSet(next);
     try {
-      localStorage.setItem(getLayoutStorageKey(kakaoId), JSON.stringify(nextLayout));
+      localStorage.setItem(`byeolsoom_completed_${kakaoId || 'guest'}`, JSON.stringify([...next]));
     } catch {}
-  }, [kakaoId]);
+    earnBP?.(def.reward.bp, `컬렉션 완성: ${def.name}`);
+    setClaimToast(`✦ ${def.name} 완성! BP +${def.reward.bp}`);
+    setTimeout(() => setClaimToast(null), 2800);
+  }, [completedSet, earnBP, kakaoId]);
 
-  const handlePlaceObject = useCallback((object) => {
-    if (!selectedSlot || !object) return;
-    if (selectedSlot.type !== object.slotType) return;
-    saveLayout({ ...layout, [selectedSlot.key]: object.id });
-  }, [layout, saveLayout, selectedSlot]);
+  const cosmicDefs = useMemo(() => COLLECTION_DEFS.filter((d) => d.system === 'cosmic'), []);
+  const sajuDefs   = useMemo(() => COLLECTION_DEFS.filter((d) => d.system === 'saju'), []);
 
-  const handleClearSlot = useCallback(() => {
-    if (!selectedSlot) return;
-    saveLayout({ ...layout, [selectedSlot.key]: null });
-  }, [layout, saveLayout, selectedSlot]);
+  const cosmicComplete = cosmicDefs.filter((d) => d.requiredIds.every((id) => ownedIds.has(id))).length;
+  const sajuComplete   = sajuDefs.filter((d) => d.requiredIds.every((id) => ownedIds.has(id))).length;
+  const totalComplete  = cosmicComplete + sajuComplete;
+  const totalDefs      = cosmicDefs.length + sajuDefs.length;
 
-  const handleSelectPet = useCallback((pet) => {
-    if (!pet) return;
-    setSelectedPetId(pet.id);
-    setSelectedSlotKey('pet');
-    try {
-      localStorage.setItem(getPetStorageKey(kakaoId), pet.id);
-    } catch {}
-  }, [kakaoId]);
-
-  const handleClaimStardust = useCallback(() => {
-    const { nextProgress, amount } = claimStardust(spaceProgress);
-    if (amount <= 0) return;
-    setSpaceProgress(nextProgress);
-    saveSpaceProgress(kakaoId, nextProgress);
-  }, [kakaoId, spaceProgress]);
-
-  const compatibleObjects = useMemo(() => {
-    if (!selectedSlot) return [];
-    return ownedObjects.filter((item) => item.slotType === selectedSlot.type);
-  }, [ownedObjects, selectedSlot]);
+  const displayedDefs = tab === 'cosmic' ? cosmicDefs : sajuDefs;
 
   return (
     <div className="page">
       <div className="inner" style={{ paddingBottom: 48 }}>
+        {/* 헤더 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
           <button
             type="button"
             onClick={() => setStep(STEP.HOME)}
-            aria-label="홈으로 돌아가기"
+            aria-label="홈으로"
             style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t3)', cursor: 'pointer' }}
           >
             ←
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: 'var(--lg)', color: 'var(--t1)', fontWeight: 900 }}>별숨공간</div>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 3 }}>가구와 오브제로 채우는 나만의 별숨</div>
+            <div style={{ fontSize: 'var(--lg)', color: 'var(--t1)', fontWeight: 900 }}>별숨 도감</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 3 }}>일반 · 레어 · 영웅 · 전설을 모아 컬렉션 완성</div>
           </div>
           <div style={{ width: 40 }} />
         </div>
 
-        <ByeolsoomCore saju={saju} />
-
-        <StardustPanel progress={spaceProgress} onClaim={handleClaimStardust} />
-
-        <SpaceLayoutPreview
-          layout={layout}
-          selectedSlotKey={selectedSlotKey}
-          equippedPet={selectedPet}
-          onSelectSlot={(slot) => setSelectedSlotKey(slot.key)}
-        />
-
-        <PetPanel
-          pets={ZODIAC_PETS}
-          selectedPetId={selectedPet?.id}
-          onSelectPet={handleSelectPet}
-        />
-
-        <section style={{ borderRadius: 22, border: '1px solid var(--line)', background: 'var(--bg2)', padding: 16, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-            <div>
-              <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 900, letterSpacing: '.08em', marginBottom: 4 }}>PLACE OBJECT</div>
-              <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 900 }}>
-                {selectedSlot ? `${selectedSlot.label} 슬롯 꾸미기` : '슬롯을 선택해 주세요'}
-              </div>
-            </div>
-            {selectedSlot && selectedSlotKey !== 'pet' && (
-              <button
-                type="button"
-                onClick={handleClearSlot}
-                style={{ flexShrink: 0, border: '1px solid var(--line)', background: 'transparent', color: 'var(--t4)', borderRadius: 999, padding: '6px 10px', fontSize: 10, fontWeight: 800, fontFamily: 'var(--ff)', cursor: 'pointer' }}
-              >
-                비우기
-              </button>
-            )}
+        {/* 전체 진행도 */}
+        <section style={{ borderRadius: 20, border: '1px solid var(--acc)', background: 'var(--goldf)', padding: '14px 16px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+            <div style={{ fontSize: 'var(--sm)', fontWeight: 900, color: 'var(--t1)' }}>전체 컬렉션</div>
+            <div style={{ fontSize: 'var(--lg)', fontWeight: 900, color: 'var(--gold)' }}>{totalComplete}<span style={{ fontSize: 'var(--xs)', color: 'var(--t3)', fontWeight: 500 }}>/{totalDefs}</span></div>
           </div>
-
-          {selectedSlotKey === 'pet' ? (
-            <div style={{ borderRadius: 16, border: '1px dashed var(--line)', padding: 16, color: 'var(--t4)', fontSize: 'var(--xs)', lineHeight: 1.7 }}>
-              펫 슬롯은 아래 십이지신 동행 펫에서 바로 선택해요. 선택한 펫은 별숨공간의 동행 슬롯에 항상 표시됩니다.
-            </div>
-          ) : loadingOwned ? (
-            <div style={{ padding: 18, textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--xs)' }}>내 오브제를 불러오는 중...</div>
-          ) : compatibleObjects.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-              {compatibleObjects.map((item) => (
-                <button
-                  type="button"
-                  key={item.id}
-                  onClick={() => handlePlaceObject(item)}
-                  style={{
-                    borderRadius: 14,
-                    border: layout[selectedSlotKey] === item.id ? '1px solid var(--gold)' : '1px solid var(--line)',
-                    background: layout[selectedSlotKey] === item.id ? 'var(--goldf)' : 'var(--bg1)',
-                    padding: '10px 8px',
-                    textAlign: 'center',
-                    fontFamily: 'var(--ff)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ fontSize: 22, marginBottom: 7 }}>{item.emoji}</div>
-                  <div style={{ fontSize: 10, color: 'var(--t2)', lineHeight: 1.35, fontWeight: 800 }}>{item.name}</div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div style={{ borderRadius: 16, border: '1px dashed var(--line)', padding: 16, textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--xs)', lineHeight: 1.7 }}>
-              {selectedSlot ? `${selectedSlot.label}에 놓을 수 있는 보유 오브제가 아직 없어요.` : '배치할 슬롯을 먼저 선택해 주세요.'}
-            </div>
-          )}
+          <div style={{ height: 7, borderRadius: 999, background: 'rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${Math.round((totalComplete / totalDefs) * 100)}%`, background: 'var(--gold)', borderRadius: 999, transition: 'width .5s ease' }} />
+          </div>
         </section>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+        {/* 탭 */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: 'var(--bg2)', borderRadius: 12, padding: 4, border: '1px solid var(--line)' }}>
+          {[
+            { key: 'cosmic', label: `🌌 우주 컬렉션`, count: cosmicComplete, total: cosmicDefs.length },
+            { key: 'saju',   label: `☯️ 사주 컬렉션`, count: sajuComplete,   total: sajuDefs.length },
+          ].map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              style={{
+                flex: 1, padding: '9px 8px', borderRadius: 9,
+                border: 'none',
+                background: tab === t.key ? 'var(--goldf)' : 'none',
+                color: tab === t.key ? 'var(--gold)' : 'var(--t3)',
+                fontWeight: tab === t.key ? 700 : 400,
+                fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
+                outline: tab === t.key ? '1px solid var(--acc)' : 'none',
+                transition: 'all .15s',
+              }}
+            >
+              {t.label} {t.count}/{t.total}
+            </button>
+          ))}
+        </div>
+
+        {/* 컬렉션 카드 목록 */}
+        {loading ? (
+          <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--xs)' }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>✦</div>불러오는 중...
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {displayedDefs.map((def) => (
+              <CollectionCard
+                key={def.id}
+                def={def}
+                ownedIds={ownedIds}
+                onComplete={handleComplete}
+                completedSet={completedSet}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* CTA */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
           <button
             type="button"
             onClick={() => setStep(STEP.GACHA)}
             style={{ padding: '13px 14px', borderRadius: 16, border: '1px solid var(--acc)', background: 'var(--goldf)', color: 'var(--gold)', fontWeight: 800, fontFamily: 'var(--ff)', cursor: 'pointer' }}
           >
-            오브제 뽑기
+            뽑기 →
           </button>
           <button
             type="button"
             onClick={() => setStep(STEP.ITEM_INVENTORY)}
             style={{ padding: '13px 14px', borderRadius: 16, border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t2)', fontWeight: 800, fontFamily: 'var(--ff)', cursor: 'pointer' }}
           >
-            내 오브제
+            내 오브제함
           </button>
         </div>
-
-        <section style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 800, letterSpacing: '.08em', marginBottom: 10 }}>SERIES</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {featuredSeries.map((series) => {
-              const objects = getSpaceObjectsBySeries(series.id);
-              return (
-                <article key={series.id} style={{ border: '1px solid var(--line)', borderRadius: 18, background: 'var(--bg2)', padding: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 900 }}>{series.emoji} {series.name}</div>
-                      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.55, marginTop: 3 }}>{series.description}</div>
-                    </div>
-                    <div style={{ flexShrink: 0, fontSize: 11, color: 'var(--gold)', fontWeight: 800 }}>{objects.length}종</div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
-                    {objects.slice(0, 4).map((item) => <MiniObject key={item.id} item={item} />)}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
-        <SeriesCollectionPanel ownedObjects={ownedObjects} />
-
-        <section>
-          <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 800, letterSpacing: '.08em', marginBottom: 10 }}>OBJECT PREVIEW</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
-            {sampleObjects.map((item) => <MiniObject key={item.id} item={item} />)}
-          </div>
-        </section>
       </div>
+
+      {/* 클레임 토스트 */}
+      {claimToast && (
+        <div style={{
+          position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--gold)', color: '#1a1108',
+          padding: '10px 20px', borderRadius: 24,
+          fontSize: 'var(--sm)', fontWeight: 800,
+          boxShadow: '0 4px 20px rgba(232,176,72,0.45)',
+          animation: 'fadeUp .3s ease',
+          zIndex: 9999, whiteSpace: 'nowrap',
+        }}>
+          {claimToast}
+        </div>
+      )}
     </div>
   );
 }

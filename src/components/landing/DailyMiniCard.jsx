@@ -2,11 +2,20 @@ import { useMemo } from 'react';
 import { parseDailyLines } from '../../utils/parseDailyLines.js';
 import { useSajuCtx } from '../../context/AppContext.jsx';
 
-function scoreColor(score) {
-  if (score >= 80) return '#f0b429';
-  if (score >= 60) return '#7ec8e3';
-  if (score >= 40) return '#a0c97b';
-  return '#c9a0dc';
+function scoreTone(score) {
+  if (score >= 85) {
+    return { label: '강한 흐름' };
+  }
+  if (score >= 70) {
+    return { label: '좋은 흐름' };
+  }
+  if (score >= 55) {
+    return { label: '안정 흐름' };
+  }
+  if (score >= 40) {
+    return { label: '조율 필요' };
+  }
+  return { label: '차분히 보기' };
 }
 
 export default function DailyMiniCard({
@@ -28,7 +37,8 @@ export default function DailyMiniCard({
   const score = todayScore || parsed.score || dailyResult?.score;
   const summary = parsed.summary || (dailyResult?.text || '').slice(0, 60);
   const dateLabel = today ? `${today.month}월 ${today.day}일` : '';
-  const color = score ? scoreColor(score) : 'var(--gold)';
+  const tone = score ? scoreTone(score) : scoreTone(0);
+  const scorePct = Math.max(0, Math.min(100, Number(score) || 0));
 
   // 로딩 중
   if (loading) {
@@ -48,11 +58,11 @@ export default function DailyMiniCard({
   // 운세 미조회
   if (!dailyResult) {
     return (
-      <div className="daily-mini-card" style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8 }}>
+      <div className="daily-mini-card daily-mini-card--empty" style={{ textAlign: 'center' }}>
+        <div className="daily-mini-eyebrow">
           ✦ 오늘 하루 나의 별숨{dateLabel ? ` · ${dateLabel}` : ''}
         </div>
-        <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7, marginBottom: 14 }}>
+        <div className="daily-mini-empty-copy">
           별이 오늘의 기운을 알려드릴게요
         </div>
         <button
@@ -74,54 +84,52 @@ export default function DailyMiniCard({
       className="daily-mini-card"
       onClick={onClick}
       aria-label={`오늘의 별숨 ${score}점, 상세 보기`}
-      style={{ width: '100%' }}
+      style={{
+        width: '100%',
+        '--daily-score-pct': `${scorePct}%`,
+      }}
     >
-      {/* 날짜 + 라벨 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontSize: 10, color: 'var(--t4)', letterSpacing: '.06em' }}>
+      <div className="daily-mini-glow" aria-hidden="true" />
+
+      <div className="daily-mini-topline">
+        <span className="daily-mini-eyebrow">
           ✦ 오늘 하루 나의 별숨{dateLabel ? ` · ${dateLabel}` : ''}
         </span>
-        <span style={{ fontSize: 10, color: 'var(--t4)' }}>상세 보기 →</span>
+        <span className="daily-mini-link">상세 보기 →</span>
       </div>
 
-      {/* 점수 */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
-        <div className="daily-mini-score" style={{ color }}>
-          {score}
+      <div className="daily-mini-main">
+        <div className="daily-mini-score-wrap">
+          <div className="daily-mini-score">
+            <span>{score}</span>
+            <small>점</small>
+          </div>
+          <div className="daily-mini-score-state">{tone.label}</div>
         </div>
-        <div style={{ paddingBottom: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <span style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>점</span>
+      </div>
+
+      {(scoreBoostDelta > 0 || boostCount > 0) && (
+        <div className="daily-mini-badges">
           {scoreBoostDelta > 0 && (
-            <span style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700 }}>
+            <span className="daily-mini-badge">
               +{scoreBoostDelta}↑
             </span>
           )}
+          {boostCount > 0 && (
+            <span className="daily-mini-badge">
+              ✦ {boostCount}개 기운 적용 중
+            </span>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* 요약 */}
       {summary && (
         <div className="daily-mini-summary">"{summary}"</div>
       )}
 
-      {/* 부스트 배지 */}
-      {boostCount > 0 && (
-        <div style={{
-          marginTop: 10,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          padding: '3px 9px',
-          borderRadius: 999,
-          background: 'var(--goldf)',
-          border: '1px solid var(--acc)',
-          fontSize: 10,
-          color: 'var(--gold)',
-          fontWeight: 700,
-        }}>
-          ✦ {boostCount}개 기운 적용 중
-        </div>
-      )}
+      <div className="daily-mini-meter" aria-hidden="true">
+        <span />
+      </div>
     </button>
   );
 }

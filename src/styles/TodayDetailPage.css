@@ -136,6 +136,63 @@
   border-radius: 2px;
 }
 
+.today-reask-card {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-radius: var(--r2);
+  border: 1px solid rgba(232, 176, 72, 0.22);
+  background:
+    linear-gradient(135deg, rgba(232, 176, 72, 0.11), rgba(126, 200, 227, 0.05)),
+    var(--bg2);
+  padding: 15px;
+  margin-bottom: 16px;
+}
+
+.today-reask-card__title {
+  font-size: var(--sm);
+  font-weight: 800;
+  color: var(--t1);
+  margin-bottom: 4px;
+}
+
+.today-reask-card__desc {
+  font-size: var(--xs);
+  color: var(--t3);
+  line-height: 1.55;
+}
+
+.today-reask-card__button {
+  flex-shrink: 0;
+  border: 1px solid var(--acc);
+  background: var(--goldf);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 11px 14px;
+  font-size: var(--xs);
+  font-weight: 800;
+  font-family: var(--ff);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.today-reask-card__button:hover {
+  opacity: 0.86;
+}
+
+.today-reask-card__button:active {
+  transform: scale(0.97);
+}
+
+.today-reask-card__button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .today-long-reading {
   flex-shrink: 0;
   border-radius: var(--r2);
@@ -673,6 +730,15 @@
   .today-detail-btn-home {
     padding: 12px var(--sp2);
     font-size: var(--xs);
+  }
+
+  .today-reask-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .today-reask-card__button {
+    width: 100%;
   }
 
   .today-axis-section__header,

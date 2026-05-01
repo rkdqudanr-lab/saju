@@ -1,87 +1,65 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
-> **세션 시작 시 반드시 먼저 읽을 것**: [`docs/DASHBOARD.md`](docs/DASHBOARD.md)
-> 전체 기능 Q&A, 키 매핑, 버그 패턴, 리팩토링 로드맵이 정리되어 있음.
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-## Project Overview
+## 1. Think Before Coding
 
-**별숨 (Byeolsoom)** — AI-based Korean Saju (四柱) fortune-telling × Western astrology app. Korean-language UI, deployed on Vercel as a PWA. Frontend is React + Vite; backend is Vercel serverless functions. AI responses come from Anthropic's Claude API (claude-haiku-4-5-20251001).
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
 
-## Commands
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
 
-```bash
-npm install        # Install dependencies
-npm run dev        # Start dev server (http://localhost:5173)
-npm run build      # Production build → dist/
-npm run preview    # Preview production build locally
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
 ```
 
-No test runner is configured. There is a standalone script:
-```bash
-node test-iljin.mjs   # Manual test for jeolgi/iljin calculation logic
-node scripts/check-response-diversity.mjs  # Check AI response diversity
-```
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-## Environment Variables
+---
 
-For local dev, create a `.env` file:
-```
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-ANTHROPIC_API_KEY=...          # Used by vite.config.js dev proxy
-```
-
-For the Vercel serverless functions (`api/`), set these in the Vercel dashboard:
-- `ANTHROPIC_API_KEY` — required for all AI calls
-- `VITE_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — for user verification
-- `JWT_SECRET` — enables JWT auth (falls back to kakao_id body param if unset)
-- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` — rate limiting (skipped if unset)
-
-## Architecture
-
-### State Management
-Global state lives in a single **Zustand store** (`src/store/useAppStore.js`). Several custom hooks populate the store at runtime:
-- `useUserProfile` → injects `user`, `profile`, `form`, auth functions
-- `useSajuContext` → injects `saju`, `sun`, `moon`, `asc`, `today`, `buildCtx`
-- `useGamification` → injects `gamificationState`, `missions`
-
-`src/context/AppContext.jsx` is a **shim** that re-exports `useUserCtx`, `useSajuCtx`, `useGamCtx` from the Zustand store using `useShallow` to prevent infinite re-renders (Zustand v5 behavior).
-
-### Routing
-There is **no React Router**. Navigation is done via `step` (integer) in the Zustand store. `src/hooks/useNavigation.js` provides `goTo(step)` helpers. Most pages/components are lazy-loaded in `App.jsx`.
-
-### Saju / Astrology Logic
-- `src/utils/saju.js` — core Korean 사주 calculation (4 pillars: year/month/day/hour), lunar calendar conversion, jeolgi-based month boundaries
-- `src/utils/astrology.js` — Western astrology (sun sign, moon sign, ascendant)
-- `lib/jeolgi.js` — solar term (절기) calculation used by saju.js
-
-### AI Prompt System
-`lib/prompts/buildSystem/` contains all system prompt builders. `index.js` routes to the correct builder based on boolean mode flags received from the frontend. **Mode detection is flag-based only** (never inferred from `userMessage` content) to prevent prompt injection.
-
-Mode flags sent to `POST /api/ask`:
-- `isChat`, `isReport`, `isLetter`, `isScenario`, `isStory` — content format modes
-- `isNatal`, `isZodiac`, `isComprehensive`, `isAstrology` — Western astrology modes
-- `isSlot`, `isWeekly`, `isDaily`, `isDaeun` — time-based fortune modes
-- `isGroupAnalysis` / `teamMode` — multi-person compatibility
-- `responseStyle`: `'T'` (brief), `'M'` (medium, default), `'F'` (full)
-- `precision_level`: `'low'` | `'mid'` | `'high'` — data depth hint for prompts
-
-### API Endpoint (`api/ask.js`)
-Single Vercel serverless function. Auth flow: JWT Bearer header → kakao_id body fallback. Rate limiting via Upstash Redis (20 req/min, 200 req/day per IP). Uses `anthropic-beta: prompt-caching-2024-07-31` for system prompt caching.
-
-In local dev, `vite.config.js` proxies `/api/ask` directly to Anthropic's API.
-
-### Gamification / BP System
-BP (별 포인트) currency drives feature unlocks. Logic is in `src/utils/gamificationLogic.js` and managed by `src/hooks/useGamification.js`. Guardian levels are earned by completing missions. BP is stored in Supabase.
-
-### Supabase
-`src/lib/supabase.js` exports two clients:
-- `supabase` — anonymous client
-- `getAuthenticatedClient(kakaoId)` — injects `x-kakao-id` header for RLS row-level security; singleton-cached per `kakaoId`
-
-Auth is Kakao OAuth (`api/kakao-auth.js`), not Supabase Auth. JWT tokens are issued server-side and stored client-side.
-
-### PWA
-Custom service worker at `src/sw.js`, registered via `vite-plugin-pwa` with `injectManifest` strategy. `vercel.json` disables caching for `sw.js` and `index.html`.
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.

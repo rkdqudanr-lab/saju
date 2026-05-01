@@ -1,8 +1,8 @@
 function scoreColor(score) {
-  if (score >= 80) return '#f0b429';
-  if (score >= 60) return '#7ec8e3';
-  if (score >= 40) return '#a0c97b';
-  return '#c9a0dc';
+  if (score >= 80) return 'var(--gold)';
+  if (score >= 60) return 'rgba(255,200,92,.72)';
+  if (score >= 40) return 'rgba(212,204,230,.62)';
+  return 'rgba(232,123,138,.72)';
 }
 
 export default function WeeklyScoreSummary({ scoreHistory = [], onClick }) {

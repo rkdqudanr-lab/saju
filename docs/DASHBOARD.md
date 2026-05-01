@@ -62,11 +62,16 @@ kakaoId는 반드시 truthy 확인 후 전달: `const kakaoId = user?.kakaoId ||
 `gamificationState.currentBp`가 현재 BP. Supabase `user_gamification` 테이블에 저장.
 출석 연결권(`streak_bridge_ticket`)은 별숨 숍에서 구매하는 1회용 아이템. 하루만 출석을 놓친 뒤 다음 로그인하면 `user_shop_inventory`에서 자동 삭제되고 기존 연속 출석을 +1로 이어준다.
 
-### [9] 가챠/아이템 시스템은?
-`src/utils/gachaItems.js` — 모든 아이템 정의, `findItem(id)` 함수.  
-`src/components/GachaPage.jsx` — 뽑기 UI.  
-`src/components/ItemInventoryPage.jsx` — 보관함, 장착, 합성, 컬렉션 (1735줄, 분리 필요).  
-아이템 장착: `useAppStore`의 `equippedItems`, `equippedTalisman`, `equippedSajuItem`.
+### [9] 가챠/아이템/컬렉션 시스템은?
+`src/utils/gachaItems.js` — 아이템 정의, `findItem(id)`, `COLLECTION_DEFS`.  
+아이템 체계: **body × grade = 1 아이템**. 우주 12body + 사주 10body, 각 4등급(일반/레어/영웅/전설) = 총 88종.  
+컬렉션: 같은 body의 4등급 모두 보유 시 완성 → BP 50 보상. `COLLECTION_DEFS`에 정의.  
+등급 내부 키: 우주=satellite/planet/galaxy/nebula, 사주=ohaeng/cheongan/jiji/gapja (UI 표시는 일반/레어/영웅/전설).  
+아이템 ID 형식: 우주=`${bodyId}_${grade}` (예: `moon_satellite`), 사주=`saju_${bodyId}_${grade}` (예: `saju_mok_ohaeng`).  
+레거시 ID(구형: `satellite_moon_overall` 등) → `findItem()` 내에서 bodyId 포함 여부로 fallback 처리.  
+`src/pages/ByeolsoomSpacePage.jsx` — 별숨 도감 (컬렉션 완성 현황, step=44).  
+`src/components/GachaPage.jsx` — 뽑기 UI (우주/사주 탭).  
+`src/components/ItemInventoryPage.jsx` — 보관함, 합성, 기존 도감 모달.  
 통합 숍(`src/components/ShopPage.jsx`)은 카드형 뽑기 종류 선택 UI를 사용하며, DB 구매 아이템 카테고리로 `special_reading`, `streak_repair`를 표시한다.
 
 ### [10] 오늘 하루 나의 별숨(TodayDetailPage) 구조는?

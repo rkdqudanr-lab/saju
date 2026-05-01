@@ -35,148 +35,34 @@ export default function LevelCard() {
     <button
       type="button"
       onClick={() => setStep(STEP.GROWTH_DASHBOARD)}
+      className="level-card"
       style={{
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        padding: '14px 16px',
-        background: `radial-gradient(ellipse at left center, ${stage.color}16 0%, transparent 55%), var(--bg2)`,
-        border: `1px solid ${stage.color}30`,
-        borderRadius: 18,
-        cursor: 'pointer',
-        fontFamily: 'var(--ff)',
-        textAlign: 'left',
-        position: 'relative',
-        overflow: 'hidden',
+        '--level-color': stage.color,
+        '--level-progress': `${Math.min(100, Math.max(0, progress))}%`,
       }}
     >
-      {/* 배경 글로우 */}
-      <div style={{
-        position: 'absolute',
-        right: -24,
-        top: -24,
-        width: 88,
-        height: 88,
-        borderRadius: '50%',
-        background: `${stage.color}18`,
-        filter: 'blur(20px)',
-        pointerEvents: 'none',
-      }} />
-
-      {/* 미니 행성 오브 */}
-      <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
-        {/* 코어 */}
-        <div style={{
-          position: 'absolute',
-          inset: 10,
-          borderRadius: '50%',
-          background: `radial-gradient(circle at 35% 28%, ${stage.color}90, ${stage.color}50, rgba(30,20,60,0.85))`,
-          animation: 'orbPulse 5s infinite',
-        }} />
-        {/* 궤도 링 1 */}
-        <div style={{
-          position: 'absolute',
-          inset: 2,
-          borderRadius: '50%',
-          border: `1px solid ${stage.color}55`,
-          animation: 'orbSpin 9s linear infinite',
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: -3,
-            left: '50%',
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: stage.color,
-            transform: 'translateX(-50%)',
-            boxShadow: `0 0 8px ${stage.color}, 0 0 16px ${stage.color}66`,
-          }} />
-        </div>
-        {/* 궤도 링 2 (역방향) */}
-        <div style={{
-          position: 'absolute',
-          inset: -6,
-          borderRadius: '50%',
-          border: `1px solid ${stage.color}20`,
-          animation: 'orbSpin 16s linear infinite reverse',
-        }}>
-          <div style={{
-            position: 'absolute',
-            bottom: -2,
-            right: '22%',
-            width: 4,
-            height: 4,
-            borderRadius: '50%',
-            background: 'rgba(200,160,255,0.8)',
-            boxShadow: '0 0 6px rgba(200,160,255,0.6)',
-          }} />
-        </div>
-        {/* 레벨 이모지 */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 20,
-          animation: 'floatGently 3.6s ease-in-out infinite',
-        }}>
-          {stage.emoji}
-        </div>
+      <div className="level-card-symbol" aria-hidden="true">
+        <span>{stage.emoji}</span>
       </div>
 
-      {/* 텍스트 영역 */}
-      <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
-        <div style={{
-          fontSize: 10,
-          color: stage.color,
-          fontWeight: 800,
-          letterSpacing: '.1em',
-          marginBottom: 3,
-          textTransform: 'uppercase',
-        }}>
-          나의 별숨 레벨
-        </div>
-        <div style={{
-          fontSize: 15,
-          fontWeight: 800,
-          color: 'var(--t1)',
-          marginBottom: 7,
-          lineHeight: 1,
-        }}>
-          {stage.label}
-        </div>
-        {/* 진행률 바 */}
-        <div style={{
-          height: 5,
-          background: 'var(--bg3)',
-          borderRadius: 999,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            width: `${Math.min(100, Math.max(0, progress))}%`,
-            height: '100%',
-            background: `linear-gradient(90deg, ${stage.color}, color-mix(in srgb, ${stage.color} 72%, white 28%))`,
-            borderRadius: 999,
-            transition: 'width .4s ease',
-            boxShadow: `0 0 8px ${stage.color}60`,
-          }} />
+      <div className="level-card-body">
+        <div className="level-card-kicker">나의 별숨 레벨</div>
+        <div className="level-card-title">{stage.label}</div>
+        <div className="level-card-progress" aria-hidden="true">
+          <span />
         </div>
         {next ? (
-          <div style={{ marginTop: 4, fontSize: 10, color: 'var(--t4)' }}>
-            다음 단계까지 미션 <span style={{ color: stage.color, fontWeight: 700 }}>{next.minMissions - totalCompleted}개</span>
+          <div className="level-card-meta">
+            다음 단계까지 미션 <strong>{next.minMissions - totalCompleted}개</strong>
           </div>
         ) : (
-          <div style={{ marginTop: 4, fontSize: 10, color: stage.color, fontWeight: 700 }}>
+          <div className="level-card-meta level-card-meta--done">
             최고 단계 달성! ✦
           </div>
         )}
       </div>
 
-      {/* 화살표 */}
-      <div style={{ color: 'var(--t4)', fontSize: 16, flexShrink: 0, position: 'relative' }}>›</div>
+      <div className="level-card-arrow">›</div>
     </button>
   );
 }

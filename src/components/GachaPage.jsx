@@ -151,7 +151,7 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace }) {
                   <div style={{
                     padding: '5px 12px', borderRadius: 20, background: cfg.bg,
                     border: `1px solid ${cfg.border}`, fontSize: '11px', color: cfg.color, fontWeight: 600, textAlign: 'center',
-                  }}>별숨공간 오브제 소재</div>
+                  }}>컬렉션 오브제</div>
                 </>
               ) : (
                 <>
@@ -190,7 +190,7 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace }) {
             width: '100%', padding: '13px', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
             borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
             fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
-          }}>별숨공간에 배치하기 →</button>
+          }}>별숨 도감 확인하기 →</button>
         )}
       </div>
     </div>,
@@ -480,10 +480,10 @@ export default function GachaPage({ showToast, consentFlags }) {
       {user && (
         <div style={{ margin: '14px 20px 0', padding: '11px 14px', background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
-            뽑은 소재는 <strong style={{ color: 'var(--gold)' }}>별숨공간 오브제</strong>로 배치할 수 있어요
+            같은 오브제를 <strong style={{ color: 'var(--gold)' }}>일반·레어·영웅·전설</strong> 모두 모으면 컬렉션 완성!
           </div>
           <button onClick={() => setStep(STEP.BYEOLSOOM_SPACE)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
-            별숨공간
+            도감
           </button>
         </div>
       )}
@@ -525,9 +525,9 @@ export default function GachaPage({ showToast, consentFlags }) {
           bgStyle={{ background: 'linear-gradient(135deg, #1a0c10 0%, #100a0a 55%, #1a100a 100%)', border: '1px solid rgba(212,165,106,.3)' }}
           accentColor="rgba(212,165,106,0.9)"
           title="사주명리 오브제"
-          subtitle={`${SAJU_POOL.length}종 사주 오브제 소재`}
-          statsLine={`오행 ${SAJU_POOL.filter(i=>i.grade==='ohaeng').length}종 · 천간 ${SAJU_POOL.filter(i=>i.grade==='cheongan').length}종 · 지지 ${SAJU_POOL.filter(i=>i.grade==='jiji').length}종 · 육십갑자 ${SAJU_POOL.filter(i=>i.grade==='gapja').length}종`}
-          single10Label={{ color: 'rgba(123,164,212,.85)', text: '천간 이상 보장' }}
+          subtitle={`${SAJU_POOL.length / 4}종 × 4등급 · 컬렉션 완성에 도전!`}
+          statsLine={`일반 ${SAJU_POOL.filter(i=>i.grade==='ohaeng').length}종 · 레어 ${SAJU_POOL.filter(i=>i.grade==='cheongan').length}종 · 영웅 ${SAJU_POOL.filter(i=>i.grade==='jiji').length}종 · 전설 ${SAJU_POOL.filter(i=>i.grade==='gapja').length}종`}
+          single10Label={{ color: 'rgba(123,164,212,.85)', text: '레어 이상 보장' }}
         />
       ) : (
         <GachaBanner
@@ -535,9 +535,9 @@ export default function GachaPage({ showToast, consentFlags }) {
           bgStyle={{ background: 'linear-gradient(135deg, #0d0830 0%, #0d0b20 55%, #150a2e 100%)', border: '1px solid rgba(180,142,240,.3)' }}
           accentColor="rgba(180,142,240,0.9)"
           title="우주 수집 오브제"
-          subtitle={`${GACHA_POOL.length}종 천체 오브제 소재`}
-          statsLine={`위성 ${GACHA_POOL.filter(i=>i.grade==='satellite').length}종 · 행성 ${GACHA_POOL.filter(i=>i.grade==='planet').length}종 · 은하 ${GACHA_POOL.filter(i=>i.grade==='galaxy').length}종 · 성운 ${GACHA_POOL.filter(i=>i.grade==='nebula').length}종`}
-          single10Label={{ color: 'rgba(126,200,164,.85)', text: '행성 이상 보장' }}
+          subtitle={`${GACHA_POOL.length / 4}종 × 4등급 · 컬렉션 완성에 도전!`}
+          statsLine={`일반 ${GACHA_POOL.filter(i=>i.grade==='satellite').length}종 · 레어 ${GACHA_POOL.filter(i=>i.grade==='planet').length}종 · 영웅 ${GACHA_POOL.filter(i=>i.grade==='galaxy').length}종 · 전설 ${GACHA_POOL.filter(i=>i.grade==='nebula').length}종`}
+          single10Label={{ color: 'rgba(126,200,164,.85)', text: '레어 이상 보장' }}
         />
       )}
 
@@ -592,7 +592,7 @@ export default function GachaPage({ showToast, consentFlags }) {
       }}>
         <div>
           <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t2)', marginBottom: 2 }}>
-            🛍️ 별숨공간을 더 채울 재료가 있어요
+            🛍️ 오브제를 모아 컬렉션을 완성해봐요
           </div>
           <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>
             숍과 뽑기로 모은 소재를 공간 장식으로 전환해요

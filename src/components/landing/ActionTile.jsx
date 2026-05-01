@@ -27,20 +27,7 @@ export default function ActionTile({
         </div>
       )}
       {badge && (
-        <div style={{
-          marginTop: 4,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 3,
-          padding: '2px 7px',
-          borderRadius: 999,
-          background: 'var(--goldf)',
-          border: '1px solid var(--acc)',
-          fontSize: 10,
-          color: 'var(--gold)',
-          fontWeight: 700,
-          alignSelf: 'flex-start',
-        }}>
+        <div className="tile-badge">
           {badge}
         </div>
       )}
