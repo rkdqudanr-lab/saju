@@ -224,6 +224,17 @@ export default function TodayDetailPage({
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
   const [showParticles, setShowParticles] = useState(false);
 
+  // 미니카드 타일 클릭 시 스크롤 처리
+  useEffect(() => {
+    try {
+      const target = sessionStorage.getItem('today_scroll_to');
+      if (!target) return;
+      sessionStorage.removeItem('today_scroll_to');
+      const el = document.getElementById(target);
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    } catch {}
+  }, []);
+
   const parsedDaily = useMemo(
     () => parseDailyLines(dailyResult?.text || ''),
     [dailyResult?.text],
@@ -422,7 +433,7 @@ export default function TodayDetailPage({
             )}
 
             {dailyLongReading.length > 0 && (
-              <section className="today-long-reading" aria-label="오늘 하루 장문 해석">
+              <section id="today-long-reading" className="today-long-reading" aria-label="오늘 하루 장문 해석">
                 <div className="today-long-reading__kicker">TODAY READING</div>
                 <div className="today-long-reading__title">오늘의 사주와 별자리 흐름</div>
                 <div className="today-long-reading__body">
@@ -450,7 +461,7 @@ export default function TodayDetailPage({
               </div>
             </div>
 
-            <section className="today-axis-section">
+            <section id="today-axis-section" className="today-axis-section">
               <div className="today-axis-section__header">
                 <div>
                   <div className="today-axis-section__kicker">AXIS FORTUNES</div>
@@ -519,7 +530,7 @@ export default function TodayDetailPage({
               </div>
             </section>
 
-            <section className="today-pick-shell">
+            <section id="today-pick-shell" className="today-pick-shell">
               <div className="today-pick-hero">
                 <div>
                   <div className="today-pick-kicker">BYEOLSOOM PICK</div>

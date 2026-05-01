@@ -512,7 +512,7 @@ export default function AppRouter({ ctx }) {
       {/* YEARLY_REPORT */}
       {step === STEP.YEARLY_REPORT && (
         <Suspense fallback={<PageSpinner text="1년 운세 흐름을 정리하는 중..." />}>
-          <YearlyReportPage form={form} buildCtx={buildCtx} showToast={showToast} spendBP={spendBP} currentBp={gamificationState?.currentBp || 0} setStep={setStep} />
+          <YearlyReportPage form={form} buildCtx={buildCtx} showToast={showToast} spendBP={spendBP} currentBp={gamificationState?.currentBp || 0} setStep={setStep} callApi={callApi} />
         </Suspense>
       )}
 

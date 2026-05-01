@@ -186,143 +186,153 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
   return (
     <div className="page step-fade">
       <div className="inner">
-        {/* 헤더 */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: '2rem', marginBottom: 8 }}>📛</div>
-          <h2 style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>이름 별숨</h2>
-          <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>
-            이름 풀이 · 작명 · 영어이름
-          </p>
-        </div>
+        {/* 결과가 없을 때만 헤더·탭 표시 */}
+        {!result && (
+          <>
+            {/* 헤더 */}
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ fontSize: '2rem', marginBottom: 8 }}>📛</div>
+              <h2 style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>이름 별숨</h2>
+              <p style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginTop: 6 }}>
+                이름 풀이 · 작명 · 영어이름
+              </p>
+            </div>
 
-        {/* 탭 */}
-        <div style={{ display: 'flex', background: 'var(--bg3)', borderRadius: 'var(--r1)', padding: 3, border: '1px solid var(--line)', marginBottom: 20 }}>
-          {[{ id: 'analyze', label: '이름 풀이' }, { id: 'create', label: '작명 추천' }, { id: 'english', label: '영어 이름' }].map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{
-                flex: 1, padding: '8px 4px', borderRadius: 'calc(var(--r1) - 2px)',
-                border: 'none', fontFamily: 'var(--ff)', fontSize: 'var(--xs)',
-                fontWeight: tab === t.id ? 700 : 400, cursor: 'pointer', transition: 'all .15s',
-                background: tab === t.id ? 'var(--goldf)' : 'transparent',
-                color: tab === t.id ? 'var(--gold)' : 'var(--t4)',
-                outline: tab === t.id ? '1px solid var(--acc)' : 'none',
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+            {/* 탭 */}
+            <div style={{ display: 'flex', background: 'var(--bg3)', borderRadius: 'var(--r1)', padding: 3, border: '1px solid var(--line)', marginBottom: 20 }}>
+              {[{ id: 'analyze', label: '이름 풀이' }, { id: 'create', label: '작명 추천' }, { id: 'english', label: '영어 이름' }].map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  style={{
+                    flex: 1, padding: '8px 4px', borderRadius: 'calc(var(--r1) - 2px)',
+                    border: 'none', fontFamily: 'var(--ff)', fontSize: 'var(--xs)',
+                    fontWeight: tab === t.id ? 700 : 400, cursor: 'pointer', transition: 'all .15s',
+                    background: tab === t.id ? 'var(--goldf)' : 'transparent',
+                    color: tab === t.id ? 'var(--gold)' : 'var(--t4)',
+                    outline: tab === t.id ? '1px solid var(--acc)' : 'none',
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* ── 탭: 이름풀이 ── */}
         {tab === 'analyze' && <>
-        {/* 이름 입력 */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
-            ✦ 이름 입력
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 0.9fr)', gap: 8, minWidth: 0, width: '100%' }}>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="예) 김별숨"
-              maxLength={6}
-              style={{
-                minWidth: 0, width: '100%', padding: '12px 10px', borderRadius: 'var(--r1)',
-                border: '1px solid var(--line)', background: 'var(--card)',
-                color: 'var(--t1)', fontSize: '1.1rem', fontWeight: 600,
-                boxSizing: 'border-box', letterSpacing: '.08em', textAlign: 'center',
-              }}
-            />
-            <input
-              type="text"
-              value={hanja}
-              onChange={e => setHanja(e.target.value)}
-              placeholder="한자 (선택)"
-              maxLength={8}
-              style={{
-                minWidth: 0, width: '100%', padding: '12px 10px', borderRadius: 'var(--r1)',
-                border: '1px solid var(--line)', background: 'var(--card)',
-                color: 'var(--t1)', fontSize: '1rem', fontWeight: 600,
-                boxSizing: 'border-box', letterSpacing: '.06em', textAlign: 'center',
-              }}
-            />
-          </div>
-          {hanja.trim() && (
-            <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 5, textAlign: 'left', paddingLeft: 2 }}>
-              한자 이름: {hanja.trim()}
+        {/* 결과가 없을 때만 입력 영역 표시 */}
+        {!result && (
+          <>
+          {/* 이름 입력 */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
+              ✦ 이름 입력
             </div>
-          )}
-        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 0.9fr)', gap: 8, minWidth: 0, width: '100%' }}>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="예) 김별숨"
+                maxLength={6}
+                style={{
+                  minWidth: 0, width: '100%', padding: '12px 10px', borderRadius: 'var(--r1)',
+                  border: '1px solid var(--line)', background: 'var(--card)',
+                  color: 'var(--t1)', fontSize: '1.1rem', fontWeight: 600,
+                  boxSizing: 'border-box', letterSpacing: '.08em', textAlign: 'center',
+                }}
+              />
+              <input
+                type="text"
+                value={hanja}
+                onChange={e => setHanja(e.target.value)}
+                placeholder="한자 (선택)"
+                maxLength={8}
+                style={{
+                  minWidth: 0, width: '100%', padding: '12px 10px', borderRadius: 'var(--r1)',
+                  border: '1px solid var(--line)', background: 'var(--card)',
+                  color: 'var(--t1)', fontSize: '1rem', fontWeight: 600,
+                  boxSizing: 'border-box', letterSpacing: '.06em', textAlign: 'center',
+                }}
+              />
+            </div>
+            {hanja.trim() && (
+              <div style={{ fontSize: '10px', color: 'var(--t4)', marginTop: 5, textAlign: 'left', paddingLeft: 2 }}>
+                한자 이름: {hanja.trim()}
+              </div>
+            )}
+          </div>
 
-        {/* 사주 분석 미리보기 */}
-        {name.trim().length > 0 && (
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20,
-            animation: 'fadeUp .3s ease',
-          }}>
-            <div style={{ padding: '12px', borderRadius: 'var(--r1)', background: 'var(--card)', border: '1px solid var(--line)', textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>획수 합계</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--gold)' }}>{strokes}획</div>
-            </div>
-            <div style={{ padding: '12px', borderRadius: 'var(--r1)', background: 'var(--card)', border: '1px solid var(--line)', textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>이름 오행</div>
-              <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>
-                {sounds || '—'}
+          {/* 사주 분석 미리보기 */}
+          {name.trim().length > 0 && (
+            <div style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20,
+              animation: 'fadeUp .3s ease',
+            }}>
+              <div style={{ padding: '12px', borderRadius: 'var(--r1)', background: 'var(--card)', border: '1px solid var(--line)', textAlign: 'center' }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>획수 합계</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--gold)' }}>{strokes}획</div>
+              </div>
+              <div style={{ padding: '12px', borderRadius: 'var(--r1)', background: 'var(--card)', border: '1px solid var(--line)', textAlign: 'center' }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>이름 오행</div>
+                <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>
+                  {sounds || '—'}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* 오행 설명 */}
-        {name.trim().length > 0 && sounds && (
+          {/* 오행 설명 */}
+          {name.trim().length > 0 && sounds && (
+            <div style={{
+              display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20,
+              animation: 'fadeUp .3s ease',
+            }}>
+              {Object.entries({ 木:'나무·성장', 火:'불·열정', 土:'흙·안정', 金:'쇠·결단', 水:'물·지혜' }).map(([oh, desc]) => {
+                const active = sounds.includes(oh);
+                return (
+                  <div key={oh} style={{
+                    padding: '5px 10px', borderRadius: 20, fontSize: 'var(--xs)',
+                    background: active ? `${OHAENG_COLOR[oh]}22` : 'var(--card)',
+                    border: `1px solid ${active ? OHAENG_COLOR[oh] : 'var(--line)'}`,
+                    color: active ? OHAENG_COLOR[oh] : 'var(--t4)',
+                    fontWeight: active ? 600 : 400,
+                  }}>
+                    {oh} {desc}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 안내 */}
           <div style={{
-            display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20,
-            animation: 'fadeUp .3s ease',
+            padding: '10px 14px', borderRadius: 'var(--r1)',
+            background: 'var(--goldf)', border: '1px solid var(--acc)',
+            fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6, marginBottom: 20,
           }}>
-            {Object.entries({ 木:'나무·성장', 火:'불·열정', 土:'흙·안정', 金:'쇠·결단', 水:'물·지혜' }).map(([oh, desc]) => {
-              const active = sounds.includes(oh);
-              return (
-                <div key={oh} style={{
-                  padding: '5px 10px', borderRadius: 20, fontSize: 'var(--xs)',
-                  background: active ? `${OHAENG_COLOR[oh]}22` : 'var(--card)',
-                  border: `1px solid ${active ? OHAENG_COLOR[oh] : 'var(--line)'}`,
-                  color: active ? OHAENG_COLOR[oh] : 'var(--t4)',
-                  fontWeight: active ? 600 : 400,
-                }}>
-                  {oh} {desc}
-                </div>
-              );
-            })}
+            ✦ 성명학은 이름의 획수·오행·음양을 분석해 사주와의 조화를 살펴요.<br />
+            좋고 나쁨을 판단하기보다, 이름 속 기운을 발견하는 관점으로 읽어주세요.
           </div>
+
+          {/* 분석 버튼 */}
+          <button
+            onClick={handleAnalyze}
+            disabled={loading || !name.trim()}
+            style={{
+              width: '100%', padding: '13px', borderRadius: 'var(--r1)', cursor: 'pointer',
+              background: loading || !name.trim() ? 'var(--line)' : 'linear-gradient(135deg, var(--gold), #c8953a)',
+              color: loading || !name.trim() ? 'var(--t3)' : '#1a1208',
+              fontWeight: 700, fontSize: 'var(--sm)', border: 'none', marginBottom: 24,
+              transition: 'all .2s',
+            }}
+          >
+            {loading ? '이름 속 기운을 읽는 중...' : '📛 이름 풀이 받기'}
+          </button>
+          </>
         )}
-
-        {/* 안내 */}
-        <div style={{
-          padding: '10px 14px', borderRadius: 'var(--r1)',
-          background: 'var(--goldf)', border: '1px solid var(--acc)',
-          fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6, marginBottom: 20,
-        }}>
-          ✦ 성명학은 이름의 획수·오행·음양을 분석해 사주와의 조화를 살펴요.<br />
-          좋고 나쁨을 판단하기보다, 이름 속 기운을 발견하는 관점으로 읽어주세요.
-        </div>
-
-        {/* 분석 버튼 */}
-        <button
-          onClick={handleAnalyze}
-          disabled={loading || !name.trim()}
-          style={{
-            width: '100%', padding: '13px', borderRadius: 'var(--r1)', cursor: 'pointer',
-            background: loading || !name.trim() ? 'var(--line)' : 'linear-gradient(135deg, var(--gold), #c8953a)',
-            color: loading || !name.trim() ? 'var(--t3)' : '#1a1208',
-            fontWeight: 700, fontSize: 'var(--sm)', border: 'none', marginBottom: 24,
-            transition: 'all .2s',
-          }}
-        >
-          {loading ? '이름 속 기운을 읽는 중...' : '📛 이름 풀이 받기'}
-        </button>
 
         {/* 결과 */}
         {result && (() => {

@@ -51,6 +51,29 @@ function getMealValue(meal, synergy) {
   return meal.value;
 }
 
+// 대시(—) 앞의 핵심 값만 추출
+function primaryValue(value) {
+  if (!value) return value;
+  const s = String(value);
+  const idx = s.indexOf(' — ');
+  if (idx !== -1) return s.slice(0, idx).trim();
+  const idx2 = s.indexOf('—');
+  if (idx2 !== -1) return s.slice(0, idx2).trim();
+  return s;
+}
+
+// 타일 클릭 시 TodayDetailPage에서 스크롤할 섹션 매핑
+const TILE_SCROLL_MAP = {
+  '좋은 운세':     'today-axis-section',
+  '조심할 것':     'today-axis-section',
+  '한 줄 조언':    'today-long-reading',
+  '시간대 힌트':   'today-long-reading',
+  '오늘 색감':     'today-pick-shell',
+  '가면 좋은 곳':  'today-pick-shell',
+  '대화 팁':       'today-pick-shell',
+};
+function getMealScrollKey() { return 'today-pick-shell'; }
+
 export default function DailyMiniCard({
   dailyResult,
   todayScore,
@@ -144,8 +167,14 @@ export default function DailyMiniCard({
 
   const handleDashboardClick = (item, event) => {
     event.stopPropagation();
-    if (onQuickAsk) onQuickAsk(item.question);
-    else onClick?.();
+    // 스크롤 타깃을 sessionStorage에 저장 후 자세히 보기 페이지로 이동
+    const scrollTarget = item.title.startsWith('오늘 ') && item.title.includes('밥')
+      ? getMealScrollKey()
+      : (TILE_SCROLL_MAP[item.title] || null);
+    if (scrollTarget) {
+      try { sessionStorage.setItem('today_scroll_to', scrollTarget); } catch {}
+    }
+    onClick?.();
   };
 
   // 로딩 중
@@ -257,7 +286,7 @@ export default function DailyMiniCard({
               <span className="daily-mini-dash-icon"><Icon name={item.icon} size={12} color="currentColor" /></span>
               <span className="daily-mini-dash-title">{item.title}</span>
             </span>
-            <span className="daily-mini-dash-value">{item.value}</span>
+            <span className="daily-mini-dash-value">{primaryValue(item.value)}</span>
           </button>
         ))}
       </div>

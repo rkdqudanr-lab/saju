@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useStreamResponse } from "../hooks/useStreamResponse.js";
 import { useAppStore } from "../store/useAppStore.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
@@ -27,6 +27,12 @@ const TAB_GROUPS = {
   summary: { label: '요약', tags: ['[연간요약]','[올해핵심키워드]','[상반기흐름]','[하반기흐름]','[분기별테마]','[좋은시기]','[주의시기]','[총평]'] },
   monthly: { label: '월별', tags: ['[1월]','[2월]','[3월]','[4월]','[5월]','[6월]','[7월]','[8월]','[9월]','[10월]','[11월]','[12월]'] },
   wrap:    { label: '마무리', tags: ['[올해의선택기준]','[별숨마무리]','[마무리]'] },
+};
+
+const MONTH_LABELS = {
+  '[1월]':'1월','[2월]':'2월','[3월]':'3월','[4월]':'4월',
+  '[5월]':'5월','[6월]':'6월','[7월]':'7월','[8월]':'8월',
+  '[9월]':'9월','[10월]':'10월','[11월]':'11월','[12월]':'12월',
 };
 
 /** 스트리밍 텍스트를 섹션별로 분리 */
@@ -69,10 +75,115 @@ function MonthTab({ tag, label, active, done, onClick }) {
   );
 }
 
+/** 주차별 가이드 컴포넌트 */
+function WeeklyGuide({ monthTag, monthLabel, callApi, year }) {
+  const [open, setOpen] = useState(false);
+  const [guide, setGuide] = useState('');
+  const [loading, setLoading] = useState(false);
+  const fetchedRef = useRef(false);
+
+  const handleFetch = useCallback(async () => {
+    if (fetchedRef.current || loading) return;
+    fetchedRef.current = true;
+    setLoading(true);
+    try {
+      const result = await callApi(
+        `${year}년 ${monthLabel}의 운세를 주차별로 나눠서 자세히 알려줘. 형식: [1주차] [2주차] [3주차] [4주차] 각 주차별로 어떤 흐름인지, 어떤 기회가 오는지, 무엇을 조심해야 하는지 구체적으로.`,
+        { isYearly: true }
+      );
+      setGuide(typeof result === 'string' ? result : result?.text || '');
+    } catch {
+      setGuide('별빛이 잠시 흐려졌어요. 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  }, [callApi, year, monthLabel, loading]);
+
+  const handleToggle = () => {
+    if (!open && !guide && !loading) handleFetch();
+    setOpen(o => !o);
+  };
+
+  // 주차 파싱
+  const WEEK_TAGS = ['1주차', '2주차', '3주차', '4주차'];
+  const weekSecs = {};
+  if (guide) {
+    for (let i = 0; i < WEEK_TAGS.length; i++) {
+      const tag = `[${WEEK_TAGS[i]}]`;
+      const start = guide.indexOf(tag);
+      if (start === -1) continue;
+      const cs = start + tag.length;
+      let end = guide.length;
+      for (let j = 0; j < WEEK_TAGS.length; j++) {
+        if (j === i) continue;
+        const nx = guide.indexOf(`[${WEEK_TAGS[j]}]`, cs);
+        if (nx !== -1 && nx < end) end = nx;
+      }
+      weekSecs[WEEK_TAGS[i]] = guide.slice(cs, end).trim();
+    }
+  }
+  const hasWeekStructure = WEEK_TAGS.some(t => weekSecs[t]);
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <button
+        onClick={handleToggle}
+        style={{
+          width: '100%', padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+          border: '1px solid var(--line)', background: 'transparent',
+          color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          transition: 'all .15s',
+        }}
+      >
+        <span>📆 {monthLabel} 주차별 가이드</span>
+        <span style={{ fontSize: '10px' }}>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 8, animation: 'fadeUp .3s ease' }}>
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '12px', color: 'var(--t4)', fontSize: 'var(--xs)' }}>
+              <div style={{ width: 20, height: 20, border: '2px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 0.8s linear infinite', margin: '0 auto 6px' }} />
+              주차별 흐름을 읽는 중이에요...
+            </div>
+          )}
+          {!loading && guide && (
+            hasWeekStructure ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {WEEK_TAGS.map((wk, i) => weekSecs[wk] ? (
+                  <div key={wk} style={{
+                    background: 'var(--bg2)', border: '1px solid var(--line)',
+                    borderRadius: 8, padding: '10px 12px',
+                  }}>
+                    <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>
+                      {i + 1}주차
+                    </div>
+                    <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                      {weekSecs[wk]}
+                    </div>
+                  </div>
+                ) : null)}
+              </div>
+            ) : (
+              <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 8, padding: '12px' }}>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
+                  {guide}
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** 섹션 카드 */
-function SectionCard({ tag, content, isStreaming }) {
-  const isMonth = tag !== '[총평]' && tag !== '[마무리]';
+function SectionCard({ tag, content, isStreaming, callApi, year }) {
+  const isMonthTag = Object.keys(MONTH_LABELS).includes(tag);
   const label = tag.replace('[', '').replace(']', '');
+  const monthLabel = MONTH_LABELS[tag] || label;
   return (
     <div style={{
       background: 'var(--card)', border: '1px solid var(--line)',
@@ -81,19 +192,23 @@ function SectionCard({ tag, content, isStreaming }) {
     }}>
       <div style={{
         fontSize: 'var(--xs)', fontWeight: 700, marginBottom: 8,
-        color: isMonth ? 'var(--gold)' : 'var(--t2)',
+        color: isMonthTag ? 'var(--gold)' : 'var(--t2)',
         display: 'flex', alignItems: 'center', gap: 6,
       }}>
-        {isMonth ? '🌙' : tag === '[총평]' ? '✦' : '⭐'} {label}
+        {isMonthTag ? '🌙' : tag === '[총평]' ? '✦' : '⭐'} {label}
       </div>
       <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
-        {content}{isStreaming && <span className="typing-cursor" />}
+        {content}
       </div>
+      {/* 월별 섹션에는 주차별 가이드 버튼 추가 */}
+      {isMonthTag && !isStreaming && callApi && (
+        <WeeklyGuide monthTag={tag} monthLabel={monthLabel} callApi={callApi} year={year} />
+      )}
     </div>
   );
 }
 
-export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, currentBp, setStep }) {
+export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, currentBp, setStep, callApi }) {
   const year = new Date().getFullYear();
   const user = useAppStore((s) => s.user);
   const [started, setStarted] = useState(false);
@@ -151,8 +266,8 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
     await doStream();
   }, [doStream]);
 
-  // 풀페이지 로딩 (스트리밍 시작 전)
-  if (isStreaming && !streamText) return <FeatureLoadingScreen type="report" />;
+  // 풀페이지 로딩 (스트리밍 시작 전 또는 텍스트 없을 때)
+  if (started && isStreaming && !streamText) return <FeatureLoadingScreen type="report" />;
 
   // ── 시작 전 랜딩 화면 ──
   if (!started) {
@@ -187,6 +302,9 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
                   {t.replace('[','').replace(']','')}
                 </span>
               ))}
+            </div>
+            <div style={{ marginTop: 12, fontSize: 'var(--xs)', color: 'var(--t3)', borderTop: '1px solid var(--line)', paddingTop: 10 }}>
+              📆 각 월별 섹션에서 주차별 가이드도 확인할 수 있어요
             </div>
           </div>
 
@@ -307,6 +425,8 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
             tag={activeSection}
             content={sections[activeSection]}
             isStreaming={isStreaming && availableTags[availableTags.length - 1] === activeSection}
+            callApi={callApi}
+            year={year}
           />
         )}
 
@@ -351,7 +471,7 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
         {!isStreaming && streamText && (
           <div style={{ marginTop: 16 }}>
             {(TAB_GROUPS[activeTabGroup]?.tags || []).filter(t => sections[t] && t !== activeSection).map(t => (
-              <SectionCard key={t} tag={t} content={sections[t]} isStreaming={false} />
+              <SectionCard key={t} tag={t} content={sections[t]} isStreaming={false} callApi={callApi} year={year} />
             ))}
           </div>
         )}

@@ -423,7 +423,7 @@ ${msg}`;
                   <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: 16 }}>
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>별숨의 꿈해몽</div>
                     <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>
-                      {mainText}{loading && <span className="typing-cursor" />}
+                      {mainText}
                     </div>
                   </div>
                 );
@@ -445,7 +445,6 @@ ${msg}`;
                     {secs['한줄해석'] && (
                       <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.6 }}>{secs['한줄해석']}</div>
                     )}
-                    {loading && !secs['한줄해석'] && <span className="typing-cursor" />}
                   </div>
 
                   <DreamSectionCard eyebrow="꿈 요소 분석" body={secs['꿈요소']} />
@@ -465,7 +464,6 @@ ${msg}`;
                       {secs['별숨한마디']}
                     </div>
                   )}
-                  {loading && <div style={{ textAlign: 'center', marginTop: 4 }}><span className="typing-cursor" /></div>}
                 </>
               );
             })()}

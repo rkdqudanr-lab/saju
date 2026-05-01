@@ -247,9 +247,9 @@ function ReportAnim() {
 // ── 6. 미래 예언 (prophecy) — 모래시계 ───────────────────────
 function ProphecyAnim() {
   return (
-    <div style={{ position: 'relative', width: 70, height: 90, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* 모래시계 윤곽 */}
-      <svg width="50" height="80" viewBox="0 0 50 80">
+    <div style={{ position: 'relative', width: 100, height: 100 }}>
+      {/* 모래시계 — hourglass waist at SVG(25,40) → container(25,10) */}
+      <svg width="50" height="80" viewBox="0 0 50 80" style={{ position: 'absolute', top: 10, left: 25 }}>
         <path d="M5,5 L45,5 L25,40 L45,75 L5,75 L25,40 Z"
           fill="none" stroke="rgba(232,176,72,.4)" strokeWidth="1.5" strokeLinejoin="round" />
         {/* 위쪽 모래 */}
@@ -264,7 +264,7 @@ function ProphecyAnim() {
         <path d="M20,68 L25,55 L30,68 Z" fill="rgba(232,176,72,.35)"
           style={{ animation: 'fl-glow-soft 1.5s ease-in-out infinite', animationDelay: '.5s' }} />
       </svg>
-      {/* 회전하는 별 — 컨테이너 중심(35px, 45px)을 pivot으로 22px 반경 궤도 */}
+      {/* 회전하는 별 — top:50%,left:50% = (50,50) = hourglass waist center */}
       <div style={{
         position: 'absolute', top: '50%', left: '50%',
         animation: 'fl-orbit-rev 3s linear infinite',

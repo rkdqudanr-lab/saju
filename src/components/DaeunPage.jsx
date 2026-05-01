@@ -8,6 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { getDaeun, getCurrentDaeunIndex, EL_COLOR } from '../../lib/daeun.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { saveDaeunPDF } from '../utils/imageExport.js';
+import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const CURRENT_AGE_OFFSET = 0; // 현재 나이 계산용
@@ -167,8 +168,10 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
       `전체 대운 흐름: ${daeunData.periods.map(p => `${p.cg}${p.jj}`).join('→')}`,
     ].filter(Boolean).join('\n');
 
+    const prompt = `나의 대운 흐름을 아래 3개 시기로 나눠 해설해줘:\n${summary}\n\n반드시 아래 태그 형식으로 답해줘:\n[초반기] 현재 대운 초반기 (지금부터 3~4년 간의 흐름, 어떤 일이 펼쳐지는지, 조심할 것)\n[중반기] 현재 대운 중반기 (4~7년 뒤의 변화, 기회와 조심할 것)\n[후반기] 대운 전환기 및 다음 대운 준비 (7~10년 뒤, 마무리와 새 흐름 진입)`;
+
     try {
-      const result = await callApi(`나의 대운 흐름을 해설해줘:\n${summary}`, {
+      const result = await callApi(prompt, {
         context: ctx,
         isDaeun: true,
       });
@@ -316,84 +319,69 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
           </button>
         )}
 
-        {loading && (
-          <div style={{
-            padding: '20px',
-            textAlign: 'center',
-            color: 'var(--t4)',
-            fontSize: 'var(--xs)',
-          }}>
-            <div style={{
-              width: 28,
-              height: 28,
-              border: '2px solid var(--line)',
-              borderTopColor: 'var(--gold)',
-              borderRadius: '50%',
-              animation: 'orbSpin 0.8s linear infinite',
-              margin: '0 auto 8px',
-            }} />
-            대운 흐름을 읽고 있어요...
-          </div>
-        )}
+        {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
-        {interpretation && (
-          <div style={{
-            background: 'var(--bg2)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--r2, 16px)',
-            padding: '20px 18px',
-          }}>
-            <div style={{
-              fontSize: 'var(--xs)',
-              color: 'var(--gold)',
-              fontWeight: 700,
-              marginBottom: 14,
-              letterSpacing: '.06em',
-            }}>
-              ✦ AI 대운 해설
+        {interpretation && (() => {
+          const PERIOD_TAGS = ['초반기', '중반기', '후반기'];
+          const PERIOD_META = [
+            { tag: '초반기', label: '초반기', desc: '지금부터 3~4년', icon: '🌱', color: 'rgba(107,191,181,.15)', border: 'rgba(107,191,181,.3)' },
+            { tag: '중반기', label: '중반기', desc: '4~7년 뒤',       icon: '🌿', color: 'rgba(232,176,72,.08)', border: 'rgba(232,176,72,.25)' },
+            { tag: '후반기', label: '후반기', desc: '7~10년 뒤',      icon: '🌟', color: 'rgba(200,160,255,.08)', border: 'rgba(200,160,255,.25)' },
+          ];
+          const secs = {};
+          for (let i = 0; i < PERIOD_TAGS.length; i++) {
+            const tag = `[${PERIOD_TAGS[i]}]`;
+            const start = interpretation.indexOf(tag);
+            if (start === -1) continue;
+            const cs = start + tag.length;
+            let end = interpretation.length;
+            for (let j = 0; j < PERIOD_TAGS.length; j++) {
+              if (j === i) continue;
+              const nx = interpretation.indexOf(`[${PERIOD_TAGS[j]}]`, cs);
+              if (nx !== -1 && nx < end) end = nx;
+            }
+            secs[PERIOD_TAGS[i]] = interpretation.slice(cs, end).trim();
+          }
+          const hasStructure = PERIOD_TAGS.some(t => secs[t]);
+          return (
+            <div style={{ animation: 'fadeUp .4s ease' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 12, letterSpacing: '.06em' }}>
+                ✦ 대운 흐름 — 3시기 분석
+              </div>
+              {hasStructure ? PERIOD_META.map(({ tag, label, desc, icon, color, border }) => secs[tag] ? (
+                <div key={tag} style={{
+                  background: color, border: `1px solid ${border}`,
+                  borderRadius: 'var(--r1)', padding: '16px', marginBottom: 10,
+                  animation: 'fadeUp .4s ease',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <span style={{ fontSize: '1rem' }}>{icon}</span>
+                    <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)' }}>{label}</span>
+                    <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginLeft: 2 }}>· {desc}</span>
+                  </div>
+                  <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>
+                    {secs[tag]}
+                  </div>
+                </div>
+              ) : null) : (
+                <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: 10 }}>
+                  <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+                    {interpretation}
+                  </div>
+                </div>
+              )}
+              <button
+                onClick={() => setInterpretation('')}
+                style={{
+                  marginTop: 8, background: 'none', border: 'none',
+                  color: 'var(--t4)', fontSize: 'var(--xs)', cursor: 'pointer', fontFamily: 'var(--ff)',
+                }}
+              >
+                다시 보기
+              </button>
             </div>
-            {interpretation.split(/\[(현재대운|다음대운|전체흐름)\]/).map((part, i) => {
-              if (!part.trim()) return null;
-              const labels = ['현재대운', '다음대운', '전체흐름'];
-              const isLabel = labels.includes(part.trim());
-              if (isLabel) return (
-                <div key={i} style={{
-                  fontSize: 'var(--xs)',
-                  fontWeight: 700,
-                  color: 'var(--t2)',
-                  marginTop: i > 0 ? 16 : 0,
-                  marginBottom: 4,
-                }}>
-                  [{part.trim()}]
-                </div>
-              );
-              return (
-                <div key={i} style={{
-                  fontSize: 'var(--sm)',
-                  color: 'var(--t1)',
-                  lineHeight: 1.7,
-                  whiteSpace: 'pre-line',
-                }}>
-                  {part.trim()}
-                </div>
-              );
-            })}
-            <button
-              onClick={() => setInterpretation('')}
-              style={{
-                marginTop: 16,
-                background: 'none',
-                border: 'none',
-                color: 'var(--t4)',
-                fontSize: 'var(--xs)',
-                cursor: 'pointer',
-                fontFamily: 'var(--ff)',
-              }}
-            >
-              다시 보기
-            </button>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* 안내 메시지 */}

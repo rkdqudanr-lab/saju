@@ -188,7 +188,7 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
         </button>
       )}
 
-      {loading && <FeatureLoadingScreen type="comprehensive" />}
+      {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -307,7 +307,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
         </button>
       )}
 
-      {loading && <FeatureLoadingScreen type="comprehensive" />}
+      {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
