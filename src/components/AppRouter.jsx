@@ -63,14 +63,14 @@ const LottoPage               = lazy(() => import("./LottoPage.jsx"));
 const GachaPage               = lazy(() => import("./GachaPage.jsx"));
 const SajuStoryPage           = lazy(() => import("./SajuStoryPage.jsx"));
 
-function PageSpinner() {
+function PageSpinner({ text = '별의 기운을 불러오는 중...' }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', gap: 16 }}>
       <div className="land-orb" style={{ width: 40, height: 40 }}>
         <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
       </div>
       <div style={{ fontSize: '12px', color: 'var(--gold)', fontWeight: 500, letterSpacing: '0.05em', opacity: 0.8 }}>
-        별의 기운을 불러오는 중...
+        {text}
       </div>
     </div>
   );
@@ -256,7 +256,7 @@ export default function AppRouter({ ctx }) {
 
       {/* COMPAT */}
       {step === STEP.COMPAT && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="두 사람의 기운을 맞춰보는 중..." />}>
           <CompatPage
             myForm={form} mySaju={saju} mySun={sun}
             callApi={callApi} buildCtx={buildCtx}
@@ -270,7 +270,7 @@ export default function AppRouter({ ctx }) {
 
       {/* FUTURE_PROPHECY */}
       {step === STEP.FUTURE_PROPHECY && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="별이 당신의 앞날을 읽는 중..." />}>
           <FutureProphecyPage
             form={form} buildCtx={buildCtx} callApi={callApi}
             onBack={() => setStep(STEP.RESULT)}
@@ -427,133 +427,133 @@ export default function AppRouter({ ctx }) {
 
       {/* DREAM */}
       {step === STEP.DREAM && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="꿈 속의 기운을 해석하는 중..." />}>
           <DreamPage user={user} form={form} buildCtx={buildCtx} callApi={callApi} setStep={setStep} showToast={showToast} consentFlags={consentFlags} onShareCard={handleShareDreamCard} />
         </Suspense>
       )}
 
       {/* TAEGIL */}
       {step === STEP.TAEGIL && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="좋은 날을 찾는 중..." />}>
           <TaegillPage form={form} buildCtx={buildCtx} callApi={callApi} showToast={showToast} onShareCard={handleShareTaegilCard} user={user} consentFlags={consentFlags} />
         </Suspense>
       )}
 
       {/* NAME_FORTUNE */}
       {step === STEP.NAME_FORTUNE && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="이름의 기운을 읽는 중..." />}>
           <NameFortunePage form={form} buildCtx={buildCtx} callApi={callApi} showToast={showToast} user={user} consentFlags={consentFlags} />
         </Suspense>
       )}
 
       {/* MY_PAGE */}
       {step === STEP.MY_PAGE && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="나의 별숨을 불러오는 중..." />}>
           <MyPage onFreeRecharge={handleFreeRecharge} freeRechargeAvailable={freeRechargeAvailable} onFreezeStreak={freezeStreak} />
         </Suspense>
       )}
 
       {/* STATS */}
       {step === STEP.STATS && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="운세 흐름을 분석하는 중..." />}>
           <StatsPage callApi={callApi} />
         </Suspense>
       )}
 
       {/* COMMUNITY */}
       {step === STEP.COMMUNITY && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="별숨 광장을 열고 있어요..." />}>
           <CommunityPage showToast={showToast} dailyResult={dailyResult} />
         </Suspense>
       )}
 
       {/* DAEUN */}
       {step === STEP.DAEUN && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="대운 흐름을 계산하는 중..." />}>
           <DaeunPage form={form} saju={saju} callApi={callApi} buildCtx={buildCtx} showToast={showToast} />
         </Suspense>
       )}
 
       {/* SHOP */}
       {step === STEP.SHOP && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="별숨샵을 열고 있어요..." />}>
           <ShopPage showToast={showToast} />
         </Suspense>
       )}
 
       {/* ANON_COMPAT */}
       {step === STEP.ANON_COMPAT && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="익명 궁합 광장으로 이동 중..." />}>
           <AnonCompatPage showToast={showToast} shareData={anonCompatShareData} />
         </Suspense>
       )}
 
       {/* SPECIAL_READING */}
       {step === STEP.SPECIAL_READING && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="특별 상담을 준비하는 중..." />}>
           <SpecialReadingPage callApi={callApi} showToast={showToast} consentFlags={consentFlags} />
         </Suspense>
       )}
 
       {/* TAROT */}
       {step === STEP.TAROT && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="타로 카드를 섞는 중..." />}>
           <TarotPage callApi={callApi} buildCtx={buildCtx} showToast={showToast} consentFlags={consentFlags} />
         </Suspense>
       )}
 
       {/* LETTER */}
       {step === STEP.LETTER && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="별숨 편지를 불러오는 중..." />}>
           <ByeolsoomLetterPage showToast={showToast} />
         </Suspense>
       )}
 
       {/* YEARLY_REPORT */}
       {step === STEP.YEARLY_REPORT && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="1년 운세 흐름을 정리하는 중..." />}>
           <YearlyReportPage form={form} buildCtx={buildCtx} showToast={showToast} spendBP={spendBP} currentBp={gamificationState?.currentBp || 0} setStep={setStep} />
         </Suspense>
       )}
 
       {/* MISSIONS */}
       {step === STEP.MISSIONS && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="오늘의 미션을 불러오는 중..." />}>
           <MissionPage onCompleteMission={handleCompleteMission} hasDiaryToday={hasDiaryToday} />
         </Suspense>
       )}
 
       {/* GROWTH_DASHBOARD */}
       {step === STEP.GROWTH_DASHBOARD && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="별숨 성장 기록을 불러오는 중..." />}>
           <GrowthDashboardPage onRechargeFreeBP={handleFreeRecharge} />
         </Suspense>
       )}
 
       {/* BYEOLSOOM_SPACE */}
       {step === STEP.BYEOLSOOM_SPACE && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="별숨 도감을 펼치는 중..." />}>
           <ByeolsoomSpacePage />
         </Suspense>
       )}
 
       {/* ITEM_INVENTORY */}
       {step === STEP.ITEM_INVENTORY && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="오브제함을 열고 있어요..." />}>
           <ItemInventoryPage showToast={showToast} callApi={callApi} spendBP={spendBP} />
         </Suspense>
       )}
 
       {/* LOTTO */}
       {step === STEP.LOTTO && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="행운의 번호를 준비하는 중..." />}>
           <LottoPage consentFlags={consentFlags} spendBP={spendBP} showToast={showToast} />
         </Suspense>
       )}
 
       {/* GACHA */}
       {step === STEP.GACHA && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<PageSpinner text="기운 뽑기를 준비하는 중..." />}>
           <GachaPage showToast={showToast} />
         </Suspense>
       )}

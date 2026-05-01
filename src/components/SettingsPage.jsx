@@ -32,15 +32,15 @@ function getDaysInMonth(year, month) {
 // ═══════════════════════════════════════════════════════════
 
 const LIFE_STAGE_OPTIONS = [
-  { value: 'jobseek', label: '취업 준비 중', emoji: '📋' },
-  { value: 'dating', label: '연애 중', emoji: '💕' },
-  { value: 'healing', label: '이별 후 회복 중', emoji: '💧' },
-  { value: 'employed', label: '직장인', emoji: '💼' },
-  { value: 'business', label: '사업 운영 중', emoji: '📈' },
-  { value: 'student', label: '학업·시험 준비 중', emoji: '📚' },
-  { value: 'parenting', label: '육아 중', emoji: '🏡' },
-  { value: 'reentry', label: '경력 재진입 준비 중', emoji: '🌱' },
-  { value: 'free', label: '자유 선택 (기본)', emoji: '✦' },
+  { value: 'jobseek', label: '취업 준비 중', emoji: '📋', desc: '취업·이직 관련 기운을 중심으로 풀어드려요' },
+  { value: 'dating', label: '연애 중', emoji: '💕', desc: '연애 흐름과 관계 에너지를 더 섬세하게 읽어드려요' },
+  { value: 'healing', label: '이별 후 회복 중', emoji: '💧', desc: '감정 회복과 새 출발의 기운에 집중해드려요' },
+  { value: 'employed', label: '직장인', emoji: '💼', desc: '직장 관계·업무 흐름을 중심으로 분석해드려요' },
+  { value: 'business', label: '사업 운영 중', emoji: '📈', desc: '사업 운·재물 흐름·결정 타이밍을 집중 분석해요' },
+  { value: 'student', label: '학업·시험 준비 중', emoji: '📚', desc: '학업 집중력·시험 기운을 중심으로 이야기해드려요' },
+  { value: 'parenting', label: '육아 중', emoji: '🏡', desc: '가정 에너지와 자녀 관계 흐름을 중심으로 읽어드려요' },
+  { value: 'reentry', label: '경력 재진입 준비 중', emoji: '🌱', desc: '새 시작의 기운과 방향성을 함께 살펴드려요' },
+  { value: 'free', label: '자유 선택 (기본)', emoji: '✦', desc: '특정 상황에 치우치지 않고 전반적으로 풀어드려요' },
 ];
 
 const STYLE_OPTIONS = [
@@ -687,6 +687,7 @@ export default function SettingsPage({
                     onLifeStageChange?.(opt.value);
                     showToast?.('상황이 저장됐어요 ✦', 'success');
                   }}
+                  title={opt.desc}
                   style={{
                     padding: '7px 14px',
                     borderRadius: 20,
@@ -700,10 +701,19 @@ export default function SettingsPage({
                     transition: 'all .2s',
                   }}
                 >
-                  {opt.label}
+                  {opt.emoji} {opt.label}
                 </button>
               ))}
             </div>
+            {/* 선택된 옵션 설명 */}
+            {(() => {
+              const sel = LIFE_STAGE_OPTIONS.find(o => o.value === lifeStage);
+              return sel ? (
+                <div style={{ marginTop: 8, fontSize: '12px', color: 'var(--t4)', lineHeight: 1.6 }}>
+                  {sel.emoji} {sel.desc}
+                </div>
+              ) : null;
+            })()}
           </div>
         )}
 

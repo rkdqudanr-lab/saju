@@ -24,16 +24,19 @@ const MENU_GROUPS = {
   consult: {
     label: '별숨 상담',
     items: [
+      // ── 자주 쓰는 상담 ──
       { icon: 'chat', label: '별숨에게 물어보기', step: STEP.QUESTION },
+      { icon: 'heart', label: '궁합', step: STEP.COMPAT },
+      { icon: 'trending-up', label: '대운 흐름', step: STEP.DAEUN },
+      { icon: 'layers', label: '종합 분석', step: STEP.COMPREHENSIVE },
       { icon: 'chart-bar', label: '월간 리포트', step: STEP.REPORT },
       { icon: 'sparkles', label: '별숨의 예언', step: STEP.FUTURE_PROPHECY },
-      { icon: 'layers', label: '종합 분석', step: STEP.COMPREHENSIVE },
-      { icon: 'moon', label: '꿈 해몽', step: STEP.DREAM },
-      { icon: 'calendar-check', label: '택일', step: STEP.TAEGIL },
-      { icon: 'user', label: '이름 풀이', step: STEP.NAME_FORTUNE },
+      // ── 특별 상담 ──
       { icon: 'cards', label: '별숨 타로', step: STEP.TAROT },
-      { icon: 'trending-up', label: '대운 흐름', step: STEP.DAEUN },
-      { icon: 'heart', label: '궁합', step: STEP.COMPAT },
+      { icon: 'moon', label: '꿈 해몽', step: STEP.DREAM },
+      { icon: 'user', label: '이름 풀이', step: STEP.NAME_FORTUNE },
+      // ── 가끔 쓰는 상담 ──
+      { icon: 'calendar-check', label: '택일', step: STEP.TAEGIL },
       { icon: 'cake', label: '기념일 운세', step: STEP.ANNIVERSARY },
       { icon: 'ticket', label: '로또 번호 뽑기', step: STEP.LOTTO },
     ],
@@ -105,7 +108,7 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
           position: 'fixed',
           inset: 0,
           zIndex: 9990,
-          background: 'rgba(0,0,0,0.45)',
+          background: 'var(--overlay, rgba(0,0,0,0.45))',
         }}
       />
       <div
@@ -312,7 +315,11 @@ export default function BottomNav() {
                   style={{
                     position: 'absolute',
                     bottom: 0,
-                    width: 32,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '40%',
+                    minWidth: 20,
+                    maxWidth: 40,
                     height: 2,
                     background: 'var(--gold)',
                     borderRadius: 2,

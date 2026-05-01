@@ -189,6 +189,7 @@ export default function DailyMiniCard({
   return (
     <div
       className="daily-mini-card"
+      data-tour="daily-card"
       style={{
         width: '100%',
         '--daily-score-pct': `${scorePct}%`,

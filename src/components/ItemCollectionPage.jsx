@@ -24,7 +24,7 @@ export default function ItemCollectionPage({ inventoryItems, onClose }) {
   // 진척도
   const ownedCount = pool.filter(i => ownedBaseIds.has(i.id)).length;
   const totalCount = pool.length;
-  const progressPercent = ((ownedCount / totalCount) * 100).toFixed(1);
+  const progressPercent = totalCount > 0 ? ((ownedCount / totalCount) * 100).toFixed(1) : '0.0';
 
   // 등급별 분류
   const itemsByGrade = useMemo(() => {
@@ -58,8 +58,13 @@ export default function ItemCollectionPage({ inventoryItems, onClose }) {
           }}>✕</button>
           <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)' }}>별숨 도감</div>
         </div>
-        <div style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 600, background: 'var(--goldf)', padding: '4px 10px', borderRadius: 20 }}>
-          {ownedCount} / {totalCount} ({progressPercent}%)
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>
+            {ownedCount} / {totalCount} ({progressPercent}%)
+          </div>
+          <div style={{ width: 80, height: 4, borderRadius: 2, background: 'var(--line)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', borderRadius: 2, background: 'var(--gold)', width: `${progressPercent}%`, transition: 'width .4s ease' }} />
+          </div>
         </div>
       </div>
 

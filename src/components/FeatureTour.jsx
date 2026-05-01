@@ -3,6 +3,7 @@
  * localStorage 'byeolsoom_tour_v1' === 'done' 이면 표시 안 함
  */
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 const TOUR_STEPS = [
   {
@@ -38,6 +39,8 @@ const TOUR_STEPS = [
 ];
 
 const PADDING = 10; // 스포트라이트 여백 (px)
+const TT_WIDTH = 260;
+const TT_OFFSET = 18;
 
 export default function FeatureTour({ onFinish }) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -46,11 +49,16 @@ export default function FeatureTour({ onFinish }) {
   const step = TOUR_STEPS[currentStep];
   const isLast = currentStep === TOUR_STEPS.length - 1;
 
-  // 타겟 요소 위치 계산
   const updateRect = useCallback(() => {
     const el = document.querySelector(`[data-tour="${step.selector}"]`);
     if (el) {
-      setTargetRect(el.getBoundingClientRect());
+      const rect = el.getBoundingClientRect();
+      // 요소가 실제로 화면 안에 있을 때만 사용
+      if (rect.width > 0 && rect.height > 0) {
+        setTargetRect(rect);
+      } else {
+        setTargetRect(null);
+      }
     } else {
       setTargetRect(null);
     }
@@ -58,8 +66,7 @@ export default function FeatureTour({ onFinish }) {
 
   useEffect(() => {
     updateRect();
-    // 레이아웃 변경에 대비해 짧은 딜레이 후 재계산
-    const t = setTimeout(updateRect, 100);
+    const t = setTimeout(updateRect, 150);
     window.addEventListener('resize', updateRect);
     return () => {
       clearTimeout(t);
@@ -81,7 +88,6 @@ export default function FeatureTour({ onFinish }) {
     onFinish?.();
   };
 
-  // 스포트라이트 위치/크기
   const spot = targetRect
     ? {
         left:   targetRect.left   - PADDING,
@@ -91,39 +97,36 @@ export default function FeatureTour({ onFinish }) {
       }
     : null;
 
-  // 툴팁 위치 계산
   function getTooltipStyle() {
-    if (!targetRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
-    const TT_WIDTH  = 260;
-    const TT_OFFSET = 18; // 스포트라이트와 툴팁 사이 간격
+    if (!targetRect) return { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+
     const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
     let left = targetRect.left + targetRect.width / 2 - TT_WIDTH / 2;
-    // 화면 밖으로 나가지 않도록 클램프
     left = Math.max(12, Math.min(left, vw - TT_WIDTH - 12));
 
     if (step.arrowDir === 'bottom') {
-      // 타겟 위에 툴팁 표시
+      const bottomVal = vh - targetRect.top + TT_OFFSET;
       return {
         position: 'fixed',
         left,
-        bottom: window.innerHeight - targetRect.top + TT_OFFSET,
+        bottom: Math.max(8, bottomVal),
         width: TT_WIDTH,
-        zIndex: 10000,
+        zIndex: 10001,
       };
     } else {
-      // 타겟 아래에 툴팁 표시
+      const topVal = targetRect.bottom + TT_OFFSET;
       return {
         position: 'fixed',
         left,
-        top: targetRect.bottom + TT_OFFSET,
+        top: Math.max(8, topVal),
         width: TT_WIDTH,
-        zIndex: 10000,
+        zIndex: 10001,
       };
     }
   }
 
-  // 화살표 위치 (CSS 삼각형)
   const arrowStyle = {
     position: 'absolute',
     left: '50%',
@@ -145,20 +148,10 @@ export default function FeatureTour({ onFinish }) {
         }),
   };
 
-  return (
+  return createPortal(
     <>
-      {/* 반투명 전체 오버레이 */}
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9997,
-          pointerEvents: 'none',
-        }}
-      />
-
       {/* 스포트라이트 (box-shadow로 주변을 어둡게) */}
-      {spot && (
+      {spot ? (
         <div
           style={{
             position: 'fixed',
@@ -167,22 +160,31 @@ export default function FeatureTour({ onFinish }) {
             width:  spot.width,
             height: spot.height,
             borderRadius: 12,
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.70)',
-            zIndex: 9998,
+            boxShadow: '0 0 0 9999px rgba(0,0,0,0.72)',
+            zIndex: 10000,
+            pointerEvents: 'none',
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.72)',
+            zIndex: 10000,
             pointerEvents: 'none',
           }}
         />
       )}
 
-      {/* 오버레이 클릭 차단 (스포트라이트 바깥 영역) */}
+      {/* 오버레이 클릭 → 건너뛰기 */}
       <div
         onClick={handleSkip}
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 9998,
+          zIndex: 10000,
           background: 'transparent',
-          pointerEvents: spot ? 'all' : 'none',
         }}
       />
 
@@ -198,7 +200,6 @@ export default function FeatureTour({ onFinish }) {
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* 화살표 */}
         <div style={arrowStyle} />
 
         {/* 진행 점 */}
@@ -217,7 +218,6 @@ export default function FeatureTour({ onFinish }) {
           ))}
         </div>
 
-        {/* 내용 */}
         <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 6 }}>
           {step.title}
         </div>
@@ -225,7 +225,6 @@ export default function FeatureTour({ onFinish }) {
           {step.desc}
         </div>
 
-        {/* 버튼 */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button
             onClick={handleNext}
@@ -259,6 +258,7 @@ export default function FeatureTour({ onFinish }) {
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

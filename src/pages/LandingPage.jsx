@@ -139,18 +139,19 @@ export default function LandingPage({
   }, [axisScores, dailyResult]);
 
   // ── Smart Suggestion ──
+  // 우선순위: 1) 저녁에 일기 미작성 → 일기 유도  2) 3일 연속 하락 → 상담 유도
   const suggestion = useMemo(() => {
     if (!user) return null;
     const hour = new Date().getHours();
 
     if (!hasDiaryToday && hour >= 17 && dailyResult) {
-      return { icon: '📓', text: '오늘 하루를 기록하면 +5 BP를 받아요', step: STEP.DIARY };
+      return { icon: '📓', text: '저녁이에요. 오늘 하루를 기록하고 +5 BP 받아요 →', step: STEP.DIARY };
     }
     const validScores = scoreHistory.filter((s) => s.score !== null);
     if (validScores.length >= 3) {
       const last3 = validScores.slice(-3);
       if (last3[0].score > last3[1].score && last3[1].score > last3[2].score) {
-        return { icon: '💬', text: '최근 3일 흐름이 내려가고 있어요. 별숨에게 물어볼까요?', step: STEP.QUESTION };
+        return { icon: '💬', text: '3일째 기운이 내려가고 있어요. 별숨에게 물어볼까요?', step: STEP.QUESTION };
       }
     }
     return null;
