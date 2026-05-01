@@ -561,6 +561,14 @@ export default function TodayDetailPage({
                 )}
               </div>
 
+              {/* 왜 이렇게 골랐는지 — 픽 그리드 위에 바로 표시 */}
+              <div className="today-pick-reason today-pick-reason--top">
+                <div className="today-pick-reason__title">✦ 왜 이렇게 골랐냐면</div>
+                <div className="today-pick-reason__body">
+                  {byeolsoomPick?.reason || byeolsoomPick?.aiHint || '오늘 점수 흐름에 맞춰 강한 축은 밀고 약한 축은 받치는 방식으로 조합했어요.'}
+                </div>
+              </div>
+
               <div className="today-pick-grid">
                 {PICK_FIELD_META.map((field) => (
                   <PickField
@@ -571,13 +579,6 @@ export default function TodayDetailPage({
                     tone={field.tone}
                   />
                 ))}
-              </div>
-
-              <div className="today-pick-reason">
-                <div className="today-pick-reason__title">왜 이렇게 골랐냐면</div>
-                <div className="today-pick-reason__body">
-                  {byeolsoomPick?.reason || byeolsoomPick?.aiHint || '오늘 점수 흐름에 맞춰 강한 축은 밀고 약한 축은 받치는 방식으로 조합했어요.'}
-                </div>
               </div>
             </section>
 
