@@ -167,6 +167,10 @@ export default function DailyMiniCard({
 
   const handleDashboardClick = (item, event) => {
     event.stopPropagation();
+    if (item.title === '바로 묻기') {
+      onQuickAsk?.();
+      return;
+    }
     // 스크롤 타깃을 sessionStorage에 저장 후 자세히 보기 페이지로 이동
     const scrollTarget = item.title.startsWith('오늘 ') && item.title.includes('밥')
       ? getMealScrollKey()
