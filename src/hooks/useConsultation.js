@@ -485,23 +485,29 @@ export function useConsultation(
 
   useEffect(() => {
     if (!user?.id) return;
+    // cancellation flag — 사용자 빠른 전환 시 이전 사용자의 캐시 응답이
+    // 새 사용자의 dailyResult를 덮어쓰는 데이터 누설 방지.
+    let cancelled = false;
+
     loadDailyCacheFromSupabase(user.id, "horoscope").then((content) => {
-      if (!content) return;
+      if (cancelled || !content) return;
       const gamData = parseHoroscopeForGamification(content);
       dailyHandler.setDailyResult({
         text: content,
         score: gamData.score,
         ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
       });
-    }).catch((e) => console.error("[별숨] 오늘 별숨 캐시 로드 오류:", e));
+    }).catch((e) => { if (!cancelled) console.error("[별숨] 오늘 별숨 캐시 로드 오류:", e); });
 
     loadDailyCacheFromSupabase(user.id, "diary_review").then((content) => {
-      if (content) dailyHandler.setDiaryReviewResult(content);
-    }).catch((e) => console.error("[별숨] 일기 리뷰 캐시 로드 오류:", e));
+      if (!cancelled && content) dailyHandler.setDiaryReviewResult(content);
+    }).catch((e) => { if (!cancelled) console.error("[별숨] 일기 리뷰 캐시 로드 오류:", e); });
 
     loadDailyCacheFromSupabase(user.id, "horoscope_count").then((countStr) => {
-      if (countStr) dailyHandler.setDailyCount(parseInt(countStr, 10) || 0);
-    }).catch((e) => console.error("[별숨] 별숨 횟수 캐시 로드 오류:", e));
+      if (!cancelled && countStr) dailyHandler.setDailyCount(parseInt(countStr, 10) || 0);
+    }).catch((e) => { if (!cancelled) console.error("[별숨] 별숨 횟수 캐시 로드 오류:", e); });
+
+    return () => { cancelled = true; };
   }, [user?.id]);
 
   const chatHandler = useChatConsultationHandler({

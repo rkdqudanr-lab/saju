@@ -121,8 +121,9 @@ async function loadJsonCache(kakaoId, cacheType) {
 
   try {
     const client = getAuthenticatedClient(String(kakaoId));
+    if (!client) return {}; // Supabase 미설정 시 빈 객체로 안전 반환
     const { data } = await client
-      ?.from('daily_cache')
+      .from('daily_cache')
       .select('content')
       .eq('kakao_id', String(kakaoId))
       .eq('cache_date', getDailyDateKey())
@@ -141,12 +142,13 @@ async function saveTodayScore(kakaoId, score) {
   writeDailyLocalCache(String(kakaoId), 'horoscope_score', content, getDailyDateKey());
   if (!canUseDailySupabaseTables()) return;
   const client = getAuthenticatedClient(String(kakaoId));
+  if (!client) return; // Supabase 미설정 시 로컬캐시까지만
   await Promise.all([
-    client?.from('daily_cache').upsert(
+    client.from('daily_cache').upsert(
       { kakao_id: String(kakaoId), cache_date: getDailyDateKey(), cache_type: 'horoscope_score', content },
       { onConflict: 'kakao_id,cache_date,cache_type' },
     ),
-    client?.from('daily_scores').upsert(
+    client.from('daily_scores').upsert(
       { kakao_id: String(kakaoId), score_date: getDailyDateKey(), score: normalizedScore },
       { onConflict: 'kakao_id,score_date' },
     ),

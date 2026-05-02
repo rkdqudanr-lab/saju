@@ -273,8 +273,10 @@ export default function App() {
     const client = getAuthenticatedClient(user.id) || supabase;
     if (!client) return;
     const today = getDailyDateKey();
+    let cancelled = false;
     client.from('diary_entries').select('id').eq('kakao_id', String(user.id)).eq('date', today).maybeSingle()
-      .then(({ data }) => setTodayDiaryWritten(!!data)).catch(() => {});
+      .then(({ data }) => { if (!cancelled) setTodayDiaryWritten(!!data); }).catch(() => {});
+    return () => { cancelled = true; };
   }, [user?.id]);
 
   // ── AppRouter에 전달할 ctx 빌드 ──

@@ -34,6 +34,13 @@ export function getAuthenticatedClient(kakaoId) {
   if (!kakaoId) return supabase
   const key = String(kakaoId)
   if (!_authClientCache.has(key)) {
+    // 메모리 누수 방지: 새 키 추가 시 다른 키는 즉시 정리 (단일 활성 정책).
+    // 공유기기·연속 카카오 로그인으로 GoTrueClient 인스턴스가 누적되는 것을 차단.
+    if (_authClientCache.size > 0) {
+      for (const k of _authClientCache.keys()) {
+        if (k !== key) _authClientCache.delete(k)
+      }
+    }
     if (!supabaseUrl || !supabaseAnonKey) {
       _authClientCache.set(key, null)
     } else {

@@ -297,6 +297,10 @@ export function useUserProfile() {
     const authClient = getAuthenticatedClient(user.id);
     const client = authClient || supabase;
 
+    // cancellation flag — user 빠른 전환 시 이전 사용자의 응답이
+    // 다른 사용자의 form/profile을 덮어쓰는 데이터 누설 방지.
+    let cancelled = false;
+
     (async () => {
       const [usersRes, profilesRes, othersRes] = await Promise.allSettled([
         client.from('users')
@@ -306,6 +310,8 @@ export function useUserProfile() {
         client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).maybeSingle(),
         client.from('other_profiles').select('*').eq('kakao_id', String(user.id)).order('sort_order'),
       ]);
+
+      if (cancelled) return;
 
       // users 테이블
       if (usersRes.status === 'fulfilled') {
@@ -378,6 +384,8 @@ export function useUserProfile() {
 
       setProfileSyncing(false);
     })();
+
+    return () => { cancelled = true; };
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── other_profiles Supabase 전체 교체 저장 ──

@@ -20,6 +20,7 @@ export function useGuardianMessage({ buildCtx, userId }) {
     if (!guardianLevelUp) return;
     setGuardianMessage('');
     setGuardianMsgLoading(true);
+    let cancelled = false;
     (async () => {
       try {
         const ctx = buildCtx ? buildCtx() : '';
@@ -30,14 +31,15 @@ export function useGuardianMessage({ buildCtx, userId }) {
           clientHour: new Date().getHours(),
           isChat: true,
         });
-        setGuardianMessage(text);
+        if (!cancelled) setGuardianMessage(text);
       } catch {
-        setGuardianMessage('A new level of strength is with you now. Meet the next star with a steadier heart.');
+        if (!cancelled) setGuardianMessage('A new level of strength is with you now. Meet the next star with a steadier heart.');
       } finally {
-        setGuardianMsgLoading(false);
+        if (!cancelled) setGuardianMsgLoading(false);
       }
     })();
-  }, [guardianLevelUp]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { cancelled = true; };
+  }, [guardianLevelUp, buildCtx, userId]);
 
   return { guardianLevelUp, setGuardianLevelUp, guardianMessage, guardianMsgLoading };
 }

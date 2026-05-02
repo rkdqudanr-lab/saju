@@ -6,6 +6,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
+import { getDailyDateKey } from '../lib/dailyDataAccess.js';
 import {
   BP_EARNING_RULES,
   BADTIME_BLOCK_COST,
@@ -25,13 +26,10 @@ function getMissionBpReward(missionType) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 유틸 함수
+// 유틸 함수 — 날짜 포맷은 lib/dailyDataAccess의 getDailyDateKey로 통일
 // ════════════════════════════════════════════════════════════════
 
-function getTodayDateStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
+const getTodayDateStr = () => getDailyDateKey();
 
 const LOCAL_LAYOUT_MODE = import.meta.env.DEV;
 
@@ -49,7 +47,7 @@ function isLocalLayoutUser(user) {
  */
 export function useGamification(user, showToast) {
   const [gamificationState, setGamificationState] = useState({
-    currentBp: 1000,
+    currentBp: 0, // 1000 → 0: 비로그인/초기 로딩 중 가짜 BP 표시 방지 (UX 깜빡임 차단)
     guardianLevel: 1,
     loginStreak: 0,
     totalMissionsCompleted: 0,
@@ -191,7 +189,8 @@ export function useGamification(user, showToast) {
         ]);
 
         const newBp = (currentUser?.current_bp || 0) + amount;
-        const newTotalEarned = (gamRow?.total_bp_earned || 0) + amount;
+        // total_bp_earned는 양수(획득)만 누적 — 소비(amount<0)는 통계 왜곡 방지를 위해 제외
+        const newTotalEarned = (gamRow?.total_bp_earned || 0) + Math.max(0, amount);
 
         await client
           .from('users')
