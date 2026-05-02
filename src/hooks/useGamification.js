@@ -159,8 +159,7 @@ export function useGamification(user, showToast) {
         const client = authClient;
         const today = getTodayDateStr();
 
-        // daily_bp_log에 기록
-        // 미션 완료 시 reason을 mission_id 포함해 고유하게 만들어 같은 날 여러 미션 로그가 충돌하지 않도록 함
+        // daily_bp_log에 기록 (감사 로그) — 멱등성을 위해 reason 고유화
         const needsUniqueReason = !missionId && amount < 0 && reason === 'question_ask';
         const logReason = missionId
           ? `${reason}_${missionId}`
@@ -182,26 +181,36 @@ export function useGamification(user, showToast) {
           throw bpLogError;
         }
 
-        // users + user_gamification 동시 조회
-        const [{ data: currentUser }, { data: gamRow }] = await Promise.all([
-          client.from('users').select('current_bp').eq('kakao_id', String(user.id)).maybeSingle(),
-          client.from('user_gamification').select('total_bp_earned').eq('kakao_id', String(user.id)).maybeSingle(),
-        ]);
+        // 원자적 BP 업데이트 (race condition 차단)
+        // — Supabase RPC apply_bp_delta가 단일 트랜잭션 내에서 read-modify-write 수행.
+        // — total_bp_earned/spent도 RPC가 양수/음수 분리 누적.
+        const { data: rpcRows, error: rpcError } = await client.rpc('apply_bp_delta', {
+          kid: String(user.id),
+          delta: amount,
+        });
 
-        const newBp = (currentUser?.current_bp || 0) + amount;
-        // total_bp_earned는 양수(획득)만 누적 — 소비(amount<0)는 통계 왜곡 방지를 위해 제외
-        const newTotalEarned = (gamRow?.total_bp_earned || 0) + Math.max(0, amount);
+        if (rpcError) {
+          // RPC가 아직 배포되지 않은 환경 fallback — 기존 read-modify-write
+          if (rpcError.code === '42883' || /function .*apply_bp_delta/i.test(rpcError.message || '')) {
+            const [{ data: currentUser }, { data: gamRow }] = await Promise.all([
+              client.from('users').select('current_bp').eq('kakao_id', String(user.id)).maybeSingle(),
+              client.from('user_gamification').select('total_bp_earned').eq('kakao_id', String(user.id)).maybeSingle(),
+            ]);
+            const newBp = Math.max(0, (currentUser?.current_bp || 0) + amount);
+            const newTotalEarned = (gamRow?.total_bp_earned || 0) + Math.max(0, amount);
+            await client.from('users').update({ current_bp: newBp, updated_at: new Date().toISOString() }).eq('kakao_id', String(user.id));
+            await client.from('user_gamification').upsert(
+              { kakao_id: String(user.id), total_bp_earned: newTotalEarned, updated_at: new Date().toISOString() },
+              { onConflict: 'kakao_id' }
+            );
+            setGamificationState(prev => ({ ...prev, currentBp: newBp }));
+            if (showToast && reason !== 'first_login' && reason !== 'login' && !reason.startsWith('streak_milestone_')) showToast(`+${amount} BP 획득! 🎉`);
+            return { success: true, newBp };
+          }
+          throw rpcError;
+        }
 
-        await client
-          .from('users')
-          .update({ current_bp: newBp, updated_at: new Date().toISOString() })
-          .eq('kakao_id', String(user.id));
-
-        // user_gamification 누적 합산 upsert
-        await client.from('user_gamification').upsert(
-          { kakao_id: String(user.id), total_bp_earned: newTotalEarned, updated_at: new Date().toISOString() },
-          { onConflict: 'kakao_id' }
-        );
+        const newBp = rpcRows?.[0]?.current_bp ?? 0;
 
         // 로컬 상태 업데이트
         setGamificationState(prev => ({
@@ -712,22 +721,30 @@ export function useGamification(user, showToast) {
     try {
       const authClient = getAuthenticatedClient(user.id);
       const client = authClient || supabase;
+      if (!client) return { success: false, message: '인증 오류' };
 
-      const newBp = gamificationState.currentBp - STREAK_FREEZE_COST;
+      // BP 차감을 먼저 검증·실행 — 실패 시 로그도 남기지 않고 즉시 중단(락스텝 유지).
+      const { data: updateRows, error: updateError } = await client
+        .from('users')
+        .update({ current_bp: gamificationState.currentBp - STREAK_FREEZE_COST, updated_at: new Date().toISOString() })
+        .eq('kakao_id', String(user.id))
+        .select('current_bp');
 
-      await Promise.all([
-        // BP 차감
-        client.from('users')
-          .update({ current_bp: newBp, updated_at: new Date().toISOString() })
-          .eq('kakao_id', String(user.id)),
-        // 프리즈 사용 로그
-        client.from('daily_bp_log').insert({
-          kakao_id: String(user.id),
-          date: getTodayDateStr(),
-          bp_amount: -STREAK_FREEZE_COST,
-          reason: 'streak_freeze',
-        }).catch(() => {}),
-      ]);
+      if (updateError) {
+        console.error('[별숨] 스트릭 프리즈 BP 차감 실패:', updateError);
+        return { success: false, message: 'BP 차감 실패' };
+      }
+      const newBp = updateRows?.[0]?.current_bp ?? (gamificationState.currentBp - STREAK_FREEZE_COST);
+
+      // 감사 로그는 best-effort — 실패해도 BP 차감은 유효.
+      client.from('daily_bp_log').insert({
+        kakao_id: String(user.id),
+        date: getTodayDateStr(),
+        bp_amount: -STREAK_FREEZE_COST,
+        reason: 'streak_freeze',
+      }).then(({ error }) => {
+        if (error) console.error('[별숨] 프리즈 로그 기록 실패(무시):', error);
+      });
 
       setGamificationState(prev => ({ ...prev, currentBp: newBp }));
       if (showToast) showToast(`❄️ 스트릭 프리즈 발동! ${STREAK_FREEZE_COST} BP 소비`);

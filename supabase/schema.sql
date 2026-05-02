@@ -654,6 +654,57 @@ as $$
   where kakao_id = kid;
 $$;
 
+-- ── apply_bp_delta RPC 함수 (원자적 BP 업데이트) ──────────────────────
+-- 동시에 여러 미션이 완료되어도 race condition으로 BP가 소실되지 않도록
+-- 단일 SQL 트랜잭션 내에서 read-modify-write를 원자적으로 수행.
+-- amount 양수=획득, 음수=소비. total_bp_earned는 양수만 누적해 통계 왜곡 방지.
+-- 반환값: { current_bp, total_bp_earned, total_bp_spent }
+create or replace function apply_bp_delta(kid text, delta integer)
+returns table(current_bp integer, total_bp_earned integer, total_bp_spent integer)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_bp integer;
+begin
+  -- users.current_bp 원자적 업데이트
+  update users
+  set
+    current_bp = greatest(0, coalesce(current_bp, 0) + delta),
+    updated_at = now()
+  where kakao_id = kid
+  returning users.current_bp into new_bp;
+
+  if new_bp is null then
+    -- 사용자가 없으면 0 반환
+    return query select 0::integer, 0::integer, 0::integer;
+    return;
+  end if;
+
+  -- user_gamification 통계 누적 (양수만 earned, 음수만 spent에 abs 누적)
+  insert into user_gamification (kakao_id, total_bp_earned, total_bp_spent, updated_at)
+  values (
+    kid,
+    greatest(0, delta),
+    greatest(0, -delta),
+    now()
+  )
+  on conflict (kakao_id) do update set
+    total_bp_earned = user_gamification.total_bp_earned + greatest(0, delta),
+    total_bp_spent  = user_gamification.total_bp_spent  + greatest(0, -delta),
+    updated_at = now();
+
+  return query
+    select
+      new_bp,
+      ug.total_bp_earned,
+      ug.total_bp_spent
+    from user_gamification ug
+    where ug.kakao_id = kid;
+end;
+$$;
+
 -- ── inquiries (문의하기) ──────────────────────────────────────────
 create table if not exists inquiries (
   id         uuid primary key default gen_random_uuid(),
