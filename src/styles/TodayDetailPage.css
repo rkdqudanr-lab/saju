@@ -401,6 +401,7 @@
   font-size: 11px;
   color: var(--t4);
   line-height: 1.5;
+  white-space: nowrap;
 }
 
 .today-axis-card__score-wrap {

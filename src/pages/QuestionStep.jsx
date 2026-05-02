@@ -45,6 +45,16 @@ export default function QuestionStep({
     });
   }, [user?.id]);
 
+  // TodayDetailPage axis/pick 클릭 시 preset 질문 자동 세팅
+  useEffect(() => {
+    try {
+      const preset = sessionStorage.getItem('byeolsoom_preset_q');
+      if (!preset) return;
+      sessionStorage.removeItem('byeolsoom_preset_q');
+      setDiy(preset);
+    } catch {}
+  }, []);
+
   const handleDeleteRecent = useCallback((q, e) => {
     e.stopPropagation();
     if (!user?.id) return;
