@@ -210,7 +210,8 @@ export function useGamification(user, showToast) {
           currentBp: newBp,
         }));
 
-        if (showToast && reason !== 'first_login' && reason !== `streak_milestone_7` && reason !== `streak_milestone_14` && reason !== `streak_milestone_21`) showToast(`+${amount} BP 획득! 🎉`);
+        // 'login', 'first_login', 'streak_milestone_*'은 각 호출부에서 직접 토스트 처리
+        if (showToast && reason !== 'first_login' && reason !== 'login' && !reason.startsWith('streak_milestone_')) showToast(`+${amount} BP 획득! 🎉`);
 
         return { success: true, newBp };
       } catch (error) {
@@ -361,6 +362,7 @@ export function useGamification(user, showToast) {
         // BP 획득 (일일 로그인 보상)
         if (lastLoginDateStr) {
           await earnBP(bpGain, 'login');
+          if (showToast) showToast(`🌟 오늘 출석 보상 +${bpGain} BP!`, 'success');
         }
 
         // 스트릭 마일스톤 보너스

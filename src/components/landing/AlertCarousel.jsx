@@ -27,6 +27,7 @@ export default function AlertCarousel({
   jeolgi = null,          // { name, meaning, diffDays }
   birthdays = [],         // [{ label, dday }] dday <= 30
   onApproximate,          // () => void — 프로필 수정으로 이동
+  onJeolgi,              // () => void — 별숨달력으로 이동
 }) {
   const cards = [];
 
@@ -54,6 +55,7 @@ export default function AlertCarousel({
         title={isToday ? `오늘은 ${jeolgi.name}` : `${jeolgi.diffDays}일 후 ${jeolgi.name}`}
         desc={jeolgi.meaning}
         gold={isToday}
+        onClick={onJeolgi}
       />,
     );
   }

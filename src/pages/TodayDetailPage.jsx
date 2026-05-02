@@ -224,17 +224,25 @@ function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, su
   ].filter((section) => compactText(section.body));
 }
 
-function PickField({ label, value, icon, tone }) {
+function PickField({ label, value, icon, tone, onClick }) {
   if (!value) return null;
   const { primary, description } = splitPickValue(value);
   return (
-    <div className={`today-pick-field today-pick-field--${tone}`}>
+    <div
+      className={`today-pick-field today-pick-field--${tone}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      style={onClick ? { cursor: 'pointer' } : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter') onClick(); } : undefined}
+    >
       <div className="today-pick-field__top">
         <span className="today-pick-field__icon" aria-hidden="true">{icon}</span>
         <span className="today-pick-field__label">{label}</span>
       </div>
       <div className="today-pick-field__value">{primary}</div>
       {description && <div className="today-pick-field__desc">{description}</div>}
+      {onClick && <div style={{ fontSize: 9, color: 'var(--t4)', marginTop: 4, opacity: 0.7 }}>탭해서 별숨에게 물어보기 →</div>}
     </div>
   );
 }
@@ -250,6 +258,7 @@ export default function TodayDetailPage({
   setStep,
   onRefresh,
   showToast = null,
+  onQuickChat = null,
 }) {
   const user = useAppStore((s) => s.user);
   const today = useAppStore((s) => s.today);
@@ -519,7 +528,12 @@ export default function TodayDetailPage({
                       '--axis-accent': axis.toneMeta.accent,
                       '--axis-soft': axis.toneMeta.soft,
                       '--axis-glow': axis.toneMeta.glow,
+                      cursor: onQuickChat ? 'pointer' : undefined,
                     }}
+                    onClick={onQuickChat ? () => onQuickChat(`오늘 내 ${axis.fullLabel}에 대해 더 자세히 알려줘. ${axis.total}점이 나왔는데 이 흐름에서 어떻게 움직이면 좋을지 구체적으로 알려줘.`) : undefined}
+                    role={onQuickChat ? 'button' : undefined}
+                    tabIndex={onQuickChat ? 0 : undefined}
+                    onKeyDown={onQuickChat ? (e) => { if (e.key === 'Enter') e.currentTarget.click(); } : undefined}
                   >
                     <div className="today-axis-card__inner">
                       <div className="today-axis-card__header">
@@ -616,6 +630,9 @@ export default function TodayDetailPage({
                     value={byeolsoomPick?.[field.key]}
                     icon={field.icon}
                     tone={field.tone}
+                    onClick={onQuickChat && byeolsoomPick?.[field.key]
+                      ? () => onQuickChat(`오늘 별숨픽 ${field.label} "${byeolsoomPick[field.key]}"을 어떻게 활용하면 좋을까? 내 오늘 운세 흐름에 맞춰 구체적으로 알려줘.`)
+                      : undefined}
                   />
                 ))}
               </div>

@@ -524,6 +524,7 @@ export default function LandingPage({
           jeolgi={nearbyJeolgi}
           birthdays={[]}
           onApproximate={() => setStep(STEP.PROFILE)}
+          onJeolgi={() => setStep(STEP.CALENDAR)}
         />
 
         {/* 4. Smart Suggestion */}

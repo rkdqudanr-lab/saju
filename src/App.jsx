@@ -188,18 +188,22 @@ export default function App() {
 
   // 무료 BP 충전 핸들러
   const handleFreeRecharge = useCallback(async () => {
+    if (!user?.id) {
+      showToast('로그인 후 BP를 충전할 수 있어요.', 'info');
+      return;
+    }
     try {
       const result = await rechargeFreeBP();
       if (result.success) {
         showToast(`+${result.recharged} BP 충전! 별숨이 응원해요 ✨`, 'success');
         setFreeRechargeAvailable(false);
-      } else if (result.message === '하루 1회 제한') {
+      } else if (result.message === '일일 1회 제한') {
         showToast('오늘 무료 충전은 이미 사용했어요.', 'info');
       }
     } catch (error) {
       showToast('BP 충전 중 오류가 발생했어요', 'error');
     }
-  }, [rechargeFreeBP, showToast]);
+  }, [rechargeFreeBP, showToast, user?.id]);
 
   const { refCode, groupCode } = useNavigation({ step, setStep, resultsRef, showToast, loginError, setLoginError });
 

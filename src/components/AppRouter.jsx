@@ -359,6 +359,7 @@ export default function AppRouter({ ctx }) {
           gamificationState={gamificationState}
           onBlockBadtime={handleBlockBadtime} isBlockingBadtime={isBlockingBadtime}
           setStep={setStep} onRefresh={askDailyHoroscope} onSpendBp={spendBP} showToast={showToast} callApi={callApi}
+          onQuickChat={(q) => { try { sessionStorage.setItem('byeolsoom_preset_q', q); } catch {} setStep(STEP.QUESTION); }}
         />
       )}
 
@@ -422,6 +423,7 @@ export default function AppRouter({ ctx }) {
           gamificationState={gamificationState}
           onBlockBadtime={handleBlockBadtime} isBlockingBadtime={isBlockingBadtime}
           setStep={setStep} onRefresh={askDailyHoroscope} onSpendBp={spendBP} showToast={showToast} callApi={callApi}
+          onQuickChat={(q) => { try { sessionStorage.setItem('byeolsoom_preset_q', q); } catch {} setStep(STEP.QUESTION); }}
         />
       )}
 
