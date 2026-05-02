@@ -13,7 +13,7 @@ create table if not exists users (
   birth_day    integer,
   consent_flags jsonb,   -- null = 동의 미완료 (앱에서 consent modal 표시)
   response_style text default 'M',
-  theme        text default 'light',
+  theme        text default 'dark',
   onboarded    boolean default false,
   quiz_state   jsonb,
   created_at   timestamptz default now(),
@@ -46,10 +46,10 @@ create index if not exists idx_user_sessions_expires_at on user_sessions(expires
 alter table user_sessions enable row level security;
 
 -- ── user_sessions 정리용 수동/스케줄 실행 SQL ─────────────────────
--- 예: Supabase Scheduled Job에서 하루 1회 실행
-delete from user_sessions
-where expires_at < now()
-   or (revoked_at is not null and revoked_at < now() - interval '7 days');
+-- 스키마 재실행 시 자동 삭제되지 않도록 주석 처리. 필요 시 SQL Editor에서 직접 실행.
+-- delete from user_sessions
+-- where expires_at < now()
+--    or (revoked_at is not null and revoked_at < now() - interval '7 days');
 
 -- ── consultation_history ─────────────────────────────────────────
 create table if not exists consultation_history (
@@ -720,9 +720,13 @@ create policy "posts_insert" on community_posts
     kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
   );
 
--- 수정(likes_count 업데이트): 누구나 가능 (서버에서 호출)
+-- 수정: 본인 글만 (likes_count는 서버 service role로 처리)
 create policy "posts_update" on community_posts
-  for update to anon using (true);
+  for update to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  ) with check (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 -- 삭제: 본인(kakao_id 헤더 일치) 행만
 create policy "posts_delete" on community_posts
@@ -802,6 +806,12 @@ create policy "comments_insert" on post_comments
     kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
   );
 
+drop policy if exists "comments_delete" on post_comments;
+create policy "comments_delete" on post_comments
+  for delete to anon using (
+    kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
 -- Feature 2: post_reports (게시글 신고)
 create table if not exists post_reports (
   id           uuid primary key default gen_random_uuid(),
@@ -849,7 +859,7 @@ drop policy if exists "scores_update" on daily_scores;
 create policy "scores_update" on daily_scores
   for update to anon
   using (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
-  with check (kakao_id is not null);
+  with check (kakao_id = (current_setting('request.headers', true)::json->>'x-kakao-id'));
 
 -- Feature 8: user_follows (광장 팔로우)
 create table if not exists user_follows (
@@ -948,6 +958,12 @@ create table if not exists shop_items (
   rarity      text default 'common',
   is_active   boolean default true
 );
+
+alter table shop_items enable row level security;
+
+drop policy if exists "shop_items_select" on shop_items;
+create policy "shop_items_select" on shop_items
+  for select to anon using (is_active = true);
 
 -- Feature 9: user_shop_inventory (구매 목록)
 -- item_id: FK 없음 — 가챠 아이템(gachaItems.js 로컬 풀)도 저장하므로 shop_items 참조 제거
@@ -1055,7 +1071,22 @@ create index if not exists idx_anon_follows_following on public.anon_follows(fol
 
 alter table public.anon_follows enable row level security;
 drop policy if exists "Allow all operations for anon_follows" on public.anon_follows;
-create policy "Allow all operations for anon_follows" on public.anon_follows for all using (true) with check (true);
+drop policy if exists "anon_follows_select" on public.anon_follows;
+drop policy if exists "anon_follows_insert" on public.anon_follows;
+drop policy if exists "anon_follows_delete" on public.anon_follows;
+
+create policy "anon_follows_select" on public.anon_follows
+  for select to anon using (true);
+
+create policy "anon_follows_insert" on public.anon_follows
+  for insert to anon with check (
+    follower_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+create policy "anon_follows_delete" on public.anon_follows
+  for delete to anon using (
+    follower_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
 
 -- ── anon_messages (익명 궁합 500BP 편지 남기기) ───────────────────
 create table if not exists public.anon_messages (
@@ -1072,4 +1103,25 @@ create index if not exists idx_anon_messages_receiver on public.anon_messages(re
 
 alter table public.anon_messages enable row level security;
 drop policy if exists "Allow all operations for anon_messages" on public.anon_messages;
-create policy "Allow all operations for anon_messages" on public.anon_messages for all using (true) with check (true);
+drop policy if exists "anon_messages_select" on public.anon_messages;
+drop policy if exists "anon_messages_insert" on public.anon_messages;
+drop policy if exists "anon_messages_update" on public.anon_messages;
+
+-- 본인이 보낸 메시지 또는 받은 메시지만 조회
+create policy "anon_messages_select" on public.anon_messages
+  for select to anon using (
+    sender_id   = (current_setting('request.headers', true)::json->>'x-kakao-id')
+    OR receiver_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- 본인이 보내는 메시지만 작성
+create policy "anon_messages_insert" on public.anon_messages
+  for insert to anon with check (
+    sender_id = (current_setting('request.headers', true)::json->>'x-kakao-id')
+  );
+
+-- 받은 메시지 읽음 처리 (is_read)
+create policy "anon_messages_update" on public.anon_messages
+  for update to anon
+  using (receiver_id = (current_setting('request.headers', true)::json->>'x-kakao-id'))
+  with check (receiver_id = (current_setting('request.headers', true)::json->>'x-kakao-id'));
