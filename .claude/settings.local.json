@@ -37,7 +37,13 @@
       "Bash(python3 -c \"f=open\\('src/components/AppRouter.jsx','rb'\\); data=f.read\\(\\); print\\('BOM:', data[:3].hex\\(\\)\\); print\\('encoding detect'\\); f.close\\(\\)\")",
       "Bash(ls src/pages/DailyHoroscopePage*)",
       "Bash(node *)",
-      "Bash(/c/Program Files/GitHub CLI/gh.exe pr *)"
+      "Bash(/c/Program Files/GitHub CLI/gh.exe pr *)",
+      "Bash(netstat -ano)",
+      "Bash(wmic process *)",
+      "PowerShell(Get-Process -Id 25172,17132)",
+      "PowerShell(Get-Process | Where-Object { $_.Name -match \"node\" } | Select-Object Id,Name,@{Name='CmdLine';Expression={\\(Get-WmiObject Win32_Process -Filter \"ProcessId=$\\($_.Id\\)\"\\).CommandLine}} | Format-List)",
+      "PowerShell($p = Get-WmiObject Win32_Process -Filter \"ProcessId=28920\"; $p.CommandLine; echo \"---WorkDir:\"; \\(Get-WmiObject Win32_Process -Filter \"ProcessId=25172\"\\).ExecutablePath)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }
