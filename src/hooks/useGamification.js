@@ -624,6 +624,7 @@ export function useGamification(user, showToast) {
       try {
         const authClient = getAuthenticatedClient(user.id);
         const client = authClient || supabase;
+        if (!client) return { success: false, message: 'Supabase 미설정' };
 
         const { data: userData } = await client
           .from('users')
