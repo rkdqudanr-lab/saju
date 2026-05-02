@@ -3,7 +3,11 @@
  * 절기, 추정모드, 생일 D-Day, 어제 reflection 미응답을 하나로 모음
  */
 
+import JeolgiIcon from './JeolgiIcon.jsx';
+
 function AlertCard({ icon, title, desc, gold = false, onClick }) {
+  // icon이 string이면 텍스트, ReactNode면 그대로 렌더
+  const isTextIcon = typeof icon === 'string';
   return (
     <div
       role={onClick ? 'button' : undefined}
@@ -13,7 +17,9 @@ function AlertCard({ icon, title, desc, gold = false, onClick }) {
       onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
       aria-label={onClick ? `${title}: ${desc}` : undefined}
     >
-      <span className="alert-card-icon">{icon}</span>
+      <span className="alert-card-icon" aria-hidden="true">
+        {isTextIcon ? icon : icon}
+      </span>
       <div className="alert-card-body">
         <div className="alert-card-title">{title}</div>
         <div className="alert-card-desc">{desc}</div>
@@ -51,7 +57,7 @@ export default function AlertCarousel({
     cards.push(
       <AlertCard
         key="jeolgi"
-        icon={isToday ? '✦' : '◇'}
+        icon={<JeolgiIcon name={jeolgi.name} size={22} color={isToday ? 'var(--gold)' : 'var(--t3)'} />}
         title={isToday ? `오늘은 ${jeolgi.name}` : `${jeolgi.diffDays}일 후 ${jeolgi.name}`}
         desc={jeolgi.meaning}
         gold={isToday}
