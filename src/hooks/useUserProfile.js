@@ -231,7 +231,7 @@ export function useUserProfile() {
           if (upsertErr) throw new Error('사용자 정보 저장에 실패했어요. 다시 로그인해주세요.');
 
           // 신규/기존 사용자 모두: user_profiles & user_gamification 빈 row 보장
-          await Promise.allSettled([
+          const initResults = await Promise.allSettled([
             (authClient || supabase).from('user_profiles').upsert(
               { kakao_id: String(data.id) },
               { onConflict: 'kakao_id', ignoreDuplicates: true }
@@ -241,6 +241,9 @@ export function useUserProfile() {
               { onConflict: 'kakao_id', ignoreDuplicates: true }
             ),
           ]);
+          initResults.forEach((r, i) => {
+            if (r.status === 'rejected') console.error(`[별숨] 초기 row 생성 실패 (${i === 0 ? 'user_profiles' : 'user_gamification'}):`, r.reason);
+          });
 
           if (saved?.id) {
             const userDataWithUuid = { ...userData, supabaseId: saved.id };

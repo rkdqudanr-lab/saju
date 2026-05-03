@@ -170,7 +170,7 @@ export default function DailyHoroscopePage({
       .from('daily_scores')
       .upsert(
         { kakao_id: String(kakaoId), score_date: dateKey, score: dailyResult.score },
-        { onConflict: 'kakao_id,score_date', ignoreDuplicates: true }
+        { onConflict: 'kakao_id,score_date' }
       )
       .then(({ error }) => { if (error) console.warn('[별숨] daily_scores upsert:', error); });
   }, [dailyResult?.score, user]);
