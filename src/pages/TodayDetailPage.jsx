@@ -3,7 +3,7 @@ import { parseDailyLines } from '../utils/parseDailyLines.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { STEP } from '../utils/steps.js';
-import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
+import { getDailyDateKey, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import '../styles/TodayDetailPage.css';
 
 import DailyRadarChart from '../features/today/DailyRadarChart.jsx';
@@ -111,14 +111,6 @@ function getFallbackHeadline(axisKey, parsedDaily) {
 
 async function loadJsonCache(kakaoId, cacheType) {
   if (!kakaoId) return {};
-  if (!canUseDailySupabaseTables()) {
-    try {
-      return JSON.parse(readDailyLocalCache(String(kakaoId), cacheType, getDailyDateKey()) || '{}');
-    } catch {
-      return {};
-    }
-  }
-
   try {
     const client = getAuthenticatedClient(String(kakaoId));
     if (!client) return {}; // Supabase 미설정 시 빈 객체로 안전 반환
@@ -140,7 +132,6 @@ async function saveTodayScore(kakaoId, score) {
   const normalizedScore = Math.max(0, Math.min(100, Math.round(score)));
   const content = String(normalizedScore);
   writeDailyLocalCache(String(kakaoId), 'horoscope_score', content, getDailyDateKey());
-  if (!canUseDailySupabaseTables()) return;
   const client = getAuthenticatedClient(String(kakaoId));
   if (!client) return; // Supabase 미설정 시 로컬캐시까지만
   await Promise.all([

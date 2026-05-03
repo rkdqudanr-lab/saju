@@ -5,7 +5,6 @@ import { useAppStore } from "../store/useAppStore.js";
 import { getTimeSlot, TIME_CONFIG } from "../utils/time.js";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import {
-  canUseDailySupabaseTables,
   getDailyDateKey,
   readDailyLocalCache,
   writeDailyLocalCache,
@@ -167,9 +166,6 @@ function getTodayDateStr() {
 
 async function loadDailyCacheFromSupabase(userId, type) {
   if (!supabase || !userId) return null;
-  if (!canUseDailySupabaseTables()) {
-    return readDailyLocalCache(userId, type, getTodayDateStr());
-  }
   try {
     const authClient = getAuthenticatedClient(userId);
     const { data } = await (authClient || supabase)
@@ -188,7 +184,6 @@ async function loadDailyCacheFromSupabase(userId, type) {
 async function saveDailyCacheToSupabase(userId, type, content) {
   if (!supabase || !userId) return;
   writeDailyLocalCache(userId, type, content, getTodayDateStr());
-  if (!canUseDailySupabaseTables()) return;
   try {
     const authClient = getAuthenticatedClient(userId);
     await (authClient || supabase).from("daily_cache").upsert({

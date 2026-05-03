@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import {
-  canUseDailySupabaseTables,
-  readDailyLocalCacheMap,
   getDailyDateKey,
   readDailyLocalCache,
   writeDailyLocalCache,
@@ -188,11 +186,6 @@ export default function LandingPage({
       const d = new Date(); d.setDate(d.getDate() - i);
       return getDailyDateKey(d);
     });
-    if (!canUseDailySupabaseTables()) {
-      const map = readDailyLocalCacheMap(kakaoId, 'horoscope_score', last7);
-      setScoreHistory(last7.reverse().map((date) => ({ date, score: map[date] == null ? null : Number(map[date]) })));
-      return;
-    }
     getAuthenticatedClient(kakaoId)
       ?.from('daily_scores')
       .select('score_date, score')
@@ -210,13 +203,6 @@ export default function LandingPage({
   useEffect(() => {
     if (!user || !dailyResult) return;
     const kakaoId = String(user.kakaoId || user.id);
-    if (!canUseDailySupabaseTables()) {
-      try {
-        const parsed = JSON.parse(readDailyLocalCache(kakaoId, TODAY_AXIS_CACHE, getDailyDateKey()) || '{}');
-        setBoostMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
-      } catch { setBoostMap({}); }
-      return;
-    }
     getAuthenticatedClient(kakaoId)
       ?.from('daily_cache')
       .select('content')
@@ -237,13 +223,6 @@ export default function LandingPage({
   useEffect(() => {
     if (!user || !dailyResult) return;
     const kakaoId = String(user.kakaoId || user.id);
-    if (!canUseDailySupabaseTables()) {
-      try {
-        const parsed = JSON.parse(readDailyLocalCache(kakaoId, TODAY_AXIS_TEXT_CACHE, getDailyDateKey()) || '{}');
-        setAxisTextOverrides(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
-      } catch { setAxisTextOverrides({}); }
-      return;
-    }
     getAuthenticatedClient(kakaoId)
       ?.from('daily_cache')
       .select('content')
@@ -307,12 +286,10 @@ export default function LandingPage({
     if (!user || answer === 'skip') return;
     const kakaoId = String(user.kakaoId || user.id);
     writeDailyLocalCache(kakaoId, 'reflection_feedback', answer, yesterdayKey);
-    if (canUseDailySupabaseTables()) {
-      getAuthenticatedClient(kakaoId)?.from('daily_cache').upsert(
-        { kakao_id: kakaoId, cache_date: yesterdayKey, cache_type: 'reflection_feedback', content: answer },
-        { onConflict: 'kakao_id,cache_date,cache_type' },
-      );
-    }
+    getAuthenticatedClient(kakaoId)?.from('daily_cache').upsert(
+      { kakao_id: kakaoId, cache_date: yesterdayKey, cache_type: 'reflection_feedback', content: answer },
+      { onConflict: 'kakao_id,cache_date,cache_type' },
+    );
     if (answer === 'match') await onEarnBP?.(2, 'reflection_correct');
   }, [user, onEarnBP, yesterdayKey]);
 

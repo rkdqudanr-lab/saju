@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
-import { canUseDailySupabaseTables } from '../lib/dailyDataAccess.js';
 import { useUserCtx } from '../context/AppContext.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { STEP } from '../utils/steps.js';
@@ -121,8 +120,6 @@ export default function ScoreTrendPage() {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     const kakaoId = String(user.kakaoId || user.id);
-
-    if (!canUseDailySupabaseTables()) { setLoading(false); return; }
 
     getAuthenticatedClient(kakaoId)
       ?.from('daily_scores')

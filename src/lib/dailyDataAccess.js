@@ -1,9 +1,3 @@
-const DAILY_TABLES_ENABLED = import.meta.env.VITE_ENABLE_DAILY_RLS_TABLES === 'true';
-
-export function canUseDailySupabaseTables() {
-  return DAILY_TABLES_ENABLED;
-}
-
 export function getDailyDateKey(date = new Date()) {
   const value = date instanceof Date ? date : new Date(date);
   // toISOString()은 UTC 기준이므로 한국 시간대에서 날짜가 어제로 표시되는 문제가 있음.

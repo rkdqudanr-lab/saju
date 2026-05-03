@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getAuthenticatedClient } from '../../lib/supabase.js';
-import { canUseDailySupabaseTables, getDailyDateKey, readDailyLocalCacheMap } from '../../lib/dailyDataAccess.js';
+import { getDailyDateKey } from '../../lib/dailyDataAccess.js';
 
 const SVG_H = 120;
 const PAD_TOP = 14;
@@ -32,13 +32,6 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
     const orderedDates = [...last7].reverse();
     const todayKey = orderedDates[6];
     const buildTrend = (map) => orderedDates.map((date) => (map[date] != null ? Number(map[date]) : null));
-
-    if (!canUseDailySupabaseTables()) {
-      const cachedMap = readDailyLocalCacheMap(String(kakaoId), 'horoscope_score', last7);
-      if (todayScore != null) cachedMap[todayKey] = String(todayScore);
-      setTrend(buildTrend(cachedMap));
-      return;
-    }
 
     const trendClient = getAuthenticatedClient(String(kakaoId));
     if (!trendClient) {
