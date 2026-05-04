@@ -70,20 +70,29 @@ function renderBoldText(text) {
   // ② 권고(면): [동사어간 1-6자]면 좋아요 — "피하면 좋아요"
   t = t.replace(/([가-힣]{1,6}면\s*좋아요)/g, m => `**${m.trim()}**`);
 
-  // ③ 권고(게): [관형형 2-6자] 게 좋아요 — "배치하는 게 좋아요"
-  t = t.replace(/([가-힣]{2,6}\s게\s*좋아요)/g, m => `**${m.trim()}**`);
+  // ③ 권고(게): [관형형 2-6자] 게 [긍정종결] — "배치하는 게 좋아요", "옮기는 게 맞아요"
+  t = t.replace(
+    /([가-힣]{2,6}\s게\s*(?:좋아요|맞아요|자연스러워요|편해요|유리해요|안전해요|적절해요))/g,
+    m => `**${m.trim()}**`,
+  );
 
   // ④ 추천: [관형형 2-6자] 편이 좋아요/유리해요 — "살피는 편이 좋아요"
   t = t.replace(/([가-힣]{2,6}\s편이\s*(?:좋아요|유리해요))/g, m => `**${m.trim()}**`);
 
-  // ⑤ 조건-결과: [동사어간 2-6자]수록 [결과동사] — "움직일수록 길이 열립니다"
+  // ⑤ 조건-결과: [동사어간 2-6자]수록 [결과동사] — "갈수록 추진력이 붙어요", "움직일수록 길이 열립니다"
   t = t.replace(
-    /([가-힣]{2,6}수록\s*[가-힣\s]{2,10}(?:커져요|커집니다|열려요|열립니다|올라요|올라가요|올라갑니다|됩니다|돼요|좋아요|좋아져요|깊어져요|강해져요|높아져요|넓어져요))/g,
+    /([가-힣]{2,6}수록\s*[가-힣\s]{2,10}(?:커져요|커집니다|열려요|열립니다|올라요|올라가요|올라갑니다|올라와요|됩니다|돼요|좋아요|좋아져요|깊어져요|강해져요|높아져요|넓어져요|붙어요|붙습니다|선명해져요|또렷해져요|풀려요|단단해져요|살아나요))/g,
     m => `**${m.trim()}**`,
   );
 
   // ⑥ 축 특성: X쪽은 Y하고/하며 — "창의 쪽은 비교적 빠르게 반응하고"
   t = t.replace(/([가-힣]{1,5}\s*쪽은\s*[가-힣\s]{2,12}(?:하고|하며|반응하고|올라오고|작동하고|나타나고))/g, m => `**${m.trim()}**`);
+
+  // ⑦ 포괄 권고: [명사 나열 1~4개] 모두 좋아요/괜찮아요/어울려요 — "기획·글쓰기·디자인 모두 좋아요"
+  t = t.replace(
+    /([가-힣A-Za-z·]{1,8}(?:[·,\s][가-힣A-Za-z]{1,8}){0,3}\s*모두\s*(?:좋아요|괜찮아요|어울려요))/g,
+    m => `**${m.trim()}**`,
+  );
 
   // 중복 마킹(패턴 겹침) 정리
   t = t.replace(/\*\*\*\*/g, '**');
@@ -184,6 +193,21 @@ function compactText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
+// 종결어미/문장부호로 끝나면 "완전 문장", 그 외(명사구 등)는 false
+function isSentenceLike(text) {
+  const t = String(text || '').trim();
+  if (!t) return false;
+  if (/[.!?。！？]$/.test(t)) return true;
+  return /(어요|아요|에요|예요|해요|네요|죠|까요|니다|습니다)$/.test(t);
+}
+
+// 값이 명사구면 nounFn, 완전 문장이면 sentenceFn 적용 (trailing 문장부호 제거 후 전달)
+function joinPhrase(value, nounFn, sentenceFn) {
+  if (!value) return '';
+  const v = String(value).trim().replace(/[.!?。！？]+$/, '');
+  return isSentenceLike(value) ? sentenceFn(v) : nounFn(v);
+}
+
 function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, sun, moon, asc }) {
   const eastern = parsedDaily?.easternKi || {};
   const western = parsedDaily?.westernSky || {};
@@ -204,22 +228,51 @@ function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, su
   const strongDesc = compactText(strongest?.headline || parsedDaily?.categories?.[strongest?.key]?.desc);
   const careDesc = compactText(care?.headline || parsedDaily?.categories?.[care?.key]?.desc);
 
+  // 명사구/문장 분기 처리 — ".이", ".의 흐름이" 같은 연결 오류 방지
+  const easternLead = easternBase
+    ? joinPhrase(
+        easternBase,
+        v => `동양의 흐름으로 보면 오늘은 ${v}이 중심에 서는 날이에요.`,
+        v => `동양의 흐름으로 보면 ${v}.`,
+      )
+    : '';
+
+  const westernLead = westernBase
+    ? joinPhrase(
+        westernBase,
+        v => `서양 점성술로는 ${v}의 흐름이 깔려 있어요.`,
+        v => `서양 점성술로 보면 ${v}.`,
+      )
+    : '';
+
+  const doActionPhrase = joinPhrase(
+    doAction,
+    v => `오늘은 ${v} 쪽으로 움직일수록 길이 열립니다.`,
+    v => `오늘 행동 방향: ${v}.`,
+  );
+
+  const dontActionPhrase = joinPhrase(
+    dontAction,
+    v => `다만 ${v} 흐름은 피하면 좋아요.`,
+    v => `다만 이런 흐름은 피하는 게 좋아요. ${v}.`,
+  );
+
   return [
     {
       title: '오늘의 사주 기운',
       body: easternBase
-        ? `동양의 흐름으로 보면 오늘은 ${easternBase}이 중심에 서는 날이에요. ${sajuLabel ? `타고난 ${sajuLabel}과 만나면서 ` : ''}${strongestLabel} 쪽은 비교적 빠르게 반응하고, ${careLabel} 쪽은 무리해서 밀어붙이기보다 리듬을 살피는 편이 좋아요. ${doAction ? `오늘은 ${doAction} 쪽으로 움직일수록 길이 열립니다.` : ''}`
+        ? `${easternLead} ${sajuLabel ? `타고난 ${sajuLabel}과 만나면서 ` : ''}${strongestLabel} 쪽은 비교적 빠르게 반응하고, ${careLabel} 쪽은 무리해서 밀어붙이기보다 리듬을 살피는 편이 좋아요.${doActionPhrase ? ` ${doActionPhrase}` : ''}`
         : `오늘은 사주 흐름에서 ${strongestLabel}이 먼저 살아나는 날이에요. 반대로 ${careLabel}은 작은 말투나 컨디션 변화에도 흔들릴 수 있으니, 큰 결정보다는 흐름을 정돈하는 데 힘을 두면 좋아요.`,
     },
     {
       title: '오늘의 점성술 흐름',
       body: westernBase
-        ? `서양 점성술로는 ${westernBase}의 흐름이 깔려 있어요. ${sunLabel ? `기본 성향인 ${sunLabel}` : '타고난 별자리 성향'}${moonLabel ? `, 감정 리듬인 ${moonLabel}` : ''}${ascLabel ? `, 바깥에 드러나는 ${ascLabel}` : ''}이 서로 맞물리며 오늘의 반응 속도를 만듭니다. ${strongDesc || '그래서 오늘은 익숙한 방식만 고집하기보다, 들어오는 신호를 조금 더 섬세하게 읽는 편이 유리해요.'}`
+        ? `${westernLead} ${sunLabel ? `기본 성향인 ${sunLabel}` : '타고난 별자리 성향'}${moonLabel ? `, 감정 리듬인 ${moonLabel}` : ''}${ascLabel ? `, 바깥에 드러나는 ${ascLabel}` : ''}이 서로 맞물리며 오늘의 반응 속도를 만듭니다. ${strongDesc || '그래서 오늘은 익숙한 방식만 고집하기보다, 들어오는 신호를 조금 더 섬세하게 읽는 편이 유리해요.'}`
         : `별자리 흐름에서는 감정과 판단의 속도가 평소보다 또렷하게 갈릴 수 있어요. ${sunLabel ? `${sunLabel}의 기본 기질은 ` : ''}오늘 필요한 선택을 밀어주지만, ${careLabel}에서는 상대의 반응을 한 번 더 확인하는 태도가 중요합니다.`,
     },
     {
       title: '그래서 오늘은',
-      body: `${overallGuide?.summary || '오늘은 무리하게 판을 키우기보다, 잘 되는 흐름을 붙잡고 예민한 부분을 천천히 정리하는 날이에요.'} ${careDesc ? `${careLabel}에서는 ${careDesc}` : `${careLabel}에서는 서두르기보다 한 박자 늦춰 보는 게 좋습니다.`} ${dontAction ? `다만 ${dontAction} 흐름은 피하면 좋아요.` : ''}`,
+      body: `${overallGuide?.summary || '오늘은 무리하게 판을 키우기보다, 잘 되는 흐름을 붙잡고 예민한 부분을 천천히 정리하는 날이에요.'} ${careDesc ? `${careLabel}에서는 ${careDesc}` : `${careLabel}에서는 서두르기보다 한 박자 늦춰 보는 게 좋습니다.`}${dontActionPhrase ? ` ${dontActionPhrase}` : ''}`,
     },
   ].filter((section) => compactText(section.body));
 }
