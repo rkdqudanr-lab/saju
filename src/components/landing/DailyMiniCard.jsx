@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { parseDailyLines } from '../../utils/parseDailyLines.js';
 import { useSajuCtx } from '../../context/AppContext.jsx';
-import Icon from '../Icon.jsx';
 
 const CATEGORY_LABELS = {
   overall: '종합',
@@ -84,7 +83,6 @@ export default function DailyMiniCard({
   scoreBoostDelta = 0,
   topAxes = [],
   bottomAxes = [],
-  onQuickAsk,
 }) {
   const { today } = useSajuCtx();
 
@@ -156,22 +154,11 @@ export default function DailyMiniCard({
         value: western.flow || synergy.direction || '오후 정리',
         question: '오늘 시간대별로 하면 좋은 일을 알려줘.',
       },
-      {
-        icon: 'magnifying-glass',
-        title: '바로 묻기',
-        value: '별숨에게 질문',
-        question: '오늘 하루 나의 별숨을 바탕으로 지금 제일 먼저 챙길 일을 알려줘.',
-      },
     ];
   }, [bottomAxes, meal, parsed.easternKi, parsed.synergy, parsed.westernSky, tone.label, topAxes]);
 
   const handleDashboardClick = (item, event) => {
     event.stopPropagation();
-    if (item.title === '바로 묻기') {
-      onQuickAsk?.();
-      return;
-    }
-    // 스크롤 타깃을 sessionStorage에 저장 후 자세히 보기 페이지로 이동
     const scrollTarget = item.title.startsWith('오늘 ') && item.title.includes('밥')
       ? getMealScrollKey()
       : (TILE_SCROLL_MAP[item.title] || null);
@@ -286,10 +273,7 @@ export default function DailyMiniCard({
             onClick={(event) => handleDashboardClick(item, event)}
             aria-label={`${item.title}: ${item.value}`}
           >
-            <span className="daily-mini-dash-head">
-              <span className="daily-mini-dash-icon"><Icon name={item.icon} size={12} color="currentColor" /></span>
-              <span className="daily-mini-dash-title">{item.title}</span>
-            </span>
+            <span className="daily-mini-dash-label">{item.title}</span>
             <span className="daily-mini-dash-value">{primaryValue(item.value)}</span>
           </button>
         ))}
