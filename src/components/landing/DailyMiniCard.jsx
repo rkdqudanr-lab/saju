@@ -50,15 +50,19 @@ function getMealValue(meal, synergy) {
   return meal.value;
 }
 
-// 대시(—) 앞의 핵심 값만 추출
+// 대시(—) 앞의 핵심 값만 추출 + 끝에 붙은 괄호 설명 제거
 function primaryValue(value) {
   if (!value) return value;
-  const s = String(value);
-  const idx = s.indexOf(' — ');
-  if (idx !== -1) return s.slice(0, idx).trim();
-  const idx2 = s.indexOf('—');
-  if (idx2 !== -1) return s.slice(0, idx2).trim();
-  return s;
+  let s = String(value);
+  const dashIdx = s.indexOf(' — ');
+  if (dashIdx !== -1) s = s.slice(0, dashIdx);
+  else {
+    const dashIdx2 = s.indexOf('—');
+    if (dashIdx2 !== -1) s = s.slice(0, dashIdx2);
+  }
+  // 끝의 괄호 설명 제거: "(상관없어요)", "(상관" 같은 완전/불완전 모두
+  s = s.replace(/\s*\([^)]*\)?\s*$/, '');
+  return s.trim();
 }
 
 // 타일 클릭 시 TodayDetailPage에서 스크롤할 섹션 매핑
