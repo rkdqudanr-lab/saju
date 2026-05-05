@@ -50,15 +50,19 @@ export function useDailyConsultationHandler({
         const confirmed = await useAppStore.getState().showBPConfirm(BM_COST_PER_ASK, 1);
         if (!confirmed) return false;
       }
+      // 확인 직후 즉시 로딩 표시 (Supabase 처리 전)
+      setDailyLoading(true);
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
         if (showToast) showToast(`BP가 부족해요. (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, "error");
+        setDailyLoading(false);
         return false;
       }
       const authClient = getAuthenticatedClient(user.id);
       const { ok, newBP } = await spendBPUtil(authClient || supabase, user.id, BM_COST_PER_ASK, "DAILY_HOROSCOPE");
       if (!ok) {
         if (showToast) showToast("BP가 부족해요.", "error");
+        setDailyLoading(false);
         return false;
       }
       const cur = useAppStore.getState().gamificationState || {};
@@ -66,10 +70,12 @@ export function useDailyConsultationHandler({
         gamificationState: { ...cur, currentBp: newBP ?? (currentBm - BM_COST_PER_ASK) },
         missions: useAppStore.getState().missions || [],
       });
+    } else {
+      // BP 불필요 사용자는 버튼 탭 즉시 로딩
+      setDailyLoading(true);
     }
 
     if (typeof window.gtag === "function") window.gtag("event", "daily_horoscope_click");
-    setDailyLoading(true);
     try {
       const ans = await callApi("오늘 하루 나의 별숨은?", {
         isDaily: true,
