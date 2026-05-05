@@ -27,6 +27,19 @@ import QuickActionGrid from '../components/landing/QuickActionGrid.jsx';
 import WeeklyScoreSummary from '../components/landing/WeeklyScoreSummary.jsx';
 import LevelCard from '../components/landing/LevelCard.jsx';
 
+const _SI = { viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+const TILE_ICONS = {
+  chat:     <svg {..._SI}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  question: <svg {..._SI}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  mission:  <svg {..._SI}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+  diary:    <svg {..._SI}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  calendar: <svg {..._SI}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  star:     <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  barChart: <svg {..._SI}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  shop:     <svg {..._SI}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
+  book:     <svg {..._SI}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+};
+
 // 시간대 판별: 17시 이후 or 6시 이전이면 '밤' 모드
 function isNightMode() {
   const h = new Date().getHours();
@@ -300,12 +313,12 @@ export default function LandingPage({
 
   const recommendedFeature = useMemo(() => {
     const features = [
-      { icon: '📊', label: '별숨 통계', sub: '지난 운세 흐름을 확인해요', step: STEP.STATS },
-      { icon: '⭐', label: '나의 별숨', sub: '사주와 천체 분석을 살펴봐요', step: STEP.NATAL },
-      { icon: '📖', label: '별숨 도감', sub: '컬렉션 완성을 이어가요', step: STEP.BYEOLSOOM_SPACE },
-      { icon: '🛍', label: '별숨샵', sub: '오늘 쓸 오브제를 골라봐요', step: STEP.SHOP },
-      { icon: '📅', label: '별숨 달력', sub: '이번 주 운세 기록을 돌아봐요', step: STEP.CALENDAR },
-      { icon: '📓', label: '나의 하루', sub: '오늘의 감정을 남겨봐요', step: STEP.DIARY },
+      { icon: TILE_ICONS.barChart, label: '별숨 통계', sub: '지난 운세 흐름을 확인해요', step: STEP.STATS },
+      { icon: TILE_ICONS.star,     label: '나의 별숨', sub: '사주와 천체 분석을 살펴봐요', step: STEP.NATAL },
+      { icon: TILE_ICONS.book,     label: '별숨 도감', sub: '컬렉션 완성을 이어가요', step: STEP.BYEOLSOOM_SPACE },
+      { icon: TILE_ICONS.shop,     label: '별숨샵', sub: '오늘 쓸 오브제를 골라봐요', step: STEP.SHOP },
+      { icon: TILE_ICONS.calendar, label: '별숨 달력', sub: '이번 주 운세 기록을 돌아봐요', step: STEP.CALENDAR },
+      { icon: TILE_ICONS.diary,    label: '나의 하루', sub: '오늘의 감정을 남겨봐요', step: STEP.DIARY },
     ];
     const seed = today?.day ?? new Date().getDate();
     return features[seed % features.length];
@@ -314,14 +327,14 @@ export default function LandingPage({
   // ── 타일 정의 ──
   const primaryTiles = useMemo(() => [
     {
-      icon: '💬',
+      icon: TILE_ICONS.chat,
       title: '별숨에게 질문하기',
       sub: '지금 제일 궁금한 걸 바로 물어보세요',
       onClick: () => setStep(STEP.QUESTION),
       accent: true,
     },
     {
-      icon: '❓',
+      icon: TILE_ICONS.question,
       title: '오늘의 추천질문',
       sub: '연애·일·돈 고민을 빠르게 골라요',
       onClick: () => setStep(STEP.QUESTION),
@@ -329,7 +342,7 @@ export default function LandingPage({
       ariaLabel: '오늘의 추천질문 보기',
     },
     {
-      icon: '✅',
+      icon: TILE_ICONS.mission,
       title: '오늘 미션',
       sub: totalMissions === 0
         ? '오늘 별숨을 확인하면 미션이 나타나요'
@@ -342,14 +355,14 @@ export default function LandingPage({
       ariaLabel: `오늘 미션, ${completedMissions}/${totalMissions} 완료`,
     },
     {
-      icon: '📓',
+      icon: TILE_ICONS.diary,
       title: '나의 하루',
       sub: hasDiaryToday ? '오늘 하루를 들려줬어요 ✦' : '별숨에게 오늘을 들려주세요',
       onClick: () => setStep(STEP.DIARY),
       accent: hasDiaryToday,
     },
     {
-      icon: '📅',
+      icon: TILE_ICONS.calendar,
       title: '별숨 달력',
       sub: '운세 기록 한눈에 보기',
       onClick: () => setStep(STEP.CALENDAR),
@@ -365,10 +378,10 @@ export default function LandingPage({
   ], [totalMissions, completedMissions, remainingMissions, hasDiaryToday, recommendedFeature, setStep]);
 
   const secondaryTiles = useMemo(() => [
-    { icon: '⭐', title: '나의 별숨', sub: '사주·천체 종합 분석', onClick: () => setStep(STEP.NATAL) },
-    { icon: '📊', title: '별숨 통계', sub: '지난 운세 흐름 보기', onClick: () => setStep(STEP.STATS) },
-    { icon: '🛍', title: '별숨샵', sub: '오브제 & 뽑기', onClick: () => setStep(STEP.SHOP) },
-    { icon: '📖', title: '별숨 도감', sub: '컬렉션 완성 도전', onClick: () => setStep(STEP.BYEOLSOOM_SPACE) },
+    { icon: TILE_ICONS.star,     title: '나의 별숨', sub: '사주·천체 종합 분석', onClick: () => setStep(STEP.NATAL) },
+    { icon: TILE_ICONS.barChart, title: '별숨 통계', sub: '지난 운세 흐름 보기', onClick: () => setStep(STEP.STATS) },
+    { icon: TILE_ICONS.shop,     title: '별숨샵', sub: '오브제 & 뽑기', onClick: () => setStep(STEP.SHOP) },
+    { icon: TILE_ICONS.book,     title: '별숨 도감', sub: '컬렉션 완성 도전', onClick: () => setStep(STEP.BYEOLSOOM_SPACE) },
   ], [setStep]);
 
   // ── 비로그인 화면 ──
