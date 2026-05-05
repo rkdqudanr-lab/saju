@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { getAuthenticatedClient } from '../../lib/supabase.js';
 import { getDailyDateKey } from '../../lib/dailyDataAccess.js';
 
-const SVG_H = 120;
-const PAD_TOP = 14;
-const PAD_BOTTOM = 26;   // x축 날짜 공간
-const Y_AXIS_W = 28;     // 왼쪽 y축 레이블 폭
-const PAD_RIGHT = 8;
+const SVG_H = 138;
+const PAD_TOP = 18;
+const PAD_BOTTOM = 36;   // x축 날짜 공간
+const Y_AXIS_W = 30;     // 왼쪽 y축 레이블 폭
+const PAD_RIGHT = 14;
 
 export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const [trend, setTrend] = useState(null);
@@ -103,7 +103,7 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const isUp = todayVal !== null && yesterdayVal !== null && todayVal >= yesterdayVal;
 
   return (
-    <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid var(--line)' }}>
+    <div style={{ background: 'linear-gradient(180deg, rgba(232,176,72,.07), rgba(255,255,255,.015)), var(--bg2)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid var(--line)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.05)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
         <div>
           <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 4 }}>최근 운세 흐름</div>
@@ -118,42 +118,68 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
 
       <div ref={containerRef} style={{ width: '100%' }}>
         <svg width={svgWidth} height={SVG_H} viewBox={`0 0 ${svgWidth} ${SVG_H}`}>
+          <defs>
+            <linearGradient id="weeklyTrendLine" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="var(--gold2)" />
+              <stop offset="100%" stopColor="var(--gold)" />
+            </linearGradient>
+            <linearGradient id="weeklyTrendFill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="var(--gold)" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="var(--gold)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
           {/* y축 그리드 + 레이블 */}
           {yTicks.map((tick) => {
             const y = toY(tick);
             return (
               <g key={tick}>
                 <line x1={Y_AXIS_W} y1={y} x2={svgWidth - PAD_RIGHT} y2={y}
-                  stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="3,3" />
+                  stroke="rgba(160,150,180,0.18)" strokeWidth="1" strokeDasharray="3,4" />
                 <text x={Y_AXIS_W - 4} y={y + 3.5} textAnchor="end"
                   fontSize="8" fill="var(--t4)">{tick}</text>
               </g>
             );
           })}
 
-          {/* y축 선 */}
-          <line x1={Y_AXIS_W} y1={PAD_TOP} x2={Y_AXIS_W} y2={PAD_TOP + plotH}
-            stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          {/* x축 세로 기준선 */}
+          {xDates.map((_, i) => (
+            <line key={i} x1={toX(i)} y1={PAD_TOP} x2={toX(i)} y2={PAD_TOP + plotH}
+              stroke="rgba(160,150,180,0.08)" strokeWidth="1" />
+          ))}
+
+          {/* 데이터 영역 */}
+          {segments.filter((s) => s.length > 1).map((s, si) => {
+            const bottomY = PAD_TOP + plotH;
+            const points = [
+              `${toX(s[0].i)},${bottomY}`,
+              ...s.map(({ i, val }) => `${toX(i)},${toY(val)}`),
+              `${toX(s[s.length - 1].i)},${bottomY}`,
+            ].join(' ');
+            return <polygon key={`fill-${si}`} points={points} fill="url(#weeklyTrendFill)" />;
+          })}
 
           {/* 데이터 라인 */}
           {segments.map((s, si) => (
-            <polyline key={si} fill="none" stroke="var(--gold)" strokeWidth="2"
+            <polyline key={si} fill="none" stroke="url(#weeklyTrendLine)" strokeWidth="2.5"
               strokeLinecap="round" strokeLinejoin="round"
               points={s.map(({ i, val }) => `${toX(i)},${toY(val)}`).join(' ')}
-              style={{ opacity: 0.85 }} />
+              style={{ opacity: 0.95 }} />
           ))}
 
           {/* 데이터 포인트 */}
           {trend.map((val, i) => {
-            if (val === null) return null;
+            const emptyY = PAD_TOP + plotH;
+            if (val === null) {
+              return <circle key={i} cx={toX(i)} cy={emptyY} r="2" fill="var(--t5)" opacity="0.26" />;
+            }
             const x = toX(i), y = toY(val);
             const isToday = i === 6;
             const labelY = y <= PAD_TOP + 10 ? y + 12 : y - 5;
             return (
               <g key={i}>
                 {isToday
-                  ? <circle cx={x} cy={y} r="4" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2" />
-                  : <circle cx={x} cy={y} r="2.5" fill="var(--gold)" opacity="0.55" />}
+                  ? <circle cx={x} cy={y} r="5" fill="var(--gold)" stroke="var(--bg1)" strokeWidth="2.5" />
+                  : <circle cx={x} cy={y} r="3.2" fill="var(--bg1)" stroke="var(--gold)" strokeWidth="2" opacity="0.82" />}
                 <text x={x} y={labelY} textAnchor="middle" fontSize="8"
                   fill={isToday ? 'var(--gold)' : 'var(--t4)'}
                   fontWeight={isToday ? '700' : '400'}
@@ -162,14 +188,12 @@ export default function WeeklyTrendChart({ kakaoId, todayScore }) {
             );
           })}
 
-          {/* x축 날짜 레이블 — 첫날/마지막날 + 중간 표시 */}
+          {/* x축 날짜 레이블 */}
           {xDates.map((label, i) => {
-            // 7개 중 첫날·중간·마지막만 표시
-            if (i !== 0 && i !== 3 && i !== 6) return null;
             return (
-              <text key={i} x={toX(i)} y={SVG_H - 4}
-                textAnchor={i === 0 ? 'start' : i === 6 ? 'end' : 'middle'}
-                fontSize="8" fill="var(--t4)">{label}</text>
+              <text key={i} x={toX(i)} y={SVG_H - 9}
+                textAnchor="middle"
+                fontSize="7.5" fill={i === 6 ? 'var(--gold)' : 'var(--t4)'} fontWeight={i === 6 ? '700' : '500'}>{label}</text>
             );
           })}
         </svg>

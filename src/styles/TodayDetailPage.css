@@ -193,6 +193,105 @@
   transform: none;
 }
 
+.today-time-slot-card {
+  flex-shrink: 0;
+  border-radius: var(--r2);
+  border: 1px solid var(--line);
+  background: linear-gradient(160deg, rgba(232, 176, 72, 0.08), rgba(255,255,255,0.02)), var(--bg2);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.today-time-slot-card__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.today-time-slot-card__kicker {
+  font-size: 10px;
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+}
+
+.today-time-slot-card__title {
+  font-size: var(--md);
+  color: var(--t1);
+  font-weight: 850;
+}
+
+.today-time-slot-card__header span {
+  font-size: 10px;
+  color: var(--t4);
+  font-weight: 700;
+}
+
+.today-time-slot-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.today-time-slot-tabs button {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg1);
+  color: var(--t3);
+  font-family: var(--ff);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.today-time-slot-tabs button.is-active {
+  border-color: var(--acc);
+  background: var(--goldf);
+  color: var(--gold);
+}
+
+.today-time-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.today-time-slot-grid div {
+  min-width: 0;
+  border-radius: 14px;
+  background: var(--bg1);
+  border: 1px solid var(--line);
+  padding: 11px 12px;
+}
+
+.today-time-slot-grid span {
+  display: block;
+  font-size: 10px;
+  color: var(--t4);
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.today-time-slot-grid strong {
+  display: block;
+  color: var(--t1);
+  font-size: var(--xs);
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.today-time-slot-card p {
+  margin: 12px 0 0;
+  color: var(--t2);
+  font-size: var(--xs);
+  line-height: 1.7;
+}
+
 .today-long-reading {
   flex-shrink: 0;
   border-radius: var(--r2);
@@ -248,6 +347,14 @@
   font-size: var(--sm);
   color: var(--t2);
   line-height: 1.9;
+}
+
+.today-long-reading__text strong {
+  color: var(--t1);
+  font-weight: 850;
+  background: linear-gradient(180deg, transparent 58%, rgba(232, 176, 72, 0.22) 58%);
+  border-radius: 3px;
+  padding: 0 2px;
 }
 
 .today-axis-section {

@@ -7,6 +7,25 @@ function extractLabeledValue(lines, patterns) {
     .trim();
 }
 
+function parseTimeSlotLine(line) {
+  const normalized = line.replace(/\s*[—–-]\s*/g, ' / ');
+  const [, rawBody = ''] = normalized.split(':');
+  const slot = {};
+  rawBody.split('/').map((part) => part.trim()).filter(Boolean).forEach((part) => {
+    const match = part.match(/^(음식|할일|조심|소통|한줄)\s*=\s*(.+)$/);
+    if (!match) return;
+    const keyMap = {
+      음식: 'food',
+      할일: 'action',
+      조심: 'caution',
+      소통: 'communication',
+      한줄: 'advice',
+    };
+    slot[keyMap[match[1]]] = match[2].trim();
+  });
+  return Object.values(slot).some(Boolean) ? slot : null;
+}
+
 export function parseCategoryLine(line) {
   const afterColon = line.split(':').slice(1).join(':').trim();
   const leadingNumMatch = afterColon.match(/^(\d{1,3})\s*[—–-]+\s*/);
@@ -43,7 +62,7 @@ export function parseDailyLines(text) {
   const empty = {
     score: null, summary: '', synergy: null, categories: null,
     badtime: null, closingAdvice: '', items: [],
-    easternKi: null, westernSky: null,
+    easternKi: null, westernSky: null, timeSlots: null,
   };
 
   if (!text || typeof text !== 'string') return empty;
@@ -104,10 +123,24 @@ export function parseDailyLines(text) {
   };
   const normalizedSynergy = Object.values(synergy).some(Boolean) ? synergy : null;
 
+  const timeSlotPatterns = [
+    { key: 'morning', regex: /^아침[:\s]/ },
+    { key: 'afternoon', regex: /^오후[:\s]/ },
+    { key: 'evening', regex: /^저녁[:\s]/ },
+    { key: 'night', regex: /^심야[:\s]/ },
+  ];
+  const timeSlots = {};
+  timeSlotPatterns.forEach(({ key, regex }) => {
+    const line = lines.find((entry) => regex.test(entry));
+    const parsedSlot = line ? parseTimeSlotLine(line) : null;
+    if (parsedSlot) timeSlots[key] = parsedSlot;
+  });
+  const normalizedTimeSlots = Object.keys(timeSlots).length > 0 ? timeSlots : null;
+
   const badtimeLine = lines.find((line) => /배드타임|액막이|주의/.test(line));
   const badtime = badtimeLine ? { symptom: badtimeLine.replace(/^\[[^\]]+\]\s*/, '').trim(), transformation: '' } : null;
 
-  const FIELD_PREFIXES = /^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운|음식|장소|색|컬러|색상|아이템|숫자|행운 숫자|방향|행운 방향|소통|행동|요약|시너지|십신|기운|DO|DONT|행성|흐름)[:\s]/i;
+  const FIELD_PREFIXES = /^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운|음식|장소|색|컬러|색상|아이템|숫자|행운 숫자|방향|행운 방향|소통|행동|요약|시너지|십신|기운|DO|DONT|행성|흐름|아침|오후|저녁|심야)[:\s]/i;
 
   const closingAdvice = [...lines].reverse().find((line) => {
     if (line.startsWith('[')) return false;
@@ -124,6 +157,7 @@ export function parseDailyLines(text) {
     score, summary,
     easternKi: normalizedEasternKi,
     westernSky: normalizedWesternSky,
+    timeSlots: normalizedTimeSlots,
     synergy: normalizedSynergy,
     categories: normalizedCategories,
     badtime, closingAdvice, items,

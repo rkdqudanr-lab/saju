@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { parseDailyLines } from '../../utils/parseDailyLines.js';
 import { useSajuCtx } from '../../context/AppContext.jsx';
 
@@ -50,6 +50,23 @@ function getMealValue(meal, synergy) {
   return meal.value;
 }
 
+const TIME_SLOT_META = {
+  morning: { label: '아침', range: '05:00-11:29', mealTitle: '아침밥', fallbackMeal: '속 편한 한 끼', defaultAction: '오전에 할 일을 세 가지로 줄이기', defaultCaution: '시작부터 약속 늘리기', defaultCommunication: '먼저 짧게 안부 묻기', defaultAdvice: '오전에는 속도를 올리기보다 리듬을 잡아요.' },
+  afternoon: { label: '오후', range: '11:30-16:59', mealTitle: '점심밥', fallbackMeal: '든든하게 채우기', defaultAction: '중요한 일 하나를 먼저 끝내기', defaultCaution: '판단을 급하게 확정하기', defaultCommunication: '핵심부터 말하기', defaultAdvice: '오후에는 선택지를 줄일수록 집중이 살아나요.' },
+  evening: { label: '저녁', range: '17:00-19:59', mealTitle: '저녁밥', fallbackMeal: '가볍게 회복하기', defaultAction: '오늘 남은 감정 정리하기', defaultCaution: '피곤한 상태로 대화 길게 끌기', defaultCommunication: '고생했다는 말 먼저 건네기', defaultAdvice: '저녁에는 관계보다 회복을 먼저 챙겨요.' },
+  night: { label: '심야', range: '20:00-04:59', mealTitle: '야식', fallbackMeal: '자극 줄이기', defaultAction: '내일 입을 옷이나 가방 정리하기', defaultCaution: '늦은 시간 충동 결제하기', defaultCommunication: '답장은 짧게, 결정은 내일로 미루기', defaultAdvice: '심야에는 마음을 가볍게 비우는 쪽이 좋아요.' },
+};
+
+const TIME_SLOT_KEYS = ['morning', 'afternoon', 'evening', 'night'];
+
+function getCurrentTimeSlotKey(date = new Date()) {
+  const minutes = date.getHours() * 60 + date.getMinutes();
+  if (minutes >= 5 * 60 && minutes < 11 * 60 + 30) return 'morning';
+  if (minutes >= 11 * 60 + 30 && minutes < 17 * 60) return 'afternoon';
+  if (minutes >= 17 * 60 && minutes < 20 * 60) return 'evening';
+  return 'night';
+}
+
 // 대시(—) 앞의 핵심 값만 추출 + 끝에 붙은 괄호 설명 제거
 function primaryValue(value) {
   if (!value) return value;
@@ -67,12 +84,16 @@ function primaryValue(value) {
 
 // 타일 클릭 시 TodayDetailPage에서 스크롤할 섹션 매핑
 const TILE_SCROLL_MAP = {
-  '좋은 운세':     'today-axis-section',
+  '아침 운세':     'today-axis-section',
+  '오후 운세':     'today-axis-section',
+  '저녁 운세':     'today-axis-section',
+  '심야 운세':     'today-axis-section',
   '조심할 것':     'today-axis-section',
-  '한 줄 조언':    'today-long-reading',
-  '시간대 힌트':   'today-long-reading',
-  '오늘 색감':     'today-pick-shell',
-  '가면 좋은 곳':  'today-pick-shell',
+  '아침 할 일':    'today-long-reading',
+  '오후 할 일':    'today-long-reading',
+  '저녁 할 일':    'today-long-reading',
+  '심야 할 일':    'today-long-reading',
+  '시간대 조언':   'today-long-reading',
   '대화 팁':       'today-pick-shell',
 };
 function getMealScrollKey() { return 'today-pick-shell'; }
@@ -89,6 +110,7 @@ export default function DailyMiniCard({
   bottomAxes = [],
 }) {
   const { today } = useSajuCtx();
+  const [activeSlotKey, setActiveSlotKey] = useState(() => getCurrentTimeSlotKey());
 
   const parsed = useMemo(
     () => parseDailyLines(dailyResult?.text || ''),
@@ -108,58 +130,48 @@ export default function DailyMiniCard({
     const cautionLabel = caution?.label || CATEGORY_LABELS[caution?.key] || '조심할 흐름';
     const synergy = parsed.synergy || {};
     const eastern = parsed.easternKi || {};
-    const western = parsed.westernSky || {};
+    const activeMeta = TIME_SLOT_META[activeSlotKey] || TIME_SLOT_META.afternoon;
+    const activeSlot = parsed.timeSlots?.[activeSlotKey] || {};
+    const fallbackMeal = getMealValue(meal, synergy) || activeMeta.fallbackMeal;
     return [
       {
         icon: 'trending-up',
-        title: '좋은 운세',
+        title: `${activeMeta.label} 운세`,
         value: best?.score ? `${bestLabel} ${best.score}` : tone.label,
         question: `오늘 ${bestLabel} 운을 어떻게 살리면 좋을까?`,
       },
       {
         icon: 'bolt',
         title: '조심할 것',
-        value: caution?.score ? `${cautionLabel} ${caution.score}` : (eastern.dontAction || '과속 금지'),
+        value: activeSlot.caution || (caution?.score ? `${cautionLabel} ${caution.score}` : (eastern.dontAction || activeMeta.defaultCaution)),
         question: `오늘 조심해야 할 운세를 자세히 알려줘.`,
       },
       {
         icon: 'pencil',
-        title: '한 줄 조언',
-        value: eastern.doAction || synergy.action || '흐름 정리',
+        title: `${activeMeta.label} 할 일`,
+        value: activeSlot.action || eastern.doAction || synergy.action || activeMeta.defaultAction,
         question: '오늘의 한 줄 조언을 내 상황에 맞게 풀어줘.',
       },
       {
         icon: 'cake',
-        title: meal.title,
-        value: getMealValue(meal, synergy),
+        title: activeMeta.mealTitle,
+        value: activeSlot.food || fallbackMeal,
         question: meal.question,
       },
       {
-        icon: 'sparkles',
-        title: '오늘 색감',
-        value: synergy.color || '따뜻한 톤',
-        question: '오늘 행운 색을 어떻게 활용하면 좋을까?',
-      },
-      {
-        icon: 'globe',
-        title: '가면 좋은 곳',
-        value: synergy.place || '조용한 자리',
-        question: '오늘 가면 좋은 장소와 피하면 좋은 장소를 알려줘.',
+        icon: 'moon',
+        title: '시간대 조언',
+        value: activeSlot.advice || activeMeta.defaultAdvice,
+        question: '지금 시간대에 맞는 조언을 더 자세히 알려줘.',
       },
       {
         icon: 'chat',
         title: '대화 팁',
-        value: synergy.communication || '짧고 선명하게',
+        value: activeSlot.communication || synergy.communication || activeMeta.defaultCommunication,
         question: '오늘 사람들과 대화할 때 신경 쓸 점을 알려줘.',
       },
-      {
-        icon: 'moon',
-        title: '시간대 힌트',
-        value: western.flow || synergy.direction || '오후 정리',
-        question: '오늘 시간대별로 하면 좋은 일을 알려줘.',
-      },
     ];
-  }, [bottomAxes, meal, parsed.easternKi, parsed.synergy, parsed.westernSky, tone.label, topAxes]);
+  }, [activeSlotKey, bottomAxes, meal, parsed.easternKi, parsed.synergy, parsed.timeSlots, tone.label, topAxes]);
 
   const handleDashboardClick = (item, event) => {
     event.stopPropagation();
@@ -229,13 +241,33 @@ export default function DailyMiniCard({
       </div>
 
       <div className="daily-mini-main">
+        <div className="daily-mini-score-title">오늘의 별숨 지수</div>
         <div className="daily-mini-score-wrap">
-          <div className="daily-mini-score-panel">
-            <span className="daily-mini-score-label">오늘의 별숨 지수</span>
-            <span className="daily-mini-score-value">{score}</span>
-          </div>
+          <span className="daily-mini-score-value">{score}</span>
           <div className="daily-mini-score-state">{tone.label}</div>
         </div>
+      </div>
+
+      <div className="daily-mini-time-tabs" aria-label="시간대별 별숨 선택">
+        {TIME_SLOT_KEYS.map((key) => {
+          const meta = TIME_SLOT_META[key];
+          const active = key === activeSlotKey;
+          return (
+            <button
+              key={key}
+              type="button"
+              className={`daily-mini-time-tab ${active ? 'is-active' : ''}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                setActiveSlotKey(key);
+              }}
+              aria-pressed={active}
+            >
+              <span>{meta.label}</span>
+              <small>{meta.range}</small>
+            </button>
+          );
+        })}
       </div>
 
       {(topAxes.length > 0 || bottomAxes.length > 0) && (
@@ -292,9 +324,6 @@ export default function DailyMiniCard({
         자세히 보기 →
       </button>
 
-      <div className="daily-mini-meter" aria-hidden="true">
-        <span />
-      </div>
     </div>
   );
 }

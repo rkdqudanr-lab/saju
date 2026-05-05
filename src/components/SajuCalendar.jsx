@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { getSaju, ON } from "../utils/saju.js";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { CATS_ALL, breakAtNatural } from "../utils/constants.js";
@@ -73,14 +73,6 @@ function scoreColor(score) {
   return '#E05A3A';
 }
 
-function scoreBg(score) {
-  if (score >= 85) return 'rgba(76,175,80,0.18)';
-  if (score >= 68) return 'rgba(129,199,132,0.15)';
-  if (score >= 50) return 'rgba(230,195,90,0.12)';
-  if (score >= 38) return 'rgba(255,138,101,0.12)';
-  return 'rgba(224,90,58,0.12)';
-}
-
 function scoreLabel(score) {
   if (score >= 85) return '최고의 날 ✦';
   if (score >= 68) return '좋은 날';
@@ -153,6 +145,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   const [inputTime, setInputTime] = useState('');
   const [editingEventId, setEditingEventId] = useState(null);
   const [editingEventText, setEditingEventText] = useState('');
+  const selectedPanelRef = useRef(null);
 
   // 운세·일기 기록 (날짜 → 데이터)
   const [dailyFortunes, setDailyFortunes] = useState({});
@@ -418,6 +411,70 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   }, [selectedCatId, callApi, viewYear, viewMonth]);
 
   const eventDays = Object.keys(events).filter(k => k.startsWith(`${viewYear}-${String(viewMonth).padStart(2,'0')}`));
+  const handleSelectDate = (d) => {
+    const nextSelected = selected === d ? null : d;
+    setSelected(nextSelected);
+    if (nextSelected) {
+      window.setTimeout(() => {
+        selectedPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
+  };
+
+  const monthlyAnalysisPanel = (
+    <div style={{ marginTop: 20, background: 'var(--bg2)', borderRadius: 'var(--r2)', padding: 16, border: '1px solid var(--line)' }}>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
+        ✦ 이번 달의 별숨 날짜 보기
+      </div>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 10 }}>
+        상황을 선택하고 이번 달 기운 좋은 날을 별숨에게 물어봐요
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+        {CATS_ALL.map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => { setSelectedCatId(prev => prev === cat.id ? null : cat.id); setMonthlyResult(null); }}
+            style={{
+              background: selectedCatId === cat.id ? 'var(--gold)' : 'var(--bg3)',
+              border: `1px solid ${selectedCatId === cat.id ? 'var(--gold)' : 'var(--line)'}`,
+              borderRadius: 20,
+              padding: '5px 10px',
+              fontSize: 'var(--xs)',
+              color: selectedCatId === cat.id ? '#0D0B14' : 'var(--t2)',
+              fontFamily: 'var(--ff)',
+              cursor: 'pointer',
+              fontWeight: selectedCatId === cat.id ? 700 : 400,
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {cat.icon} {cat.label}
+          </button>
+        ))}
+      </div>
+      {selectedCatId && (
+        <button
+          className="cta-main"
+          style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginBottom: monthlyResult || monthlyLoading ? 12 : 0 }}
+          onClick={askMonthlyAnalysis}
+          disabled={monthlyLoading}
+        >
+          {monthlyLoading ? '별숨이 날짜를 읽고 있어요 ✦' : `${viewMonth}월 ${CATS_ALL.find(c => c.id === selectedCatId)?.label} 날짜 보기 ✦`}
+        </button>
+      )}
+      {monthlyLoading && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--gold)', fontSize: 'var(--xs)', padding: '8px 0' }}>
+          <span>별숨이 이번 달을 읽고 있어요</span>
+          <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
+        </div>
+      )}
+      {monthlyResult && !monthlyLoading && (
+        <div style={{ background: 'var(--bg1)', borderRadius: 'var(--r1)', padding: '14px 16px', border: '1px solid var(--acc)', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+          {monthlyResult}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="page step-fade">
@@ -448,7 +505,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
         {/* 날짜 그리드 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
           {Array.from({ length: firstWeekday }, (_, i) => <div key={`e${i}`} />)}
-          {daysData.map(({ d, saju, score }) => {
+          {daysData.map(({ d, score }) => {
             const isSel = selected === d;
             const isT = isToday(d);
             const weekday = new Date(viewYear, viewMonth - 1, d).getDay();
@@ -459,64 +516,49 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
             return (
               <button
                 key={d}
-                onClick={() => setSelected(isSel ? null : d)}
+                onClick={() => handleSelectDate(d)}
                 style={{
-                  background: isSel ? 'var(--gold)' : scoreBg(score),
-                  border: isT ? '2px solid var(--gold)' : isSel ? '2px solid var(--gold)' : `1px solid ${scoreColor(score)}44`,
+                  background: isSel ? 'var(--gold)' : isT ? 'var(--goldf)' : 'var(--bg1)',
+                  border: isT ? '2px solid var(--gold)' : isSel ? '2px solid var(--gold)' : '1px solid var(--line)',
                   borderRadius: 8,
-                  padding: '6px 2px',
+                  padding: '7px 6px',
                   cursor: 'pointer',
                   fontFamily: 'var(--ff)',
                   color: isSel ? '#0D0B14' : weekday === 0 ? 'var(--rose)' : weekday === 6 ? '#4A8EC4' : 'var(--t1)',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 2,
+                  alignItems: 'stretch',
+                  justifyContent: 'space-between',
+                  gap: 6,
                   fontSize: '0.85rem',
                   fontWeight: isT ? 700 : 400,
-                  minHeight: 56,
+                  minHeight: 62,
                   transition: 'all 0.15s',
                   position: 'relative',
                 }}
               >
-                <span>{d}</span>
-                {saju && (
-                  <span style={{ fontSize: '0.55rem', color: isSel ? '#0D0B14' : 'var(--t4)', lineHeight: 1 }}>
-                    {saju.il.gh}{saju.il.jh}
-                  </span>
-                )}
-                <span style={{ fontSize: '0.6rem', color: isSel ? '#0D0B14' : scoreColor(score), fontWeight: 700 }}>
-                  {score}
+                <span style={{ alignSelf: 'flex-start', lineHeight: 1 }}>
+                  {d}
                 </span>
                 {/* 기록 인디케이터 */}
-                {(hasEvents || hasFortune || hasDiary) && (
-                  <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    {hasFortune && (
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--gold)', display: 'block' }} title="운세 기록" />
-                    )}
-                    {hasDiary && (
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--lav, #9b8ec4)', display: 'block' }} title="일기 기록" />
-                    )}
-                    {hasEvents && (
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--teal, #4DB6AC)', display: 'block' }} title="일정" />
-                    )}
-                  </div>
-                )}
+                <div style={{ display: 'flex', gap: 3, alignItems: 'center', minHeight: 6 }}>
+                  {hasFortune && (
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--gold)', display: 'block' }} title="운세 기록" />
+                  )}
+                  {hasDiary && (
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--lav, #9b8ec4)', display: 'block' }} title="일기 기록" />
+                  )}
+                  {hasEvents && (
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: isSel ? '#0D0B14' : 'var(--teal, #4DB6AC)', display: 'block' }} title="일정" />
+                  )}
+                </div>
               </button>
             );
           })}
         </div>
 
-        {/* 범례 */}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 10, fontSize: '0.6rem', color: 'var(--t4)', flexWrap: 'wrap' }}>
-          <span><span style={{ color: '#4CAF50' }}>■</span> 85+ 최고</span>
-          <span><span style={{ color: '#81C784' }}>■</span> 68+ 좋음</span>
-          <span><span style={{ color: '#E6C35A' }}>■</span> 50+ 무난</span>
-          <span><span style={{ color: '#FF8A65' }}>■</span> 38+ 조심</span>
-          <span><span style={{ color: '#E05A3A' }}>■</span> 38미만 주의</span>
-        </div>
         {/* 기록 인디케이터 범례 */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 6, fontSize: '0.6rem', color: 'var(--t4)', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 10, fontSize: '0.6rem', color: 'var(--t4)', flexWrap: 'wrap' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block' }} /> 운세 기록
           </span>
@@ -528,66 +570,9 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
           </span>
         </div>
 
-        {/* ── 이번 달의 별숨 날짜 보기 (상황별 분석) ── */}
-        <div style={{ marginTop: 20, background: 'var(--bg2)', borderRadius: 'var(--r2)', padding: 16, border: '1px solid var(--line)' }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
-            ✦ 이번 달의 별숨 날짜 보기
-          </div>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 10 }}>
-            상황을 선택하고 이번 달 기운 좋은 날을 별숨에게 물어봐요
-          </div>
-          {/* 20가지 상황 버튼 */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-            {CATS_ALL.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => { setSelectedCatId(prev => prev === cat.id ? null : cat.id); setMonthlyResult(null); }}
-                style={{
-                  background: selectedCatId === cat.id ? 'var(--gold)' : 'var(--bg3)',
-                  border: `1px solid ${selectedCatId === cat.id ? 'var(--gold)' : 'var(--line)'}`,
-                  borderRadius: 20,
-                  padding: '5px 10px',
-                  fontSize: 'var(--xs)',
-                  color: selectedCatId === cat.id ? '#0D0B14' : 'var(--t2)',
-                  fontFamily: 'var(--ff)',
-                  cursor: 'pointer',
-                  fontWeight: selectedCatId === cat.id ? 700 : 400,
-                  transition: 'all 0.15s',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {cat.icon} {cat.label}
-              </button>
-            ))}
-          </div>
-          {/* 분석 버튼 */}
-          {selectedCatId && (
-            <button
-              className="cta-main"
-              style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '12px', marginBottom: monthlyResult || monthlyLoading ? 12 : 0 }}
-              onClick={askMonthlyAnalysis}
-              disabled={monthlyLoading}
-            >
-              {monthlyLoading ? '별숨이 날짜를 읽고 있어요 ✦' : `${viewMonth}월 ${CATS_ALL.find(c => c.id === selectedCatId)?.label} 날짜 보기 ✦`}
-            </button>
-          )}
-          {/* 분석 결과 */}
-          {monthlyLoading && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--gold)', fontSize: 'var(--xs)', padding: '8px 0' }}>
-              <span>별숨이 이번 달을 읽고 있어요</span>
-              <span className="dsc-loading-dot" /><span className="dsc-loading-dot" /><span className="dsc-loading-dot" />
-            </div>
-          )}
-          {monthlyResult && !monthlyLoading && (
-            <div style={{ background: 'var(--bg1)', borderRadius: 'var(--r1)', padding: '14px 16px', border: '1px solid var(--acc)', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
-              {monthlyResult}
-            </div>
-          )}
-        </div>
-
         {/* 선택된 날 패널 */}
         {selectedData && (
-          <div style={{ marginTop: 'var(--sp3)', background: 'var(--bg2)', borderRadius: 'var(--r2)', padding: 'var(--sp3)', border: '1px solid var(--line)' }}>
+          <div ref={selectedPanelRef} style={{ marginTop: 'var(--sp3)', background: 'var(--bg2)', borderRadius: 'var(--r2)', padding: 'var(--sp3)', border: '1px solid var(--line)' }}>
             <div style={{ fontWeight: 700, color: 'var(--t1)', marginBottom: 10, fontSize: 'var(--md)' }}>
               {viewMonth}월 {selectedData.d}일 ({WEEKDAYS[new Date(viewYear, viewMonth - 1, selectedData.d).getDay()]}요일)
             </div>
@@ -689,8 +674,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: biorhythm ? 8 : 14, padding: '12px 14px', background: 'var(--bg3)', borderRadius: 'var(--r1)', border: `2px solid ${scoreColor(selectedData.score)}44` }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4 }}>
-                        일진: <strong style={{ color: 'var(--gold)' }}>{selectedData.saju.il.gh}{selectedData.saju.il.jh}</strong>
-                        &nbsp;·&nbsp;{selectedData.saju.ilganDesc || `${ON[selectedData.saju.dom]} 기운`}
+                        {selectedData.saju.ilganDesc || `${ON[selectedData.saju.dom]} 기운`}
                       </div>
                       <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: 8 }}>
                         나의 사주 기운&nbsp;
@@ -731,7 +715,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                         const status = getBiorhythmStatus(val);
                         const barW = toBarWidth(val);
                         return (
-                          <div key={ch.key} style={{ marginBottom: 6 }}>
+                          <div key={ch.key} style={{ marginBottom: 10 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                               <span style={{ fontSize: 11, color: 'var(--t3)' }}>{ch.emoji} {ch.label}</span>
                               <span style={{
@@ -741,23 +725,25 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                                 {BIORHYTHM_STATUS_LABEL[status]}{status === 'critical' ? ' ⚡' : ''}
                               </span>
                             </div>
-                            {/* 중앙 기준 바 (0 = 50% 위치) */}
-                            <div style={{ position: 'relative', height: 5, background: 'var(--line)', borderRadius: 3, overflow: 'hidden' }}>
-                              {/* 중앙선 */}
-                              <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: 'var(--t5)', opacity: 0.5 }} />
-                              {val >= 0 ? (
-                                <div style={{
-                                  position: 'absolute', left: '50%', top: 0, bottom: 0,
-                                  width: `${(val / 100) * 50}%`,
-                                  background: ch.color, borderRadius: '0 3px 3px 0',
-                                }} />
-                              ) : (
-                                <div style={{
-                                  position: 'absolute', right: `${50 + (val / 100) * 50}%`, top: 0, bottom: 0,
-                                  left: `${50 + (val / 100) * 50}%`,
-                                  background: 'var(--rose)', borderRadius: '3px 0 0 3px',
-                                }} />
-                              )}
+                            <div style={{ position: 'relative', height: 8, background: 'linear-gradient(90deg, rgba(224,90,58,.38) 0%, rgba(145,160,187,.28) 50%, rgba(95,173,122,.42) 100%)', borderRadius: 999 }}>
+                              <div style={{ position: 'absolute', left: '50%', top: -2, bottom: -2, width: 1, background: 'rgba(255,255,255,.38)' }} />
+                              <div style={{
+                                position: 'absolute',
+                                left: `${barW}%`,
+                                top: '50%',
+                                width: 12,
+                                height: 12,
+                                borderRadius: '50%',
+                                background: status === 'low' ? 'var(--rose)' : status === 'high' ? ch.color : 'var(--gold)',
+                                border: '2px solid var(--bg3)',
+                                boxShadow: '0 2px 8px rgba(0,0,0,.18)',
+                                transform: 'translate(-50%, -50%)',
+                              }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 9, color: 'var(--t5)' }}>
+                              <span>저하</span>
+                              <span>보통</span>
+                              <span>상승</span>
                             </div>
                           </div>
                         );
@@ -940,6 +926,9 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
             )}
           </div>
         )}
+
+        {/* ── 이번 달의 별숨 날짜 보기 (상황별 분석) ── */}
+        {monthlyAnalysisPanel}
 
         {/* 이달 일정 요약 */}
         {eventDays.length > 0 && !selected && (

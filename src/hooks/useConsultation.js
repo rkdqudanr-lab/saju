@@ -375,6 +375,7 @@ export function useConsultation(
             responseStyle: style,
             precision_level: useAppStore.getState().dataPrecision?.level || "low",
             gender: useAppStore.getState().form?.gender || null,
+            lifeStage: useAppStore.getState().lifeStage || "free",
             clientHour: new Date().getHours(),
         });
 

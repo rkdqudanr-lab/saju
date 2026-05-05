@@ -97,6 +97,7 @@ export default function App() {
 
   // showToast를 Zustand store에 직접 주입
   useEffect(() => { _storeSetAuthFns({ showToast }); }, [showToast, _storeSetAuthFns]);
+  useEffect(() => { _storeSetAuthFns({ lifeStage: lifeStage || 'free' }); }, [lifeStage, _storeSetAuthFns]);
 
   // ── 기능 투어 트리거 (온보딩 완료 후 step 0 최초 진입 시 1회만) ──
   useEffect(() => {
@@ -446,20 +447,20 @@ export default function App() {
       )}
 
       {step >= STEP.PROFILE && user && (
-        <div className="user-chip" onClick={() => setShowProfileModal(true)} title="프로필 수정" style={{ cursor: 'pointer' }}>
+        <button type="button" className="user-chip" onClick={() => setShowProfileModal(true)} title="프로필 수정" aria-label={`${user.nickname} 프로필 수정`}>
           {equippedAvatar ? (
-            <div style={{ fontSize: '1.2rem', lineHeight: 1 }}>{equippedAvatar.emoji}</div>
+            <span className="user-chip-avatar">{equippedAvatar.emoji}</span>
           ) : user.profileImage ? (
             <img src={user.profileImage} alt="Profile" />
           ) : (
-            <span style={{ fontSize: '1rem' }}>*</span>
+            <span className="user-chip-avatar">✦</span>
           )}
-          <span>{user.nickname}</span>
-        </div>
+          <span className="user-chip-name">{user.nickname}</span>
+        </button>
       )}
       {step >= STEP.PROFILE && !user && (
-        <button className="user-chip" onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }} style={{ border: '1px solid #FEE500', background: 'rgba(254,229,0,.1)' }}>
-          <span style={{ fontSize: '.75rem', color: 'var(--t2)' }}>카카오 로그인</span>
+        <button className="user-chip user-chip--login" onClick={() => { if (typeof window.gtag === 'function') window.gtag('event', 'kakao_login_click'); kakaoLogin(); }}>
+          <span className="user-chip-name">카카오 로그인</span>
         </button>
       )}
 

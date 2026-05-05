@@ -51,6 +51,23 @@ const AXIS_TONE_META = {
   },
 };
 
+const TIME_SLOT_META = {
+  morning: { label: '아침', range: '05:00-11:29', mealTitle: '아침밥', fallbackMeal: '속 편한 한 끼', defaultAction: '오전에 할 일을 세 가지로 줄이기', defaultCaution: '시작부터 약속 늘리기', defaultCommunication: '먼저 짧게 안부 묻기', defaultAdvice: '오전에는 속도를 올리기보다 리듬을 잡아요.' },
+  afternoon: { label: '오후', range: '11:30-16:59', mealTitle: '점심밥', fallbackMeal: '든든하게 채우기', defaultAction: '중요한 일 하나를 먼저 끝내기', defaultCaution: '판단을 급하게 확정하기', defaultCommunication: '핵심부터 말하기', defaultAdvice: '오후에는 선택지를 줄일수록 집중이 살아나요.' },
+  evening: { label: '저녁', range: '17:00-19:59', mealTitle: '저녁밥', fallbackMeal: '가볍게 회복하기', defaultAction: '오늘 남은 감정 정리하기', defaultCaution: '피곤한 상태로 대화 길게 끌기', defaultCommunication: '고생했다는 말 먼저 건네기', defaultAdvice: '저녁에는 관계보다 회복을 먼저 챙겨요.' },
+  night: { label: '심야', range: '20:00-04:59', mealTitle: '야식', fallbackMeal: '자극 줄이기', defaultAction: '내일 입을 옷이나 가방 정리하기', defaultCaution: '늦은 시간 충동 결제하기', defaultCommunication: '답장은 짧게, 결정은 내일로 미루기', defaultAdvice: '심야에는 마음을 가볍게 비우는 쪽이 좋아요.' },
+};
+
+const TIME_SLOT_KEYS = ['morning', 'afternoon', 'evening', 'night'];
+
+function getCurrentTimeSlotKey(date = new Date()) {
+  const minutes = date.getHours() * 60 + date.getMinutes();
+  if (minutes >= 5 * 60 && minutes < 11 * 60 + 30) return 'morning';
+  if (minutes >= 11 * 60 + 30 && minutes < 17 * 60) return 'afternoon';
+  if (minutes >= 17 * 60 && minutes < 20 * 60) return 'evening';
+  return 'night';
+}
+
 /** 조디악 기호 제거 + 핵심 구문 자동 굵게 처리 → React 노드 배열 반환 */
 function renderBoldText(text) {
   if (!text) return null;
@@ -61,41 +78,30 @@ function renderBoldText(text) {
     .replace(/\s{2,}/g, ' ')
     .trim();
 
-  // 2. 핵심 구문 ** 마킹
+  // 2. 사용자가 바로 가져갈 수 있는 시간대, 권고, 주의, 조건-결과 구문만 강조
+  const mark = (pattern) => {
+    t = t.replace(pattern, (m) => (m.includes('**') ? m : `**${m.trim()}**`));
+  };
 
-  // ① 가능성/주의: [동사어형 1단어 1-10자] 수 있어요
-  //    어미 제한 없이 단어 단위로 — "조심스러울 수 있어요", "빨라질 수 있어요"
-  t = t.replace(/([가-힣]{1,10}\s+수\s+있어요)/g, m => `**${m.trim()}**`);
+  mark(/((?:오늘은|오전에는|오후에는|저녁에는|밤에는)\s*[가-힣\s]{2,28}(?:좋아요|유리해요|필요해요|열립니다|커져요|줄이기|정리하기))/g);
+  mark(/((?:먼저|가능하면|되도록|무리해서|즉흥적으로)\s*[가-힣\s]{2,28}(?:좋아요|유리해요|피하세요|줄이세요|보세요|말아주세요))/g);
+  mark(/([가-힣\s]{2,22}(?:하는 게|하기보다|쪽으로|편이)\s*(?:좋아요|유리해요|필요해요|안정적이에요))/g);
+  mark(/([가-힣]{1,10}\s+수\s+있어요)/g);
+  mark(/([가-힣]{2,10}수록\s*[가-힣\s]{2,18}(?:커져요|커집니다|열려요|열립니다|좋아요|좋아져요|안정돼요|넓어져요))/g);
+  mark(/((?:조심할|주의할|피할)\s*[가-힣\s]{2,22})/g);
 
-  // ② 권고(면): [동사어간 1-6자]면 좋아요 — "피하면 좋아요"
-  t = t.replace(/([가-힣]{1,6}면\s*좋아요)/g, m => `**${m.trim()}**`);
+  mark(/([가-힣]{1,6}면\s*좋아요)/g);
+  mark(/([가-힣]{2,6}\s게\s*(?:좋아요|맞아요|자연스러워요|편해요|유리해요|안전해요|적절해요))/g);
+  mark(/([가-힣]{2,6}\s편이\s*(?:좋아요|유리해요))/g);
+  mark(/([가-힣]{2,6}수록\s*[가-힣\s]{2,10}(?:커져요|커집니다|열려요|열립니다|올라요|올라가요|올라갑니다|올라와요|됩니다|돼요|좋아요|좋아져요|깊어져요|강해져요|높아져요|넓어져요|붙어요|붙습니다|선명해져요|또렷해져요|풀려요|단단해져요|살아나요))/g);
+  mark(/([가-힣]{1,5}\s*쪽은\s*[가-힣\s]{2,12}(?:하고|하며|반응하고|올라오고|작동하고|나타나고))/g);
+  mark(/([가-힣A-Za-z·]{1,8}(?:[·,\s][가-힣A-Za-z]{1,8}){0,3}\s*모두\s*(?:좋아요|괜찮아요|어울려요))/g);
 
-  // ③ 권고(게): [관형형 2-6자] 게 [긍정종결] — "배치하는 게 좋아요", "옮기는 게 맞아요"
-  t = t.replace(
-    /([가-힣]{2,6}\s게\s*(?:좋아요|맞아요|자연스러워요|편해요|유리해요|안전해요|적절해요))/g,
-    m => `**${m.trim()}**`,
-  );
-
-  // ④ 추천: [관형형 2-6자] 편이 좋아요/유리해요 — "살피는 편이 좋아요"
-  t = t.replace(/([가-힣]{2,6}\s편이\s*(?:좋아요|유리해요))/g, m => `**${m.trim()}**`);
-
-  // ⑤ 조건-결과: [동사어간 2-6자]수록 [결과동사] — "갈수록 추진력이 붙어요", "움직일수록 길이 열립니다"
-  t = t.replace(
-    /([가-힣]{2,6}수록\s*[가-힣\s]{2,10}(?:커져요|커집니다|열려요|열립니다|올라요|올라가요|올라갑니다|올라와요|됩니다|돼요|좋아요|좋아져요|깊어져요|강해져요|높아져요|넓어져요|붙어요|붙습니다|선명해져요|또렷해져요|풀려요|단단해져요|살아나요))/g,
-    m => `**${m.trim()}**`,
-  );
-
-  // ⑥ 축 특성: X쪽은 Y하고/하며 — "창의 쪽은 비교적 빠르게 반응하고"
-  t = t.replace(/([가-힣]{1,5}\s*쪽은\s*[가-힣\s]{2,12}(?:하고|하며|반응하고|올라오고|작동하고|나타나고))/g, m => `**${m.trim()}**`);
-
-  // ⑦ 포괄 권고: [명사 나열 1~4개] 모두 좋아요/괜찮아요/어울려요 — "기획·글쓰기·디자인 모두 좋아요"
-  t = t.replace(
-    /([가-힣A-Za-z·]{1,8}(?:[·,\s][가-힣A-Za-z]{1,8}){0,3}\s*모두\s*(?:좋아요|괜찮아요|어울려요))/g,
-    m => `**${m.trim()}**`,
-  );
-
-  // 중복 마킹(패턴 겹침) 정리
-  t = t.replace(/\*\*\*\*/g, '**');
+  // 중복/중첩 마킹 정리
+  t = t
+    .replace(/\*\*\s*\*\*/g, '')
+    .replace(/\*\*\*\*/g, '**')
+    .replace(/\*\*([^*]+)\*\*\s*\*\*([^*]+)\*\*/g, '**$1 $2**');
 
   // 3. ** ** → <strong> 변환
   return t.split(/(\*\*[^*]+\*\*)/).map((part, i) => {
@@ -324,6 +330,7 @@ export default function TodayDetailPage({
 
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
   const [showParticles, setShowParticles] = useState(false);
+  const [activeTimeSlotKey, setActiveTimeSlotKey] = useState(() => getCurrentTimeSlotKey());
 
   // 미니카드 타일 클릭 시 스크롤 처리
   useEffect(() => {
@@ -371,6 +378,20 @@ export default function TodayDetailPage({
     () => buildDailyLongReading({ parsedDaily, axisScores: actionableScores, overallGuide, saju, sun, moon, asc }),
     [parsedDaily, actionableScores, overallGuide, saju, sun, moon, asc],
   );
+
+  const activeTimeSlot = useMemo(() => {
+    const meta = TIME_SLOT_META[activeTimeSlotKey] || TIME_SLOT_META.afternoon;
+    const slot = parsedDaily.timeSlots?.[activeTimeSlotKey] || {};
+    const food = slot.food || parsedDaily.synergy?.food?.split(/[,.·/]/)[0]?.trim() || meta.fallbackMeal;
+    return {
+      meta,
+      food,
+      action: slot.action || parsedDaily.easternKi?.doAction || meta.defaultAction,
+      caution: slot.caution || parsedDaily.easternKi?.dontAction || meta.defaultCaution,
+      communication: slot.communication || parsedDaily.synergy?.communication || meta.defaultCommunication,
+      advice: slot.advice || meta.defaultAdvice,
+    };
+  }, [activeTimeSlotKey, parsedDaily]);
 
   const axisRankMap = useMemo(
     () => Object.fromEntries(
@@ -513,6 +534,40 @@ export default function TodayDetailPage({
               </div>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{overallGuide.summary}</div>
             </div>
+
+            <section className="today-time-slot-card" aria-label="시간대별 오늘의 별숨">
+              <div className="today-time-slot-card__header">
+                <div>
+                  <div className="today-time-slot-card__kicker">TIME FLOW</div>
+                  <div className="today-time-slot-card__title">{activeTimeSlot.meta.label} 별숨</div>
+                </div>
+                <span>{activeTimeSlot.meta.range}</span>
+              </div>
+              <div className="today-time-slot-tabs">
+                {TIME_SLOT_KEYS.map((key) => {
+                  const meta = TIME_SLOT_META[key];
+                  const active = key === activeTimeSlotKey;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      className={active ? 'is-active' : ''}
+                      onClick={() => setActiveTimeSlotKey(key)}
+                      aria-pressed={active}
+                    >
+                      {meta.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="today-time-slot-grid">
+                <div><span>{activeTimeSlot.meta.mealTitle}</span><strong>{activeTimeSlot.food}</strong></div>
+                <div><span>할 일</span><strong>{activeTimeSlot.action}</strong></div>
+                <div><span>조심</span><strong>{activeTimeSlot.caution}</strong></div>
+                <div><span>소통</span><strong>{activeTimeSlot.communication}</strong></div>
+              </div>
+              <p>{activeTimeSlot.advice}</p>
+            </section>
 
             {onRefresh && (
               <section className="today-reask-card" aria-label="오늘 운세 다시 물어보기">
