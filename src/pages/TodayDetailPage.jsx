@@ -52,13 +52,24 @@ const AXIS_TONE_META = {
 };
 
 const TIME_SLOT_META = {
-  morning: { label: '아침', range: '05:00-11:29', mealTitle: '아침밥', fallbackMeal: '속 편한 한 끼', defaultAction: '오전에 할 일을 세 가지로 줄이기', defaultCaution: '시작부터 약속 늘리기', defaultCommunication: '먼저 짧게 안부 묻기', defaultAdvice: '오전에는 속도를 올리기보다 리듬을 잡아요.' },
-  afternoon: { label: '오후', range: '11:30-16:59', mealTitle: '점심밥', fallbackMeal: '든든하게 채우기', defaultAction: '중요한 일 하나를 먼저 끝내기', defaultCaution: '판단을 급하게 확정하기', defaultCommunication: '핵심부터 말하기', defaultAdvice: '오후에는 선택지를 줄일수록 집중이 살아나요.' },
-  evening: { label: '저녁', range: '17:00-19:59', mealTitle: '저녁밥', fallbackMeal: '가볍게 회복하기', defaultAction: '오늘 남은 감정 정리하기', defaultCaution: '피곤한 상태로 대화 길게 끌기', defaultCommunication: '고생했다는 말 먼저 건네기', defaultAdvice: '저녁에는 관계보다 회복을 먼저 챙겨요.' },
-  night: { label: '심야', range: '20:00-04:59', mealTitle: '야식', fallbackMeal: '자극 줄이기', defaultAction: '내일 입을 옷이나 가방 정리하기', defaultCaution: '늦은 시간 충동 결제하기', defaultCommunication: '답장은 짧게, 결정은 내일로 미루기', defaultAdvice: '심야에는 마음을 가볍게 비우는 쪽이 좋아요.' },
+  morning: { label: '아침', range: '05:00-11:29', mealTitle: '아침밥', fallbackMeal: '요거트와 바나나', defaultAction: '오전에 할 일을 세 가지로 줄이기', defaultCaution: '시작부터 약속 늘리기', defaultCommunication: '먼저 짧게 안부 묻기', defaultAdvice: '오전에는 속도를 올리기보다 리듬을 잡아요.' },
+  afternoon: { label: '오후', range: '11:30-16:59', mealTitle: '점심밥', fallbackMeal: '닭가슴살 비빔밥', defaultAction: '중요한 일 하나를 먼저 끝내기', defaultCaution: '판단을 급하게 확정하기', defaultCommunication: '핵심부터 말하기', defaultAdvice: '오후에는 선택지를 줄일수록 집중이 살아나요.' },
+  evening: { label: '저녁', range: '17:00-19:59', mealTitle: '저녁밥', fallbackMeal: '구운 생선 정식', defaultAction: '오늘 남은 감정 정리하기', defaultCaution: '피곤한 상태로 대화 길게 끌기', defaultCommunication: '고생했다는 말 먼저 건네기', defaultAdvice: '저녁에는 관계보다 회복을 먼저 챙겨요.' },
+  night: { label: '심야', range: '20:00-04:59', mealTitle: '야식', fallbackMeal: '따뜻한 우유', defaultAction: '내일 입을 옷이나 가방 정리하기', defaultCaution: '늦은 시간 충동 결제하기', defaultCommunication: '답장은 짧게, 결정은 내일로 미루기', defaultAdvice: '심야에는 마음을 가볍게 비우는 쪽이 좋아요.' },
 };
 
 const TIME_SLOT_KEYS = ['morning', 'afternoon', 'evening', 'night'];
+
+function getSlotFood(parsedDaily, slotKey) {
+  const slotFood = parsedDaily.timeSlots?.[slotKey]?.food?.trim();
+  if (slotFood) {
+    const firstSameSlot = TIME_SLOT_KEYS.find((key) => (
+      parsedDaily.timeSlots?.[key]?.food?.trim() === slotFood
+    ));
+    if (!firstSameSlot || firstSameSlot === slotKey) return slotFood;
+  }
+  return TIME_SLOT_META[slotKey]?.fallbackMeal || '가볍게 챙기기';
+}
 
 function getCurrentTimeSlotKey(date = new Date()) {
   const minutes = date.getHours() * 60 + date.getMinutes();
@@ -382,10 +393,9 @@ export default function TodayDetailPage({
   const activeTimeSlot = useMemo(() => {
     const meta = TIME_SLOT_META[activeTimeSlotKey] || TIME_SLOT_META.afternoon;
     const slot = parsedDaily.timeSlots?.[activeTimeSlotKey] || {};
-    const food = slot.food || parsedDaily.synergy?.food?.split(/[,.·/]/)[0]?.trim() || meta.fallbackMeal;
     return {
       meta,
-      food,
+      food: getSlotFood(parsedDaily, activeTimeSlotKey),
       action: slot.action || parsedDaily.easternKi?.doAction || meta.defaultAction,
       caution: slot.caution || parsedDaily.easternKi?.dontAction || meta.defaultCaution,
       communication: slot.communication || parsedDaily.synergy?.communication || meta.defaultCommunication,
