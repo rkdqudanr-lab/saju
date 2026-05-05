@@ -53,9 +53,22 @@ const TIME_SLOT_META = {
 
 const TIME_SLOT_KEYS = ['morning', 'afternoon', 'evening', 'night'];
 
+const UNSUITABLE_TIME_SLOT_FOODS = {
+  morning: ['티라미수', '케이크', '마카롱', '빙수', '젤라토', '파르페', '브라우니', '푸딩', '에이드', '라떼', '밀크티', '마라탕', '피자', '치킨', '버거', '튀김'],
+  afternoon: [],
+  evening: ['티라미수', '케이크', '마카롱', '빙수', '파르페'],
+  night: ['티라미수', '케이크', '마카롱', '빙수', '젤라토', '파르페', '브라우니', '푸딩', '마라탕', '피자', '치킨', '버거', '튀김', '감자탕', '삼겹살', '갈비구이', '족발', '보쌈', '짬뽕'],
+};
+
+function isSuitableSlotFood(food, slotKey) {
+  if (!food) return false;
+  const blocked = UNSUITABLE_TIME_SLOT_FOODS[slotKey] || [];
+  return !blocked.some((item) => food.includes(item));
+}
+
 function getSlotFood(parsed, slotKey) {
   const slotFood = parsed.timeSlots?.[slotKey]?.food?.trim();
-  if (slotFood) {
+  if (slotFood && isSuitableSlotFood(slotFood, slotKey)) {
     const firstSameSlot = TIME_SLOT_KEYS.find((key) => (
       parsed.timeSlots?.[key]?.food?.trim() === slotFood
     ));
