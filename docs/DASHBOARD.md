@@ -31,7 +31,7 @@
 `useConsultation.js`의 `askDailyHoroscope()` → `/api/ask` (isDaily=true) → AI 응답 → `dailyResult` 상태 저장.  
 프롬프트: `lib/prompts/buildSystem/daily_horoscope_gamified.js`.  
 파싱: `src/components/DailyStarCardV2.jsx`의 `parseDailyLines()`.
-별숨픽은 음식/장소/색/아이템/숫자/소통/행동 후보를 날짜 시드로 좁혀 매일 바뀌게 한다. 일일 운세는 일반 `buildCtx()`의 `[요약] 먼저 출력` 지시보다 daily 프롬프트의 `[점수] → [요약]` 구조가 우선한다.
+별숨픽은 음식/장소/색/아이템/숫자/소통/행동 후보를 날짜 시드로 좁혀 매일 바뀌게 한다. 시간대별 별숨의 할일·조심도 `lifeStage`와 시간대별 후보 풀에서 날짜 시드로 고르게 해 반복감을 줄인다. 일일 운세는 일반 `buildCtx()`의 `[요약] 먼저 출력` 지시보다 daily 프롬프트의 `[점수] → [요약]` 구조가 우선한다.
 
 ### [4] 카테고리 운세 점수 형식은?
 AI가 `종합운: 68 — 설명` 형식으로 반환 (20~100 정수, 항목마다 다른 값).  
