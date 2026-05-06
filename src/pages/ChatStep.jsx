@@ -95,6 +95,13 @@ export default function ChatStep({
   const lastMsg = chatHistory[chatHistory.length - 1];
   const lastMsgIsStreaming = lastMsg?.streaming === true;
 
+  // 메시지 추가/스트리밍 중 자동 스크롤
+  useEffect(() => {
+    if (!chatEndRef?.current) return;
+    const isStreaming = chatHistory[chatHistory.length - 1]?.streaming === true;
+    chatEndRef.current.scrollIntoView({ behavior: isStreaming ? 'instant' : 'smooth', block: 'end' });
+  }, [chatHistory, chatLoading, chatEndRef]);
+
   // 진입 시 pre-fill된 메시지가 있으면 자동 전송 (마운트 시점의 값만 사용)
   const autoSent = useRef(false);
   const initialInput = useRef(chatInput);

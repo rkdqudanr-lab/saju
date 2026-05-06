@@ -226,6 +226,7 @@ export default function App() {
 
   const handleEnterChat = useCallback((prefill = '') => {
     if (chatTransitioning) return;
+    resetSession();
     if (prefill) setChatInput(prefill);
     setChatTransitioning(true);
     window.setTimeout(() => {
@@ -233,7 +234,7 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 240);
     window.setTimeout(() => setChatTransitioning(false), 820);
-  }, [chatTransitioning, setStep, setChatInput]);
+  }, [chatTransitioning, setStep, setChatInput, resetSession]);
 
   // 사이드바 설정 로드 (로그인 시)
   useEffect(() => {
