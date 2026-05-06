@@ -53,12 +53,17 @@ const AXIS_TONE_META = {
 
 const TIME_SLOT_META = {
   morning: { label: '아침', range: '05:00-11:29', mealTitle: '아침밥', fallbackMeal: '요거트와 바나나', defaultAction: '오전에 할 일을 세 가지로 줄이기', defaultCaution: '시작부터 약속 늘리기', defaultCommunication: '먼저 짧게 안부 묻기', defaultAdvice: '오전에는 속도를 올리기보다 리듬을 잡아요.' },
-  afternoon: { label: '오후', range: '11:30-16:59', mealTitle: '점심밥', fallbackMeal: '닭가슴살 비빔밥', defaultAction: '중요한 일 하나를 먼저 끝내기', defaultCaution: '판단을 급하게 확정하기', defaultCommunication: '핵심부터 말하기', defaultAdvice: '오후에는 선택지를 줄일수록 집중이 살아나요.' },
+  afternoon: { label: '점심', range: '11:30-16:59', mealTitle: '점심밥', fallbackMeal: '닭가슴살 비빔밥', defaultAction: '중요한 일 하나를 먼저 끝내기', defaultCaution: '판단을 급하게 확정하기', defaultCommunication: '핵심부터 말하기', defaultAdvice: '점심에는 선택지를 줄일수록 집중이 살아나요.' },
   evening: { label: '저녁', range: '17:00-19:59', mealTitle: '저녁밥', fallbackMeal: '구운 생선 정식', defaultAction: '오늘 남은 감정 정리하기', defaultCaution: '피곤한 상태로 대화 길게 끌기', defaultCommunication: '고생했다는 말 먼저 건네기', defaultAdvice: '저녁에는 관계보다 회복을 먼저 챙겨요.' },
   night: { label: '심야', range: '20:00-04:59', mealTitle: '야식', fallbackMeal: '따뜻한 우유', defaultAction: '내일 입을 옷이나 가방 정리하기', defaultCaution: '늦은 시간 충동 결제하기', defaultCommunication: '답장은 짧게, 결정은 내일로 미루기', defaultAdvice: '심야에는 마음을 가볍게 비우는 쪽이 좋아요.' },
 };
 
 const TIME_SLOT_KEYS = ['morning', 'afternoon', 'evening', 'night'];
+const TODAY_PICK_VIEW_KEYS = ['overall', ...TIME_SLOT_KEYS];
+const TODAY_PICK_VIEW_META = {
+  overall: { label: '전체', range: '별숨픽 8항목' },
+  ...TIME_SLOT_META,
+};
 
 const UNSUITABLE_TIME_SLOT_FOODS = {
   morning: ['티라미수', '케이크', '마카롱', '빙수', '젤라토', '파르페', '브라우니', '푸딩', '에이드', '라떼', '밀크티', '마라탕', '피자', '치킨', '버거', '튀김'],
@@ -82,6 +87,28 @@ function getSlotFood(parsedDaily, slotKey) {
     if (!firstSameSlot || firstSameSlot === slotKey) return slotFood;
   }
   return TIME_SLOT_META[slotKey]?.fallbackMeal || '가볍게 챙기기';
+}
+
+function primaryValue(value) {
+  if (!value) return '';
+  let text = String(value);
+  const dashIdx = text.indexOf(' — ');
+  if (dashIdx !== -1) text = text.slice(0, dashIdx);
+  else {
+    const looseDashIdx = text.indexOf('—');
+    if (looseDashIdx !== -1) text = text.slice(0, looseDashIdx);
+  }
+  return text.replace(/\s*\([^)]*\)?\s*$/, '').trim();
+}
+
+function getPickValue(parsedDaily, slotKey, fieldKey) {
+  const synergy = parsedDaily.synergy || {};
+  if (slotKey === 'overall') return synergy[fieldKey] || '';
+  const slot = parsedDaily.timeSlots?.[slotKey] || {};
+  if (fieldKey === 'food') return getSlotFood(parsedDaily, slotKey);
+  if (fieldKey === 'action') return slot.action || synergy.action || TIME_SLOT_META[slotKey]?.defaultAction || '';
+  if (fieldKey === 'communication') return slot.communication || synergy.communication || TIME_SLOT_META[slotKey]?.defaultCommunication || '';
+  return slot[fieldKey] || synergy[fieldKey] || '';
 }
 
 function getCurrentTimeSlotKey(date = new Date()) {
@@ -333,7 +360,7 @@ export default function TodayDetailPage({
 
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
   const [showParticles, setShowParticles] = useState(false);
-  const [activeTimeSlotKey, setActiveTimeSlotKey] = useState(() => getCurrentTimeSlotKey());
+  const [activePickViewKey, setActivePickViewKey] = useState('overall');
 
   // 미니카드 타일 클릭 시 스크롤 처리
   useEffect(() => {
@@ -382,18 +409,16 @@ export default function TodayDetailPage({
     [parsedDaily, actionableScores, overallGuide, saju, sun, moon, asc],
   );
 
-  const activeTimeSlot = useMemo(() => {
-    const meta = TIME_SLOT_META[activeTimeSlotKey] || TIME_SLOT_META.afternoon;
-    const slot = parsedDaily.timeSlots?.[activeTimeSlotKey] || {};
+  const activePickView = useMemo(() => {
+    const meta = TODAY_PICK_VIEW_META[activePickViewKey] || TODAY_PICK_VIEW_META.overall;
     return {
       meta,
-      food: getSlotFood(parsedDaily, activeTimeSlotKey),
-      action: slot.action || parsedDaily.easternKi?.doAction || meta.defaultAction,
-      caution: slot.caution || parsedDaily.easternKi?.dontAction || meta.defaultCaution,
-      communication: slot.communication || parsedDaily.synergy?.communication || meta.defaultCommunication,
-      advice: slot.advice || meta.defaultAdvice,
+      fields: PICK_FIELD_META.map((field) => ({
+        ...field,
+        value: primaryValue(getPickValue(parsedDaily, activePickViewKey, field.key)) || '-',
+      })),
     };
-  }, [activeTimeSlotKey, parsedDaily]);
+  }, [activePickViewKey, parsedDaily]);
 
   const axisRankMap = useMemo(
     () => Object.fromEntries(
@@ -540,21 +565,21 @@ export default function TodayDetailPage({
             <section className="today-time-slot-card" aria-label="시간대별 오늘의 별숨">
               <div className="today-time-slot-card__header">
                 <div>
-                  <div className="today-time-slot-card__kicker">TIME FLOW</div>
-                  <div className="today-time-slot-card__title">{activeTimeSlot.meta.label} 별숨</div>
+                  <div className="today-time-slot-card__kicker">BYEOLSOOM PICK FLOW</div>
+                  <div className="today-time-slot-card__title">{activePickView.meta.label} 별숨픽</div>
                 </div>
-                <span>{activeTimeSlot.meta.range}</span>
+                <span>{activePickView.meta.range}</span>
               </div>
               <div className="today-time-slot-tabs">
-                {TIME_SLOT_KEYS.map((key) => {
-                  const meta = TIME_SLOT_META[key];
-                  const active = key === activeTimeSlotKey;
+                {TODAY_PICK_VIEW_KEYS.map((key) => {
+                  const meta = TODAY_PICK_VIEW_META[key];
+                  const active = key === activePickViewKey;
                   return (
                     <button
                       key={key}
                       type="button"
                       className={active ? 'is-active' : ''}
-                      onClick={() => setActiveTimeSlotKey(key)}
+                      onClick={() => setActivePickViewKey(key)}
                       aria-pressed={active}
                     >
                       {meta.label}
@@ -563,12 +588,13 @@ export default function TodayDetailPage({
                 })}
               </div>
               <div className="today-time-slot-grid">
-                <div><span>{activeTimeSlot.meta.mealTitle}</span><strong>{activeTimeSlot.food}</strong></div>
-                <div><span>할 일</span><strong>{activeTimeSlot.action}</strong></div>
-                <div><span>조심</span><strong>{activeTimeSlot.caution}</strong></div>
-                <div><span>소통</span><strong>{activeTimeSlot.communication}</strong></div>
+                {activePickView.fields.map((field) => (
+                  <div key={field.key} data-tone={field.tone}>
+                    <span>{field.icon} {field.label}</span>
+                    <strong>{field.value}</strong>
+                  </div>
+                ))}
               </div>
-              <p>{activeTimeSlot.advice}</p>
             </section>
 
             {onRefresh && (

@@ -46,12 +46,28 @@ function getMealPrompt(hour) {
 
 const TIME_SLOT_META = {
   morning: { label: '아침', range: '05:00-11:29', mealTitle: '아침밥', fallbackMeal: '요거트와 바나나', defaultAction: '오전에 할 일을 세 가지로 줄이기', defaultCaution: '시작부터 약속 늘리기', defaultCommunication: '먼저 짧게 안부 묻기', defaultAdvice: '오전에는 속도를 올리기보다 리듬을 잡아요.' },
-  afternoon: { label: '오후', range: '11:30-16:59', mealTitle: '점심밥', fallbackMeal: '닭가슴살 비빔밥', defaultAction: '중요한 일 하나를 먼저 끝내기', defaultCaution: '판단을 급하게 확정하기', defaultCommunication: '핵심부터 말하기', defaultAdvice: '오후에는 선택지를 줄일수록 집중이 살아나요.' },
+  afternoon: { label: '점심', range: '11:30-16:59', mealTitle: '점심밥', fallbackMeal: '닭가슴살 비빔밥', defaultAction: '중요한 일 하나를 먼저 끝내기', defaultCaution: '판단을 급하게 확정하기', defaultCommunication: '핵심부터 말하기', defaultAdvice: '점심에는 선택지를 줄일수록 집중이 살아나요.' },
   evening: { label: '저녁', range: '17:00-19:59', mealTitle: '저녁밥', fallbackMeal: '구운 생선 정식', defaultAction: '오늘 남은 감정 정리하기', defaultCaution: '피곤한 상태로 대화 길게 끌기', defaultCommunication: '고생했다는 말 먼저 건네기', defaultAdvice: '저녁에는 관계보다 회복을 먼저 챙겨요.' },
   night: { label: '심야', range: '20:00-04:59', mealTitle: '야식', fallbackMeal: '따뜻한 우유', defaultAction: '내일 입을 옷이나 가방 정리하기', defaultCaution: '늦은 시간 충동 결제하기', defaultCommunication: '답장은 짧게, 결정은 내일로 미루기', defaultAdvice: '심야에는 마음을 가볍게 비우는 쪽이 좋아요.' },
 };
 
 const TIME_SLOT_KEYS = ['morning', 'afternoon', 'evening', 'night'];
+const PICK_VIEW_KEYS = ['overall', ...TIME_SLOT_KEYS];
+const PICK_VIEW_META = {
+  overall: { label: '전체', range: '별숨픽 8항목' },
+  ...TIME_SLOT_META,
+};
+
+const PICK_FIELD_META = [
+  { key: 'food', label: '음식', icon: 'cake', question: '오늘 먹으면 좋은 음식을 더 자세히 알려줘.' },
+  { key: 'place', label: '장소', icon: 'pin', question: '오늘 가면 좋은 장소를 더 자세히 알려줘.' },
+  { key: 'color', label: '색', icon: 'palette', question: '오늘 행운의 색을 어떻게 쓰면 좋을까?' },
+  { key: 'item', label: '아이템', icon: 'bag', question: '오늘 행운 아이템을 어떻게 활용하면 좋을까?' },
+  { key: 'number', label: '숫자', icon: 'number', question: '오늘 행운 숫자의 의미를 알려줘.' },
+  { key: 'direction', label: '방향', icon: 'compass', question: '오늘 유리한 방향을 어떻게 활용하면 좋을까?' },
+  { key: 'communication', label: '소통', icon: 'chat', question: '오늘 사람들과 대화할 때 신경 쓸 점을 알려줘.' },
+  { key: 'action', label: '행동', icon: 'pencil', question: '오늘의 행동 조언을 내 상황에 맞게 풀어줘.' },
+];
 
 const UNSUITABLE_TIME_SLOT_FOODS = {
   morning: ['티라미수', '케이크', '마카롱', '빙수', '젤라토', '파르페', '브라우니', '푸딩', '에이드', '라떼', '밀크티', '마라탕', '피자', '치킨', '버거', '튀김'],
@@ -75,6 +91,16 @@ function getSlotFood(parsed, slotKey) {
     if (!firstSameSlot || firstSameSlot === slotKey) return slotFood;
   }
   return TIME_SLOT_META[slotKey]?.fallbackMeal || '가볍게 챙기기';
+}
+
+function getPickValue(parsed, viewKey, fieldKey) {
+  const synergy = parsed.synergy || {};
+  if (viewKey === 'overall') return synergy[fieldKey] || '';
+  const slot = parsed.timeSlots?.[viewKey] || {};
+  if (fieldKey === 'food') return getSlotFood(parsed, viewKey);
+  if (fieldKey === 'action') return slot.action || synergy.action || TIME_SLOT_META[viewKey]?.defaultAction || '';
+  if (fieldKey === 'communication') return slot.communication || synergy.communication || TIME_SLOT_META[viewKey]?.defaultCommunication || '';
+  return slot[fieldKey] || synergy[fieldKey] || '';
 }
 
 function getCurrentTimeSlotKey(date = new Date()) {
@@ -113,6 +139,14 @@ const TILE_SCROLL_MAP = {
   '심야 할 일':    'today-long-reading',
   '시간대 조언':   'today-long-reading',
   '대화 팁':       'today-pick-shell',
+  '음식':         'today-pick-shell',
+  '장소':         'today-pick-shell',
+  '색':           'today-pick-shell',
+  '아이템':       'today-pick-shell',
+  '숫자':         'today-pick-shell',
+  '방향':         'today-pick-shell',
+  '소통':         'today-pick-shell',
+  '행동':         'today-pick-shell',
 };
 function getMealScrollKey() { return 'today-pick-shell'; }
 
@@ -159,6 +193,11 @@ function ScoreRing({ score, color }) {
 }
 
 const SLOT_ICONS = {
+  overall: (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="none" aria-hidden="true">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+  ),
   morning: (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
       <circle cx="12" cy="9" r="3"/>
@@ -236,6 +275,40 @@ const DASH_ICONS = {
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
     </svg>
   ),
+  pin: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="dmc-tile-icon" aria-hidden="true">
+      <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11z"/>
+      <circle cx="12" cy="10" r="2"/>
+    </svg>
+  ),
+  palette: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="dmc-tile-icon" aria-hidden="true">
+      <path d="M12 3a9 9 0 0 0 0 18h1.5a1.8 1.8 0 0 0 1.2-3.1 1.8 1.8 0 0 1 1.2-3.1H18a6 6 0 0 0 0-12h-6z"/>
+      <circle cx="7.5" cy="10" r="0.8"/>
+      <circle cx="10" cy="7" r="0.8"/>
+      <circle cx="13.5" cy="7.5" r="0.8"/>
+    </svg>
+  ),
+  bag: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="dmc-tile-icon" aria-hidden="true">
+      <path d="M6 8h12l-1 13H7L6 8z"/>
+      <path d="M9 8a3 3 0 0 1 6 0"/>
+    </svg>
+  ),
+  number: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" className="dmc-tile-icon" aria-hidden="true">
+      <line x1="10" y1="3" x2="8" y2="21"/>
+      <line x1="16" y1="3" x2="14" y2="21"/>
+      <line x1="4" y1="9" x2="20" y2="9"/>
+      <line x1="3" y1="15" x2="19" y2="15"/>
+    </svg>
+  ),
+  compass: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="dmc-tile-icon" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="m15 9-2 5-4 1 2-5 4-1z"/>
+    </svg>
+  ),
 };
 
 export default function DailyMiniCard({
@@ -250,7 +323,7 @@ export default function DailyMiniCard({
   bottomAxes = [],
 }) {
   const { today } = useSajuCtx();
-  const [activeSlotKey, setActiveSlotKey] = useState(() => getCurrentTimeSlotKey());
+  const [activeSlotKey, setActiveSlotKey] = useState('overall');
 
   const parsed = useMemo(
     () => parseDailyLines(dailyResult?.text || ''),
@@ -263,55 +336,13 @@ export default function DailyMiniCard({
   const scorePct = Math.max(0, Math.min(100, Number(score) || 0));
   const meal = useMemo(() => getMealPrompt(new Date().getHours()), []);
   const dashboardItems = useMemo(() => {
-    const allAxes = [...topAxes, ...bottomAxes].filter(Boolean);
-    const best = topAxes[0] || allAxes.sort((a, b) => (b.score || 0) - (a.score || 0))[0];
-    const caution = bottomAxes[0] || allAxes.sort((a, b) => (a.score || 0) - (b.score || 0))[0];
-    const bestLabel = best?.label || CATEGORY_LABELS[best?.key] || '좋은 흐름';
-    const cautionLabel = caution?.label || CATEGORY_LABELS[caution?.key] || '조심할 흐름';
-    const synergy = parsed.synergy || {};
-    const eastern = parsed.easternKi || {};
-    const activeMeta = TIME_SLOT_META[activeSlotKey] || TIME_SLOT_META.afternoon;
-    const activeSlot = parsed.timeSlots?.[activeSlotKey] || {};
-    const fallbackMeal = getSlotFood(parsed, activeSlotKey);
-    return [
-      {
-        icon: 'trending-up',
-        title: `${activeMeta.label} 운세`,
-        value: best?.score ? `${bestLabel} ${best.score}` : tone.label,
-        question: `오늘 ${bestLabel} 운을 어떻게 살리면 좋을까?`,
-      },
-      {
-        icon: 'bolt',
-        title: '조심할 것',
-        value: activeSlot.caution || (caution?.score ? `${cautionLabel} ${caution.score}` : (eastern.dontAction || activeMeta.defaultCaution)),
-        question: `오늘 조심해야 할 운세를 자세히 알려줘.`,
-      },
-      {
-        icon: 'pencil',
-        title: `${activeMeta.label} 할 일`,
-        value: activeSlot.action || eastern.doAction || synergy.action || activeMeta.defaultAction,
-        question: '오늘의 한 줄 조언을 내 상황에 맞게 풀어줘.',
-      },
-      {
-        icon: 'cake',
-        title: activeMeta.mealTitle,
-        value: fallbackMeal,
-        question: meal.question,
-      },
-      {
-        icon: 'moon',
-        title: '시간대 조언',
-        value: activeSlot.advice || activeMeta.defaultAdvice,
-        question: '지금 시간대에 맞는 조언을 더 자세히 알려줘.',
-      },
-      {
-        icon: 'chat',
-        title: '대화 팁',
-        value: activeSlot.communication || synergy.communication || activeMeta.defaultCommunication,
-        question: '오늘 사람들과 대화할 때 신경 쓸 점을 알려줘.',
-      },
-    ];
-  }, [activeSlotKey, bottomAxes, meal, parsed.easternKi, parsed.synergy, parsed.timeSlots, tone.label, topAxes]);
+    return PICK_FIELD_META.map((field) => ({
+      icon: field.icon,
+      title: field.label,
+      value: getPickValue(parsed, activeSlotKey, field.key) || '-',
+      question: field.question,
+    }));
+  }, [activeSlotKey, parsed]);
 
   const handleDashboardClick = (item, event) => {
     event.stopPropagation();
@@ -392,8 +423,8 @@ export default function DailyMiniCard({
       </button>
 
       <div className="daily-mini-time-tabs" aria-label="시간대별 별숨 선택">
-        {TIME_SLOT_KEYS.map((key) => {
-          const meta = TIME_SLOT_META[key];
+        {PICK_VIEW_KEYS.map((key) => {
+          const meta = PICK_VIEW_META[key];
           const active = key === activeSlotKey;
           return (
             <button

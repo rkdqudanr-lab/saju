@@ -12,14 +12,25 @@ function parseTimeSlotLine(line) {
   const [, rawBody = ''] = normalized.split(':');
   const slot = {};
   rawBody.split('/').map((part) => part.trim()).filter(Boolean).forEach((part) => {
-    const match = part.match(/^(음식|할일|조심|소통|한줄)\s*=\s*(.+)$/);
+    const match = part.match(/^(음식|장소|색|컬러|색상|아이템|숫자|행운 숫자|방향|행운 방향|소통|행동|할일|조심|한줄|요약)\s*=\s*(.+)$/);
     if (!match) return;
     const keyMap = {
       음식: 'food',
+      장소: 'place',
+      색: 'color',
+      컬러: 'color',
+      색상: 'color',
+      아이템: 'item',
+      숫자: 'number',
+      '행운 숫자': 'number',
+      방향: 'direction',
+      '행운 방향': 'direction',
       할일: 'action',
+      행동: 'action',
       조심: 'caution',
       소통: 'communication',
       한줄: 'advice',
+      요약: 'advice',
     };
     slot[keyMap[match[1]]] = match[2].trim();
   });
@@ -125,7 +136,7 @@ export function parseDailyLines(text) {
 
   const timeSlotPatterns = [
     { key: 'morning', regex: /^아침[:\s]/ },
-    { key: 'afternoon', regex: /^오후[:\s]/ },
+    { key: 'afternoon', regex: /^(오후|점심)[:\s]/ },
     { key: 'evening', regex: /^저녁[:\s]/ },
     { key: 'night', regex: /^심야[:\s]/ },
   ];
@@ -140,7 +151,7 @@ export function parseDailyLines(text) {
   const badtimeLine = lines.find((line) => /배드타임|액막이|주의/.test(line));
   const badtime = badtimeLine ? { symptom: badtimeLine.replace(/^\[[^\]]+\]\s*/, '').trim(), transformation: '' } : null;
 
-  const FIELD_PREFIXES = /^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운|음식|장소|색|컬러|색상|아이템|숫자|행운 숫자|방향|행운 방향|소통|행동|요약|시너지|십신|기운|DO|DONT|행성|흐름|아침|오후|저녁|심야)[:\s]/i;
+  const FIELD_PREFIXES = /^(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운|음식|장소|색|컬러|색상|아이템|숫자|행운 숫자|방향|행운 방향|소통|행동|요약|시너지|십신|기운|DO|DONT|행성|흐름|아침|오후|점심|저녁|심야)[:\s]/i;
 
   const closingAdvice = [...lines].reverse().find((line) => {
     if (line.startsWith('[')) return false;

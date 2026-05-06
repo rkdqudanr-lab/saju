@@ -1031,14 +1031,14 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 .dmc-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:14px}
 .dmc-ring-num{font-size:32px;font-weight:900;line-height:1;color:var(--daily-score-color);font-variant-numeric:tabular-nums;text-shadow:0 0 18px var(--daily-score-color)}
 .dmc-ring-tone{display:inline-flex;align-items:center;margin-top:8px;padding:3px 9px;border-radius:999px;background:var(--goldf);border:1px solid var(--acc);font-size:10px;font-weight:800;color:var(--gold);letter-spacing:.02em;white-space:nowrap}
-.daily-mini-time-tabs{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 12px}
+.daily-mini-time-tabs{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:0 0 12px}
 .daily-mini-time-tab{
-  min-width:0;padding:8px 4px 9px;border-radius:12px;border:1px solid var(--home-card-line);
+  min-width:0;padding:8px 2px 9px;border-radius:12px;border:1px solid var(--home-card-line);
   background:rgba(255,255,255,.045);color:var(--t3);font-family:var(--ff);cursor:pointer;
   display:flex;flex-direction:column;align-items:center;gap:3px;
   transition:background var(--trans-fast),border-color var(--trans-fast),transform var(--trans-fast);
 }
-.daily-mini-time-tab span{font-size:10px;font-weight:850;line-height:1}
+.daily-mini-time-tab span{font-size:9px;font-weight:850;line-height:1}
 .daily-mini-time-tab.is-active{background:var(--goldf);border-color:var(--acc);color:var(--gold)}
 .daily-mini-time-tab:active{transform:scale(.97)}
 .daily-mini-dashboard{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:13px}
