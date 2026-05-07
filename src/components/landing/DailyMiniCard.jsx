@@ -215,7 +215,6 @@ export default function DailyMiniCard({
   onAsk,
   onClick,
   boostCount = 0,
-  scoreBoostDelta = 0,
   topAxes = [],
   bottomAxes = [],
 }) {
@@ -373,18 +372,11 @@ export default function DailyMiniCard({
         </div>
       )}
 
-      {(scoreBoostDelta > 0 || boostCount > 0) && (
+      {boostCount > 0 && (
         <div className="daily-mini-badges">
-          {scoreBoostDelta > 0 && (
-            <span className="daily-mini-badge">
-              +{scoreBoostDelta}↑
-            </span>
-          )}
-          {boostCount > 0 && (
-            <span className="daily-mini-badge">
-              ✦ {boostCount}개 기운 적용 중
-            </span>
-          )}
+          <span className="daily-mini-badge">
+            ✦ {boostCount}개 기운 적용 중
+          </span>
         </div>
       )}
 
