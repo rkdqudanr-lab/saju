@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { parseDailyLines } from '../../utils/parseDailyLines.js';
 import { useSajuCtx } from '../../context/AppContext.jsx';
 
@@ -124,11 +124,9 @@ function ScoreRing({ score, color }) {
       <circle cx="50" cy="50" r={_R} fill="none"
         stroke={color} strokeWidth="5"
         strokeDasharray={`${fill} ${_C - fill}`}
-        strokeLinecap="round" transform="rotate(135 50 50)"
-        style={{ filter: `drop-shadow(0 0 4px ${color})` }} />
+        strokeLinecap="round" transform="rotate(135 50 50)" />
       {s > 2 && (
-        <circle cx={capX} cy={capY} r="3.2" fill={color}
-          style={{ filter: `drop-shadow(0 0 5px ${color})` }} />
+        <circle cx={capX} cy={capY} r="3.2" fill={color} />
       )}
     </svg>
   );
@@ -222,6 +220,8 @@ export default function DailyMiniCard({
   bottomAxes = [],
 }) {
   const { today } = useSajuCtx();
+  const [displayScore, setDisplayScore] = useState(0);
+  const [hasRevealed, setHasRevealed] = useState(false);
 
   const parsed = useMemo(
     () => parseDailyLines(dailyResult?.text || ''),
@@ -229,9 +229,10 @@ export default function DailyMiniCard({
   );
 
   const score = todayScore || parsed.score || dailyResult?.score;
+  const numericScore = Math.max(0, Math.min(100, Number(score) || 0));
   const dateLabel = today ? `${today.month}월 ${today.day}일` : '';
   const tone = score ? scoreTone(score) : scoreTone(0);
-  const scorePct = Math.max(0, Math.min(100, Number(score) || 0));
+  const scorePct = numericScore;
   const dashboardItems = useMemo(() => {
     return PICK_FIELD_META.map((field) => ({
       icon: field.icon,
@@ -240,6 +241,43 @@ export default function DailyMiniCard({
       question: field.question,
     }));
   }, [parsed]);
+
+  useEffect(() => {
+    if (!dailyResult || !numericScore) {
+      setDisplayScore(0);
+      setHasRevealed(false);
+      return undefined;
+    }
+
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      setDisplayScore(numericScore);
+      setHasRevealed(true);
+      return undefined;
+    }
+
+    let rafId = 0;
+    const duration = 780;
+    const start = performance.now();
+    const from = Math.min(displayScore || 0, numericScore);
+    const delta = numericScore - from;
+
+    const tick = (now) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayScore(Math.round(from + delta * eased));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        setHasRevealed(true);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+    // displayScore는 애니메이션 시작점으로만 사용하며 score 변경 시에만 재실행한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailyResult, numericScore]);
 
   const handleDashboardClick = (item, event) => {
     event.stopPropagation();
@@ -292,7 +330,7 @@ export default function DailyMiniCard({
   // 운세 조회 완료
   return (
     <div
-      className="daily-mini-card"
+      className={`daily-mini-card ${hasRevealed ? 'is-revealed' : 'is-revealing'}`}
       data-tour="daily-card"
       style={{
         width: '100%',
@@ -301,6 +339,7 @@ export default function DailyMiniCard({
       }}
     >
       <div className="daily-mini-glow" aria-hidden="true" />
+      <div className="daily-mini-starfield" aria-hidden="true" />
 
       <div className="daily-mini-topline">
         <span className="daily-mini-eyebrow">
@@ -313,7 +352,7 @@ export default function DailyMiniCard({
         <div className="dmc-ring-wrap">
           <ScoreRing score={scorePct} color={dynamicScoreColor(scorePct)} />
           <div className="dmc-ring-center">
-            <span className="dmc-ring-num">{score}</span>
+            <span className="dmc-ring-num">{displayScore || score}</span>
             <span className="dmc-ring-tone">{tone.label}</span>
           </div>
         </div>
@@ -350,11 +389,12 @@ export default function DailyMiniCard({
       )}
 
       <div className="daily-mini-dashboard" aria-label="오늘의 미니 대시보드">
-        {dashboardItems.map((item) => (
+        {dashboardItems.map((item, index) => (
           <button
             key={item.title}
             type="button"
             className="daily-mini-dash-item"
+            style={{ '--dash-delay': `${index * 34}ms` }}
             onClick={(event) => handleDashboardClick(item, event)}
             aria-label={`${item.title}: ${item.value}`}
           >
@@ -371,7 +411,7 @@ export default function DailyMiniCard({
         onClick={onClick}
         aria-label={`오늘의 별숨 ${score}점, 자세히 보기`}
       >
-        자세히 보기 →
+        오늘 흐름 자세히 보기 →
       </button>
 
     </div>
