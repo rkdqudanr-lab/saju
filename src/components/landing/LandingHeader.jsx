@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useUserCtx, useSajuCtx, useGamCtx } from '../../context/AppContext.jsx';
 import { useAppStore } from '../../store/useAppStore.js';
 
@@ -30,6 +31,8 @@ export default function LandingHeader({
   const streakBonusText = nextStreakBonus && nextStreakBonus.day - streak <= 2
     ? `${nextStreakBonus.day - streak}일 뒤 +${nextStreakBonus.bonus}`
     : '';
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const ilgan = saju?.ilganPoetic || '';
   const dateLabel = today ? `${today.month}월 ${today.day}일` : '';
@@ -84,10 +87,45 @@ export default function LandingHeader({
         </div>
       </div>
 
-      {/* 수정 / 로그아웃 */}
-      <div className="lh-actions">
-        <button type="button" className="lh-action-btn" onClick={onEditProfile}>수정</button>
-        <button type="button" className="lh-action-btn" onClick={onLogout}>로그아웃</button>
+      {/* 케밥 메뉴 (수정/로그아웃 격하) */}
+      <div className="lh-actions" style={{ position: 'relative' }}>
+        <button
+          type="button"
+          className="lh-kebab"
+          aria-label="더보기 메뉴"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>
+          </svg>
+        </button>
+        {menuOpen && (
+          <>
+            <div
+              style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+              onClick={() => setMenuOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="lh-menu" role="menu">
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => { setMenuOpen(false); onEditProfile(); }}
+              >
+                프로필 수정
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => { setMenuOpen(false); onLogout(); }}
+              >
+                로그아웃
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

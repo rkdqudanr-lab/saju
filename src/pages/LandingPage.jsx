@@ -23,6 +23,7 @@ import ReflectionPopup from '../components/ReflectionPopup.jsx';
 import LandingHeader from '../components/landing/LandingHeader.jsx';
 import DailyMiniCard from '../components/landing/DailyMiniCard.jsx';
 import AlertCarousel from '../components/landing/AlertCarousel.jsx';
+import ActionTile from '../components/landing/ActionTile.jsx';
 import QuickActionGrid from '../components/landing/QuickActionGrid.jsx';
 import WeeklyScoreSummary from '../components/landing/WeeklyScoreSummary.jsx';
 import LevelCard from '../components/landing/LevelCard.jsx';
@@ -325,14 +326,15 @@ export default function LandingPage({
   }, [today?.day]);
 
   // ── 타일 정의 ──
+  const heroTile = useMemo(() => ({
+    icon: TILE_ICONS.chat,
+    title: '별숨에게 질문하기',
+    sub: '지금 제일 궁금한 걸 바로 물어보세요',
+    onClick: () => setStep(STEP.QUESTION),
+    hero: true,
+  }), [setStep]);
+
   const primaryTiles = useMemo(() => [
-    {
-      icon: TILE_ICONS.chat,
-      title: '별숨에게 질문하기',
-      sub: '지금 제일 궁금한 걸 바로 물어보세요',
-      onClick: () => setStep(STEP.QUESTION),
-      accent: true,
-    },
     {
       icon: TILE_ICONS.question,
       title: '오늘의 추천질문',
@@ -532,8 +534,11 @@ export default function LandingPage({
           </div>
         )}
 
-        {/* 5. 주요 기능 2×2 타일 */}
-        <QuickActionGrid tiles={primaryTiles} />
+        {/* 5. 주요 기능: hero + 2×2 그리드 */}
+        <div className="tile-stack">
+          <ActionTile {...heroTile} />
+          <QuickActionGrid tiles={primaryTiles} />
+        </div>
 
         {/* 6. 7일 점수 요약 */}
         <WeeklyScoreSummary

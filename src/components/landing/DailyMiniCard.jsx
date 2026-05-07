@@ -39,14 +39,14 @@ function dynamicScoreColor(score) {
 
 
 const PICK_FIELD_META = [
-  { key: 'food', label: '음식', icon: 'cake', question: '오늘 먹으면 좋은 음식을 더 자세히 알려줘.' },
-  { key: 'place', label: '장소', icon: 'pin', question: '오늘 가면 좋은 장소를 더 자세히 알려줘.' },
-  { key: 'color', label: '색', icon: 'palette', question: '오늘 행운의 색을 어떻게 쓰면 좋을까?' },
-  { key: 'item', label: '아이템', icon: 'bag', question: '오늘 행운 아이템을 어떻게 활용하면 좋을까?' },
-  { key: 'number', label: '숫자', icon: 'number', question: '오늘 행운 숫자의 의미를 알려줘.' },
-  { key: 'direction', label: '방향', icon: 'compass', question: '오늘 유리한 방향을 어떻게 활용하면 좋을까?' },
-  { key: 'communication', label: '소통', icon: 'chat', question: '오늘 사람들과 대화할 때 신경 쓸 점을 알려줘.' },
-  { key: 'action', label: '행동', icon: 'pencil', question: '오늘의 행동 조언을 내 상황에 맞게 풀어줘.' },
+  { key: 'food',          label: '음식',  icon: 'cake',    tone: 'warm',     question: '오늘 먹으면 좋은 음식을 더 자세히 알려줘.' },
+  { key: 'place',         label: '장소',  icon: 'pin',     tone: 'teal',     question: '오늘 가면 좋은 장소를 더 자세히 알려줘.' },
+  { key: 'color',         label: '색',    icon: 'palette', tone: 'lavender', question: '오늘 행운의 색을 어떻게 쓰면 좋을까?' },
+  { key: 'item',          label: '아이템',icon: 'bag',     tone: 'rose',     question: '오늘 행운 아이템을 어떻게 활용하면 좋을까?' },
+  { key: 'number',        label: '숫자',  icon: 'number',  tone: 'mint',     question: '오늘 행운 숫자의 의미를 알려줘.' },
+  { key: 'direction',     label: '방향',  icon: 'compass', tone: 'sky',      question: '오늘 유리한 방향을 어떻게 활용하면 좋을까?' },
+  { key: 'communication', label: '소통',  icon: 'chat',    tone: 'amber',    question: '오늘 사람들과 대화할 때 신경 쓸 점을 알려줘.' },
+  { key: 'action',        label: '행동',  icon: 'pencil',  tone: 'gold',     question: '오늘의 행동 조언을 내 상황에 맞게 풀어줘.' },
 ];
 
 function getPickValue(parsed, fieldKey) {
@@ -236,6 +236,7 @@ export default function DailyMiniCard({
     return PICK_FIELD_META.map((field) => ({
       icon: field.icon,
       title: field.label,
+      tone: field.tone,
       value: getPickValue(parsed, field.key) || '-',
       question: field.question,
     }));
@@ -380,17 +381,23 @@ export default function DailyMiniCard({
         </div>
       )}
 
+      <div className="daily-mini-section-label" aria-hidden="true">
+        <span>오늘의 별숨픽</span>
+        <span className="daily-mini-divider" />
+      </div>
+
       <div className="daily-mini-dashboard" aria-label="오늘의 미니 대시보드">
         {dashboardItems.map((item, index) => (
           <button
             key={item.title}
             type="button"
             className="daily-mini-dash-item"
+            data-tone={item.tone}
             style={{ '--dash-delay': `${index * 34}ms` }}
             onClick={(event) => handleDashboardClick(item, event)}
             aria-label={`${item.title}: ${item.value}`}
           >
-            {DASH_ICONS[item.icon]}
+            <span className="daily-mini-dash-icon">{DASH_ICONS[item.icon]}</span>
             <span className="daily-mini-dash-label">{item.title}</span>
             <span className="daily-mini-dash-value">{primaryValue(item.value)}</span>
           </button>
@@ -403,7 +410,12 @@ export default function DailyMiniCard({
         onClick={onClick}
         aria-label={`오늘의 별숨 ${score}점, 자세히 보기`}
       >
-        오늘 흐름 자세히 보기 →
+        자세히 보기
+        <span className="daily-mini-cta-arrow" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M13 5l7 7-7 7"/>
+          </svg>
+        </span>
       </button>
 
     </div>

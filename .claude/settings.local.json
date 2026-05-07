@@ -43,7 +43,9 @@
       "PowerShell(Get-Process -Id 25172,17132)",
       "PowerShell(Get-Process | Where-Object { $_.Name -match \"node\" } | Select-Object Id,Name,@{Name='CmdLine';Expression={\\(Get-WmiObject Win32_Process -Filter \"ProcessId=$\\($_.Id\\)\"\\).CommandLine}} | Format-List)",
       "PowerShell($p = Get-WmiObject Win32_Process -Filter \"ProcessId=28920\"; $p.CommandLine; echo \"---WorkDir:\"; \\(Get-WmiObject Win32_Process -Filter \"ProcessId=25172\"\\).ExecutablePath)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(git rebase *)",
+      "Bash(GIT_EDITOR=true git rebase --continue)"
     ]
   }
 }
