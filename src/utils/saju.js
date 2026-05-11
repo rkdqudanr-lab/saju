@@ -2,16 +2,16 @@ import { getKstDateParts, getMonthJijiIndex, getSolarTermInfo } from '../../lib/
 import { formatLunarDate, solarToLunar } from '../../lib/lunarCalendar.js';
 
 // ── 일진(日辰) 계산 — 60甲子 순환 ─────────────────────────────
-// 기준: 2000-01-01 = 甲戌日 (천간 0=갑, 지지 10=술)
+// 만세력 기준 에포크: 1900-01-01 = 甲戌(index 10), +10 오프셋 적용
 const _IC_GANS = ['갑','을','병','정','무','기','경','신','임','계'];
 const _IC_JIS  = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
 const _IC_EL   = { 갑:'목',을:'목',병:'화',정:'화',무:'토',기:'토',경:'금',신:'금',임:'수',계:'수' };
 const _IC_DESC = { 목:'추진·시작하기 좋은 날', 화:'표현·활발하게 나서기 좋은 날', 토:'신중하게 기다리기 좋은 날', 금:'결단·마무리하기 좋은 날', 수:'직관을 믿고 조용히 준비하기 좋은 날' };
 
 function _calcIlchin(y, m, d) {
-  const diff = Math.round((Date.UTC(y, m-1, d) - Date.UTC(2000, 0, 1)) / 86400000);
-  const gan  = _IC_GANS[((diff)    % 10 + 10) % 10];
-  const ji   = _IC_JIS [((10+diff) % 12 + 12) % 12];
+  const df = Math.round((Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 1)) / 86400000) + 10;
+  const gan = _IC_GANS[(df % 10 + 10) % 10];
+  const ji  = _IC_JIS [(df % 12 + 12) % 12];
   return { gan, ji, text: `${gan}${ji}일`, element: _IC_EL[gan], desc: _IC_DESC[_IC_EL[gan]] };
 }
 
@@ -164,7 +164,16 @@ export function getSaju(y,m,d,h,min=0){
     y=next.getFullYear(); m=next.getMonth()+1; d=next.getDate();
     h=0;
   }
-  const yg=((y-4)%10+10)%10,yj=((y-4)%12+12)%12;
+  // 연주(年柱)는 입춘(立春) 기준 — 입춘 이전이면 전년도 연주 적용
+  // getSolarTermInfo: JEOLGI_TABLE 있으면 분 단위 정확, 없으면 천문학적 계산 — 모든 연도 지원
+  let _yBase = y;
+  if (m === 1) {
+    _yBase = y - 1; // 1월은 항상 입춘 이전
+  } else if (m === 2) {
+    const { index } = getSolarTermInfo(y, m, d, h, min);
+    if (index === 0 || index === 1) _yBase = y - 1; // 소한(0)·대한(1) = 입춘 미통과
+  }
+  const yg=((_yBase-4)%10+10)%10,yj=((_yBase-4)%12+12)%12;
   // 월지: 절기(입절) 기준 월주 지지
   const wj = getMonthJijiIndex(y, m, d, h, min);
   // 월간: 오호둔월법 — 인월(寅月) 천간 = (연간%5)*2+2, 이후 月마다 +1
