@@ -28,7 +28,7 @@ export const GRADE_ORDER      = ['satellite', 'planet', 'galaxy', 'nebula'];
 export const SAJU_GRADE_ORDER = ['ohaeng', 'cheongan', 'jiji', 'gapja'];
 
 // ─── 속성 (컬렉션 완성도 관계 없음, 풍미 텍스트용) ─────────────
-const ASPECTS = {
+export const ASPECTS = {
   overall: { label: '종합',  emoji: '🌟', effectTpl: (n) => `${n}의 기운이 오늘의 전반적인 운세를 높여요` },
   wealth:  { label: '재물',  emoji: '💰', effectTpl: (n) => `${n}의 기운이 금전·사업운을 밝혀요` },
   love:    { label: '애정',  emoji: '💫', effectTpl: (n) => `${n}의 빛이 새로운 인연을 이어줘요` },
