@@ -112,6 +112,36 @@ function DaeunCard({ period, isCurrent, isNext }) {
   );
 }
 
+const PERIOD_CONFIG = {
+  past: {
+    tags: ['그당시흐름', '그당시전환', '오늘의나에게'],
+    meta: [
+      { tag: '그당시흐름',   label: '그 시기의 흐름',   desc: '어떤 10년이었는지',  icon: '🔙', color: 'rgba(150,150,180,.1)',   border: 'rgba(150,150,180,.3)' },
+      { tag: '그당시전환',   label: '기회와 어려움',    desc: '그 시기의 패턴',     icon: '💭', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
+      { tag: '오늘의나에게', label: '지금의 나에게',    desc: '남겨진 것들',        icon: '🔗', color: 'rgba(107,191,181,.12)', border: 'rgba(107,191,181,.3)' },
+    ],
+    title: '대운 회고 — 지나온 흐름',
+  },
+  current: {
+    tags: ['초반기', '중반기', '후반기'],
+    meta: [
+      { tag: '초반기', label: '초반기', desc: '지금부터 3~4년', icon: '🌱', color: 'rgba(107,191,181,.15)', border: 'rgba(107,191,181,.3)' },
+      { tag: '중반기', label: '중반기', desc: '4~7년 뒤',       icon: '🌿', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
+      { tag: '후반기', label: '후반기', desc: '7~10년 뒤',      icon: '🌟', color: 'rgba(200,160,255,.08)', border: 'rgba(200,160,255,.25)' },
+    ],
+    title: '대운 흐름 — 3시기 분석',
+  },
+  future: {
+    tags: ['앞으로의흐름', '이시기기회', '준비할것'],
+    meta: [
+      { tag: '앞으로의흐름', label: '앞으로의 흐름',   desc: '어떤 10년이 될지',   icon: '🔮', color: 'rgba(200,160,255,.12)', border: 'rgba(200,160,255,.3)' },
+      { tag: '이시기기회',   label: '기회와 주의',     desc: '이 시기에 살릴 것', icon: '✨', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
+      { tag: '준비할것',     label: '지금 준비할 것',  desc: '미리 챙겨둘 것',    icon: '📋', color: 'rgba(107,191,181,.12)', border: 'rgba(107,191,181,.3)' },
+    ],
+    title: '대운 전망 — 앞으로의 흐름',
+  },
+};
+
 export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) {
   const { user } = useAppStore();
   const scrollRef = useRef(null);
@@ -176,11 +206,10 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     const ctx = buildCtx ? buildCtx() : '';
     const age = CURRENT_YEAR - Number(form.by);
 
-    // 과거/현재/미래 판별
+    // 과거/현재/미래 판별 — type은 await 전에 확정하고, 상태 업데이트는 await 후 interpretation과 함께 배치
     const isPast = selected.ageEnd < age;
     const isFuture = selected.age > age;
     const type = isPast ? 'past' : isFuture ? 'future' : 'current';
-    setPeriodType(type);
 
     const baseInfo = [
       `현재 나이: ${age}세`,
@@ -203,6 +232,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
         context: ctx,
         isDaeun: true,
       });
+      setPeriodType(type);
       setInterpretation(typeof result === 'string' ? result : result?.text || '');
     } catch {
       showToast('해설을 불러오지 못했어요. 다시 시도해봐요.', 'error');
@@ -287,14 +317,6 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
       {/* 타임라인 */}
       {daeunData && (
         <div style={{ padding: '0 0 4px' }}>
-          <style>{`
-            @keyframes daeunScrollHint {
-              0%   { transform: translateX(0);   opacity: 0.4; }
-              50%  { transform: translateX(6px);  opacity: 1;   }
-              100% { transform: translateX(0);   opacity: 0.4; }
-            }
-          `}</style>
-
           {/* 스크롤 컨테이너 + 오른쪽 fade */}
           <div style={{ position: 'relative' }}>
             <div
@@ -393,35 +415,6 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
         {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
         {interpretation && (() => {
-          const PERIOD_CONFIG = {
-            past: {
-              tags: ['그당시흐름', '그당시전환', '오늘의나에게'],
-              meta: [
-                { tag: '그당시흐름',   label: '그 시기의 흐름',   desc: '어떤 10년이었는지',  icon: '🔙', color: 'rgba(150,150,180,.1)',   border: 'rgba(150,150,180,.3)' },
-                { tag: '그당시전환',   label: '기회와 어려움',    desc: '그 시기의 패턴',     icon: '💭', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
-                { tag: '오늘의나에게', label: '지금의 나에게',    desc: '남겨진 것들',        icon: '🔗', color: 'rgba(107,191,181,.12)', border: 'rgba(107,191,181,.3)' },
-              ],
-              title: '대운 회고 — 지나온 흐름',
-            },
-            current: {
-              tags: ['초반기', '중반기', '후반기'],
-              meta: [
-                { tag: '초반기', label: '초반기', desc: '지금부터 3~4년', icon: '🌱', color: 'rgba(107,191,181,.15)', border: 'rgba(107,191,181,.3)' },
-                { tag: '중반기', label: '중반기', desc: '4~7년 뒤',       icon: '🌿', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
-                { tag: '후반기', label: '후반기', desc: '7~10년 뒤',      icon: '🌟', color: 'rgba(200,160,255,.08)', border: 'rgba(200,160,255,.25)' },
-              ],
-              title: '대운 흐름 — 3시기 분석',
-            },
-            future: {
-              tags: ['앞으로의흐름', '이시기기회', '준비할것'],
-              meta: [
-                { tag: '앞으로의흐름', label: '앞으로의 흐름',   desc: '어떤 10년이 될지',   icon: '🔮', color: 'rgba(200,160,255,.12)', border: 'rgba(200,160,255,.3)' },
-                { tag: '이시기기회',   label: '기회와 주의',     desc: '이 시기에 살릴 것', icon: '✨', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
-                { tag: '준비할것',     label: '지금 준비할 것',  desc: '미리 챙겨둘 것',    icon: '📋', color: 'rgba(107,191,181,.12)', border: 'rgba(107,191,181,.3)' },
-              ],
-              title: '대운 전망 — 앞으로의 흐름',
-            },
-          };
           const config = PERIOD_CONFIG[periodType] || PERIOD_CONFIG.current;
           const secs = {};
           for (let i = 0; i < config.tags.length; i++) {
