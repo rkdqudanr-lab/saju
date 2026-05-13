@@ -120,6 +120,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
   const [pdfSaving, setPdfSaving] = useState(false);
   const [daeunData, setDaeunData] = useState(null);
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [periodType, setPeriodType] = useState('current'); // 'past' | 'current' | 'future'
 
   const gender = form?.gender || 'M';
 
@@ -148,6 +149,12 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     scrollRef.current.scrollLeft = offset;
   }, [currentIdx, daeunData]);
 
+  // 카드 선택이 바뀌면 이전 해설 초기화
+  useEffect(() => {
+    setInterpretation('');
+    setPeriodType('current');
+  }, [currentIdx]);
+
   async function handleAskInterpretation() {
     if (!daeunData || !user) {
       showToast('로그인 후 이용 가능해요', 'info');
@@ -156,19 +163,32 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     setLoading(true);
     setInterpretation('');
 
-    const current = daeunData.periods[currentIdx];
+    const selected = daeunData.periods[currentIdx];
     const next = daeunData.periods[currentIdx + 1];
     const ctx = buildCtx ? buildCtx() : '';
+    const age = CURRENT_YEAR - Number(form.by);
 
-    const summary = [
-      `현재 나이: ${CURRENT_YEAR - Number(form.by)}세`,
+    // 과거/현재/미래 판별
+    const isPast = selected.ageEnd < age;
+    const isFuture = selected.age > age;
+    const type = isPast ? 'past' : isFuture ? 'future' : 'current';
+    setPeriodType(type);
+
+    const baseInfo = [
+      `현재 나이: ${age}세`,
       `순행 여부: ${daeunData.isForward ? '순행' : '역행'}`,
-      `현재 대운: ${current?.cg}${current?.jj} (${current?.age}~${current?.ageEnd}세, ${current?.cgEl}·${current?.jjEl})`,
-      next ? `다음 대운: ${next.cg}${next.jj} (${next.age}~${next.ageEnd}세)` : '',
+      `선택한 대운: ${selected.cg}${selected.jj} (${selected.age}~${selected.ageEnd}세, ${selected.cgEl}·${selected.jjEl})`,
       `전체 대운 흐름: ${daeunData.periods.map(p => `${p.cg}${p.jj}`).join('→')}`,
-    ].filter(Boolean).join('\n');
+    ].join('\n');
 
-    const prompt = `나의 대운 흐름을 아래 3개 시기로 나눠 해설해줘:\n${summary}\n\n반드시 아래 태그 형식으로 답해줘:\n[초반기] 현재 대운 초반기 (지금부터 3~4년 간의 흐름, 어떤 일이 펼쳐지는지, 조심할 것)\n[중반기] 현재 대운 중반기 (4~7년 뒤의 변화, 기회와 조심할 것)\n[후반기] 대운 전환기 및 다음 대운 준비 (7~10년 뒤, 마무리와 새 흐름 진입)`;
+    let prompt;
+    if (type === 'past') {
+      prompt = `나의 이미 지나간 대운을 회고해줘:\n${baseInfo}\n\n이 시기(${selected.age}~${selected.ageEnd}세)는 이미 지나간 시기예요. 그 당시 어떤 삶의 흐름이 있었을지를 회고 형식으로, 과거형 말투("~했을 거예요" "~하기 쉬웠어요")로 써줘.\n\n반드시 아래 태그 형식으로 답해줘:\n[그당시흐름] 이 10년이 어떤 성격의 시기였을지. 어떤 방향이 강했는지, 어떤 감정·선택·관계 패턴이 반복됐을지.\n[그당시전환] 이 시기의 기회와 어려움. 어떤 결정을 앞에 두었을지, 무엇이 발목을 잡았을지.\n[오늘의나에게] 그 시기가 지금의 나에게 남긴 것. 여전히 이어지는 것, 그때부터 달라진 것, 지금 살릴 수 있는 것.`;
+    } else if (type === 'future') {
+      prompt = `나의 앞으로 다가올 대운을 전망해줘:\n${baseInfo}\n\n이 시기(${selected.age}~${selected.ageEnd}세)는 아직 오지 않은 미래예요. 이 시기에 어떤 흐름이 펼쳐질 가능성이 높은지를 전망 형식으로 써줘. 단정 금지, 가능성으로 표현.\n\n반드시 아래 태그 형식으로 답해줘:\n[앞으로의흐름] 이 10년이 어떤 성격의 시기가 될지. 어떤 방향이 강해질지, 생활에서 어떤 변화가 나타날지.\n[이시기기회] 이 시기에 살릴 수 있는 기회와 주의할 패턴. 어떤 선택이 잘 맞고, 무엇을 조심하면 좋을지.\n[준비할것] 지금부터 이 시기를 위해 해두면 좋은 것. "이번 시기에 시작해볼 것: ~"으로 마무리.`;
+    } else {
+      prompt = `나의 현재 진행 중인 대운을 3시기로 나눠 해설해줘:\n${baseInfo}\n${next ? `다음 대운: ${next.cg}${next.jj} (${next.age}~${next.ageEnd}세)` : ''}\n\n반드시 아래 태그 형식으로 답해줘:\n[초반기] 현재 대운 초반기 (지금부터 3~4년 간의 흐름, 어떤 일이 펼쳐지는지, 조심할 것)\n[중반기] 현재 대운 중반기 (4~7년 뒤의 변화, 기회와 조심할 것)\n[후반기] 대운 전환기 및 다음 대운 준비 (7~10년 뒤, 마무리와 새 흐름 진입)`;
+    }
 
     try {
       const result = await callApi(prompt, {
@@ -298,57 +318,97 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
 
       {/* AI 해설 영역 */}
       <div style={{ padding: '4px 20px 0' }}>
-        {!interpretation && !loading && (
-          <button
-            onClick={handleAskInterpretation}
-            style={{
-              width: '100%',
-              padding: '14px',
-              background: 'var(--goldf)',
-              border: '1.5px solid var(--acc)',
-              borderRadius: 'var(--r1)',
-              cursor: 'pointer',
-              fontFamily: 'var(--ff)',
-              fontSize: 'var(--sm)',
-              color: 'var(--gold)',
-              fontWeight: 700,
-              letterSpacing: '.02em',
-            }}
-          >
-            ✦ 해설 읽기
-          </button>
-        )}
+        {!interpretation && !loading && daeunData && (() => {
+          const sel = daeunData.periods[currentIdx];
+          const age = CURRENT_YEAR - Number(form.by);
+          const isPast = sel.ageEnd < age;
+          const isFuture = sel.age > age;
+          const label = isPast
+            ? `🔙 ${sel.age}~${sel.ageEnd}세 · 지나온 시기 회고`
+            : isFuture
+            ? `🔮 ${sel.age}~${sel.ageEnd}세 · 앞으로의 시기 전망`
+            : `지금 · ${sel.age}~${sel.ageEnd}세 대운 분석`;
+          return (
+            <div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, textAlign: 'center' }}>
+                {label}
+              </div>
+              <button
+                onClick={handleAskInterpretation}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: 'var(--goldf)',
+                  border: '1.5px solid var(--acc)',
+                  borderRadius: 'var(--r1)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--ff)',
+                  fontSize: 'var(--sm)',
+                  color: 'var(--gold)',
+                  fontWeight: 700,
+                  letterSpacing: '.02em',
+                }}
+              >
+                ✦ 해설 읽기
+              </button>
+            </div>
+          );
+        })()}
 
         {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
         {interpretation && (() => {
-          const PERIOD_TAGS = ['초반기', '중반기', '후반기'];
-          const PERIOD_META = [
-            { tag: '초반기', label: '초반기', desc: '지금부터 3~4년', icon: '🌱', color: 'rgba(107,191,181,.15)', border: 'rgba(107,191,181,.3)' },
-            { tag: '중반기', label: '중반기', desc: '4~7년 뒤',       icon: '🌿', color: 'rgba(232,176,72,.08)', border: 'rgba(232,176,72,.25)' },
-            { tag: '후반기', label: '후반기', desc: '7~10년 뒤',      icon: '🌟', color: 'rgba(200,160,255,.08)', border: 'rgba(200,160,255,.25)' },
-          ];
+          const PERIOD_CONFIG = {
+            past: {
+              tags: ['그당시흐름', '그당시전환', '오늘의나에게'],
+              meta: [
+                { tag: '그당시흐름',   label: '그 시기의 흐름',   desc: '어떤 10년이었는지',  icon: '🔙', color: 'rgba(150,150,180,.1)',   border: 'rgba(150,150,180,.3)' },
+                { tag: '그당시전환',   label: '기회와 어려움',    desc: '그 시기의 패턴',     icon: '💭', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
+                { tag: '오늘의나에게', label: '지금의 나에게',    desc: '남겨진 것들',        icon: '🔗', color: 'rgba(107,191,181,.12)', border: 'rgba(107,191,181,.3)' },
+              ],
+              title: '대운 회고 — 지나온 흐름',
+            },
+            current: {
+              tags: ['초반기', '중반기', '후반기'],
+              meta: [
+                { tag: '초반기', label: '초반기', desc: '지금부터 3~4년', icon: '🌱', color: 'rgba(107,191,181,.15)', border: 'rgba(107,191,181,.3)' },
+                { tag: '중반기', label: '중반기', desc: '4~7년 뒤',       icon: '🌿', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
+                { tag: '후반기', label: '후반기', desc: '7~10년 뒤',      icon: '🌟', color: 'rgba(200,160,255,.08)', border: 'rgba(200,160,255,.25)' },
+              ],
+              title: '대운 흐름 — 3시기 분석',
+            },
+            future: {
+              tags: ['앞으로의흐름', '이시기기회', '준비할것'],
+              meta: [
+                { tag: '앞으로의흐름', label: '앞으로의 흐름',   desc: '어떤 10년이 될지',   icon: '🔮', color: 'rgba(200,160,255,.12)', border: 'rgba(200,160,255,.3)' },
+                { tag: '이시기기회',   label: '기회와 주의',     desc: '이 시기에 살릴 것', icon: '✨', color: 'rgba(232,176,72,.08)',  border: 'rgba(232,176,72,.25)' },
+                { tag: '준비할것',     label: '지금 준비할 것',  desc: '미리 챙겨둘 것',    icon: '📋', color: 'rgba(107,191,181,.12)', border: 'rgba(107,191,181,.3)' },
+              ],
+              title: '대운 전망 — 앞으로의 흐름',
+            },
+          };
+          const config = PERIOD_CONFIG[periodType] || PERIOD_CONFIG.current;
           const secs = {};
-          for (let i = 0; i < PERIOD_TAGS.length; i++) {
-            const tag = `[${PERIOD_TAGS[i]}]`;
+          for (let i = 0; i < config.tags.length; i++) {
+            const tag = `[${config.tags[i]}]`;
             const start = interpretation.indexOf(tag);
             if (start === -1) continue;
             const cs = start + tag.length;
             let end = interpretation.length;
-            for (let j = 0; j < PERIOD_TAGS.length; j++) {
+            for (let j = 0; j < config.tags.length; j++) {
               if (j === i) continue;
-              const nx = interpretation.indexOf(`[${PERIOD_TAGS[j]}]`, cs);
+              const nx = interpretation.indexOf(`[${config.tags[j]}]`, cs);
               if (nx !== -1 && nx < end) end = nx;
             }
-            secs[PERIOD_TAGS[i]] = interpretation.slice(cs, end).trim();
+            secs[config.tags[i]] = interpretation.slice(cs, end).trim();
           }
-          const hasStructure = PERIOD_TAGS.some(t => secs[t]);
+          const hasStructure = config.tags.some(t => secs[t]);
           return (
             <div style={{ animation: 'fadeUp .4s ease' }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 12, letterSpacing: '.06em' }}>
-                ✦ 대운 흐름 — 3시기 분석
+                ✦ {config.title}
               </div>
-              {hasStructure ? PERIOD_META.map(({ tag, label, desc, icon, color, border }) => secs[tag] ? (
+              {hasStructure ? config.meta.map(({ tag, label, desc, icon, color, border }) => secs[tag] ? (
                 <div key={tag} style={{
                   background: color, border: `1px solid ${border}`,
                   borderRadius: 'var(--r1)', padding: '16px', marginBottom: 10,
