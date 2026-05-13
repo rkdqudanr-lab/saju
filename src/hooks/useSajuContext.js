@@ -117,7 +117,9 @@ export function useSajuContext(form, profile, activeProfileIdx, otherProfiles) {
           c += `[오늘의 십신 — 반드시 이 계산값 사용, AI 자체 판단 금지]\n`;
           c += `${sipsin.name}(${sipsin.meaning})\n`;
           c += `강한 운세 영역: ${sipsin.strongAreas}\n`;
-          c += `주의 운세 영역: ${sipsin.weakAreas}\n\n`;
+          c += `주의 운세 영역: ${sipsin.weakAreas}\n`;
+          if (sipsin.notableAreas) c += `주목할 운세 영역(서양 흐름·요약에서 우선 언급): ${sipsin.notableAreas}\n`;
+          c += '\n';
         }
       }
     }

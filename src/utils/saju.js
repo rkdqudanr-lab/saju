@@ -23,7 +23,8 @@ const _KE    = { 목:'토', 화:'금', 토:'수', 금:'목', 수:'화' }; // 상
  * 사용자 일간과 오늘 천간으로 십신을 계산해요.
  * @param {string} myGan 사용자 일간 (예: '임')
  * @param {string} todayGan 오늘 일진 천간 (예: '갑')
- * @returns {{ name, meaning, strongAreas, weakAreas } | null}
+ * @returns {{ name, meaning, strongAreas, weakAreas, notableAreas } | null}
+ * notableAreas: strongAreas/weakAreas에 없는 카테고리 중 서양 흐름·요약 섹션에서 언급할 영역
  */
 export function calcSipsin(myGan, todayGan) {
   if (!myGan || !todayGan) return null;
@@ -36,24 +37,24 @@ export function calcSipsin(myGan, todayGan) {
 
   if (myEl === todayEl)
     return same
-      ? { name:'비견', meaning:'자립·독립심 활성화',          strongAreas:'이동운·건강운',      weakAreas:'금전운' }
-      : { name:'겁재', meaning:'경쟁심·돌파력 자극',          strongAreas:'직장운·이동운',      weakAreas:'금전운·대인운' };
+      ? { name:'비견', meaning:'자립·독립심 활성화',          strongAreas:'이동운·건강운',        weakAreas:'금전운',         notableAreas:'애정운·창의운' }
+      : { name:'겁재', meaning:'경쟁심·돌파력 자극',          strongAreas:'직장운·이동운',        weakAreas:'금전운·대인운',  notableAreas:'애정운·창의운' };
   if (_SHENG[myEl] === todayEl)
     return same
-      ? { name:'식신', meaning:'재능·표현·여유 활성화',       strongAreas:'창의운·학업운·대인운', weakAreas:'직장운' }
-      : { name:'상관', meaning:'창의·자기표현·변화 충동',     strongAreas:'창의운·이동운',      weakAreas:'직장운·대인운' };
+      ? { name:'식신', meaning:'재능·표현·여유 활성화',       strongAreas:'창의운·학업운·대인운', weakAreas:'직장운',         notableAreas:'애정운·금전운' }
+      : { name:'상관', meaning:'창의·자기표현·변화 충동',     strongAreas:'창의운·이동운',        weakAreas:'직장운·대인운',  notableAreas:'애정운·건강운' };
   if (_KE[myEl] === todayEl)
     return same
-      ? { name:'편재', meaning:'새로운 재물·활발한 외부활동', strongAreas:'금전운·이동운',      weakAreas:'학업운' }
-      : { name:'정재', meaning:'안정적 재물·꼼꼼한 관리',    strongAreas:'금전운·직장운',      weakAreas:'이동운' };
+      ? { name:'편재', meaning:'새로운 재물·활발한 외부활동', strongAreas:'금전운·이동운',        weakAreas:'학업운',         notableAreas:'애정운·창의운' }
+      : { name:'정재', meaning:'안정적 재물·꼼꼼한 관리',    strongAreas:'금전운·직장운',        weakAreas:'이동운',         notableAreas:'애정운·건강운' };
   if (_KE[todayEl] === myEl)
     return same
-      ? { name:'편관', meaning:'규율·압박·도전',              strongAreas:'직장운·건강운',      weakAreas:'대인운·애정운' }
-      : { name:'정관', meaning:'명예·인정·체계',              strongAreas:'직장운·대인운',      weakAreas:'창의운' };
+      ? { name:'편관', meaning:'규율·압박·도전',              strongAreas:'직장운·건강운',        weakAreas:'대인운·애정운',  notableAreas:'금전운·이동운' }
+      : { name:'정관', meaning:'명예·인정·체계',              strongAreas:'직장운·대인운',        weakAreas:'창의운·이동운',  notableAreas:'애정운·금전운' };
   if (_SHENG[todayEl] === myEl)
     return same
-      ? { name:'편인', meaning:'학습·분석·직관력',            strongAreas:'학업운·이동운',      weakAreas:'애정운' }
-      : { name:'정인', meaning:'지혜·배움·귀인',              strongAreas:'학업운·대인운',      weakAreas:'이동운' };
+      ? { name:'편인', meaning:'학습·분석·직관력',            strongAreas:'학업운·이동운',        weakAreas:'애정운',         notableAreas:'금전운·창의운' }
+      : { name:'정인', meaning:'지혜·배움·귀인',              strongAreas:'학업운·대인운',        weakAreas:'이동운',         notableAreas:'애정운·금전운' };
   return null;
 }
 
