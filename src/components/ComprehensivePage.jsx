@@ -49,6 +49,7 @@ const COMP_SECTIONS = [
 ];
 
 const ASTRO_SECTIONS = [
+  { tag: '한줄요약', icon: '⭐', title: '한 줄 요약', highlight: true },
   { tag: '태양', icon: '☀️', title: '태양 · 본질적 자아' },
   { tag: '달',   icon: '🌙', title: '달 · 내면의 감정' },
   { tag: '상승', icon: '↑',  title: '상승 · 세상에 내보이는 모습' },
@@ -322,8 +323,8 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>✦ 별숨의 종합 점성술</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>태양 · 달 · 상승의 세 별빛으로 읽는 그대의 하늘지도</div>
           </div>
-          {ASTRO_SECTIONS.map(({ tag, icon, title }, i) => (
-            <SectionCard key={tag} icon={icon} title={title} text={sections[tag] || ''} delay={i * 80} />
+          {ASTRO_SECTIONS.map(({ tag, icon, title, highlight }, i) => (
+            <SectionCard key={tag} icon={icon} title={title} text={sections[tag] || ''} delay={i * 80} highlight={!!highlight} />
           ))}
           <button className="res-btn" onClick={fetch_} style={{ width: '100%', marginTop: 8 }}>다시 풀어보기</button>
         </>
