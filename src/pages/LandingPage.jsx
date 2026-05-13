@@ -667,14 +667,6 @@ export default function LandingPage({
         </div>
       )}
 
-      {/* ── 어제 운세 피드백 팝업 ── */}
-      {showReflection && yesterdayEntry?.score && (
-        <ReflectionPopup
-          yesterdayScore={yesterdayEntry.score}
-          yesterdayDate={yesterdayKey}
-          onAnswer={handleReflectionAnswer}
-        />
-      )}
     </div>
   );
 }
