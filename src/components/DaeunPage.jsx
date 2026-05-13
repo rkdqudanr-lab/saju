@@ -121,6 +121,8 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
   const [daeunData, setDaeunData] = useState(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [periodType, setPeriodType] = useState('current'); // 'past' | 'current' | 'future'
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const [scrollAtEnd, setScrollAtEnd] = useState(false);
 
   const gender = form?.gender || 'M';
 
@@ -154,6 +156,12 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     setInterpretation('');
     setPeriodType('current');
   }, [currentIdx]);
+
+  function handleTimelineScroll(e) {
+    const el = e.currentTarget;
+    if (!hasScrolled && el.scrollLeft > 20) setHasScrolled(true);
+    setScrollAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 16);
+  }
 
   async function handleAskInterpretation() {
     if (!daeunData || !user) {
@@ -279,39 +287,66 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
       {/* 타임라인 */}
       {daeunData && (
         <div style={{ padding: '0 0 4px' }}>
-          <div style={{
-            fontSize: 'var(--xs)',
-            color: 'var(--t4)',
-            padding: '0 20px',
-            marginBottom: 10,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}>
-            <span style={{ opacity: 0.5 }}>← →</span> 전체 대운 확인
-          </div>
-          <div
-            ref={scrollRef}
-            style={{
-              display: 'flex',
-              gap: 8,
-              overflowX: 'auto',
-              padding: '12px 20px 16px',
-              scrollBehavior: 'smooth',
-              WebkitOverflowScrolling: 'touch',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              scrollSnapType: 'x mandatory',
-            }}
-          >
-            {daeunData.periods.map((period, idx) => (
-              <DaeunCard
-                key={idx}
-                period={{...period, onClick: () => setCurrentIdx(idx)}}
-                isCurrent={idx === currentIdx}
-                isNext={idx === currentIdx + 1}
-              />
-            ))}
+          <style>{`
+            @keyframes daeunScrollHint {
+              0%   { transform: translateX(0);   opacity: 0.4; }
+              50%  { transform: translateX(6px);  opacity: 1;   }
+              100% { transform: translateX(0);   opacity: 0.4; }
+            }
+          `}</style>
+
+          {/* 스크롤 컨테이너 + 오른쪽 fade */}
+          <div style={{ position: 'relative' }}>
+            <div
+              ref={scrollRef}
+              onScroll={handleTimelineScroll}
+              style={{
+                display: 'flex',
+                gap: 8,
+                overflowX: 'auto',
+                padding: '12px 20px 16px',
+                scrollBehavior: 'smooth',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                scrollSnapType: 'x mandatory',
+              }}
+            >
+              {daeunData.periods.map((period, idx) => (
+                <DaeunCard
+                  key={idx}
+                  period={{...period, onClick: () => setCurrentIdx(idx)}}
+                  isCurrent={idx === currentIdx}
+                  isNext={idx === currentIdx + 1}
+                />
+              ))}
+            </div>
+
+            {/* 오른쪽 fade + 힌트 화살표 */}
+            {!scrollAtEnd && (
+              <div style={{
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 56,
+                background: 'linear-gradient(to right, transparent, var(--bg))',
+                pointerEvents: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                paddingRight: 10,
+              }}>
+                {!hasScrolled && (
+                  <div style={{
+                    animation: 'daeunScrollHint 1.1s ease-in-out infinite',
+                    fontSize: 18,
+                    color: 'var(--t3)',
+                    lineHeight: 1,
+                  }}>›</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
