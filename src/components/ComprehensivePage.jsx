@@ -2,7 +2,7 @@
 import { ON } from "../utils/saju.js";
 import { stripMarkdown } from "../utils/constants.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
-import { postAskText } from "../lib/askApi.js";
+import { readStreamResponse } from "../lib/streamTransport.js";
 import PrecisionNudge from "./PrecisionNudge.jsx";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
@@ -137,15 +137,28 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
         : '';
       const sunSummary = sun ? `별자리: ${sun.n}(${sun.s}) — ${sun.desc}` : '';
       const userMsg = `나의 종합 사주 리포트를 작성해주세요. ${sajuSummary} ${sunSummary}. 현재 ${now}년.`;
-      const text = await postAskText({
-        userMessage: userMsg,
-        context: buildCtx(),
-        isComprehensive: true,
-        kakaoId: user?.id || null,
-        clientHour: new Date().getHours(),
+      const res = await fetch('/api/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: userMsg,
+          context: buildCtx(),
+          isComprehensive: true,
+          kakaoId: user?.id || null,
+          clientHour: new Date().getHours(),
+        }),
       });
-      const cleaned = stripMarkdown(text);
-      setText(cleaned);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `API error (${res.status})`);
+      }
+      let finalText = '';
+      const result = await readStreamResponse(res, {
+        onText: (accumulated) => { finalText = accumulated; setText(stripMarkdown(accumulated)); },
+        onError: () => {},
+      });
+      if (!result.ok) throw new Error(result.error || '별이 잠시 쉬고 있어요');
+      const cleaned = stripMarkdown(finalText);
       try { localStorage.setItem(localKey, cleaned); } catch {}
       if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
       saveConsultationHistoryEntry({
@@ -155,6 +168,7 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
         answers: [cleaned],
       }).catch(() => {});
     } catch {
+      setText('');
       setError(true);
     } finally {
       loadingRef.current = false;
@@ -189,7 +203,7 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
         </button>
       )}
 
-      {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
+      {loading && !text && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -248,15 +262,28 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
         ? `상승(첫인상): ${asc.n}(${asc.s}) — ${asc.desc}`
         : '상승궁 정보 없음(출생지 정보가 없어 상승궁은 확정하지 말고, 태양·달 기반 인상 해석은 보조적으로만 부탁)';
       const userMsg = `나의 종합 점성술 리포트를 작성해주세요. ${sunSummary}. ${moonSummary}. ${ascSummary}. 현재 ${now}년.`;
-      const text = await postAskText({
-        userMessage: userMsg,
-        context: buildCtx(),
-        isAstrology: true,
-        kakaoId: user?.id || null,
-        clientHour: new Date().getHours(),
+      const res = await fetch('/api/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: userMsg,
+          context: buildCtx(),
+          isAstrology: true,
+          kakaoId: user?.id || null,
+          clientHour: new Date().getHours(),
+        }),
       });
-      const cleaned = stripMarkdown(text);
-      setText(cleaned);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `API error (${res.status})`);
+      }
+      let finalText = '';
+      const result = await readStreamResponse(res, {
+        onText: (accumulated) => { finalText = accumulated; setText(stripMarkdown(accumulated)); },
+        onError: () => {},
+      });
+      if (!result.ok) throw new Error(result.error || '별이 잠시 쉬고 있어요');
+      const cleaned = stripMarkdown(finalText);
       try { localStorage.setItem(localKey, cleaned); } catch {}
       if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
       saveConsultationHistoryEntry({
@@ -266,6 +293,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
         answers: [cleaned],
       }).catch(() => {});
     } catch {
+      setText('');
       setError(true);
     } finally {
       loadingRef.current = false;
@@ -308,7 +336,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
         </button>
       )}
 
-      {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
+      {loading && !text && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
