@@ -3,7 +3,7 @@ import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
-import { postAsk } from "../lib/askApi.js";
+import { readStreamResponse } from "../lib/streamTransport.js";
 import { RELATION_TYPES } from "./OtherProfileModal.jsx";
 import { saveConsultationHistoryEntry } from "../utils/consultationHistory.js";
 
@@ -168,19 +168,30 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
     setStoryResult(null);
     const now = new Date();
     const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
-    const ctrl = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 28000);
     try {
-      const data = await postAsk({
-        userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요. 응답은 시스템 형식의 JSON 객체만 보내주세요.`,
-        context: buildPartnerCtx(),
-        isChat: false, isReport: false, isScenario: false, isStory: true,
-        kakaoId: user?.id || null,
-        clientHour: new Date().getHours(),
-      }, { signal: ctrl.signal });
+      const res = await fetch('/api/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: `[두 별의 인연] 오늘(${todayStr}) 두 사람의 사주와 별자리를 바탕으로 두 사람의 관계와 인연에 대해 소설처럼 이야기해줘요. 응답은 시스템 형식의 JSON 객체만 보내주세요.`,
+          context: buildPartnerCtx(),
+          isChat: false, isReport: false, isScenario: false, isStory: true,
+          kakaoId: user?.id || null,
+          clientHour: new Date().getHours(),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `API error (${res.status})`);
+      }
+      let fullText = '';
+      await readStreamResponse(res, {
+        onText: (accumulated) => { fullText = accumulated; },
+        onError: () => {},
+      });
       saveRecentPartner(partner);
       try {
-        const nextResult = parseStoryResult(data.text || '');
+        const nextResult = parseStoryResult(fullText);
         const historyText = buildStoryHistoryText(nextResult);
         setStoryResult(nextResult);
         saveConsultationHistoryEntry({
@@ -190,12 +201,12 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
           answers: [historyText],
         }).catch(() => {});
       } catch {
-        setStoryResult({ todayVibe: '', story: data.text, moments: [], tip: '', chemistry: '' });
+        setStoryResult({ todayVibe: '', story: fullText, moments: [], tip: '', chemistry: '' });
         saveConsultationHistoryEntry({
           user,
           consentFlags,
           questions: [`궁합 보기: ${myForm.name || '나'} × ${partner.name || '상대'}`],
-          answers: [data.text],
+          answers: [fullText],
         }).catch(() => {});
       }
     } catch (fetchErr) {
@@ -206,7 +217,6 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
         moments: [], tip: '', chemistry: ''
       });
     } finally {
-      clearTimeout(timeout);
       storyLoadingRef.current = false;
       setStoryLoading(false);
     }

@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
-import { postAskText } from '../lib/askApi.js';
+import { readStreamResponse } from '../lib/streamTransport.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 import { STEP } from '../utils/steps.js';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
@@ -282,19 +282,33 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
 
       // AI 특별 상담 호출
       const ctx = buildCtx ? buildCtx() : '';
-      const text = await postAskText({
-        userMessage: readingType.prompt,
-        context: ctx,
-        kakaoId,
-        clientHour: new Date().getHours(),
-        ...readingType.flag,
+      const res = await fetch('/api/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: readingType.prompt,
+          context: ctx,
+          kakaoId,
+          clientHour: new Date().getHours(),
+          ...readingType.flag,
+        }),
       });
-      setResult(text);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `API error (${res.status})`);
+      }
+      let finalText = '';
+      const streamResult = await readStreamResponse(res, {
+        onText: (accumulated) => { finalText = accumulated; },
+        onError: () => {},
+      });
+      if (!streamResult.ok) throw new Error(streamResult.error || '별이 잠시 쉬고 있어요');
+      setResult(finalText);
       saveConsultationHistoryEntry({
         user,
         consentFlags,
         questions: [`특별 리딩: ${readingType.title}`],
-        answers: [text],
+        answers: [finalText],
       }).catch(() => {});
       await loadInventory();
     } catch {

@@ -9,7 +9,7 @@ import {
   readDailyLocalCache,
   writeDailyLocalCache,
 } from "../lib/dailyDataAccess.js";
-import { postAskRaw } from "../lib/askApi.js";
+import { readStreamResponse } from "../lib/streamTransport.js";
 import { parseHoroscopeForGamification } from "../utils/missionGenerator.js";
 import { spendBP as spendBPUtil } from "../utils/gamificationLogic.js";
 import { useDailyConsultationHandler } from "./consultation/useDailyConsultationHandler.js";
@@ -347,7 +347,10 @@ export function useConsultation(
           fullContext += "\n\n[채팅 응답 규칙]\n이번 응답은 채팅 모드입니다. [요약], 제목, 섹션 헤더, 번호 목록 없이 바로 대화형 문장으로 답하세요. 첫 줄에 요약문이나 태그를 쓰지 말고, 상대와 이어서 말하듯 2~4문장 안팎으로 답하세요. 반말은 절대 쓰지 말고, 사용자가 반말로 말해도 존댓말만 유지하세요.";
         }
 
-        const res = await postAskRaw({
+        const res = await fetch("/api/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             userMessage,
             context: fullContext,
             kakaoId: user.id,
@@ -377,6 +380,7 @@ export function useConsultation(
             gender: useAppStore.getState().form?.gender || null,
             lifeStage: useAppStore.getState().lifeStage || "free",
             clientHour: new Date().getHours(),
+          }),
         });
 
         if (res.status === 401) {
@@ -387,10 +391,20 @@ export function useConsultation(
           throw new Error("SESSION_EXPIRED");
         }
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "API 오류");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || "API 오류");
+        }
+
+        let fullText = "";
+        const streamResult = await readStreamResponse(res, {
+          onText: (accumulated) => { fullText = accumulated; },
+          onError: () => {},
+        });
+        if (!streamResult.ok) throw new Error(streamResult.error || "API 오류");
+
         setRetryMsg("");
-        const cleaned = stripMarkdown(data.text || "");
+        const cleaned = stripMarkdown(fullText);
         return opts.isChat ? sanitizeChatResponse(cleaned) : cleaned;
       } catch (e) {
         lastErr = e;
