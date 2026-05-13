@@ -27,6 +27,8 @@ import ActionTile from '../components/landing/ActionTile.jsx';
 import QuickActionGrid from '../components/landing/QuickActionGrid.jsx';
 import WeeklyScoreSummary from '../components/landing/WeeklyScoreSummary.jsx';
 import LevelCard from '../components/landing/LevelCard.jsx';
+import GachaGraphic from '../components/GachaGraphic.jsx';
+import { ASPECTS, getDailyResonanceItems } from '../utils/gachaItems.js';
 
 const _SI = { viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 const TILE_ICONS = {
@@ -40,6 +42,57 @@ const TILE_ICONS = {
   shop:     <svg {..._SI}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
   book:     <svg {..._SI}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
 };
+
+function TodayResonancePreview({ item, axisKey, onClick }) {
+  if (!item) return null;
+  const axis = ASPECTS[axisKey] || ASPECTS.overall;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`오늘의 인연 오브제, ${item.bodyName}`}
+      style={{
+        width: '100%',
+        border: '1px solid var(--acc)',
+        background: 'var(--goldf)',
+        borderRadius: 'var(--r1)',
+        padding: '12px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        textAlign: 'left',
+        fontFamily: 'var(--ff)',
+        cursor: 'pointer',
+      }}
+    >
+      <div style={{
+        width: 48,
+        height: 48,
+        borderRadius: 14,
+        background: 'var(--bg1)',
+        border: '1px solid var(--acc)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <GachaGraphic item={item} size={34} />
+      </div>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 900, letterSpacing: '.05em', marginBottom: 3 }}>
+          오늘의 인연 오브제
+        </div>
+        <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 900, lineHeight: 1.25, wordBreak: 'keep-all' }}>
+          {item.bodyName}
+        </div>
+        <div style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1.45, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {axis.emoji} {axis.label} 기운이 가까워졌어요
+        </div>
+      </div>
+      <div style={{ color: 'var(--gold)', fontWeight: 900, fontSize: 18 }}>›</div>
+    </button>
+  );
+}
 
 // 시간대 판별: 17시 이후 or 6시 이전이면 '밤' 모드
 function isNightMode() {
@@ -97,6 +150,7 @@ export default function LandingPage({
 
   const nightMode = isNightMode();
   const nearbyJeolgi = getNearbyJeolgi();
+  const kakaoId = user?.kakaoId || user?.id;
 
   // ── 데이터 페칭 상태 ──
   const [boostMap, setBoostMap] = useState(() => {
@@ -132,6 +186,11 @@ export default function LandingPage({
     const orig = parsedDaily.score ?? dailyResult?.score ?? 0;
     return todayScore && orig ? todayScore - orig : 0;
   }, [dailyResult?.score, parsedDaily.score, todayScore]);
+  const homeResonanceItems = useMemo(
+    () => getDailyResonanceItems({ system: 'cosmic', saju, today, userId: kakaoId || user?.nickname || 'guest', count: 1 }),
+    [kakaoId, saju, today, user?.nickname],
+  );
+  const homeResonanceItem = homeResonanceItems[0] || null;
 
   // ── 핵심 축 점수 (상위 2개 / 하위 1개) ──
   const topAxes = useMemo(() => {
@@ -317,7 +376,7 @@ export default function LandingPage({
       { icon: TILE_ICONS.barChart, label: '별숨 통계', sub: '지난 운세 흐름을 확인해요', step: STEP.STATS },
       { icon: TILE_ICONS.star,     label: '나의 별숨', sub: '사주와 천체 분석을 살펴봐요', step: STEP.NATAL },
       { icon: TILE_ICONS.book,     label: '별숨 도감', sub: '컬렉션 완성을 이어가요', step: STEP.BYEOLSOOM_SPACE },
-      { icon: TILE_ICONS.shop,     label: '별숨샵', sub: '오늘 쓸 오브제를 골라봐요', step: STEP.SHOP },
+      { icon: TILE_ICONS.shop,     label: '별숨 뽑기', sub: '오늘의 인연 오브제를 만나봐요', step: STEP.GACHA },
       { icon: TILE_ICONS.calendar, label: '별숨 달력', sub: '이번 주 운세 기록을 돌아봐요', step: STEP.CALENDAR },
       { icon: TILE_ICONS.diary,    label: '나의 하루', sub: '오늘의 감정을 남겨봐요', step: STEP.DIARY },
     ];
@@ -382,7 +441,7 @@ export default function LandingPage({
   const secondaryTiles = useMemo(() => [
     { icon: TILE_ICONS.star,     title: '나의 별숨', sub: '사주·천체 종합 분석', onClick: () => setStep(STEP.NATAL) },
     { icon: TILE_ICONS.barChart, title: '별숨 통계', sub: '지난 운세 흐름 보기', onClick: () => setStep(STEP.STATS) },
-    { icon: TILE_ICONS.shop,     title: '별숨샵', sub: '오브제 & 뽑기', onClick: () => setStep(STEP.SHOP) },
+    { icon: TILE_ICONS.shop,     title: '별숨 뽑기', sub: '인연 보정으로 오브제 만나기', onClick: () => setStep(STEP.GACHA), ariaLabel: '별숨 뽑기, 오브제 만나기' },
     { icon: TILE_ICONS.book,     title: '별숨 도감', sub: '컬렉션 완성 도전', onClick: () => setStep(STEP.BYEOLSOOM_SPACE) },
   ], [setStep]);
 
@@ -509,6 +568,14 @@ export default function LandingPage({
           bottomAxes={bottomAxes}
           onQuickAsk={onEnterChat}
         />
+
+        <div style={{ padding: '0 20px', marginTop: 12 }}>
+          <TodayResonancePreview
+            item={homeResonanceItem}
+            axisKey={homeResonanceItem?.resonanceAxis}
+            onClick={() => setStep(STEP.GACHA)}
+          />
+        </div>
 
         {/* 3. 알림 캐러셀 (절기/생일만) */}
         <AlertCarousel
