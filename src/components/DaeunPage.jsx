@@ -224,7 +224,23 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     } else if (type === 'future') {
       prompt = `나의 앞으로 다가올 대운을 전망해줘:\n${baseInfo}\n\n이 시기(${selected.age}~${selected.ageEnd}세)는 아직 오지 않은 미래예요. 이 시기에 어떤 흐름이 펼쳐질 가능성이 높은지를 전망 형식으로 써줘. 단정 금지, 가능성으로 표현.\n\n반드시 아래 태그 형식으로 답해줘:\n[앞으로의흐름] 이 10년이 어떤 성격의 시기가 될지. 어떤 방향이 강해질지, 생활에서 어떤 변화가 나타날지.\n[이시기기회] 이 시기에 살릴 수 있는 기회와 주의할 패턴. 어떤 선택이 잘 맞고, 무엇을 조심하면 좋을지.\n[준비할것] 지금부터 이 시기를 위해 해두면 좋은 것. "이번 시기에 시작해볼 것: ~"으로 마무리.`;
     } else {
-      prompt = `나의 현재 진행 중인 대운을 3시기로 나눠 해설해줘:\n${baseInfo}\n${next ? `다음 대운: ${next.cg}${next.jj} (${next.age}~${next.ageEnd}세)` : ''}\n\n반드시 아래 태그 형식으로 답해줘:\n[초반기] 현재 대운 초반기 (지금부터 3~4년 간의 흐름, 어떤 일이 펼쳐지는지, 조심할 것)\n[중반기] 현재 대운 중반기 (4~7년 뒤의 변화, 기회와 조심할 것)\n[후반기] 대운 전환기 및 다음 대운 준비 (7~10년 뒤, 마무리와 새 흐름 진입)`;
+      const p1Start = selected.age;
+      const p1End   = selected.age + 3;
+      const p2End   = selected.age + 7;
+      const p3End   = selected.ageEnd;
+      const phaseState = (start, end) =>
+        age >= end ? 'past' : age < start ? 'future' : 'current';
+      const phase1 = phaseState(p1Start, p1End);
+      const phase2 = phaseState(p1End, p2End);
+      const phase3 = phaseState(p2End, p3End + 1);
+      const phaseInstruction = (start, end, state, label) => {
+        if (state === 'past')
+          return `[${label}] ${start}~${end}세 (이미 지나간 시기 — "~했을 거예요" 과거형 말투로)`;
+        if (state === 'current')
+          return `[${label}] ${start}~${end}세 (현재 이 시기 — 지금의 흐름과 앞으로 이 시기가 어떻게 마무리될지)`;
+        return `[${label}] ${start}~${end}세 (앞으로의 시기 — 미래 가능성으로)`;
+      };
+      prompt = `나의 현재 진행 중인 대운을 3시기로 나눠 해설해줘:\n${baseInfo}\n${next ? `다음 대운: ${next.cg}${next.jj} (${next.age}~${next.ageEnd}세)` : ''}\n\n각 시기가 이미 지나간 시기인지, 현재 시기인지, 앞으로의 시기인지를 반드시 반영해서 작성해줘. 지나간 시기는 과거형으로, 현재 시기는 현재형으로.\n\n반드시 아래 태그 형식으로 답해줘:\n${phaseInstruction(p1Start, p1End, phase1, '초반기')}\n${phaseInstruction(p1End, p2End, phase2, '중반기')}\n${phaseInstruction(p2End, p3End, phase3, '후반기')}`;
     }
 
     try {
@@ -415,7 +431,26 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
         {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
         {interpretation && (() => {
-          const config = PERIOD_CONFIG[periodType] || PERIOD_CONFIG.current;
+          let config = PERIOD_CONFIG[periodType] || PERIOD_CONFIG.current;
+          if (periodType === 'current' && daeunData) {
+            const sel = daeunData.periods[currentIdx];
+            const ca = CURRENT_YEAR - Number(form.by);
+            const p1End = sel.age + 3;
+            const p2End = sel.age + 7;
+            const phaseDesc = (start, end) => {
+              if (ca >= end)    return `${start}~${end}세 · 지나온 시기`;
+              if (ca >= start)  return `${start}~${end}세 · 현재`;
+              return `${start}~${end}세 · 앞으로`;
+            };
+            config = {
+              ...config,
+              meta: [
+                { ...config.meta[0], desc: phaseDesc(sel.age, p1End) },
+                { ...config.meta[1], desc: phaseDesc(p1End, p2End) },
+                { ...config.meta[2], desc: phaseDesc(p2End, sel.ageEnd) },
+              ],
+            };
+          }
           const secs = {};
           for (let i = 0; i < config.tags.length; i++) {
             const tag = `[${config.tags[i]}]`;
