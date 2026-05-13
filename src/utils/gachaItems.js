@@ -134,6 +134,7 @@ export const ALL_GACHA_POOL = [...GACHA_POOL, ...SAJU_POOL];
 // 오늘의 인연 오브제 — userId + today 기반 결정론적 선택
 export function getDailyResonanceItems({ system = 'cosmic', userId = 'guest', today = '', count = 1 }) {
   const pool = system === 'saju' ? SAJU_POOL : GACHA_POOL;
+  if (!pool.length) return [];
   const seed = String(userId) + String(today);
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {

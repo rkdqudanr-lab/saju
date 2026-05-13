@@ -185,10 +185,11 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
         throw new Error(data.error || `API error (${res.status})`);
       }
       let fullText = '';
-      await readStreamResponse(res, {
+      const streamResult = await readStreamResponse(res, {
         onText: (accumulated) => { fullText = accumulated; },
         onError: () => {},
       });
+      if (!streamResult.ok) throw new Error(streamResult.error || '두 사람의 이야기를 불러오지 못했어요.');
       saveRecentPartner(partner);
       try {
         const nextResult = parseStoryResult(fullText);
