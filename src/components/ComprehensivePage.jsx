@@ -154,11 +154,12 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
       }
       let finalText = '';
       const result = await readStreamResponse(res, {
-        onText: (accumulated) => { finalText = accumulated; setText(stripMarkdown(accumulated)); },
+        onText: (accumulated) => { finalText = accumulated; },
         onError: () => {},
       });
       if (!result.ok) throw new Error(result.error || '별이 잠시 쉬고 있어요');
       const cleaned = stripMarkdown(finalText);
+      setText(cleaned);
       try { localStorage.setItem(localKey, cleaned); } catch {}
       if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
       saveConsultationHistoryEntry({
@@ -203,7 +204,7 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
         </button>
       )}
 
-      {loading && !text && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
+      {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -279,11 +280,12 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
       }
       let finalText = '';
       const result = await readStreamResponse(res, {
-        onText: (accumulated) => { finalText = accumulated; setText(stripMarkdown(accumulated)); },
+        onText: (accumulated) => { finalText = accumulated; },
         onError: () => {},
       });
       if (!result.ok) throw new Error(result.error || '별이 잠시 쉬고 있어요');
       const cleaned = stripMarkdown(finalText);
+      setText(cleaned);
       try { localStorage.setItem(localKey, cleaned); } catch {}
       if (user?.id) await saveAnalysisCache(user.id, cacheKey, cleaned);
       saveConsultationHistoryEntry({
@@ -336,7 +338,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
         </button>
       )}
 
-      {loading && !text && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
+      {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
       {error && (
         <div style={{ textAlign: 'center', marginBottom: 20 }}>

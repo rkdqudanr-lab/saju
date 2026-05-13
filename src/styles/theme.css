@@ -591,7 +591,7 @@ select.inp option{background:var(--bg2)}
 .hist-empty{padding:var(--sp5) var(--sp3);text-align:center;color:var(--t4);font-size:var(--sm);line-height:2.2}
 
 /* ══ step 전환 fade ══ */
-.step-fade{animation:stepFadeIn .45s cubic-bezier(.4,0,.2,1)}
+.step-fade{animation:stepFadeIn .45s cubic-bezier(.4,0,.2,1) both}
 @keyframes stepFadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}

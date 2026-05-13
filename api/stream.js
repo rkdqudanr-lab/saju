@@ -68,7 +68,7 @@ export default async function handler(req, res) {
   res.setHeader("X-Accel-Buffering", "no");
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  const timeoutId = setTimeout(() => controller.abort(), 55000);
 
   let upstreamRes;
   try {
