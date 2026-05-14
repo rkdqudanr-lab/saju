@@ -1,8 +1,11 @@
 import { createPortal } from 'react-dom';
-import { GRADE_CONFIG, SAJU_GRADE_CONFIG } from '../../utils/gachaItems.js';
+import { useAppStore } from '../../store/useAppStore.js';
+import { GRADE_CONFIG, SAJU_GRADE_CONFIG, getItemResonanceReason } from '../../utils/gachaItems.js';
 import GachaGraphic from '../../components/GachaGraphic.jsx';
 
 export default function ItemDetailModal({ item, onClose }) {
+  const saju = useAppStore((s) => s.saju);
+  const today = useAppStore((s) => s.today);
   const cfg = item.grade ? (GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG?.[item.grade]) : null;
   const systemLabel = item.id?.startsWith('saju_') ? '사주 시스템' : item.grade ? '우주 시스템' : '';
   const isTalisman = item.category === 'talisman';
@@ -30,6 +33,11 @@ export default function ItemDetailModal({ item, onClose }) {
         {(item.effect || item.effectLabel) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 'var(--xs)', color: cfg?.color || 'var(--gold)' }}>
             <span>✦</span><span style={{ fontWeight: 600 }}>{item.effect || item.effectLabel}</span>
+          </div>
+        )}
+        {item.grade && (
+          <div style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1.7, background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '10px 12px', marginBottom: 12, border: '1px solid var(--line)' }}>
+            {getItemResonanceReason(item, { saju, today })}
           </div>
         )}
         <button onClick={onClose} style={{ width: '100%', padding: '11px', background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', cursor: 'pointer' }}>닫기</button>

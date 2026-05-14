@@ -73,6 +73,7 @@ kakaoId는 반드시 truthy 확인 후 전달: `const kakaoId = user?.kakaoId ||
 `src/components/GachaPage.jsx` — 뽑기 UI (우주/사주 탭).  
 `src/components/ItemInventoryPage.jsx` — 보관함, 합성, 기존 도감 모달.  
 통합 숍(`src/components/ShopPage.jsx`)은 카드형 뽑기 종류 선택 UI를 사용하며, DB 구매 아이템 카테고리로 `special_reading`, `streak_repair`를 표시한다.
+뽑기 페이지는 `getDailyResonanceItems()`로 오늘의 사주 균형/날짜 흐름 기반 인연 오브제 3개를 보여준다. 실제 뽑기는 `pullOneResonance()`/`pull10Resonance()` 및 사주 대응 함수로 등급 확률은 유지하되 같은 등급 안에서 오늘의 인연 축과 맞는 오브제를 소폭 우선한다. 홈에는 오늘의 인연 오브제 1개 미리보기를 표시하며 클릭 시 `STEP.GACHA`로 이동한다. 단일 뽑기 결과와 10연 최고 등급 결과, 보관함 상세 모달은 `getItemResonanceReason()`으로 “오늘 이 오브제가 온 이유”를 표시한다. 컬렉션 완성 보상은 BP뿐 아니라 칭호/프레임/스토리/패시브 문구를 함께 노출한다.
 
 ### [10] 오늘 하루 나의 별숨(TodayDetailPage) 구조는?
 step=60 진입. `getDailyAxisScores(baseScore, equippedItems)` → 9개 영역 점수 계산.  

@@ -12,8 +12,9 @@ import { spendBP } from '../utils/gamificationLogic.js';
 import { STEP } from '../utils/steps.js';
 import { saveConsultationHistoryEntry } from '../utils/consultationHistory.js';
 import {
-  GACHA_POOL,   GRADE_CONFIG,      PROB_TABLE,      pullOne,     pull10,      GRADE_ORDER,
-  SAJU_POOL,    SAJU_GRADE_CONFIG,  SAJU_PROB_TABLE, pullOneSaju, pull10Saju, SAJU_GRADE_ORDER,
+  GACHA_POOL,   GRADE_CONFIG,      PROB_TABLE,      pullOneResonance,     pull10Resonance,      GRADE_ORDER,
+  SAJU_POOL,    SAJU_GRADE_CONFIG,  SAJU_PROB_TABLE, pullOneSajuResonance, pull10SajuResonance, SAJU_GRADE_ORDER,
+  ASPECTS, getDailyResonanceItems, getItemResonanceReason,
 } from '../utils/gachaItems.js';
 import GachaGraphic from './GachaGraphic.jsx';
 
@@ -83,13 +84,14 @@ function SmallResultCard({ item, index, revealed, gradeConfig, onClick }) {
 }
 
 // ─── 공용 — 결과 오버레이 ─────────────────────────────────────
-function ResultOverlay({ results, gradeConfig, onClose, onGoSpace }) {
+function ResultOverlay({ results, gradeConfig, onClose, onGoSpace, resonanceContext }) {
   const [revealed, setRevealed] = useState(new Set());
   const isSingle    = results.length === 1;
   const allRevealed = revealed.size === results.length;
   const gradeOrder  = Object.keys(gradeConfig);
   const topGrade    = gradeOrder.slice().reverse().find(g => results.some(r => r.grade === g));
   const topCfg      = gradeConfig[topGrade] || {};
+  const topItem      = results.find((item) => item.grade === topGrade) || results[0];
 
   useEffect(() => {
     if (isSingle) {
@@ -149,6 +151,13 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace }) {
                   <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: item.affixColor || '#fff', textAlign: 'center' }}>{item.name}</div>
                   <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.55)', textAlign: 'center', lineHeight: 1.6 }}>{item.description}</div>
                   <div style={{
+                    fontSize: '11px', color: 'rgba(255,255,255,.72)', textAlign: 'left', lineHeight: 1.65,
+                    background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.12)',
+                    borderRadius: 12, padding: '9px 10px', width: '100%',
+                  }}>
+                    {getItemResonanceReason(item, resonanceContext)}
+                  </div>
+                  <div style={{
                     padding: '5px 12px', borderRadius: 20, background: cfg.bg,
                     border: `1px solid ${cfg.border}`, fontSize: '11px', color: cfg.color, fontWeight: 600, textAlign: 'center',
                   }}>컬렉션 오브제</div>
@@ -162,14 +171,32 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace }) {
             </div>
           );
         })() : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 7, width: '100%' }}>
-            {results.map((item, i) => (
-              <SmallResultCard
-                key={i} item={item} index={i} revealed={revealed.has(i)}
-                gradeConfig={gradeConfig}
-                onClick={(idx) => setRevealed(prev => new Set([...prev, idx]))}
-              />
-            ))}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: 7, width: '100%' }}>
+              {results.map((item, i) => (
+                <SmallResultCard
+                  key={i} item={item} index={i} revealed={revealed.has(i)}
+                  gradeConfig={gradeConfig}
+                  onClick={(idx) => setRevealed(prev => new Set([...prev, idx]))}
+                />
+              ))}
+            </div>
+            {allRevealed && topItem && (
+              <div style={{
+                borderRadius: 14,
+                border: `1px solid ${topCfg.border || 'rgba(255,255,255,.18)'}`,
+                background: 'rgba(255,255,255,.06)',
+                padding: '11px 12px',
+                color: 'rgba(255,255,255,.74)',
+                fontSize: '11px',
+                lineHeight: 1.65,
+              }}>
+                <div style={{ color: topCfg.color || '#fff', fontWeight: 800, marginBottom: 4 }}>
+                  오늘 가장 강하게 닿은 오브제: {topItem.name}
+                </div>
+                {getItemResonanceReason(topItem, resonanceContext)}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -195,6 +222,70 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace }) {
       </div>
     </div>,
     document.body,
+  );
+}
+
+function DailyResonancePanel({ items, axisKey, onGoSpace }) {
+  const axis = ASPECTS[axisKey] || ASPECTS.overall;
+  if (!items?.length) return null;
+  return (
+    <section style={{
+      margin: '16px 20px 0',
+      padding: '14px',
+      borderRadius: 'var(--r1)',
+      border: '1px solid var(--acc)',
+      background: 'var(--goldf)',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 12 }}>
+        <div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 900, letterSpacing: '.04em' }}>
+            ✦ 오늘의 인연 오브제
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1.5, marginTop: 3 }}>
+            오늘 가까운 기운: {axis.emoji} {axis.label}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onGoSpace}
+          style={{
+            flexShrink: 0, border: '1px solid var(--acc)', background: 'var(--bg1)',
+            color: 'var(--gold)', borderRadius: 20, padding: '4px 10px',
+            fontSize: '10px', fontWeight: 800, fontFamily: 'var(--ff)', cursor: 'pointer',
+          }}
+        >
+          도감
+        </button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+        {items.map((item) => {
+          const cfg = item.system === 'saju' ? SAJU_GRADE_CONFIG[item.grade] : GRADE_CONFIG[item.grade];
+          return (
+            <div key={item.id} style={{
+              minWidth: 0,
+              borderRadius: 12,
+              border: `1px solid ${cfg?.border || 'var(--line)'}`,
+              background: 'var(--bg1)',
+              padding: '10px 6px',
+              textAlign: 'center',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+                <GachaGraphic item={item} size={34} />
+              </div>
+              <div style={{ fontSize: '10px', color: cfg?.color || 'var(--gold)', fontWeight: 800, marginBottom: 4 }}>
+                {cfg?.label}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 800, lineHeight: 1.25, wordBreak: 'keep-all' }}>
+                {item.bodyName}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 10, fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6 }}>
+        인연 오브제는 오늘의 사주 균형과 날짜 흐름을 바탕으로 고른 후보예요. 오늘 뽑기는 같은 등급 안에서 인연 후보가 조금 더 가까워져요.
+      </div>
+    </section>
   );
 }
 
@@ -383,6 +474,8 @@ export default function GachaPage({ showToast, consentFlags }) {
   const user             = useAppStore(s => s.user);
   const setStep          = useAppStore(s => s.setStep);
   const gamificationState = useAppStore(s => s.gamificationState);
+  const saju             = useAppStore(s => s.saju);
+  const today            = useAppStore(s => s.today);
   const kakaoId = user?.kakaoId || user?.id;
 
   const [tab, setTab]             = useState('space'); // 'space' | 'saju'
@@ -396,11 +489,17 @@ export default function GachaPage({ showToast, consentFlags }) {
   useEffect(() => {
     if (!kakaoId) return;
     setLoadingBP(true);
-    getAuthenticatedClient(kakaoId)
+    const client = getAuthenticatedClient(kakaoId);
+    if (!client) {
+      setCurrentBP(gamificationState?.currentBp || 0);
+      setLoadingBP(false);
+      return;
+    }
+    client
       .from('users').select('current_bp').eq('kakao_id', String(kakaoId)).single()
       .then(({ data }) => setCurrentBP(data?.current_bp ?? 0))
       .finally(() => setLoadingBP(false));
-  }, [kakaoId]);
+  }, [gamificationState?.currentBp, kakaoId]);
 
   // 탭 바뀔 때 결과 오버레이 닫기
   useEffect(() => { setResults(null); setShowProb(false); }, [tab]);
@@ -424,12 +523,17 @@ export default function GachaPage({ showToast, consentFlags }) {
     setPulling(count === 1 ? 'single' : '10');
     try {
       const client = getAuthenticatedClient(kakaoId);
+      if (!client) {
+        showToast?.('로컬 환경에서는 Supabase 연결 후 이용 가능해요', 'info');
+        return;
+      }
       const { ok, newBP } = await spendBP(client, kakaoId, cost, `GACHA_${tab.toUpperCase()}_${count}_${Date.now()}`, `${tab === 'saju' ? '사주' : '우주'} 뽑기 ${count}회`);
       if (!ok) { showToast?.('BP가 부족해요', 'error'); return; }
 
+      const resonancePullContext = { saju, today, userId: kakaoId || user?.nickname || 'guest' };
       const pulled = tab === 'saju'
-        ? (count === 1 ? [pullOneSaju()] : pull10Saju())
-        : (count === 1 ? [pullOne()]     : pull10());
+        ? (count === 1 ? [pullOneSajuResonance(resonancePullContext)] : pull10SajuResonance(resonancePullContext))
+        : (count === 1 ? [pullOneResonance(resonancePullContext)]     : pull10Resonance(resonancePullContext));
 
       await client.from('user_shop_inventory').upsert(
         pulled.map(item => ({
@@ -454,6 +558,15 @@ export default function GachaPage({ showToast, consentFlags }) {
   const gradeOrder  = isSaju ? SAJU_GRADE_ORDER  : GRADE_ORDER;
   const pool        = isSaju ? SAJU_POOL          : GACHA_POOL;
   const probTable   = isSaju ? SAJU_PROB_TABLE    : PROB_TABLE;
+  const resonanceItems = getDailyResonanceItems({
+    system: isSaju ? 'saju' : 'cosmic',
+    saju,
+    today,
+    userId: kakaoId || user?.nickname || 'guest',
+    count: 3,
+  });
+  const resonanceAxis = resonanceItems[0]?.resonanceAxis;
+  const resonanceContext = { saju, today };
 
   return (
     <div className="page step-fade" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 16px))', maxWidth: 480, margin: '0 auto' }}>
@@ -487,6 +600,12 @@ export default function GachaPage({ showToast, consentFlags }) {
           </button>
         </div>
       )}
+
+      <DailyResonancePanel
+        items={resonanceItems}
+        axisKey={resonanceAxis}
+        onGoSpace={() => setStep(STEP.BYEOLSOOM_SPACE)}
+      />
 
       {/* ── 탭 ── */}
       <div style={{
@@ -527,7 +646,7 @@ export default function GachaPage({ showToast, consentFlags }) {
           title="사주명리 오브제"
           subtitle={`${SAJU_POOL.length / 4}종 × 4등급 · 컬렉션 완성에 도전!`}
           statsLine={`일반 ${SAJU_POOL.filter(i=>i.grade==='ohaeng').length}종 · 레어 ${SAJU_POOL.filter(i=>i.grade==='cheongan').length}종 · 영웅 ${SAJU_POOL.filter(i=>i.grade==='jiji').length}종 · 전설 ${SAJU_POOL.filter(i=>i.grade==='gapja').length}종`}
-          single10Label={{ color: 'rgba(123,164,212,.85)', text: '레어 이상 보장' }}
+          single10Label={{ color: 'rgba(123,164,212,.85)', text: '레어 이상 · 인연 보정' }}
         />
       ) : (
         <GachaBanner
@@ -537,7 +656,7 @@ export default function GachaPage({ showToast, consentFlags }) {
           title="우주 수집 오브제"
           subtitle={`${GACHA_POOL.length / 4}종 × 4등급 · 컬렉션 완성에 도전!`}
           statsLine={`일반 ${GACHA_POOL.filter(i=>i.grade==='satellite').length}종 · 레어 ${GACHA_POOL.filter(i=>i.grade==='planet').length}종 · 영웅 ${GACHA_POOL.filter(i=>i.grade==='galaxy').length}종 · 전설 ${GACHA_POOL.filter(i=>i.grade==='nebula').length}종`}
-          single10Label={{ color: 'rgba(126,200,164,.85)', text: '레어 이상 보장' }}
+          single10Label={{ color: 'rgba(126,200,164,.85)', text: '레어 이상 · 인연 보정' }}
         />
       )}
 
@@ -615,6 +734,7 @@ export default function GachaPage({ showToast, consentFlags }) {
         <ResultOverlay
           results={results}
           gradeConfig={gradeConfig}
+          resonanceContext={resonanceContext}
           onClose={() => setResults(null)}
           onGoSpace={() => {
             setResults(null);

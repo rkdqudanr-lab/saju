@@ -26,7 +26,7 @@ import QuickActionGrid from '../components/landing/QuickActionGrid.jsx';
 import WeeklyScoreSummary from '../components/landing/WeeklyScoreSummary.jsx';
 import LevelCard from '../components/landing/LevelCard.jsx';
 import GachaGraphic from '../components/GachaGraphic.jsx';
-import { ASPECTS, getDailyResonanceItem } from '../utils/gachaItems.js';
+import { ASPECTS, getDailyResonanceItems } from '../utils/gachaItems.js';
 
 const _SI = { viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 const TILE_ICONS = {
@@ -183,10 +183,11 @@ export default function LandingPage({
     const orig = parsedDaily.score ?? dailyResult?.score ?? 0;
     return todayScore && orig ? todayScore - orig : 0;
   }, [dailyResult?.score, parsedDaily.score, todayScore]);
-  const homeResonanceItem = useMemo(
-    () => getDailyResonanceItem({ system: 'cosmic', userId: kakaoId || user?.nickname || 'guest', today }),
-    [kakaoId, user?.nickname, today],
+  const homeResonanceItems = useMemo(
+    () => getDailyResonanceItems({ system: 'cosmic', saju, today, userId: kakaoId || user?.nickname || 'guest', count: 1 }),
+    [kakaoId, saju, today, user?.nickname],
   );
+  const homeResonanceItem = homeResonanceItems[0] || null;
 
   // ── 핵심 축 점수 (상위 2개 / 하위 1개) ──
   const topAxes = useMemo(() => {

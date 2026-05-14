@@ -40,6 +40,51 @@ export const ASPECTS = {
   create:  { label: '창의',  emoji: '🎨', effectTpl: (n) => `${n}의 기운이 영감과 표현력을 깨워요` },
 };
 
+const BODY_RESONANCE = {
+  moon:      { axis: 'love',   title: '달의 기록자',     frame: '은빛 달무리 프레임', story: '마음을 서두르지 않고 비추는 감정의 기록이 열립니다.' },
+  sun:       { axis: 'health', title: '태양의 점화자',   frame: '태양광 프레임',     story: '위축된 하루에 다시 온기를 넣는 생명력의 기록이 열립니다.' },
+  jupiter:   { axis: 'wealth', title: '목성의 확장자',   frame: '목성 고리 프레임',   story: '작은 기회가 더 큰 흐름으로 번지는 풍요의 기록이 열립니다.' },
+  saturn:    { axis: 'career', title: '토성의 설계자',   frame: '황금 고리 프레임',   story: '느리지만 무너지지 않는 책임과 구조의 기록이 열립니다.' },
+  mars:      { axis: 'career', title: '화성의 추진자',   frame: '붉은 궤도 프레임',   story: '망설임을 줄이고 첫 행동을 밀어주는 추진의 기록이 열립니다.' },
+  venus:     { axis: 'love',   title: '금성의 조율자',   frame: '새벽별 프레임',     story: '말투와 표정에 부드러운 매력을 더하는 관계의 기록이 열립니다.' },
+  mercury:   { axis: 'study',  title: '수성의 전달자',   frame: '빠른 별빛 프레임',   story: '생각을 정리하고 필요한 말을 정확히 고르는 지성의 기록이 열립니다.' },
+  andromeda: { axis: 'travel', title: '은하의 순례자',   frame: '심우주 프레임',     story: '익숙한 반경을 넘어 새 관점을 만나는 이동의 기록이 열립니다.' },
+  orion:     { axis: 'create', title: '오리온의 창작자', frame: '별탄생 프레임',     story: '흩어진 영감을 하나의 모양으로 묶는 창작의 기록이 열립니다.' },
+  polaris:   { axis: 'overall', title: '북극성의 길잡이', frame: '방향성 프레임',    story: '흔들리는 선택지 속에서 기준점을 되찾는 기록이 열립니다.' },
+  sirius:    { axis: 'social', title: '시리우스의 신호자', frame: '밝은 별 프레임',  story: '사람 사이에서 선명하게 보이는 존재감의 기록이 열립니다.' },
+  milkyway:  { axis: 'overall', title: '은하수의 수집가', frame: '은하 흐름 프레임', story: '작은 순간들이 이어져 하나의 흐름이 되는 기록이 열립니다.' },
+  saju_mok:   { axis: 'create', title: '목의 성장자',   frame: '새싹 결 프레임',     story: '새로운 생각과 관계가 천천히 자라는 성장의 기록이 열립니다.' },
+  saju_hwa:   { axis: 'social', title: '화의 발화자',   frame: '불빛 결 프레임',     story: '표현과 반응이 살아나는 열기의 기록이 열립니다.' },
+  saju_to:    { axis: 'health', title: '토의 중심자',   frame: '대지 결 프레임',     story: '흩어진 리듬을 다시 한가운데로 모으는 안정의 기록이 열립니다.' },
+  saju_geum:  { axis: 'career', title: '금의 결단자',   frame: '금빛 결 프레임',     story: '정리와 판단이 또렷해지는 결단의 기록이 열립니다.' },
+  saju_su:    { axis: 'study',  title: '수의 통찰자',   frame: '물결 결 프레임',     story: '깊게 듣고 유연하게 이해하는 지혜의 기록이 열립니다.' },
+  saju_gap:   { axis: 'career', title: '갑목의 개척자', frame: '푸른 줄기 프레임',   story: '처음 길을 내는 의지와 추진의 기록이 열립니다.' },
+  saju_eul:   { axis: 'social', title: '을목의 연결자', frame: '넝쿨 결 프레임',     story: '부드럽게 돌아가며 관계를 잇는 유연함의 기록이 열립니다.' },
+  saju_ja:    { axis: 'wealth', title: '자수의 감지자', frame: '밤물결 프레임',     story: '작은 흐름을 빠르게 읽고 기회를 포착하는 기록이 열립니다.' },
+  saju_myo:   { axis: 'love',   title: '묘목의 온기자', frame: '봄빛 결 프레임',     story: '가볍지만 따뜻한 접촉이 관계를 여는 기록이 열립니다.' },
+  saju_gapja: { axis: 'overall', title: '갑자의 시작자', frame: '첫 순환 프레임',    story: '새로운 주기를 여는 첫 숨의 기록이 열립니다.' },
+};
+
+const ELEMENT_AXIS = {
+  목: 'create',
+  화: 'social',
+  토: 'health',
+  금: 'career',
+  수: 'study',
+};
+
+const AXIS_REASON = {
+  overall: '하루 전체의 균형을 다시 잡는 상징이라 오늘의 기준점으로 잘 맞아요.',
+  wealth: '기회와 지출 감각을 또렷하게 만드는 상징이라 금전 흐름을 점검하기 좋아요.',
+  love: '감정 표현과 관계의 온도를 부드럽게 조율하는 상징이라 마음을 전하기 좋아요.',
+  career: '판단과 추진을 정돈하는 상징이라 일의 우선순위를 세우는 데 도움이 돼요.',
+  study: '정보를 흡수하고 정리하는 상징이라 집중과 이해의 리듬을 살리기 좋아요.',
+  health: '몸과 생활 리듬을 안정시키는 상징이라 무리한 흐름을 낮추는 데 잘 맞아요.',
+  social: '사람 사이의 반응을 밝히는 상징이라 먼저 말을 건네기 좋은 흐름이에요.',
+  travel: '방향과 이동의 변수를 살피는 상징이라 바깥 일정에 여유를 주기 좋아요.',
+  create: '흩어진 영감을 잡아주는 상징이라 아이디어를 형태로 만들기 좋아요.',
+};
+
 // 등급별 고정 속성 (우주/사주 공통 → 풍미 텍스트 결정)
 const COSMIC_GRADE_ASPECT = { satellite: 'overall', planet: 'wealth', galaxy: 'love', nebula: 'career' };
 const SAJU_GRADE_ASPECT   = { ohaeng: 'overall', cheongan: 'study', jiji: 'health', gapja: 'career' };
@@ -131,19 +176,6 @@ export const GACHA_POOL = buildCosmicItems();
 export const SAJU_POOL  = buildSajuItems();
 export const ALL_GACHA_POOL = [...GACHA_POOL, ...SAJU_POOL];
 
-// 오늘의 인연 오브제 — userId + today 기반 결정론적 선택
-export function getDailyResonanceItem({ system = 'cosmic', userId = 'guest', today = '' }) {
-  const pool = system === 'saju' ? SAJU_POOL : GACHA_POOL;
-  if (!pool.length) return null;
-  const seed = String(userId) + String(today);
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  const item = pool[hash % pool.length];
-  return { ...item, resonanceAxis: item.aspectKey };
-}
-
 // ─── 컬렉션 정의 ────────────────────────────────────────────────
 export const COLLECTION_DEFS = [
   ...COSMIC_BODY_DEFS.map((body) => ({
@@ -153,7 +185,13 @@ export const COLLECTION_DEFS = [
     emoji: body.emoji,
     description: body.lore,
     requiredIds: GRADE_ORDER.map((g) => `${body.id}_${g}`),
-    reward: { bp: 50, title: `${body.name}의 기운을 담은 자` },
+    reward: {
+      bp: 50,
+      title: BODY_RESONANCE[body.id]?.title || `${body.name}의 기운을 담은 자`,
+      frame: BODY_RESONANCE[body.id]?.frame || `${body.name} 프레임`,
+      story: BODY_RESONANCE[body.id]?.story || `${body.name}의 숨겨진 기록이 열립니다.`,
+      passive: `${ASPECTS[BODY_RESONANCE[body.id]?.axis || 'overall'].label} 계열 오브제 해석이 더 선명해져요`,
+    },
   })),
   ...SAJU_BODY_DEFS.map((body) => ({
     id: body.id,
@@ -162,7 +200,13 @@ export const COLLECTION_DEFS = [
     emoji: body.emoji,
     description: body.lore,
     requiredIds: SAJU_GRADE_ORDER.map((g) => `${body.id}_${g}`),
-    reward: { bp: 50, title: `${body.name}의 기운을 담은 자` },
+    reward: {
+      bp: 50,
+      title: BODY_RESONANCE[body.id]?.title || `${body.name}의 기운을 담은 자`,
+      frame: BODY_RESONANCE[body.id]?.frame || `${body.name} 프레임`,
+      story: BODY_RESONANCE[body.id]?.story || `${body.name}의 숨겨진 기록이 열립니다.`,
+      passive: `${ASPECTS[BODY_RESONANCE[body.id]?.axis || 'overall'].label} 계열 오브제 해석이 더 선명해져요`,
+    },
   })),
 ];
 
@@ -186,6 +230,118 @@ const COSMIC_BY_GRADE = Object.fromEntries(GRADE_ORDER.map((g) => [g, GACHA_POOL
 const SAJU_BY_GRADE   = Object.fromEntries(SAJU_GRADE_ORDER.map((g) => [g, SAJU_POOL.filter((i) => i.grade === g)]));
 
 function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function hashString(input) {
+  let h = 2166136261;
+  const s = String(input || '');
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h >>> 0);
+}
+
+function getDateKey(today = null) {
+  if (today?.year && today?.month && today?.day) {
+    return `${today.year}-${String(today.month).padStart(2, '0')}-${String(today.day).padStart(2, '0')}`;
+  }
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getResonanceAxis({ saju = null, today = null } = {}) {
+  const dateSeed = hashString(getDateKey(today));
+  const month = Number(today?.month || new Date().getMonth() + 1);
+  const seasonalAxis = month >= 3 && month <= 5
+    ? 'create'
+    : month >= 6 && month <= 8
+    ? 'social'
+    : month >= 9 && month <= 11
+    ? 'career'
+    : 'study';
+
+  const elementScores = saju?.or && typeof saju.or === 'object' ? saju.or : null;
+  if (elementScores) {
+    const entries = Object.entries(elementScores).filter(([, value]) => Number.isFinite(Number(value)));
+    const weak = entries.sort((a, b) => Number(a[1]) - Number(b[1]))[0]?.[0];
+    if (ELEMENT_AXIS[weak]) return ELEMENT_AXIS[weak];
+  }
+  if (ELEMENT_AXIS[saju?.dom]) return ELEMENT_AXIS[saju.dom];
+  return dateSeed % 2 === 0 ? seasonalAxis : 'overall';
+}
+
+export function getItemResonanceReason(item, context = {}) {
+  if (!item) return '';
+  const body = BODY_RESONANCE[item.bodyId] || {};
+  const axisKey = item.aspectKey || body.axis || getResonanceAxis(context);
+  const axis = ASPECTS[axisKey] || ASPECTS.overall;
+  const dateLabel = context.today?.month && context.today?.day
+    ? `${context.today.month}월 ${context.today.day}일`
+    : '오늘';
+  const gradeLabel = (GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade])?.label || '';
+  const bodyReason = body.story || item.description || '오늘의 흐름을 붙잡아주는 상징이에요.';
+  return `${dateLabel}, ${item.bodyName}의 ${axis.label} 기운이 가까워졌어요. ${AXIS_REASON[axisKey] || AXIS_REASON.overall} ${gradeLabel ? `${gradeLabel} 등급이라` : '이 오브제는'} ${bodyReason}`;
+}
+
+export function getDailyResonanceItems({ system = 'cosmic', saju = null, today = null, userId = '', count = 3 } = {}) {
+  const pool = system === 'saju' ? SAJU_POOL : GACHA_POOL;
+  const gradeOrder = system === 'saju' ? SAJU_GRADE_ORDER : GRADE_ORDER;
+  const axis = getResonanceAxis({ saju, today });
+  const seed = hashString(`${getDateKey(today)}:${userId}:${system}:${axis}`);
+  const scored = pool.map((item, idx) => {
+    const body = BODY_RESONANCE[item.bodyId] || {};
+    const axisMatch = item.aspectKey === axis ? 80 : 0;
+    const bodyMatch = body.axis === axis ? 45 : 0;
+    const gradeWeight = gradeOrder.indexOf(item.grade) * 7;
+    const jitter = hashString(`${seed}:${item.id}:${idx}`) % 29;
+    return { item, score: axisMatch + bodyMatch + gradeWeight + jitter };
+  });
+  return scored
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count)
+    .map(({ item }) => ({
+      ...item,
+      resonanceAxis: axis,
+      resonanceReason: getItemResonanceReason(item, { saju, today }),
+    }));
+}
+
+function getResonancePoolByGrade({ system, grade, saju = null, today = null, userId = '' }) {
+  const pool = system === 'saju' ? SAJU_POOL : GACHA_POOL;
+  const axis = getResonanceAxis({ saju, today });
+  const candidates = pool.filter((item) => {
+    const body = BODY_RESONANCE[item.bodyId] || {};
+    return item.grade === grade && (item.aspectKey === axis || body.axis === axis);
+  });
+  if (candidates.length) return candidates;
+  return getDailyResonanceItems({ system, saju, today, userId, count: 12 })
+    .filter((item) => item.grade === grade);
+}
+
+function shouldUseResonancePick({ system, grade, seed }) {
+  const topGrade = system === 'saju' ? 'gapja' : 'nebula';
+  const heroicGrade = system === 'saju' ? 'jiji' : 'galaxy';
+  const roll = seed % 100;
+  if (grade === topGrade) return roll < 65;
+  if (grade === heroicGrade) return roll < 55;
+  return roll < 42;
+}
+
+function pullOneFromSystem({ system, guaranteedMin = null, saju = null, today = null, userId = '', resonance = false } = {}) {
+  const gradeOrder = system === 'saju' ? SAJU_GRADE_ORDER : GRADE_ORDER;
+  const byGrade = system === 'saju' ? SAJU_BY_GRADE : COSMIC_BY_GRADE;
+  const gradeByRoll = system === 'saju' ? sajuGradeByRoll : cosmicGradeByRoll;
+  const r = Math.random() * 100;
+  let grade = gradeByRoll(r);
+  if (guaranteedMin && gradeOrder.indexOf(grade) < gradeOrder.indexOf(guaranteedMin)) grade = guaranteedMin;
+
+  const seed = hashString(`${getDateKey(today)}:${userId}:${system}:${grade}:${Math.floor(Math.random() * 100000)}`);
+  const resonancePool = resonance && shouldUseResonancePick({ system, grade, seed })
+    ? getResonancePoolByGrade({ system, grade, saju, today, userId })
+    : [];
+  const picked = resonancePool.length ? randomFrom(resonancePool) : randomFrom(byGrade[grade]);
+  return applyAffix(picked);
+}
 
 function cosmicGradeByRoll(r) {
   if (r < 2)  return 'nebula';
@@ -236,6 +392,10 @@ export function pullOne(guaranteedMin = null) {
   return applyAffix(randomFrom(COSMIC_BY_GRADE[grade]));
 }
 
+export function pullOneResonance(context = {}, guaranteedMin = null) {
+  return pullOneFromSystem({ ...context, system: 'cosmic', guaranteedMin, resonance: true });
+}
+
 export function pull10() {
   const results = [];
   for (let i = 0; i < 9; i++) results.push(pullOne());
@@ -250,11 +410,29 @@ export function pull10() {
   return results;
 }
 
+export function pull10Resonance(context = {}) {
+  const results = [];
+  for (let i = 0; i < 9; i++) results.push(pullOneResonance(context));
+  const hasPlanetPlus = results.some((i) => ['planet', 'galaxy', 'nebula'].includes(i.grade));
+  const hasGalaxyPlus = results.some((i) => ['galaxy', 'nebula'].includes(i.grade));
+  const guarantee = !hasPlanetPlus ? 'planet' : (Math.random() < 0.05 && !hasGalaxyPlus ? 'galaxy' : null);
+  results.push(pullOneResonance(context, guarantee));
+  for (let i = results.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [results[i], results[j]] = [results[j], results[i]];
+  }
+  return results;
+}
+
 export function pullOneSaju(guaranteedMin = null) {
   const r = Math.random() * 100;
   let grade = sajuGradeByRoll(r);
   if (guaranteedMin && SAJU_GRADE_ORDER.indexOf(grade) < SAJU_GRADE_ORDER.indexOf(guaranteedMin)) grade = guaranteedMin;
   return applyAffix(randomFrom(SAJU_BY_GRADE[grade]));
+}
+
+export function pullOneSajuResonance(context = {}, guaranteedMin = null) {
+  return pullOneFromSystem({ ...context, system: 'saju', guaranteedMin, resonance: true });
 }
 
 export function pull10Saju() {
@@ -264,6 +442,20 @@ export function pull10Saju() {
   const hasJijiPlus     = results.some((i) => ['jiji', 'gapja'].includes(i.grade));
   const guarantee = !hasCheonganPlus ? 'cheongan' : (Math.random() < 0.05 && !hasJijiPlus ? 'jiji' : null);
   results.push(pullOneSaju(guarantee));
+  for (let i = results.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [results[i], results[j]] = [results[j], results[i]];
+  }
+  return results;
+}
+
+export function pull10SajuResonance(context = {}) {
+  const results = [];
+  for (let i = 0; i < 9; i++) results.push(pullOneSajuResonance(context));
+  const hasCheonganPlus = results.some((i) => ['cheongan', 'jiji', 'gapja'].includes(i.grade));
+  const hasJijiPlus     = results.some((i) => ['jiji', 'gapja'].includes(i.grade));
+  const guarantee = !hasCheonganPlus ? 'cheongan' : (Math.random() < 0.05 && !hasJijiPlus ? 'jiji' : null);
+  results.push(pullOneSajuResonance(context, guarantee));
   for (let i = results.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [results[i], results[j]] = [results[j], results[i]];
