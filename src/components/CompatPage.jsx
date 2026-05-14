@@ -168,6 +168,8 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
     setStoryResult(null);
     const now = new Date();
     const todayStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일)`;
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 60000);
     try {
       const res = await fetch('/api/stream', {
         method: 'POST',
@@ -179,6 +181,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
           kakaoId: user?.id || null,
           clientHour: new Date().getHours(),
         }),
+        signal: ctrl.signal,
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -218,6 +221,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
         moments: [], tip: '', chemistry: ''
       });
     } finally {
+      clearTimeout(timeout);
       storyLoadingRef.current = false;
       setStoryLoading(false);
     }

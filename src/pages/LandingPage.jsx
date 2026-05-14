@@ -3,7 +3,6 @@ import { getAuthenticatedClient } from '../lib/supabase.js';
 import {
   getDailyDateKey,
   readDailyLocalCache,
-  writeDailyLocalCache,
 } from '../lib/dailyDataAccess.js';
 import { getDailyWord, REVIEWS } from '../utils/constants.js';
 import { STEP } from '../utils/steps.js';
@@ -18,7 +17,6 @@ import {
 } from '../features/today/getDailyAxisScores.js';
 import { TODAY_AXIS_TEXT_CACHE } from '../features/today/fortuneAxisTools.js';
 import SamplePreview from '../components/SamplePreview.jsx';
-import ReflectionPopup from '../components/ReflectionPopup.jsx';
 
 import LandingHeader from '../components/landing/LandingHeader.jsx';
 import DailyMiniCard from '../components/landing/DailyMiniCard.jsx';
@@ -28,7 +26,7 @@ import QuickActionGrid from '../components/landing/QuickActionGrid.jsx';
 import WeeklyScoreSummary from '../components/landing/WeeklyScoreSummary.jsx';
 import LevelCard from '../components/landing/LevelCard.jsx';
 import GachaGraphic from '../components/GachaGraphic.jsx';
-import { ASPECTS, getDailyResonanceItems } from '../utils/gachaItems.js';
+import { ASPECTS, getDailyResonanceItem } from '../utils/gachaItems.js';
 
 const _SI = { viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 const TILE_ICONS = {
@@ -165,7 +163,6 @@ export default function LandingPage({
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
   const [scoreHistory, setScoreHistory] = useState([]);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
-  const [showReflection, setShowReflection] = useState(false);
 
   // ── 운세 점수 계산 ──
   const baseScore = dailyResult?.score ?? 0;
@@ -186,11 +183,10 @@ export default function LandingPage({
     const orig = parsedDaily.score ?? dailyResult?.score ?? 0;
     return todayScore && orig ? todayScore - orig : 0;
   }, [dailyResult?.score, parsedDaily.score, todayScore]);
-  const homeResonanceItems = useMemo(
-    () => getDailyResonanceItems({ system: 'cosmic', saju, today, userId: kakaoId || user?.nickname || 'guest', count: 1 }),
-    [kakaoId, saju, today, user?.nickname],
+  const homeResonanceItem = useMemo(
+    () => getDailyResonanceItem({ system: 'cosmic', userId: kakaoId || user?.nickname || 'guest', today }),
+    [kakaoId, user?.nickname, today],
   );
-  const homeResonanceItem = homeResonanceItems[0] || null;
 
   // ── 핵심 축 점수 (상위 2개 / 하위 1개) ──
   const topAxes = useMemo(() => {
@@ -334,37 +330,6 @@ export default function LandingPage({
     }, 800);
     return () => clearTimeout(t);
   }, [user?.id, gamificationState.loginStreak]);
-
-  // ── useEffect: reflection 팝업 ──
-  const yesterdayKey = useMemo(() => {
-    const d = new Date(); d.setDate(d.getDate() - 1);
-    return getDailyDateKey(d);
-  }, []);
-  const yesterdayEntry = useMemo(
-    () => scoreHistory.find((s) => s.date === yesterdayKey),
-    [scoreHistory, yesterdayKey],
-  );
-  useEffect(() => {
-    if (!user || !scoreHistory.length) return;
-    const entry = scoreHistory.find((s) => s.date === yesterdayKey);
-    if (!entry?.score) return;
-    const kakaoId = String(user.kakaoId || user.id);
-    if (readDailyLocalCache(kakaoId, 'reflection_feedback', yesterdayKey)) return;
-    const t = setTimeout(() => setShowReflection(true), 2000);
-    return () => clearTimeout(t);
-  }, [user?.id, scoreHistory, yesterdayKey]);
-
-  const handleReflectionAnswer = useCallback(async (answer) => {
-    setShowReflection(false);
-    if (!user || answer === 'skip') return;
-    const kakaoId = String(user.kakaoId || user.id);
-    writeDailyLocalCache(kakaoId, 'reflection_feedback', answer, yesterdayKey);
-    getAuthenticatedClient(kakaoId)?.from('daily_cache').upsert(
-      { kakao_id: kakaoId, cache_date: yesterdayKey, cache_type: 'reflection_feedback', content: answer },
-      { onConflict: 'kakao_id,cache_date,cache_type' },
-    );
-    if (answer === 'match') await onEarnBP?.(2, 'reflection_correct');
-  }, [user, onEarnBP, yesterdayKey]);
 
   // ── 미션 진행률 ──
   const completedMissions = missions.filter((m) => m.is_completed).length;

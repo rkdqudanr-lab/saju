@@ -132,20 +132,16 @@ export const SAJU_POOL  = buildSajuItems();
 export const ALL_GACHA_POOL = [...GACHA_POOL, ...SAJU_POOL];
 
 // 오늘의 인연 오브제 — userId + today 기반 결정론적 선택
-export function getDailyResonanceItems({ system = 'cosmic', userId = 'guest', today = '', count = 1 }) {
+export function getDailyResonanceItem({ system = 'cosmic', userId = 'guest', today = '' }) {
   const pool = system === 'saju' ? SAJU_POOL : GACHA_POOL;
-  if (!pool.length) return [];
+  if (!pool.length) return null;
   const seed = String(userId) + String(today);
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
   }
-  const results = [];
-  for (let i = 0; i < count; i++) {
-    const item = pool[(hash + i * 7919) % pool.length];
-    results.push({ ...item, resonanceAxis: item.aspectKey });
-  }
-  return results;
+  const item = pool[hash % pool.length];
+  return { ...item, resonanceAxis: item.aspectKey };
 }
 
 // ─── 컬렉션 정의 ────────────────────────────────────────────────

@@ -282,17 +282,25 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
 
       // AI 특별 상담 호출
       const ctx = buildCtx ? buildCtx() : '';
-      const res = await fetch('/api/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: readingType.prompt,
-          context: ctx,
-          kakaoId,
-          clientHour: new Date().getHours(),
-          ...readingType.flag,
-        }),
-      });
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 60000);
+      let res;
+      try {
+        res = await fetch('/api/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userMessage: readingType.prompt,
+            context: ctx,
+            kakaoId,
+            clientHour: new Date().getHours(),
+            ...readingType.flag,
+          }),
+          signal: ctrl.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `API error (${res.status})`);

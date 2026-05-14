@@ -296,6 +296,8 @@ export function useConsultation(
     const style = responseStyle || "M";
 
     for (let attempt = 0; attempt < maxRetries; attempt += 1) {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 60000);
       try {
         if (attempt > 0) {
           const msgs = [
@@ -350,6 +352,7 @@ export function useConsultation(
         const res = await fetch("/api/stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: ctrl.signal,
           body: JSON.stringify({
             userMessage,
             context: fullContext,
@@ -410,6 +413,8 @@ export function useConsultation(
         lastErr = e;
         if (e?.message === "SESSION_EXPIRED") throw e;
         if (attempt < maxRetries - 1) continue;
+      } finally {
+        clearTimeout(timeout);
       }
     }
 

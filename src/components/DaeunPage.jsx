@@ -232,7 +232,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
         age >= end ? 'past' : age < start ? 'future' : 'current';
       const phase1 = phaseState(p1Start, p1End);
       const phase2 = phaseState(p1End, p2End);
-      const phase3 = phaseState(p2End, p3End + 1);
+      const phase3 = phaseState(p2End, p3End + 1); // ageEnd 해당 연도를 'past'가 아닌 'current'로 포함
       const phaseInstruction = (start, end, state, label) => {
         if (state === 'past')
           return `[${label}] ${start}~${end}세 (이미 지나간 시기 — "~했을 거예요" 과거형 말투로)`;

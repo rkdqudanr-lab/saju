@@ -137,17 +137,25 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
         : '';
       const sunSummary = sun ? `별자리: ${sun.n}(${sun.s}) — ${sun.desc}` : '';
       const userMsg = `나의 종합 사주 리포트를 작성해주세요. ${sajuSummary} ${sunSummary}. 현재 ${now}년.`;
-      const res = await fetch('/api/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: userMsg,
-          context: buildCtx(),
-          isComprehensive: true,
-          kakaoId: user?.id || null,
-          clientHour: new Date().getHours(),
-        }),
-      });
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 60000);
+      let res;
+      try {
+        res = await fetch('/api/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userMessage: userMsg,
+            context: buildCtx(),
+            isComprehensive: true,
+            kakaoId: user?.id || null,
+            clientHour: new Date().getHours(),
+          }),
+          signal: ctrl.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `API error (${res.status})`);
@@ -263,17 +271,25 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
         ? `상승(첫인상): ${asc.n}(${asc.s}) — ${asc.desc}`
         : '상승궁 정보 없음(출생지 정보가 없어 상승궁은 확정하지 말고, 태양·달 기반 인상 해석은 보조적으로만 부탁)';
       const userMsg = `나의 종합 점성술 리포트를 작성해주세요. ${sunSummary}. ${moonSummary}. ${ascSummary}. 현재 ${now}년.`;
-      const res = await fetch('/api/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: userMsg,
-          context: buildCtx(),
-          isAstrology: true,
-          kakaoId: user?.id || null,
-          clientHour: new Date().getHours(),
-        }),
-      });
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 60000);
+      let res;
+      try {
+        res = await fetch('/api/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userMessage: userMsg,
+            context: buildCtx(),
+            isAstrology: true,
+            kakaoId: user?.id || null,
+            clientHour: new Date().getHours(),
+          }),
+          signal: ctrl.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `API error (${res.status})`);
