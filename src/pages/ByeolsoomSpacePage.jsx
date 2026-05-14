@@ -104,6 +104,24 @@ function CollectionCard({ def, ownedIds, onComplete, completedSet }) {
       </div>
 
       {complete && !alreadyClaimed && (
+        <div style={{
+          marginTop: 12,
+          padding: '10px 12px',
+          borderRadius: 12,
+          background: 'var(--bg1)',
+          border: '1px solid var(--acc)',
+          fontSize: '11px',
+          color: 'var(--t3)',
+          lineHeight: 1.6,
+        }}>
+          <div style={{ color: 'var(--gold)', fontWeight: 900, marginBottom: 3 }}>
+            해금 보상: {def.reward.title}
+          </div>
+          <div>{def.reward.frame} · {def.reward.passive}</div>
+        </div>
+      )}
+
+      {complete && !alreadyClaimed && (
         <button
           type="button"
           onClick={() => onComplete(def)}
@@ -119,8 +137,19 @@ function CollectionCard({ def, ownedIds, onComplete, completedSet }) {
         </button>
       )}
       {complete && alreadyClaimed && (
-        <div style={{ marginTop: 10, textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>
-          칭호: {def.reward.title}
+        <div style={{
+          marginTop: 10,
+          padding: '10px 12px',
+          borderRadius: 12,
+          background: 'var(--bg1)',
+          border: '1px solid var(--acc)',
+          fontSize: 'var(--xs)',
+          color: 'var(--t3)',
+          lineHeight: 1.6,
+        }}>
+          <div style={{ color: 'var(--gold)', fontWeight: 900 }}>칭호: {def.reward.title}</div>
+          <div>{def.reward.frame}</div>
+          <div>{def.reward.story}</div>
         </div>
       )}
     </article>
@@ -167,7 +196,7 @@ export default function ByeolsoomSpacePage() {
       localStorage.setItem(`byeolsoom_completed_${kakaoId || 'guest'}`, JSON.stringify([...next]));
     } catch {}
     earnBP?.(def.reward.bp, `컬렉션 완성: ${def.name}`);
-    setClaimToast(`✦ ${def.name} 완성! BP +${def.reward.bp}`);
+    setClaimToast(`✦ ${def.reward.title} 해금! BP +${def.reward.bp}`);
     setTimeout(() => setClaimToast(null), 2800);
   }, [completedSet, earnBP, kakaoId]);
 
