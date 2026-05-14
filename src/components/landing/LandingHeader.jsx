@@ -66,7 +66,7 @@ export default function LandingHeader({
               tabIndex={onStreakClick ? 0 : undefined}
               onKeyDown={onStreakClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onStreakClick(); } : undefined}
             >
-              🔥 {streak}일 연속
+              🔥<span className="lh-streak-num"> {streak}일</span><span className="lh-streak-suffix"> 연속</span>
               {streakBonusText && <span className="lh-streak-next">{streakBonusText}</span>}
             </span>
           )}

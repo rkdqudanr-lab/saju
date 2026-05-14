@@ -542,7 +542,7 @@ export default function LandingPage({
 
   // ── 로그인 + 프로필 완성 화면 ──
   return (
-    <div className="page step-fade" style={{ justifyContent: 'flex-start', paddingTop: 0 }}>
+    <div className="page step-fade" style={{ justifyContent: 'flex-start', paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
       <div className="land-home">
 
         {/* 1. 보상 바 헤더 */}
