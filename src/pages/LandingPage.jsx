@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import {
   getDailyDateKey,
@@ -506,6 +507,48 @@ export default function LandingPage({
     );
   }
 
+  const streakText = (() => {
+    const s = gamificationState.loginStreak;
+    const MILESTONE_MSG = { 3: '+30 BP', 7: '+100 BP', 14: '+100 BP', 21: '+100 BP', 30: '+300 BP' };
+    if (MILESTONE_MSG[s]) return `✦ ${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요!`;
+    const next = [3, 7, 14, 21, 30].find((m) => m > s);
+    return next
+      ? `앞으로 ${next - s}일 더 출석하면 ${MILESTONE_MSG[next]} 보너스를 받아요`
+      : '30일을 넘었어요! 전설의 별숨 수호자예요 ✦';
+  })();
+
+  const streakPopup = showStreakPopup && typeof document !== 'undefined'
+    ? createPortal(
+      <div
+        className="streak-popup-backdrop"
+        role="presentation"
+        onClick={() => setShowStreakPopup(false)}
+      >
+        <div
+          className="streak-popup-card"
+          role="dialog"
+          aria-modal="true"
+          aria-label="연속 출석 보상"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="streak-popup-flame" aria-hidden="true">🔥</div>
+          <div className="streak-popup-title">
+            {gamificationState.loginStreak}일 연속 출석!
+          </div>
+          <div className="streak-popup-desc">{streakText}</div>
+          <button
+            type="button"
+            className="streak-popup-button"
+            onClick={() => setShowStreakPopup(false)}
+          >
+            오늘도 별숨 시작하기 ✦
+          </button>
+        </div>
+      </div>,
+      document.body,
+    )
+    : null;
+
   // ── 로그인 + 프로필 완성 화면 ──
   return (
     <div className="page step-fade" style={{ justifyContent: 'flex-start', paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
@@ -597,42 +640,7 @@ export default function LandingPage({
 
       </div>
 
-      {/* ── 연속 출석 전체화면 ── */}
-      {showStreakPopup && (
-        <div
-          onClick={() => setShowStreakPopup(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 9500, background: 'var(--bg0)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn .4s ease' }}
-        >
-          <div style={{ fontSize: '5rem', marginBottom: 16, animation: 'fl-glow-soft 2s ease-in-out infinite' }}>🔥</div>
-          <div style={{ fontSize: '3.5rem', fontWeight: 900, color: 'var(--gold)', letterSpacing: '-0.02em', marginBottom: 8 }}>
-            {gamificationState.loginStreak}
-          </div>
-          <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 20 }}>
-            일 연속 출석
-          </div>
-          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.8, textAlign: 'center', maxWidth: 280, marginBottom: 48 }}>
-            {(() => {
-              const s = gamificationState.loginStreak;
-              const MILESTONE_MSG = { 3: '+30 BP', 7: '+100 BP', 14: '+100 BP', 21: '+100 BP', 30: '+300 BP' };
-              if (MILESTONE_MSG[s]) return `✦ ${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요!`;
-              const next = [3, 7, 14, 21, 30].find((m) => m > s);
-              return next
-                ? `앞으로 ${next - s}일 더 출석하면 ${MILESTONE_MSG[next]} 보너스를 받아요`
-                : `30일을 넘었어요! 전설의 별숨 수호자예요 🌟`;
-            })()}
-          </div>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); setShowStreakPopup(false); }}
-            style={{ padding: '14px 48px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontFamily: 'var(--ff)', fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700, cursor: 'pointer' }}
-          >
-            오늘도 별숨 시작하기 ✦
-          </button>
-          <div style={{ position: 'absolute', bottom: 40, fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-            화면을 탭하면 닫혀요
-          </div>
-        </div>
-      )}
+      {streakPopup}
 
     </div>
   );
