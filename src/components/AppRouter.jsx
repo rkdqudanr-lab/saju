@@ -610,8 +610,15 @@ export default function AppRouter({ ctx }) {
 
       {/* 기능별 전체화면 로딩 오버레이 */}
       {featureLoading && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 8500, background: 'var(--bg0)', animation: 'fadeIn .3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <FeatureLoadingScreen type={featureLoading.type} text={featureLoading.text} />
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 8500,
+          background: 'rgba(13, 11, 20, 0.88)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          animation: 'fadeIn .25s ease',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <FeatureLoadingScreen type={featureLoading.type} text={featureLoading.text} fullPage={false} />
         </div>
       )}
     </div>
