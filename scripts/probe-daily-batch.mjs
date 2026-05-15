@@ -57,8 +57,36 @@ const CHECK_RULES = [
   },
   {
     id: 'abstract_expr',
-    label: '추상어 (기운/에너지 단독)',
-    pattern: /기운이 살아나요|기운이 내 것|에너지가 살아|기운이 올라와|기운을 받아요/,
+    label: '추상어 (기운/에너지)',
+    // [동양의 기운]\n기운: 필드 안의 "~기운을/이/으로 만나/강해져요" 패턴은 허용 (날 기운 설명)
+    // 카테고리 운세·별숨픽·요약에서의 에너지/오행기운 합성어만 체크
+    custom: (text) => {
+      // 에너지: 어디서나 금지
+      if (/에너지/.test(text)) {
+        const m = text.match(/.{0,20}에너지.{0,20}/);
+        return `"에너지" 발견: "${m?.[0]?.trim()}"`;
+      }
+      // 화기(火氣), 목기운, 물 기운 등 오행+기운 합성어 (한자포함)
+      if (/화기\(火氣\)|목기운|물 기운|화 기운|토 기운|금 기운|수 기운|목화상생 기운/.test(text)) {
+        const m = text.match(/.{0,15}(화기\(火氣\)|목기운|물 기운|화 기운|토 기운|금 기운|수 기운).{0,15}/);
+        return `오행+기운 합성어 발견: "${m?.[0]?.trim()}"`;
+      }
+      // 카테고리 운세·별숨픽·요약에서의 "기운이/기운으로/기운을" (섹션 밖)
+      // [카테고리 운세] 블록과 [별숨픽] 블록, [요약] 줄만 체크
+      const catBlock = text.match(/\[카테고리 운세\]([\s\S]*?)(?=\n\[|$)/)?.[1] ?? '';
+      const pickBlock = text.match(/\[별숨픽\]([\s\S]*?)(?=\n\[|$)/)?.[1] ?? '';
+      const summaryLine = text.match(/\[요약\][^\n]*/)?.[0] ?? '';
+      const checkTarget = catBlock + pickBlock + summaryLine;
+      const kiun = checkTarget.match(/.{0,20}(기운이|기운을|기운으로).{0,20}/);
+      if (kiun) return `카테고리/픽/요약에서 "기운" 발견: "${kiun[0].trim()}"`;
+      return null;
+    },
+  },
+  {
+    id: 'forbidden_ending_ext',
+    label: '금지 어미 (편이 좋아/게 좋습니다)',
+    // F형 "해봐도 좋을 것 같아요"는 허용 — 단순 "해봐요"/"해봐요" 금지
+    pattern: /편이 좋아|게 좋습니다/,
   },
   {
     id: 'cafe_repeat',

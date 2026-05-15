@@ -204,7 +204,7 @@ function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, su
   const sunLabel = sun ? `${sun.s || ''} ${sun.n || ''}`.trim() : '';
   const moonLabel = moon ? `${moon.s || ''} ${moon.n || ''}`.trim() : '';
   const ascLabel = asc ? `${asc.s || ''} ${asc.n || ''}`.trim() : '';
-  const sajuLabel = saju?.dom ? `${saju.dom} 기운` : '';
+  const sajuLabel = saju?.dom ? `${saju.dom} 기질` : '';
 
   const easternBase = compactText(eastern.kiun || eastern.sinshin);
   const westernBase = compactText(western.flow || western.planet);
@@ -238,16 +238,16 @@ function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, su
 
   const dontActionPhrase = joinPhrase(
     dontAction,
-    v => `다만 ${v} 흐름은 피하면 좋아요.`,
-    v => `다만 이런 흐름은 피하는 게 좋아요. ${v}.`,
+    v => `다만 ${v} 흐름은 피하세요.`,
+    v => `다만 이런 흐름은 피하세요. ${v}.`,
   );
 
   return [
     {
       title: '오늘의 사주 기운',
       body: easternBase
-        ? `${easternLead} ${sajuLabel ? `타고난 ${sajuLabel}과 만나면서 ` : ''}${strongestLabel} 쪽은 비교적 빠르게 반응하고, ${careLabel} 쪽은 무리해서 밀어붙이기보다 리듬을 살피는 편이 좋아요.${doActionPhrase ? ` ${doActionPhrase}` : ''}`
-        : `오늘은 사주 흐름에서 ${strongestLabel}이 먼저 살아나는 날이에요. 반대로 ${careLabel}은 작은 말투나 컨디션 변화에도 흔들릴 수 있으니, 큰 결정보다는 흐름을 정돈하는 데 힘을 두면 좋아요.`,
+        ? `${easternLead} ${sajuLabel ? `타고난 ${sajuLabel}과 만나면서 ` : ''}${strongestLabel} 쪽은 비교적 빠르게 반응하고, ${careLabel} 쪽은 무리해서 밀어붙이기보다 리듬을 살피세요.${doActionPhrase ? ` ${doActionPhrase}` : ''}`
+        : `오늘은 사주 흐름에서 ${strongestLabel}이 먼저 살아나는 날이에요. 반대로 ${careLabel}은 작은 말투나 컨디션 변화에도 흔들릴 수 있으니, 큰 결정보다는 흐름을 정돈하는 데 힘을 두세요.`,
     },
     {
       title: '오늘의 점성술 흐름',
@@ -257,7 +257,7 @@ function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, su
     },
     {
       title: '그래서 오늘은',
-      body: `${overallGuide?.summary || '오늘은 무리하게 판을 키우기보다, 잘 되는 흐름을 붙잡고 예민한 부분을 천천히 정리하는 날이에요.'} ${careDesc ? `${careLabel}에서는 ${careDesc}` : `${careLabel}에서는 서두르기보다 한 박자 늦춰 보는 게 좋습니다.`}${dontActionPhrase ? ` ${dontActionPhrase}` : ''}`,
+      body: `${overallGuide?.summary || '오늘은 무리하게 판을 키우기보다, 잘 되는 흐름을 붙잡고 예민한 부분을 천천히 정리하는 날이에요.'} ${careDesc ? `${careLabel}에서는 ${careDesc}` : `${careLabel}에서는 서두르기보다 한 박자 늦추세요.`}${dontActionPhrase ? ` ${dontActionPhrase}` : ''}`,
     },
   ].filter((section) => compactText(section.body));
 }
