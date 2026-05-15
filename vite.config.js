@@ -43,6 +43,7 @@ export default defineConfig({
     },
   },
   server: {
+    port: 5174,
     proxy: {
       // ── /api/ask: 로컬 dev용 Anthropic 직접 프록시 ──
       '/api/ask': {

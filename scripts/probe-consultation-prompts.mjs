@@ -23,6 +23,85 @@ function loadEnv() {
 
 const CASES = [
   {
+    id: 'daily',
+    label: '오늘 일일 운세',
+    body: {
+      userMessage: '오늘 하루 운세 알려줘',
+      context: [
+        '[사용자 기본 정보]',
+        '생년월일: 1995년 6월 15일 오전 10시 30분',
+        '성별: 여성',
+        '사주 요약: 추진력이 강하고 새로운 일을 시작하는 데 두려움이 없는 편.',
+        '별자리 요약: 태양 쌍둥이자리, 달 양자리.',
+        '현재 관심사: 커리어, 건강, 인간관계',
+        '현재 생애 단계: 직장인',
+      ].join('\n'),
+      responseStyle: 'M',
+      kakaoId: 'local-test',
+      clientHour: 9,
+      isDaily: true,
+      gender: '여성',
+      lifeStage: 'employed',
+    },
+  },
+  {
+    id: 'monthly',
+    label: '월간 리포트',
+    body: {
+      userMessage: '이번 달 운세 리포트 알려줘',
+      context: [
+        '[사용자 기본 정보]',
+        '생년월일: 1993년 3월 22일 오후 2시 45분',
+        '성별: 남성',
+        '사주 요약: 책임감이 강하고 계획적이지만 감정 표현이 서툰 편.',
+        '별자리 요약: 태양 양자리, 달 천칭자리.',
+        '현재 관심사: 직장, 재정, 건강',
+      ].join('\n'),
+      responseStyle: 'M',
+      kakaoId: 'local-test',
+      clientHour: 14,
+      isReport: true,
+    },
+  },
+  {
+    id: 'letter',
+    label: '편지 모드',
+    body: {
+      userMessage: '6개월 뒤의 나에게 편지를 써줘',
+      context: [
+        '[사용자 기본 정보]',
+        '생년월일: 1999년 11월 5일 오후 8시 10분',
+        '성별: 여성',
+        '사주 요약: 감수성이 풍부하고 창의적이지만 결정을 미루는 경향.',
+        '별자리 요약: 태양 전갈자리, 달 게자리.',
+        '현재 관심사: 진로, 감정, 창작',
+      ].join('\n'),
+      responseStyle: 'F',
+      kakaoId: 'local-test',
+      clientHour: 20,
+      isLetter: true,
+    },
+  },
+  {
+    id: 'dream',
+    label: '꿈 해몽',
+    body: {
+      userMessage: '어젯밤에 이빨이 빠지는 꿈을 꿨어. 무슨 의미야?',
+      context: [
+        '[사용자 기본 정보]',
+        '생년월일: 1991년 7월 28일 오전 6시 55분',
+        '성별: 남성',
+        '사주 요약: 완벽을 추구하고 작은 실수에도 자책하는 편.',
+        '별자리 요약: 태양 사자자리, 달 처녀자리.',
+        '현재 관심사: 직장, 자기관리, 건강',
+      ].join('\n'),
+      responseStyle: 'M',
+      kakaoId: 'local-test',
+      clientHour: 8,
+      isDream: true,
+    },
+  },
+  {
     id: 'love-contact',
     label: '연애 연락 결정',
     body: {
