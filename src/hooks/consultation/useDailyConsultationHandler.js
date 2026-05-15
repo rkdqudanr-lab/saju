@@ -52,10 +52,12 @@ export function useDailyConsultationHandler({
       }
       // 확인 직후 즉시 로딩 표시 (Supabase 처리 전)
       setDailyLoading(true);
+      useAppStore.getState().setFeatureLoading({ type: 'daily', text: '오늘의 별 기운을 읽는 중...' });
       const currentBm = useAppStore.getState().gamificationState?.currentBp ?? 0;
       if (currentBm < BM_COST_PER_ASK) {
         if (showToast) showToast(`BP가 부족해요. (필요: ${BM_COST_PER_ASK} BP, 보유: ${currentBm} BP)`, "error");
         setDailyLoading(false);
+        useAppStore.getState().setFeatureLoading(null);
         return false;
       }
       const authClient = getAuthenticatedClient(user.id);
@@ -63,6 +65,7 @@ export function useDailyConsultationHandler({
       if (!ok) {
         if (showToast) showToast("BP가 부족해요.", "error");
         setDailyLoading(false);
+        useAppStore.getState().setFeatureLoading(null);
         return false;
       }
       const cur = useAppStore.getState().gamificationState || {};
@@ -73,6 +76,7 @@ export function useDailyConsultationHandler({
     } else {
       // BP 불필요 사용자는 버튼 탭 즉시 로딩
       setDailyLoading(true);
+      useAppStore.getState().setFeatureLoading({ type: 'daily', text: '오늘의 별 기운을 읽는 중...' });
     }
 
     if (typeof window.gtag === "function") window.gtag("event", "daily_horoscope_click");
@@ -164,6 +168,7 @@ export function useDailyConsultationHandler({
       return false;
     } finally {
       setDailyLoading(false);
+      useAppStore.getState().setFeatureLoading(null);
     }
   }, [callApi, dailyCount, dailyLoading, dailyMax, formOk, getTodayDateStr, onDailyLimitReached, onMissionsSaved, saveDailyCache, saveHistoryToSupabase, showToast, timeSlot, user?.id]);
 

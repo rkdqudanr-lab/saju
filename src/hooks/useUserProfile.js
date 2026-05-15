@@ -209,6 +209,7 @@ export function useUserProfile() {
         const userData = { id: String(data.id), nickname: data.nickname || '별님', profileImage: rawImage ? rawImage.replace(/^http:\/\//, 'https://') : null };
         setUser(userData);
         setAuthUser(userData);
+        try { sessionStorage.setItem('byeolsoom_explicit_login', '1'); } catch {}
 
         if (supabase) {
           const authClient = getAuthenticatedClient(String(data.id));

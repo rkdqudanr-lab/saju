@@ -81,4 +81,8 @@ export const useAppStore = create((set, get) => ({
 
   equippedAvatar: null,
   setEquippedAvatar: (val) => set({ equippedAvatar: val }),
+
+  // ── 기능 로딩 전체화면 오버레이 ──────────────────────────────
+  featureLoading: null, // null | { type: string, text?: string }
+  setFeatureLoading: (config) => set({ featureLoading: config }),
 }));

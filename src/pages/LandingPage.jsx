@@ -597,38 +597,39 @@ export default function LandingPage({
 
       </div>
 
-      {/* ── 연속 출석 팝업 ── */}
+      {/* ── 연속 출석 전체화면 ── */}
       {showStreakPopup && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}
           onClick={() => setShowStreakPopup(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 9500, background: 'var(--bg0)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn .4s ease' }}
         >
-          <div
-            style={{ background: 'var(--bg1)', border: '1px solid var(--acc)', borderRadius: 'var(--r2)', padding: '28px 24px', maxWidth: 320, width: '100%', textAlign: 'center', animation: 'fadeUp .3s ease' }}
-            onClick={(e) => e.stopPropagation()}
+          <div style={{ fontSize: '5rem', marginBottom: 16, animation: 'fl-glow-soft 2s ease-in-out infinite' }}>🔥</div>
+          <div style={{ fontSize: '3.5rem', fontWeight: 900, color: 'var(--gold)', letterSpacing: '-0.02em', marginBottom: 8 }}>
+            {gamificationState.loginStreak}
+          </div>
+          <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 20 }}>
+            일 연속 출석
+          </div>
+          <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', lineHeight: 1.8, textAlign: 'center', maxWidth: 280, marginBottom: 48 }}>
+            {(() => {
+              const s = gamificationState.loginStreak;
+              const MILESTONE_MSG = { 3: '+30 BP', 7: '+100 BP', 14: '+100 BP', 21: '+100 BP', 30: '+300 BP' };
+              if (MILESTONE_MSG[s]) return `✦ ${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요!`;
+              const next = [3, 7, 14, 21, 30].find((m) => m > s);
+              return next
+                ? `앞으로 ${next - s}일 더 출석하면 ${MILESTONE_MSG[next]} 보너스를 받아요`
+                : `30일을 넘었어요! 전설의 별숨 수호자예요 🌟`;
+            })()}
+          </div>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowStreakPopup(false); }}
+            style={{ padding: '14px 48px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontFamily: 'var(--ff)', fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700, cursor: 'pointer' }}
           >
-            <div style={{ fontSize: '2.4rem', marginBottom: 8 }}>🔥</div>
-            <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 6 }}>
-              {gamificationState.loginStreak}일 연속 출석!
-            </div>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7, marginBottom: 18 }}>
-              {(() => {
-                const s = gamificationState.loginStreak;
-                const MILESTONE_MSG = { 3: '+30 BP', 7: '+100 BP', 14: '+100 BP', 21: '+100 BP', 30: '+300 BP' };
-                if (MILESTONE_MSG[s]) return `✦ ${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요!`;
-                const next = [3, 7, 14, 21, 30].find((m) => m > s);
-                return next
-                  ? `앞으로 ${next - s}일 더 출석하면 ${MILESTONE_MSG[next]} 보너스를 받아요`
-                  : `30일을 넘었어요! 전설의 별숨 수호자예요 🌟`;
-              })()}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowStreakPopup(false)}
-              style={{ width: '100%', padding: '12px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontFamily: 'var(--ff)', fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 700, cursor: 'pointer' }}
-            >
-              오늘도 별숨 시작하기 ✦
-            </button>
+            오늘도 별숨 시작하기 ✦
+          </button>
+          <div style={{ position: 'absolute', bottom: 40, fontSize: 'var(--xs)', color: 'var(--t4)' }}>
+            화면을 탭하면 닫혀요
           </div>
         </div>
       )}

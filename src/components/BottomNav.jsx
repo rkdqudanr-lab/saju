@@ -32,6 +32,7 @@ const MENU_GROUPS = {
       { icon: 'chart-bar', label: '월간 리포트', step: STEP.REPORT },
       { icon: 'sparkles', label: '별숨의 예언', step: STEP.FUTURE_PROPHECY },
       // ── 특별 상담 ──
+      { icon: 'chat-alt', label: '심층 인터뷰', step: STEP.DEEP_INTERVIEW },
       { icon: 'cards', label: '별숨 타로', step: STEP.TAROT },
       { icon: 'moon', label: '꿈 해몽', step: STEP.DREAM },
       { icon: 'user', label: '이름 풀이', step: STEP.NAME_FORTUNE },

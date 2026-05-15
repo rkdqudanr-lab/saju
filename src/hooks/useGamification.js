@@ -378,8 +378,17 @@ export function useGamification(user, showToast) {
           achievedStreak = currentLoginStreak;
         }
 
-        // 보상 지급 (미지급인 경우에만)
+        // 보상 지급 (미지급인 경우에만, 명시적 로그인 시에만)
         if (!rewardAlreadyPaid) {
+          const isExplicitLogin = (() => {
+            try { return sessionStorage.getItem('byeolsoom_explicit_login') === '1'; } catch { return false; }
+          })();
+          if (!isExplicitLogin) {
+            setGamificationState(prev => ({ ...prev, loginStreak: achievedStreak }));
+            return;
+          }
+          try { sessionStorage.removeItem('byeolsoom_explicit_login'); } catch {}
+
           const loginBpGain = isFirstLoginToday ? bpGain : BP_EARNING_RULES.DAILY_LOGIN;
           let rewardResult;
 

@@ -17,6 +17,7 @@ const PAGE_ANIM = {
 
 // static imports (항상 로드)
 import SkeletonLoader      from "./SkeletonLoader.jsx";
+import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import TodayDetailPage     from "../pages/TodayDetailPage.jsx";
 import ReportStep          from "../pages/ReportStep.jsx";
 import ChatStep            from "../pages/ChatStep.jsx";
@@ -76,9 +77,25 @@ function PageSpinner({ text = '별의 기운을 불러오는 중...' }) {
   );
 }
 
+const STEP_FEATURE_TYPE = {
+  [STEP.DEEP_INTERVIEW]:   'special',
+  [STEP.COMPAT]:           'compat',
+  [STEP.FUTURE_PROPHECY]:  'prophecy',
+  [STEP.GROUP]:            'group',
+  [STEP.COMPREHENSIVE]:    'comprehensive',
+  [STEP.DIARY]:            'diary',
+  [STEP.TODAY_DETAIL]:     'daily',
+  [STEP.DREAM]:            'dream',
+  [STEP.TAEGIL]:           'taegil',
+  [STEP.NAME_FORTUNE]:     'name',
+  [STEP.TAROT]:            'tarot',
+  [STEP.LETTER]:           'letter',
+};
+
 export default function AppRouter({ ctx }) {
-  const step    = useAppStore((s) => s.step);
-  const setStep = useAppStore((s) => s.setStep);
+  const step           = useAppStore((s) => s.step);
+  const setStep        = useAppStore((s) => s.setStep);
+  const featureLoading = useAppStore((s) => s.featureLoading);
 
   // COMPREHENSIVE_REDIRECT: 렌더 중 setStep 호출을 피하기 위해 useEffect 사용
   useEffect(() => {
@@ -249,14 +266,14 @@ export default function AppRouter({ ctx }) {
 
       {/* DEEP_INTERVIEW */}
       {step === STEP.DEEP_INTERVIEW && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<FeatureLoadingScreen type="special" />}>
           <DeepInterviewPage form={form} today={today} callApi={callApi} shareResult={shareResult} saveReportImage={handleSaveReportImage} />
         </Suspense>
       )}
 
       {/* COMPAT */}
       {step === STEP.COMPAT && (
-        <Suspense fallback={<PageSpinner text="두 사람의 기운을 맞춰보는 중..." />}>
+        <Suspense fallback={<FeatureLoadingScreen type="compat" />}>
           <CompatPage
             myForm={form} mySaju={saju} mySun={sun}
             callApi={callApi} buildCtx={buildCtx}
@@ -270,7 +287,7 @@ export default function AppRouter({ ctx }) {
 
       {/* FUTURE_PROPHECY */}
       {step === STEP.FUTURE_PROPHECY && (
-        <Suspense fallback={<PageSpinner text="별이 당신의 앞날을 읽는 중..." />}>
+        <Suspense fallback={<FeatureLoadingScreen type="prophecy" />}>
           <FutureProphecyPage
             form={form} buildCtx={buildCtx} callApi={callApi}
             onBack={() => setStep(STEP.RESULT)}
@@ -301,7 +318,7 @@ export default function AppRouter({ ctx }) {
 
       {/* GROUP */}
       {step === STEP.GROUP && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<FeatureLoadingScreen type="group" />}>
           <GroupBulseumPage form={form} saju={saju} sun={sun} setStep={setStep} initialCode={groupCode} user={user} />
         </Suspense>
       )}
@@ -327,7 +344,7 @@ export default function AppRouter({ ctx }) {
 
       {/* COMPREHENSIVE */}
       {step === STEP.COMPREHENSIVE && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<FeatureLoadingScreen type="comprehensive" />}>
           <ComprehensivePage saju={saju} sun={sun} moon={moon} asc={asc} form={form} buildCtx={buildCtx} user={user} consentFlags={consentFlags} />
         </Suspense>
       )}
@@ -341,7 +358,7 @@ export default function AppRouter({ ctx }) {
 
       {/* DIARY */}
       {step === STEP.DIARY && (
-        <Suspense fallback={<PageSpinner />}>
+        <Suspense fallback={<FeatureLoadingScreen type="diary" />}>
           <DiaryPage
             askReview={askDiaryReview} setStep={setStep} setDiy={setDiy} callApi={callApi}
             viewDate={diaryViewDate}
@@ -429,21 +446,21 @@ export default function AppRouter({ ctx }) {
 
       {/* DREAM */}
       {step === STEP.DREAM && (
-        <Suspense fallback={<PageSpinner text="꿈 속의 기운을 해석하는 중..." />}>
+        <Suspense fallback={<FeatureLoadingScreen type="dream" />}>
           <DreamPage user={user} form={form} buildCtx={buildCtx} callApi={callApi} setStep={setStep} showToast={showToast} consentFlags={consentFlags} onShareCard={handleShareDreamCard} />
         </Suspense>
       )}
 
       {/* TAEGIL */}
       {step === STEP.TAEGIL && (
-        <Suspense fallback={<PageSpinner text="좋은 날을 찾는 중..." />}>
+        <Suspense fallback={<FeatureLoadingScreen type="taegil" />}>
           <TaegillPage form={form} buildCtx={buildCtx} callApi={callApi} showToast={showToast} onShareCard={handleShareTaegilCard} user={user} consentFlags={consentFlags} />
         </Suspense>
       )}
 
       {/* NAME_FORTUNE */}
       {step === STEP.NAME_FORTUNE && (
-        <Suspense fallback={<PageSpinner text="이름의 기운을 읽는 중..." />}>
+        <Suspense fallback={<FeatureLoadingScreen type="name" />}>
           <NameFortunePage form={form} buildCtx={buildCtx} callApi={callApi} showToast={showToast} user={user} consentFlags={consentFlags} />
         </Suspense>
       )}
@@ -499,14 +516,14 @@ export default function AppRouter({ ctx }) {
 
       {/* TAROT */}
       {step === STEP.TAROT && (
-        <Suspense fallback={<PageSpinner text="타로 카드를 섞는 중..." />}>
+        <Suspense fallback={<FeatureLoadingScreen type="tarot" />}>
           <TarotPage callApi={callApi} buildCtx={buildCtx} showToast={showToast} consentFlags={consentFlags} />
         </Suspense>
       )}
 
       {/* LETTER */}
       {step === STEP.LETTER && (
-        <Suspense fallback={<PageSpinner text="별숨 편지를 불러오는 중..." />}>
+        <Suspense fallback={<FeatureLoadingScreen type="letter" />}>
           <ByeolsoomLetterPage showToast={showToast} />
         </Suspense>
       )}
@@ -590,6 +607,13 @@ export default function AppRouter({ ctx }) {
 
       </motion.div>
       </AnimatePresence>
+
+      {/* 기능별 전체화면 로딩 오버레이 */}
+      {featureLoading && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 8500, background: 'var(--bg0)', animation: 'fadeIn .3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <FeatureLoadingScreen type={featureLoading.type} text={featureLoading.text} />
+        </div>
+      )}
     </div>
   );
 }
