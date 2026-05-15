@@ -521,14 +521,14 @@ const FEATURE_MAP = {
   ), title: '별숨이 오늘 하루를 읽고 있어요', subtitle: '사주와 별자리로\n오늘의 기운을 분석하는 중이에요' },
 };
 
-export default function FeatureLoadingScreen({ type = 'daily', fullPage = true }) {
+export default function FeatureLoadingScreen({ type = 'daily', fullPage = true, title: titleOverride, subtitle: subtitleOverride }) {
   const config = FEATURE_MAP[type] || FEATURE_MAP.daily;
   const { Anim, title, subtitle } = config;
 
   const inner = (
     <Wrap>
       <Anim />
-      <Label title={title} subtitle={subtitle} />
+      <Label title={titleOverride ?? title} subtitle={subtitleOverride ?? subtitle} />
     </Wrap>
   );
 

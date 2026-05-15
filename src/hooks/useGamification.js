@@ -91,7 +91,7 @@ export function useGamification(user, showToast) {
       // users 테이블에서 게이미피케이션 정보 로드
       const { data: userData } = await client
         .from('users')
-        .select('current_bp, guardian_level, login_streak, last_login_date')
+        .select('current_bp, guardian_level, login_streak, last_login_date, daily_login_reward_at')
         .eq('kakao_id', String(user.id))
         .maybeSingle();
 
@@ -100,7 +100,7 @@ export function useGamification(user, showToast) {
           ...prev,
           currentBp: userData.current_bp || 0,
           guardianLevel: userData.guardian_level || 1,
-          loginStreak: userData.login_streak || 0,
+          // loginStreak는 updateLoginStreakAndEarnBP 완료 후 설정 (팝업이 증가 전 값으로 오표시되는 것 방지)
           lastLoginDate: userData.last_login_date,
         }));
       }
@@ -131,7 +131,7 @@ export function useGamification(user, showToast) {
       }));
 
       // 일일 로그인 스트릭 및 BP 획득
-      await updateLoginStreakAndEarnBP(user.id, userData?.last_login_date, userData?.login_streak || 0);
+      await updateLoginStreakAndEarnBP(user.id, userData?.last_login_date, userData?.login_streak || 0, userData?.daily_login_reward_at);
 
       // 오늘의 미션 로드
       await loadTodayMissions(user.id);
@@ -312,7 +312,7 @@ export function useGamification(user, showToast) {
   // 4. 로그인 스트릭 업데이트 및 일일 로그인 BP 획득
   // ─────────────────────────────────────────────────────────────
   const updateLoginStreakAndEarnBP = useCallback(
-    async (kakaoId, lastLoginDateStr, currentLoginStreak = gamificationState.loginStreak || 0) => {
+    async (kakaoId, lastLoginDateStr, currentLoginStreak = gamificationState.loginStreak || 0, lastRewardAt) => {
       try {
         const authClient = getAuthenticatedClient(kakaoId);
         const client = authClient || supabase;
@@ -320,73 +320,96 @@ export function useGamification(user, showToast) {
         const { newStreak, isFirstLoginToday, bpGain, isConsecutiveDay, missedDays } =
           calculateLoginStreak(lastLoginDateStr);
 
-        // 이미 오늘 로그인했으면 스킵
-        if (!isFirstLoginToday) {
+        const todayStr = getTodayDateStr();
+        // daily_login_reward_at으로 보상 지급 여부를 별도 추적
+        // (last_login_date는 로그인 추적용 — 둘이 어긋나면 보상 재시도 가능)
+        const rewardAlreadyPaid = lastRewardAt === todayStr;
+
+        // 이미 오늘 로그인하고 보상도 지급됐으면 로컬 상태만 동기화 후 종료
+        if (!isFirstLoginToday && rewardAlreadyPaid) {
+          setGamificationState(prev => ({ ...prev, loginStreak: currentLoginStreak }));
           return;
         }
 
-        // users 테이블 업데이트
         let bridgedStreak = false;
-        if (!isConsecutiveDay && missedDays === 1) {
-          const { data: bridgeItem } = await client
-            .from('user_shop_inventory')
-            .select('item_id')
-            .eq('kakao_id', String(kakaoId))
-            .eq('item_id', STREAK_BRIDGE_ITEM_ID)
-            .maybeSingle();
+        let achievedStreak;
 
-          if (bridgeItem) {
-            await client
+        if (isFirstLoginToday) {
+          // streak DB 갱신 (오늘 첫 로그인인 경우에만)
+          if (!isConsecutiveDay && missedDays === 1) {
+            const { data: bridgeItem } = await client
               .from('user_shop_inventory')
-              .delete()
+              .select('item_id')
               .eq('kakao_id', String(kakaoId))
-              .eq('item_id', STREAK_BRIDGE_ITEM_ID);
-            bridgedStreak = true;
+              .eq('item_id', STREAK_BRIDGE_ITEM_ID)
+              .maybeSingle();
+
+            if (bridgeItem) {
+              await client
+                .from('user_shop_inventory')
+                .delete()
+                .eq('kakao_id', String(kakaoId))
+                .eq('item_id', STREAK_BRIDGE_ITEM_ID);
+              bridgedStreak = true;
+            }
           }
+
+          if (isConsecutiveDay || bridgedStreak) {
+            // 스트릭 증가
+            await client.rpc('increment_login_streak', { kid: String(kakaoId) });
+          } else {
+            // 스트릭 리셋 (daily_login_reward_at은 보상 지급 후 별도 업데이트)
+            await client
+              .from('users')
+              .update({
+                login_streak: 1,
+                last_login_date: todayStr,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('kakao_id', String(kakaoId));
+          }
+
+          achievedStreak = bridgedStreak
+            ? (currentLoginStreak + 1)
+            : (newStreak > 0 ? newStreak : (currentLoginStreak + 1));
+        } else {
+          // 이미 오늘 로그인(streak 갱신됨)했지만 보상이 미지급인 복구 경로
+          // currentLoginStreak은 오늘 증가한 DB 값이므로 그대로 사용
+          achievedStreak = currentLoginStreak;
         }
 
-        if (isConsecutiveDay || bridgedStreak) {
-          // 스트릭 증가
-          await client.rpc('increment_login_streak', { kid: String(kakaoId) });
-        } else {
-          // 스트릭 리셋
+        // 보상 지급 (미지급인 경우에만)
+        if (!rewardAlreadyPaid) {
+          const loginBpGain = isFirstLoginToday ? bpGain : BP_EARNING_RULES.DAILY_LOGIN;
+
+          if (!lastLoginDateStr) {
+            // 최초 로그인 보너스 (첫 가입)
+            await earnBP(BP_EARNING_RULES.FIRST_LOGIN, 'first_login');
+            if (showToast) showToast(`🎉 별숨에 오신 것을 환영해요! +${BP_EARNING_RULES.FIRST_LOGIN} BP 지급!`, 'success');
+          } else {
+            // 일일 로그인 보상
+            await earnBP(loginBpGain, 'login');
+            if (showToast) showToast(`🌟 오늘 출석 보상 +${loginBpGain} BP!`, 'success');
+          }
+
+          // 스트릭 마일스톤 보너스
+          if (bridgedStreak && showToast) {
+            showToast(`출석 연결권을 사용해 ${achievedStreak}일 연속 출석을 이어갔어요`, 'success');
+          }
+          const STREAK_MILESTONES = { 3: 30, 7: 100, 14: 100, 21: 100, 30: 300 };
+          if (STREAK_MILESTONES[achievedStreak]) {
+            await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);
+            if (showToast) showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');
+          }
+
+          // 보상 지급 완료 표시 — 로그인 추적(last_login_date)과 분리해 관리
           await client
             .from('users')
-            .update({
-              login_streak: 1,
-              last_login_date: getTodayDateStr(),
-              daily_login_reward_at: getTodayDateStr(),
-              updated_at: new Date().toISOString(),
-            })
+            .update({ daily_login_reward_at: todayStr, updated_at: new Date().toISOString() })
             .eq('kakao_id', String(kakaoId));
         }
 
-        // 최초 로그인 보너스 (last_login_date가 null이면 첫 가입)
-        if (!lastLoginDateStr) {
-          await earnBP(BP_EARNING_RULES.FIRST_LOGIN, 'first_login');
-          if (showToast) showToast(`🎉 별숨에 오신 것을 환영해요! +${BP_EARNING_RULES.FIRST_LOGIN} BP 지급!`, 'success');
-        }
-
-        // BP 획득 (일일 로그인 보상)
-        if (lastLoginDateStr) {
-          await earnBP(bpGain, 'login');
-          if (showToast) showToast(`🌟 오늘 출석 보상 +${bpGain} BP!`, 'success');
-        }
-
-        // 스트릭 마일스톤 보너스
-        const achievedStreak = bridgedStreak
-          ? (currentLoginStreak + 1)
-          : (newStreak > 0 ? newStreak : (currentLoginStreak + 1));
-        if (bridgedStreak && showToast) {
-          showToast(`출석 연결권을 사용해 ${achievedStreak}일 연속 출석을 이어갔어요`, 'success');
-        }
-        const STREAK_MILESTONES = { 3: 30, 7: 100, 14: 100, 21: 100, 30: 300 };
-        if (STREAK_MILESTONES[achievedStreak]) {
-          await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);
-          if (showToast) showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');
-        }
-
-        // 로컬 상태 업데이트
+        // 로컬 상태 업데이트 (earnBP 완료 후 설정해 팝업이 올바른 streak 값으로 표시됨)
         setGamificationState(prev => ({
           ...prev,
           loginStreak: achievedStreak,
