@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import {
@@ -42,7 +42,7 @@ const TILE_ICONS = {
   book:     <svg {..._SI}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
 };
 
-function TodayResonancePreview({ item, axisKey, onClick }) {
+const TodayResonancePreview = React.memo(function TodayResonancePreview({ item, axisKey, onClick }) {
   if (!item) return null;
   const axis = ASPECTS[axisKey] || ASPECTS.overall;
   return (
@@ -91,7 +91,7 @@ function TodayResonancePreview({ item, axisKey, onClick }) {
       <div style={{ color: 'var(--gold)', fontWeight: 900, fontSize: 18 }}>›</div>
     </button>
   );
-}
+});
 
 // 시간대 판별: 17시 이후 or 6시 이전이면 '밤' 모드
 function isNightMode() {
@@ -147,8 +147,8 @@ export default function LandingPage({
   const { saju, today, isApproximate } = useSajuCtx();
   const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0 }, missions = [] } = useGamCtx();
 
-  const nightMode = isNightMode();
-  const nearbyJeolgi = getNearbyJeolgi();
+  const nightMode = useMemo(() => isNightMode(), []);
+  const nearbyJeolgi = useMemo(() => getNearbyJeolgi(), []);
   const kakaoId = user?.kakaoId || user?.id;
 
   // ── 데이터 페칭 상태 ──
@@ -270,44 +270,30 @@ export default function LandingPage({
       .catch(() => {});
   }, [user?.id]);
 
-  // ── useEffect: boostMap ──
+  // ── useEffect: boostMap + axisTextOverrides ──
   useEffect(() => {
     if (!user || !dailyResult) return;
     const kakaoId = String(user.kakaoId || user.id);
     getAuthenticatedClient(kakaoId)
       ?.from('daily_cache')
-      .select('content')
+      .select('cache_type, content')
       .eq('kakao_id', kakaoId)
       .eq('cache_date', getDailyDateKey())
-      .eq('cache_type', TODAY_AXIS_CACHE)
-      .maybeSingle()
+      .in('cache_type', [TODAY_AXIS_CACHE, TODAY_AXIS_TEXT_CACHE])
       .then(({ data }) => {
+        const rows = data || [];
+        const axisRow = rows.find((r) => r.cache_type === TODAY_AXIS_CACHE);
+        const textRow = rows.find((r) => r.cache_type === TODAY_AXIS_TEXT_CACHE);
         try {
-          const parsed = JSON.parse(data?.content || '{}');
+          const parsed = JSON.parse(axisRow?.content || '{}');
           setBoostMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
         } catch { setBoostMap({}); }
-      })
-      .catch(() => setBoostMap({}));
-  }, [user?.id, dailyResult?.score]);
-
-  // ── useEffect: axisTextOverrides ──
-  useEffect(() => {
-    if (!user || !dailyResult) return;
-    const kakaoId = String(user.kakaoId || user.id);
-    getAuthenticatedClient(kakaoId)
-      ?.from('daily_cache')
-      .select('content')
-      .eq('kakao_id', kakaoId)
-      .eq('cache_date', getDailyDateKey())
-      .eq('cache_type', TODAY_AXIS_TEXT_CACHE)
-      .maybeSingle()
-      .then(({ data }) => {
         try {
-          const parsed = JSON.parse(data?.content || '{}');
+          const parsed = JSON.parse(textRow?.content || '{}');
           setAxisTextOverrides(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
         } catch { setAxisTextOverrides({}); }
       })
-      .catch(() => setAxisTextOverrides({}));
+      .catch(() => { setBoostMap({}); setAxisTextOverrides({}); });
   }, [user?.id, dailyResult?.score]);
 
   // ── useEffect: 오늘 점수 히스토리 즉시 반영 ──
@@ -334,9 +320,20 @@ export default function LandingPage({
   }, [user?.id, gamificationState.loginStreak]);
 
   // ── 미션 진행률 ──
-  const completedMissions = missions.filter((m) => m.is_completed).length;
-  const totalMissions = missions.length;
-  const remainingMissions = totalMissions - completedMissions;
+  const completedMissions = useMemo(() => missions.filter((m) => m.is_completed).length, [missions]);
+  const totalMissions = useMemo(() => missions.length, [missions]);
+  const remainingMissions = useMemo(() => totalMissions - completedMissions, [totalMissions, completedMissions]);
+
+  // ── 스트릭 텍스트 ──
+  const streakText = useMemo(() => {
+    const s = gamificationState.loginStreak;
+    const MILESTONE_MSG = { 3: '+30 BP', 7: '+100 BP', 14: '+100 BP', 21: '+100 BP', 30: '+300 BP' };
+    if (MILESTONE_MSG[s]) return `✦ ${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요!`;
+    const next = [3, 7, 14, 21, 30].find((m) => m > s);
+    return next
+      ? `앞으로 ${next - s}일 더 출석하면 ${MILESTONE_MSG[next]} 보너스를 받아요`
+      : '30일을 넘었어요! 전설의 별숨 수호자예요 ✦';
+  }, [gamificationState.loginStreak]);
 
   const recommendedFeature = useMemo(() => {
     const features = [
@@ -506,16 +503,6 @@ export default function LandingPage({
       </div>
     );
   }
-
-  const streakText = (() => {
-    const s = gamificationState.loginStreak;
-    const MILESTONE_MSG = { 3: '+30 BP', 7: '+100 BP', 14: '+100 BP', 21: '+100 BP', 30: '+300 BP' };
-    if (MILESTONE_MSG[s]) return `✦ ${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요!`;
-    const next = [3, 7, 14, 21, 30].find((m) => m > s);
-    return next
-      ? `앞으로 ${next - s}일 더 출석하면 ${MILESTONE_MSG[next]} 보너스를 받아요`
-      : '30일을 넘었어요! 전설의 별숨 수호자예요 ✦';
-  })();
 
   const streakPopup = showStreakPopup && typeof document !== 'undefined'
     ? createPortal(

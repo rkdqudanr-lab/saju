@@ -535,8 +535,19 @@ export default function FeatureLoadingScreen({ type = 'daily', fullPage = true, 
   if (!fullPage) return inner;
 
   return (
-    <div className="page">
-      <div className="inner">{inner}</div>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 300,
+      background: 'rgba(13, 11, 20, 0.88)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      animation: 'fadeIn .25s ease',
+    }}>
+      <div style={{ width: '100%', maxWidth: 480 }}>{inner}</div>
     </div>
   );
 }
