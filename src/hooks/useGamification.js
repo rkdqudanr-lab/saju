@@ -381,16 +381,26 @@ export function useGamification(user, showToast) {
         // 보상 지급 (미지급인 경우에만)
         if (!rewardAlreadyPaid) {
           const loginBpGain = isFirstLoginToday ? bpGain : BP_EARNING_RULES.DAILY_LOGIN;
+          let rewardResult;
 
           if (!lastLoginDateStr) {
             // 최초 로그인 보너스 (첫 가입)
-            await earnBP(BP_EARNING_RULES.FIRST_LOGIN, 'first_login');
+            rewardResult = await earnBP(BP_EARNING_RULES.FIRST_LOGIN, 'first_login');
+            if (!rewardResult?.success) throw new Error('FIRST_LOGIN_BP_FAILED');
             if (showToast) showToast(`🎉 별숨에 오신 것을 환영해요! +${BP_EARNING_RULES.FIRST_LOGIN} BP 지급!`, 'success');
           } else {
             // 일일 로그인 보상
-            await earnBP(loginBpGain, 'login');
+            rewardResult = await earnBP(loginBpGain, 'login');
+            if (!rewardResult?.success) throw new Error('DAILY_LOGIN_BP_FAILED');
             if (showToast) showToast(`🌟 오늘 출석 보상 +${loginBpGain} BP!`, 'success');
           }
+
+          // 보상 지급 완료 표시 — 로그인 추적(last_login_date)과 분리해 관리
+          const { error: rewardMarkError } = await client
+            .from('users')
+            .update({ daily_login_reward_at: todayStr, updated_at: new Date().toISOString() })
+            .eq('kakao_id', String(kakaoId));
+          if (rewardMarkError) throw rewardMarkError;
 
           // 스트릭 마일스톤 보너스
           if (bridgedStreak && showToast) {
@@ -398,15 +408,13 @@ export function useGamification(user, showToast) {
           }
           const STREAK_MILESTONES = { 3: 30, 7: 100, 14: 100, 21: 100, 30: 300 };
           if (STREAK_MILESTONES[achievedStreak]) {
-            await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);
-            if (showToast) showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');
+            const milestoneResult = await earnBP(STREAK_MILESTONES[achievedStreak], `streak_milestone_${achievedStreak}`);
+            if (milestoneResult?.success && showToast) {
+              showToast(`🔥 ${achievedStreak}일 연속 출석! +${STREAK_MILESTONES[achievedStreak]} BP 보너스!`, 'success');
+            } else if (!milestoneResult?.success) {
+              console.error('[별숨] 스트릭 마일스톤 BP 지급 실패:', milestoneResult);
+            }
           }
-
-          // 보상 지급 완료 표시 — 로그인 추적(last_login_date)과 분리해 관리
-          await client
-            .from('users')
-            .update({ daily_login_reward_at: todayStr, updated_at: new Date().toISOString() })
-            .eq('kakao_id', String(kakaoId));
         }
 
         // 로컬 상태 업데이트 (earnBP 완료 후 설정해 팝업이 올바른 streak 값으로 표시됨)
