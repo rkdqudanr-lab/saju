@@ -618,7 +618,7 @@ export default function AppRouter({ ctx }) {
           animation: 'fadeIn .25s ease',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <FeatureLoadingScreen type={featureLoading.type} text={featureLoading.text} />
+          <FeatureLoadingScreen type={featureLoading.type} text={featureLoading.text} fullPage={false} />
         </div>
       )}
     </div>

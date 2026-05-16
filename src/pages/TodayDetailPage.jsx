@@ -523,7 +523,7 @@ export default function TodayDetailPage({
                     tabIndex={onQuickChat ? 0 : undefined}
                     style={onQuickChat ? { cursor: 'pointer' } : undefined}
                     onClick={onQuickChat ? () => onQuickChat(`오늘 별숨픽 ${field.label} "${field.value}"을 어떻게 활용하면 좋을까? 내 오늘 운세 흐름에 맞춰 구체적으로 알려줘.`) : undefined}
-                    onKeyDown={onQuickChat ? (e) => { if (e.key === 'Enter') e.currentTarget.click(); } : undefined}
+                    onKeyDown={onQuickChat ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } } : undefined}
                   >
                     <span>{field.icon} {field.label}</span>
                     <strong>{field.value}</strong>
@@ -605,7 +605,7 @@ export default function TodayDetailPage({
                     onClick={onQuickChat ? () => onQuickChat(`오늘 내 ${axis.fullLabel}에 대해 더 자세히 알려줘. ${axis.total}점이 나왔는데 이 흐름에서 어떻게 움직이면 좋을지 구체적으로 알려줘.`) : undefined}
                     role={onQuickChat ? 'button' : undefined}
                     tabIndex={onQuickChat ? 0 : undefined}
-                    onKeyDown={onQuickChat ? (e) => { if (e.key === 'Enter') e.currentTarget.click(); } : undefined}
+                    onKeyDown={onQuickChat ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } } : undefined}
                   >
                     <div className="today-axis-card__inner">
                       <div className="today-axis-card__header">

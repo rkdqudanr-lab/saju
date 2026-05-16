@@ -112,21 +112,29 @@ export default defineConfig(({ mode }) => {
               if (!validation.ok) { sendError(); return; }
               if (!apiKey) { sendError(); return; }
               const { systemWithContext, maxTokens } = await buildAiRequestContext(validation.data);
-              const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-api-key': apiKey,
-                  'anthropic-version': '2023-06-01',
-                },
-                body: JSON.stringify({
-                  model: 'claude-haiku-4-5-20251001',
-                  max_tokens: maxTokens,
-                  stream: true,
-                  system: [{ type: 'text', text: systemWithContext }],
-                  messages: [{ role: 'user', content: validation.data.userMessage }],
-                }),
-              });
+              const streamController = new AbortController();
+              const streamTimeout = setTimeout(() => streamController.abort(), 30000);
+              let anthropicRes;
+              try {
+                anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+                  method: 'POST',
+                  signal: streamController.signal,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
+                  },
+                  body: JSON.stringify({
+                    model: 'claude-haiku-4-5-20251001',
+                    max_tokens: maxTokens,
+                    stream: true,
+                    system: [{ type: 'text', text: systemWithContext }],
+                    messages: [{ role: 'user', content: validation.data.userMessage }],
+                  }),
+                });
+              } finally {
+                clearTimeout(streamTimeout);
+              }
               if (!anthropicRes.ok) { sendError(); return; }
               let buf = '';
               const decoder = new TextDecoder();

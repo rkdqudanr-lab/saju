@@ -86,12 +86,19 @@ export function useDailyConsultationHandler({
         boostMap: options.boostMap || null,
       });
       // 일일 운세 응답 후처리: 금지 표현 자동 교체
+      // 받침 유무 판단: 0=없음, 8=ㄹ(으로→로) 제외
+      const hasBatchim = (s) => {
+        const c = s.charCodeAt(s.length - 1);
+        if (c < 0xAC00 || c > 0xD7A3) return false;
+        const jong = (c - 0xAC00) % 28;
+        return jong !== 0 && jong !== 8;
+      };
       const ans = rawAns
         .replace(/해보세요/g, '하세요')
         .replace(/하면 좋아요/g, '하세요')
-        .replace(/([가-힣]+)\s*에너지로\s*/g, (_, pre) => `${pre}으로 `)
-        .replace(/([가-힣]+)\s*에너지가\s*/g, (_, pre) => `${pre}이 `)
-        .replace(/([가-힣]+)\s*에너지를\s*/g, (_, pre) => `${pre}을 `)
+        .replace(/([가-힣]+)\s*에너지로\s*/g, (_, pre) => `${pre}${hasBatchim(pre) ? '으로' : '로'} `)
+        .replace(/([가-힣]+)\s*에너지가\s*/g, (_, pre) => `${pre}${hasBatchim(pre) ? '이' : '가'} `)
+        .replace(/([가-힣]+)\s*에너지를\s*/g, (_, pre) => `${pre}${hasBatchim(pre) ? '을' : '를'} `)
         .replace(/에너지\s*집중/g, '집중력')
         .replace(/에너지/g, '추진력');
       const newCount = shouldIncrementCount ? dailyCount + 1 : dailyCount;
