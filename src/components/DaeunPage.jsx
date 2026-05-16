@@ -200,6 +200,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     }
     setLoading(true);
     setInterpretation('');
+    useAppStore.getState().setFeatureLoading({ type: 'comprehensive', text: '10년의 흐름을 읽는 중이에요...' });
 
     const selected = daeunData.periods[currentIdx];
     const next = daeunData.periods[currentIdx + 1];
@@ -253,6 +254,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     } catch {
       showToast('해설을 불러오지 못했어요. 다시 시도해봐요.', 'error');
     } finally {
+      useAppStore.getState().setFeatureLoading(null);
       setLoading(false);
     }
   }
@@ -428,7 +430,6 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
           );
         })()}
 
-        {loading && <FeatureLoadingScreen type="comprehensive" fullPage={false} />}
 
         {interpretation && (() => {
           let config = PERIOD_CONFIG[periodType] || PERIOD_CONFIG.current;

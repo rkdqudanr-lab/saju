@@ -516,9 +516,18 @@ export default function TodayDetailPage({
               </div>
               <div className="today-time-slot-grid">
                 {activePickView.fields.map((field) => (
-                  <div key={field.key} data-tone={field.tone}>
+                  <div
+                    key={field.key}
+                    data-tone={field.tone}
+                    role={onQuickChat ? 'button' : undefined}
+                    tabIndex={onQuickChat ? 0 : undefined}
+                    style={onQuickChat ? { cursor: 'pointer' } : undefined}
+                    onClick={onQuickChat ? () => onQuickChat(`오늘 별숨픽 ${field.label} "${field.value}"을 어떻게 활용하면 좋을까? 내 오늘 운세 흐름에 맞춰 구체적으로 알려줘.`) : undefined}
+                    onKeyDown={onQuickChat ? (e) => { if (e.key === 'Enter') e.currentTarget.click(); } : undefined}
+                  >
                     <span>{field.icon} {field.label}</span>
                     <strong>{field.value}</strong>
+                    {onQuickChat && <em className="today-time-slot-grid__hint">탭해서 물어보기 →</em>}
                   </div>
                 ))}
               </div>
@@ -618,13 +627,13 @@ export default function TodayDetailPage({
 
                         <div className="today-axis-card__score-wrap">
                           <div className="today-axis-card__score">{axis.total}점</div>
-                          <div className="today-axis-card__score-caption">{axis.status.caption}</div>
                         </div>
                       </div>
 
                       <div className="today-axis-card__meter">
                         <div className="today-axis-card__meter-base" style={{ width: `${axis.baseFillWidth}%` }} />
                       </div>
+                      <div className="today-axis-card__score-caption">{axis.status.caption}</div>
 
                       <div className="today-axis-card__headline">{axis.headline}</div>
 

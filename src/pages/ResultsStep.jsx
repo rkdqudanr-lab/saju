@@ -246,8 +246,8 @@ export default function ResultsStep({
                             </div>
                           )}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <FeedbackBtn qIdx={i} />
+                        <FeedbackBtn qIdx={i} />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
                           <button className="res-top-btn" style={{ fontSize: 'var(--xs)' }} onClick={() => shareCard(i)}>Q{i + 1} 이미지 저장</button>
                         </div>
                       </div>

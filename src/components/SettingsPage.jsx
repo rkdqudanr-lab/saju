@@ -320,7 +320,7 @@ export default function SettingsPage({
             <fieldset style={{ border: 'none', padding: 0, margin: '4px 0 0' }}>
               <legend className="lbl">생년월일</legend>
               <div className="row" style={{ marginBottom: 'var(--sp2)' }}>
-                <div className="col">
+                <div className="col" style={{ flex: 1.6 }}>
                   <input
                     className="inp"
                     placeholder="1998"

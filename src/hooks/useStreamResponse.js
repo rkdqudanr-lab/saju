@@ -79,7 +79,7 @@ export function useStreamResponse() {
     setIsStreaming(true);
 
     try {
-      if (import.meta.env.DEV && user?.id === "test_user_id") {
+      if (import.meta.env.DEV && !import.meta.env.VITE_REAL_API && user?.id === "test_user_id") {
         await new Promise((r) => setTimeout(r, 650));
         setStreamText(getLocalStreamText(payload));
         return;

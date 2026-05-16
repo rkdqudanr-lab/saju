@@ -159,7 +159,7 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
             overflowY: 'auto',
           }}
         >
-          {group.items.map((item) => (
+          {group.items.map((item, idx) => (
             <button
               key={item.step}
               onClick={() => handleNav(item)}
@@ -175,6 +175,7 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
                 fontFamily: 'var(--ff)',
                 textAlign: 'left',
                 transition: 'all .12s',
+                ...(idx === group.items.length - 1 && group.items.length % 2 !== 0 ? { gridColumn: 'span 2' } : {}),
               }}
             >
               <Icon name={item.icon} size={18} color="var(--gold)" />

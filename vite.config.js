@@ -1,11 +1,164 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { buildAiRequestContext, validateAiRequest } from './lib/aiRequest.js'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const apiKey = env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || '';
+  return {
   plugins: [
     react(),
+    // ── 로컬 dev용 API 미들웨어 (/api/ask, /api/stream) ──
+    {
+      name: 'byeolsoom-api',
+      configureServer(server) {
+        // POST /api/ask
+        server.middlewares.use('/api/ask', async (req, res) => {
+          if (req.method !== 'POST') {
+            res.writeHead(405, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Method not allowed' }));
+            return;
+          }
+          const chunks = [];
+          req.on('data', chunk => chunks.push(chunk));
+          req.on('end', async () => {
+            try {
+              const parsed = JSON.parse(Buffer.concat(chunks).toString());
+              const validation = validateAiRequest(parsed);
+              if (!validation.ok) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: validation.reason }));
+                return;
+              }
+              if (!apiKey) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY 환경변수가 필요해요.' }));
+                return;
+              }
+              const { systemWithContext, maxTokens } = await buildAiRequestContext(validation.data);
+              const controller = new AbortController();
+              const timeout = setTimeout(() => controller.abort(), 25000);
+              let anthropicRes;
+              try {
+                anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+                  method: 'POST',
+                  signal: controller.signal,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
+                    'anthropic-beta': 'prompt-caching-2024-07-31',
+                  },
+                  body: JSON.stringify({
+                    model: 'claude-haiku-4-5-20251001',
+                    max_tokens: maxTokens,
+                    ...(validation.data.isDaily ? { temperature: 0.65 } : {}),
+                    system: [{ type: 'text', text: systemWithContext }],
+                    messages: [{ role: 'user', content: validation.data.userMessage }],
+                  }),
+                });
+              } finally {
+                clearTimeout(timeout);
+              }
+              const body = await anthropicRes.json();
+              if (!anthropicRes.ok) {
+                console.error('[별숨:ask] Anthropic error:', JSON.stringify(body));
+                res.writeHead(anthropicRes.status, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: body.error?.message || 'AI 오류' }));
+                return;
+              }
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ text: body.content?.[0]?.text || '' }));
+            } catch (e) {
+              if (e?.name === 'AbortError') {
+                res.writeHead(504, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: '별이 잠시 바빴어요. 다시 시도해주세요.' }));
+              } else {
+                console.error('[별숨:ask] Error:', e?.message || e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: '서버 오류가 있었어요.' }));
+              }
+            }
+          });
+        });
+
+        // POST /api/stream (SSE)
+        server.middlewares.use('/api/stream', async (req, res) => {
+          if (req.method !== 'POST') {
+            res.writeHead(405);
+            res.end();
+            return;
+          }
+          const chunks = [];
+          req.on('data', chunk => chunks.push(chunk));
+          req.on('end', async () => {
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache, no-transform',
+              'Connection': 'keep-alive',
+              'X-Accel-Buffering': 'no',
+            });
+            const sendError = () => {
+              try {
+                res.write(`data: ${JSON.stringify({ error: 'AI 서버 오류 (로컬 dev)' })}\n\n`);
+                res.write('data: [DONE]\n\n');
+                res.end();
+              } catch {}
+            };
+            try {
+              const parsed = JSON.parse(Buffer.concat(chunks).toString());
+              const validation = validateAiRequest(parsed);
+              if (!validation.ok) { sendError(); return; }
+              if (!apiKey) { sendError(); return; }
+              const { systemWithContext, maxTokens } = await buildAiRequestContext(validation.data);
+              const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-api-key': apiKey,
+                  'anthropic-version': '2023-06-01',
+                },
+                body: JSON.stringify({
+                  model: 'claude-haiku-4-5-20251001',
+                  max_tokens: maxTokens,
+                  stream: true,
+                  system: [{ type: 'text', text: systemWithContext }],
+                  messages: [{ role: 'user', content: validation.data.userMessage }],
+                }),
+              });
+              if (!anthropicRes.ok) { sendError(); return; }
+              let buf = '';
+              const decoder = new TextDecoder();
+              for await (const chunk of anthropicRes.body) {
+                buf += decoder.decode(chunk, { stream: true });
+                const lines = buf.split('\n');
+                buf = lines.pop() || '';
+                for (const line of lines) {
+                  const t = line.trim();
+                  if (!t.startsWith('data: ')) continue;
+                  const raw = t.slice(6);
+                  if (raw === '[DONE]') continue;
+                  try {
+                    const ev = JSON.parse(raw);
+                    if (ev.type === 'content_block_delta' && ev.delta?.text) {
+                      res.write(`data: ${JSON.stringify({ text: ev.delta.text })}\n\n`);
+                    }
+                    if (ev.type === 'message_stop') {
+                      res.write('data: [DONE]\n\n');
+                    }
+                  } catch { /* 파싱 실패 무시 */ }
+                }
+              }
+              try { res.end(); } catch {}
+            } catch (e) {
+              console.error('[별숨:stream] Error:', e?.message || e);
+              sendError();
+            }
+          });
+        });
+      },
+    },
     VitePWA({
       // injectManifest 전략: src/sw.js를 커스텀 SW로 사용
       strategies: 'injectManifest',
@@ -42,164 +195,5 @@ export default defineConfig({
       },
     },
   },
-  server: {
-    port: 5174,
-    proxy: {
-      // ── /api/ask: 로컬 dev용 Anthropic 직접 프록시 ──
-      '/api/ask': {
-        target: 'https://api.anthropic.com',
-        changeOrigin: true,
-        rewrite: () => '/v1/messages',
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq, req) => {
-            const body = [];
-            req.on('data', chunk => body.push(chunk));
-            req.on('end', () => {
-              try {
-                const parsed = JSON.parse(Buffer.concat(body).toString());
-                const validation = validateAiRequest(parsed);
-                if (!validation.ok) throw new Error(validation.reason);
-                buildAiRequestContext(validation.data).then(({ systemWithContext, maxTokens }) => {
-                  const newBody = JSON.stringify({
-                    model: 'claude-haiku-4-5-20251001',
-                    max_tokens: maxTokens,
-                    ...(validation.data.isDaily ? { temperature: 0.65 } : {}),
-                    system: [{ type: 'text', text: systemWithContext }],
-                    messages: [{ role: 'user', content: validation.data.userMessage }],
-                  });
-                  proxyReq.setHeader('Content-Type', 'application/json');
-                  proxyReq.setHeader('x-api-key', process.env.ANTHROPIC_API_KEY || '');
-                  proxyReq.setHeader('anthropic-version', '2023-06-01');
-                  proxyReq.setHeader('anthropic-beta', 'prompt-caching-2024-07-31');
-                  proxyReq.setHeader('Content-Length', Buffer.byteLength(newBody));
-                  proxyReq.write(newBody);
-                  proxyReq.end();
-                }).catch((e) => {
-                  console.error('Proxy AI context error:', e);
-                  proxyReq.destroy(e);
-                });
-              } catch (e) {
-                console.error('Proxy error:', e);
-                proxyReq.destroy(e);
-              }
-            });
-          });
-          proxy.on('proxyRes', (proxyRes, req, res) => {
-            const chunks = [];
-            proxyRes.on('data', chunk => chunks.push(chunk));
-            proxyRes.on('end', () => {
-              try {
-                const data = JSON.parse(Buffer.concat(chunks).toString());
-                const out = JSON.stringify({ text: data.content?.[0]?.text || '' });
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(out);
-              } catch (e) {
-                res.writeHead(500);
-                res.end(JSON.stringify({ error: '파싱 오류' }));
-              }
-            });
-          });
-        },
-        selfHandleResponse: true,
-      },
-
-      // ── /api/stream: 로컬 dev용 SSE 스트리밍 프록시 ──
-      '/api/stream': {
-        target: 'https://api.anthropic.com',
-        changeOrigin: true,
-        rewrite: () => '/v1/messages',
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq, req) => {
-            const body = [];
-            req.on('data', chunk => body.push(chunk));
-            req.on('end', async () => {
-              try {
-                const parsed = JSON.parse(Buffer.concat(body).toString());
-                const year = new Date().getFullYear();
-
-                // 모드별 간이 시스템 프롬프트 (로컬 dev 전용)
-                let systemPrompt = '당신은 별숨이에요. 사주와 별자리로 운세를 봐줘요. 마크다운 금지.';
-                if (parsed.isYearly) {
-                  systemPrompt = `당신은 별숨이에요. 사주와 별자리 데이터로 ${year}년 운세를 월별로 분석해요.\n[총평] 3~4문장. [1월]~[12월] 각 2~3문장 (재물·연애·건강·커리어 포함). [마무리] 1~2문장. 마크다운 금지.`;
-                } else if (parsed.isComprehensive || parsed.isAstrology) {
-                  systemPrompt = '당신은 별숨이에요. 사주와 점성술을 종합 분석해줘요. 마크다운 금지.';
-                } else if (parsed.isLetter || parsed.isProphecy) {
-                  systemPrompt = '당신은 별숨이에요. 따뜻한 운세 편지를 써줘요. 마크다운 금지.';
-                }
-
-                const contextNote = parsed.context
-                  ? `\n\n[사용자 데이터]\n${String(parsed.context).slice(0, 800)}`
-                  : '';
-
-                const maxTokens =
-                  parsed.isYearly || parsed.isComprehensive || parsed.isAstrology ? 3500 :
-                  parsed.isLetter || parsed.isStory ? 2000 : 1400;
-
-                const newBody = JSON.stringify({
-                  model: 'claude-haiku-4-5-20251001',
-                  max_tokens: maxTokens,
-                  stream: true,
-                  system: [{ type: 'text', text: systemPrompt + contextNote }],
-                  messages: [{ role: 'user', content: String(parsed.userMessage || '').slice(0, 3000) }],
-                });
-                proxyReq.setHeader('Content-Type', 'application/json');
-                proxyReq.setHeader('x-api-key', process.env.ANTHROPIC_API_KEY || '');
-                proxyReq.setHeader('anthropic-version', '2023-06-01');
-                proxyReq.setHeader('Content-Length', Buffer.byteLength(newBody));
-                proxyReq.write(newBody);
-                proxyReq.end();
-              } catch (e) {
-                console.error('[별숨:stream-proxy] Error:', e);
-              }
-            });
-          });
-
-          // Anthropic SSE → 별숨 SSE 포맷으로 변환
-          proxy.on('proxyRes', (proxyRes, _req, res) => {
-            res.writeHead(proxyRes.statusCode >= 400 ? 200 : proxyRes.statusCode, {
-              'Content-Type': 'text/event-stream',
-              'Cache-Control': 'no-cache, no-transform',
-              'Connection': 'keep-alive',
-              'X-Accel-Buffering': 'no',
-            });
-            if (proxyRes.statusCode >= 400) {
-              res.write(`data: ${JSON.stringify({ error: 'AI 서버 오류 (로컬 dev)' })}\n\n`);
-              res.write('data: [DONE]\n\n');
-              res.end();
-              return;
-            }
-            let buf = '';
-            proxyRes.on('data', chunk => {
-              buf += chunk.toString();
-              const lines = buf.split('\n');
-              buf = lines.pop() || '';
-              for (const line of lines) {
-                const t = line.trim();
-                if (!t.startsWith('data: ')) continue;
-                const raw = t.slice(6);
-                if (raw === '[DONE]') continue;
-                try {
-                  const ev = JSON.parse(raw);
-                  if (ev.type === 'content_block_delta' && ev.delta?.text) {
-                    res.write(`data: ${JSON.stringify({ text: ev.delta.text })}\n\n`);
-                  }
-                  if (ev.type === 'message_stop') {
-                    res.write('data: [DONE]\n\n');
-                  }
-                } catch { /* 파싱 실패 무시 */ }
-              }
-            });
-            proxyRes.on('end', () => { try { res.end(); } catch {} });
-            proxyRes.on('error', () => {
-              try {
-                res.write('data: [DONE]\n\n');
-                res.end();
-              } catch {}
-            });
-          });
-        },
-        selfHandleResponse: true,
-      },
-    },
-  },
+  }
 })

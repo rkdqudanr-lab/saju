@@ -285,6 +285,19 @@
   word-break: keep-all;
 }
 
+.today-time-slot-grid__hint {
+  display: block;
+  font-style: normal;
+  font-size: 9px;
+  color: var(--t4);
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.today-time-slot-grid div[role="button"]:active {
+  opacity: 0.7;
+}
+
 .today-long-reading {
   flex-shrink: 0;
   border-radius: var(--r2);
@@ -519,8 +532,8 @@
 .today-axis-card__score-caption {
   font-size: 10px;
   color: var(--t4);
-  margin-top: 5px;
-  max-width: 120px;
+  margin-bottom: 10px;
+  text-align: right;
 }
 
 .today-axis-card__meter {
@@ -740,7 +753,8 @@
 .today-pick-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .today-pick-field {

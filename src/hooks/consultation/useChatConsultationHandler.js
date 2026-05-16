@@ -252,7 +252,7 @@ export function useChatConsultationHandler({
     await new Promise(r => setTimeout(r, 1000));
 
     try {
-      if (isLocalLayoutUser(user)) {
+      if (isLocalLayoutUser(user) && !import.meta.env.VITE_REAL_API) {
         const mockText = "로컬 레이아웃 점검용 채팅 응답입니다. 실제 API 호출 없이 말풍선, 입력창, 스크롤 위치, 저장 흐름만 확인할 수 있게 채웠어요.";
         setChatHistory((prev) => {
           const updated = prev.map((message, index) => (

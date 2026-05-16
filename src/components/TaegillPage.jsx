@@ -189,28 +189,28 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--gold)' }} />
             검색 기간 설정 (최대 14일)
           </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <div style={{ flex: 1, position: 'relative' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', overflow: 'hidden' }}>
+            <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
               <input
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                style={{ 
-                  width: '100%', padding: '12px 14px', borderRadius: 14, 
-                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', 
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 14, boxSizing: 'border-box',
+                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
                   color: 'var(--t1)', fontSize: 'var(--xs)', outline: 'none'
                 }}
               />
             </div>
-            <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>—</span>
-            <div style={{ flex: 1, position: 'relative' }}>
+            <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)', flexShrink: 0 }}>—</span>
+            <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
               <input
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                style={{ 
-                  width: '100%', padding: '12px 14px', borderRadius: 14, 
-                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', 
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 14, boxSizing: 'border-box',
+                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
                   color: 'var(--t1)', fontSize: 'var(--xs)', outline: 'none'
                 }}
               />

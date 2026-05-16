@@ -286,7 +286,7 @@ export function useConsultation(
       throw new Error("LOGIN_REQUIRED");
     }
 
-    if (isLocalLayoutUser(user)) {
+    if (isLocalLayoutUser(user) && !import.meta.env.VITE_REAL_API) {
       await new Promise((r) => setTimeout(r, opts.isChat ? 450 : 650));
       return getLocalLayoutAnswer(userMessage, opts);
     }

@@ -714,8 +714,8 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                       {secs['한줄답변']}
                     </div>
                   )}
-                  {/* 카드별 해석 3열 */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+                  {/* 카드별 해석 1열(세로) */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
                     <TarotSectionCard eyebrow="과거" body={secs['과거카드']} />
                     <TarotSectionCard eyebrow="현재" body={secs['현재카드']} />
                     <TarotSectionCard eyebrow="미래" body={secs['미래카드']} />
@@ -724,7 +724,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                   <TarotSectionCard eyebrow="✦ 세 카드의 흐름" body={secs['카드조합']} highlight />
                   {/* 성향 보정 + 행동 */}
                   <TarotSectionCard eyebrow="내 성향으로 볼 때" body={secs['성향보정']} />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <TarotSectionCard eyebrow="지금 할 일" body={secs['지금할일']} />
                     <TarotSectionCard eyebrow="피할 것" body={secs['피할일']} />
                   </div>

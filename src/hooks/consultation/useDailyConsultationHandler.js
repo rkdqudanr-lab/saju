@@ -107,7 +107,7 @@ export function useDailyConsultationHandler({
 
         try {
           const gamData = parseHoroscopeForGamification(ans);
-          if (isLocalLayoutUser(user)) {
+          if (isLocalLayoutUser(user) && !import.meta.env.VITE_REAL_API) {
             setDailyResult((prev) => ({
               ...prev,
               score: gamData.score,
