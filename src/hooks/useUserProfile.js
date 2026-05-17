@@ -85,6 +85,7 @@ export function useUserProfile() {
   const [otherForm, setOtherForm]                     = useState(DEFAULT_OTHER);
   const [editingOtherIdx, setEditingOtherIdx]         = useState(null);
   const [showProfileModal, setShowProfileModal]       = useState(false);
+  const [profileModalMode, setProfileModalMode]       = useState('full');
   const [showOtherProfileModal, setShowOtherProfileModal] = useState(false);
   const [showConsentModal, setShowConsentModal]       = useState(false);
   const [consentFlags, setConsentFlags] = useState(null); // null = 아직 로드 안 됨
@@ -644,6 +645,7 @@ export function useUserProfile() {
     otherForm, setOtherForm,
     editingOtherIdx, setEditingOtherIdx,
     showProfileModal, setShowProfileModal,
+    profileModalMode, setProfileModalMode,
     showOtherProfileModal, setShowOtherProfileModal,
     showConsentModal, setShowConsentModal,
     consentFlags, setConsentFlags,
@@ -655,5 +657,5 @@ export function useUserProfile() {
     saveSettings,
     kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile,
     saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
-  }), [user, profile, form, otherProfiles, activeProfileIdx, otherForm, editingOtherIdx, showProfileModal, showOtherProfileModal, showConsentModal, consentFlags, handleConsentConfirm, loginError, loginLoading, profileSyncing, responseStyle, theme, instantTyping, onboarded, quizState, lifeStage, fontSize, saveSettings, kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile, saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer]);
+  }), [user, profile, form, otherProfiles, activeProfileIdx, otherForm, editingOtherIdx, showProfileModal, profileModalMode, showOtherProfileModal, showConsentModal, consentFlags, handleConsentConfirm, loginError, loginLoading, profileSyncing, responseStyle, theme, instantTyping, onboarded, quizState, lifeStage, fontSize, saveSettings, kakaoLogin, kakaoLogout, handleSessionExpired, saveOtherProfile, startEditOtherProfile, saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer]);
 }

@@ -66,7 +66,7 @@ export default function App() {
   // ── 커스텀 훅 ──
   const userProfile = useUserProfile();
   const { user, profile, setProfile, form, setForm, otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
-          otherForm, setOtherForm, showProfileModal, setShowProfileModal,
+          otherForm, setOtherForm, showProfileModal, setShowProfileModal, profileModalMode, setProfileModalMode,
           showOtherProfileModal, setShowOtherProfileModal,
           loginError, setLoginError,
           loginLoading, profileSyncing,
@@ -289,7 +289,7 @@ export default function App() {
     otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
     consentFlags, saveOtherProfile, saveProfileToSupabase,
     responseStyle, theme, lifeStage, fontSize, saveSettings,
-    setShowProfileModal, setShowOtherProfileModal,
+    setShowProfileModal, setProfileModalMode, setShowOtherProfileModal,
     editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
     // sajuCtx
     today, buildCtx,
@@ -481,6 +481,7 @@ export default function App() {
       {/* 모달들 */}
       <AppModals
         showProfileModal={showProfileModal} setShowProfileModal={setShowProfileModal}
+        profileModalMode={profileModalMode}
         profile={profile} setProfile={userProfile.setProfile}
         user={user} saveUserProfileExtra={saveUserProfileExtra}
         showOtherProfileModal={showOtherProfileModal} setShowOtherProfileModal={setShowOtherProfileModal}

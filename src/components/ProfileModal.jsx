@@ -1,5 +1,5 @@
-﻿import { useState, useEffect, useRef } from "react";
-import { DAILY_QUESTIONS, PROFILE_QUESTIONS_IDS } from "../utils/constants.js";
+﻿import { useState, useEffect, useRef, useMemo } from "react";
+import { DAILY_QUESTIONS, PROFILE_QUESTIONS_IDS, MUTABLE_PROFILE_IDS, QA_TIMESTAMPS_KEY, QA_REFRESH_DAYS } from "../utils/constants.js";
 import { postAsk } from "../lib/askApi.js";
 import { useAppStore } from "../store/useAppStore.js";
 import { STEP } from "../utils/steps.js";
@@ -13,21 +13,53 @@ function countAnswered(qa) {
   return Object.keys(qa).length;
 }
 
+// LocalStorage에서 qa_timestamps 읽기/쓰기
+function readTimestamps() {
+  try { return JSON.parse(localStorage.getItem(QA_TIMESTAMPS_KEY) || '{}'); } catch { return {}; }
+}
+function writeTimestamps(ts) {
+  try { localStorage.setItem(QA_TIMESTAMPS_KEY, JSON.stringify(ts)); } catch {}
+}
+
+// 30일 이상 경과한 변동형 질문 목록 반환
+// timestamp가 있으면 (= 한 번이라도 입력한 적 있음) existingQa 체크 없이 경과 여부만 확인
+export function getStaleRefreshQuestions(existingQa) {
+  const ts = readTimestamps();
+  const cutoff = Date.now() - QA_REFRESH_DAYS * 24 * 60 * 60 * 1000;
+  return PROFILE_QS.filter(q => {
+    if (!MUTABLE_PROFILE_IDS.includes(q.id)) return false;
+    const hasTs = !!ts[q.id];
+    const hasAnswer = !!(existingQa?.[q.id]);
+    if (!hasTs && !hasAnswer) return false; // 한 번도 입력 안 한 질문은 신규 입력 대상
+    const savedAt = hasTs ? new Date(ts[q.id]).getTime() : 0;
+    return savedAt < cutoff;
+  });
+}
+
 // ═══════════════════════════════════════════════════════════
 //  👤 별숨에게 나를 알려주기 — 20문 20답
+//  mode: 'full' (기본) | 'refresh' (변동형 30일 경과 항목만)
 // ═══════════════════════════════════════════════════════════
-export default function ProfileModal({ profile, setProfile, onClose, user, saveUserProfileExtra }) {
+export default function ProfileModal({ profile, setProfile, onClose, user, saveUserProfileExtra, mode = 'full' }) {
   const setStep = useAppStore(s => s.setStep);
+  const existingQa = profile?.qa_answers ? { ...profile.qa_answers } : {};
+
+  // refresh 모드: 30일 경과 변동형 질문만, full 모드: 미답변 질문부터
+  // 마운트 시 고정 — 답변 저장 후 profile 변경으로 재계산되지 않도록
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const activeQs = useMemo(() =>
+    mode === 'refresh' ? getStaleRefreshQuestions(existingQa) : PROFILE_QS
+  , []);
+
   // qa_answers: { [questionId]: answerString }
   const [qa, setQa] = useState(() => {
     try { return profile?.qa_answers ? { ...profile.qa_answers } : {}; } catch { return {}; }
   });
   const [currentIdx, setCurrentIdx] = useState(() => {
-    // 마지막으로 답한 질문 다음부터 시작
+    if (mode === 'refresh') return 0;
     try {
-      const existing = profile?.qa_answers ? { ...profile.qa_answers } : {};
-      const lastAnsweredIdx = PROFILE_QS.reduce((acc, q, i) => existing[q.id] ? i : acc, -1);
-      return Math.min(lastAnsweredIdx + 1, PROFILE_QS.length - 1);
+      const firstUnanswered = PROFILE_QS.findIndex(q => !existingQa[q.id]);
+      return firstUnanswered >= 0 ? firstUnanswered : 0;
     } catch { return 0; }
   });
   const [textInput, setTextInput] = useState('');
@@ -45,9 +77,8 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
   }, []);
 
   const answeredCount = countAnswered(qa);
-  const totalQ = PROFILE_QS.length;
-  const currentQ = PROFILE_QS[currentIdx];
-  const allPresetDone = answeredCount >= totalQ;
+  const currentQ = activeQs[currentIdx];
+  const allPresetDone = answeredCount >= PROFILE_QS.length;
 
   // ── 포커스 트랩 ──
   useEffect(() => {
@@ -71,13 +102,21 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [phase]);
 
+  const totalQ = activeQs.length;
+
   // 텍스트 입력 초기화 (질문 바뀔 때)
   useEffect(() => {
-    const q = PROFILE_QS[currentIdx];
+    const q = activeQs[currentIdx];
     if (q) setTextInput(qa[q.id] || '');
   }, [currentIdx]);
 
-  const saveAndApply = (updatedQa) => {
+  const saveAndApply = (updatedQa, answeredId) => {
+    // timestamp 갱신
+    if (answeredId) {
+      const ts = readTimestamps();
+      ts[answeredId] = new Date().toISOString();
+      writeTimestamps(ts);
+    }
     // qa_answers를 profile 필드에도 매핑
     const mapped = { qa_answers: updatedQa };
     PROFILE_QS.forEach(q => {
@@ -89,14 +128,15 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
   };
 
   const answerChip = (val) => {
-    const q = PROFILE_QS[currentIdx];
+    const q = activeQs[currentIdx];
     const updatedQa = { ...qa, [q.id]: val };
     setQa(updatedQa);
-    saveAndApply(updatedQa);
+    saveAndApply(updatedQa, q.id);
     if (currentIdx < totalQ - 1) {
       setCurrentIdx(i => i + 1);
     } else {
-      // 20개 완성 → AI 질문 단계
+      // refresh 모드는 AI 단계 없이 바로 완료
+      if (mode === 'refresh') { setPhase('done'); return; }
       triggerAiQuestions(updatedQa);
     }
   };
@@ -104,14 +144,15 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
   const answerText = () => {
     const val = textInput.trim();
     if (!val) return;
-    const q = PROFILE_QS[currentIdx];
+    const q = activeQs[currentIdx];
     const updatedQa = { ...qa, [q.id]: val };
     setQa(updatedQa);
-    saveAndApply(updatedQa);
+    saveAndApply(updatedQa, q.id);
     setTextInput('');
     if (currentIdx < totalQ - 1) {
       setCurrentIdx(i => i + 1);
     } else {
+      if (mode === 'refresh') { setPhase('done'); return; }
       triggerAiQuestions(updatedQa);
     }
   };
@@ -181,6 +222,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
   const skipQuestion = () => {
     if (phase === 'quiz') {
       if (currentIdx < totalQ - 1) setCurrentIdx(i => i + 1);
+      else if (mode === 'refresh') setPhase('done');
       else triggerAiQuestions(qa);
     } else if (phase === 'ai') {
       if (aiIdx < aiQuestions.length - 1) { setAiIdx(i => i + 1); setTextInput(''); }
@@ -195,6 +237,17 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
       setAiIdx(i => i - 1);
       setTextInput('');
     }
+  };
+
+  // refresh 모드: 기존 답변 그대로 유지하고 timestamp만 갱신 후 다음으로
+  const keepAnswer = () => {
+    const q = activeQs[currentIdx];
+    if (!q) return;
+    const ts = readTimestamps();
+    ts[q.id] = new Date().toISOString();
+    writeTimestamps(ts);
+    if (currentIdx < totalQ - 1) setCurrentIdx(i => i + 1);
+    else setPhase('done');
   };
 
   // ── 완료 화면 ──
@@ -370,6 +423,14 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
             >
               이렇게 답할게요 →
             </button>
+            {mode === 'refresh' && phase === 'quiz' && qa[currentQ?.id] && (
+              <button
+                onClick={keepAnswer}
+                style={{ width: '100%', marginTop: 8, padding: '10px', background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+              >
+                그대로예요 (이전 답변 유지) →
+              </button>
+            )}
           </div>
         )}
 
@@ -381,10 +442,18 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
               ← 이전
             </button>
           )}
-          <button onClick={skipQuestion}
-            style={{ flex: 1, padding: '10px', background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-            {phase === 'ai' && aiIdx === aiQuestions.length - 1 ? '완료' : '다음에 할게요 →'}
-          </button>
+          {mode === 'refresh' && phase === 'quiz' && qa[currentQ?.id] && activeQ?.type === 'chips' ? (
+            // refresh 모드 + 기존 답변 + 칩 전용 타입: "그대로예요" (텍스트 타입은 위에 별도 버튼 있음)
+            <button onClick={keepAnswer}
+              style={{ flex: 1, padding: '10px', background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+              그대로예요 →
+            </button>
+          ) : (
+            <button onClick={skipQuestion}
+              style={{ flex: 1, padding: '10px', background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+              {phase === 'ai' && aiIdx === aiQuestions.length - 1 ? '완료' : '다음에 할게요 →'}
+            </button>
+          )}
         </div>
 
         <button className="profile-close-btn" onClick={onClose} style={{ marginTop: 8 }}>

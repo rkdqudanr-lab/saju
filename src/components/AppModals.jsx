@@ -28,7 +28,8 @@ function PageSpinner() {
 
 export default function AppModals({
   // useUserProfile
-  showProfileModal, setShowProfileModal, profile, setProfile, user, saveUserProfileExtra,
+  showProfileModal, setShowProfileModal, profileModalMode,
+  profile, setProfile, user, saveUserProfileExtra,
   showOtherProfileModal, setShowOtherProfileModal,
   editingOtherIdx, setEditingOtherIdx, otherForm, setOtherForm, saveOtherProfile,
   showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
@@ -56,6 +57,7 @@ export default function AppModals({
             onClose={() => setShowProfileModal(false)}
             user={user}
             saveUserProfileExtra={saveUserProfileExtra}
+            mode={profileModalMode || 'full'}
           />
         </Suspense>
       )}

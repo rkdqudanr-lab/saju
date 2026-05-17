@@ -1060,7 +1060,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
       </div>
 
       {/* 필터 탭 */}
-      <div style={{ display: 'flex', gap: 8, padding: '12px 20px', borderBottom: '1px solid var(--line)' }}>
+      <div style={{ display: 'flex', gap: 8, padding: '12px 20px', borderBottom: '1px solid var(--line)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {FILTERS.map(f => (
           <button
             key={f}
@@ -1075,6 +1075,8 @@ export default function CommunityPage({ showToast, dailyResult }) {
               fontSize: 'var(--xs)',
               color: filter === f ? 'var(--gold)' : 'var(--t3)',
               fontWeight: filter === f ? 700 : 400,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             {f}
@@ -1136,10 +1138,11 @@ export default function CommunityPage({ showToast, dailyResult }) {
       </div>
 
       {/* 토픽 필터 */}
-      <div style={{ display: 'flex', gap: 6, padding: '8px max(20px, env(safe-area-inset-left)) 12px max(20px, env(safe-area-inset-right))', overflowX: 'auto', scrollbarWidth: 'none', scrollPaddingInline: 20, borderBottom: '1px solid var(--line)' }}>
+      <div style={{ display: 'flex', gap: 6, paddingTop: 8, paddingBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', borderBottom: '1px solid var(--line)', width: '100%', alignSelf: 'stretch', boxSizing: 'border-box' }}>
         <button
           onClick={() => setTopicFilter('')}
           style={{
+            marginLeft: 16,
             padding: '4px 12px', borderRadius: 14, fontSize: '10px', cursor: 'pointer', flexShrink: 0,
             border: `1px solid ${!topicFilter ? 'var(--gold)' : 'var(--line)'}`,
             background: !topicFilter ? 'var(--goldf)' : 'none',
@@ -1147,7 +1150,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
             fontFamily: 'var(--ff)', fontWeight: !topicFilter ? 700 : 400,
           }}
         >전체</button>
-        {TOPICS.map(t => (
+        {TOPICS.map((t, i) => (
           <button
             key={t.value}
             onClick={() => setTopicFilter(prev => prev === t.value ? '' : t.value)}
@@ -1157,6 +1160,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
               background: topicFilter === t.value ? 'var(--goldf)' : 'none',
               color: topicFilter === t.value ? 'var(--gold)' : 'var(--t3)',
               fontFamily: 'var(--ff)', fontWeight: topicFilter === t.value ? 700 : 400,
+              ...(i === TOPICS.length - 1 ? { marginRight: 'max(16px, env(safe-area-inset-right))' } : {}),
             }}
           >
             {t.emoji} {t.value}

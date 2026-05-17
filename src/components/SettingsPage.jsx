@@ -320,7 +320,7 @@ export default function SettingsPage({
             <fieldset style={{ border: 'none', padding: 0, margin: '4px 0 0' }}>
               <legend className="lbl">생년월일</legend>
               <div className="row" style={{ marginBottom: 'var(--sp2)' }}>
-                <div className="col" style={{ flex: 1.6 }}>
+                <div className="col" style={{ flex: 1.4 }}>
                   <input
                     className="inp"
                     placeholder="1998"
@@ -338,7 +338,7 @@ export default function SettingsPage({
                     aria-label="출생 월"
                     value={localForm.bm || ''}
                     onChange={e => { const nm = e.target.value; const max = getDaysInMonth(localForm.by, nm); setLocalForm(f => ({ ...f, bm: nm, bd: f.bd && parseInt(f.bd) > max ? '' : f.bd })); }}
-                    style={{ marginBottom: 0 }}
+                    style={{ marginBottom: 0, paddingRight: 8 }}
                   >
                     <option value="">월</option>
                     {[...Array(12)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}월</option>)}
@@ -350,7 +350,7 @@ export default function SettingsPage({
                     aria-label="출생 일"
                     value={localForm.bd || ''}
                     onChange={e => setLocalForm(f => ({ ...f, bd: e.target.value }))}
-                    style={{ marginBottom: 0 }}
+                    style={{ marginBottom: 0, paddingRight: 8 }}
                   >
                     <option value="">일</option>
                     {[...Array(getDaysInMonth(localForm.by, localForm.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}
@@ -473,9 +473,8 @@ export default function SettingsPage({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="card" style={{ padding: 'var(--sp3)' }}>
               <div className="card-title">별숨 스타일 설정</div>
-              <div className="card-sub" style={{ marginBottom: 20 }}>
-                별숨이 답변하는 방식을 조정할 수 있어요.<br />
-                분석형은 논리적·구체적으로, 공감형은 감성적·위로 중심으로 이야기해줘요.
+              <div className="card-sub" style={{ marginBottom: 20, wordBreak: 'keep-all' }}>
+                별숨이 답변하는 방식을 조정할 수 있어요. 분석형은 논리적·구체적으로, 공감형은 감성적·위로 중심으로 이야기해줘요.
               </div>
 
               {/* ── 가로 슬라이더 바 ── */}
@@ -583,9 +582,8 @@ export default function SettingsPage({
                 );
               })()}
 
-              <div style={{ marginTop: 16, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7, textAlign: 'center' }}>
-                스타일은 언제든지 변경할 수 있어요<br />
-                변경 즉시 다음 답변부터 적용돼요.
+              <div style={{ marginTop: 16, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7, textAlign: 'center', wordBreak: 'keep-all' }}>
+                스타일은 언제든지 변경할 수 있어요. 변경 즉시 다음 답변부터 적용돼요.
               </div>
             </div>
 
@@ -791,8 +789,8 @@ export default function SettingsPage({
                 aria-label="광장에서 사주 정보 표시"
                 onClick={e => { e.stopPropagation(); const next = !communityShowSaju; setCommunityShowSajuState(next); setCommunityShowSaju(next); showToast?.(next ? '별자리·일간 정보를 표시해요 ✦' : '별자리·일간 정보를 숨겼어요', 'success'); }}
               />
-              <span className="toggle-label">
-                내 별자리·일간(일주) 정보 표시 {communityShowSaju ? '(켜짐)' : '(꺼짐)'}
+              <span className="toggle-label" style={{ fontSize: '13px' }}>
+                별자리·일간 정보 공개 {communityShowSaju ? '(켜짐)' : '(꺼짐)'}
               </span>
             </div>
             <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.5, marginTop: 4 }}>
@@ -832,11 +830,11 @@ export default function SettingsPage({
                     aria-label={`${label} 메뉴 표시`}
                     onClick={e => { e.stopPropagation(); toggle(); }}
                   />
-                  <div style={{ flex: 1 }}>
-                    <span className="toggle-label" style={{ display: 'block', fontWeight: 600 }}>{label}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span className="toggle-label" style={{ display: 'block', fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</span>
                     <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>{desc}</span>
                   </div>
-                  <span style={{ fontSize: 'var(--xs)', color: hidden ? 'var(--t4)' : 'var(--gold)', marginLeft: 8 }}>{hidden ? '숨김' : '표시'}</span>
+                  <span style={{ fontSize: 'var(--xs)', color: hidden ? 'var(--t4)' : 'var(--gold)', marginLeft: 8, flexShrink: 0 }}>{hidden ? '숨김' : '표시'}</span>
                 </div>
               );
             })}

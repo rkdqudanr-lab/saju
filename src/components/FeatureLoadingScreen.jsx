@@ -19,11 +19,11 @@ function Wrap({ children }) {
 function Label({ title, subtitle }) {
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 10 }}>
+      <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 10 }}>
         {title}
       </div>
       {subtitle && (
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+        <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
           {subtitle}
         </div>
       )}

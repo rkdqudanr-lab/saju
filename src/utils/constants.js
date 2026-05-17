@@ -425,6 +425,17 @@ export const PROFILE_QUESTIONS_IDS = [
   'dq_16','dq_17','dq_18','dq_19','dq_20',
 ];
 
+// 시간에 따라 변하는 항목 — 30일 주기로 재입력 권장
+// (직업·상황, 고민, 연애, 감정, 목표, 스트레스 등 "요즘/지금/올해" 기반 질문)
+export const MUTABLE_PROFILE_IDS = [
+  'dq_01','dq_03','dq_04','dq_06','dq_10',
+  'dq_11','dq_12','dq_13','dq_14','dq_15',
+  'dq_17','dq_19',
+];
+
+export const QA_TIMESTAMPS_KEY = 'byeolsoom_qa_timestamps';
+export const QA_REFRESH_DAYS = 30;
+
 // ═══════════════════════════════════════════════════════════
 //  💬 하루 한 질문 — 별숨 100문 100답
 // ═══════════════════════════════════════════════════════════

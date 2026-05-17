@@ -175,9 +175,11 @@ export default function ByeolsoomSpacePage() {
 
   useEffect(() => {
     if (!kakaoId) { setOwnedIds(new Set()); return; }
+    const client = getAuthenticatedClient(String(kakaoId));
+    if (!client) { setOwnedIds(new Set()); return; }
     setLoading(true);
-    getAuthenticatedClient(String(kakaoId))
-      ?.from('user_shop_inventory')
+    client
+      .from('user_shop_inventory')
       .select('item_id')
       .eq('kakao_id', String(kakaoId))
       .then(({ data }) => {

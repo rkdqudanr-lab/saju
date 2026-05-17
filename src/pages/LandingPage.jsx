@@ -6,6 +6,7 @@ import {
   readDailyLocalCache,
 } from '../lib/dailyDataAccess.js';
 import { getDailyWord, REVIEWS } from '../utils/constants.js';
+import { getStaleRefreshQuestions } from '../components/ProfileModal.jsx';
 import { STEP } from '../utils/steps.js';
 import { useUserCtx, useSajuCtx, useGamCtx } from '../context/AppContext.jsx';
 import { useAppStore } from '../store/useAppStore.js';
@@ -137,13 +138,14 @@ export default function LandingPage({
   hasDiaryToday = false,
   setEditingMyProfile,
   setShowProfileModal,
+  setProfileModalMode,
   onEnterChat,
 }) {
   const setStep = useAppStore((s) => s.setStep);
   const setEquippedTheme = useAppStore((s) => s.setEquippedTheme);
   const setEquippedAvatar = useAppStore((s) => s.setEquippedAvatar);
 
-  const { user, form, kakaoLogin, kakaoLogout } = useUserCtx();
+  const { user, profile, form, kakaoLogin, kakaoLogout } = useUserCtx();
   const { saju, today, isApproximate } = useSajuCtx();
   const { gamificationState = { currentBp: 0, guardianLevel: 1, loginStreak: 0 }, missions = [] } = useGamCtx();
 
@@ -400,7 +402,14 @@ export default function LandingPage({
       badge: recommendedFeature.label,
       ariaLabel: `오늘의 추천 별숨기능, ${recommendedFeature.label}`,
     },
-  ], [totalMissions, completedMissions, remainingMissions, hasDiaryToday, recommendedFeature, setStep]);
+    {
+      icon: TILE_ICONS.question,
+      title: '나에 대해 알려주기',
+      sub: '더 깊은 분석을 위해 별숨에게 나를 알려줘요',
+      onClick: () => setShowProfileModal(true),
+      ariaLabel: '나에 대해 알려주기',
+    },
+  ], [totalMissions, completedMissions, remainingMissions, hasDiaryToday, recommendedFeature, setStep, setShowProfileModal]);
 
   const secondaryTiles = useMemo(() => [
     { icon: TILE_ICONS.star,     title: '나의 별숨', sub: '사주·천체 종합 분석', onClick: () => setStep(STEP.NATAL) },
@@ -565,13 +574,11 @@ export default function LandingPage({
           onQuickAsk={onEnterChat}
         />
 
-        <div style={{ padding: '0 20px', marginTop: 12 }}>
-          <TodayResonancePreview
-            item={homeResonanceItem}
-            axisKey={homeResonanceItem?.resonanceAxis}
-            onClick={() => setStep(STEP.GACHA)}
-          />
-        </div>
+        <TodayResonancePreview
+          item={homeResonanceItem}
+          axisKey={homeResonanceItem?.resonanceAxis}
+          onClick={() => setStep(STEP.GACHA)}
+        />
 
         {/* 3. 알림 캐러셀 (절기/생일만) */}
         <AlertCarousel
@@ -581,6 +588,35 @@ export default function LandingPage({
           onApproximate={() => setStep(STEP.PROFILE)}
           onJeolgi={() => setStep(STEP.CALENDAR)}
         />
+
+        {/* 3-1. 이 달의 별숨 업데이트 nudge */}
+        {(() => {
+          const stale = getStaleRefreshQuestions(profile?.qa_answers || {});
+          if (!stale.length) return null;
+          return (
+            <button
+              onClick={() => { setProfileModalMode?.('refresh'); setShowProfileModal(true); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                width: '100%', padding: '14px 16px',
+                background: 'var(--goldf)', border: '1px solid var(--acc)',
+                borderRadius: 'var(--r1)', cursor: 'pointer', fontFamily: 'var(--ff)',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>🔄</span>
+              <span style={{ flex: 1, minWidth: 0, wordBreak: 'keep-all' }}>
+                <span style={{ display: 'block', fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--gold)' }}>
+                  별숨에게 당신을 다시 알려줘야 하는 시간이에요
+                </span>
+                <span style={{ display: 'block', fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 2 }}>
+                  {stale.length}개 항목이 한 달이 지났어요. 지금 상황으로 업데이트해봐요
+                </span>
+              </span>
+              <span style={{ color: 'var(--gold)', fontSize: 18, fontWeight: 900, flexShrink: 0 }}>›</span>
+            </button>
+          );
+        })()}
 
         {/* 4. Smart Suggestion */}
         {suggestion && (

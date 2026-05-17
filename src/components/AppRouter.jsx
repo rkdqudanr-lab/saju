@@ -109,7 +109,7 @@ export default function AppRouter({ ctx }) {
     otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
     consentFlags, saveOtherProfile, saveProfileToSupabase,
     responseStyle, theme, lifeStage, fontSize, instantTyping, saveSettings,
-    setShowProfileModal, setShowOtherProfileModal,
+    setShowProfileModal, setProfileModalMode, setShowOtherProfileModal,
     editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
 
     // sajuCtx
@@ -182,6 +182,7 @@ export default function AppRouter({ ctx }) {
           hasDiaryToday={hasDiaryToday}
           setEditingMyProfile={setEditingMyProfile}
           setShowProfileModal={setShowProfileModal}
+          setProfileModalMode={setProfileModalMode}
           onEnterChat={ctx.handleEnterChat}
         />
       )}
@@ -383,31 +384,27 @@ export default function AppRouter({ ctx }) {
       {/* SETTINGS */}
       {step === STEP.SETTINGS && (
         <Suspense fallback={<PageSpinner />}>
-          <div className="page step-fade" style={{ paddingTop: 56 }}>
-            <div className="inner" style={{ paddingTop: 16, paddingBottom: 60 }}>
-            <SettingsPage
-              form={form} setForm={setForm} user={user}
-              saveProfileToSupabase={saveProfileToSupabase}
-              onBack={() => setStep(STEP.HOME)}
-              showToast={showToast}
-              responseStyle={responseStyle}
-              onStyleChange={(val) => saveSettings({ responseStyle: val })}
-              theme={theme}
-              onThemeChange={(val) => saveSettings({ theme: val })}
-              instantTyping={instantTyping}
-              onInstantTypingChange={(val) => saveSettings({ instantTyping: val })}
-              sidebarPrefs={sidebarPrefs}
-              onSidebarPrefsChange={(prefs) => {
-                setSidebarPrefs(prefs);
-                if (user?.id) saveAnalysisCache(user.id, 'sidebar_prefs', JSON.stringify(prefs));
-              }}
-              lifeStage={lifeStage}
-              onLifeStageChange={(val) => saveSettings({ lifeStage: val })}
-              fontSize={fontSize}
-              onFontSizeChange={(val) => saveSettings({ fontSize: val })}
-            />
-            </div>
-          </div>
+          <SettingsPage
+            form={form} setForm={setForm} user={user}
+            saveProfileToSupabase={saveProfileToSupabase}
+            onBack={() => setStep(STEP.HOME)}
+            showToast={showToast}
+            responseStyle={responseStyle}
+            onStyleChange={(val) => saveSettings({ responseStyle: val })}
+            theme={theme}
+            onThemeChange={(val) => saveSettings({ theme: val })}
+            instantTyping={instantTyping}
+            onInstantTypingChange={(val) => saveSettings({ instantTyping: val })}
+            sidebarPrefs={sidebarPrefs}
+            onSidebarPrefsChange={(prefs) => {
+              setSidebarPrefs(prefs);
+              if (user?.id) saveAnalysisCache(user.id, 'sidebar_prefs', JSON.stringify(prefs));
+            }}
+            lifeStage={lifeStage}
+            onLifeStageChange={(val) => saveSettings({ lifeStage: val })}
+            fontSize={fontSize}
+            onFontSizeChange={(val) => saveSettings({ fontSize: val })}
+          />
         </Suspense>
       )}
 

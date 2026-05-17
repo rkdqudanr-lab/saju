@@ -15,10 +15,10 @@ import SynthesisModal  from '../features/inventory/SynthesisModal.jsx';
 import { FORTUNE_LABELS } from '../features/inventory/inventoryUtils.js';
 
 const SEGMENTS = [
-  { id: '전체',   label: '전체' },
-  { id: '🌌 우주', label: '🌌 우주' },
-  { id: '☯️ 사주', label: '☯️ 사주' },
-  { id: '기타',   label: '상점' },
+  { id: '전체',    label: '전체',  short: '전체' },
+  { id: '🌌 우주', label: '🌌 우주', short: '우주' },
+  { id: '☯️ 사주', label: '☯️ 사주', short: '사주' },
+  { id: '기타',   label: '상점',  short: '상점' },
 ];
 
 export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
@@ -163,13 +163,13 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
                   border: 'none', fontFamily: 'var(--ff)',
                   fontSize: '11px', fontWeight: isActive ? 700 : 400,
                   cursor: 'pointer', transition: 'all .15s',
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                   background: isActive ? 'var(--goldf)' : 'transparent',
                   color: isActive ? 'var(--gold)' : 'var(--t4)',
                   outline: isActive ? '1px solid var(--acc)' : 'none',
                 }}
               >
-                {seg.label}
+                {seg.short}
               </button>
             );
           })}

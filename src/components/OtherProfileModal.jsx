@@ -83,7 +83,7 @@ export default function OtherProfileModal({
         </fieldset>
         <button className="btn-main"
           disabled={!otherForm.by || !otherForm.bm || !otherForm.bd || !otherForm.gender}
-          onClick={saveOtherProfile}>
+          onClick={() => saveOtherProfile()}>
           {editingOtherIdx !== null ? '수정하기 ✦' : '추가하기 ✦'}
         </button>
         <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }}
