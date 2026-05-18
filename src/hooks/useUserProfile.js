@@ -455,6 +455,7 @@ export function useUserProfile() {
       try { window.Kakao.init(JS_KEY); } catch { setLoginError('카카오 초기화에 실패했어요 🌙'); return; }
     }
     setLoginError('');
+    setKeepLogin(true);
     try {
       const state = crypto.randomUUID();
       // Safari fallback: sessionStorage가 실패해도 쿠키에 저장 (5분 유효)

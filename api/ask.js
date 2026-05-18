@@ -88,7 +88,7 @@ export default async function handler(req, res) {
           "anthropic-beta": "prompt-caching-2024-07-31",
         },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
+          model: data.isDaily ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001",
           max_tokens: maxTokens,
           ...(data.isDaily ? { temperature: 0.65 } : {}),
           system: [{ type: "text", text: systemWithContext, cache_control: { type: "ephemeral" } }],
