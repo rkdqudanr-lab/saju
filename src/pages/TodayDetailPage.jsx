@@ -7,6 +7,7 @@ import { getDailyDateKey, writeDailyLocalCache } from '../lib/dailyDataAccess.js
 import '../styles/TodayDetailPage.css';
 
 import DailyElementMeet from '../components/DailyElementMeet.jsx';
+import AstroSignViz from '../components/AstroSignViz.jsx';
 import DailyRadarChart from '../features/today/DailyRadarChart.jsx';
 import WeeklyTrendChart from '../features/today/WeeklyTrendChart.jsx';
 import GoldenParticles from '../features/today/GoldenParticles.jsx';
@@ -530,6 +531,9 @@ export default function TodayDetailPage({
                   {dailyLongReading.map((section) => (
                     <article key={section.title} className="today-long-reading__section">
                       <div className="today-long-reading__section-title">{section.title}</div>
+                      {section.title === '오늘의 점성술 흐름' && (sun || moon || asc) && (
+                        <AstroSignViz sun={sun} moon={moon} asc={asc} />
+                      )}
                       <p className="today-long-reading__text">{renderBoldText(section.body)}</p>
                     </article>
                   ))}
