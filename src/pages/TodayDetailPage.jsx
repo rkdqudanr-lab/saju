@@ -6,6 +6,7 @@ import { STEP } from '../utils/steps.js';
 import { getDailyDateKey, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import '../styles/TodayDetailPage.css';
 
+import DailyElementMeet from '../components/DailyElementMeet.jsx';
 import DailyRadarChart from '../features/today/DailyRadarChart.jsx';
 import WeeklyTrendChart from '../features/today/WeeklyTrendChart.jsx';
 import GoldenParticles from '../features/today/GoldenParticles.jsx';
@@ -193,7 +194,7 @@ function joinPhrase(value, nounFn, sentenceFn) {
   return isSentenceLike(value) ? sentenceFn(v) : nounFn(v);
 }
 
-function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, sun, moon, asc }) {
+function buildDailyLongReading({ parsedDaily, axisScores, overallGuide }) {
   const eastern = parsedDaily?.easternKi || {};
   const western = parsedDaily?.westernSky || {};
   const sortedAxes = [...(axisScores || [])].sort((a, b) => (b.total || 0) - (a.total || 0));
@@ -201,63 +202,26 @@ function buildDailyLongReading({ parsedDaily, axisScores, overallGuide, saju, su
   const care = [...(axisScores || [])].sort((a, b) => (a.total || 0) - (b.total || 0))[0];
   const strongestLabel = strongest?.fullLabel || strongest?.label || '강하게 올라오는 운';
   const careLabel = care?.fullLabel || care?.label || '살짝 돌봐야 할 운';
-  const sunLabel = sun ? `${sun.s || ''} ${sun.n || ''}`.trim() : '';
-  const moonLabel = moon ? `${moon.s || ''} ${moon.n || ''}`.trim() : '';
-  const ascLabel = asc ? `${asc.s || ''} ${asc.n || ''}`.trim() : '';
-  const sajuLabel = saju?.dom ? `${saju.dom} 기질` : '';
 
-  const easternBase = compactText(eastern.kiun || eastern.sinshin);
-  const westernBase = compactText(western.flow || western.planet);
-  const doAction = compactText(eastern.doAction || overallGuide?.do);
-  const dontAction = compactText(eastern.dontAction || overallGuide?.caution);
-  const strongDesc = compactText(strongest?.headline || parsedDaily?.categories?.[strongest?.key]?.desc);
-  const careDesc = compactText(care?.headline || parsedDaily?.categories?.[care?.key]?.desc);
-
-  // 명사구/문장 분기 처리 — ".이", ".의 흐름이" 같은 연결 오류 방지
-  const easternLead = easternBase
-    ? joinPhrase(
-        easternBase,
-        v => `동양의 흐름으로 보면 오늘은 ${v}이 중심에 서는 날이에요.`,
-        v => `동양의 흐름으로 보면 ${v}.`,
-      )
-    : '';
-
-  const westernLead = westernBase
-    ? joinPhrase(
-        westernBase,
-        v => `서양 점성술로는 ${v}의 흐름이 깔려 있어요.`,
-        v => `서양 점성술로 보면 ${v}.`,
-      )
-    : '';
-
-  const doActionPhrase = joinPhrase(
-    doAction,
-    v => `오늘은 ${v} 쪽으로 움직일수록 길이 열립니다.`,
-    v => `오늘 행동 방향: ${v}.`,
-  );
-
-  const dontActionPhrase = joinPhrase(
-    dontAction,
-    v => `다만 ${v} 흐름은 피하세요.`,
-    v => `다만 이런 흐름은 피하세요. ${v}.`,
-  );
+  const easternText = compactText(eastern.kiun || eastern.sinshin);
+  const westernText = compactText(western.flow || western.planet);
+  const summaryText = compactText(overallGuide?.summary || parsedDaily?.synergy?.summary);
 
   return [
     {
       title: '오늘의 사주 기운',
-      body: easternBase
-        ? `${easternLead} ${sajuLabel ? `타고난 ${sajuLabel}과 만나면서 ` : ''}${strongestLabel} 쪽은 비교적 빠르게 반응하고, ${careLabel} 쪽은 무리해서 밀어붙이기보다 리듬을 살피세요.${doActionPhrase ? ` ${doActionPhrase}` : ''}`
-        : `오늘은 사주 흐름에서 ${strongestLabel}이 먼저 살아나는 날이에요. 반대로 ${careLabel}은 작은 말투나 컨디션 변화에도 흔들릴 수 있으니, 큰 결정보다는 흐름을 정돈하는 데 힘을 두세요.`,
+      body: easternText
+        || `오늘은 ${strongestLabel}이 먼저 살아나는 날이에요. ${careLabel}은 작은 말투나 컨디션 변화에도 흔들릴 수 있으니, 큰 결정보다는 흐름을 정돈하는 데 힘을 두세요.`,
     },
     {
       title: '오늘의 점성술 흐름',
-      body: westernBase
-        ? `${westernLead} ${sunLabel ? `기본 성향인 ${sunLabel}` : '타고난 별자리 성향'}${moonLabel ? `, 감정 리듬인 ${moonLabel}` : ''}${ascLabel ? `, 바깥에 드러나는 ${ascLabel}` : ''}이 서로 맞물리며 오늘의 반응 속도를 만듭니다. ${strongDesc || '그래서 오늘은 익숙한 방식만 고집하기보다, 들어오는 신호를 조금 더 섬세하게 읽는 편이 유리해요.'}`
-        : `별자리 흐름에서는 감정과 판단의 속도가 평소보다 또렷하게 갈릴 수 있어요. ${sunLabel ? `${sunLabel}의 기본 기질은 ` : ''}오늘 필요한 선택을 밀어주지만, ${careLabel}에서는 상대의 반응을 한 번 더 확인하는 태도가 중요합니다.`,
+      body: westernText
+        || `별자리 흐름에서 감정과 판단의 속도가 평소보다 또렷하게 갈릴 수 있어요. ${careLabel}에서는 상대의 반응을 한 번 더 확인하는 태도가 중요합니다.`,
     },
     {
       title: '그래서 오늘은',
-      body: `${overallGuide?.summary || '오늘은 무리하게 판을 키우기보다, 잘 되는 흐름을 붙잡고 예민한 부분을 천천히 정리하는 날이에요.'} ${careDesc ? `${careLabel}에서는 ${careDesc}` : `${careLabel}에서는 서두르기보다 한 박자 늦추세요.`}${dontActionPhrase ? ` ${dontActionPhrase}` : ''}`,
+      body: summaryText
+        || `오늘은 잘 되는 흐름을 붙잡고 예민한 부분을 천천히 정리하는 날이에요. ${careLabel}에서는 서두르기보다 한 박자 늦추세요.`,
     },
   ].filter((section) => compactText(section.body));
 }
@@ -353,8 +317,8 @@ export default function TodayDetailPage({
   );
 
   const dailyLongReading = useMemo(
-    () => buildDailyLongReading({ parsedDaily, axisScores: actionableScores, overallGuide, saju, sun, moon, asc }),
-    [parsedDaily, actionableScores, overallGuide, saju, sun, moon, asc],
+    () => buildDailyLongReading({ parsedDaily, axisScores: actionableScores, overallGuide }),
+    [parsedDaily, actionableScores, overallGuide],
   );
 
   const activePickView = useMemo(() => ({
@@ -556,6 +520,12 @@ export default function TodayDetailPage({
               <section id="today-long-reading" className="today-long-reading" aria-label="오늘 하루 장문 해석">
                 <div className="today-long-reading__kicker">TODAY READING</div>
                 <div className="today-long-reading__title">오늘의 사주와 별자리 흐름</div>
+                {today?.ilchin?.gan && saju?.ilgan && (
+                  <DailyElementMeet
+                    myGan={saju.ilgan}
+                    todayGan={today.ilchin.gan}
+                  />
+                )}
                 <div className="today-long-reading__body">
                   {dailyLongReading.map((section) => (
                     <article key={section.title} className="today-long-reading__section">
