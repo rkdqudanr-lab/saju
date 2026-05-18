@@ -4,7 +4,7 @@ import { useAppStore } from '../store/useAppStore.js';
 
 const DEFAULT_PROFILE = { partner: '', partnerBy: '', partnerBm: '', partnerBd: '', workplace: '', worryText: '', mbti: '', selfDesc: '' };
 const DEFAULT_FORM    = { name: '', nickname: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
-const DEFAULT_OTHER   = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
+export const DEFAULT_OTHER = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
 const DEFAULT_QUIZ    = { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
 const LOCAL_MAIN_SCREEN_ENABLED = import.meta.env.DEV;
 const LOCAL_DEV_USER = {
@@ -511,7 +511,10 @@ export function useUserProfile() {
     } else if (editingOtherIdx !== null) {
       newProfiles = otherProfiles.map((item, i) => i === editingOtherIdx ? { ...otherForm } : item);
     } else {
-      if (otherProfiles.length >= 3) return;
+      if (otherProfiles.length >= 3) {
+        setShowOtherProfileModal(false);
+        return;
+      }
       newProfiles = [...otherProfiles, { ...otherForm }];
     }
     setOtherProfiles(newProfiles);

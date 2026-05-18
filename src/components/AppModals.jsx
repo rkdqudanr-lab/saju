@@ -74,7 +74,7 @@ export default function AppModals({
           editingOtherIdx={editingOtherIdx} setEditingOtherIdx={setEditingOtherIdx}
           otherForm={otherForm} setOtherForm={setOtherForm}
           saveOtherProfile={saveOtherProfile}
-          onClose={() => setShowOtherProfileModal(false)}
+          onClose={() => { setShowOtherProfileModal(false); setEditingOtherIdx(null); }}
         />
       )}
 

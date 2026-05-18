@@ -8,7 +8,7 @@ import { PKGS, ANNIVERSARY_PROMPT } from "./utils/constants.js";
 import { STEP, STEP_GROUPS } from "./utils/steps.js";
 
 // hooks
-import { useUserProfile }     from "./hooks/useUserProfile.js";
+import { useUserProfile, DEFAULT_OTHER } from "./hooks/useUserProfile.js";
 import { useSajuContext }     from "./hooks/useSajuContext.js";
 import { useConsultation }    from "./hooks/useConsultation.js";
 import { useNavigation }      from "./hooks/useNavigation.js";
@@ -439,7 +439,7 @@ export default function App() {
           onKakaoLogout={kakaoLogout}
           onProfileOpen={() => setShowProfileModal(true)}
           onInvite={() => setShowInviteModal(true)}
-          onAddOther={() => setShowOtherProfileModal(true)}
+          onAddOther={() => { setOtherForm(DEFAULT_OTHER); setEditingOtherIdx(null); setShowOtherProfileModal(true); }}
           onSettings={() => setStep(STEP.SETTINGS)}
           onDeleteAllHistory={deleteAllHistoryItems}
           sidebarPrefs={sidebarPrefs}
