@@ -12,6 +12,7 @@
   --teal:#6BBFB5;--tealf:rgba(107,191,181,.1);--tealacc:rgba(107,191,181,.25);
   --rose:#E87B8A;--rosef:rgba(232,123,138,.1);--roseacc:rgba(232,123,138,.25);
   --mint:#7DE8C4;--mintf:rgba(125,232,196,.1);--mintacc:rgba(125,232,196,.25);
+  --loading-overlay:rgba(13,11,20,.92);
   --surface-strong:rgba(18,15,29,.88);--surface-float:rgba(24,20,36,.92);
   --home-surface:rgba(18,15,29,.82);--home-surface-strong:rgba(18,15,29,.9);
   --home-surface-soft:rgba(18,15,29,.58);--home-card-line:rgba(255,255,255,.08);
@@ -29,6 +30,7 @@
   --goldf:rgba(176,120,32,.09);--golds:rgba(176,120,32,.05);--acc:rgba(176,120,32,.18);
   --rose:#C45A6D;--rosef:rgba(196,90,109,.09);--roseacc:rgba(196,90,109,.18);
   --mint:#4A9E82;--mintf:rgba(74,158,130,.09);--mintacc:rgba(74,158,130,.18);
+  --loading-overlay:rgba(250,247,241,.94);
   --surface-strong:rgba(255,251,244,.9);--surface-float:rgba(255,251,244,.94);
   --home-surface:rgba(255,255,255,.78);--home-surface-strong:rgba(255,255,255,.9);
   --home-surface-soft:rgba(255,255,255,.62);--home-card-line:rgba(27,20,32,.1);

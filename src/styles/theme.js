@@ -16,9 +16,11 @@ const CSS = `
   --r1:12px;--r2:20px;--r3:28px;--r4:36px;
   --xl:1.75rem;--lg:1.125rem;--md:0.9375rem;--sm:0.8125rem;--xs:0.6875rem;
   --trans-fast:.15s ease;--trans:.25s ease;--trans-slow:.4s ease;
+  --loading-overlay:rgba(13,11,20,.92);
 }
 [data-theme="light"]{
-  --bg:#F7F4EF;--bg1:#FFFFFF;--bg2:#F0EBE2;--bg3:#E8E0D5;--bg4:#DDD5C8;
+  --bg:#F7F4EF;
+  --loading-overlay:rgba(247,244,239,.94);--bg1:#FFFFFF;--bg2:#F0EBE2;--bg3:#E8E0D5;--bg4:#DDD5C8;
   --line:rgba(0,0,0,.07);--line2:rgba(0,0,0,.04);
   --t1:#1A1420;--t2:#4A3F60;--t3:#8A7FA0;--t4:#C0B8CC;
   --gold:#B07820;--gold2:#8A5E14;
