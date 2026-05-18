@@ -31,51 +31,52 @@ function Label({ title, subtitle }) {
   );
 }
 
-// ── 1. 일일 운세 (daily) — 3개 별이 중심 ✦ 주위를 공전 ────
+// ── 1. 일일 운세 (daily) — SVG 정밀 공전: 3점 120° 균등 배치 ──
 function DailyAnim() {
+  // SVG animateTransform: rotate(deg cx cy) 방식으로 중심(50,50) 기준 정확한 공전
+  const ORBIT_R = 36; // 점이 도는 반경
+  const cx = 50, cy = 50;
+  const dots = [
+    { r: 4.5, fill: 'var(--gold)',             filter: true,  begin: '0s',      dur: '2.4s' },
+    { r: 3,   fill: 'rgba(200,160,255,.85)',    filter: false, begin: '-0.8s',   dur: '2.4s' },
+    { r: 3.5, fill: 'rgba(232,176,72,.55)',     filter: false, begin: '-1.6s',   dur: '2.4s' },
+  ];
   return (
-    <div style={{ position: 'relative', width: 100, height: 100 }}>
-      {/* 중심 별 */}
-      <div style={{
-        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-        fontSize: '1.4rem', color: 'var(--gold)',
-        animation: 'fl-glow-soft 2s ease-in-out infinite',
-      }}>✦</div>
-      {/* 공전하는 점 3개 */}
-      {[0, 120, 240].map((deg, i) => (
-        <div key={i} style={{
-          position: 'absolute', top: '50%', left: '50%',
-          animation: `fl-orbit ${2 + i * 0.4}s linear infinite`,
-          animationDelay: `${i * -0.6}s`,
-        }}>
-          <div style={{
-            width: i === 0 ? 9 : i === 1 ? 6 : 7,
-            height: i === 0 ? 9 : i === 1 ? 6 : 7,
-            borderRadius: '50%',
-            background: i === 0 ? 'var(--gold)' : i === 1 ? 'rgba(200,160,255,.8)' : 'rgba(232,176,72,.5)',
-            marginTop: -4, marginLeft: -4,
-            boxShadow: i === 0 ? '0 0 8px var(--gold)' : 'none',
-          }} />
-        </div>
-      ))}
-      {/* 두 번째 궤도 (느린 역방향) */}
-      <div style={{
-        position: 'absolute', top: '50%', left: '50%',
-        animation: 'fl-orbit-slow 4.5s linear infinite reverse',
-      }}>
-        <div style={{
-          width: 5, height: 5, borderRadius: '50%',
-          background: 'rgba(155,142,196,.6)',
-          marginTop: -2, marginLeft: -2,
-        }} />
-      </div>
+    <svg width="100" height="100" viewBox="0 0 100 100" overflow="visible">
+      <defs>
+        <filter id="dl-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
       {/* 궤도 링 */}
-      <div style={{
-        position: 'absolute', inset: 12,
-        border: '1px solid rgba(232,176,72,.15)',
-        borderRadius: '50%',
-      }} />
-    </div>
+      <circle cx={cx} cy={cy} r={ORBIT_R} fill="none"
+        stroke="rgba(232,176,72,.18)" strokeWidth="1" strokeDasharray="4 4"/>
+      {/* 내부 링 */}
+      <circle cx={cx} cy={cy} r={ORBIT_R * 0.55} fill="none"
+        stroke="rgba(200,160,255,.1)" strokeWidth="0.8"/>
+      {/* 역방향 느린 점 */}
+      <g>
+        <circle cx={cx + ORBIT_R * 0.55} cy={cy} r="2.2" fill="rgba(155,142,196,.5)"/>
+        <animateTransform attributeName="transform" type="rotate"
+          from={`0 ${cx} ${cy}`} to={`-360 ${cx} ${cy}`}
+          dur="5s" repeatCount="indefinite"/>
+      </g>
+      {/* 공전하는 점 3개 — 120° 균등 배치 */}
+      {dots.map((d, i) => (
+        <g key={i}>
+          <circle cx={cx + ORBIT_R} cy={cy} r={d.r}
+            fill={d.fill} filter={d.filter ? 'url(#dl-glow)' : undefined}/>
+          <animateTransform attributeName="transform" type="rotate"
+            from={`0 ${cx} ${cy}`} to={`360 ${cx} ${cy}`}
+            dur={d.dur} begin={d.begin} repeatCount="indefinite"/>
+        </g>
+      ))}
+      {/* 중심 별 */}
+      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+        fontSize="20" fill="var(--gold)"
+        style={{ animation: 'fl-glow-soft 2s ease-in-out infinite' }}>✦</text>
+    </svg>
   );
 }
 
@@ -275,42 +276,70 @@ function ProphecyAnim() {
   );
 }
 
-// ── 7. 종합 분석 (comprehensive) — 3중 동심원 회전 ──────────
+// ── 7. 종합 분석 (comprehensive) — 동서양 교차 궤도: 타원 두 개가 90° 엇갈림 ──
 function ComprehensiveAnim() {
+  // 가로 타원(서양 별자리) + 세로 타원(동양 사주) 두 궤도가 교차
+  const cx = 50, cy = 50;
+  const rx = 42, ry = 18; // 타원 반경
   return (
-    <div style={{ position: 'relative', width: 100, height: 100 }}>
-      {/* 링 3개 (사주/별자리/종합) */}
-      {[
-        { size: 90, color: 'rgba(232,176,72,.35)', dur: '3s', rev: false, label: '사' },
-        { size: 64, color: 'rgba(200,160,255,.4)', dur: '2s', rev: true, label: '성' },
-        { size: 40, color: 'rgba(232,176,72,.6)', dur: '1.4s', rev: false, label: '종' },
-      ].map(({ size, color, dur, rev }, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          top: '50%', left: '50%',
-          width: size, height: size,
-          marginTop: -size / 2, marginLeft: -size / 2,
-          borderRadius: '50%',
-          border: `1.5px solid ${color}`,
-          animation: `fl-ring-spin-${i + 1} ${dur} linear infinite ${rev ? 'reverse' : ''}`,
-        }}>
-          {/* 링 위의 점 */}
-          <div style={{
-            position: 'absolute', top: -4, left: '50%', marginLeft: -4,
-            width: 8, height: 8, borderRadius: '50%',
-            background: color,
-            boxShadow: `0 0 6px ${color}`,
-          }} />
-        </div>
+    <svg width="100" height="100" viewBox="0 0 100 100" overflow="visible">
+      <defs>
+        <filter id="cp-glow-g" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="cp-glow-p" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      {/* 가로 타원 — 서양 별자리 (파랑-보라) */}
+      <ellipse cx={cx} cy={cy} rx={rx} ry={ry}
+        fill="none" stroke="rgba(155,142,196,.3)" strokeWidth="1" strokeDasharray="5 3"/>
+      {/* 세로 타원 — 동양 사주 (금색) */}
+      <ellipse cx={cx} cy={cy} rx={ry} ry={rx}
+        fill="none" stroke="rgba(232,176,72,.3)" strokeWidth="1" strokeDasharray="5 3"/>
+
+      {/* 가로 타원 위 보라 점 (시계방향) */}
+      <g>
+        <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="none">
+          <animate attributeName="stroke" values="none" dur="3.6s" repeatCount="indefinite"/>
+        </ellipse>
+        <circle r="4" fill="rgba(200,160,255,.9)" filter="url(#cp-glow-p)">
+          <animateMotion dur="3.6s" repeatCount="indefinite">
+            <mpath href="#cp-path-h"/>
+          </animateMotion>
+        </circle>
+      </g>
+
+      {/* 세로 타원 위 금색 점 (반시계방향) */}
+      <g>
+        <circle r="4.5" fill="var(--gold)" filter="url(#cp-glow-g)">
+          <animateMotion dur="2.8s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear">
+            <mpath href="#cp-path-v"/>
+          </animateMotion>
+        </circle>
+      </g>
+
+      {/* 경로 정의 (화면 밖 보이지 않음) */}
+      <path id="cp-path-h" d={`M${cx+rx},${cy} A${rx},${ry} 0 1 1 ${cx+rx-0.01},${cy}`}
+        fill="none" stroke="none"/>
+      <path id="cp-path-v" d={`M${cx},${cy-rx} A${ry},${rx} 0 1 1 ${cx-0.01},${cy-rx}`}
+        fill="none" stroke="none"/>
+
+      {/* 교차점 4개에 작은 점 (정적) */}
+      {[[cx+ry,cy],[cx-ry,cy],[cx,cy+ry],[cx,cy-ry]].map(([x,y],i)=>(
+        <circle key={i} cx={x} cy={y} r="1.5"
+          fill="rgba(232,176,72,.4)"
+          style={{ animation: `fl-glow-soft ${1.4+i*0.3}s ease-in-out infinite` }}/>
       ))}
-      {/* 중심 */}
-      <div style={{
-        position: 'absolute', top: '50%', left: '50%',
-        transform: 'translate(-50%,-50%)',
-        fontSize: '1rem', color: 'var(--gold)',
-        animation: 'fl-glow-soft 2s ease-in-out infinite',
-      }}>✦</div>
-    </div>
+
+      {/* 중심 별 */}
+      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+        fontSize="16" fill="var(--gold)"
+        style={{ animation: 'fl-glow-soft 2.2s ease-in-out infinite' }}>✦</text>
+    </svg>
   );
 }
 
