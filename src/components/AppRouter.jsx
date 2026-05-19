@@ -609,9 +609,9 @@ export default function AppRouter({ ctx }) {
       {featureLoading && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 8500,
-          background: 'rgba(13, 11, 20, 0.88)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          background: 'rgba(250, 247, 241, 0.97)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           animation: 'fadeIn .25s ease',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
