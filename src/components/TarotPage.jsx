@@ -5,6 +5,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore.js';
 import FeatureLoadingScreen from './FeatureLoadingScreen.jsx';
 import { useStreamResponse } from '../hooks/useStreamResponse.js';
@@ -73,7 +74,7 @@ function parseTarotSections(text) {
   return result;
 }
 
-function TarotSectionCard({ eyebrow, body, highlight, dark }) {
+function TarotSectionCard({ eyebrow, body, highlight, dark, delay = 0 }) {
   if (!body) return null;
   const isActionList = body.match(/^\d+\.\s/m);
   const baseStyle = {
@@ -86,7 +87,12 @@ function TarotSectionCard({ eyebrow, body, highlight, dark }) {
     border: `1px solid ${highlight ? 'rgba(200,165,80,0.4)' : 'rgba(200,165,80,0.12)'}`,
   };
   return (
-    <div style={baseStyle}>
+    <motion.div
+      style={baseStyle}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay, ease: [0.4, 0, 0.2, 1] }}
+    >
       <div style={{ fontSize: '9px', color: 'rgba(200,165,80,0.85)', fontWeight: 700, letterSpacing: '.12em', marginBottom: 8, textTransform: 'uppercase' }}>{eyebrow}</div>
       {isActionList ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -100,7 +106,7 @@ function TarotSectionCard({ eyebrow, body, highlight, dark }) {
       ) : (
         <div style={{ fontSize: 'var(--xs)', color: 'rgba(238,232,252,0.9)', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>{body}</div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -659,15 +665,15 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
             </div>
           )}
 
-          {/* 스트리밍 로딩 인디케이터 */}
-          {isStreaming && !streamText && (
+          {/* 스트리밍 로딩 인디케이터 — 완료 전까지 유지 */}
+          {isStreaming && (
             <div style={{ margin: '20px 20px 0', padding: '20px 18px', background: 'linear-gradient(160deg, rgba(13,11,30,0.96), rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.2)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <div className="typing-dots"><span /><span /><span /></div>
               <span style={{ fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.7)', fontStyle: 'italic' }}>별빛을 읽는 중...</span>
             </div>
           )}
 
-          {(streamText || streamError) && (() => {
+          {!isStreaming && (streamText || streamError) && (() => {
             const secs = parseTarotSections(streamText || '');
             const hasStructure = !!(secs['한줄답변'] || secs['카드조합']);
             const wrapper = { margin: '20px 20px 0', background: 'linear-gradient(160deg,rgba(13,11,30,0.96),rgba(20,16,44,0.92))', borderRadius: 14, border: '1px solid rgba(200,165,80,0.35)', overflow: 'hidden' };
@@ -710,28 +716,38 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                 <div style={{ padding: '12px 18px 18px' }}>
                   {/* 히어로 */}
                   {secs['한줄답변'] && (
-                    <div style={{ textAlign: 'center', padding: '10px 0 14px', color: 'rgba(220,190,100,0.95)', fontWeight: 700, fontSize: 'var(--sm)', lineHeight: 1.6, borderBottom: '1px solid rgba(200,165,80,0.15)', marginBottom: 12 }}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.38, ease: [0.4, 0, 0.2, 1] }}
+                      style={{ textAlign: 'center', padding: '10px 0 14px', color: 'rgba(220,190,100,0.95)', fontWeight: 700, fontSize: 'var(--sm)', lineHeight: 1.6, borderBottom: '1px solid rgba(200,165,80,0.15)', marginBottom: 12 }}
+                    >
                       {secs['한줄답변']}
-                    </div>
+                    </motion.div>
                   )}
                   {/* 카드별 해석 1열(세로) */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
-                    <TarotSectionCard eyebrow="과거" body={secs['과거카드']} />
-                    <TarotSectionCard eyebrow="현재" body={secs['현재카드']} />
-                    <TarotSectionCard eyebrow="미래" body={secs['미래카드']} />
+                    <TarotSectionCard eyebrow="과거" body={secs['과거카드']} delay={0.08} />
+                    <TarotSectionCard eyebrow="현재" body={secs['현재카드']} delay={0.16} />
+                    <TarotSectionCard eyebrow="미래" body={secs['미래카드']} delay={0.24} />
                   </div>
                   {/* 핵심: 카드 조합 흐름 */}
-                  <TarotSectionCard eyebrow="✦ 세 카드의 흐름" body={secs['카드조합']} highlight />
+                  <TarotSectionCard eyebrow="✦ 세 카드의 흐름" body={secs['카드조합']} highlight delay={0.32} />
                   {/* 성향 보정 + 행동 */}
-                  <TarotSectionCard eyebrow="내 성향으로 볼 때" body={secs['성향보정']} />
+                  <TarotSectionCard eyebrow="내 성향으로 볼 때" body={secs['성향보정']} delay={0.38} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <TarotSectionCard eyebrow="지금 할 일" body={secs['지금할일']} />
-                    <TarotSectionCard eyebrow="피할 것" body={secs['피할일']} />
+                    <TarotSectionCard eyebrow="지금 할 일" body={secs['지금할일']} delay={0.44} />
+                    <TarotSectionCard eyebrow="피할 것" body={secs['피할일']} delay={0.50} />
                   </div>
                   {secs['별숨한마디'] && (
-                    <div style={{ textAlign: 'center', marginTop: 6, fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.75)', fontStyle: 'italic' }}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.38, delay: 0.56, ease: [0.4, 0, 0.2, 1] }}
+                      style={{ textAlign: 'center', marginTop: 6, fontSize: 'var(--xs)', color: 'rgba(200,165,80,0.75)', fontStyle: 'italic' }}
+                    >
                       {secs['별숨한마디']}
-                    </div>
+                    </motion.div>
                   )}
                   {!isStreaming && (
                     <button
