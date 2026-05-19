@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { ON } from '../../utils/saju.js';
 import FeatureLoadingScreen from '../../components/FeatureLoadingScreen.jsx';
 import { useStreamResponse } from '../../hooks/useStreamResponse.js';
@@ -65,12 +66,17 @@ export default function DetailPanel({ pair, members, onClose }) {
             </div>
           </div>
 
-          {isStreaming && !streamText && !streamError ? (
+          {isStreaming ? (
             <FeatureLoadingScreen type="group" fullPage={false} />
           ) : (
-            <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}
+            >
               {stripMd(streamError || streamText || '분석을 불러오지 못했어요.')}
-            </div>
+            </motion.div>
           )}
           {streamError && (
             <button onClick={askDetail} style={{ marginTop: 16, fontSize: 'var(--xs)', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '8px 20px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { getMoonPhase, DREAM_PROMPT } from "../utils/constants.js";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
 import { useStreamResponse } from "../hooks/useStreamResponse.js";
@@ -70,17 +71,22 @@ function parseDreamSections(text) {
   return result;
 }
 
-function DreamSectionCard({ eyebrow, body, highlight }) {
+function DreamSectionCard({ eyebrow, body, highlight, delay = 0 }) {
   if (!body) return null;
   return (
-    <div style={{
-      background: highlight ? 'linear-gradient(135deg,rgba(232,176,72,.1),rgba(200,160,255,.06))' : 'var(--card)',
-      border: `1px solid ${highlight ? 'var(--acc)' : 'var(--line)'}`,
-      borderRadius: 'var(--r1)', padding: '14px 16px', marginBottom: 10,
-    }}>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.38, delay, ease: [0.4, 0, 0.2, 1] }}
+      style={{
+        background: highlight ? 'linear-gradient(135deg,rgba(232,176,72,.1),rgba(200,160,255,.06))' : 'var(--card)',
+        border: `1px solid ${highlight ? 'var(--acc)' : 'var(--line)'}`,
+        borderRadius: 'var(--r1)', padding: '14px 16px', marginBottom: 10,
+      }}
+    >
       <div style={{ fontSize: '10px', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.05em' }}>{eyebrow}</div>
       <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.85, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>{body}</div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -270,7 +276,7 @@ ${msg}`;
 
   const mainText = stripFollowUp(result);
 
-  if (loading && !result) return <FeatureLoadingScreen type="dream" />;
+  if (loading) return <FeatureLoadingScreen type="dream" />;
 
   return (
     <div className="page step-fade">
@@ -413,30 +419,40 @@ ${msg}`;
               </button>
             )}
 
-            {loading && !result ? null : streamError ? (
+            {streamError ? (
               <div style={{ background: 'var(--card)', border: '1px solid var(--rose)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, color: 'var(--rose)', fontSize: 'var(--sm)' }}>{streamError}</div>
-            ) : (() => {
+            ) : result ? (() => {
               const secs = parseDreamSections(mainText);
               const hasStructure = !!(secs['한줄해석'] || secs['무의식해석']);
               if (!hasStructure) {
                 return (
-                  <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: 16 }}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                    style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '16px', marginBottom: 16 }}
+                  >
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>별숨의 꿈해몽</div>
                     <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line', wordBreak: 'keep-all' }}>
                       {mainText}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               }
               const score = parseInt(secs['감정점수'] || '0', 10) || null;
               return (
                 <>
                   {/* 히어로 카드 */}
-                  <div style={{
-                    background: 'linear-gradient(135deg,rgba(180,140,200,.12),rgba(232,176,72,.08))',
-                    border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
-                    padding: '16px', marginBottom: 10, textAlign: 'center',
-                  }}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.38, ease: [0.4, 0, 0.2, 1] }}
+                    style={{
+                      background: 'linear-gradient(135deg,rgba(180,140,200,.12),rgba(232,176,72,.08))',
+                      border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
+                      padding: '16px', marginBottom: 10, textAlign: 'center',
+                    }}
+                  >
                     {score > 0 && (
                       <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--gold)', marginBottom: 4 }}>
                         {score}<span style={{ fontSize: '.9rem', fontWeight: 400, color: 'var(--t3)', marginLeft: 3 }}>점</span>
@@ -445,28 +461,33 @@ ${msg}`;
                     {secs['한줄해석'] && (
                       <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.6 }}>{secs['한줄해석']}</div>
                     )}
-                  </div>
+                  </motion.div>
 
-                  <DreamSectionCard eyebrow="꿈 요소 분석" body={secs['꿈요소']} />
-                  <DreamSectionCard eyebrow="무의식 해석" body={secs['무의식해석']} highlight />
-                  <DreamSectionCard eyebrow="현실과의 연결" body={secs['현실연결']} />
+                  <DreamSectionCard eyebrow="꿈 요소 분석"   body={secs['꿈요소']}       delay={0.08} />
+                  <DreamSectionCard eyebrow="무의식 해석"    body={secs['무의식해석']}   highlight delay={0.16} />
+                  <DreamSectionCard eyebrow="현실과의 연결"  body={secs['현실연결']}     delay={0.24} />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <DreamActionCard title="오늘 할 일" body={secs['오늘할일']} />
                     <DreamActionCard title="주의할 점" body={secs['주의할점']} />
                   </div>
                   <DreamActionCard title="나에게 묻기" body={secs['나에게묻기']} />
                   {secs['별숨한마디'] && (
-                    <div style={{
-                      textAlign: 'center', padding: '12px 16px', marginTop: 4,
-                      background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)',
-                      fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic',
-                    }}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.38, delay: 0.32, ease: [0.4, 0, 0.2, 1] }}
+                      style={{
+                        textAlign: 'center', padding: '12px 16px', marginTop: 4,
+                        background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)',
+                        fontSize: 'var(--sm)', color: 'var(--t2)', fontStyle: 'italic',
+                      }}
+                    >
                       {secs['별숨한마디']}
-                    </div>
+                    </motion.div>
                   )}
                 </>
               );
-            })()}
+            })() : null}
 
             {!streamError && <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 8 }}>더 궁금한 점이 있나요?</div>
