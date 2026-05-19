@@ -6,6 +6,7 @@
  */
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore.js';
 import Icon from './Icon.jsx';
 import { STEP, STEP_GROUPS } from '../utils/steps.js';
@@ -313,12 +314,13 @@ export default function BottomNav() {
                 {tab.label}
               </span>
               {isActive && (
-                <span
+                <motion.span
+                  layoutId="nav-pill"
                   style={{
                     position: 'absolute',
                     bottom: 0,
                     left: '50%',
-                    transform: 'translateX(-50%)',
+                    x: '-50%',
                     width: '40%',
                     minWidth: 20,
                     maxWidth: 40,
@@ -326,6 +328,7 @@ export default function BottomNav() {
                     background: 'var(--gold)',
                     borderRadius: 2,
                   }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 36 }}
                 />
               )}
             </button>

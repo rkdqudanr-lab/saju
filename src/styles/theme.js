@@ -278,8 +278,6 @@ select.inp option{background:var(--bg2)}
 .acc-body.open{max-height:3000px;opacity:1}
 .acc-content{padding:var(--sp2) var(--sp4) var(--sp4);font-size:var(--sm);color:var(--t2);line-height:2.4;letter-spacing:-.005em;white-space:pre-wrap}
 .acc-content p:first-child::first-letter{font-size:2.4em;font-weight:700;color:var(--gold);float:left;line-height:.82;margin:.06em .1em 0 0}
-.typing-cursor{display:inline-block;width:2px;height:.9em;background:var(--gold);margin-left:2px;vertical-align:text-bottom;animation:blink .7s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* ══ 추가질문 STEP 5 (고정 레이아웃) ══ */
 .chat-page{position:fixed;top:0;bottom:calc(57px + max(env(safe-area-inset-bottom,0px),16px));left:50%;transform:translateX(-50%);width:100%;max-width:500px;display:flex;flex-direction:column;background:var(--bg);z-index:1;animation:fadeUp .5s ease}
@@ -435,7 +433,6 @@ select.inp option{background:var(--bg2)}
 .sample-badge{display:inline-block;font-size:10px;color:var(--t4);letter-spacing:.08em;margin-bottom:8px;padding:3px 8px;background:var(--bg3);border-radius:10px;border:1px solid var(--line)}
 .sample-name{font-size:var(--xs);color:var(--gold);margin-bottom:8px;letter-spacing:.06em;font-weight:600}
 .sample-text{font-size:var(--xs);color:var(--t2);line-height:1.9;min-height:60px}
-.sample-cursor{display:inline-block;width:1.5px;height:.85em;background:var(--gold);margin-left:1px;vertical-align:text-bottom;animation:blink .7s infinite}
 
 /* ══ 피드백 ══ */
 .fb-wrap{display:flex;align-items:center;gap:8px;justify-content:center;padding:var(--sp2) 0;border-top:1px solid var(--line);margin-top:var(--sp1)}

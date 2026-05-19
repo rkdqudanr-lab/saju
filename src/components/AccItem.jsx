@@ -61,11 +61,13 @@ export default function AccItem({ q, text, idx, isOpen, onToggle, shouldType, on
       <div id={bodyId} className={`acc-body${isOpen ? ' open' : ' closed'}`} role="region" aria-label={`Q${idx + 1} 답변`}>
         <div className="acc-content">
           {isOpen && display ? (
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-            >{display}</motion.p>
+            display.split(/\n{2,}/).filter(Boolean).map((para, idx) => (
+              <motion.p key={idx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.38, delay: idx * 0.07, ease: [0.4, 0, 0.2, 1] }}
+              >{para}</motion.p>
+            ))
           ) : (
             <p>{display}</p>
           )}
@@ -94,7 +96,6 @@ export function ChatBubble({ text, isNew, isStreaming = false }) {
     >
       <div className="chat-bubble">
         {text}
-        {isStreaming && <span className="typing-cursor" />}
       </div>
     </motion.div>
   );

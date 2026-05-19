@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useUserCtx, useSajuCtx, useGamCtx } from '../../context/AppContext.jsx';
 import { useAppStore } from '../../store/useAppStore.js';
+import { CG, CGO, OC } from '../../utils/saju.js';
 
 const STREAK_BONUSES = [
   { day: 3, bonus: 30 },
@@ -38,16 +39,29 @@ export default function LandingHeader({
   const dateLabel = today ? `${today.month}월 ${today.day}일` : '';
   const sub = [ilgan, dateLabel].filter(Boolean).join(' · ');
 
+  const ilganEl = saju?.ilgan ? CGO[CG.indexOf(saju.ilgan)] : null;
+  const pulseColor = ilganEl ? OC[ilganEl] : '#E8B048';
+
   return (
     <div className="lh-wrap">
-      {/* 아바타 */}
-      {equippedAvatar ? (
-        <div className="lh-avatar-ph" style={{ fontSize: '1.3rem' }}>{equippedAvatar.emoji}</div>
-      ) : user?.profileImage ? (
-        <img className="lh-avatar" src={user.profileImage} alt="프로필" />
-      ) : (
-        <div className="lh-avatar-ph">🌙</div>
-      )}
+      {/* 아바타 + 오행 ripple */}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+        {[0, 1].map(i => (
+          <div key={i} style={{
+            position: 'absolute', inset: -5, borderRadius: '50%',
+            border: `1.5px solid ${pulseColor}55`,
+            animation: `rippleOut 2.4s ease-out ${i * 0.85}s infinite`,
+            pointerEvents: 'none',
+          }}/>
+        ))}
+        {equippedAvatar ? (
+          <div className="lh-avatar-ph" style={{ fontSize: '1.3rem' }}>{equippedAvatar.emoji}</div>
+        ) : user?.profileImage ? (
+          <img className="lh-avatar" src={user.profileImage} alt="프로필" />
+        ) : (
+          <div className="lh-avatar-ph">🌙</div>
+        )}
+      </div>
 
       {/* 이름 + 서브 + 칩들 */}
       <div className="lh-info">

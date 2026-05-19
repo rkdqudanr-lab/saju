@@ -1,9 +1,5 @@
-/**
- * MissionDashboard 컴포넌트
- * 오늘의 미션 표시 (색상/음식/라이프 아이템 + DO 실천/DONT 주의)
- */
-
 import React, { useCallback, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MISSION_CONFIG = {
   color: { emoji: '🎨', label: '색상 처방', color: 'var(--teal)', bg: 'rgba(95,173,122,0.08)' },
@@ -13,63 +9,34 @@ const MISSION_CONFIG = {
   dont:  { emoji: '⚠️', label: '오늘의 주의', color: '#E08830', bg: 'rgba(224,136,48,0.10)' },
 };
 
-export default function MissionDashboard({
-  missions = [],
-  onMissionComplete = null,
-  onDiaryClick = null,
-  hasDiaryToday = false,
-  className = '',
-}) {
-  const [completingId, setCompletingId] = useState(null);
-
-  const handleMissionClick = useCallback(
-    async (missionId) => {
-      if (!onMissionComplete || completingId) return;
-      setCompletingId(missionId);
-      try {
-        await onMissionComplete(missionId);
-      } finally {
-        setCompletingId(null);
-      }
-    },
-    [onMissionComplete, completingId]
+function CheckMark() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 12 12" style={{ overflow: 'visible' }}>
+      <motion.path
+        d="M2 6.5 L5 9.5 L10 3.5"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.32, ease: 'easeOut' }}
+      />
+    </svg>
   );
+}
 
-  const completedCount = missions.filter(m => m.is_completed).length;
-  const total = missions.length;
-  const completionPct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
-  const milestoneReached = completionPct >= 50;
+function MissionRow({ mission, onComplete, isLoading, isJustCompleted }) {
+  const cfg = MISSION_CONFIG[mission.mission_type] || { emoji: '✨', label: '미션', color: 'var(--gold)', bg: 'var(--goldf)' };
+  const isCompleted = mission.is_completed;
 
-  // 미션을 do/dont와 처방(color/menu/item)으로 분리해서 표시
-  const prescriptions = missions.filter(m => ['color', 'menu', 'item'].includes(m.mission_type));
-  const behavioral = missions.filter(m => ['do', 'dont'].includes(m.mission_type));
-
-  if (missions.length === 0) {
-    return (
-      <div className={`mission-dashboard ${className}`}>
-        <div style={{
-          padding: '14px 16px',
-          textAlign: 'center',
-          color: 'var(--t4)',
-          fontSize: '13px',
-          background: 'var(--bg2)',
-          borderRadius: 'var(--r1)',
-          border: '1px solid var(--line)',
-        }}>
-          오늘의 별숨 기운을 확인하면 미션이 나타나요 ✦
-        </div>
-      </div>
-    );
-  }
-
-  function MissionRow({ mission }) {
-    const cfg = MISSION_CONFIG[mission.mission_type] || { emoji: '✨', label: '미션', color: 'var(--gold)', bg: 'var(--goldf)' };
-    const isCompleted = mission.is_completed;
-    const isLoading = completingId === mission.id;
-
-    return (
-      <div
-        onClick={() => !isCompleted && handleMissionClick(mission.id)}
+  return (
+    <div style={{ position: 'relative' }}>
+      <motion.div
+        onClick={() => !isCompleted && onComplete(mission.id)}
+        animate={{ opacity: isLoading ? 0.55 : 1 }}
+        whileTap={!isCompleted ? { scale: 0.97 } : undefined}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -78,9 +45,8 @@ export default function MissionDashboard({
           backgroundColor: isCompleted ? 'var(--bg3)' : cfg.bg,
           borderRadius: '8px',
           border: `1px solid ${isCompleted ? 'var(--line)' : cfg.color + '44'}`,
-          transition: 'all 0.2s ease',
+          transition: 'background-color 0.2s ease, border-color 0.2s ease',
           cursor: !isCompleted ? 'pointer' : 'default',
-          opacity: isLoading ? 0.6 : 1,
         }}
       >
         {/* 체크박스 */}
@@ -90,9 +56,9 @@ export default function MissionDashboard({
           backgroundColor: isCompleted ? cfg.color : 'var(--bg3)',
           border: isCompleted ? 'none' : `1.5px solid ${cfg.color}66`,
           color: '#fff', fontSize: '11px', fontWeight: 700,
-          transition: 'all 0.2s ease',
+          transition: 'background-color 0.2s ease',
         }}>
-          {isCompleted ? '✓' : ''}
+          {isCompleted && <CheckMark />}
         </div>
 
         {/* 내용 */}
@@ -116,6 +82,83 @@ export default function MissionDashboard({
           color: isCompleted ? 'var(--t4)' : cfg.color,
         }}>
           {isCompleted ? '✓' : `+${mission.bp_reward} BP`}
+        </div>
+      </motion.div>
+
+      {/* 완료 시 BP 떠오름 */}
+      <AnimatePresence>
+        {isJustCompleted && (
+          <motion.div
+            key="bp-float"
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 0, y: -28 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
+            style={{
+              position: 'absolute',
+              right: 12,
+              top: 8,
+              fontSize: '12px',
+              fontWeight: 700,
+              color: cfg.color,
+              pointerEvents: 'none',
+            }}
+          >
+            +{mission.bp_reward} BP ✦
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function MissionDashboard({
+  missions = [],
+  onMissionComplete = null,
+  onDiaryClick = null,
+  hasDiaryToday = false,
+  className = '',
+}) {
+  const [completingId, setCompletingId] = useState(null);
+  const [justCompletedIds, setJustCompletedIds] = useState(new Set());
+
+  const handleMissionClick = useCallback(async (missionId) => {
+    if (!onMissionComplete || completingId) return;
+    setCompletingId(missionId);
+    try {
+      await onMissionComplete(missionId);
+      setJustCompletedIds(prev => new Set([...prev, missionId]));
+      setTimeout(() => setJustCompletedIds(prev => {
+        const next = new Set(prev);
+        next.delete(missionId);
+        return next;
+      }), 1100);
+    } finally {
+      setCompletingId(null);
+    }
+  }, [onMissionComplete, completingId]);
+
+  const completedCount = missions.filter(m => m.is_completed).length;
+  const total = missions.length;
+  const completionPct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+  const milestoneReached = completionPct >= 50;
+
+  const prescriptions = missions.filter(m => ['color', 'menu', 'item'].includes(m.mission_type));
+  const behavioral    = missions.filter(m => ['do', 'dont'].includes(m.mission_type));
+
+  if (missions.length === 0) {
+    return (
+      <div className={`mission-dashboard ${className}`}>
+        <div style={{
+          padding: '14px 16px',
+          textAlign: 'center',
+          color: 'var(--t4)',
+          fontSize: '13px',
+          background: 'var(--bg2)',
+          borderRadius: 'var(--r1)',
+          border: '1px solid var(--line)',
+        }}>
+          오늘의 별숨 기운을 확인하면 미션이 나타나요 ✦
         </div>
       </div>
     );
@@ -141,16 +184,17 @@ export default function MissionDashboard({
 
         {/* 진행률 바 */}
         <div style={{ height: '5px', background: 'var(--bg3)', borderRadius: '3px', overflow: 'hidden' }}>
-          <div style={{
-            height: '100%',
-            width: `${completionPct}%`,
-            background: milestoneReached ? 'var(--teal)' : 'var(--gold)',
-            borderRadius: '3px',
-            transition: 'width 0.4s ease',
-          }} />
+          <motion.div
+            style={{
+              height: '100%',
+              background: milestoneReached ? 'var(--teal)' : 'var(--gold)',
+              borderRadius: '3px',
+            }}
+            animate={{ width: `${completionPct}%` }}
+            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+          />
         </div>
 
-        {/* 마일스톤 달성 메시지 */}
         {milestoneReached && (
           <div style={{
             marginTop: 6, fontSize: '11px', color: 'var(--teal)', fontWeight: 600,
@@ -163,17 +207,21 @@ export default function MissionDashboard({
 
       {/* 미션 목록 */}
       <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
-        {/* 처방 미션 (색상/음식/아이템) */}
         {prescriptions.length > 0 && (
           <>
             <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--t4)', letterSpacing: '.06em', textTransform: 'uppercase', paddingLeft: 2 }}>
               오늘의 처방
             </div>
-            {prescriptions.map(m => <MissionRow key={m.id} mission={m} />)}
+            {prescriptions.map(m => (
+              <MissionRow key={m.id} mission={m}
+                onComplete={handleMissionClick}
+                isLoading={completingId === m.id}
+                isJustCompleted={justCompletedIds.has(m.id)}
+              />
+            ))}
           </>
         )}
 
-        {/* 실천/주의 미션 */}
         {behavioral.length > 0 && (
           <>
             {prescriptions.length > 0 && (
@@ -182,11 +230,16 @@ export default function MissionDashboard({
             <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--t4)', letterSpacing: '.06em', textTransform: 'uppercase', paddingLeft: 2 }}>
               오늘의 실천
             </div>
-            {behavioral.map(m => <MissionRow key={m.id} mission={m} />)}
+            {behavioral.map(m => (
+              <MissionRow key={m.id} mission={m}
+                onComplete={handleMissionClick}
+                isLoading={completingId === m.id}
+                isJustCompleted={justCompletedIds.has(m.id)}
+              />
+            ))}
           </>
         )}
 
-        {/* 일기 쓰기 유도 */}
         {!hasDiaryToday && (
           <button
             onClick={onDiaryClick}

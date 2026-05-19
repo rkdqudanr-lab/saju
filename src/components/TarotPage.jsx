@@ -515,8 +515,8 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                       : isPicked ? 'none' : '0 3px 10px rgba(0,0,0,0.3)',
                     opacity: isPicked ? 0.2 : 1,
                     cursor: canPick ? 'pointer' : 'default',
-                    transform: isHovered ? 'translateY(-10px) scale(1.06)' : 'translateY(0) scale(1)',
-                    transition: 'transform .22s cubic-bezier(.34,1.56,.64,1), opacity .3s, border-color .2s, box-shadow .2s',
+                    transform: isHovered ? 'translateY(-10px) scale(1.06) rotate(2deg)' : 'translateY(0) scale(1) rotate(0deg)',
+                    transition: 'transform .24s cubic-bezier(.34,1.56,.64,1), opacity .3s, border-color .2s, box-shadow .2s',
                     animation: `lineCardIn 0.45s cubic-bezier(.34,1.56,.64,1) ${i * 35}ms both`,
                     position: 'relative',
                     overflow: 'hidden',
@@ -733,7 +733,6 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                       {secs['별숨한마디']}
                     </div>
                   )}
-                  {isStreaming && <div style={{ textAlign: 'center', marginTop: 4 }}><span className="typing-cursor" /></div>}
                   {!isStreaming && (
                     <button
                       onClick={resetTarotFlow}

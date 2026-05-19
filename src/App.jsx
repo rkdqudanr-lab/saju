@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 // store (showToast를 스토어에 주입)
 import { useAppStore } from "./store/useAppStore.js";
@@ -397,11 +398,22 @@ export default function App() {
       />
 
       {/* 엑스트라 알림 */}
-      {toast && (
-        <div role="alert" aria-live="assertive" className={`toast toast-${toast.type}`}>
-          {toast.message}
-        </div>
-      )}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key={toast.message}
+            role="alert"
+            aria-live="assertive"
+            className={`toast toast-${toast.type}`}
+            initial={{ opacity: 0, y: -16, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.96 }}
+            transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+          >
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {chatTransitioning && (
         <div className="chat-transition-overlay" aria-hidden="true">

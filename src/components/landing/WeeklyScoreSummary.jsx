@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+
 function scoreColor(score) {
   if (score >= 80) return 'var(--gold)';
   if (score >= 60) return 'rgba(255,200,92,.72)';
@@ -28,7 +30,6 @@ export default function WeeklyScoreSummary({ scoreHistory = [], onClick }) {
         : '어제와 같아요'
       : null;
 
-  // 막대 최대 높이 28px
   const maxScore = Math.max(...validScores.map((s) => s.score), 1);
 
   return (
@@ -50,14 +51,17 @@ export default function WeeklyScoreSummary({ scoreHistory = [], onClick }) {
           const hasScore = item.score !== null;
           const h = hasScore ? Math.max(4, Math.round((item.score / maxScore) * 28)) : 4;
           return (
-            <div
+            <motion.div
               key={i}
               className="weekly-mini-bar"
               style={{
-                height: h,
                 background: hasScore ? scoreColor(item.score) : 'var(--line)',
                 opacity: hasScore ? 1 : 0.35,
+                transformOrigin: 'bottom',
               }}
+              initial={{ scaleY: 0, height: h }}
+              animate={{ scaleY: 1, height: h }}
+              transition={{ duration: 0.45, delay: i * 0.055, ease: [0.4, 0, 0.2, 1] }}
             />
           );
         })}

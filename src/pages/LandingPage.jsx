@@ -19,6 +19,7 @@ import {
 } from '../features/today/getDailyAxisScores.js';
 import { TODAY_AXIS_TEXT_CACHE } from '../features/today/fortuneAxisTools.js';
 import SamplePreview from '../components/SamplePreview.jsx';
+import CosmicCompass from '../components/landing/CosmicCompass.jsx';
 
 import LandingHeader from '../components/landing/LandingHeader.jsx';
 import DailyMiniCard from '../components/landing/DailyMiniCard.jsx';
@@ -424,9 +425,7 @@ export default function LandingPage({
       <div className="page step-fade">
         <div className="land-hero">
           <div className="land-wordmark">byeolsoom</div>
-          <div className="land-orb">
-            <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
-          </div>
+          <CosmicCompass />
           <p className="land-copy" style={{ fontSize: '1.05rem', lineHeight: 1.8 }}>
             당신의 별숨은 당신을 바라보고 있어요.
           </p>
@@ -488,9 +487,7 @@ export default function LandingPage({
       <div className="page step-fade">
         <div className="land-hero">
           <div className="land-wordmark">byeolsoom</div>
-          <div className="land-orb">
-            <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
-          </div>
+          <CosmicCompass />
           <p className="land-copy" style={{ fontSize: '1.05rem', lineHeight: 1.8 }}>
             당신의 별숨은 당신을 바라보고 있어요.
           </p>

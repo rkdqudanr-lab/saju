@@ -70,7 +70,6 @@ export default function DetailPanel({ pair, members, onClose }) {
           ) : (
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
               {stripMd(streamError || streamText || '분석을 불러오지 못했어요.')}
-              {isStreaming && streamText && <span className="typing-cursor" aria-hidden="true" />}
             </div>
           )}
           {streamError && (
