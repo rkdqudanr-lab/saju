@@ -12,7 +12,7 @@ import {
 import { readStreamResponse } from "../lib/streamTransport.js";
 import { parseHoroscopeForGamification } from "../utils/missionGenerator.js";
 import { spendBP as spendBPUtil } from "../utils/gamificationLogic.js";
-import { isLocalLayoutUser } from "../utils/localLayoutMode.js";
+import { isLocalLayoutUser, isLocalMockUser } from "../utils/localLayoutMode.js";
 import { useDailyConsultationHandler } from "./consultation/useDailyConsultationHandler.js";
 import { useChatConsultationHandler } from "./consultation/useChatConsultationHandler.js";
 import { useReportConsultationHandler } from "./consultation/useReportConsultationHandler.js";
@@ -282,7 +282,7 @@ export function useConsultation(
       throw new Error("LOGIN_REQUIRED");
     }
 
-    if (isLocalLayoutUser(user)) {
+    if (isLocalMockUser(user)) {
       await new Promise((r) => setTimeout(r, opts.isChat ? 450 : 650));
       return getLocalLayoutAnswer(userMessage, opts);
     }
