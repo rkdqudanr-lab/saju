@@ -12,6 +12,7 @@ import {
 import { readStreamResponse } from "../lib/streamTransport.js";
 import { parseHoroscopeForGamification } from "../utils/missionGenerator.js";
 import { spendBP as spendBPUtil } from "../utils/gamificationLogic.js";
+import { isLocalLayoutUser } from "../utils/localLayoutMode.js";
 import { useDailyConsultationHandler } from "./consultation/useDailyConsultationHandler.js";
 import { useChatConsultationHandler } from "./consultation/useChatConsultationHandler.js";
 import { useReportConsultationHandler } from "./consultation/useReportConsultationHandler.js";
@@ -19,11 +20,6 @@ import { useReportConsultationHandler } from "./consultation/useReportConsultati
 const BM_COST_PER_ASK = 10;
 const ERR_MSG = "별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!";
 export const DAILY_MAX = 999;
-const LOCAL_LAYOUT_MODE = import.meta.env.DEV;
-
-function isLocalLayoutUser(user) {
-  return LOCAL_LAYOUT_MODE && user?.id === "test_user_id";
-}
 
 function getLocalLayoutAnswer(userMessage, opts = {}) {
   if (opts.isDaily) {
@@ -286,7 +282,7 @@ export function useConsultation(
       throw new Error("LOGIN_REQUIRED");
     }
 
-    if (isLocalLayoutUser(user) && !import.meta.env.VITE_REAL_API) {
+    if (isLocalLayoutUser(user)) {
       await new Promise((r) => setTimeout(r, opts.isChat ? 450 : 650));
       return getLocalLayoutAnswer(userMessage, opts);
     }

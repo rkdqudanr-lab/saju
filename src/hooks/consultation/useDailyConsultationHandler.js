@@ -4,14 +4,10 @@ import { supabase, getAuthenticatedClient } from "../../lib/supabase.js";
 import { getDailyDateKey } from "../../lib/dailyDataAccess.js";
 import { parseHoroscopeForGamification } from "../../utils/missionGenerator.js";
 import { spendBP as spendBPUtil } from "../../utils/gamificationLogic.js";
+import { isLocalLayoutUser } from "../../utils/localLayoutMode.js";
 
 const BM_COST_PER_ASK = 10;
 const ERR_MSG = '별이 잠시 쉬고 있어요 🌙\n잠시 후 다시 시도해봐요!';
-const LOCAL_LAYOUT_MODE = import.meta.env.DEV;
-
-function isLocalLayoutUser(user) {
-  return LOCAL_LAYOUT_MODE && user?.id === 'test_user_id';
-}
 
 export function useDailyConsultationHandler({
   formOk,
@@ -114,7 +110,7 @@ export function useDailyConsultationHandler({
 
         try {
           const gamData = parseHoroscopeForGamification(ans);
-          if (isLocalLayoutUser(user) && !import.meta.env.VITE_REAL_API) {
+          if (isLocalLayoutUser(user)) {
             setDailyResult((prev) => ({
               ...prev,
               score: gamData.score,

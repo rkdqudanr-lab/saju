@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useAppStore } from "../store/useAppStore.js";
 import { DEFAULT_STREAM_ERROR, readStreamResponse } from "../lib/streamTransport.js";
+import { isLocalLayoutUser } from "../utils/localLayoutMode.js";
 
 function getLocalStreamText(payload = {}) {
   if (payload.isDream) {
@@ -79,7 +80,7 @@ export function useStreamResponse() {
     setIsStreaming(true);
 
     try {
-      if (import.meta.env.DEV && !import.meta.env.VITE_REAL_API && user?.id === "test_user_id") {
+      if (isLocalLayoutUser(user)) {
         await new Promise((r) => setTimeout(r, 650));
         setStreamText(getLocalStreamText(payload));
         return;

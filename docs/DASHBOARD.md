@@ -161,6 +161,7 @@ Supabase `missions` 테이블. 매일 리셋되는 일일 미션.
 ### [23] 로컬 개발 환경은?
 `.env` 파일: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `ANTHROPIC_API_KEY`.  
 `npm run dev` → localhost:5173. `/api/ask`는 vite.config.js가 Anthropic으로 프록시.
+로컬 레이아웃 샘플 모드는 `VITE_ENABLE_LOCAL_LAYOUT=true`이고 호스트가 `localhost`/`127.0.0.1`일 때만 켜진다. 배포 도메인에서는 `test_user_id` 샘플 응답으로 우회하면 안 된다.
 
 ### [24] 컴포넌트 Context 구조는?
 `src/context/AppContext.jsx` — Zustand 스토어의 shim. `useUserCtx`, `useSajuCtx`, `useGamCtx` 재익스포트.  

@@ -3,6 +3,8 @@
  * BP 시스템, 레벨 시스템, 배드타임 감지 로직
  */
 
+import { isLocalLayoutKakaoId } from './localLayoutMode.js';
+
 // ════════════════════════════════════════════════════════════════
 // BP 획득 규칙
 // ════════════════════════════════════════════════════════════════
@@ -286,7 +288,7 @@ export function getBPGaugeColor(currentBp, level) {
  * @returns {Promise<{ok: boolean, newBP: number|null}>}
  */
 export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE', note = '') {
-  if (import.meta.env.DEV && String(kakaoId) === 'test_user_id') {
+  if (isLocalLayoutKakaoId(kakaoId)) {
     return { ok: true, newBP: null };
   }
 

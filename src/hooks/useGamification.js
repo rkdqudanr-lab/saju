@@ -7,6 +7,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase, getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { getDailyDateKey } from '../lib/dailyDataAccess.js';
+import { isLocalLayoutUser } from '../utils/localLayoutMode.js';
 import {
   BP_EARNING_RULES,
   BADTIME_BLOCK_COST,
@@ -30,12 +31,6 @@ function getMissionBpReward(missionType) {
 // ════════════════════════════════════════════════════════════════
 
 const getTodayDateStr = () => getDailyDateKey();
-
-const LOCAL_LAYOUT_MODE = import.meta.env.DEV;
-
-function isLocalLayoutUser(user) {
-  return LOCAL_LAYOUT_MODE && user?.id === 'test_user_id';
-}
 
 /**
  * useGamification 훅
@@ -67,7 +62,7 @@ export function useGamification(user, showToast) {
     // user가 바뀌어도 재초기화 — ref에 마지막 초기화한 userId 저장
     if (!user?.id || initLoadedRef.current === user.id) return;
 
-    if (user.id === 'test_user_id') {
+    if (isLocalLayoutUser(user)) {
       initLoadedRef.current = user.id;
       setGamificationState(prev => ({
         ...prev,
