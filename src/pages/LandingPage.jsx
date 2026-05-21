@@ -15,6 +15,7 @@ import {
   ACTIONABLE_AXIS_KEYS,
   getAverageFortuneScore,
   getDailyAxisScores,
+  normalizeByHistory,
   TODAY_AXIS_CACHE,
 } from '../features/today/getDailyAxisScores.js';
 import { TODAY_AXIS_TEXT_CACHE } from '../features/today/fortuneAxisTools.js';
@@ -178,6 +179,26 @@ export default function LandingPage({
     [baseScore, boostMap, parsedDaily.categories],
   );
   const todayScore = useMemo(() => getAverageFortuneScore(axisScores), [axisScores]);
+
+  // ── 표준편차 기반 정규화 ──
+  // scoreHistory(30일)의 유효 점수로 μ·σ를 계산해 0~100으로 재매핑
+  const allRawHistoryScores = useMemo(
+    () => scoreHistory.map((s) => s.score).filter((s) => s !== null),
+    [scoreHistory],
+  );
+  const normalizedTodayScore = useMemo(
+    () => normalizeByHistory(todayScore, allRawHistoryScores),
+    [todayScore, allRawHistoryScores],
+  );
+  // WeeklyScoreSummary에 넘길 마지막 7일 — 각 점수도 정규화
+  const normalizedWeeklyHistory = useMemo(
+    () => scoreHistory.slice(-7).map((item) => ({
+      ...item,
+      score: item.score !== null ? normalizeByHistory(item.score, allRawHistoryScores) : null,
+    })),
+    [scoreHistory, allRawHistoryScores],
+  );
+
   const actionableScores = useMemo(
     () => axisScores.filter((s) => ACTIONABLE_AXIS_KEYS.includes(s.key)),
     [axisScores],
@@ -255,7 +276,7 @@ export default function LandingPage({
   useEffect(() => {
     if (!user) { setScoreHistory([]); return; }
     const kakaoId = String(user.kakaoId || user.id);
-    const last7 = Array.from({ length: 7 }, (_, i) => {
+    const last30 = Array.from({ length: 30 }, (_, i) => {
       const d = new Date(); d.setDate(d.getDate() - i);
       return getDailyDateKey(d);
     });
@@ -263,11 +284,11 @@ export default function LandingPage({
       ?.from('daily_scores')
       .select('score_date, score')
       .eq('kakao_id', kakaoId)
-      .in('score_date', last7)
+      .in('score_date', last30)
       .then(({ data }) => {
         const map = {};
         (data || []).forEach((r) => { map[r.score_date] = Number(r.score); });
-        setScoreHistory(last7.reverse().map((date) => ({ date, score: map[date] ?? null })));
+        setScoreHistory(last30.reverse().map((date) => ({ date, score: map[date] ?? null })));
       })
       .catch(() => {});
   }, [user?.id]);
@@ -563,7 +584,7 @@ export default function LandingPage({
         {/* 2. 히어로: 오늘의 별숨 미니카드 */}
         <DailyMiniCard
           dailyResult={dailyResult}
-          todayScore={todayScore}
+          todayScore={normalizedTodayScore}
           loading={dailyLoading}
           onAsk={askDailyHoroscope}
           onClick={() => setStep(STEP.TODAY_DETAIL)}
@@ -641,7 +662,7 @@ export default function LandingPage({
 
         {/* 6. 7일 점수 요약 */}
         <WeeklyScoreSummary
-          scoreHistory={scoreHistory}
+          scoreHistory={normalizedWeeklyHistory}
           onClick={() => setStep(STEP.SCORE_TREND)}
         />
 

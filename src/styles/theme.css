@@ -622,6 +622,8 @@ select.inp option{background:var(--bg2)}
 @keyframes fl-ring-spin-2{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
 @keyframes fl-ring-spin-3{from{transform:rotate(45deg)}to{transform:rotate(405deg)}}
 @keyframes fl-constellation{from{stroke-dashoffset:60}to{stroke-dashoffset:0}}
+@keyframes fl-constellation-loop{0%,8%{stroke-dashoffset:60;opacity:0}18%{opacity:1}45%,72%{stroke-dashoffset:0;opacity:1}88%,100%{stroke-dashoffset:0;opacity:0}}
+@keyframes fl-star-loop{0%,12%{opacity:0;transform:scale(0)}22%{opacity:1;transform:scale(1.15)}50%,72%{opacity:1;transform:scale(1)}88%,100%{opacity:0;transform:scale(0)}}
 
 /* ══ 모바일 버튼 터치 피드백 (스케일 0.95) ══ */
 button:active:not(:disabled){transform:scale(.95);transition:transform .1s}

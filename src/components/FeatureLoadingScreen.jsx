@@ -31,54 +31,46 @@ function Label({ title, subtitle }) {
   );
 }
 
-// ── 1. 일일 운세 (daily) — SVG 정밀 공전: 3점 120° 균등 배치 ──
-function DailyAnim() {
-  // SVG animateTransform: rotate(deg cx cy) 방식으로 중심(50,50) 기준 정확한 공전
-  const ORBIT_R = 36; // 점이 도는 반경
-  const cx = 50, cy = 50;
-  const dots = [
-    { r: 4.5, fill: 'var(--gold)',             filter: true,  begin: '0s',      dur: '2.4s' },
-    { r: 3,   fill: 'rgba(200,160,255,.85)',    filter: false, begin: '-0.8s',   dur: '2.4s' },
-    { r: 3.5, fill: 'rgba(232,176,72,.55)',     filter: false, begin: '-1.6s',   dur: '2.4s' },
-  ];
+// ── 공통: land-orb 스타일 구체 ──────────────────────────────
+function OrbAnim() {
   return (
-    <svg width="100" height="100" viewBox="0 0 100 100" overflow="visible">
-      <defs>
-        <filter id="dl-glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="2.5" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      {/* 궤도 링 */}
-      <circle cx={cx} cy={cy} r={ORBIT_R} fill="none"
-        stroke="rgba(232,176,72,.18)" strokeWidth="1" strokeDasharray="4 4"/>
-      {/* 내부 링 */}
-      <circle cx={cx} cy={cy} r={ORBIT_R * 0.55} fill="none"
-        stroke="rgba(200,160,255,.1)" strokeWidth="0.8"/>
-      {/* 역방향 느린 점 */}
-      <g>
-        <circle cx={cx + ORBIT_R * 0.55} cy={cy} r="2.2" fill="rgba(155,142,196,.5)"/>
-        <animateTransform attributeName="transform" type="rotate"
-          from={`0 ${cx} ${cy}`} to={`-360 ${cx} ${cy}`}
-          dur="5s" repeatCount="indefinite"/>
-      </g>
-      {/* 공전하는 점 3개 — 120° 균등 배치 */}
-      {dots.map((d, i) => (
-        <g key={i}>
-          <circle cx={cx + ORBIT_R} cy={cy} r={d.r}
-            fill={d.fill} filter={d.filter ? 'url(#dl-glow)' : undefined}/>
-          <animateTransform attributeName="transform" type="rotate"
-            from={`0 ${cx} ${cy}`} to={`360 ${cx} ${cy}`}
-            dur={d.dur} begin={d.begin} repeatCount="indefinite"/>
-        </g>
-      ))}
-      {/* 중심 별 */}
-      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
-        fontSize="20" fill="var(--gold)"
-        style={{ animation: 'fl-glow-soft 2s ease-in-out infinite' }}>✦</text>
-    </svg>
+    <div style={{ width: 120, height: 120, borderRadius: '50%', position: 'relative' }}>
+      <div style={{
+        position: 'absolute', inset: 14, borderRadius: '50%',
+        background: 'radial-gradient(circle at 35% 28%, rgba(232,176,72,.75), rgba(190,110,170,.5), rgba(50,30,90,.9), transparent)',
+        animation: 'orbPulse 5s infinite',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: '50%',
+        border: '1px solid rgba(232,176,72,.18)',
+        animation: 'orbSpin 14s linear infinite',
+        overflow: 'visible',
+      }}>
+        <div style={{
+          position: 'absolute', top: -3, left: '50%', width: 6, height: 6,
+          borderRadius: '50%', background: 'var(--gold)', transform: 'translateX(-50%)',
+          boxShadow: '0 0 12px var(--gold), 0 0 24px rgba(232,176,72,.4)',
+        }} />
+      </div>
+      <div style={{
+        position: 'absolute', inset: -16, borderRadius: '50%',
+        border: '1px solid rgba(232,176,72,.06)',
+        animation: 'orbSpin 22s linear infinite reverse',
+        overflow: 'visible',
+      }}>
+        <div style={{
+          position: 'absolute', bottom: -3, right: '20%',
+          width: 4, height: 4, borderRadius: '50%',
+          background: 'rgba(200,160,255,.7)',
+          boxShadow: '0 0 8px rgba(200,160,255,.5)',
+        }} />
+      </div>
+    </div>
   );
 }
+
+// ── 1. 일일 운세 (daily) ──────────────────────────────────────
+function DailyAnim() { return <OrbAnim />; }
 
 // ── 2. 타로 (tarot) — 카드 3장 + 빛 스윕 ─────────────────
 function TarotAnim() {
@@ -224,7 +216,7 @@ function ReportAnim() {
               x1={s[0]} y1={s[1]} x2={next[0]} y2={next[1]}
               stroke="rgba(232,176,72,.25)" strokeWidth="1"
               strokeDasharray="60" strokeDashoffset="60"
-              style={{ animation: `fl-constellation 1.5s ease forwards`, animationDelay: `${i * 0.18}s` }}
+              style={{ animation: `fl-constellation-loop 4s ease ${i * 0.18}s infinite` }}
             />
           );
         })}
@@ -233,8 +225,7 @@ function ReportAnim() {
           <circle key={i} cx={x} cy={y} r={3}
             fill="var(--gold)"
             style={{
-              animation: `fl-star-appear .5s ease forwards`,
-              animationDelay: `${i * 0.18}s`,
+              animation: `fl-star-loop 4s ease ${i * 0.18 + 0.2}s infinite`,
               opacity: 0,
               transformOrigin: `${x}px ${y}px`,
             }}
@@ -531,6 +522,7 @@ function SpecialAnim() {
 // ── 메인 export ──────────────────────────────────────────────
 const FEATURE_MAP = {
   daily:         { Anim: DailyAnim,        title: '오늘의 기운을 읽고 있어요',    subtitle: '사주와 별자리로\n오늘 하루를 분석하는 중이에요' },
+  daeun:         { Anim: OrbAnim,          title: '10년의 흐름을 읽고 있어요',   subtitle: '사주와 천체의 흐름으로\n대운을 분석하는 중이에요' },
   tarot:         { Anim: TarotAnim,        title: '카드의 목소리를 듣고 있어요',   subtitle: '선택하신 타로 카드의 의미를\n해석하는 중이에요' },
   dream:         { Anim: DreamAnim,        title: '꿈속의 이야기를 읽고 있어요',   subtitle: '사주와 별자리로\n꿈의 메시지를 해독하는 중이에요' },
   compat:        { Anim: CompatAnim,       title: '두 별의 인연을 읽고 있어요',    subtitle: '두 사람의 사주를 맞대어\n인연의 깊이를 분석하는 중이에요' },

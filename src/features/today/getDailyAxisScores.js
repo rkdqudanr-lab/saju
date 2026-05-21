@@ -203,3 +203,21 @@ export function getRecommendedRow(score, ownedRows) {
   if (!matched.length) return null;
   return [...matched].sort((a, b) => (b.item?.boost || 0) - (a.item?.boost || 0))[0];
 }
+
+/**
+ * 과거 점수 분포(평균·표준편차) 기준으로 rawScore를 0~100으로 정규화.
+ * 0 = μ - k·σ, 100 = μ + k·σ (기본 k=2, 약 95% 범위를 0~100에 매핑)
+ * 히스토리가 5개 미만이거나 편차가 거의 없으면 rawScore 그대로 반환.
+ */
+export function normalizeByHistory(rawScore, historicalScores, k = 2) {
+  const valid = (historicalScores || []).filter((s) => typeof s === 'number' && Number.isFinite(s));
+  if (valid.length < 5) return rawScore;
+  const n = valid.length;
+  const mean = valid.reduce((a, b) => a + b, 0) / n;
+  const variance = valid.reduce((sum, s) => sum + (s - mean) ** 2, 0) / n;
+  const stdDev = Math.sqrt(variance);
+  if (stdDev < 1) return rawScore; // 변동 없음 — 정규화 불가
+  const low = mean - k * stdDev;
+  const high = mean + k * stdDev;
+  return Math.round(Math.max(0, Math.min(100, ((rawScore - low) / (high - low)) * 100)));
+}

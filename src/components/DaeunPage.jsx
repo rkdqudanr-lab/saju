@@ -200,7 +200,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
     }
     setLoading(true);
     setInterpretation('');
-    useAppStore.getState().setFeatureLoading({ type: 'comprehensive', text: '10년의 흐름을 읽는 중이에요...' });
+    useAppStore.getState().setFeatureLoading({ type: 'daeun', text: '10년의 흐름을 읽는 중이에요...' });
 
     const selected = daeunData.periods[currentIdx];
     const next = daeunData.periods[currentIdx + 1];
