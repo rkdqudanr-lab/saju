@@ -26,9 +26,15 @@ function parseMonthlyReport(text) {
   const scoreMap = Object.fromEntries(scoreList.map((item) => [item.label, item]));
   const weeks = { "1주차": "", "2주차": "", "3주차": "", "4주차": "" };
 
+  let currentWeek = null;
   (parsed.sections["주차별가이드"] || "").split("\n").forEach((line) => {
-    const match = line.match(/^(1주차|2주차|3주차|4주차)\s*:\s*(.+)$/);
-    if (match) weeks[match[1]] = match[2].trim();
+    const match = line.match(/^(1주차|2주차|3주차|4주차)\s*:\s*(.*)$/);
+    if (match) {
+      currentWeek = match[1];
+      weeks[currentWeek] = match[2].trim();
+    } else if (currentWeek && line.trim()) {
+      weeks[currentWeek] += (weeks[currentWeek] ? " " : "") + line.trim();
+    }
   });
 
   const checklist = (parsed.sections["이번달실천"] || "")
