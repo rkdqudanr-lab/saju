@@ -255,7 +255,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
     }).catch(() => {});
   }, [consentFlags, isStreaming, pickedCards, streamText, user]);
 
-  if (phase === 'done' && isStreaming && !streamText) {
+  if (phase === 'done' && isStreaming) {
     return <FeatureLoadingScreen type="tarot" />;
   }
 

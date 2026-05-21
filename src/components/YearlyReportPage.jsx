@@ -267,7 +267,7 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
   }, [doStream]);
 
   // 풀페이지 로딩 (스트리밍 시작 전 또는 텍스트 없을 때)
-  if (started && isStreaming && !streamText) return <FeatureLoadingScreen type="report" />;
+  if (started && isStreaming) return <FeatureLoadingScreen type="report" />;
 
   // ── 시작 전 랜딩 화면 ──
   if (!started) {
@@ -363,11 +363,6 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
           <h2 style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>
             {year}년 연간 종합 리포트
           </h2>
-          {isStreaming && (
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginTop: 6 }}>
-              ✦ 별숨이 한 해를 읽고 있어요...
-            </div>
-          )}
         </div>
 
         {/* 그룹 탭 (요약 / 월별 / 마무리) */}
@@ -422,24 +417,16 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
         {/* 선택된 섹션 표시 */}
         {sections[activeSection] !== undefined && (
           <SectionCard
+            key={activeSection}
             tag={activeSection}
             content={sections[activeSection]}
-            isStreaming={isStreaming && availableTags[availableTags.length - 1] === activeSection}
+            isStreaming={false}
             callApi={callApi}
             year={year}
           />
         )}
 
         {/* 스트리밍 중 다음 섹션 안내 */}
-        {isStreaming && (
-          <div style={{
-            textAlign: 'center', padding: '12px',
-            fontSize: 'var(--xs)', color: 'var(--t3)',
-          }}>
-            <span className="dsc-loading-dot" style={{ marginRight: 4 }} />
-            다음 달을 읽는 중이에요
-          </div>
-        )}
 
         {/* 오류 */}
         {streamError && (
