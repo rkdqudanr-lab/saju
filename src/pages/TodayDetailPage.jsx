@@ -3,7 +3,7 @@ import { parseDailyLines } from '../utils/parseDailyLines.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { STEP } from '../utils/steps.js';
-import { getDailyDateKey, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
+import { getDailyDateKey, readDailyLocalCache, writeDailyLocalCache } from '../lib/dailyDataAccess.js';
 import '../styles/TodayDetailPage.css';
 
 import DailyElementMeet from '../components/DailyElementMeet.jsx';
@@ -11,7 +11,7 @@ import AstroSignViz from '../components/AstroSignViz.jsx';
 import DailyRadarChart from '../features/today/DailyRadarChart.jsx';
 import WeeklyTrendChart from '../features/today/WeeklyTrendChart.jsx';
 import GoldenParticles from '../features/today/GoldenParticles.jsx';
-import { ACTIONABLE_AXIS_KEYS, ASPECT_META, getAverageFortuneScore, getDailyAxisScores } from '../features/today/getDailyAxisScores.js';
+import { ACTIONABLE_AXIS_KEYS, ASPECT_META, getAverageFortuneScore, getDailyAxisScores, normalizeByHistory, TODAY_AXIS_CACHE } from '../features/today/getDailyAxisScores.js';
 import { TODAY_AXIS_TEXT_CACHE, deriveByeolsoomPick } from '../features/today/fortuneAxisTools.js';
 
 const PICK_FIELD_META = [
@@ -274,6 +274,15 @@ export default function TodayDetailPage({
 
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
   const [showParticles, setShowParticles] = useState(false);
+  const [boostMap, setBoostMap] = useState(() => {
+    if (!kakaoId) return {};
+    try {
+      const raw = readDailyLocalCache(String(kakaoId), TODAY_AXIS_CACHE, getDailyDateKey());
+      const parsed = JSON.parse(raw || '{}');
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch { return {}; }
+  });
+  const [scoreHistory, setScoreHistory] = useState([]);
 
   // 미니카드 타일 클릭 시 스크롤 처리
   useEffect(() => {
@@ -292,8 +301,8 @@ export default function TodayDetailPage({
   );
 
   const axisScores = useMemo(
-    () => getDailyAxisScores(dailyResult?.score || 0, {}, parsedDaily.categories),
-    [dailyResult?.score, parsedDaily.categories],
+    () => getDailyAxisScores(dailyResult?.score || 0, boostMap, parsedDaily.categories),
+    [dailyResult?.score, boostMap, parsedDaily.categories],
   );
 
   const actionableScores = useMemo(
@@ -304,6 +313,16 @@ export default function TodayDetailPage({
   const todayScore = useMemo(
     () => getAverageFortuneScore(axisScores),
     [axisScores],
+  );
+
+  // ── 표준편차 기반 정규화 (LandingPage와 동일 로직) ──
+  const allRawHistoryScores = useMemo(
+    () => scoreHistory.map((s) => s.score).filter((s) => s !== null),
+    [scoreHistory],
+  );
+  const normalizedTodayScore = useMemo(
+    () => normalizeByHistory(todayScore, allRawHistoryScores),
+    [todayScore, allRawHistoryScores],
   );
 
   const overallGuide = useMemo(() => ({
@@ -370,22 +389,61 @@ export default function TodayDetailPage({
     };
   }, [kakaoId]);
 
+  // ── useEffect: 30일 점수 히스토리 (정규화용) ──
   useEffect(() => {
-    if (!dailyResult || !kakaoId || !Number.isFinite(todayScore)) return;
-    saveTodayScore(kakaoId, todayScore).catch(() => {});
-  }, [dailyResult, kakaoId, todayScore]);
+    if (!kakaoId) { setScoreHistory([]); return; }
+    const last30 = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      return getDailyDateKey(d);
+    });
+    getAuthenticatedClient(String(kakaoId))
+      ?.from('daily_scores')
+      .select('score_date, score')
+      .eq('kakao_id', String(kakaoId))
+      .in('score_date', last30)
+      .then(({ data }) => {
+        const map = {};
+        (data || []).forEach((r) => { map[r.score_date] = Number(r.score); });
+        setScoreHistory(last30.reverse().map((date) => ({ date, score: map[date] ?? null })));
+      })
+      .catch(() => {});
+  }, [kakaoId]);
+
+  // ── useEffect: boostMap 로드 ──
+  useEffect(() => {
+    if (!kakaoId || !dailyResult) return;
+    getAuthenticatedClient(String(kakaoId))
+      ?.from('daily_cache')
+      .select('cache_type, content')
+      .eq('kakao_id', String(kakaoId))
+      .eq('cache_date', getDailyDateKey())
+      .eq('cache_type', TODAY_AXIS_CACHE)
+      .maybeSingle()
+      .then(({ data }) => {
+        try {
+          const parsed = JSON.parse(data?.content || '{}');
+          setBoostMap(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
+        } catch { setBoostMap({}); }
+      })
+      .catch(() => { setBoostMap({}); });
+  }, [kakaoId, dailyResult?.score]);
 
   useEffect(() => {
-    if (todayScore >= 100 && prevTodayScoreRef.current < 100) {
+    if (!dailyResult || !kakaoId || !Number.isFinite(normalizedTodayScore)) return;
+    saveTodayScore(kakaoId, normalizedTodayScore).catch(() => {});
+  }, [dailyResult, kakaoId, normalizedTodayScore]);
+
+  useEffect(() => {
+    if (normalizedTodayScore >= 100 && prevTodayScoreRef.current < 100) {
       setShowParticles(true);
     }
-    prevTodayScoreRef.current = todayScore;
-  }, [todayScore]);
+    prevTodayScoreRef.current = normalizedTodayScore;
+  }, [normalizedTodayScore]);
 
   const handleShareDaily = useCallback(async () => {
     if (!dailyResult) return;
     const dateStr = today ? `${today.month}월 ${today.day}일` : '';
-    const text = `✦ 오늘의 별숨${dateStr ? ` · ${dateStr}` : ''}\n${overallGuide.summary}\n\n별숨점수 ${todayScore}점\n\n— 별숨 앱`;
+    const text = `✦ 오늘의 별숨${dateStr ? ` · ${dateStr}` : ''}\n${overallGuide.summary}\n\n별숨점수 ${normalizedTodayScore}점\n\n— 별숨 앱`;
     if (navigator.share) {
       try {
         await navigator.share({ title: '별숨 ✦', text });
@@ -394,7 +452,7 @@ export default function TodayDetailPage({
       await navigator.clipboard?.writeText(text);
       showToast?.('클립보드에 복사됐어요', 'success');
     }
-  }, [dailyResult, overallGuide.summary, showToast, today, todayScore]);
+  }, [dailyResult, normalizedTodayScore, overallGuide.summary, showToast, today]);
 
   const handleReaskDaily = useCallback(async () => {
     if (!onRefresh || dailyLoading) return;
@@ -463,7 +521,7 @@ export default function TodayDetailPage({
             <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 18, marginBottom: 16, border: '1px solid var(--line)' }}>
               <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>TODAY SCORE</div>
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--t1)', lineHeight: 1 }}>{todayScore}점</div>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--t1)', lineHeight: 1 }}>{normalizedTodayScore}점</div>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 6 }}>
                   세부 운세 {actionableScores.length}개 평균으로 계산되는 오늘의 총점이에요.
                 </div>
@@ -684,7 +742,7 @@ export default function TodayDetailPage({
               </div>
             </section>
 
-            <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult ? todayScore : null} />
+            <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult ? normalizedTodayScore : null} />
 
             {(dailyResult?.badtime || parsedDaily.badtime) && (
               <div style={{ background: 'rgba(201,160,220,0.08)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid rgba(201,160,220,0.18)' }}>
