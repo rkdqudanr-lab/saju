@@ -244,6 +244,7 @@ export function useConsultation(
       setHistItems([]);
       return;
     }
+    let cancelled = false;
     const authClient = getAuthenticatedClient(user.id);
     const client = authClient || supabase;
     let query = client
@@ -254,7 +255,7 @@ export function useConsultation(
     // supabaseId(UUID) 있으면 명시적 필터 추가 — RLS와 이중 안전
     if (user.supabaseId) query = query.eq("user_id", user.supabaseId);
     query.then(({ data }) => {
-        if (!data?.length) return;
+        if (cancelled || !data?.length) return;
         const items = data.map((row) => {
           const dt = new Date(row.created_at);
           const dateStr = `${dt.getFullYear()}.${String(dt.getMonth() + 1).padStart(2, "0")}.${String(dt.getDate()).padStart(2, "0")} ${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
@@ -271,9 +272,11 @@ export function useConsultation(
         setHistItems(items);
       })
       .catch((e) => {
+        if (cancelled) return;
         console.error("[별숨] 상담 기록 로드 오류:", e);
         if (typeof showToast === "function") showToast("상담 기록을 불러오지 못했어요", "error");
       });
+    return () => { cancelled = true; };
   }, [showToast, user?.id, user?.supabaseId]);
 
   const callApi = useCallback(async (userMessage, opts = {}) => {

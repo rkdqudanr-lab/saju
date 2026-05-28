@@ -75,7 +75,7 @@ export default function App() {
           editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
           showConsentModal, consentFlags, setConsentFlags, handleConsentConfirm,
           saveProfileToSupabase, saveUserProfileExtra, saveDailyQuizAnswer,
-          responseStyle, theme, onboarded, quizState, lifeStage, fontSize, saveSettings } = userProfile;
+          responseStyle, theme, instantTyping, onboarded, quizState, lifeStage, fontSize, saveSettings } = userProfile;
 
   const isDark         = theme === 'dark';
   const onboardingDone = onboarded;
@@ -100,13 +100,14 @@ export default function App() {
   useEffect(() => { _storeSetAuthFns({ showToast }); }, [showToast, _storeSetAuthFns]);
   useEffect(() => { _storeSetAuthFns({ lifeStage: lifeStage || 'free' }); }, [lifeStage, _storeSetAuthFns]);
 
-  // ── 기능 투어 트리거 (온보딩 완료 후 step 0 최초 진입 시 1회만) ──
+  // ── 기능 투어 트리거 (온보딩 완료 후 step 0 최초 진입 시 1회만, 로컬 레이아웃 모드 제외) ──
   useEffect(() => {
+    if (!user || user.id === 'test_user_id') return; // 로컬 테스트 유저는 투어 제외
     if (step === STEP.HOME && onboardingDone && localStorage.getItem('byeolsoom_tour_v1') !== 'done') {
       const t = setTimeout(() => setShowTour(true), 700);
       return () => clearTimeout(t);
     }
-  }, [step, onboardingDone, setShowTour]);
+  }, [step, onboardingDone, setShowTour, user]);
 
   // lifeStage + qaAnswers를 profile에 병합 (메모이제이션으로 리렌더링 루프 방지)
   const profileWithMeta = useMemo(() => ({
@@ -289,7 +290,7 @@ export default function App() {
     formOk, formOkApprox, onboardingDone,
     otherProfiles, setOtherProfiles, activeProfileIdx, setActiveProfileIdx,
     consentFlags, saveOtherProfile, saveProfileToSupabase,
-    responseStyle, theme, lifeStage, fontSize, saveSettings,
+    responseStyle, theme, lifeStage, fontSize, instantTyping, saveSettings,
     setShowProfileModal, setProfileModalMode, setShowOtherProfileModal,
     editingOtherIdx, setEditingOtherIdx, startEditOtherProfile,
     // sajuCtx

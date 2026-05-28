@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { CG, CGO, OC, OE, ON } from '../utils/saju.js';
 
 const SHENG = { 목: '화', 화: '토', 토: '금', 금: '수', 수: '목' };
@@ -91,11 +91,25 @@ export default function DailyElementMeet({ myGan, todayGan }) {
     return { myEl, todayEl, rel };
   }, [myGan, todayGan]);
 
+  const containerRef = useRef(null);
+  const [showLabel, setShowLabel] = useState(true);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setShowLabel(el.getBoundingClientRect().width >= 260);
+    const ro = new ResizeObserver(([entry]) => {
+      setShowLabel(entry.contentRect.width >= 260);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   if (!data) return null;
   const { myEl, todayEl, rel } = data;
 
   return (
-    <div style={{
+    <div ref={containerRef} style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       gap: 8, padding: '20px 12px 12px',
     }}>
@@ -125,14 +139,16 @@ export default function DailyElementMeet({ myGan, todayGan }) {
       <Orb el={myEl} gan={myGan} sublabel="나의 일간" />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, minWidth: 60 }}>
         <FlowLine tone={rel.tone} dir={rel.tone === 'receive' || rel.tone === 'tension' ? 'left' : 'right'} />
-        <div style={{
-          fontSize: 'var(--xs)', color: 'var(--t3)', textAlign: 'center',
-          background: 'var(--bg2)', borderRadius: 20,
-          padding: '3px 10px', border: '1px solid var(--line)',
-          whiteSpace: 'nowrap',
-        }}>
-          {rel.label}
-        </div>
+        {showLabel && (
+          <div style={{
+            fontSize: 'var(--xs)', color: 'var(--t3)', textAlign: 'center',
+            background: 'var(--bg2)', borderRadius: 20,
+            padding: '3px 10px', border: '1px solid var(--line)',
+            whiteSpace: 'nowrap',
+          }}>
+            {rel.label}
+          </div>
+        )}
       </div>
       <Orb el={todayEl} gan={todayGan} sublabel="오늘 일진" />
     </div>

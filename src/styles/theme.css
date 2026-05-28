@@ -1097,8 +1097,8 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 .daily-mini-link{font-size:10px;color:var(--t3);white-space:nowrap}
 .daily-mini-main{
   position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  width:100%;margin:2px 0 12px;padding:16px 16px 18px;cursor:pointer;font-family:var(--ff);
-  min-height:196px;
+  width:100%;margin:2px 0 12px;padding:20px 20px 22px;cursor:pointer;font-family:var(--ff);
+  min-height:210px;
   border-radius:18px;
   background:
     linear-gradient(180deg,rgba(255,255,255,.48),rgba(255,255,255,.22)),
@@ -1120,21 +1120,21 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
   font-size:var(--sm);color:var(--t2);font-weight:800;letter-spacing:0;
   line-height:1.25;margin:0 0 8px;
 }
-.dmc-ring-wrap{position:relative;width:124px;height:124px;margin:0 auto;filter:none}
+.dmc-ring-wrap{position:relative;width:148px;height:148px;margin:0 auto;filter:none}
 .dmc-ring{width:100%;height:100%}
 .daily-mini-card.is-revealing .dmc-ring{animation:dmc-ring-pop .78s cubic-bezier(.18,.85,.28,1) both}
 .daily-mini-card.is-revealing .dmc-ring circle:nth-of-type(4){
   animation:dmc-ring-draw .78s cubic-bezier(.22,.9,.24,1) both;
 }
-.dmc-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:0}
+.dmc-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:4px}
 .dmc-ring-num{
-  font-size:32px;font-weight:900;line-height:.95;
+  font-size:36px;font-weight:900;line-height:.95;
   color:#7c5f1d;
   font-variant-numeric:tabular-nums;
   text-shadow:none;
 }
 .dmc-ring-tone{
-  display:inline-flex;align-items:center;margin-top:7px;padding:3px 10px;border-radius:999px;
+  display:inline-flex;align-items:center;margin-top:8px;padding:4px 12px;border-radius:999px;
   background:rgba(255,255,255,.5);border:1px solid color-mix(in srgb,var(--home-card-line) 70%,rgba(124,95,29,.22));
   font-size:10px;font-weight:850;color:#6f5f86;letter-spacing:0;white-space:nowrap;
   box-shadow:none;

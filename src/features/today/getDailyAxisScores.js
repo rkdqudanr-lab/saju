@@ -148,7 +148,14 @@ function getBoostSummary(entry) {
   };
 }
 
-// boostMap: { [aspectKey]: { itemId, boost, name, emoji } }
+/**
+ * 9개 운세 축별 점수를 계산합니다.
+ * @param {number} baseScore - 기본 종합 점수
+ * @param {Object} boostMap  - { [axisKey]: { itemId, boost, name, emoji } }
+ * @param {Object|null} categoryScores - AI가 반환한 카테고리별 점수
+ * @returns {Array<{key:string, label:string, base:number, total:number, bonus:number, boostItem, appliedItems}>}
+ *   ⚠️ 최종 표시 점수는 `total` 키입니다. `score` 키는 존재하지 않습니다.
+ */
 export function getDailyAxisScores(baseScore, boostMap, categoryScores = null) {
   const todayDate = getDailyDateKey();
   const getDailyNoise = (idx) => {
@@ -234,4 +241,11 @@ export function normalizeByHistory(rawScore, historicalScores, k = 2) {
   const low = mean - k * stdDev;
   const high = mean + k * stdDev;
   return Math.round(Math.max(0, Math.min(100, ((rawScore - low) / (high - low)) * 100)));
+}
+
+const _CLAMP_RANGE = 20;
+/** normalizeByHistory + ±20 클램핑을 한 번에 수행하는 공유 헬퍼 */
+export function normalizeAndClamp(rawScore, historicalScores) {
+  const normalized = normalizeByHistory(rawScore, historicalScores);
+  return Math.round(Math.max(rawScore - _CLAMP_RANGE, Math.min(rawScore + _CLAMP_RANGE, normalized)));
 }

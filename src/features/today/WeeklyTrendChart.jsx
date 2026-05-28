@@ -6,7 +6,7 @@ const SVG_H = 138;
 const PAD_TOP = 18;
 const PAD_BOTTOM = 36;   // x축 날짜 공간
 const Y_AXIS_W = 30;     // 왼쪽 y축 레이블 폭
-const PAD_RIGHT = 14;
+const PAD_RIGHT = 24;
 
 export default function WeeklyTrendChart({ kakaoId, todayScore }) {
   const [trend, setTrend] = useState(null);

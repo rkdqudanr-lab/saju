@@ -37,10 +37,8 @@ function setAuthUser(val) {
   try { localStorage.setItem('byeolsoom_user', val === null ? '' : JSON.stringify(val)); } catch {}
   if (val === null) { try { localStorage.removeItem('byeolsoom_user'); } catch {} }
 }
-export function getAuthToken() {
-  return null;
-}
-function setAuthToken(token) {
+// 구 JWT localStorage 키 제거용 헬퍼 (마이그레이션 잔재 정리)
+function clearLegacyAuthToken() {
   try { localStorage.removeItem('byeolsoom_jwt'); } catch {}
 }
 export function getKeepLogin() {
@@ -138,7 +136,7 @@ export function useUserProfile() {
         setOtherProfiles([]);
         setConsentFlags(null);
         setAuthUser(null);
-        setAuthToken(null);
+        clearLegacyAuthToken();
         setProfileSyncing(false);
       }
     })();

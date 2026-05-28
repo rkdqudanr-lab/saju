@@ -5,9 +5,10 @@ export async function readStreamResponse(res, { onText, onError, fallbackError =
 
   if (!contentType.includes("text/event-stream")) {
     const data = await res.json().catch(() => ({}));
-    if (data?.text) {
-      onText?.(String(data.text));
-      return { ok: true, text: String(data.text), mode: "json" };
+    const text = typeof data?.text === "string" ? data.text.trim() : "";
+    if (text) {
+      onText?.(text);
+      return { ok: true, text, mode: "json" };
     }
     const errorMessage = data?.error || fallbackError;
     onError?.(errorMessage);

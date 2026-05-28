@@ -11,7 +11,7 @@ import AstroSignViz from '../components/AstroSignViz.jsx';
 import DailyRadarChart from '../features/today/DailyRadarChart.jsx';
 import WeeklyTrendChart from '../features/today/WeeklyTrendChart.jsx';
 import GoldenParticles from '../features/today/GoldenParticles.jsx';
-import { ACTIONABLE_AXIS_KEYS, ASPECT_META, getAverageFortuneScore, getDailyAxisScores, normalizeByHistory, TODAY_AXIS_CACHE } from '../features/today/getDailyAxisScores.js';
+import { ACTIONABLE_AXIS_KEYS, ASPECT_META, getAverageFortuneScore, getDailyAxisScores, normalizeAndClamp, TODAY_AXIS_CACHE } from '../features/today/getDailyAxisScores.js';
 import { TODAY_AXIS_TEXT_CACHE, deriveByeolsoomPick } from '../features/today/fortuneAxisTools.js';
 
 const PICK_FIELD_META = [
@@ -54,21 +54,15 @@ const AXIS_TONE_META = {
 };
 
 
-function primaryValue(value) {
-  if (!value) return '';
-  let text = String(value);
-  const dashIdx = text.indexOf(' — ');
-  if (dashIdx !== -1) text = text.slice(0, dashIdx);
-  else {
-    const looseDashIdx = text.indexOf('—');
-    if (looseDashIdx !== -1) text = text.slice(0, looseDashIdx);
-  }
-  return text.replace(/\s*\([^)]*\)?\s*$/, '').trim();
+/** 점수 구간별 등급 라벨 반환 */
+function getScoreGrade(score) {
+  if (score >= 81) return { label: '빛나는 날', icon: '✨', color: '#B8A035' };
+  if (score >= 61) return { label: '활기찬 날', icon: '☀️', color: '#E08A3A' };
+  if (score >= 41) return { label: '평온한 날', icon: '⛅', color: '#4A9EFF' };
+  if (score >= 21) return { label: '차분한 날', icon: '☁️', color: '#7B9EBB' };
+  return { label: '조심스러운 날', icon: '🌧️', color: '#9E7BB5' };
 }
 
-function getPickValue(parsedDaily, fieldKey) {
-  return (parsedDaily.synergy || {})[fieldKey] || '';
-}
 
 /** 조디악 기호 제거 + 핵심 구문 자동 굵게 처리 → React 노드 배열 반환 */
 function renderBoldText(text) {
@@ -321,9 +315,16 @@ export default function TodayDetailPage({
     [scoreHistory],
   );
   const normalizedTodayScore = useMemo(
-    () => normalizeByHistory(todayScore, allRawHistoryScores),
+    () => normalizeAndClamp(todayScore, allRawHistoryScores),
     [todayScore, allRawHistoryScores],
   );
+
+  // 개인 Baseline: 과거 저장된 점수들의 평균 (Task #15)
+  const personalBaseline = useMemo(() => {
+    const valid = allRawHistoryScores.filter((s) => typeof s === 'number' && Number.isFinite(s));
+    if (!valid.length) return null;
+    return Math.round(valid.reduce((a, b) => a + b, 0) / valid.length);
+  }, [allRawHistoryScores]);
 
   const overallGuide = useMemo(() => ({
     summary: parsedDaily.summary || parsedDaily.categories?.overall?.desc || parsedDaily.closingAdvice || '오늘 흐름을 가볍게 정리하면서 리듬을 맞춰보세요.',
@@ -341,12 +342,11 @@ export default function TodayDetailPage({
     [parsedDaily, actionableScores, overallGuide],
   );
 
-  const activePickView = useMemo(() => ({
-    fields: PICK_FIELD_META.map((field) => ({
-      ...field,
-      value: primaryValue(getPickValue(parsedDaily, field.key)) || '-',
-    })),
-  }), [parsedDaily]);
+  const scoreCardData = useMemo(() => {
+    const grade = getScoreGrade(normalizedTodayScore);
+    const sorted = [...actionableScores].sort((a, b) => b.total - a.total);
+    return { grade, topAxis: sorted[0], bottomAxis: sorted[sorted.length - 1] };
+  }, [normalizedTodayScore, actionableScores]);
 
   const axisRankMap = useMemo(
     () => Object.fromEntries(
@@ -518,44 +518,255 @@ export default function TodayDetailPage({
       <div className="today-detail-content">
         {dailyResult ? (
           <Suspense fallback={<PageSpinner />}>
-            <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 18, marginBottom: 16, border: '1px solid var(--line)' }}>
-              <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>TODAY SCORE</div>
-              <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--t1)', lineHeight: 1 }}>{normalizedTodayScore}점</div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 6 }}>
-                  세부 운세 {actionableScores.length}개 평균으로 계산되는 오늘의 총점이에요.
+
+            {/* ① TODAY SCORE */}
+            <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: '20px 18px 14px', marginBottom: 16, border: '1px solid var(--line)' }}>
+              <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 16 }}>
+                TODAY SCORE
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 3, lineHeight: 1 }}>
+                    <span style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--t1)', letterSpacing: '-0.02em' }}>
+                      {normalizedTodayScore}
+                    </span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--t3)' }}>점</span>
+                  </div>
+                  {personalBaseline !== null ? (
+                    <div style={{ fontSize: 11, color: 'var(--t4)', marginTop: 5 }}>
+                      {allRawHistoryScores.length}일 평균 {personalBaseline}점 대비{' '}
+                      <span style={{ color: normalizedTodayScore >= personalBaseline ? '#4cbb7f' : '#d57c58', fontWeight: 700 }}>
+                        {normalizedTodayScore >= personalBaseline ? '+' : ''}{normalizedTodayScore - personalBaseline}점
+                      </span>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 5 }}>
+                      {actionableScores.length}개 운세축 평균
+                    </div>
+                  )}
+                </div>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  background: `${scoreCardData.grade.color}1a`, border: `1px solid ${scoreCardData.grade.color}50`,
+                  borderRadius: 20, padding: '5px 12px', flexShrink: 0,
+                }}>
+                  <span style={{ fontSize: 15 }}>{scoreCardData.grade.icon}</span>
+                  <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: scoreCardData.grade.color }}>{scoreCardData.grade.label}</span>
                 </div>
               </div>
-              <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>{overallGuide.summary}</div>
+              {scoreCardData.topAxis && scoreCardData.bottomAxis && (
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(76,187,127,0.07)', border: '1px solid rgba(76,187,127,0.28)', borderRadius: 10, padding: '8px 12px' }}>
+                    <span style={{ fontSize: 13, color: '#4cbb7f' }}>↑</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 9, color: '#4cbb7f', fontWeight: 600, marginBottom: 1 }}>강세</div>
+                      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {ASPECT_META[scoreCardData.topAxis.key]?.emoji} {ASPECT_META[scoreCardData.topAxis.key]?.label || scoreCardData.topAxis.label}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 'var(--sm)', fontWeight: 900, color: '#4cbb7f', flexShrink: 0 }}>{scoreCardData.topAxis.total}</span>
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(213,124,88,0.07)', border: '1px solid rgba(213,124,88,0.25)', borderRadius: 10, padding: '8px 12px' }}>
+                    <span style={{ fontSize: 13, color: '#d57c58' }}>↓</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 9, color: '#d57c58', fontWeight: 600, marginBottom: 1 }}>주의</div>
+                      <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {ASPECT_META[scoreCardData.bottomAxis.key]?.emoji} {ASPECT_META[scoreCardData.bottomAxis.key]?.label || scoreCardData.bottomAxis.label}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 'var(--sm)', fontWeight: 900, color: '#d57c58', flexShrink: 0 }}>{scoreCardData.bottomAxis.total}</span>
+                  </div>
+                </div>
+              )}
+              <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7, borderTop: '1px solid var(--line)', paddingTop: 12 }}>
+                {overallGuide.summary}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 9, color: 'var(--t4)' }}>
+                <span>
+                  8축 평균 {todayScore}점
+                  {allRawHistoryScores.length >= 5 ? ` · ${allRawHistoryScores.length}일 개인화 적용` : ` · ${allRawHistoryScores.length}일 누적 중`}
+                </span>
+                <span>흐름 안내 · 참고 지표</span>
+              </div>
             </div>
 
-            <section id="today-pick-shell" className="today-time-slot-card" aria-label="오늘의 별숨픽">
-              <div className="today-time-slot-card__header">
-                <div>
-                  <div className="today-time-slot-card__kicker">BYEOLSOOM PICK</div>
-                  <div className="today-time-slot-card__title">오늘의 별숨픽</div>
+            {/* ② 저점수 자기돌봄 카드 (score < 40) */}
+            {normalizedTodayScore < 40 && (
+              <div style={{ background: 'rgba(161,142,200,0.12)', border: '1px solid rgba(161,142,200,0.35)', borderRadius: 'var(--r1)', padding: '14px 16px', marginBottom: 16 }}>
+                <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: '#a18ec8', marginBottom: 8 }}>
+                  💙 오늘은 나를 먼저 챙기는 날이에요
                 </div>
-                <span>8항목</span>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7 }}>
+                  흐름이 잠시 낮아진 날엔 억지로 밀어붙이기보다 회복에 집중하는 것이 더 효과적이에요.
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                  {['충분한 수면', '따뜻한 음료', '짧은 산책', '연락 줄이기', '일정 단순화'].map((tip) => (
+                    <span key={tip} style={{ fontSize: 11, color: '#a18ec8', background: 'rgba(161,142,200,0.15)', borderRadius: 20, padding: '3px 10px' }}>{tip}</span>
+                  ))}
+                </div>
               </div>
-              <div className="today-time-slot-grid">
-                {activePickView.fields.map((field) => (
-                  <div
-                    key={field.key}
-                    data-tone={field.tone}
+            )}
+
+            {/* ③ 배드타임 카드 (파싱된 경우) */}
+            {(dailyResult?.badtime || parsedDaily.badtime) && (
+              <div style={{ background: 'rgba(201,160,220,0.08)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid rgba(201,160,220,0.18)' }}>
+                <div style={{ fontSize: 10, color: '#c9a0dc', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>⚠️ 주의 흐름</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7 }}>
+                  {(dailyResult?.badtime || parsedDaily.badtime)?.symptom || '오늘은 예민한 흐름이 살짝 감지돼요.'}
+                </div>
+              </div>
+            )}
+
+            {/* ④ TODAY READING — 점수 이유를 설명하는 장문 */}
+            {dailyLongReading.length > 0 && (
+              <section id="today-long-reading" className="today-long-reading" aria-label="오늘 하루 장문 해석">
+                <div className="today-long-reading__kicker">TODAY READING</div>
+                <div className="today-long-reading__title">오늘의 사주와 별자리 흐름</div>
+                {today?.ilchin?.gan && saju?.ilgan && (
+                  <DailyElementMeet myGan={saju.ilgan} todayGan={today.ilchin.gan} />
+                )}
+                <div className="today-long-reading__body">
+                  {dailyLongReading.map((section) => (
+                    <article key={section.title} className="today-long-reading__section">
+                      <div className="today-long-reading__section-title">{section.title}</div>
+                      {section.title === '오늘의 점성술 흐름' && (sun || moon || asc) && (
+                        <AstroSignViz sun={sun} moon={moon} asc={asc} />
+                      )}
+                      <p className="today-long-reading__text">{renderBoldText(section.body)}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ⑤ OVERALL GUIDE — 장문 직후: "그래서 오늘 뭐해?" */}
+            <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid var(--line)' }}>
+              <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 10 }}>OVERALL GUIDE</div>
+              <div style={{ background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 12, padding: '11px 12px', marginBottom: 8 }}>
+                <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, marginBottom: 4 }}>DO</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6 }}>{overallGuide.do}</div>
+              </div>
+              <div style={{ background: 'var(--bg1)', border: '1px solid var(--line)', borderRadius: 12, padding: '11px 12px' }}>
+                <div style={{ fontSize: 10, color: 'var(--t3)', fontWeight: 700, marginBottom: 4 }}>주의</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>{overallGuide.caution}</div>
+              </div>
+            </div>
+
+            {/* ⑥ 레이더 차트 + AXIS FORTUNES — 묶어서 한 흐름 */}
+            <DailyRadarChart scores={actionableScores} />
+
+            <section id="today-axis-section" className="today-axis-section">
+              <div className="today-axis-section__header">
+                <div>
+                  <div className="today-axis-section__kicker">AXIS FORTUNES</div>
+                  <div className="today-axis-section__copy">
+                    오늘 강하게 올라오는 축과 조심히 다뤄야 할 축을 한눈에 정리했어요.
+                  </div>
+                </div>
+              </div>
+              <div className="today-axis-list">
+                {axisCards.map((axis) => (
+                  <article
+                    key={axis.key}
+                    className={`today-axis-card today-axis-card--${axis.status.tone}`}
+                    style={{ '--axis-accent': axis.toneMeta.accent, '--axis-soft': axis.toneMeta.soft, '--axis-glow': axis.toneMeta.glow, cursor: onQuickChat ? 'pointer' : undefined }}
+                    onClick={onQuickChat ? () => onQuickChat(`오늘 내 ${axis.fullLabel}에 대해 더 자세히 알려줘. ${axis.total}점이 나왔는데 이 흐름에서 어떻게 움직이면 좋을지 구체적으로 알려줘.`) : undefined}
                     role={onQuickChat ? 'button' : undefined}
                     tabIndex={onQuickChat ? 0 : undefined}
-                    style={onQuickChat ? { cursor: 'pointer' } : undefined}
-                    onClick={onQuickChat ? () => onQuickChat(`오늘 별숨픽 ${field.label} "${field.value}"을 어떻게 활용하면 좋을까? 내 오늘 운세 흐름에 맞춰 구체적으로 알려줘.`) : undefined}
                     onKeyDown={onQuickChat ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } } : undefined}
                   >
-                    <span>{field.icon} {field.label}</span>
-                    <strong>{field.value}</strong>
-                    {onQuickChat && <em className="today-time-slot-grid__hint">탭해서 물어보기 →</em>}
-                  </div>
+                    <div className="today-axis-card__inner">
+                      <div className="today-axis-card__header">
+                        <div className="today-axis-card__lead">
+                          <div className="today-axis-card__rank">#{axis.rank}</div>
+                          <div className="today-axis-card__icon" aria-hidden="true">{ASPECT_META[axis.key]?.emoji || '✨'}</div>
+                          <div className="today-axis-card__title-wrap">
+                            <div className="today-axis-card__title-row">
+                              <div className="today-axis-card__title">{axis.fullLabel}</div>
+                              <span className="today-axis-card__badge">{axis.status.badge}</span>
+                            </div>
+                            <div className="today-axis-card__meta">오늘 흐름 {axis.total}점</div>
+                          </div>
+                        </div>
+                        <div className="today-axis-card__score-wrap">
+                          <div className="today-axis-card__score">{axis.total}점</div>
+                        </div>
+                      </div>
+                      <div className="today-axis-card__meter">
+                        <div className="today-axis-card__meter-base" style={{ width: `${axis.baseFillWidth}%` }} />
+                      </div>
+                      <div className="today-axis-card__score-caption">{axis.status.caption}</div>
+                      <div className="today-axis-card__headline">{axis.headline}</div>
+                      <div className="today-axis-card__chips">
+                        {axis.key === byeolsoomPick?.careKey && (
+                          <span className="today-axis-card__meta-chip today-axis-card__meta-chip--accent">오늘 받쳐줄 축</span>
+                        )}
+                        {axis.key === byeolsoomPick?.focusKey && axis.key !== byeolsoomPick?.careKey && (
+                          <span className="today-axis-card__meta-chip today-axis-card__meta-chip--accent">오늘 밀어줄 축</span>
+                        )}
+                      </div>
+                    </div>
+                  </article>
                 ))}
               </div>
             </section>
 
+            {/* ⑦ BYEOLSOOM PICK (today-pick-shell만 — 중복이었던 time-slot-card 제거) */}
+            <section id="today-pick-shell" className="today-pick-shell">
+              <div className="today-pick-hero">
+                <div>
+                  <div className="today-pick-kicker">BYEOLSOOM PICK</div>
+                  <div className="today-pick-title">{byeolsoomPick?.blendTitle || '오늘의 별숨픽'}</div>
+                  <div className="today-pick-subtitle">
+                    {byeolsoomPick?.summary || '오늘 흐름을 밀고 눌러줄 조합을 골랐어요.'}
+                  </div>
+                </div>
+                <div className="today-pick-badges">
+                  {byeolsoomPick?.badge && <span className="today-pick-badge today-pick-badge--primary">{byeolsoomPick.badge}</span>}
+                  {byeolsoomPick?.strategyLabel && <span className="today-pick-badge">{byeolsoomPick.strategyLabel}</span>}
+                  {byeolsoomPick?.scoreSpread > 0 && <span className="today-pick-badge">격차 {byeolsoomPick.scoreSpread}점</span>}
+                </div>
+              </div>
+              <div className="today-pick-pivot">
+                {byeolsoomPick?.focusLabel && (
+                  <div className="today-pick-pivot__card">
+                    <div className="today-pick-pivot__label">밀어줄 축</div>
+                    <div className="today-pick-pivot__value">{byeolsoomPick.focusLabel}</div>
+                  </div>
+                )}
+                {byeolsoomPick?.careLabel && (
+                  <div className="today-pick-pivot__card">
+                    <div className="today-pick-pivot__label">받쳐줄 축</div>
+                    <div className="today-pick-pivot__value">{byeolsoomPick.careLabel}</div>
+                  </div>
+                )}
+              </div>
+              <div className="today-pick-reason today-pick-reason--top">
+                <div className="today-pick-reason__title">✦ 왜 이렇게 골랐냐면</div>
+                <div className="today-pick-reason__body">
+                  {byeolsoomPick?.reason || byeolsoomPick?.aiHint || '오늘 점수 흐름에 맞춰 강한 축은 밀고 약한 축은 받치는 방식으로 조합했어요.'}
+                </div>
+              </div>
+              <div className="today-pick-grid">
+                {PICK_FIELD_META.map((field) => (
+                  <PickField
+                    key={field.key}
+                    label={field.label}
+                    value={byeolsoomPick?.[field.key]}
+                    icon={field.icon}
+                    tone={field.tone}
+                    onClick={onQuickChat && byeolsoomPick?.[field.key]
+                      ? () => onQuickChat(`오늘 별숨픽 ${field.label} "${byeolsoomPick[field.key]}"을 어떻게 활용하면 좋을까? 내 오늘 운세 흐름에 맞춰 구체적으로 알려줘.`)
+                      : undefined}
+                  />
+                ))}
+              </div>
+            </section>
+
+            {/* ⑧ 주간 트렌드 — 부록 */}
+            <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult ? normalizedTodayScore : null} />
+
+            {/* ⑨ 다시 물어보기 — 맨 아래 CTA */}
             {onRefresh && (
               <section className="today-reask-card" aria-label="오늘 운세 다시 물어보기">
                 <div>
@@ -575,183 +786,6 @@ export default function TodayDetailPage({
               </section>
             )}
 
-            {dailyLongReading.length > 0 && (
-              <section id="today-long-reading" className="today-long-reading" aria-label="오늘 하루 장문 해석">
-                <div className="today-long-reading__kicker">TODAY READING</div>
-                <div className="today-long-reading__title">오늘의 사주와 별자리 흐름</div>
-                {today?.ilchin?.gan && saju?.ilgan && (
-                  <DailyElementMeet
-                    myGan={saju.ilgan}
-                    todayGan={today.ilchin.gan}
-                  />
-                )}
-                <div className="today-long-reading__body">
-                  {dailyLongReading.map((section) => (
-                    <article key={section.title} className="today-long-reading__section">
-                      <div className="today-long-reading__section-title">{section.title}</div>
-                      {section.title === '오늘의 점성술 흐름' && (sun || moon || asc) && (
-                        <AstroSignViz sun={sun} moon={moon} asc={asc} />
-                      )}
-                      <p className="today-long-reading__text">{renderBoldText(section.body)}</p>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <DailyRadarChart scores={actionableScores} />
-
-            <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid var(--line)' }}>
-              <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 10 }}>OVERALL GUIDE</div>
-              <div style={{ background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 12, padding: '11px 12px', marginBottom: 8 }}>
-                <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, marginBottom: 4 }}>DO</div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6 }}>{overallGuide.do}</div>
-              </div>
-              <div style={{ background: 'var(--bg1)', border: '1px solid var(--line)', borderRadius: 12, padding: '11px 12px' }}>
-                <div style={{ fontSize: 10, color: 'var(--t3)', fontWeight: 700, marginBottom: 4 }}>주의</div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>{overallGuide.caution}</div>
-              </div>
-            </div>
-
-            <section id="today-axis-section" className="today-axis-section">
-              <div className="today-axis-section__header">
-                <div>
-                  <div className="today-axis-section__kicker">AXIS FORTUNES</div>
-                  <div className="today-axis-section__copy">
-                    오늘 강하게 올라오는 축과 조심히 다뤄야 할 축을 한눈에 정리했어요.
-                  </div>
-                </div>
-              </div>
-
-              <div className="today-axis-list">
-                {axisCards.map((axis) => (
-                  <article
-                    key={axis.key}
-                    className={`today-axis-card today-axis-card--${axis.status.tone}`}
-                    style={{
-                      '--axis-accent': axis.toneMeta.accent,
-                      '--axis-soft': axis.toneMeta.soft,
-                      '--axis-glow': axis.toneMeta.glow,
-                      cursor: onQuickChat ? 'pointer' : undefined,
-                    }}
-                    onClick={onQuickChat ? () => onQuickChat(`오늘 내 ${axis.fullLabel}에 대해 더 자세히 알려줘. ${axis.total}점이 나왔는데 이 흐름에서 어떻게 움직이면 좋을지 구체적으로 알려줘.`) : undefined}
-                    role={onQuickChat ? 'button' : undefined}
-                    tabIndex={onQuickChat ? 0 : undefined}
-                    onKeyDown={onQuickChat ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } } : undefined}
-                  >
-                    <div className="today-axis-card__inner">
-                      <div className="today-axis-card__header">
-                        <div className="today-axis-card__lead">
-                          <div className="today-axis-card__rank">#{axis.rank}</div>
-                          <div className="today-axis-card__icon" aria-hidden="true">
-                            {ASPECT_META[axis.key]?.emoji || '✨'}
-                          </div>
-                          <div className="today-axis-card__title-wrap">
-                            <div className="today-axis-card__title-row">
-                              <div className="today-axis-card__title">{axis.fullLabel}</div>
-                              <span className="today-axis-card__badge">{axis.status.badge}</span>
-                            </div>
-                            <div className="today-axis-card__meta">
-                              오늘 흐름 {axis.total}점
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="today-axis-card__score-wrap">
-                          <div className="today-axis-card__score">{axis.total}점</div>
-                        </div>
-                      </div>
-
-                      <div className="today-axis-card__meter">
-                        <div className="today-axis-card__meter-base" style={{ width: `${axis.baseFillWidth}%` }} />
-                      </div>
-                      <div className="today-axis-card__score-caption">{axis.status.caption}</div>
-
-                      <div className="today-axis-card__headline">{axis.headline}</div>
-
-                      <div className="today-axis-card__chips">
-                        {axis.key === byeolsoomPick?.careKey && (
-                          <span className="today-axis-card__meta-chip today-axis-card__meta-chip--accent">
-                            오늘 받쳐줄 축
-                          </span>
-                        )}
-                        {axis.key === byeolsoomPick?.focusKey && axis.key !== byeolsoomPick?.careKey && (
-                          <span className="today-axis-card__meta-chip today-axis-card__meta-chip--accent">
-                            오늘 밀어줄 축
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section id="today-pick-shell" className="today-pick-shell">
-              <div className="today-pick-hero">
-                <div>
-                  <div className="today-pick-kicker">BYEOLSOOM PICK</div>
-                  <div className="today-pick-title">{byeolsoomPick?.blendTitle || '오늘의 별숨픽'}</div>
-                  <div className="today-pick-subtitle">
-                    {byeolsoomPick?.summary || '오늘 흐름을 밀고 눌러줄 조합을 골랐어요.'}
-                  </div>
-                </div>
-                <div className="today-pick-badges">
-                  {byeolsoomPick?.badge && <span className="today-pick-badge today-pick-badge--primary">{byeolsoomPick.badge}</span>}
-                  {byeolsoomPick?.strategyLabel && <span className="today-pick-badge">{byeolsoomPick.strategyLabel}</span>}
-                  {byeolsoomPick?.scoreSpread > 0 && <span className="today-pick-badge">격차 {byeolsoomPick.scoreSpread}점</span>}
-                </div>
-              </div>
-
-              <div className="today-pick-pivot">
-                {byeolsoomPick?.focusLabel && (
-                  <div className="today-pick-pivot__card">
-                    <div className="today-pick-pivot__label">밀어줄 축</div>
-                    <div className="today-pick-pivot__value">{byeolsoomPick.focusLabel}</div>
-                  </div>
-                )}
-                {byeolsoomPick?.careLabel && (
-                  <div className="today-pick-pivot__card">
-                    <div className="today-pick-pivot__label">받쳐줄 축</div>
-                    <div className="today-pick-pivot__value">{byeolsoomPick.careLabel}</div>
-                  </div>
-                )}
-              </div>
-
-              {/* 왜 이렇게 골랐는지 — 픽 그리드 위에 바로 표시 */}
-              <div className="today-pick-reason today-pick-reason--top">
-                <div className="today-pick-reason__title">✦ 왜 이렇게 골랐냐면</div>
-                <div className="today-pick-reason__body">
-                  {byeolsoomPick?.reason || byeolsoomPick?.aiHint || '오늘 점수 흐름에 맞춰 강한 축은 밀고 약한 축은 받치는 방식으로 조합했어요.'}
-                </div>
-              </div>
-
-              <div className="today-pick-grid">
-                {PICK_FIELD_META.map((field) => (
-                  <PickField
-                    key={field.key}
-                    label={field.label}
-                    value={byeolsoomPick?.[field.key]}
-                    icon={field.icon}
-                    tone={field.tone}
-                    onClick={onQuickChat && byeolsoomPick?.[field.key]
-                      ? () => onQuickChat(`오늘 별숨픽 ${field.label} "${byeolsoomPick[field.key]}"을 어떻게 활용하면 좋을까? 내 오늘 운세 흐름에 맞춰 구체적으로 알려줘.`)
-                      : undefined}
-                  />
-                ))}
-              </div>
-            </section>
-
-            <WeeklyTrendChart kakaoId={kakaoId} todayScore={dailyResult ? normalizedTodayScore : null} />
-
-            {(dailyResult?.badtime || parsedDaily.badtime) && (
-              <div style={{ background: 'rgba(201,160,220,0.08)', borderRadius: 'var(--r1)', padding: 16, marginBottom: 16, border: '1px solid rgba(201,160,220,0.18)' }}>
-                <div style={{ fontSize: 10, color: '#c9a0dc', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>주의 흐름</div>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.7 }}>
-                  {(dailyResult?.badtime || parsedDaily.badtime)?.symptom || '오늘은 예민한 흐름이 살짝 감지돼요.'}
-                </div>
-              </div>
-            )}
           </Suspense>
         ) : (
           <div className="today-detail-empty">

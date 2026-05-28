@@ -4,7 +4,7 @@
  * 각 탭 클릭 시 서브메뉴 드로어가 위로 펼쳐짐
  * props 없이 Zustand store에서 직접 읽는다.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore.js';
@@ -200,7 +200,9 @@ export default function BottomNav() {
   const formOkApprox = useAppStore((s) => s.formOkApprox);
   const [openDrawer, setOpenDrawer] = useState(null);
   const [visible, setVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollYRef = useRef(0);
+  const openDrawerRef = useRef(openDrawer);
+  useEffect(() => { openDrawerRef.current = openDrawer; }, [openDrawer]);
 
   useEffect(() => {
     setOpenDrawer(null);
@@ -209,22 +211,23 @@ export default function BottomNav() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      const lastScrollY = lastScrollYRef.current;
       if (currentScrollY < 10) {
         setVisible(true);
       } else if (currentScrollY > lastScrollY && currentScrollY > 60) {
         // 스크롤 다운 중 (숨김)
         setVisible(false);
-        if (openDrawer) setOpenDrawer(null); // 바가 숨겨지면 드로어도 닫음
+        if (openDrawerRef.current) setOpenDrawer(null); // 바가 숨겨지면 드로어도 닫음
       } else if (currentScrollY < lastScrollY) {
         // 스크롤 업 중 (보임)
         setVisible(true);
       }
-      setLastScrollY(currentScrollY);
+      lastScrollYRef.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, openDrawer]);
+  }, []);
 
   const tabs = [
     { id: 'today', label: '오늘', hasDrawer: true },

@@ -4,6 +4,7 @@
  */
 
 import { isLocalLayoutKakaoId } from './localLayoutMode.js';
+import { getDailyDateKey } from '../lib/dailyDataAccess.js';
 
 // ════════════════════════════════════════════════════════════════
 // BP 획득 규칙
@@ -224,7 +225,7 @@ export function getStreakTier(streak) {
  */
 export function calculateLoginStreak(lastLoginDateStr) {
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+  const todayStr = getDailyDateKey(today); // YYYY-MM-DD (로컬 시간 기준)
 
   if (!lastLoginDateStr) {
     // 첫 로그인
@@ -240,7 +241,7 @@ export function calculateLoginStreak(lastLoginDateStr) {
   const lastDate = new Date(lastLoginDateStr + 'T00:00:00Z');
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = getDailyDateKey(yesterday);
 
   const isConsecutive = lastLoginDateStr === yesterdayStr;
   const missedDays = Math.max(0, Math.floor((today - lastDate) / 86400000) - 1);

@@ -6,9 +6,10 @@ export function parseScores(text) {
     .map((line) => {
       const match = line.match(/^(.+?):\s*(\d{1,3})\s*점?\s*-\s*(.+)$/);
       if (!match) return null;
+      const raw = parseInt(match[2], 10);
       return {
         label: match[1].trim(),
-        score: Math.max(0, Math.min(100, parseInt(match[2], 10) || 0)),
+        score: Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0,
         description: match[3].trim(),
       };
     })

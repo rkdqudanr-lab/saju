@@ -15,7 +15,7 @@ import {
   ACTIONABLE_AXIS_KEYS,
   getAverageFortuneScore,
   getDailyAxisScores,
-  normalizeByHistory,
+  normalizeAndClamp,
   TODAY_AXIS_CACHE,
 } from '../features/today/getDailyAxisScores.js';
 import { TODAY_AXIS_TEXT_CACHE } from '../features/today/fortuneAxisTools.js';
@@ -187,7 +187,7 @@ export default function LandingPage({
     [scoreHistory],
   );
   const normalizedTodayScore = useMemo(
-    () => normalizeByHistory(todayScore, allRawHistoryScores),
+    () => normalizeAndClamp(todayScore, allRawHistoryScores),
     [todayScore, allRawHistoryScores],
   );
   // WeeklyScoreSummary에 넘길 마지막 7일 — 각 점수도 정규화
@@ -217,16 +217,16 @@ export default function LandingPage({
   const topAxes = useMemo(() => {
     if (!dailyResult || !axisScores.length) return [];
     return [...axisScores]
-      .filter((s) => s.key !== 'overall' && s.score >= 70)
-      .sort((a, b) => b.score - a.score)
+      .filter((s) => s.key !== 'overall' && s.total >= 70)
+      .sort((a, b) => b.total - a.total)
       .slice(0, 2);
   }, [axisScores, dailyResult]);
 
   const bottomAxes = useMemo(() => {
     if (!dailyResult || !axisScores.length) return [];
     return [...axisScores]
-      .filter((s) => s.key !== 'overall' && s.score <= 50)
-      .sort((a, b) => a.score - b.score)
+      .filter((s) => s.key !== 'overall' && s.total <= 50)
+      .sort((a, b) => a.total - b.total)
       .slice(0, 1);
   }, [axisScores, dailyResult]);
 
