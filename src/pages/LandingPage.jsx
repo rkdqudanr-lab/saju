@@ -16,6 +16,7 @@ import {
   getAverageFortuneScore,
   getDailyAxisScores,
   normalizeAndClamp,
+  normalizeByHistory,
   TODAY_AXIS_CACHE,
 } from '../features/today/getDailyAxisScores.js';
 import { TODAY_AXIS_TEXT_CACHE } from '../features/today/fortuneAxisTools.js';
