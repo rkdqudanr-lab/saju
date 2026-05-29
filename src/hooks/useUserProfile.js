@@ -4,8 +4,8 @@ import { useAppStore } from '../store/useAppStore.js';
 import { isLocalLayoutMode } from '../utils/localLayoutMode.js';
 
 const DEFAULT_PROFILE = { partner: '', partnerBy: '', partnerBm: '', partnerBd: '', workplace: '', worryText: '', mbti: '', selfDesc: '' };
-const DEFAULT_FORM    = { name: '', nickname: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
-export const DEFAULT_OTHER = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false };
+const DEFAULT_FORM    = { name: '', nickname: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false, birthRegion: '' };
+export const DEFAULT_OTHER = { name: '', by: '', bm: '', bd: '', bh: '', gender: '', noTime: false, birthRegion: '' };
 const DEFAULT_QUIZ    = { answers: {}, nextQIdx: 0, lastAnsweredDate: '' };
 const LOCAL_DEV_USER = {
   id: 'test_user_id',
@@ -19,8 +19,9 @@ const LOCAL_DEV_FORM = {
   bm: '5',
   bd: '15',
   bh: '12',
-  gender: 'female',
+  gender: '여성',
   noTime: false,
+  birthRegion: 'seoul',
 };
 const LOCAL_DEV_PROFILE = {
   ...DEFAULT_PROFILE,
@@ -217,7 +218,7 @@ export function useUserProfile() {
           // 기존 저장된 사용자 데이터를 먼저 조회 (저장된 닉네임 보존을 위해)
           const { data: saved } = await (authClient || supabase)
             .from('users')
-            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state, instant_typing')
+            .select('id, birth_year, birth_month, birth_day, birth_hour, gender, birth_region, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state, instant_typing')
             .eq('kakao_id', String(data.id))
             .maybeSingle();
 
@@ -259,6 +260,7 @@ export function useUserProfile() {
               bd: String(saved.birth_day),
               ...(saved.birth_hour != null ? { bh: String(parseFloat(saved.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
               ...(saved.gender && { gender: saved.gender }),
+              ...(saved.birth_region && { birthRegion: saved.birth_region }),
               // DB nickname이 비어 있으면 카카오 프로필 닉네임으로 fallback
               nickname: saved.nickname || data.nickname || '별님',
               ...(saved.name && { name: saved.name }),
@@ -308,7 +310,7 @@ export function useUserProfile() {
     (async () => {
       const [usersRes, profilesRes, othersRes] = await Promise.allSettled([
         client.from('users')
-          .select('birth_year, birth_month, birth_day, birth_hour, gender, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state, instant_typing')
+          .select('birth_year, birth_month, birth_day, birth_hour, gender, birth_region, name, nickname, consent_flags, response_style, theme, onboarded, quiz_state, instant_typing')
           .eq('kakao_id', String(user.id))
           .maybeSingle(),
         client.from('user_profiles').select('*').eq('kakao_id', String(user.id)).maybeSingle(),
@@ -328,6 +330,7 @@ export function useUserProfile() {
             bd: String(data.birth_day),
             ...(data.birth_hour != null ? { bh: String(parseFloat(data.birth_hour).toFixed(4)), noTime: false } : { noTime: true }),
             ...(data.gender && { gender: data.gender }),
+            ...(data.birth_region && { birthRegion: data.birth_region }),
             // DB nickname이 비어 있으면 카카오 user.nickname으로 fallback
             nickname: data.nickname || user?.nickname || '별님',
             ...(data.name && { name: data.name }),
@@ -380,6 +383,7 @@ export function useUserProfile() {
             bh:     row.birth_hour != null ? String(row.birth_hour) : '',
             gender: row.gender || '',
             noTime: row.no_time || false,
+            birthRegion: row.birth_region || '',
           })));
         }
       } else {
@@ -409,6 +413,7 @@ export function useUserProfile() {
             birth_hour:  p.bh ? (() => { const h = parseFloat(p.bh); return isNaN(h) || h < 0 || h >= 24 ? null : h; })() : null,
             gender:      p.gender || null,
             no_time:     p.noTime || false,
+            birth_region: p.birthRegion || null,
             sort_order:  i,
           }))
         );
@@ -528,7 +533,7 @@ export function useUserProfile() {
 
   const saveProfileToSupabase = useCallback(async (currentForm, currentUser) => {
     if (!supabase || !currentUser?.id) return true;
-    const { by, bm, bd, name, nickname, bh, gender, noTime } = currentForm;
+    const { by, bm, bd, name, nickname, bh, gender, noTime, birthRegion } = currentForm;
     if (!by || !bm || !bd) return true;
     try {
       const authClient = getAuthenticatedClient(currentUser.id);
@@ -540,6 +545,7 @@ export function useUserProfile() {
         birth_day:   parseInt(bd, 10),
         birth_hour:  !noTime && bh ? (() => { const h = parseFloat(bh); return isNaN(h) || h < 0 || h >= 24 ? null : h; })() : null,
         gender:      gender || null,
+        birth_region: birthRegion || null,
         name:        name || null,
         nickname:    nickname || currentUser.nickname || '별님',
         updated_at:  new Date().toISOString(),

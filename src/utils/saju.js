@@ -153,10 +153,22 @@ export function getDailyInfo(date) {
   };
 }
 
-export function getSaju(y,m,d,h,min=0){
+export function getSaju(y,m,d,h,min=0,lng=null){
   // 입력값 범위 가드 — 비정상 값으로 인한 오작동 방지
   if(!Number.isInteger(y)||!Number.isInteger(m)||!Number.isInteger(d)||!Number.isInteger(h)) return null;
   if(m<1||m>12||d<1||d>31||h<0||h>23) return null;
+
+  // 진태양시(경도) 보정: 한국 표준시 자오선 135°E 대비 출생지 경도 차이를 분 단위로 보정.
+  // 경도 1°당 4분. 보정 결과 자정을 넘으면 날짜·시주 경계도 함께 이동한다.
+  if(Number.isFinite(lng)){
+    const offsetMin=Math.round((lng-135)*4);
+    if(offsetMin!==0){
+      const dt=new Date(y,m-1,d,h,min);
+      dt.setMinutes(dt.getMinutes()+offsetMin);
+      y=dt.getFullYear(); m=dt.getMonth()+1; d=dt.getDate();
+      h=dt.getHours(); min=dt.getMinutes();
+    }
+  }
 
   // 자시(子時) 경계 처리: 23:00 이후는 사주상 다음날 자시에 해당
   // (전통 사주에서 23:00~01:00가 자시이며, 23:00부터 날이 바뀜)

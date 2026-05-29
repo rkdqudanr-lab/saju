@@ -25,6 +25,7 @@ alter table users add column if not exists response_style text default 'M';
 alter table users add column if not exists theme text default 'light';
 alter table users add column if not exists onboarded boolean default false;
 alter table users add column if not exists quiz_state jsonb;
+alter table users add column if not exists birth_region text;
 
 -- ── user_sessions (로그인 유지용 refresh 세션) ───────────────────
 create table if not exists user_sessions (
@@ -340,6 +341,8 @@ create table if not exists other_profiles (
   created_at   timestamptz default now(),
   updated_at   timestamptz default now()
 );
+
+alter table other_profiles add column if not exists birth_region text;
 
 alter table other_profiles enable row level security;
 

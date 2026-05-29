@@ -9,6 +9,11 @@ export default async function handler(req, res) {
 
   const { code, redirectUri, keepLogin } = req.body;
   if (!code) return res.status(400).json({ error: 'code가 없어요' });
+  // redirectUri는 인코딩 없이 토큰 요청 body에 보간되므로, 추가 파라미터 주입을
+  // 막기 위해 &·?·#·공백이 없는 순수 http(s) URL만 허용한다.
+  if (!redirectUri || !/^https?:\/\/[^\s&?#]+$/.test(redirectUri)) {
+    return res.status(400).json({ error: 'redirectUri가 올바르지 않아요' });
+  }
 
   const restKey = process.env.KAKAO_REST_API_KEY;
   if (!restKey) return res.status(500).json({ error: 'KAKAO_REST_API_KEY 환경변수를 설정해주세요' });

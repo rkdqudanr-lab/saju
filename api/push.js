@@ -115,8 +115,11 @@ async function sendPush(subscription, payload) {
 export default async function handler(req, res) {
   // Vercel Cron 인증: Authorization 헤더 검증
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET || ''}`) {
-    // CRON_SECRET 없으면 로컬 테스트 허용
     if (process.env.CRON_SECRET) {
+      return res.status(401).json({ error: '인증 실패' });
+    }
+    // CRON_SECRET 미설정: 프로덕션에선 무단 트리거를 막고 로컬 테스트만 허용
+    if (process.env.NODE_ENV === 'production') {
       return res.status(401).json({ error: '인증 실패' });
     }
   }

@@ -1,3 +1,5 @@
+import { BIRTH_REGION_GROUPS } from "../utils/regions.js";
+
 function getDaysInMonth(year, month) {
   if (!month) return 31;
   if (!year || String(year).length < 4) return 31;
@@ -63,6 +65,16 @@ export default function OtherProfileModal({
             <div className="col"><select className="inp" aria-label="출생 일" value={otherForm.bd} onChange={e => setOtherForm(f => ({ ...f, bd: e.target.value }))} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(getDaysInMonth(otherForm.by, otherForm.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
           </div>
         </fieldset>
+        <label className="lbl" htmlFor="other-region">태어난 지역 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(시주·상승궁 보정)</span></label>
+        <select id="other-region" className="inp" value={otherForm.birthRegion || ''} onChange={e => setOtherForm(f => ({ ...f, birthRegion: e.target.value }))}>
+          <option value="">선택 안 함 (서울 기준)</option>
+          {BIRTH_REGION_GROUPS.map(g => (
+            <optgroup key={g.province} label={g.province}>
+              {g.items.map(it => <option key={it.code} value={it.code}>{it.label}</option>)}
+            </optgroup>
+          ))}
+        </select>
+
         <div className="toggle-row" onClick={() => setOtherForm(f => ({ ...f, noTime: !f.noTime, bh: '' }))}>
           <button className={`toggle ${otherForm.noTime ? 'on' : 'off'}`} role="switch" aria-checked={otherForm.noTime} aria-label="태어난 시간 모름" onClick={e => { e.stopPropagation(); setOtherForm(f => ({ ...f, noTime: !f.noTime, bh: '' })); }} />
           <span className="toggle-label">태어난 시간을 몰라요</span>

@@ -1,6 +1,7 @@
 import { OC, OE, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { STEP } from "../utils/steps.js";
+import { BIRTH_REGION_GROUPS } from "../utils/regions.js";
 
 function getDaysInMonth(year, month) {
   if (!month) return 31;
@@ -135,6 +136,18 @@ export default function ProfileStep({
                 <div className="col"><select id="inp-bd" className="inp" aria-label="출생 일" value={form.bd} onChange={e => setForm(f => ({ ...f, bd: e.target.value }))} onBlur={e => { if (e.target.value) setFieldTouched(t => ({ ...t, bd: true })); }} style={{ marginBottom: 0 }}><option value="">일</option>{[...Array(getDaysInMonth(form.by, form.bm))].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}일</option>)}</select></div>
               </div>
             </fieldset>
+
+            <div style={{ marginBottom: 'var(--sp2)' }}>
+              <label className="lbl" htmlFor="inp-region" style={{ marginBottom: 6 }}>태어난 지역 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(시주·상승궁 보정)</span></label>
+              <select id="inp-region" className="inp" style={{ marginBottom: 0 }} value={form.birthRegion || ''} onChange={e => setForm(f => ({ ...f, birthRegion: e.target.value }))}>
+                <option value="">선택 안 함 (서울 기준)</option>
+                {BIRTH_REGION_GROUPS.map(g => (
+                  <optgroup key={g.province} label={g.province}>
+                    {g.items.map(it => <option key={it.code} value={it.code}>{it.label}</option>)}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
 
             {/* ── 태어난 시간: 알아요 / 모르겠어요 두 버튼으로 VIP 처리 ── */}
             <div style={{ marginBottom: 'var(--sp2)' }}>
