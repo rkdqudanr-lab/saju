@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { getAuthenticatedClient, supabase } from '../lib/supabase.js';
+import { BIRTH_REGION_GROUPS } from '../utils/regions.js';
 
 // 광장 사주 정보 공개 설정 로컬 저장
 const COMMUNITY_SAJU_KEY = 'byeolsoom_community_show_saju';
@@ -358,6 +359,23 @@ export default function SettingsPage({
                 </div>
               </div>
             </fieldset>
+
+            <label className="lbl" htmlFor="set-region" style={{ marginTop: 'var(--sp2)' }}>
+              태어난 지역 <span style={{ color: 'var(--t4)', fontWeight: 400 }}>(시주·상승궁 보정)</span>
+            </label>
+            <select
+              id="set-region"
+              className="inp"
+              value={localForm.birthRegion || ''}
+              onChange={e => setLocalForm(f => ({ ...f, birthRegion: e.target.value }))}
+            >
+              <option value="">선택 안 함 (서울 기준)</option>
+              {BIRTH_REGION_GROUPS.map(g => (
+                <optgroup key={g.province} label={g.province}>
+                  {g.items.map(it => <option key={it.code} value={it.code}>{it.label}</option>)}
+                </optgroup>
+              ))}
+            </select>
 
             <div
               className="toggle-row"
