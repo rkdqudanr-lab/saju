@@ -43,7 +43,7 @@ export default function Mascot({
 
   return (
     <img
-      src={`/mascot/${entry.file}.png`}
+      src={`/mascot/${entry.file}.webp`}
       alt={entry.alt}
       width={px}
       height={px}
