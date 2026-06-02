@@ -987,6 +987,9 @@ button:active:not(:disabled){transform:scale(.95);transition:transform .1s}
 .tile-hero:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 14px 30px rgba(176,120,32,.30)}
 .tile-hero:hover .tile-hero-arrow{transform:translateX(3px)}
 .tile-hero:active{transform:translateY(0);filter:brightness(.97)}
+.peek-hero-owl{transform:scaleX(-1);transition:transform .2s ease}
+.peek-hero-wrap:hover .peek-hero-owl{transform:scaleX(-1) translateY(-6px)}
+.peek-hero-wrap:active .peek-hero-owl{transform:scaleX(-1) translateY(-2px)}
 
 /* 다크에서도 hero 컬러 유지 */
 :root .tile-hero{

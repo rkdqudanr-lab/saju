@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import Mascot from './Mascot';
 
 const LEVEL_LABELS = {
   1: '초급 액막이사',
@@ -67,6 +68,9 @@ export default function GuardianLevelUpModal({ fromLevel, toLevel, guardianMessa
         }}
         onClick={e => e.stopPropagation()}
       >
+        {/* 축하 마스코트 */}
+        <Mascot mood="celebrate" size="lg" float style={{ marginBottom: 4 }} />
+
         {/* 별 이펙트 */}
         <div style={{ fontSize: '2.4rem', marginBottom: 8, lineHeight: 1, color }}>{emoji}</div>
 

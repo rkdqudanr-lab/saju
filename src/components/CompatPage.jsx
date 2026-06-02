@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import FeatureLoadingScreen from "./FeatureLoadingScreen.jsx";
+import Mascot from "./Mascot.jsx";
 import { getSaju, ON } from "../utils/saju.js";
 import { getSun } from "../utils/astrology.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
@@ -391,6 +392,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                         borderBottom: '1px solid rgba(180,140,50,0.15)',
                         marginBottom: 14, animation: 'fadeUp .4s ease',
                       }}>
+                        <Mascot mood="love" size="md" float style={{ marginBottom: 6 }} />
                         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 5, letterSpacing: '.08em', textTransform: 'uppercase' }}>
                           두 별의 공명
                         </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { OC, ON } from "../utils/saju.js";
 import { REVIEWS } from "../utils/constants.js";
+import Mascot from "./Mascot.jsx";
 
 // ── 핵심 기능 소개 ──
 const FEATURES_CORE = [
@@ -38,14 +39,7 @@ function IntroCard({ saju, sun }) {
   const domKey = saju?.dom || '금';
   return (
     <div style={{ textAlign: "center", padding: "8px 0 12px" }}>
-      <div
-        className="land-orb"
-        style={{ margin: "0 auto 28px", transform: "scale(0.75)", transformOrigin: "center" }}
-      >
-        <div className="orb-core" />
-        <div className="orb-r1" />
-        <div className="orb-r2" />
-      </div>
+      <Mascot mood="walking" size={132} float aria-hidden="true" style={{ margin: "0 auto 18px", display: "block" }} />
       <div
         style={{
           fontSize: "1.45rem",

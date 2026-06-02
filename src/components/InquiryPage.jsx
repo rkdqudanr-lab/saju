@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
+import Mascot from './Mascot.jsx';
 
 const CATEGORIES = [
   { value: 'bug', label: '🐛 버그 신고' },
@@ -61,6 +62,7 @@ export default function InquiryPage() {
   useEffect(() => {
     if (!user?.id) { setHistoryLoading(false); return; }
     const authClient = getAuthenticatedClient(user.id);
+    if (!authClient) { setHistoryLoading(false); return; }
     authClient
       .from('inquiries')
       .select('id, category, title, status, created_at')
@@ -80,6 +82,7 @@ export default function InquiryPage() {
     setIsSubmitting(true);
     try {
       const authClient = getAuthenticatedClient(user.id);
+      if (!authClient) return;
       const { error } = await authClient.from('inquiries').insert({
         kakao_id: String(user.id),
         category,
@@ -256,7 +259,15 @@ export default function InquiryPage() {
             border: '1px dashed var(--line)',
             borderRadius: 'var(--r1)',
           }}>
-            아직 문의 내역이 없어요
+            <div className="mascot--float" style={{ position: 'relative', width: 120, margin: '0 auto 10px' }}>
+              <Mascot mood="sign" size={120} style={{ display: 'block' }} />
+              <span style={{
+                position: 'absolute', left: '50%', top: '61%', transform: 'translate(-50%,-50%)',
+                fontSize: 12, fontWeight: 800, color: 'var(--lav)', letterSpacing: '.02em',
+                whiteSpace: 'nowrap', pointerEvents: 'none',
+              }}>텅~</span>
+            </div>
+            <div>아직 문의 내역이 없어요</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

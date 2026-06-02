@@ -17,6 +17,7 @@ import {
   ASPECTS, getDailyResonanceItems, getItemResonanceReason,
 } from '../utils/gachaItems.js';
 import GachaGraphic from './GachaGraphic.jsx';
+import Mascot from './Mascot.jsx';
 
 // ─── 공용 — 반짝이 파티클 ─────────────────────────────────────
 function Sparkles({ grade, cfg }) {
@@ -92,6 +93,8 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace, resonanceCont
   const topGrade    = gradeOrder.slice().reverse().find(g => results.some(r => r.grade === g));
   const topCfg      = gradeConfig[topGrade] || {};
   const topItem      = results.find((item) => item.grade === topGrade) || results[0];
+  const isTopTier    = topGrade === gradeOrder[gradeOrder.length - 1]
+                     || topGrade === gradeOrder[gradeOrder.length - 2];
 
   useEffect(() => {
     if (isSingle) {
@@ -124,6 +127,12 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace, resonanceCont
           }}>닫기</button>
         )}
       </div>
+
+      {allRevealed && isTopTier && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+          <Mascot mood="celebrate" size="md" float />
+        </div>
+      )}
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isSingle ? (() => {

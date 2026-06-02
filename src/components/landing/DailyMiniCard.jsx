@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { parseDailyLines } from '../../utils/parseDailyLines.js';
 import { useSajuCtx } from '../../context/AppContext.jsx';
+import Mascot from '../Mascot.jsx';
+
+// 오늘 점수에 따라 별숨이 표정이 달라진다
+function moodForScore(score) {
+  if (score >= 80) return 'celebrate';
+  if (score >= 65) return 'smile';
+  if (score >= 50) return 'wink';
+  if (score >= 38) return 'normal';
+  return 'cheer';
+}
 
 const CATEGORY_LABELS = {
   overall: '종합',
@@ -312,6 +322,7 @@ export default function DailyMiniCard({
         <div className="daily-mini-eyebrow">
           ✦ 오늘 하루 나의 별숨{dateLabel ? ` · ${dateLabel}` : ''}
         </div>
+        <Mascot mood="eureka" size="md" float style={{ margin: '6px auto 2px' }} />
         <div className="daily-mini-empty-copy">
           별이 오늘의 기운을 알려드릴게요
         </div>
@@ -345,6 +356,7 @@ export default function DailyMiniCard({
         <span className="daily-mini-eyebrow">
           ✦ 오늘 하루 나의 별숨{dateLabel ? ` · ${dateLabel}` : ''}
         </span>
+        <Mascot mood={moodForScore(numericScore)} size={44} float style={{ flexShrink: 0 }} />
       </div>
 
       <button type="button" className="daily-mini-main" onClick={onClick} aria-label={`오늘의 별숨 ${score}점, 자세히 보기`}>

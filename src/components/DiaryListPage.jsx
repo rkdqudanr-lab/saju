@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase, getAuthenticatedClient } from "../lib/supabase.js";
 import { STEP } from "../utils/steps.js";
+import Mascot from "./Mascot.jsx";
 
 // ═══════════════════════════════════════════════════════════
 //  📚 일기 모아보기 — 과거 일기 목록 페이지 (Step 20)
@@ -176,7 +177,14 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
 
         {entries.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--t4)' }}>
-            <div style={{ fontSize: '1.6rem', marginBottom: 16, color: 'var(--t4)' }}>✦</div>
+            <div className="mascot--float" style={{ position: 'relative', width: 168, margin: '0 auto 16px' }}>
+              <Mascot mood="sign" size={168} style={{ display: 'block' }} />
+              <span style={{
+                position: 'absolute', left: '50%', top: '61%', transform: 'translate(-50%,-50%)',
+                fontSize: 15, fontWeight: 800, color: 'var(--lav)', letterSpacing: '.04em',
+                whiteSpace: 'nowrap', pointerEvents: 'none',
+              }}>텅 비었어요</span>
+            </div>
             <div style={{ fontSize: 'var(--md)', fontWeight: 600, marginBottom: 8 }}>아직 일기가 없어요</div>
             <div style={{ fontSize: 'var(--sm)', marginBottom: 20, lineHeight: 1.7 }}>오늘의 하루를 별숨에게 처음 전해봐요</div>
             <button className="btn-main" onClick={() => setStep(STEP.DIARY)} style={{ maxWidth: 200 }}>

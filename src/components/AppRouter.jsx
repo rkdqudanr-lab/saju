@@ -25,6 +25,7 @@ import ResultsStep         from "../pages/ResultsStep.jsx";
 import QuestionStep        from "../pages/QuestionStep.jsx";
 import ProfileStep         from "../pages/ProfileStep.jsx";
 import LandingPage         from "../pages/LandingPage.jsx";
+import Mascot              from "./Mascot.jsx";
 
 // lazy-loaded components
 const SajuCalendar            = lazy(() => import("./SajuCalendar.jsx"));
@@ -66,10 +67,8 @@ const SajuStoryPage           = lazy(() => import("./SajuStoryPage.jsx"));
 
 function PageSpinner({ text = '별의 기운을 불러오는 중...' }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', gap: 16 }}>
-      <div className="land-orb" style={{ width: 40, height: 40 }}>
-        <div className="orb-core" /><div className="orb-r1" /><div className="orb-r2" />
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', gap: 14 }}>
+      <Mascot mood="sleeping" size={104} float aria-hidden="true" />
       <div style={{ fontSize: '12px', color: 'var(--gold)', fontWeight: 500, letterSpacing: '0.05em', opacity: 0.8 }}>
         {text}
       </div>

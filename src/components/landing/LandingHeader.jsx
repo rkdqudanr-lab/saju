@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useUserCtx, useSajuCtx, useGamCtx } from '../../context/AppContext.jsx';
 import { useAppStore } from '../../store/useAppStore.js';
 import { CG, CGO, OC } from '../../utils/saju.js';
+import Mascot from '../Mascot.jsx';
 
 const STREAK_BONUSES = [
   { day: 3, bonus: 30 },
@@ -59,7 +60,13 @@ export default function LandingHeader({
         ) : user?.profileImage ? (
           <img className="lh-avatar" src={user.profileImage} alt="프로필" />
         ) : (
-          <div className="lh-avatar-ph">🌙</div>
+          <div className="lh-avatar-ph" style={{ padding: 0, overflow: 'hidden' }}>
+            <Mascot
+              mood="head"
+              size={48}
+              style={{ width: '118%', height: '118%', objectFit: 'contain', transform: 'translateY(2px)' }}
+            />
+          </div>
         )}
       </div>
 

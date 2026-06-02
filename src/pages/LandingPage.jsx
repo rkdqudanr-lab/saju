@@ -30,6 +30,7 @@ import QuickActionGrid from '../components/landing/QuickActionGrid.jsx';
 import WeeklyScoreSummary from '../components/landing/WeeklyScoreSummary.jsx';
 import LevelCard from '../components/landing/LevelCard.jsx';
 import GachaGraphic from '../components/GachaGraphic.jsx';
+import Mascot from '../components/Mascot.jsx';
 import { ASPECTS, getDailyResonanceItems } from '../utils/gachaItems.js';
 
 const _SI = { viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
@@ -516,6 +517,7 @@ export default function LandingPage({
           <p className="land-copy" style={{ fontSize: '1.05rem', lineHeight: 1.8 }}>
             당신의 별숨은 당신을 바라보고 있어요.
           </p>
+          <Mascot mood="wave" size="lg" float style={{ marginBottom: 4 }} />
           <div className="land-login-section">
             <div className="land-login-card logged" style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>
@@ -657,7 +659,20 @@ export default function LandingPage({
 
         {/* 5. 주요 기능: hero + 2×2 그리드 */}
         <div className="tile-stack">
-          <ActionTile {...heroTile} />
+          <div className="peek-hero-wrap" style={{ position: 'relative' }}>
+            <Mascot
+              mood="peek"
+              size={56}
+              aria-hidden="true"
+              className="peek-hero-owl"
+              style={{
+                position: 'absolute', top: -14, right: 18, zIndex: 2,
+                pointerEvents: 'none',
+                filter: 'drop-shadow(0 2px 3px rgba(0,0,0,.12))',
+              }}
+            />
+            <ActionTile {...heroTile} />
+          </div>
           <QuickActionGrid tiles={primaryTiles} />
         </div>
 

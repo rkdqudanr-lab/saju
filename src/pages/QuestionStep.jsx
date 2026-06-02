@@ -6,6 +6,7 @@ import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import BPInsufficientModal from "../components/BPInsufficientModal.jsx";
 import { useBPCostGate } from "../hooks/useBPCostGate.js";
 import { useAppStore } from "../store/useAppStore.js";
+import Mascot from "../components/Mascot.jsx";
 
 export default function QuestionStep({
   form, saju, sun, moon,
@@ -202,10 +203,13 @@ export default function QuestionStep({
                 </div>
               )}
 
-              <div className="q-stat">
-                {selQs.length === 0 && '질문을 하나 이상 골라봐요'}
-                {selQs.length > 0 && selQs.length < maxQ && <><strong>{maxQ - selQs.length}개</strong> 더 고를 수 있어요</>}
-                {selQs.length === maxQ && <><strong>준비 완료!</strong> 두 별이 읽어드릴게요</>}
+              <div className="q-stat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <Mascot mood="pointing" size={36} aria-hidden="true" style={{ flexShrink: 0 }} />
+                <span>
+                  {selQs.length === 0 && '질문을 하나 이상 골라봐요'}
+                  {selQs.length > 0 && selQs.length < maxQ && <><strong>{maxQ - selQs.length}개</strong> 더 고를 수 있어요</>}
+                  {selQs.length === maxQ && <><strong>준비 완료!</strong> 두 별이 읽어드릴게요</>}
+                </span>
               </div>
               <button ref={askBtnRef} className="btn-main" disabled={!selQs.length} onClick={askClaude}>
                 {selQs.length === 0 ? '질문을 먼저 골라봐요' : `✦ 두 별에게 물어보기 (${selQs.length}개)`}
