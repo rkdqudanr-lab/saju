@@ -115,30 +115,75 @@ export function useUserProfile() {
       setProfileSyncing(false);
       return;
     }
-    if (!storedUser?.id || params.get('code')) {
+    if (params.get('code')) {
       setProfileSyncing(false);
       return;
     }
 
     let cancelled = false;
 
+    // 명확한 401(인증 실패)일 때만 로그인 상태를 정리한다.
+    const clearSession = () => {
+      fetch('/api/logout', { method: 'POST' }).catch(() => {});
+      if (storedUser?.id) clearAuthClient(storedUser.id);
+      setUser(null);
+      setForm(DEFAULT_FORM);
+      setProfile(DEFAULT_PROFILE);
+      setOtherProfiles([]);
+      setConsentFlags(null);
+      setAuthUser(null);
+      clearLegacyAuthToken();
+      setProfileSyncing(false);
+    };
+
     (async () => {
       try {
         const res = await fetch('/api/session', { method: 'GET', credentials: 'same-origin' });
-        if (!res.ok) throw new Error(`SESSION_INVALID_${res.status}`);
+        if (cancelled) return;
+
+        // 401 = 서버가 명확히 "인증 안 됨"이라고 응답한 경우만 로그아웃.
+        if (res.status === 401) {
+          if (storedUser?.id) clearSession();
+          else setProfileSyncing(false);
+          return;
+        }
+
+        // 5xx 등 비정상 응답은 일시적 장애일 수 있다. 30일 쿠키 세션이 살아있는데
+        // 함부로 지우지 않도록, 저장된 유저가 있으면 그대로 진행한다.
+        if (!res.ok) {
+          setProfileSyncing(!!storedUser?.id);
+          return;
+        }
+
+        // iOS Safari ITP는 약 7일 후 localStorage를 삭제하지만 HttpOnly 인증 쿠키(30일)는
+        // 남는다. 쿠키 세션이 유효한데 localStorage 유저 정보만 사라진 경우,
+        // 쿠키 세션의 kakaoId로 로그인 상태를 복원해 재로그인·정보 재입력을 막는다.
+        if (!storedUser?.id) {
+          const data = await res.json().catch(() => null);
+          const kakaoId = data?.kakaoId ? String(data.kakaoId) : null;
+          if (!kakaoId) { if (!cancelled) setProfileSyncing(false); return; }
+          let nickname = '별님';
+          try {
+            const client = getAuthenticatedClient(kakaoId) || supabase;
+            if (client) {
+              const { data: row } = await client.from('users').select('nickname').eq('kakao_id', kakaoId).maybeSingle();
+              if (row?.nickname) nickname = row.nickname;
+            }
+          } catch {}
+          if (cancelled) return;
+          const restored = { id: kakaoId, nickname, profileImage: null };
+          setUser(restored);
+          setAuthUser(restored);
+        }
+
         if (!cancelled) setProfileSyncing(true);
       } catch {
+        // 네트워크 오류(오프라인·타임아웃·서비스워커 실패)는 인증 실패가 아니다.
+        // 다음날 콜드 부팅 시 네트워크가 늦게 깨어나 세션 체크가 실패하더라도
+        // 로그아웃·정보 삭제하지 않고 기존 로그인 상태로 진행한다.
+        // (세션이 실제로 만료됐다면 이후 실제 API 호출의 401에서 handleSessionExpired가 처리)
         if (cancelled) return;
-        fetch('/api/logout', { method: 'POST' }).catch(() => {});
-        if (storedUser?.id) clearAuthClient(storedUser.id);
-        setUser(null);
-        setForm(DEFAULT_FORM);
-        setProfile(DEFAULT_PROFILE);
-        setOtherProfiles([]);
-        setConsentFlags(null);
-        setAuthUser(null);
-        clearLegacyAuthToken();
-        setProfileSyncing(false);
+        setProfileSyncing(!!storedUser?.id);
       }
     })();
 
@@ -482,7 +527,6 @@ export function useUserProfile() {
     setOtherProfiles([]);
     setConsentFlags(null);
     setAuthUser(null);
-    setAuthToken(null);
   }, []);
 
   // ── 세션 만료 처리: 상태 정리 + 로그인 필요 알림 ──
@@ -497,7 +541,6 @@ export function useUserProfile() {
     setOtherProfiles([]);
     setConsentFlags(null);
     setAuthUser(null);
-    setAuthToken(null);
   }, []);
 
   const startEditOtherProfile = useCallback((idx) => {
