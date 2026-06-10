@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { parseDailyLines } from '../utils/parseDailyLines.js';
 import { useAppStore } from '../store/useAppStore.js';
 import { getAuthenticatedClient } from '../lib/supabase.js';
@@ -86,6 +86,11 @@ function renderBoldText(text) {
     return part;
   });
 }
+
+/** renderBoldText 메모화 래퍼 — text가 같으면 탭 전환 등 부모 리렌더 시 정규식 재실행 방지 */
+const BoldText = memo(function BoldText({ text }) {
+  return renderBoldText(text);
+});
 
 function PageSpinner() {
   return (
@@ -632,7 +637,7 @@ export default function TodayDetailPage({
                       {section.title === '오늘의 점성술 흐름' && (sun || moon || asc) && (
                         <AstroSignViz sun={sun} moon={moon} asc={asc} />
                       )}
-                      <p className="today-long-reading__text">{renderBoldText(section.body)}</p>
+                      <p className="today-long-reading__text"><BoldText text={section.body} /></p>
                     </article>
                   ))}
                 </div>

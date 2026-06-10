@@ -98,6 +98,29 @@ async function generateDailyLine(sunSign, ilgan) {
 }
 
 /**
+ * 푸시 구독 JSON 파싱 (문자열/객체 모두 수용, 실패 시 null)
+ */
+function parseSub(raw) {
+  try {
+    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+  } catch { return null; }
+}
+
+/**
+ * 동시성 제한 병렬 실행 — 순차 전송의 지연을 줄이되 푸시 엔드포인트 과부하 방지
+ */
+async function mapWithConcurrency(items, limit, fn) {
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const i = next++;
+      await fn(items[i], i);
+    }
+  });
+  await Promise.all(workers);
+}
+
+/**
  * Web Push 전송
  */
 async function sendPush(subscription, payload) {
@@ -142,42 +165,34 @@ export default async function handler(req, res) {
   let sent = 0;
   const expired = [];
 
-  // 유저당 오늘 운세 생성 후 전송
-  // (비용 최적화: 동일 출생 정보 그룹 캐싱은 추후 구현)
-  for (const user of users) {
-    if (!user.push_subscription) continue;
+  // 운세 한 줄은 출생 정보를 쓰지 않으므로 1회만 생성해 전체 사용자에게 공유
+  // (AI 호출 N회 → 1회. 출생 정보 기반 개인화 시 그룹 캐싱으로 확장)
+  const dailyBody = await generateDailyLine(null, null);
+  const dailyTag = `daily-${new Date().toISOString().slice(0, 10)}`;
 
-    let sub;
-    try {
-      sub = typeof user.push_subscription === 'string'
-        ? JSON.parse(user.push_subscription)
-        : user.push_subscription;
-    } catch { continue; }
-
-    const body = await generateDailyLine(null, null);
-
+  await mapWithConcurrency(users, 10, async (user) => {
+    const sub = parseSub(user.push_subscription);
+    if (!sub) return;
     const result = await sendPush(sub, {
       title: '✦ 오늘의 별숨',
-      body,
+      body: dailyBody,
       url: '/',
-      tag: `daily-${new Date().toISOString().slice(0, 10)}`,
+      tag: dailyTag,
     });
-
     if (result === 'expired') expired.push(user.kakao_id);
     else if (result) sent++;
-  }
+  });
 
-  // 만료된 구독 정리
+  // 만료된 구독 정리 — 단건 PATCH 반복 대신 in.() 일괄 처리
   if (expired.length > 0) {
-    for (const kakaoId of expired) {
-      await supabaseFetch(
-        `users?kakao_id=eq.${encodeURIComponent(kakaoId)}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({ push_subscription: null }),
-        },
-      );
-    }
+    const idList = expired.map((id) => `"${String(id).replace(/"/g, '')}"`).join(',');
+    await supabaseFetch(
+      `users?kakao_id=in.(${encodeURIComponent(idList)})`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ push_subscription: null }),
+      },
+    );
   }
 
   // ── 생일 알림 ──────────────────────────────────────────────
@@ -193,10 +208,9 @@ export default async function handler(req, res) {
 
   let sentBirthday = 0;
   if (Array.isArray(birthdayUsers)) {
-    for (const u of birthdayUsers) {
-      let sub;
-      try { sub = typeof u.push_subscription === 'string' ? JSON.parse(u.push_subscription) : u.push_subscription; }
-      catch { continue; }
+    await mapWithConcurrency(birthdayUsers, 10, async (u) => {
+      const sub = parseSub(u.push_subscription);
+      if (!sub) return;
       const result = await sendPush(sub, {
         title: '🎂 생일 축하해요!',
         body: '오늘은 특별한 날이에요. 별숨이 당신의 생일 운세를 준비했어요 ✦',
@@ -204,7 +218,7 @@ export default async function handler(req, res) {
         tag: `birthday-${todayMonth}-${todayDay}`,
       });
       if (result === true) sentBirthday++;
-    }
+    });
   }
 
   // ── 절기 알림 ──────────────────────────────────────────────
@@ -216,10 +230,9 @@ export default async function handler(req, res) {
       `&notification_prefs->>jeolgi_notice=eq.true&push_subscription=not.is.null`,
     );
     if (Array.isArray(jeolgiUsers)) {
-      for (const u of jeolgiUsers) {
-        let sub;
-        try { sub = typeof u.push_subscription === 'string' ? JSON.parse(u.push_subscription) : u.push_subscription; }
-        catch { continue; }
+      await mapWithConcurrency(jeolgiUsers, 10, async (u) => {
+        const sub = parseSub(u.push_subscription);
+        if (!sub) return;
         const result = await sendPush(sub, {
           title: `🌿 오늘은 ${jeolgiName}이에요`,
           body: `계절의 전환점, 별숨이 오늘의 기운을 읽어드려요 ✦`,
@@ -227,7 +240,7 @@ export default async function handler(req, res) {
           tag: `jeolgi-${jeolgiName}-${kst.getUTCFullYear()}`,
         });
         if (result === true) sentJeolgi++;
-      }
+      });
     }
   }
 
