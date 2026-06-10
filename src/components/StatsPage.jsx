@@ -337,7 +337,7 @@ export default function StatsPage({ callApi }) {
   if (!user) {
     return (
       <div className="page" style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)' }}>
-        <div style={{ fontSize: '1.6rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
+        <div style={{ fontSize: '1.6rem', marginBottom: 12, color: 'var(--t4)' }}></div>
         <div>로그인 후 통계를 볼 수 있어요</div>
       </div>
     );
@@ -348,7 +348,7 @@ export default function StatsPage({ callApi }) {
       {/* 헤더 */}
       <div style={{ padding: '28px 20px 20px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
-          ✦ 나의 별숨 통계
+          나의 별숨 통계
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)' }}>
@@ -493,7 +493,7 @@ export default function StatsPage({ callApi }) {
                     fontWeight: 700,
                   }}
                 >
-                  ✦ AI 패턴 인사이트 보기
+                  AI 패턴 인사이트 보기
                 </button>
                 {insightError && (
                   <div style={{ marginTop: 10, fontSize: 'var(--xs)', color: '#E05A3A', lineHeight: 1.6 }}>
@@ -520,7 +520,7 @@ export default function StatsPage({ callApi }) {
                 borderRadius: 'var(--r2, 16px)', padding: '18px 16px',
               }}>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 12 }}>
-                  ✦ AI 인사이트
+                  AI 인사이트
                 </div>
                 {insight.split(/\[(패턴|의미|조언)\]/).map((part, i) => {
                   if (!part.trim()) return null;

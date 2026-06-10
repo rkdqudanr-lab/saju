@@ -85,7 +85,7 @@ export default function NameFortunePage({ form, buildCtx, callApi: callApiProp, 
   const sounds  = useMemo(() => name ? getNameOhaeng(name) : '', [name]);
 
   const handleAnalyze = async () => {
-    if (!name.trim()) { showToast('이름을 입력해주세요 ✦', 'info'); return; }
+    if (!name.trim()) { showToast('이름을 입력해주세요', 'info'); return; }
     if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
     setLoading(true);
     setResult('');
@@ -143,7 +143,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
   };
 
   const handleEngName = async () => {
-    if (!engName.trim()) { showToast('이름을 입력해주세요 ✦', 'info'); return; }
+    if (!engName.trim()) { showToast('이름을 입력해주세요', 'info'); return; }
     if (!callApiProp) { showToast('로그인이 필요해요', 'info'); return; }
     setEngLoading(true);
     setEngResult('');
@@ -228,7 +228,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
           {/* 이름 입력 */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
-              ✦ 이름 입력
+              이름 입력
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 0.9fr)', gap: 8, minWidth: 0, width: '100%' }}>
               <input
@@ -313,7 +313,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
             background: 'var(--goldf)', border: '1px solid var(--acc)',
             fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6, marginBottom: 20,
           }}>
-            ✦ 성명학은 이름의 획수·오행·음양을 분석해 사주와의 조화를 살펴요.<br />
+            성명학은 이름의 획수·오행·음양을 분석해 사주와의 조화를 살펴요.<br />
             좋고 나쁨을 판단하기보다, 이름 속 기운을 발견하는 관점으로 읽어주세요.
           </div>
 
@@ -383,7 +383,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
                     {card('획수 분석', secs['획수분석'])}
                   </div>
                   {card('의미 분석', secs['의미분석'])}
-                  {card('✦ 성향과의 조화', secs['성향조화'], true)}
+                  {card('성향과의 조화', secs['성향조화'], true)}
                   {card('보완할 점', secs['보완점'])}
                   {secs['개명조언'] && card('개명 조언', secs['개명조언'])}
                   {secs['추천방향'] && card('추천 방향', secs['추천방향'])}
@@ -395,7 +395,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
                 </>
               ) : (
                 <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '16px' }}>
-                  <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>✦ 별숨의 이름 풀이 — {name}</div>
+                  <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>별숨의 이름 풀이 — {name}</div>
                   <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{result}</div>
                 </div>
               )}
@@ -416,13 +416,13 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               background: 'var(--goldf)', border: '1px solid var(--acc)',
               fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6,
             }}>
-              ✦ 사주 오행 균형을 고려해 좋은 기운을 담은 이름 후보를 추천해드려요.
+              사주 오행 균형을 고려해 좋은 기운을 담은 이름 후보를 추천해드려요.
               한자와 획수까지 분석해드릴게요.
             </div>
 
             <div>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>
-                ✦ 성(姓) 입력 (선택)
+                성(姓) 입력 (선택)
               </div>
               <input
                 type="text"
@@ -447,7 +447,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
                 color: '#1a1208', fontWeight: 700, fontSize: 'var(--sm)', border: 'none',
               }}
             >
-              ✦ 사주 기반 작명 받기
+              사주 기반 작명 받기
             </button>
 
             {createResult && (
@@ -456,7 +456,7 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
                 borderRadius: 'var(--r1)', padding: '16px', animation: 'fadeUp .4s ease',
               }}>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10 }}>
-                  ✦ 별숨의 이름 추천
+                  별숨의 이름 추천
                 </div>
                 <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
                   {createResult}
@@ -480,13 +480,13 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
               background: 'var(--goldf)', border: '1px solid var(--acc)',
               fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.6,
             }}>
-              ✦ 내 이름의 기운과 사주에 어울리는 영어 이름을 찾아드려요.
+              내 이름의 기운과 사주에 어울리는 영어 이름을 찾아드려요.
               발음, 의미, 오행이 잘 맞는 이름을 추천해드릴게요.
             </div>
 
             <div>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>
-                ✦ 내 이름 (한글)
+                내 이름 (한글)
               </div>
               <input
                 type="text"

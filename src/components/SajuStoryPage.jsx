@@ -13,7 +13,7 @@ const CHAPTERS = [
   { id: 'youth',     title: '청년기',       icon: '🌿', desc: '뿌리를 내리고 자라던 계절' },
   { id: 'present',   title: '현재',         icon: '🌳', desc: '온전히 피어난 지금 이 순간' },
   { id: 'future',    title: '미래',         icon: '🌟', desc: '아직 쓰이지 않은 별의 이야기' },
-  { id: 'destiny',   title: '운명의 교차점', icon: '✦',  desc: '모든 별이 하나로 만나는 곳' },
+  { id: 'destiny',   title: '운명의 교차점', icon: '◆',  desc: '모든 별이 하나로 만나는 곳' },
 ];
 
 function buildChapterPrompt(chapter, index, prevSummary) {
@@ -237,7 +237,7 @@ export default function SajuStoryPage({ callApi, showToast }) {
               boxShadow: '0 10px 24px rgba(176,120,32,0.1)',
             }}
           >
-            ✦ 이야기 생성하기
+            이야기 생성하기
           </button>
         )}
 
@@ -314,7 +314,7 @@ export default function SajuStoryPage({ callApi, showToast }) {
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: 24, marginBottom: 8 }}>✦</div>
+            <div style={{ fontSize: 24, marginBottom: 8 }}></div>
             <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--gold)', marginBottom: 6 }}>
               이야기가 완성됐어요
             </div>

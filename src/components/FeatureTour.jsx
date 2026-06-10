@@ -9,7 +9,7 @@ const TOUR_STEPS = [
   {
     selector: 'menu-btn',
     arrowDir: 'top',   // 툴팁이 타겟 아래에 표시 (화살표는 위를 가리킴)
-    title: '메뉴를 열어봐요 ✦',
+    title: '메뉴를 열어봐요',
     desc: '모든 기능이 여기에 있어요. 사주 분석, 대운, 궁합까지.',
   },
   {
@@ -241,7 +241,7 @@ export default function FeatureTour({ onFinish }) {
               letterSpacing: '.02em',
             }}
           >
-            {isLast ? '시작하기 ✦' : '다음 →'}
+            {isLast ? '시작하기' : '다음 →'}
           </button>
           <button
             onClick={handleSkip}

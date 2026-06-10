@@ -86,7 +86,7 @@ export default function PremiumConsultationResult({
             marginBottom: 12,
             opacity: 0.8
           }}>
-            ✦ B Y E O L S O O M &nbsp; I N S I G H T ✦
+            B Y E O L S O O M &nbsp; I N S I G H T
           </div>
           <h2 style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', marginBottom: 8, lineHeight: 1.2 }}>
             {title}

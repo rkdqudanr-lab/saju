@@ -195,7 +195,7 @@ function SectionCard({ tag, content, isStreaming, callApi, year }) {
         color: isMonthTag ? 'var(--gold)' : 'var(--t2)',
         display: 'flex', alignItems: 'center', gap: 6,
       }}>
-        {isMonthTag ? '🌙' : tag === '[총평]' ? '✦' : '⭐'} {label}
+        {isMonthTag ? '🌙' : tag === '[총평]' ? '📌' : '⭐'} {label}
       </div>
       <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.85, whiteSpace: 'pre-line' }}>
         {content}
@@ -290,7 +290,7 @@ export default function YearlyReportPage({ form, buildCtx, showToast, spendBP, c
             borderRadius: 'var(--r1)', padding: '16px 20px', marginBottom: 28, textAlign: 'left',
           }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 12 }}>
-              ✦ 리포트 구성
+              리포트 구성
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {MONTH_TAGS.map(t => (

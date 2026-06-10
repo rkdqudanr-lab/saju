@@ -24,7 +24,7 @@ const TONE_LINE = {
 
 function Orb({ el, gan, sublabel, size = 64 }) {
   const color = OC[el] || 'var(--t3)';
-  const emoji = el === '금' ? '✦' : (OE[el] || '✦');
+  const emoji = el === '금' ? '⚪' : (OE[el] || '·');
   const name  = ON[el] || el;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, minWidth: 80 }}>

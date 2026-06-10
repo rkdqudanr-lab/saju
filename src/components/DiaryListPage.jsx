@@ -52,7 +52,7 @@ function StreakCalendar({ entries }) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--gold)', letterSpacing: '.05em' }}>
-          ✦ {month + 1}월 일기 기록
+          {month + 1}월 일기 기록
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>{thisMonthCount}일 작성</span>
@@ -188,7 +188,7 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
             <div style={{ fontSize: 'var(--md)', fontWeight: 600, marginBottom: 8 }}>아직 일기가 없어요</div>
             <div style={{ fontSize: 'var(--sm)', marginBottom: 20, lineHeight: 1.7 }}>오늘의 하루를 별숨에게 처음 전해봐요</div>
             <button className="btn-main" onClick={() => setStep(STEP.DIARY)} style={{ maxWidth: 200 }}>
-              오늘 일기 쓰기 ✦
+              오늘 일기 쓰기
             </button>
           </div>
         ) : (
@@ -221,7 +221,7 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
             {displayGroups.map(([monthKey, monthEntries]) => (
               <div key={monthKey} style={{ marginBottom: 28 }}>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 10, paddingLeft: 2 }}>
-                  ✦ {formatMonthLabel(monthKey)} ({monthEntries.length}개)
+                  {formatMonthLabel(monthKey)} ({monthEntries.length}개)
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {monthEntries.map(entry => {
@@ -269,7 +269,7 @@ export default function DiaryListPage({ user, setStep, onSelectEntry }) {
 
             {/* 오늘 일기 쓰기 버튼 */}
             <button className="btn-main" onClick={() => setStep(STEP.DIARY)} style={{ marginTop: 8 }}>
-              오늘 일기 쓰기 ✦
+              오늘 일기 쓰기
             </button>
           </>
         )}

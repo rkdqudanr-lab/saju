@@ -13,7 +13,7 @@ export default function SamplePreview() {
   const signs = ['물고기자리', '사자자리', '천칭자리'];
   return (
     <div className="sample-preview">
-      <div className="sample-badge">✦ 별숨이 만든 예시 이야기예요</div>
+      <div className="sample-badge">별숨이 만든 예시 이야기예요</div>
       <div className="sample-name">{signs[essayIdx]}인 당신에게</div>
       <AnimatePresence mode="wait">
         <motion.div

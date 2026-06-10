@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppStore } from '../store/useAppStore.js';
+import { useModalA11y } from '../hooks/useModalA11y.js';
 
 export default function BPConfirmModal() {
   const bpConfirmState   = useAppStore((s) => s.bpConfirmState);
   const resolveBPConfirm = useAppStore((s) => s.resolveBPConfirm);
   const [visible, setVisible] = useState(false);
+  const sheetRef = useModalA11y({ open: bpConfirmState.open, onClose: () => resolveBPConfirm(false) });
 
   useEffect(() => {
     if (bpConfirmState.open) {
@@ -35,6 +37,10 @@ export default function BPConfirmModal() {
       }}
     >
       <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bp-confirm-title"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%', maxWidth: 460,
@@ -61,11 +67,11 @@ export default function BPConfirmModal() {
               border: '1px solid var(--acc)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '1.5rem', flexShrink: 0,
-            }}>
+            }} aria-hidden="true">
               ✦
             </div>
             <div>
-              <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.3 }}>
+              <div id="bp-confirm-title" style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.3 }}>
                 별숨에게 물어볼까요?
               </div>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginTop: 3 }}>
@@ -141,7 +147,7 @@ export default function BPConfirmModal() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
             >
-              <span>✦</span>
+              <span aria-hidden="true">✦</span>
               <span>별숨에게 물어보기</span>
             </button>
           </div>

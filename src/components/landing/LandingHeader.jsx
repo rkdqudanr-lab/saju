@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useUserCtx, useSajuCtx, useGamCtx } from '../../context/AppContext.jsx';
 import { useAppStore } from '../../store/useAppStore.js';
-import { CG, CGO, OC } from '../../utils/saju.js';
 import Mascot from '../Mascot.jsx';
 
 const STREAK_BONUSES = [
@@ -40,21 +39,10 @@ export default function LandingHeader({
   const dateLabel = today ? `${today.month}월 ${today.day}일` : '';
   const sub = [ilgan, dateLabel].filter(Boolean).join(' · ');
 
-  const ilganEl = saju?.ilgan ? CGO[CG.indexOf(saju.ilgan)] : null;
-  const pulseColor = ilganEl ? OC[ilganEl] : '#E8B048';
-
   return (
     <div className="lh-wrap">
-      {/* 아바타 + 오행 ripple */}
+      {/* 아바타 */}
       <div style={{ position: 'relative', flexShrink: 0 }}>
-        {[0, 1].map(i => (
-          <div key={i} style={{
-            position: 'absolute', inset: -5, borderRadius: '50%',
-            border: `1.5px solid ${pulseColor}55`,
-            animation: `rippleOut 2.4s ease-out ${i * 0.85}s infinite`,
-            pointerEvents: 'none',
-          }}/>
-        ))}
         {equippedAvatar ? (
           <div className="lh-avatar-ph" style={{ fontSize: '1.3rem' }}>{equippedAvatar.emoji}</div>
         ) : user?.profileImage ? (
@@ -74,7 +62,6 @@ export default function LandingHeader({
       <div className="lh-info">
         <div className="lh-name">
           {form?.nickname || user?.nickname || '별숨'}
-          <span style={{ color: 'var(--gold)', marginLeft: 4 }}>✦</span>
         </div>
         {sub && <div className="lh-sub">{sub}</div>}
         <div className="lh-chips">
@@ -87,7 +74,7 @@ export default function LandingHeader({
               tabIndex={onStreakClick ? 0 : undefined}
               onKeyDown={onStreakClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onStreakClick(); } : undefined}
             >
-              🔥<span className="lh-streak-num"> {streak}일</span><span className="lh-streak-suffix"> 연속</span>
+              <span className="lh-streak-num">{streak}일</span><span className="lh-streak-suffix"> 연속</span>
               {streakBonusText && <span className="lh-streak-next">{streakBonusText}</span>}
             </span>
           )}
@@ -103,7 +90,7 @@ export default function LandingHeader({
             title={freeRechargeAvailable ? '무료 충전 가능' : '오늘 충전 완료'}
             aria-label={`별숨 포인트 ${currentBp}점${freeRechargeAvailable ? ', 무료 충전 가능' : ''}`}
           >
-            ✦ {currentBp} BP{freeRechargeAvailable ? ' +' : ''}
+            {currentBp} BP{freeRechargeAvailable ? ' 충전' : ''}
           </button>
         </div>
       </div>

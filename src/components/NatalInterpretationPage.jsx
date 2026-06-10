@@ -167,7 +167,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <div style={{ fontSize: 'var(--xs)', color: meta.color, fontWeight: 700, letterSpacing: '.06em' }}>
-              ✦ 별숨 정밀도
+              별숨 정밀도
             </div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
               {total}점 · <span style={{ color: meta.color, fontWeight: 600 }}>{meta.label}</span>
@@ -242,14 +242,14 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
         {tab === 0 && (
           <div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', letterSpacing: '.06em', marginBottom: 10 }}>
-              ✦ 네 기둥 이야기
+              네 기둥 이야기
             </div>
             <PillarCards saju={saju} />
 
             {/* 일간 설명 */}
             {saju && (
               <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6, letterSpacing: '.04em' }}>✦ 일간의 기질</div>
+                <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6, letterSpacing: '.04em' }}>일간의 기질</div>
                 <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>{saju.ilganDesc || ILGAN_DESC[saju.ilgan] || ''}</div>
               </div>
             )}
@@ -359,7 +359,7 @@ export default function NatalInterpretationPage({ saju, sun, moon, asc, form, on
               lineHeight: 1.4,
             }}
           >
-            별숨의 종합사주 ✦
+            별숨의 종합사주
           </button>
           <button
             onClick={() => {

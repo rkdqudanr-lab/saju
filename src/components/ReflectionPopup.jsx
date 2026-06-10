@@ -38,7 +38,7 @@ export default function ReflectionPopup({ yesterdayScore, yesterdayDate, onAnswe
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.08em', marginBottom: 10 }}>
-            ✦ {dateStr} 어제의 별숨
+            {dateStr} 어제의 별숨
           </div>
 
           <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', marginBottom: 4 }}>

@@ -29,7 +29,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
     return (
       <div className="page">
         <div className="inner" style={{ textAlign: 'center', paddingTop: 40 }}>
-          <div style={{ fontSize: '1.5rem', marginBottom: 20, color: 'var(--gold)' }}>✦</div>
+          <div style={{ fontSize: '1.5rem', marginBottom: 20, color: 'var(--gold)' }}></div>
           <div style={{ fontSize: 'var(--md)', fontWeight: 700, marginBottom: 16 }}>명함 카드 만들기</div>
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginBottom: 20 }}>
             생년월일을 입력해서<br/>당신의 사주 명함을 만들어봐요
@@ -91,7 +91,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
           )}
           {/* 브랜드 */}
           <div style={{ fontSize: 'var(--xs)', color: theme.accent, letterSpacing: '.15em', fontWeight: 600, position: 'absolute', top: 14 }}>
-            ✦ 별숨
+            별숨
           </div>
           {/* 이름 */}
           <div style={{ fontSize: '2.2rem', fontWeight: 700, color: '#F0EBF8', lineHeight: 1.1 }}>
@@ -111,7 +111,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
         {/* 오행 테마 선택 */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
-            ✦ 오행 테마
+            오행 테마
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {Object.entries(ELEMENT_THEMES).map(([key, th]) => (
@@ -139,7 +139,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
         {/* 스티커 선택 */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
-            ✦ 스티커
+            스티커
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {STICKERS.map(s => (

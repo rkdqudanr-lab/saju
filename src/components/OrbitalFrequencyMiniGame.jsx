@@ -304,7 +304,7 @@ export default function OrbitalFrequencyMiniGame({
               opacity: gameState.guess.includes('-') ? 0.6 : 1,
             }}
           >
-            ✦ 답 제출
+            답 제출
           </button>
         </>
       ) : (
@@ -320,7 +320,7 @@ export default function OrbitalFrequencyMiniGame({
             }}
           >
             <div style={{ fontSize: '2rem', marginBottom: '12px', color: 'var(--gold)' }}>
-              {gameState.reward === 200 ? '⊛' : gameState.reward >= 40 ? '◈' : gameState.reward > 0 ? '✦' : '◇'}
+              {gameState.reward === 200 ? '⊛' : gameState.reward >= 40 ? '◈' : gameState.reward > 0 ? '◆' : '◇'}
             </div>
             <div
               style={{

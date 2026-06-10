@@ -112,7 +112,7 @@ export default function LottoPage({ consentFlags, spendBP, showToast }) {
       {/* 헤더 */}
       <div style={{ padding: '28px 20px 20px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
-          ✦ 오늘의 행운 번호
+          오늘의 행운 번호
         </div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)' }}>
           별숨 로또 번호 뽑기

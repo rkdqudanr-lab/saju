@@ -273,7 +273,7 @@ export default function DailyHoroscopePage({
         setLastBatchBoost(totalBoost);
         setShowRegenModal(true);
       } else {
-        showToast?.('아이템 기운이 오늘 운세에 스며들었어요 ✦', 'success');
+        showToast?.('아이템 기운이 오늘 운세에 스며들었어요', 'success');
       }
     } catch (err) {
       console.error('[별숨] 아이템 적용 실패:', err);
@@ -356,7 +356,7 @@ export default function DailyHoroscopePage({
 
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 40, filter: isPurifying ? 'blur(4px)' : 'none', transition: 'filter 0.4s', pointerEvents: isPurifying ? 'none' : 'auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: '1.4rem', marginBottom: 8, color: 'var(--gold)' }}>✦</div>
+          <div style={{ fontSize: '1.4rem', marginBottom: 8, color: 'var(--gold)' }}></div>
           <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
             오늘 하루 나의 별숨
           </div>
@@ -447,7 +447,7 @@ export default function DailyHoroscopePage({
                     onClick={handlePurify}
                     disabled={isPurifying || dailyLoading}
                   >
-                    <span style={{ animation: isPurifying ? 'purifyBtnGlow 1s infinite' : 'none' }}>✦</span>
+                    <span style={{ animation: isPurifying ? 'purifyBtnGlow 1s infinite' : 'none' }}></span>
                     정화 재점
                     <span style={{ fontSize: 10, opacity: 0.7 }}>({DAILY_MAX - dailyCount}/{DAILY_MAX})</span>
                   </button>
@@ -474,7 +474,7 @@ export default function DailyHoroscopePage({
                   }
                 }}
               >
-                오늘 기운 확인하기 ✦
+                오늘 기운 확인하기
               </button>
             )}
           </>

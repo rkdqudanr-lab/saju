@@ -443,10 +443,10 @@ export default function TodayDetailPage({
   const handleShareDaily = useCallback(async () => {
     if (!dailyResult) return;
     const dateStr = today ? `${today.month}월 ${today.day}일` : '';
-    const text = `✦ 오늘의 별숨${dateStr ? ` · ${dateStr}` : ''}\n${overallGuide.summary}\n\n별숨점수 ${normalizedTodayScore}점\n\n— 별숨 앱`;
+    const text = `오늘의 별숨${dateStr ? ` · ${dateStr}` : ''}\n${overallGuide.summary}\n\n별숨점수 ${normalizedTodayScore}점\n\n— 별숨 앱`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: '별숨 ✦', text });
+        await navigator.share({ title: '별숨', text });
       } catch {}
     } else {
       await navigator.clipboard?.writeText(text);
@@ -742,7 +742,7 @@ export default function TodayDetailPage({
                 )}
               </div>
               <div className="today-pick-reason today-pick-reason--top">
-                <div className="today-pick-reason__title">✦ 왜 이렇게 골랐냐면</div>
+                <div className="today-pick-reason__title">왜 이렇게 골랐냐면</div>
                 <div className="today-pick-reason__body">
                   {byeolsoomPick?.reason || byeolsoomPick?.aiHint || '오늘 점수 흐름에 맞춰 강한 축은 밀고 약한 축은 받치는 방식으로 조합했어요.'}
                 </div>

@@ -337,7 +337,7 @@ export default function GroupBulseumPage({ setStep, initialCode, user }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
               {enrichedMembers.map((m, i) => {
                 const elColor = m.saju?.dom ? OHAENG_COLOR[m.saju.dom] : 'var(--gold)';
-                const elChar = m.saju?.dom ? OHAENG_CHAR[m.saju.dom] : '✦';
+                const elChar = m.saju?.dom ? OHAENG_CHAR[m.saju.dom] : '·';
                 const mKey = m.id || `${m.name}_${m.birth_year}_${m.birth_month}_${m.birth_day}`;
 
                 return (

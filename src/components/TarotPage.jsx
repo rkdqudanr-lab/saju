@@ -151,8 +151,8 @@ function CardBack({ opacity = 1 }) {
           stroke="rgba(200,165,80,0.2)" strokeWidth="0.5"/>;
       })}
       <circle cx="29" cy="46" r="2" fill="rgba(200,165,80,0.85)"/>
-      <text x="4" y="11" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif">✦</text>
-      <text x="47" y="88" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif" textAnchor="middle">✦</text>
+      <text x="4" y="11" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif"></text>
+      <text x="47" y="88" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif" textAnchor="middle"></text>
     </svg>
   );
 }
@@ -341,7 +341,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
       {/* ── 헤더 ── */}
       <div style={{ padding: '32px 20px 20px', textAlign: 'center' }}>
         <div style={{ fontSize: '10px', color: 'rgba(200,165,80,0.8)', fontWeight: 700, letterSpacing: '.2em', marginBottom: 8, textTransform: 'uppercase' }}>
-          ✦ &nbsp; B Y E O L S O O M &nbsp; T A R O T &nbsp; ✦
+          &nbsp; B Y E O L S O O M &nbsp; T A R O T &nbsp;
         </div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.25, marginBottom: 6 }}>
           오늘의 세 별빛
@@ -391,7 +391,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
             onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 44px rgba(200,165,80,0.3)'; e.currentTarget.style.borderColor = 'rgba(200,165,80,0.9)'; }}
             onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 0 28px rgba(200,165,80,0.14)'; e.currentTarget.style.borderColor = 'rgba(200,165,80,0.6)'; }}
           >
-            ✦ 카드 펼치기
+            카드 펼치기
           </button>
         </div>
       )}
@@ -444,7 +444,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
               fontSize: '8px', color: 'rgba(200,165,80,0.7)',
               animation: `sparkle ${0.8 + i * 0.2}s ease-in-out ${i * 180}ms infinite`,
               pointerEvents: 'none',
-            }}>✦</div>
+            }}></div>
           ))}
         </div>
       )}
@@ -476,7 +476,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                         : <TarotImage src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     ) : (
-                      <div style={{ fontSize: '16px', color: 'rgba(200,165,80,0.18)' }}>✦</div>
+                      <div style={{ fontSize: '16px', color: 'rgba(200,165,80,0.18)' }}></div>
                     )}
                   </div>
                   <div style={{ fontSize: '8px', color: card ? 'rgba(200,165,80,0.75)' : 'var(--t4)', fontWeight: card ? 700 : 400, textAlign: 'center', lineHeight: 1.4, transition: 'color .3s' }}>
@@ -557,7 +557,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: 'rgba(13,11,30,0.5)',
                     }}>
-                      <span style={{ fontSize: 18, color: 'rgba(200,165,80,0.7)' }}>✦</span>
+                      <span style={{ fontSize: 18, color: 'rgba(200,165,80,0.7)' }}></span>
                     </div>
                   )}
                 </div>
@@ -660,7 +660,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                   transition: 'all .2s',
                 }}
               >
-                ✦ 세 별빛의 흐름 읽어주기
+                세 별빛의 흐름 읽어주기
               </button>
             </div>
           )}
@@ -705,7 +705,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                     onClick={resetTarotFlow}
                     style={{ display: 'block', margin: '0 auto 14px', padding: '8px 22px', background: 'rgba(200,165,80,0.1)', border: '1px solid rgba(200,165,80,0.35)', borderRadius: 20, color: 'rgba(200,165,80,0.85)', fontSize: 'var(--xs)', cursor: 'pointer', letterSpacing: '.05em' }}
                   >
-                    ✦ 다시 뽑기
+                    다시 뽑기
                   </button>
                 )}
               </div>
@@ -732,7 +732,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                     <TarotSectionCard eyebrow="미래" body={secs['미래카드']} delay={0.24} />
                   </div>
                   {/* 핵심: 카드 조합 흐름 */}
-                  <TarotSectionCard eyebrow="✦ 세 카드의 흐름" body={secs['카드조합']} highlight delay={0.32} />
+                  <TarotSectionCard eyebrow="세 카드의 흐름" body={secs['카드조합']} highlight delay={0.32} />
                   {/* 성향 보정 + 행동 */}
                   <TarotSectionCard eyebrow="내 성향으로 볼 때" body={secs['성향보정']} delay={0.38} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -754,7 +754,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                       onClick={resetTarotFlow}
                       style={{ display: 'block', margin: '14px auto 0', padding: '8px 22px', background: 'rgba(200,165,80,0.1)', border: '1px solid rgba(200,165,80,0.35)', borderRadius: 20, color: 'rgba(200,165,80,0.85)', fontSize: 'var(--xs)', cursor: 'pointer', letterSpacing: '.05em' }}
                     >
-                      ✦ 다시 뽑기
+                      다시 뽑기
                     </button>
                   )}
                 </div>
@@ -768,7 +768,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
 
       <div style={{ margin: '20px 20px 0', padding: '10px 14px', background: 'rgba(200,165,80,0.04)', border: '1px solid rgba(200,165,80,0.1)', borderRadius: 10, textAlign: 'center' }}>
         <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.7 }}>
-          오늘의 별빛은 매일 자정 새롭게 열려요 ✦
+          오늘의 별빛은 매일 자정 새롭게 열려요
         </div>
       </div>
 

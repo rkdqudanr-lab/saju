@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AnimatedMascot from "./AnimatedMascot.jsx";
 import { CGO } from "../utils/saju.js";
 import { LOAD_STATES } from "../utils/constants.js";
 
@@ -8,11 +9,11 @@ import { LOAD_STATES } from "../utils/constants.js";
 
 // 별숨만의 감성적 로딩 메시지 (기존 LOAD_STATES 외 추가)
 const EXTRA_MESSAGES = [
-  { t: '당신의 태어난 계절과 오늘의 일진을 맞추는 중...', s: '잠깐만요 ✦' },
-  { t: '오행의 흐름에서 특별한 행운의 단서를 찾는 중...', s: '거의 다 왔어요 ✦' },
-  { t: '별숨이 당신을 위한 문장을 정성껏 적어 내려가고 있어요', s: '조금만 기다려줘요 ✦' },
-  { t: '동양의 별과 서양의 별이 함께 당신을 읽고 있어요', s: '잠깐만요 ✦' },
-  { t: '태어난 순간의 기운을 조용히 불러오는 중이에요', s: '조금만 기다려줘요 ✦' },
+  { t: '당신의 태어난 계절과 오늘의 일진을 맞추는 중...', s: '잠깐만요' },
+  { t: '오행의 흐름에서 특별한 행운의 단서를 찾는 중...', s: '거의 다 왔어요' },
+  { t: '별숨이 당신을 위한 문장을 정성껏 적어 내려가고 있어요', s: '조금만 기다려줘요' },
+  { t: '동양의 별과 서양의 별이 함께 당신을 읽고 있어요', s: '잠깐만요' },
+  { t: '태어난 순간의 기운을 조용히 불러오는 중이에요', s: '조금만 기다려줘요' },
 ];
 
 /** 질문별 로딩 상태 인디케이터 */
@@ -81,6 +82,8 @@ export default function SkeletonLoader({ qCount, saju, loadingMsgIdx, selQs = []
         </div>
       )}
 
+      <AnimatedMascot name="loading-thinking" size={76} fps={6} staticMood="thinking" className="load-mascot" aria-hidden="true" />
+
       {/* ── 가짜 프로그레스 바 (달이 차오르는 느낌) ── */}
       <div style={{ margin: '16px auto 4px', maxWidth: 240, width: '80%' }}>
         <div style={{ height: 4, background: 'var(--bg2)', borderRadius: 4, overflow: 'hidden' }}>
@@ -95,7 +98,7 @@ export default function SkeletonLoader({ qCount, saju, loadingMsgIdx, selQs = []
           />
         </div>
         <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 6 }}>
-          {elapsed < 3 ? '별숨이 당신의 별을 찾고 있어요...' : elapsed < 8 ? '분석이 진행되고 있어요...' : '거의 다 됐어요 ✦'}
+          {elapsed < 3 ? '별숨이 당신의 별을 찾고 있어요...' : elapsed < 8 ? '분석이 진행되고 있어요...' : '거의 다 됐어요'}
         </div>
       </div>
 

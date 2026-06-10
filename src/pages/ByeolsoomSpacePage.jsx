@@ -41,7 +41,7 @@ function GradeSlot({ gradeKey, item, owned }) {
       gap: 5,
       opacity: owned ? 1 : 0.45,
     }}>
-      <div style={{ fontSize: owned ? 20 : 16 }}>{owned ? (item?.emoji || '✦') : '？'}</div>
+      <div style={{ fontSize: owned ? 20 : 16 }}>{owned ? (item?.emoji || '·') : '？'}</div>
       <div style={{ fontSize: 9, fontWeight: 700, color: owned ? color : 'var(--t4)', letterSpacing: '.03em' }}>
         {label}
       </div>
@@ -83,7 +83,7 @@ function CollectionCard({ def, ownedIds, onComplete, completedSet }) {
         </div>
         <div style={{ flexShrink: 0, textAlign: 'right' }}>
           {complete ? (
-            <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 900 }}>완성 ✦</div>
+            <div style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 900 }}>완성</div>
           ) : (
             <div style={{ fontSize: 'var(--sm)', color: 'var(--gold)', fontWeight: 900 }}>{ownedCount}/{total}</div>
           )}
@@ -198,7 +198,7 @@ export default function ByeolsoomSpacePage() {
       localStorage.setItem(`byeolsoom_completed_${kakaoId || 'guest'}`, JSON.stringify([...next]));
     } catch {}
     earnBP?.(def.reward.bp, `컬렉션 완성: ${def.name}`);
-    setClaimToast(`✦ ${def.reward.title} 해금! BP +${def.reward.bp}`);
+    setClaimToast(`${def.reward.title} 해금! BP +${def.reward.bp}`);
     setTimeout(() => setClaimToast(null), 2800);
   }, [completedSet, earnBP, kakaoId]);
 
@@ -272,7 +272,7 @@ export default function ByeolsoomSpacePage() {
         {/* 컬렉션 카드 목록 */}
         {loading ? (
           <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--xs)' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>✦</div>불러오는 중...
+            <div style={{ fontSize: 28, marginBottom: 8 }}></div>불러오는 중...
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

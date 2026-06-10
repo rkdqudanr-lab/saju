@@ -81,7 +81,7 @@ export default function TodayIntroPage({ setStep, askDailyHoroscope, dailyLoadin
             onClick={handleKnowMore}
             disabled={dailyLoading}
           >
-            {dailyLoading ? '별숨이 오늘을 읽고 있어요...' : '오늘의 운세 알아보기 ✦'}
+            {dailyLoading ? '별숨이 오늘을 읽고 있어요...' : '오늘의 운세 알아보기'}
           </button>
           <button
             className="today-intro-btn-secondary"

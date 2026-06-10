@@ -42,7 +42,7 @@ export default function AlertCarousel({
     cards.push(
       <AlertCard
         key="approx"
-        icon="✦"
+        icon="📝"
         title="프로필 완성률 50%"
         desc="생일 일자를 추가하면 더 정확한 별숨을 받아요"
         gold

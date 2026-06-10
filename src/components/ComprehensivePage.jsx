@@ -27,7 +27,7 @@ const COMP_SECTIONS = [
   // 신규 태그 (종합 분석 v2)
   { tag: '한줄정체성', icon: '⭐', title: '나를 한 줄로' },
   { tag: '핵심성향', icon: '🌟', title: '핵심 성향' },
-  { tag: '교차해석', icon: '✦', title: '두 관점의 교차점', highlight: true },
+  { tag: '교차해석', icon: '◆', title: '두 관점의 교차점', highlight: true },
   { tag: '강점', icon: '💪', title: '강점' },
   { tag: '반복패턴', icon: '🔄', title: '반복되는 패턴' },
   { tag: '연애와관계', icon: '💫', title: '연애 · 관계' },
@@ -44,7 +44,7 @@ const COMP_SECTIONS = [
   { tag: '직업', icon: '🌙', title: '직업 · 적성' },
   { tag: '건강', icon: '🌿', title: '건강운' },
   { tag: '올해', icon: '🌊', title: '올해의 흐름' },
-  { tag: '별숨의 시선', icon: '✦', title: '두 별지도의 교차점', highlight: true },
+  { tag: '별숨의 시선', icon: '◆', title: '두 별지도의 교차점', highlight: true },
   { tag: '숨겨진 그림자', icon: '🌗', title: '강점의 그늘' },
 ];
 
@@ -208,7 +208,7 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
 
       {!hasContent && !loading && (
         <button className="btn-main" onClick={fetch_} style={{ marginBottom: 20 }}>
-          별숨에게 종합 사주 풀어보기 ✦
+          별숨에게 종합 사주 풀어보기
         </button>
       )}
 
@@ -224,7 +224,7 @@ function SajuPanel({ saju, sun, form, buildCtx, user, consentFlags }) {
       {hasContent && (
         <>
           <div style={{ marginBottom: 16, padding: '12px 16px', background: 'rgba(180,140,50,0.06)', borderRadius: 12, border: '1px solid rgba(180,140,50,0.15)' }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>✦ 별숨의 종합 사주</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>별숨의 종합 사주</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>타고난 본성부터 올해의 흐름까지</div>
           </div>
           {COMP_SECTIONS.map(({ tag, icon, title, highlight }, i) => (
@@ -350,7 +350,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
 
       {!hasContent && !loading && (
         <button className="btn-main" onClick={fetch_} style={{ marginBottom: 20 }}>
-          별숨에게 종합 점성술 풀어보기 ✦
+          별숨에게 종합 점성술 풀어보기
         </button>
       )}
 
@@ -366,7 +366,7 @@ function AstroPanel({ sun, moon, asc, form, buildCtx, user, consentFlags }) {
       {hasContent && (
         <>
           <div style={{ marginBottom: 16, padding: '12px 16px', background: 'rgba(120,100,200,0.06)', borderRadius: 12, border: '1px solid rgba(120,100,200,0.15)' }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>✦ 별숨의 종합 점성술</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>별숨의 종합 점성술</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>태양 · 달 · 상승의 세 별빛으로 읽는 그대의 하늘지도</div>
           </div>
           {ASTRO_SECTIONS.map(({ tag, icon, title, highlight }, i) => (
@@ -397,7 +397,7 @@ export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx
         <div style={{ paddingBottom: 40 }}>
           {/* 헤더 */}
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>✦</div>
+            <div style={{ fontSize: '1.6rem', marginBottom: 8 }}></div>
             <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '.04em', marginBottom: 6 }}>
               종합 분석
             </div>
@@ -409,7 +409,7 @@ export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx
           {/* 탭 전환 */}
           <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderRadius: 14, border: '1px solid var(--line)', overflow: 'hidden' }}>
             {[
-              { id: 'saju', label: '✦ 사주 분석' },
+              { id: 'saju', label: '사주 분석' },
               { id: 'astro', label: '🌟 점성술 분석' },
             ].map(tab => (
               <button

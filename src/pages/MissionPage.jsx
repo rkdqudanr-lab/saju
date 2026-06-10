@@ -115,7 +115,7 @@ export default function MissionPage({ onCompleteMission, hasDiaryToday }) {
                   cursor: 'pointer',
                 }}
               >
-                ✦ 오늘의 별숨 보기
+                오늘의 별숨 보기
               </button>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function MissionPage({ onCompleteMission, hasDiaryToday }) {
                   다음 단계까지 미션 {next.minMissions - totalCompleted}개
                 </div>
               ) : (
-                <div style={{ marginTop: 4, fontSize: 10, color: stage.color, fontWeight: 700 }}>최고 단계 달성! ✦</div>
+                <div style={{ marginTop: 4, fontSize: 10, color: stage.color, fontWeight: 700 }}>최고 단계 달성!</div>
               )}
             </div>
             <div style={{ color: 'var(--t4)', fontSize: 14 }}>›</div>

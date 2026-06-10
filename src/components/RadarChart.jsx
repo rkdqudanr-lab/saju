@@ -163,7 +163,7 @@ export default function RadarChart({ form, otherProfiles, setStep, onAddOther })
         <div className="inner" style={{ textAlign: 'center', paddingTop: 60 }}>
           <div style={{ fontSize: '2rem', marginBottom: 12 }}>🕸️</div>
           <div style={{ color: 'var(--t2)' }}>먼저 나의 생년월일을 입력해야 해요</div>
-          <button className="btn-main" style={{ marginTop: 20, width: 'auto', padding: '12px 32px' }} onClick={() => setStep(STEP.PROFILE)}>프로필 입력하기 ✦</button>
+          <button className="btn-main" style={{ marginTop: 20, width: 'auto', padding: '12px 32px' }} onClick={() => setStep(STEP.PROFILE)}>프로필 입력하기</button>
         </div>
       </div>
     );
@@ -249,7 +249,7 @@ export default function RadarChart({ form, otherProfiles, setStep, onAddOther })
             <div style={{ marginTop: 'var(--sp3)', background: 'var(--bg2)', borderRadius: 'var(--r2)', padding: 'var(--sp3)', border: '1px solid var(--line)' }}>
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>
                 {totalScore >= 75
-                  ? `${currentOther?.name || '이 분'}과 당신은 사주 오행이 잘 맞아요. 서로의 기운이 자연스럽게 조화를 이루는 인연이에요 ✦`
+                  ? `${currentOther?.name || '이 분'}과 당신은 사주 오행이 잘 맞아요. 서로의 기운이 자연스럽게 조화를 이루는 인연이에요`
                   : totalScore >= 55
                   ? `${currentOther?.name || '이 분'}과 당신은 노력이 필요한 궁합이에요. 서로 다른 기운을 이해하면 더 깊은 관계가 될 수 있어요.`
                   : `${currentOther?.name || '이 분'}과 당신은 오행적으로 충돌이 있어요. 다름을 인정하고 배려하는 것이 열쇠예요.`}

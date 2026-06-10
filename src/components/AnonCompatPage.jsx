@@ -661,7 +661,7 @@ export default function AnonCompatPage({ showToast, shareData: incomingShareData
             cursor: 'pointer',
           }}
         >
-          {shareData ? '✦ 내 궁합 결과 익명 공유하기' : '궁합 확인 후 이곳에서 공유할 수 있어요'}
+          {shareData ? '내 궁합 결과 익명 공유하기' : '궁합 확인 후 이곳에서 공유할 수 있어요'}
         </button>
         <div style={{ marginTop: 8, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.6 }}>
           광장 글만 보이면 팔로우와 편지 보내기는 바로 사용할 수 있어요. 공유 버튼만 최근 궁합 결과가 필요해요.

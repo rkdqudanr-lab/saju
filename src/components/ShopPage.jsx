@@ -24,6 +24,7 @@ import {
 } from '../utils/shopGachaItems.js';
 import GachaGraphic from './GachaGraphic.jsx';
 import ShopItemGraphic from './ShopItemGraphic.jsx';
+import EmptyState from './ui/EmptyState.jsx';
 
 // ─── 상수 ────────────────────────────────────────────────────
 const SPIRIT_COST_1 = 10, SPIRIT_COST_10 = 90;
@@ -31,11 +32,11 @@ const SHOP_COST_1   = 10, SHOP_COST_10   = 90;
 const DUPLICATE_REFUND = 5;
 
 const MAIN_TABS = [
-  { id: 'spirit', label: '기운 뽑기', emoji: '🌌', desc: '운세에 반영되는 우주·사주 아이템', accent: 'rgba(180,142,240,0.9)' },
-  { id: 'theme', label: '테마 뽑기', emoji: '🎨', desc: '앱 분위기와 색감 꾸미기', accent: 'rgba(232,176,72,0.9)' },
-  { id: 'avatar', label: '아바타 뽑기', emoji: '👤', desc: '프로필에 쓰는 상징 아바타', accent: 'rgba(123,164,212,0.9)' },
-  { id: 'effect', label: '이펙트 뽑기', emoji: '✨', desc: '화면 위에 흐르는 장식 효과', accent: 'rgba(126,200,164,0.9)' },
-  { id: 'inv', label: '보관함', emoji: '🗃️', desc: '구매·보유 아이템 관리', accent: 'rgba(155,173,206,0.9)' },
+  { id: 'spirit', label: '기운', desc: '운세에 반영되는 오브제', accent: 'rgba(180,142,240,0.9)' },
+  { id: 'theme', label: '테마', desc: '앱의 색과 분위기', accent: 'rgba(232,176,72,0.9)' },
+  { id: 'avatar', label: '아바타', desc: '프로필 상징', accent: 'rgba(123,164,212,0.9)' },
+  { id: 'effect', label: '효과', desc: '화면 장식', accent: 'rgba(126,200,164,0.9)' },
+  { id: 'inv', label: '보관함', desc: '보유 아이템 관리', accent: 'rgba(155,173,206,0.9)' },
 ];
 
 const CAT_DESC = {
@@ -103,7 +104,7 @@ function PullResultOverlay({ results, system, onClose }) {
       <div style={{ width: '100%', maxWidth: 520, flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: '#fff' }}>
-          {isSingle ? '✦ 뽑기 결과' : '✦ 10연 뽑기 결과'}
+          {isSingle ? '뽑기 결과' : '10연 뽑기 결과'}
         </div>
         {allRevealed && (
           <button onClick={onClose} style={{
@@ -160,7 +161,7 @@ function PullResultOverlay({ results, system, onClose }) {
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: 44, opacity: .3 }}>✦</div>
+                  <div style={{ fontSize: 44, opacity: .3 }}></div>
                   <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.3)' }}>공개 중...</div>
                 </>
               )}
@@ -207,7 +208,7 @@ function PullResultOverlay({ results, system, onClose }) {
                     </>
                   ) : (
                     <>
-                      <div style={{ fontSize: 18, opacity: .35 }}>✦</div>
+                      <div style={{ fontSize: 18, opacity: .35 }}></div>
                       <div style={{ fontSize: '9px', color: 'var(--t4)' }}>탭</div>
                     </>
                   )}
@@ -224,7 +225,7 @@ function PullResultOverlay({ results, system, onClose }) {
             width: '100%', padding: '13px', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
             borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
             fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer',
-          }}>✦ 모두 공개</button>
+          }}>모두 공개</button>
         )}
         {allRevealed && (
           <button onClick={onClose} style={{
@@ -257,7 +258,7 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
         }} />
       ))}
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ fontSize: 'var(--xs)', color: accentColor, fontWeight: 700, letterSpacing: '.08em', marginBottom: 4, opacity: .9 }}>✦ {title}</div>
+        <div style={{ fontSize: 'var(--xs)', color: accentColor, fontWeight: 700, letterSpacing: '.08em', marginBottom: 4, opacity: .9 }}>{title}</div>
         <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: '#fff', marginBottom: 3 }}>{subtitle}</div>
         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.4)', marginBottom: 14, lineHeight: 1.6 }}>{stats}</div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -277,7 +278,7 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
               </span>
             ) : (
               <>
-                <span style={{ fontSize: 'var(--xs)', whiteSpace: 'nowrap' }}>✦ 1회 뽑기</span>
+                <span style={{ fontSize: 'var(--xs)', whiteSpace: 'nowrap' }}>1회 뽑기</span>
                 <span style={{ fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap' }}>{cost1} BP</span>
               </>
             )}
@@ -300,7 +301,7 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
             ) : (
               <>
                 <span style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent)', animation: canAfford10 ? 'gacha-shine 2.5s ease infinite' : 'none' }} />
-                <span style={{ fontSize: 'var(--xs)', whiteSpace: 'nowrap' }}>✦ 10연 뽑기</span>
+                <span style={{ fontSize: 'var(--xs)', whiteSpace: 'nowrap' }}>10연 뽑기</span>
                 <span style={{ fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap' }}>{cost10} BP</span>
                 <span style={{ fontSize: '10px', color: guarantee10Label.color, whiteSpace: 'nowrap' }}>{guarantee10Label.text}</span>
               </>
@@ -349,7 +350,7 @@ function ShopItemPreviewGrid({ pool, gradeConfig, gradeOrder }) {
   return (
     <div style={{ padding: '14px 0 0' }}>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
-        ✦ 등장 아이템 미리보기
+        등장 아이템 미리보기
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         {gradeOrder.map(r => {
@@ -408,7 +409,7 @@ function SpiritItemPreview({ pool, gradeConfig, gradeOrder }) {
   return (
     <div style={{ padding: '14px 0 0' }}>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em', marginBottom: 10 }}>
-        ✦ 등장 아이템 미리보기
+        등장 아이템 미리보기
       </div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
         {gradeOrder.map(grade => {
@@ -446,41 +447,43 @@ function SpiritItemPreview({ pool, gradeConfig, gradeOrder }) {
 
 // ─── 뽑기 종류 선택 카드 ──────────────────────────────────────
 function GachaTypeSelector({ activeTab, onSelect }) {
+  const activeMeta = MAIN_TABS.find((tab) => tab.id === activeTab) || MAIN_TABS[0];
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 9, padding: '4px 0 14px', borderBottom: '1px solid var(--line)' }}>
-      {MAIN_TABS.map(tab => {
-        const active = activeTab === tab.id;
-        return (
-          <button key={tab.id} onClick={() => onSelect(tab.id)} style={{
-            minHeight: 78,
-            padding: '11px 10px',
-            borderRadius: 'var(--r1)',
-            border: `1.5px solid ${active ? tab.accent : 'var(--line)'}`,
-            background: active ? `linear-gradient(135deg, ${tab.accent.replace('0.9', '0.18')}, var(--bg2))` : 'var(--bg2)',
-            color: active ? 'var(--t1)' : 'var(--t3)',
-            fontFamily: 'var(--ff)',
-            cursor: 'pointer',
-            textAlign: 'left',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            gap: 7,
-            boxShadow: active ? `0 0 16px ${tab.accent.replace('0.9', '0.16')}` : 'none',
-            transition: 'transform .16s ease, border-color .16s ease, background .16s ease',
-          }}>
-            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                <span style={{ fontSize: 17, lineHeight: 1 }}>{tab.emoji}</span>
-                <span style={{ fontSize: 'var(--xs)', fontWeight: 800, whiteSpace: 'nowrap' }}>{tab.label}</span>
-              </span>
-              {active && <span style={{ width: 7, height: 7, borderRadius: '50%', background: tab.accent, boxShadow: `0 0 8px ${tab.accent}` }} />}
-            </span>
-            <span style={{ fontSize: '10px', lineHeight: 1.35, color: active ? 'var(--t2)' : 'var(--t4)', wordBreak: 'keep-all' }}>
-              {tab.desc}
-            </span>
-          </button>
-        );
-      })}
+    <div style={{ padding: '4px 0 14px', borderBottom: '1px solid var(--line)' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+        gap: 4,
+        padding: 4,
+        borderRadius: 12,
+        background: 'var(--bg2)',
+        border: '1px solid var(--line)',
+      }}>
+        {MAIN_TABS.map(tab => {
+          const active = activeTab === tab.id;
+          return (
+            <button key={tab.id} onClick={() => onSelect(tab.id)} style={{
+              minHeight: 36,
+              padding: '8px 4px',
+              borderRadius: 9,
+              border: 'none',
+              background: active ? 'var(--bg1)' : 'transparent',
+              color: active ? 'var(--t1)' : 'var(--t4)',
+              fontFamily: 'var(--ff)',
+              cursor: 'pointer',
+              fontSize: 'var(--xs)',
+              fontWeight: active ? 800 : 600,
+              boxShadow: active ? `inset 0 0 0 1px ${tab.accent.replace('0.9', '0.35')}` : 'none',
+              transition: 'color .16s ease, background .16s ease',
+            }}>
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 8, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.5 }}>
+        {activeMeta.desc}
+      </div>
     </div>
   );
 }
@@ -534,7 +537,7 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
           boxShadow: isEquipped ? '0 0 8px rgba(232,176,72,0.35)' : 'none',
           transition: 'all .2s',
         }}>
-          {isEquipped ? '✦ 장착 중 (해제)' : '장착하기'}
+          {isEquipped ? '장착 중 (해제)' : '장착하기'}
         </button>
       )}
       {isSpecial && (
@@ -544,7 +547,7 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
           border: '1px solid var(--acc)', borderRadius: 'var(--r1)',
           background: 'var(--goldf)', fontFamily: 'var(--ff)',
         }}>
-          ✦ 지금 사용하기 →
+          지금 사용하기 →
         </button>
       )}
       {isStreakRepair && (
@@ -591,7 +594,7 @@ function BuyModal({ item, currentBP, onConfirm, onClose, buying }) {
           color: canAfford ? 'var(--gold)' : 'var(--t4)', fontWeight: 700, fontSize: 'var(--sm)',
           fontFamily: 'var(--ff)', cursor: canAfford ? 'pointer' : 'not-allowed', marginBottom: 8,
         }}>
-          {buying ? '구매 중...' : canAfford ? `✦ 구매하기 (${item.bp_cost} BP)` : 'BP 부족'}
+          {buying ? '구매 중...' : canAfford ? `구매하기 (${item.bp_cost} BP)` : 'BP 부족'}
         </button>
         <button onClick={onClose} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
           취소
@@ -606,9 +609,10 @@ function BuyModal({ item, currentBP, onConfirm, onClose, buying }) {
 export default function ShopPage({ showToast }) {
   const user    = useAppStore(s => s.user);
   const setStep = useAppStore(s => s.setStep);
+  const appBP   = useAppStore(s => s.gamificationState?.currentBp || 0);
   const [activeTab,   setActiveTab]   = useState('spirit');
   const [spiritTab,   setSpiritTab]   = useState('space'); // 'space'|'saju'
-  const [currentBP,   setCurrentBP]   = useState(0);
+  const [currentBP,   setCurrentBP]   = useState(appBP);
   const [loadingBP,   setLoadingBP]   = useState(false);
   const [pulling,     setPulling]     = useState(false);  // 'single'|'10'|false
   const [results,     setResults]     = useState(null);   // pulled items
@@ -623,6 +627,15 @@ export default function ShopPage({ showToast }) {
   const [invFilter,     setInvFilter]     = useState('all');
 
   const kakaoId = user?.kakaoId || user?.id;
+  const syncBP = useCallback((nextBP) => {
+    setCurrentBP(nextBP);
+    const store = useAppStore.getState();
+    const curGamification = store.gamificationState || {};
+    store.setGamificationData?.({
+      gamificationState: { ...curGamification, currentBp: nextBP },
+      missions: store.missions || [],
+    });
+  }, []);
 
   // ── BP + 보유 아이템 로드 ────────────────────────────────────
   const loadData = useCallback(async () => {
@@ -635,7 +648,8 @@ export default function ShopPage({ showToast }) {
         client.from('user_shop_inventory').select('item_id, is_equipped').eq('kakao_id', String(kakaoId)),
         client.from('shop_items').select('*').eq('is_active', true),
       ]);
-      setCurrentBP(bpRes.data?.current_bp ?? 0);
+      const loadedBP = bpRes.data?.current_bp ?? appBP ?? 0;
+      syncBP(loadedBP);
       const inv = invRes.data || [];
       setOwnedIds(new Set(inv.map(r => String(r.item_id))));
       setDbItems((dbItemsRes.data || []).filter(i => ['special_reading', 'streak_repair'].includes(i.category)));
@@ -657,7 +671,13 @@ export default function ShopPage({ showToast }) {
       store.setEquippedAvatar?.(equippedAvatarItem);
     } catch { /* silent */ }
     finally { setLoadingBP(false); }
-  }, [kakaoId]);
+  }, [kakaoId, appBP, syncBP]);
+
+  useEffect(() => {
+    if (!loadingBP && appBP !== currentBP) setCurrentBP(appBP);
+    // currentBP는 화면 동기화 대상이라 appBP 변화에만 반응한다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appBP, loadingBP]);
 
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => { setResults(null); }, [activeTab, spiritTab]);
@@ -678,7 +698,7 @@ export default function ShopPage({ showToast }) {
       await client.from('user_shop_inventory').insert(
         pulled.map(item => ({ kakao_id: String(kakaoId), item_id: item.id, is_equipped: false, unlocked_at: new Date().toISOString() }))
       );
-      setCurrentBP(newBP ?? currentBP - cost);
+      syncBP(newBP ?? currentBP - cost);
       setResultSys(spiritTab);
       setResults(pulled);
     } catch { showToast?.('뽑기 중 오류가 발생했어요', 'error'); }
@@ -728,7 +748,7 @@ export default function ShopPage({ showToast }) {
         await client.from('users').update({ current_bp: freshBP + refund }).eq('kakao_id', String(kakaoId));
         finalBP = freshBP + refund;
       }
-      setCurrentBP(finalBP);
+      syncBP(finalBP);
       setResultSys('shop');
       setResults(pulled);
     } catch { showToast?.('뽑기 중 오류가 발생했어요', 'error'); }
@@ -751,7 +771,7 @@ export default function ShopPage({ showToast }) {
         setEquippedIds(prev => ({ ...prev, [cat]: item.id }));
         if (cat === 'theme')  useAppStore.getState().setEquippedTheme(item);
         if (cat === 'avatar') useAppStore.getState().setEquippedAvatar(item);
-        showToast?.(`${item.name} 장착 완료! ✦`, 'success');
+        showToast?.(`${item.name} 장착 완료!`, 'success');
       } else {
         await client.from('user_shop_inventory').update({ is_equipped: false }).eq('kakao_id', String(kakaoId)).eq('item_id', item.id);
         setEquippedIds(prev => ({ ...prev, [cat]: null }));
@@ -776,11 +796,11 @@ export default function ShopPage({ showToast }) {
       const { ok, newBP } = await spendBP(client, kakaoId, item.bp_cost, 'SHOP_BUY', item.name);
       if (!ok) { showToast?.('BP가 부족해요', 'error'); setBuying(false); return; }
       await client.from('user_shop_inventory').insert({ kakao_id: String(kakaoId), item_id: item.id, is_equipped: false });
-      setCurrentBP(newBP ?? currentBP - item.bp_cost);
+      syncBP(newBP ?? currentBP - item.bp_cost);
       setOwnedIds(prev => new Set([...prev, String(item.id)]));
       setConfirmItem(null);
       if (item.category === 'special_reading') {
-        showToast?.(`${item.name} 구매 완료! ✦`, 'success');
+        showToast?.(`${item.name} 구매 완료!`, 'success');
         setTimeout(() => setStep(STEP.SPECIAL_READING), 800);
       } else {
         showToast?.(`${item.name} 구매 완료! 하루 놓친 출석에 자동으로 사용돼요`, 'success');
@@ -801,12 +821,11 @@ export default function ShopPage({ showToast }) {
       <div style={{ width: '100%', maxWidth: 460, margin: '0 auto', padding: '0 16px' }}>
 
       {/* 헤더 */}
-      <div style={{ padding: '24px 0 16px' }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>✦ 별숨 숍</div>
+      <div style={{ padding: '64px 0 16px' }}>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>별숨 숍</div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
-          <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', lineHeight: 1.25 }}>뽑기 · 꾸미기 · 보관함</div>
+          <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', lineHeight: 1.25 }}>뽑기 · 꾸미기 · 보관함</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'var(--goldf)', borderRadius: 999, border: '1px solid var(--acc)', flexShrink: 0, marginBottom: 2 }}>
-            <span style={{ fontSize: 11, color: 'var(--gold)' }}>✦</span>
             <span style={{ fontSize: 'var(--xs)', fontWeight: 800, color: 'var(--gold)' }}>
               {loadingBP ? '...' : currentBP} BP
             </span>
@@ -837,7 +856,7 @@ export default function ShopPage({ showToast }) {
 
           {/* 설명 */}
           <div style={{ margin: '12px 0 0', padding: '10px 12px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
-            ✦ 기운 아이템을 뽑아 <strong style={{ color: 'var(--gold)' }}>메인 기운</strong>으로 장착하면 모든 AI 답변에 반영돼요
+            기운 아이템을 뽑아 <strong style={{ color: 'var(--gold)' }}>메인 기운</strong>으로 장착하면 모든 AI 답변에 반영돼요
           </div>
 
           {spiritTab === 'space' ? (
@@ -912,7 +931,7 @@ export default function ShopPage({ showToast }) {
               </div>
             ) : (
               <div style={{ margin: '14px 0 0', padding: '10px 12px', background: 'var(--bg2)', border: '1px dashed var(--line)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t4)', textAlign: 'center' }}>
-                {label} 아이템을 뽑아서 장착해봐요 ✦
+                {label} 아이템을 뽑아서 장착해봐요
               </div>
             )}
 
@@ -952,7 +971,7 @@ export default function ShopPage({ showToast }) {
           {/* 특별 상담·출석 연결권 구매 섹션 */}
           {(invFilter === 'all' || invFilter === 'special_reading' || invFilter === 'streak_repair') && dbItems.filter(i => !ownedIds.has(String(i.id)) && (invFilter === 'all' || i.category === invFilter)).length > 0 && (
             <div style={{ margin: '14px 0 0' }}>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>✦ 바로 구매</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>바로 구매</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
                 {dbItems.filter(i => !ownedIds.has(String(i.id)) && (invFilter === 'all' || i.category === invFilter)).map(item => (
                   <div key={item.id} style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px', display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'center', minHeight: 160 }}>
@@ -977,11 +996,14 @@ export default function ShopPage({ showToast }) {
           <div style={{ padding: '14px 0 0' }}>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 8, fontWeight: 600 }}>보유 아이템 ({invItems.length})</div>
             {invItems.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--t4)' }}>
-                <div style={{ fontSize: 36, marginBottom: 10 }}>🗃️</div>
-                <div style={{ fontSize: 'var(--sm)' }}>아직 수집한 아이템이 없어요</div>
-                <div style={{ fontSize: 'var(--xs)', marginTop: 6 }}>뽑기로 아이템을 모아봐요</div>
-              </div>
+              <EmptyState
+                mood="peek"
+                title="아직 수집한 아이템이 없어요"
+                desc="뽑기로 아이템을 모아 별숨 공간을 채워봐요"
+                actionLabel="뽑기 보러가기"
+                actionIcon="gift"
+                onAction={() => setActiveTab('spirit')}
+              />
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10, alignItems: 'stretch' }}>
                 {invItems.map(item => (
@@ -1011,7 +1033,7 @@ export default function ShopPage({ showToast }) {
 
       {/* BP 획득 안내 */}
       <div style={{ margin: '20px 0 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', fontSize: '11px', color: 'var(--t4)', lineHeight: 1.7 }}>
-        <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 5 }}>✦ BP 획득 방법</div>
+        <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 5 }}>BP 획득 방법</div>
         일일 출석 +100 · 미션 완료 +10 · 일기 작성 +5 · 앱 설치 +20 · 친구 공유 +3
       </div>
 

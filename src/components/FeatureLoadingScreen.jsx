@@ -3,6 +3,7 @@
  * type: 'daily' | 'tarot' | 'dream' | 'compat' | 'report' | 'prophecy'
  *       | 'comprehensive' | 'name' | 'taegil' | 'letter' | 'group' | 'special' | 'diary'
  */
+import AnimatedMascot from './AnimatedMascot.jsx';
 
 // ── 공통 래퍼 ──────────────────────────────────────────────
 function Wrap({ children }) {
@@ -70,7 +71,9 @@ function OrbAnim() {
 }
 
 // ── 1. 일일 운세 (daily) ──────────────────────────────────────
-function DailyAnim() { return <OrbAnim />; }
+function DailyAnim() {
+  return <AnimatedMascot name="loading-reading" size={132} fps={6} staticMood="eureka" />;
+}
 
 // ── 2. 타로 (tarot) — 카드 3장 + 빛 스윕 ─────────────────
 function TarotAnim() {
@@ -97,7 +100,7 @@ function TarotAnim() {
               alignItems: 'center', justifyContent: 'center',
               fontSize: i === 1 ? '1.3rem' : '1rem',
               color: 'rgba(232,176,72,.5)',
-            }}>✦</div>
+            }}></div>
             {/* 빛 스윕 */}
             <div style={{
               position: 'absolute', top: 0, bottom: 0, width: '40%',
@@ -132,7 +135,7 @@ function DreamAnim() {
           fontSize: '.5rem', color: 'rgba(232,176,72,.6)',
           animation: `fl-glow-soft ${1.5 + i * 0.4}s ease-in-out infinite`,
           animationDelay: `${i * 0.35}s`,
-        }}>✦</div>
+        }}></div>
       ))}
       {/* 떠오르는 Z (꿈) */}
       {[0.6, 1.3, 2.1].map((delay, i) => (
@@ -195,7 +198,7 @@ function CompatAnim() {
         fontSize: '1.2rem',
         animation: 'fl-glow-soft 2s ease-in-out infinite',
         color: 'rgba(232,176,72,.8)',
-      }}>✦</div>
+      }}></div>
     </div>
   );
 }
@@ -261,7 +264,7 @@ function ProphecyAnim() {
         position: 'absolute', top: '50%', left: '50%',
         animation: 'fl-orbit-rev 3s linear infinite',
       }}>
-        <div style={{ fontSize: '.7rem', color: 'var(--gold)', marginTop: -6, marginLeft: -6 }}>✦</div>
+        <div style={{ fontSize: '.7rem', color: 'var(--gold)', marginTop: -6, marginLeft: -6 }}></div>
       </div>
     </div>
   );
@@ -329,7 +332,7 @@ function ComprehensiveAnim() {
       {/* 중심 별 */}
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
         fontSize="16" fill="var(--gold)"
-        style={{ animation: 'fl-glow-soft 2.2s ease-in-out infinite' }}>✦</text>
+        style={{ animation: 'fl-glow-soft 2.2s ease-in-out infinite' }}></text>
     </svg>
   );
 }
@@ -408,13 +411,13 @@ function LetterAnim() {
         <svg width="90" height="30" style={{ position: 'absolute', top: 0 }}>
           <path d="M0,0 L45,20 L90,0" fill="none" stroke="rgba(232,176,72,.3)" strokeWidth="1" />
         </svg>
-        {/* 봉인 ✦ */}
+        {/* 봉인 */}
         <div style={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%,-50%)',
           fontSize: '.9rem', color: 'rgba(232,176,72,.6)',
           animation: 'fl-glow-soft 2s ease-in-out infinite',
-        }}>✦</div>
+        }}></div>
       </div>
       {/* 편지지가 올라옴 */}
       <div style={{
@@ -470,7 +473,7 @@ function GroupAnim() {
         transform: 'translate(-50%,-50%)',
         fontSize: '1.1rem', color: 'var(--gold)',
         animation: 'fl-glow-soft 2s ease-in-out infinite',
-      }}>✦</div>
+      }}></div>
     </div>
   );
 }
@@ -537,7 +540,7 @@ const FEATURE_MAP = {
   diary:         { Anim: () => (
     <div style={{ position: 'relative', width: 72, height: 72 }}>
       <div style={{ width: 72, height: 72, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 1.2s linear infinite' }} />
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '1.6rem' }}>✦</div>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '1.6rem' }}></div>
     </div>
   ), title: '별숨이 오늘 하루를 읽고 있어요', subtitle: '사주와 별자리로\n오늘의 기운을 분석하는 중이에요' },
 };
@@ -560,7 +563,7 @@ export default function FeatureLoadingScreen({ type = 'daily', fullPage = true, 
       position: 'fixed',
       inset: 0,
       zIndex: 300,
-      background: 'rgba(250, 247, 241, 0.97)',
+      background: 'var(--loading-overlay)',
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
       display: 'flex',

@@ -41,7 +41,7 @@ export default function UseItemModal({ item, callApi, onClose, showToast }) {
           )}
         </div>
         <button onClick={onClose} style={{ width: '100%', padding: '11px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-          ✦ 확인했어요
+          확인했어요
         </button>
       </div>
     </div>,

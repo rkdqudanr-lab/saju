@@ -26,21 +26,22 @@ import LandingHeader from '../components/landing/LandingHeader.jsx';
 import DailyMiniCard from '../components/landing/DailyMiniCard.jsx';
 import AlertCarousel from '../components/landing/AlertCarousel.jsx';
 import ActionTile from '../components/landing/ActionTile.jsx';
-import QuickActionGrid from '../components/landing/QuickActionGrid.jsx';
-import WeeklyScoreSummary from '../components/landing/WeeklyScoreSummary.jsx';
-import LevelCard from '../components/landing/LevelCard.jsx';
+import HomeQuickActions from '../components/landing/HomeQuickActions.jsx';
+import FeatureRail from '../components/landing/FeatureRail.jsx';
+import PetMascot from '../components/landing/PetMascot.jsx';
 import GachaGraphic from '../components/GachaGraphic.jsx';
 import Mascot from '../components/Mascot.jsx';
+import AnimatedMascot from '../components/AnimatedMascot.jsx';
 import { ASPECTS, getDailyResonanceItems } from '../utils/gachaItems.js';
 
-const _SI = { viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+const _SI = { viewBox: '0 0 24 24', width: 18, height: 18, fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 const TILE_ICONS = {
   chat:     <svg {..._SI}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
   question: <svg {..._SI}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   mission:  <svg {..._SI}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
   diary:    <svg {..._SI}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
   calendar: <svg {..._SI}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-  star:     <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  star:     <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
   barChart: <svg {..._SI}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
   shop:     <svg {..._SI}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
   book:     <svg {..._SI}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
@@ -89,7 +90,7 @@ const TodayResonancePreview = React.memo(function TodayResonancePreview({ item, 
           {item.bodyName}
         </div>
         <div style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1.45, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {axis.emoji} {axis.label} 기운이 가까워졌어요
+          {axis.label} 기운이 가까워졌어요
         </div>
       </div>
       <div style={{ color: 'var(--gold)', fontWeight: 900, fontSize: 18 }}>›</div>
@@ -138,6 +139,7 @@ export default function LandingPage({
   onFreeRecharge,
   freeRechargeAvailable = true,
   onEarnBP,
+  spendBP,
   hasDiaryToday = false,
   setEditingMyProfile,
   setShowProfileModal,
@@ -169,6 +171,7 @@ export default function LandingPage({
   const [axisTextOverrides, setAxisTextOverrides] = useState({});
   const [scoreHistory, setScoreHistory] = useState([]);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [showHomeMore, setShowHomeMore] = useState(false);
 
   // ── 운세 점수 계산 ──
   const baseScore = dailyResult?.score ?? 0;
@@ -239,13 +242,13 @@ export default function LandingPage({
     const hour = new Date().getHours();
 
     if (!hasDiaryToday && hour >= 17 && dailyResult) {
-      return { icon: '📓', text: '저녁이에요. 오늘 하루를 기록하고 +5 BP 받아요 →', step: STEP.DIARY };
+      return { mood: 'sleepy', text: '저녁이에요. 오늘 하루를 기록하고 +5 BP 받아요 →', step: STEP.DIARY };
     }
     const validScores = scoreHistory.filter((s) => s.score !== null);
     if (validScores.length >= 3) {
       const last3 = validScores.slice(-3);
       if (last3[0].score > last3[1].score && last3[1].score > last3[2].score) {
-        return { icon: '💬', text: '3일째 기운이 내려가고 있어요. 별숨에게 물어볼까요?', step: STEP.QUESTION };
+        return { mood: 'cheer', text: '3일째 기운이 내려가고 있어요. 별숨에게 물어볼까요?', step: STEP.QUESTION };
       }
     }
     return null;
@@ -353,20 +356,20 @@ export default function LandingPage({
   const streakText = useMemo(() => {
     const s = gamificationState.loginStreak;
     const MILESTONE_MSG = { 3: '+30 BP', 7: '+100 BP', 14: '+100 BP', 21: '+100 BP', 30: '+300 BP' };
-    if (MILESTONE_MSG[s]) return `✦ ${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요!`;
+    if (MILESTONE_MSG[s]) return `${s}일 달성 보너스 ${MILESTONE_MSG[s]}을 받았어요`;
     const next = [3, 7, 14, 21, 30].find((m) => m > s);
     return next
       ? `앞으로 ${next - s}일 더 출석하면 ${MILESTONE_MSG[next]} 보너스를 받아요`
-      : '30일을 넘었어요! 전설의 별숨 수호자예요 ✦';
+      : '30일을 넘었어요. 전설의 별숨 수호자예요';
   }, [gamificationState.loginStreak]);
 
   const recommendedFeature = useMemo(() => {
     const features = [
-      { icon: TILE_ICONS.barChart, label: '별숨 통계', sub: '지난 운세 흐름을 확인해요', step: STEP.STATS },
+      { icon: TILE_ICONS.barChart, label: '운세 통계', sub: '지난 운세 흐름을 확인해요', step: STEP.STATS },
       { icon: TILE_ICONS.star,     label: '나의 별숨', sub: '사주와 천체 분석을 살펴봐요', step: STEP.NATAL },
-      { icon: TILE_ICONS.book,     label: '별숨 도감', sub: '컬렉션 완성을 이어가요', step: STEP.BYEOLSOOM_SPACE },
-      { icon: TILE_ICONS.shop,     label: '별숨 뽑기', sub: '오늘의 인연 오브제를 만나봐요', step: STEP.GACHA },
-      { icon: TILE_ICONS.calendar, label: '별숨 달력', sub: '이번 주 운세 기록을 돌아봐요', step: STEP.CALENDAR },
+      { icon: TILE_ICONS.book,     label: '도감', sub: '컬렉션 완성을 이어가요', step: STEP.BYEOLSOOM_SPACE },
+      { icon: TILE_ICONS.shop,     label: '뽑기', sub: '오늘의 인연 오브제를 만나봐요', step: STEP.GACHA },
+      { icon: TILE_ICONS.calendar, label: '달력', sub: '이번 주 운세 기록을 돌아봐요', step: STEP.CALENDAR },
       { icon: TILE_ICONS.diary,    label: '나의 하루', sub: '오늘의 감정을 남겨봐요', step: STEP.DIARY },
     ];
     const seed = today?.day ?? new Date().getDate();
@@ -376,70 +379,136 @@ export default function LandingPage({
   // ── 타일 정의 ──
   const heroTile = useMemo(() => ({
     icon: TILE_ICONS.chat,
-    title: '별숨에게 질문하기',
-    sub: '지금 제일 궁금한 걸 바로 물어보세요',
+    title: '지금 고민 물어보기',
+    sub: '연애, 일, 돈, 관계를 바로 상담해요',
     onClick: () => setStep(STEP.QUESTION),
     hero: true,
   }), [setStep]);
 
-  const primaryTiles = useMemo(() => [
+  const homeQuickActions = useMemo(() => [
     {
       icon: TILE_ICONS.question,
-      title: '오늘의 추천질문',
-      sub: '연애·일·돈 고민을 빠르게 골라요',
+      label: '질문',
+      meta: '상담',
       onClick: () => setStep(STEP.QUESTION),
-      badge: '자주 묻는 질문',
       ariaLabel: '오늘의 추천질문 보기',
     },
     {
       icon: TILE_ICONS.mission,
-      title: '오늘 미션',
-      sub: totalMissions === 0
-        ? '오늘 별숨을 확인하면 미션이 나타나요'
+      label: '미션',
+      meta: totalMissions === 0
+        ? '대기'
         : remainingMissions > 0
-          ? `✦ ${remainingMissions}개 남았어요`
-          : '오늘 미션 완료! ✦',
+          ? `${remainingMissions}개`
+          : '완료',
       onClick: () => setStep(STEP.MISSIONS),
-      progressFill: totalMissions > 0 ? (completedMissions / totalMissions) * 100 : 0,
       accent: totalMissions > 0 && remainingMissions === 0,
       ariaLabel: `오늘 미션, ${completedMissions}/${totalMissions} 완료`,
     },
     {
       icon: TILE_ICONS.diary,
-      title: '나의 하루',
-      sub: hasDiaryToday ? '오늘 하루를 들려줬어요 ✦' : '별숨에게 오늘을 들려주세요',
+      label: '나의 하루',
+      meta: hasDiaryToday ? '완료' : '+5 BP',
       onClick: () => setStep(STEP.DIARY),
       accent: hasDiaryToday,
     },
     {
       icon: TILE_ICONS.calendar,
-      title: '별숨 달력',
-      sub: '운세 기록 한눈에 보기',
+      label: '달력',
+      meta: '기록',
       onClick: () => setStep(STEP.CALENDAR),
     },
-    {
-      icon: recommendedFeature.icon,
-      title: '오늘의 추천 별숨기능',
-      sub: recommendedFeature.sub,
-      onClick: () => setStep(recommendedFeature.step),
-      badge: recommendedFeature.label,
-      ariaLabel: `오늘의 추천 별숨기능, ${recommendedFeature.label}`,
-    },
-    {
-      icon: TILE_ICONS.question,
-      title: '나에 대해 알려주기',
-      sub: '더 깊은 분석을 위해 별숨에게 나를 알려줘요',
-      onClick: () => setShowProfileModal(true),
-      ariaLabel: '나에 대해 알려주기',
-    },
-  ], [totalMissions, completedMissions, remainingMissions, hasDiaryToday, recommendedFeature, setStep, setShowProfileModal]);
+  ], [totalMissions, completedMissions, remainingMissions, hasDiaryToday, setStep]);
 
-  const secondaryTiles = useMemo(() => [
-    { icon: TILE_ICONS.star,     title: '나의 별숨', sub: '사주·천체 종합 분석', onClick: () => setStep(STEP.NATAL) },
-    { icon: TILE_ICONS.barChart, title: '별숨 통계', sub: '지난 운세 흐름 보기', onClick: () => setStep(STEP.STATS) },
-    { icon: TILE_ICONS.shop,     title: '별숨 뽑기', sub: '인연 보정으로 오브제 만나기', onClick: () => setStep(STEP.GACHA), ariaLabel: '별숨 뽑기, 오브제 만나기' },
-    { icon: TILE_ICONS.book,     title: '별숨 도감', sub: '컬렉션 완성 도전', onClick: () => setStep(STEP.BYEOLSOOM_SPACE) },
-  ], [setStep]);
+  const weeklyBars = useMemo(
+    () => normalizedWeeklyHistory.map((item) => item.score),
+    [normalizedWeeklyHistory],
+  );
+
+  const serviceRailItems = useMemo(() => {
+    const baseItems = [
+      {
+        icon: TILE_ICONS.shop,
+        label: '뽑기',
+        sub: '오늘의 인연 오브제',
+        onClick: () => setStep(STEP.GACHA),
+        ariaLabel: '뽑기, 오브제 만나기',
+      },
+      {
+        icon: TILE_ICONS.star,
+        label: '나의 별숨',
+        sub: '사주·천체 종합',
+        onClick: () => setStep(STEP.NATAL),
+      },
+      {
+        icon: TILE_ICONS.barChart,
+        label: '운세 통계',
+        sub: '지난 흐름 보기',
+        onClick: () => setStep(STEP.STATS),
+      },
+      {
+        icon: TILE_ICONS.book,
+        label: '도감',
+        sub: '컬렉션 완성',
+        onClick: () => setStep(STEP.BYEOLSOOM_SPACE),
+      },
+      {
+        icon: TILE_ICONS.question,
+        label: '나 업데이트',
+        sub: '상황 다시 알려주기',
+        onClick: () => setShowProfileModal(true),
+        ariaLabel: '나에 대해 알려주기',
+      },
+    ];
+
+    return [
+      {
+        icon: recommendedFeature.icon,
+        label: recommendedFeature.label,
+        sub: recommendedFeature.sub,
+        badge: '추천',
+        accent: true,
+        onClick: () => setStep(recommendedFeature.step),
+        ariaLabel: `오늘의 추천 별숨기능, ${recommendedFeature.label}`,
+      },
+      ...baseItems.filter((item) => item.label !== recommendedFeature.label),
+    ];
+  }, [recommendedFeature, setStep, setShowProfileModal]);
+
+  const growthRailItems = useMemo(() => [
+    {
+      icon: TILE_ICONS.barChart,
+      label: '주간 흐름',
+      sub: weeklyBars.some((value) => value !== null) ? '최근 7일 점수' : '기록 모으는 중',
+      bars: weeklyBars,
+      onClick: () => setStep(STEP.SCORE_TREND),
+    },
+    {
+      icon: TILE_ICONS.star,
+      label: '성장 단계',
+      sub: `수호자 Lv.${gamificationState.guardianLevel || 1}`,
+      progress: totalMissions > 0 ? (completedMissions / totalMissions) * 100 : 0,
+      onClick: () => setStep(STEP.GROWTH_DASHBOARD),
+    },
+    {
+      icon: TILE_ICONS.shop,
+      label: '상점',
+      sub: '아이템과 테마',
+      onClick: () => setStep(STEP.SHOP),
+    },
+    {
+      icon: TILE_ICONS.star,
+      label: '오브제함',
+      sub: '보유 아이템',
+      onClick: () => setStep(STEP.ITEM_INVENTORY),
+    },
+    {
+      icon: TILE_ICONS.book,
+      label: '일기 모아보기',
+      sub: '기록 다시 읽기',
+      onClick: () => setStep(STEP.DIARY_LIST),
+    },
+  ], [weeklyBars, gamificationState.guardianLevel, totalMissions, completedMissions, setStep]);
 
   // ── 비로그인 화면 ──
   if (!user) {
@@ -486,7 +555,7 @@ export default function LandingPage({
         <div className="inner land-scroll-zone">
           <SamplePreview />
           <div className="daily-word">
-            <div className="daily-label">✦ {today?.month}월 {today?.day}일의 별 메시지</div>
+            <div className="daily-label">{today?.month}월 {today?.day}일의 별 메시지</div>
             <div className="daily-text">{'"' + getDailyWord(today?.day) + '"'}</div>
           </div>
           <div className="rev-wrap">
@@ -528,7 +597,7 @@ export default function LandingPage({
                 style={{ width: '100%', justifyContent: 'center', borderRadius: 'var(--r1)', padding: '14px' }}
                 onClick={() => setStep(STEP.PROFILE)}
               >
-                지금 시작하기 ✦
+                지금 시작하기
               </button>
             </div>
           </div>
@@ -551,7 +620,7 @@ export default function LandingPage({
           aria-label="연속 출석 보상"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="streak-popup-flame" aria-hidden="true">🔥</div>
+          <AnimatedMascot name="reward-pop" size={104} fps={6} staticMood="reward" className="streak-popup-mascot" aria-hidden="true" />
           <div className="streak-popup-title">
             {gamificationState.loginStreak}일 연속 출석!
           </div>
@@ -561,7 +630,7 @@ export default function LandingPage({
             className="streak-popup-button"
             onClick={() => setShowStreakPopup(false)}
           >
-            오늘도 별숨 시작하기 ✦
+            확인
           </button>
         </div>
       </div>,
@@ -598,22 +667,17 @@ export default function LandingPage({
           onQuickAsk={onEnterChat}
         />
 
-        <TodayResonancePreview
-          item={homeResonanceItem}
-          axisKey={homeResonanceItem?.resonanceAxis}
-          onClick={() => setStep(STEP.GACHA)}
-        />
+        {/* 3. 핵심 상담 CTA */}
+        <div className="tile-stack">
+          <div className="peek-hero-wrap">
+            <ActionTile {...heroTile} />
+          </div>
+        </div>
 
-        {/* 3. 알림 캐러셀 (절기/생일만) */}
-        <AlertCarousel
-          isApproximate={isApproximate}
-          jeolgi={nearbyJeolgi}
-          birthdays={[]}
-          onApproximate={() => setStep(STEP.PROFILE)}
-          onJeolgi={() => setStep(STEP.CALENDAR)}
-        />
+        {/* 4. 오늘 바로가기 */}
+        <HomeQuickActions title="오늘 바로가기" items={homeQuickActions} />
 
-        {/* 3-1. 이 달의 별숨 업데이트 nudge */}
+        {/* 5. 상황성 추천 */}
         {(() => {
           const stale = getStaleRefreshQuestions(profile?.qa_answers || {});
           if (!stale.length) return null;
@@ -642,7 +706,6 @@ export default function LandingPage({
           );
         })()}
 
-        {/* 4. Smart Suggestion */}
         {suggestion && (
           <div
             role={suggestion.step ? 'button' : undefined}
@@ -651,52 +714,81 @@ export default function LandingPage({
             onClick={suggestion.step ? () => setStep(suggestion.step) : undefined}
             onKeyDown={suggestion.step ? (e) => e.key === 'Enter' && setStep(suggestion.step) : undefined}
           >
-            <span className="smart-suggestion-icon">{suggestion.icon}</span>
+            <Mascot mood={suggestion.mood || 'pointing'} size={38} aria-hidden="true" className="smart-suggestion-mascot" />
             <span className="smart-suggestion-text">{suggestion.text}</span>
             {suggestion.step && <span className="smart-suggestion-arrow">›</span>}
           </div>
         )}
 
-        {/* 5. 주요 기능: hero + 2×2 그리드 */}
-        <div className="tile-stack">
-          <div className="peek-hero-wrap" style={{ position: 'relative' }}>
-            <Mascot
-              mood="peek"
-              size={56}
-              aria-hidden="true"
-              className="peek-hero-owl"
-              style={{
-                position: 'absolute', top: -14, right: 18, zIndex: 2,
-                pointerEvents: 'none',
-                filter: 'drop-shadow(0 2px 3px rgba(0,0,0,.12))',
-              }}
+        <button
+          type="button"
+          className="home-more-toggle"
+          onClick={() => setShowHomeMore((value) => !value)}
+          aria-expanded={showHomeMore}
+        >
+          <span className="home-more-copy">
+            <span className="home-more-title">{showHomeMore ? '간단히 보기' : '더 둘러보기'}</span>
+            <span className="home-more-sub">도감 · 뽑기 · 기록 · 통계</span>
+          </span>
+          <span className="home-more-action" aria-hidden="true">
+            <span>{showHomeMore ? '접기' : '펼치기'}</span>
+            <svg
+              className="home-more-chevron"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d={showHomeMore ? 'm18 15-6-6-6 6' : 'm6 9 6 6 6-6'} />
+            </svg>
+          </span>
+        </button>
+
+        {showHomeMore && (
+          <div className="home-more-panel">
+            <TodayResonancePreview
+              item={homeResonanceItem}
+              axisKey={homeResonanceItem?.resonanceAxis}
+              onClick={() => setStep(STEP.GACHA)}
             />
-            <ActionTile {...heroTile} />
+
+            <AlertCarousel
+              isApproximate={isApproximate}
+              jeolgi={nearbyJeolgi}
+              birthdays={[]}
+              onApproximate={() => setStep(STEP.PROFILE)}
+              onJeolgi={() => setStep(STEP.CALENDAR)}
+            />
+
+            <FeatureRail
+              title="추천 서비스"
+              items={serviceRailItems}
+            />
+
+            <FeatureRail
+              title="기록과 성장"
+              items={growthRailItems}
+            />
+
+            <section className="home-section home-pet-section" aria-label="별숨이 키우기">
+              <div className="home-section-head">
+                <h2 className="home-section-title">별숨이 키우기</h2>
+              </div>
+              <PetMascot onSpecialFeed={spendBP} />
+            </section>
+
+            <div className="land-daily-msg land-daily-msg--compact">
+              <div className="land-daily-msg-label">
+                {today?.month}월 {today?.day}일의 별 메시지
+              </div>
+              <div className="land-daily-msg-text">
+                "{getDailyWord(today?.day)}"
+              </div>
+            </div>
           </div>
-          <QuickActionGrid tiles={primaryTiles} />
-        </div>
-
-        {/* 6. 7일 점수 요약 */}
-        <WeeklyScoreSummary
-          scoreHistory={normalizedWeeklyHistory}
-          onClick={() => setStep(STEP.SCORE_TREND)}
-        />
-
-        {/* 7. 별숨 레벨 카드 */}
-        <LevelCard />
-
-        {/* 8. 보조 기능 2×2 타일 */}
-        <QuickActionGrid tiles={secondaryTiles} />
-
-        {/* 9. 오늘의 별 메시지 */}
-        <div className="land-daily-msg">
-          <div className="land-daily-msg-label">
-            ✦ {today?.month}월 {today?.day}일의 별 메시지
-          </div>
-          <div className="land-daily-msg-text">
-            "{getDailyWord(today?.day)}"
-          </div>
-        </div>
+        )}
 
       </div>
 

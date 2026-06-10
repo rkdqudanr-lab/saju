@@ -256,7 +256,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
       <div className="profile-overlay" role="dialog" aria-modal="true" aria-label="별숨에게 나를 알려주기"
         onClick={e => { if (e.target.className === 'profile-overlay') onClose(); }}>
         <div className="profile-sheet" ref={sheetRef} style={{ textAlign: 'center', padding: '40px 24px' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>✦</div>
+          <div style={{ fontSize: '2.5rem', marginBottom: 16 }}></div>
           <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 12 }}>
             별숨이 이제 당신을 잘 알아요
           </div>
@@ -284,7 +284,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
       <div className="profile-overlay" role="dialog" aria-modal="true" aria-label="별숨에게 나를 알려주기"
         onClick={e => { if (e.target.className === 'profile-overlay') onClose(); }}>
         <div className="profile-sheet" ref={sheetRef} style={{ textAlign: 'center', padding: '60px 24px' }}>
-          <div style={{ fontSize: '1.6rem', marginBottom: 16, color: 'var(--gold)' }}>✦</div>
+          <div style={{ fontSize: '1.6rem', marginBottom: 16, color: 'var(--gold)' }}></div>
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>
             별숨이 당신만을 위한<br />맞춤 질문을 만들고 있어요...
           </div>
@@ -327,7 +327,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
         <div style={{ padding: '0 4px 16px', borderBottom: '1px solid var(--line)', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div className="profile-title" style={{ marginBottom: 0 }}>
-              {phase === 'ai' ? '✦ 맞춤 질문' : '✦ 별숨에게 나를 알려주기'}
+              {phase === 'ai' ? '맞춤 질문' : '별숨에게 나를 알려주기'}
             </div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
               {phase === 'ai'
@@ -348,7 +348,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
           </div>
           {phase === 'ai' && (
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', marginTop: 6, fontWeight: 600 }}>
-              ✦ 별숨이 당신만을 위해 준비한 질문이에요
+              별숨이 당신만을 위해 준비한 질문이에요
             </div>
           )}
         </div>
@@ -372,7 +372,7 @@ export default function ProfileModal({ profile, setProfile, onClose, user, saveU
             borderRadius: 'var(--r1)', border: '1px solid var(--acc)',
             fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 12,
           }}>
-            ✦ 이전 답변: {qa[activeQ.id]}
+            이전 답변: {qa[activeQ.id]}
           </div>
         )}
 

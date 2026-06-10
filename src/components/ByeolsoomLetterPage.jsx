@@ -62,8 +62,8 @@ function LetterCard({ letter, onOpen, isInbox }) {
 
   const statusLabel = {
     pending: { text: '전달 중', color: 'var(--t4)' },
-    matched: { text: isInbox ? '새 편지 도착 ✦' : '전달됨', color: isInbox ? 'var(--gold)' : 'var(--teal)' },
-    replied: { text: isInbox ? '답장함' : '답장 받음 ✦', color: letter.status === 'replied' && !isInbox ? 'var(--gold)' : 'var(--t3)' },
+    matched: { text: isInbox ? '새 편지 도착' : '전달됨', color: isInbox ? 'var(--gold)' : 'var(--teal)' },
+    replied: { text: isInbox ? '답장함' : '답장 받음', color: letter.status === 'replied' && !isInbox ? 'var(--gold)' : 'var(--t3)' },
   }[letter.status] || { text: '', color: 'var(--t4)' };
 
   return (
@@ -81,7 +81,7 @@ function LetterCard({ letter, onOpen, isInbox }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
-          {isInbox ? `✦ 익명의 별` : `→ ${letter.gender_pref || '상관없음'}에게`}
+          {isInbox ? `익명의 별` : `→ ${letter.gender_pref || '상관없음'}에게`}
           {letter.sender_sun_sign && ` · ${letter.sender_sun_sign}`}
         </div>
         <div style={{ fontSize: 'var(--xs)', color: statusLabel.color, fontWeight: 600 }}>
@@ -119,7 +119,7 @@ function LetterDetailModal({ letter, myKakaoId, onClose, onReplyDone, showToast 
         .update({ reply_content: reply.trim(), reply_at: new Date().toISOString(), status: 'replied' })
         .eq('id', letter.id);
       if (error) throw error;
-      showToast('답장을 보냈어요 ✦', 'success');
+      showToast('답장을 보냈어요', 'success');
       onReplyDone();
     } catch (e) {
       console.error('[별숨편지] reply error:', e);
@@ -161,7 +161,7 @@ function LetterDetailModal({ letter, myKakaoId, onClose, onReplyDone, showToast 
         {isInbox && !hasReplied && (
           <div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8, letterSpacing: '.04em' }}>
-              ✦ 답장 쓰기
+              답장 쓰기
             </div>
             <textarea
               value={reply}
@@ -185,7 +185,7 @@ function LetterDetailModal({ letter, myKakaoId, onClose, onReplyDone, showToast 
               disabled={!reply.trim() || sending}
               onClick={sendReply}
             >
-              {sending ? '전송 중...' : '답장 보내기 ✦'}
+              {sending ? '전송 중...' : '답장 보내기'}
             </button>
           </div>
         )}
@@ -193,7 +193,7 @@ function LetterDetailModal({ letter, myKakaoId, onClose, onReplyDone, showToast 
         {/* 이미 답장한 경우 */}
         {isInbox && hasReplied && (
           <div style={{ padding: '14px 16px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)' }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>✦ 내가 보낸 답장</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>내가 보낸 답장</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{letter.reply_content}</div>
           </div>
         )}
@@ -201,7 +201,7 @@ function LetterDetailModal({ letter, myKakaoId, onClose, onReplyDone, showToast 
         {/* 내가 쓴 편지에 답장이 온 경우 */}
         {!isInbox && letter.reply_content && (
           <div style={{ marginTop: 8, padding: '16px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r2)' }}>
-            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>✦ 돌아온 답장</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>돌아온 답장</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{letter.reply_content}</div>
           </div>
         )}
@@ -349,7 +349,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
             .eq('id', myLetter.id);
         }
         await loadLetters();
-        showToast('✦ 이번 주 별숨편지가 도착했어요! 받은 편지함을 확인해봐요', 'success');
+        showToast('이번 주 별숨편지가 도착했어요! 받은 편지함을 확인해봐요', 'success');
       } catch (e) {
         console.error('[별숨편지] 월요일 자동 매칭 오류:', e);
       }
@@ -425,14 +425,14 @@ export default function ByeolsoomLetterPage({ showToast }) {
             .update({ recipient_kakao_id: best.sender_kakao_id, status: 'matched', compat_score: bestScore })
             .eq('id', myLetter.id);
 
-          showToast('✦ 기운이 맞는 편지가 도착했어요! 받은 편지함을 확인해봐요', 'success');
+          showToast('기운이 맞는 편지가 도착했어요! 받은 편지함을 확인해봐요', 'success');
           setTab('inbox');
         } else {
-          showToast('편지를 보냈어요 · 기운이 맞는 누군가가 곧 받아볼 거예요 ✦', 'success');
+          showToast('편지를 보냈어요 · 기운이 맞는 누군가가 곧 받아볼 거예요', 'success');
           setTab('sent');
         }
       } else {
-        showToast('편지를 보냈어요 · 기운이 맞는 누군가가 곧 받아볼 거예요 ✦', 'success');
+        showToast('편지를 보냈어요 · 기운이 맞는 누군가가 곧 받아볼 거예요', 'success');
         setTab('sent');
       }
 
@@ -486,7 +486,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
           <span style={{ fontSize: 18, flexShrink: 0 }}>{isMonday ? '✉️' : '📅'}</span>
           <div>
             <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: isMonday ? 'var(--gold)' : 'var(--t2)', marginBottom: 2 }}>
-              {isMonday ? '오늘은 편지 배달의 날이에요 ✦' : '별숨편지는 매주 월요일 아침에 배달돼요'}
+              {isMonday ? '오늘은 편지 배달의 날이에요' : '별숨편지는 매주 월요일 아침에 배달돼요'}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>
               {isMonday
@@ -503,7 +503,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
             textAlign: 'center', padding: '40px 20px',
             background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)',
           }}>
-            <div style={{ fontSize: '1.4rem', color: 'var(--t4)', marginBottom: 12 }}>✦</div>
+            <div style={{ fontSize: '1.4rem', color: 'var(--t4)', marginBottom: 12 }}></div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', marginBottom: 6 }}>로그인이 필요해요</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>카카오 로그인 후 별숨편지를 이용할 수 있어요</div>
           </div>
@@ -522,7 +522,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
                     padding: '12px 14px', background: 'var(--goldf)', border: '1px solid var(--acc)',
                     borderRadius: 'var(--r1)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10,
                   }}>
-                    <div style={{ fontSize: '1rem', color: 'var(--gold)' }}>✦</div>
+                    <div style={{ fontSize: '1rem', color: 'var(--gold)' }}></div>
                     <div>
                       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 2 }}>이 편지에 담기는 나의 기운</div>
                       <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)' }}>
@@ -596,7 +596,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
                   disabled={!content.trim() || sending || content.length > MAX_LEN}
                   onClick={sendLetter}
                 >
-                  {sending ? '별빛에 실어 보내는 중...' : '✦ 편지 보내기'}
+                  {sending ? '별빛에 실어 보내는 중...' : '편지 보내기'}
                 </button>
 
                 {hasSent && (
@@ -616,7 +616,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
                   </div>
                 ) : sentLetters.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--t4)' }}>
-                    <div style={{ fontSize: '1.4rem', marginBottom: 12 }}>✦</div>
+                    <div style={{ fontSize: '1.4rem', marginBottom: 12 }}></div>
                     <div style={{ fontSize: 'var(--sm)', marginBottom: 6 }}>아직 보낸 편지가 없어요</div>
                     <div style={{ fontSize: 'var(--xs)' }}>편지 쓰기 탭에서 첫 편지를 써봐요</div>
                     <button className="btn-main" style={{ marginTop: 20, maxWidth: 160 }} onClick={() => setTab('write')}>
@@ -639,7 +639,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
                     padding: '14px 16px', background: 'var(--goldf)', border: '1px solid var(--acc)',
                     borderRadius: 'var(--r1)', marginBottom: 16, fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7,
                   }}>
-                    ✦ 편지를 먼저 보내야 누군가의 편지를 받을 수 있어요.
+                    편지를 먼저 보내야 누군가의 편지를 받을 수 있어요.
                   </div>
                 )}
                 {loading ? (

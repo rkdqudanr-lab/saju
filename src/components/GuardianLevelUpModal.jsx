@@ -24,7 +24,7 @@ const LEVEL_COLORS = {
 };
 
 const LEVEL_EMOJIS = {
-  1: '✦',
+  1: '◦',
   2: '◇',
   3: '◈',
   4: '✧',
@@ -40,7 +40,7 @@ export default function GuardianLevelUpModal({ fromLevel, toLevel, guardianMessa
   }, []);
 
   const color = LEVEL_COLORS[toLevel] || '#B8A035';
-  const emoji = LEVEL_EMOJIS[toLevel] || '✦';
+  const emoji = LEVEL_EMOJIS[toLevel] || '◦';
   const label = LEVEL_LABELS[toLevel] || '';
 
   return createPortal(
@@ -130,7 +130,7 @@ export default function GuardianLevelUpModal({ fromLevel, toLevel, guardianMessa
             cursor: 'pointer',
           }}
         >
-          고마워요, 더 성장할게요 ✦
+          고마워요, 더 성장할게요
         </button>
       </div>
     </div>,

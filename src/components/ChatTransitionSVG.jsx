@@ -29,7 +29,7 @@ export default function ChatTransitionSVG() {
 
       {/* 별 심볼 */}
       <text className="ct-star" x="100" y="110"
-        textAnchor="middle" fontSize="26" fill="#FFF7DE">✦</text>
+        textAnchor="middle" fontSize="26" fill="#FFF7DE"></text>
 
       {/* 반짝이 점들 */}
       <circle className="ct-sp ct-sp-0" cx="64"  cy="49"  r="2"   fill="#E8B048" />

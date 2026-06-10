@@ -175,7 +175,7 @@ export default function ScoreTrendPage() {
       {/* 데이터 없음 */}
       {!loading && scores.length === 0 && (
         <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', marginBottom: 12 }}>✦</div>
+          <div style={{ fontSize: '2rem', marginBottom: 12 }}></div>
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7 }}>
             아직 기록된 운세 점수가 없어요.<br />오늘 별숨을 확인해보세요.
           </div>

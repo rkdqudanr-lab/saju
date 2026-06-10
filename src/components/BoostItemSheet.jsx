@@ -32,7 +32,7 @@ function ItemChip({ row, isPending, onToggle, disabled }) {
         transition: 'all 0.18s ease',
       }}
     >
-      <span style={{ fontSize: 22, flexShrink: 0 }}>{item?.emoji || '✦'}</span>
+      <span style={{ fontSize: 22, flexShrink: 0 }}>{item?.emoji || '·'}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', marginBottom: 2 }}>
           {item?.name || '아이템'}
@@ -119,7 +119,7 @@ export default function BoostItemSheet({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <div>
             <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)' }}>
-              ✦ 점수 올리기
+              점수 올리기
             </div>
             <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 2 }}>
               현재 {baseDisplayScore}점
@@ -147,7 +147,7 @@ export default function BoostItemSheet({
             </div>
           ) : !hasItems ? (
             <div style={{ textAlign: 'center', padding: '32px 0' }}>
-              <div style={{ fontSize: '2rem', marginBottom: 12 }}>✦</div>
+              <div style={{ fontSize: '2rem', marginBottom: 12 }}></div>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 16 }}>
                 사용할 아이템이 없어요
               </div>
@@ -220,7 +220,7 @@ export default function BoostItemSheet({
                   정화 중...
                 </>
               ) : pendingItems.length > 0 ? (
-                <>✦ 점수 올리기 <span style={{ opacity: 0.85, fontSize: 13 }}>+{totalPendingBoost}점</span></>
+                <>점수 올리기 <span style={{ opacity: 0.85, fontSize: 13 }}>+{totalPendingBoost}점</span></>
               ) : (
                 '아이템을 선택해주세요'
               )}

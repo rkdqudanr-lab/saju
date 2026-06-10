@@ -5,6 +5,13 @@
   -webkit-user-drag: none;
 }
 
+.animated-mascot {
+  display: inline-block;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .mascot--float {
   animation: mascot-float 3.4s ease-in-out infinite;
 }

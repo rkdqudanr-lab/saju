@@ -37,7 +37,7 @@ export default function PrecisionNudge() {
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontSize: 'var(--xs)', color: meta.color, fontWeight: 700, letterSpacing: '.06em' }}>
-          ✦ 나의 별숨 정밀도
+          나의 별숨 정밀도
         </div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
           {total}점 / {MAX_SCORE}점 · <span style={{ color: meta.color, fontWeight: 600 }}>{meta.label}</span>

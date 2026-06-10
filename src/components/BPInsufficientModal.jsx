@@ -67,7 +67,7 @@ export default function BPInsufficientModal({
 
         {/* 헤더 */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>✦</div>
+          <div style={{ fontSize: '1.6rem', marginBottom: 8 }}></div>
           <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 6 }}>
             BP가 부족해요
           </div>

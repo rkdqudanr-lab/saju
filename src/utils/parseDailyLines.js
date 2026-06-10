@@ -7,6 +7,25 @@ function extractLabeledValue(lines, patterns) {
     .trim();
 }
 
+// 다음 "필드 라벨(콜론) 또는 [태그]"가 나오기 전까지를 한 항목의 경계로 본다.
+// 산문 문장이 잘못 끊기지 않도록 반드시 콜론을 요구한다.
+const BLOCK_BOUNDARY = /^(\[|(종합운|애정운|금전운|직장운|학업운|건강운|대인운|이동운|창의운|음식|장소|색|컬러|색상|아이템|숫자|행운\s?숫자|방향|행운\s?방향|소통|행동|요약|시너지|십신|기운|DO|DONT|행성|흐름)\s*[:：])/i;
+
+// 라벨이 붙은 줄부터 다음 경계 전까지의 여러 줄을 한 값으로 묶는다.
+// 값이 한 줄이면 extractLabeledValue와 동일하게 동작하고, AI가 문장을 줄바꿈해도 내용이 유실되지 않는다.
+function extractLabeledBlock(lines, patterns) {
+  const startIdx = lines.findIndex((entry) => patterns.some((pattern) => pattern.test(entry)));
+  if (startIdx === -1) return '';
+  const parts = [
+    lines[startIdx].replace(/^\[[^\]]+\]\s*/, '').replace(/^[^:]+:\s*/, '').trim(),
+  ];
+  for (let i = startIdx + 1; i < lines.length; i++) {
+    if (BLOCK_BOUNDARY.test(lines[i])) break;
+    parts.push(lines[i].trim());
+  }
+  return parts.filter(Boolean).join(' ').trim();
+}
+
 export function parseCategoryLine(line) {
   const afterColon = line.split(':').slice(1).join(':').trim();
   const leadingNumMatch = afterColon.match(/^(\d{1,3})\s*[—–-]+\s*/);
@@ -79,7 +98,7 @@ export function parseDailyLines(text) {
 
   const easternKi = {
     sinshin: extractLabeledValue(lines, [/^십신[:\s]/]),
-    kiun: extractLabeledValue(lines, [/^기운[:\s]/]),
+    kiun: extractLabeledBlock(lines, [/^기운[:\s]/]),
     doAction: extractLabeledValue(lines, [/^DO[:\s]/i]),
     dontAction: extractLabeledValue(lines, [/^DONT[:\s]/i]),
   };
@@ -87,7 +106,7 @@ export function parseDailyLines(text) {
 
   const westernSky = {
     planet: extractLabeledValue(lines, [/^행성[:\s]/]),
-    flow: extractLabeledValue(lines, [/^흐름[:\s]/]),
+    flow: extractLabeledBlock(lines, [/^흐름[:\s]/]),
   };
   const normalizedWesternSky = Object.values(westernSky).some(Boolean) ? westernSky : null;
 

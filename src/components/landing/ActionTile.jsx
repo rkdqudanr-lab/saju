@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import Mascot from '../Mascot.jsx';
 
 const HERO_ARROW = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -17,6 +18,7 @@ export default function ActionTile({
   progressFill = null,
   badge = null,
   ariaLabel,
+  mascotMood = null,
 }) {
   if (hero) {
     return (
@@ -35,6 +37,9 @@ export default function ActionTile({
           <div className="tile-title">{title}</div>
           {sub && <div className="tile-sub">{sub}</div>}
         </div>
+        {mascotMood && (
+          <Mascot mood={mascotMood} size={42} aria-hidden="true" className="tile-hero-mascot" />
+        )}
         <span className="tile-hero-arrow">{HERO_ARROW}</span>
       </motion.button>
     );
@@ -49,6 +54,9 @@ export default function ActionTile({
       whileTap={{ scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
     >
+      {mascotMood && (
+        <Mascot mood={mascotMood} size={42} aria-hidden="true" className="tile-mascot" />
+      )}
       <motion.div className="tile-icon" whileTap={{ scale: 1.15, rotate: -5 }}>
         {icon}
       </motion.div>

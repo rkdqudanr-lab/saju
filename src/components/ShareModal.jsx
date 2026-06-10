@@ -19,7 +19,7 @@ export default function ShareModal({ shareModal, onClose, showToast, cardDataUrl
         onClick={e => e.stopPropagation()}
         style={{ maxWidth: hasCard ? 420 : undefined }}
       >
-        <div style={{ textAlign: 'center', fontSize: '2rem', marginBottom: 8 }}>✦</div>
+        <div style={{ textAlign: 'center', fontSize: '2rem', marginBottom: 8 }}></div>
         <div className="upgrade-modal-title">
           {hasCard ? '카드뉴스 저장' : '공유하기'}
         </div>
@@ -49,7 +49,7 @@ export default function ShareModal({ shareModal, onClose, showToast, cardDataUrl
                 style={{ background: 'var(--bg3)', color: 'var(--t1)' }}
                 onClick={() => {
                   navigator.clipboard?.writeText(shareUrl)
-                    .then(() => showToast?.('별숨 링크가 복사됐어요! 친구에게 공유해주세요 ✦', 'success'));
+                    .then(() => showToast?.('별숨 링크가 복사됐어요! 친구에게 공유해주세요', 'success'));
                   onClose();
                 }}
               >

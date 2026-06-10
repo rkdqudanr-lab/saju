@@ -22,7 +22,7 @@ const CARD_THEMES = {
     titleColor:   '#E8B048',
     barColor:     '#E8B048',
     defaultTitle: '오늘의 운세',
-    tagline:      '나만의 수호별, 별숨에서 확인하기 ✦',
+    tagline:      '나만의 수호별, 별숨에서 확인하기',
   },
   dream: {
     bg:           'linear-gradient(160deg, #120A1E 0%, #1A0D2E 45%, #22103A 100%)',
@@ -42,7 +42,7 @@ const CARD_THEMES = {
     titleColor:   '#7B9EC4',
     barColor:     '#7B9EC4',
     defaultTitle: '📅 나의 최고의 날',
-    tagline:      '길일(吉日) 찾기, 별숨에서 확인하기 ✦',
+    tagline:      '길일(吉日) 찾기, 별숨에서 확인하기',
   },
 };
 
@@ -132,7 +132,7 @@ const ShareCardTemplate = forwardRef(function ShareCardTemplate(
             fontWeight: 600,
             marginBottom: '10px',
           }}>
-            ✦ 별숨
+            별숨
           </div>
           <div style={{
             width: '48px',

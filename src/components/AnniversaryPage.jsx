@@ -7,7 +7,7 @@ const ANNIVERSARY_TYPES = [
   { key: "시험일",     emoji: "📚" },
   { key: "입사일",     emoji: "💼" },
   { key: "생일",       emoji: "🎂" },
-  { key: "직접입력",   emoji: "✦" },
+  { key: "직접입력",   emoji: "✏️" },
 ];
 
 const FUTURE_TYPES = [
@@ -15,7 +15,7 @@ const FUTURE_TYPES = [
   { key: "계약·서류일", emoji: "📝" },
   { key: "결혼 후보일", emoji: "💍" },
   { key: "여행·이동일", emoji: "✈️" },
-  { key: "직접입력",    emoji: "✦" },
+  { key: "직접입력",    emoji: "✏️" },
 ];
 
 const CONTEXT_LINES = {
@@ -74,7 +74,7 @@ export default function AnniversaryPage({
     <div className="page step-fade">
       <div className="inner">
         <div style={{ textAlign: 'center', marginBottom: 'var(--sp3)' }}>
-          <div style={{ fontSize: '1.1rem', marginBottom: 4, color: 'var(--gold)' }}>{isFutureMode ? '◈' : '✦'}</div>
+          <div style={{ fontSize: '1.1rem', marginBottom: 4, color: 'var(--gold)' }}>{isFutureMode ? '◈' : '◇'}</div>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>
             {isFutureMode ? '미래 날짜 점보기' : '기념일 운세'}
           </h2>
@@ -202,7 +202,7 @@ export default function AnniversaryPage({
             onClick={handleAskAI}
             style={{ marginBottom: 'var(--sp3)' }}
           >
-            {loading ? '별이 기운을 읽는 중 🌙' : (isFutureMode ? '✦ 이 날의 기운 미리보기' : '✦ AI 해석 받기')}
+            {loading ? '별이 기운을 읽는 중 🌙' : (isFutureMode ? '이 날의 기운 미리보기' : 'AI 해석 받기')}
           </button>
         )}
 

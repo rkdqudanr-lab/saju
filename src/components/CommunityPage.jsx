@@ -30,7 +30,7 @@ const TOPICS = [
   { value: '꿈', emoji: '🌙' },
   { value: '일상', emoji: '☀️' },
   { value: '고민', emoji: '🤔' },
-  { value: '행운', emoji: '✦' },
+  { value: '행운', emoji: '🍀' },
 ];
 
 // 일간 → 오행 색상 매핑
@@ -217,7 +217,7 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
           boxShadow: '0 2px 8px rgba(224,96,64,0.3)',
           zIndex: 2,
         }}>
-          HOT ✦ 인기
+          HOT 인기
         </div>
       )}
 
@@ -231,7 +231,7 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
           fontSize: 16, flexShrink: 0, color: avatarColor, fontWeight: 800,
           boxShadow: `0 4px 12px ${avatarColor}15`,
         }}>
-          {post.ilgan ? post.ilgan : '✦'}
+          {post.ilgan ? post.ilgan : '·'}
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>
@@ -390,7 +390,7 @@ function PostCard({ post, myKakaoId, myNickname, myLikedIds, followingIds, onLik
               transition: 'all 0.2s ease',
             }}
           >
-            <span style={{ fontSize: '14px' }}>{liked ? '✦' : '✧'}</span>
+            <span style={{ fontSize: '14px' }}>{liked ? '★' : '☆'}</span>
             <span>{post.likes_count || 0}</span>
           </button>
           <button
@@ -494,7 +494,7 @@ function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan,
         onClick={e => e.stopPropagation()}
       >
         <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 14 }}>
-          오늘의 별숨 한 마디 ✦
+          오늘의 별숨 한 마디
         </div>
         <textarea
           ref={textRef}
@@ -557,7 +557,7 @@ function WriteModal({ onClose, onSubmit, nickname, defaultSunSign, defaultIlgan,
             />
             <div>
               <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gold)' }}>오늘의 별숨 기운 첨부</div>
-              <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 2 }}>✦ {fortuneSummary}</div>
+              <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: 2 }}>{fortuneSummary}</div>
             </div>
           </label>
         )}
@@ -1049,7 +1049,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
       {/* 헤더 */}
       <div style={{ padding: '28px 20px 16px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
-          ✦ 별숨 광장
+          별숨 광장
         </div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)' }}>
           오늘의 별 기운 나누기
@@ -1226,7 +1226,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
           }}
           aria-label="글쓰기"
         >
-          ✦
+         
         </button>
       )}
 

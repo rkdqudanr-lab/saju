@@ -119,20 +119,20 @@ export default function ShieldBlockModal({
           }}
         >
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 10, letterSpacing: '.04em' }}>
-            ✦ 별숨 포인트 현황
+            별숨 포인트 현황
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>보유 BP</div>
               <div style={{ fontSize: 'var(--xl)', fontWeight: 700, color: 'var(--lav)' }}>
-                ✦ {currentBp}
+                {currentBp}
               </div>
             </div>
             <div style={{ color: 'var(--t4)', fontSize: 'var(--sm)' }}>→</div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 4 }}>필요 BP</div>
               <div style={{ fontSize: 'var(--xl)', fontWeight: 700, color: 'var(--gold)' }}>
-                ✦ {cost}
+                {cost}
               </div>
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function ShieldBlockModal({
           >
             {freeRechargeAvailable ? (
               <div>
-                <strong>✦ 오늘치 별의 에너지를 받아볼까요?</strong>
+                <strong>오늘치 별의 에너지를 받아볼까요?</strong>
                 <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t2)' }}>
                   별숨 포인트(BP)로 나의 별에게 맑은 기운을 선물할 수 있어요.
                   무료 충전 후 기운을 정화해보세요.
@@ -196,7 +196,7 @@ export default function ShieldBlockModal({
               </div>
             ) : (
               <div>
-                <strong>✦ 미션을 완료하면 BP가 쌓여요</strong>
+                <strong>미션을 완료하면 BP가 쌓여요</strong>
                 <div style={{ marginTop: 6, fontSize: 'var(--xs)', color: 'var(--t2)' }}>
                   다음 무료 충전까지 {freeRechargeTimeRemaining || '조금'} 남았어요.
                   오늘의 미션을 완료하거나 내일 다시 시도해보세요.
@@ -228,7 +228,7 @@ export default function ShieldBlockModal({
                   transition: 'opacity .2s',
                 }}
               >
-                {isBlocking ? '정화 중...' : '✦ 기운 정화하기'}
+                {isBlocking ? '정화 중...' : '기운 정화하기'}
               </button>
               <button
                 onClick={onClose}
@@ -266,7 +266,7 @@ export default function ShieldBlockModal({
                     cursor: 'pointer',
                   }}
                 >
-                  ✦ 별 에너지 받기
+                  별 에너지 받기
                 </button>
               )}
               <button

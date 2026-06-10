@@ -104,7 +104,7 @@ function MissionRow({ mission, onComplete, isLoading, isJustCompleted }) {
               pointerEvents: 'none',
             }}
           >
-            +{mission.bp_reward} BP ✦
+            +{mission.bp_reward} BP
           </motion.div>
         )}
       </AnimatePresence>
@@ -158,7 +158,7 @@ export default function MissionDashboard({
           borderRadius: 'var(--r1)',
           border: '1px solid var(--line)',
         }}>
-          오늘의 별숨 기운을 확인하면 미션이 나타나요 ✦
+          오늘의 별숨 기운을 확인하면 미션이 나타나요
         </div>
       </div>
     );
@@ -175,7 +175,7 @@ export default function MissionDashboard({
       <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--t1)' }}>
-            ✦ 오늘의 미션
+            오늘의 미션
           </div>
           <div style={{ fontSize: '12px', color: milestoneReached ? 'var(--teal)' : 'var(--t4)', fontWeight: milestoneReached ? 700 : 400 }}>
             {completedCount} / {total} 완료

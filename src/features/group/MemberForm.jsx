@@ -70,7 +70,7 @@ export default function MemberForm({ onSubmit, title }) {
         ))}
       </div>
       <button className="btn-main" disabled={!ok} onClick={handleSubmit}>
-        모임에 참여하기 ✦
+        모임에 참여하기
       </button>
     </div>
   );

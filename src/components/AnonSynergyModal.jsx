@@ -63,7 +63,7 @@ export default function AnonSynergyModal({ onClose, targetUser, myIlgan, mySunSi
         }} />
 
         <div style={{ fontSize: '11px', color: 'var(--gold)', fontWeight: 800, letterSpacing: '.2em', marginBottom: 12, textTransform: 'uppercase' }}>
-          ✦ Resonance Synergy ✦
+          Resonance Synergy
         </div>
         
         <div style={{ fontSize: 'var(--md)', color: 'var(--t2)', marginBottom: 32, lineHeight: 1.5 }}>

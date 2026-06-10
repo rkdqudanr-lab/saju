@@ -91,7 +91,7 @@ export default function SynthesisModal({ inventory, kakaoId, onClose, onComplete
     const cfg = GRADE_CONFIG[item.grade] || SAJU_GRADE_CONFIG[item.grade] || {};
     const particles = Array.from({ length: 8 }, (_, i) => {
       const angle = (i / 8) * 360, dist = 60 + Math.random() * 30;
-      return { px: `${Math.cos(angle * Math.PI / 180) * dist}px`, py: `${Math.sin(angle * Math.PI / 180) * dist}px`, delay: `${i * 0.06}s`, emoji: ['✦', '✧', '◈', '★'][i % 4] };
+      return { px: `${Math.cos(angle * Math.PI / 180) * dist}px`, py: `${Math.sin(angle * Math.PI / 180) * dist}px`, delay: `${i * 0.06}s`, emoji: ['◇', '✧', '◈', '★'][i % 4] };
     });
     return createPortal(
       <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px' }}>
@@ -100,10 +100,10 @@ export default function SynthesisModal({ inventory, kakaoId, onClose, onComplete
             {particles.map((p, i) => <span key={i} style={{ position: 'absolute', top: '50%', left: '50%', fontSize: '12px', color: cfg.color || 'var(--gold)', '--px': p.px, '--py': p.py, animation: `synth-particle .7s ease ${p.delay} both`, pointerEvents: 'none' }}>{p.emoji}</span>)}
             <div style={{ fontSize: 68, lineHeight: 1, animation: 'synth-star-pop .6s cubic-bezier(.34,1.56,.64,1) both' }}>{item.emoji}</div>
           </div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: cfg.color || 'var(--gold)', marginBottom: 6, letterSpacing: '.05em' }}>✦ 합성 성공! {cfg.label} 아이템 획득</div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: cfg.color || 'var(--gold)', marginBottom: 6, letterSpacing: '.05em' }}>합성 성공! {cfg.label} 아이템 획득</div>
           <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: 'var(--t1)', marginBottom: 8 }}>{item.name}</div>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 20, lineHeight: 1.6 }}>{item.description}</div>
-          <button onClick={() => { onComplete(); onClose(); }} style={{ width: '100%', padding: '12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>✦ 보관함 확인</button>
+          <button onClick={() => { onComplete(); onClose(); }} style={{ width: '100%', padding: '12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>보관함 확인</button>
         </div>
       </div>,
       document.body,
@@ -128,7 +128,7 @@ export default function SynthesisModal({ inventory, kakaoId, onClose, onComplete
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px' }}>
       <div style={{ width: '100%', maxWidth: 360, background: 'var(--bg1)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', padding: '24px', animation: 'fadeUp .3s ease' }}>
-        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 16 }}>✦ 아이템 합성</div>
+        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 16 }}>아이템 합성</div>
 
         <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(232,176,72,0.08)', border: '1px solid rgba(232,176,72,0.2)', borderRadius: 'var(--r1)', fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6 }}>
           일반 → 희귀는 100%, 희귀 → 영웅은 50%, 영웅 → 레전더리는 10%예요. 실패해도 재료 아이템은 유지되고 BP만 100 소모돼요.
@@ -171,7 +171,7 @@ export default function SynthesisModal({ inventory, kakaoId, onClose, onComplete
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={onClose} style={{ flex: 1, padding: '11px', background: 'none', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontFamily: 'var(--ff)', cursor: 'pointer', fontSize: 'var(--xs)' }}>취소</button>
           <button onClick={handleSynthesize} disabled={!selectedGrade || synthesizing} style={{ flex: 2, padding: '11px', background: selectedGrade ? 'var(--goldf)' : 'var(--bg3)', border: `1.5px solid ${selectedGrade ? 'var(--acc)' : 'var(--line)'}`, borderRadius: 'var(--r1)', color: selectedGrade ? 'var(--gold)' : 'var(--t4)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: selectedGrade && !synthesizing ? 'pointer' : 'not-allowed' }}>
-            {synthesizing ? '합성 중...' : selectedOpt && selectedOpt.rate < 1.0 ? `✦ 합성 시도 (${Math.round(selectedOpt.rate * 100)}%)` : '✦ 합성하기'}
+            {synthesizing ? '합성 중...' : selectedOpt && selectedOpt.rate < 1.0 ? `합성 시도 (${Math.round(selectedOpt.rate * 100)}%)` : '합성하기'}
           </button>
         </div>
       </div>

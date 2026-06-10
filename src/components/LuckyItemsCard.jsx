@@ -122,7 +122,7 @@ function generateShareCard({ ohaeng, data, luckyNum, word, displayColor, display
     ctx.fillStyle = 'rgba(200,165,80,0.85)';
     ctx.font = 'bold 26px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('✦ 별숨 오늘의 키워드', W / 2, 80);
+    ctx.fillText('별숨 오늘의 키워드', W / 2, 80);
 
     ctx.fillStyle = 'rgba(200,165,80,0.4)';
     ctx.font = '18px sans-serif';
@@ -187,7 +187,7 @@ function generateShareCard({ ohaeng, data, luckyNum, word, displayColor, display
     ctx.fillStyle = 'rgba(200,165,80,0.4)';
     ctx.font = '18px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('byeolsoom.com ✦', W / 2, H - 50);
+    ctx.fillText('byeolsoom.com', W / 2, H - 50);
 
     resolve(canvas.toDataURL('image/png'));
   });
@@ -261,7 +261,7 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
           border: `1px solid ${fromApi ? 'var(--acc)' : 'var(--line)'}`,
           color: fromApi ? 'var(--gold)' : 'var(--t4)',
         }}>
-          {fromApi ? '✦ 오늘 별숨 결과 기반' : '사주 기반 · 오늘 기운 확인 후 업데이트'}
+          {fromApi ? '오늘 별숨 결과 기반' : '사주 기반 · 오늘 기운 확인 후 업데이트'}
         </span>
       </div>
 
@@ -332,12 +332,12 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
         marginTop: 10, padding: '10px 14px', borderRadius: 'var(--r1)',
         background: 'var(--card)', border: '1px solid var(--line)',
       }}>
-        <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>✦ 오늘 하면 좋은 것 </span>
+        <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>오늘 하면 좋은 것 </span>
         <span style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600 }}>{data.activity}</span>
       </div>
 
       <div style={{ textAlign: 'center', fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 14 }}>
-        {fromApi ? '오늘 별숨 결과에서 업데이트됐어요 ✦' : '오늘 기운을 먼저 확인하면 더 정확해져요 ✦'}
+        {fromApi ? '오늘 별숨 결과에서 업데이트됐어요' : '오늘 기운을 먼저 확인하면 더 정확해져요'}
       </div>
 
       {/* 카드 공유 버튼 */}
@@ -376,7 +376,7 @@ export default function LuckyItemsCard({ today, saju, dailyResult }) {
           opacity: sharing ? 0.7 : 1, transition: 'opacity .2s',
         }}
       >
-        {sharing ? '카드 생성 중...' : '✦ 오늘의 별숨 카드 공유하기'}
+        {sharing ? '카드 생성 중...' : '오늘의 별숨 카드 공유하기'}
       </button>
     </div>
   );

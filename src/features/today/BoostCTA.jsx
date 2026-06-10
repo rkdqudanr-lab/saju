@@ -28,7 +28,7 @@ export default function BoostCTA({
     }}>
       {/* 섹션 타이틀 */}
       <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>
-        {isMaxed ? '기운 보강 완료' : '✦ 즉시 운세 올리기'}
+        {isMaxed ? '기운 보강 완료' : '즉시 운세 올리기'}
       </div>
 
       {/* 설명 텍스트 */}
@@ -71,7 +71,7 @@ export default function BoostCTA({
           onMouseUp={(e) => (e.currentTarget.style.transform = '')}
           onMouseLeave={(e) => (e.currentTarget.style.transform = '')}
         >
-          <span>✦ BP로 즉시 운세 올리기</span>
+          <span>BP로 즉시 운세 올리기</span>
           <span style={{
             padding: '2px 10px',
             background: canAfford ? 'rgba(232,176,72,0.22)' : 'rgba(255,255,255,0.06)',

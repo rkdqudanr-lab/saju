@@ -67,7 +67,7 @@ export default function InstantBoostModal({ phase, pulledItem, cost, currentBp, 
     >
       {/* 헤더 라벨 */}
       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', letterSpacing: '.1em', fontWeight: 700, marginBottom: 32, textTransform: 'uppercase' }}>
-        {isPull ? '✦ 기운을 뽑는 중...' : '✦ 즉시 운세 올리기'}
+        {isPull ? '기운을 뽑는 중...' : '즉시 운세 올리기'}
       </div>
 
       {/* 뽑기 중 스피너 */}
@@ -139,7 +139,7 @@ export default function InstantBoostModal({ phase, pulledItem, cost, currentBp, 
             animation: 'gacha-card-in 0.4s cubic-bezier(.34,1.56,.64,1) 0.4s both',
           }}
         >
-          ✦ 확인했어요
+          확인했어요
         </button>
       )}
 

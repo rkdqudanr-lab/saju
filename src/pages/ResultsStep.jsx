@@ -220,7 +220,7 @@ export default function ResultsStep({
                     {openAcc === i && typedSet.has(i) && answers[i] && (
                       <div style={{ padding: '0 var(--sp4) var(--sp2)', borderBottom: '1px solid var(--line)' }}>
                         <div style={{ padding: '8px 12px', background: 'rgba(232,176,72,0.05)', borderRadius: 'var(--r1)', marginBottom: 12 }}>
-                          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 8 }}>✦ 별숨이 추천하는 다음 질문</div>
+                          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 8 }}>별숨이 추천하는 다음 질문</div>
                           {loadingFollowUp ? (
                             <div className="typing-dots" style={{ padding: '8px 0' }}><span /><span /><span /></div>
                           ) : (

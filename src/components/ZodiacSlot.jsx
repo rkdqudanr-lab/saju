@@ -42,7 +42,7 @@ export default function ZodiacSlot({ today, onQuickAsk }) {
 
   return (
     <div className="zodiac-slot">
-      <div className="zodiac-slot-title">✦ 오늘의 12별자리</div>
+      <div className="zodiac-slot-title">오늘의 12별자리</div>
       <div className="zodiac-slot-sub">클릭하면 해당 별자리로 바로 상담할 수 있어요</div>
       <div className="zodiac-slot-grid">
         {phrases.map((sign, i) => (

@@ -106,10 +106,10 @@ export default function DailyStarCardV2({
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
     >
-      <span className="dsc-spark dsc-spark-1">✦</span>
+      <span className="dsc-spark dsc-spark-1"></span>
       <span className="dsc-spark dsc-spark-2">✧</span>
       <span className="dsc-spark dsc-spark-3">⋆</span>
-      <span className="dsc-spark dsc-spark-4">✦</span>
+      <span className="dsc-spark dsc-spark-4"></span>
 
       <div className="dsc-card">
         <div className="dsc-top-shimmer" />
@@ -166,7 +166,7 @@ export default function DailyStarCardV2({
 
         {westernSky && (
           <div style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: 16, marginBottom: 12 }}>
-            <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 10 }}>✦ 서양의 하늘</div>
+            <div style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 10 }}>서양의 하늘</div>
             {westernSky.planet && (
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7, marginBottom: 6 }}>{westernSky.planet}</div>
             )}

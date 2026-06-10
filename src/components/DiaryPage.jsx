@@ -41,7 +41,7 @@ function Section({ title, children }) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
-        ✦ {title}
+        {title}
       </div>
       {children}
     </div>
@@ -369,7 +369,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
       {/* 감사한 일 */}
       {gratitude && (
         <div style={{ marginBottom: 16, padding: '12px 16px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>✦ 오늘 감사했던 일</div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>오늘 감사했던 일</div>
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>{gratitude}</div>
         </div>
       )}
@@ -377,7 +377,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
       {/* 내일 목표 */}
       {tomorrowGoal && (
         <div style={{ marginBottom: 16, padding: '12px 16px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>✦ 내일 한 가지 목표</div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 6 }}>내일 한 가지 목표</div>
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.8 }}>{tomorrowGoal}</div>
         </div>
       )}
@@ -385,7 +385,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
       {/* 일기 내용 */}
       {content && (
         <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)' }}>
-          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>✦ 오늘 있었던 일</div>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>오늘 있었던 일</div>
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>{content}</div>
         </div>
       )}
@@ -395,7 +395,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
         <div style={{ marginBottom: 16 }}>
           <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.1rem' }}>✦</span>
+              <span style={{ fontSize: '1.1rem' }}></span>
               <div>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>별숨의 해석</div>
                 <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 오늘을 읽었어요</div>
@@ -472,7 +472,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
                                   opacity: followUpLoading ? 0.5 : 1,
                                 }}
                               >
-                                ✦ {q}
+                                {q}
                               </button>
                             ))}
                           </div>
@@ -551,7 +551,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
         <div style={{ marginBottom: 16 }}>
           <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.1rem' }}>✦</span>
+              <span style={{ fontSize: '1.1rem' }}></span>
               <div>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>별숨의 해석</div>
                 <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 그날을 읽었어요</div>
@@ -590,7 +590,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
             onClick={showSummary ? () => setShowSummary(false) : handleMonthlySummary}
             disabled={summaryLoading}
           >
-            {summaryLoading ? '이달 이야기를 읽고 있어요...' : showSummary ? '▲ 이달 요약 닫기' : '✦ 이번 달 돌아보기'}
+            {summaryLoading ? '이달 이야기를 읽고 있어요...' : showSummary ? '▲ 이달 요약 닫기' : '이번 달 돌아보기'}
           </button>
           {showSummary && summaryText && (
             <div style={{ marginTop: 10, padding: '14px 16px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
@@ -625,7 +625,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
 
           {isEditing && submitted && (
             <div style={{ padding: '10px 14px', background: 'var(--goldf)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)', fontSize: 'var(--xs)', color: 'var(--gold)', marginBottom: 20, textAlign: 'center' }}>
-              ✦ 수정 모드 — 저장하면 별숨이 다시 해석해줘요
+              수정 모드 — 저장하면 별숨이 다시 해석해줘요
             </div>
           )}
 
@@ -718,7 +718,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
           <Section title="내일 한 가지 목표">
             <input
               className="inp"
-              placeholder="내일의 나에게 한 가지만요 ✦"
+              placeholder="내일의 나에게 한 가지만요"
               value={tomorrowGoal}
               onChange={e => setTomorrowGoal(e.target.value)}
               style={{ marginBottom: 0 }}
@@ -753,7 +753,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
               onClick={handleSaveOnly}
               style={{ marginBottom: 8 }}
             >
-              {isSubmitting ? '저장 중...' : '저장하기 ✦'}
+              {isSubmitting ? '저장 중...' : '저장하기'}
             </button>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
@@ -762,7 +762,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
                 disabled={!canSubmit || isSubmitting}
                 onClick={handleSubmit}
               >
-                {isSubmitting ? '저장 중...' : '별숨에게 해석 듣기 ✦'}
+                {isSubmitting ? '저장 중...' : '별숨에게 해석 듣기'}
               </button>
               <button
                 className="btn-sub"
@@ -790,7 +790,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
             <div style={{ marginTop: 8, marginBottom: 8 }}>
               <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
                 <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: '1.1rem' }}>✦</span>
+                  <span style={{ fontSize: '1.1rem' }}></span>
                   <div>
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>별숨의 해석</div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 오늘을 읽었어요</div>
@@ -853,7 +853,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
                   ? '이달 이야기를 읽고 있어요...'
                   : showSummary
                     ? '▲ 이달 요약 닫기'
-                    : '✦ 이번 달 돌아보기'}
+                    : '이번 달 돌아보기'}
               </button>
               {showSummary && summaryText && (
                 <div style={{ marginTop: 10, padding: '14px 16px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
@@ -882,7 +882,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
               position: 'absolute', top: '50%', left: '50%',
               transform: 'translate(-50%, -50%)',
               fontSize: '1.6rem',
-            }}>✦</div>
+            }}></div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 10 }}>

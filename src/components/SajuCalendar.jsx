@@ -74,7 +74,7 @@ function scoreColor(score) {
 }
 
 function scoreLabel(score) {
-  if (score >= 85) return '최고의 날 ✦';
+  if (score >= 85) return '최고의 날';
   if (score >= 68) return '좋은 날';
   if (score >= 50) return '무난한 날';
   if (score >= 38) return '조심할 날';
@@ -424,7 +424,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   const monthlyAnalysisPanel = (
     <div style={{ marginTop: 20, background: 'var(--bg2)', borderRadius: 'var(--r2)', padding: 16, border: '1px solid var(--line)' }}>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 10, letterSpacing: '.04em' }}>
-        ✦ 이번 달의 별숨 날짜 보기
+        이번 달의 별숨 날짜 보기
       </div>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 10 }}>
         상황을 선택하고 이번 달 기운 좋은 날을 별숨에게 물어봐요
@@ -459,7 +459,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
           onClick={askMonthlyAnalysis}
           disabled={monthlyLoading}
         >
-          {monthlyLoading ? '별숨이 날짜를 읽고 있어요 ✦' : `${viewMonth}월 ${CATS_ALL.find(c => c.id === selectedCatId)?.label} 날짜 보기 ✦`}
+          {monthlyLoading ? '별숨이 날짜를 읽고 있어요' : `${viewMonth}월 ${CATS_ALL.find(c => c.id === selectedCatId)?.label} 날짜 보기`}
         </button>
       )}
       {monthlyLoading && (
@@ -623,7 +623,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
 
             <div style={{ marginBottom: 14, background: 'var(--bg1)', borderRadius: 'var(--r1)', border: '1px solid var(--line)', overflow: 'hidden' }}>
               <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--lav, #9b8ec4)', fontWeight: 700, letterSpacing: '.04em' }}>✦ 오늘 일정</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--lav, #9b8ec4)', fontWeight: 700, letterSpacing: '.04em' }}>오늘 일정</span>
                 <span style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>
                   {sortedSelectedEvents.length > 0 ? '시간순으로 정렬했어요' : '먼저 일정을 추가해보세요'}
                 </span>
@@ -760,7 +760,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               return (
                 <div style={{ marginBottom: 14, background: 'var(--bg1)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
                   <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>✦ 오늘 하루 나의 별숨</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>오늘 하루 나의 별숨</span>
                   </div>
                   <div style={{ padding: '10px 14px 12px' }}>
                     {summary && (
@@ -832,12 +832,12 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                   )}
                   {selectedDiary.tomorrow_goal && (
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: selectedDiaryReview ? 8 : 0 }}>
-                      ✦ 내일 목표: {selectedDiary.tomorrow_goal}
+                      내일 목표: {selectedDiary.tomorrow_goal}
                     </div>
                   )}
                   {selectedDiaryReview && (
                     <div style={{ marginTop: 10, padding: '8px 10px', background: 'var(--goldf)', borderRadius: 'var(--r1)', border: '1px solid var(--acc)' }}>
-                      <div style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700, marginBottom: 4 }}>✦ 별숨의 해석</div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--gold)', fontWeight: 700, marginBottom: 4 }}>별숨의 해석</div>
                       <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
                         {selectedDiaryReview}
                       </div>
@@ -904,7 +904,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                             onClick={() => askAboutEvent(evTitle, selectedData.score, selectedData.d)}
                             style={{ background: 'linear-gradient(135deg, var(--goldf), rgba(155,142,196,.15))', border: '1px solid var(--gold)', borderRadius: 20, padding: '5px 10px', fontSize: '10px', color: 'var(--gold)', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}
                           >
-                            별숨에게 ✦
+                            별숨에게
                           </button>
                           <button
                             onClick={() => startEditEvent(ev)}
@@ -933,7 +933,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
         {/* 이달 일정 요약 */}
         {eventDays.length > 0 && !selected && (
           <div style={{ marginTop: 'var(--sp3)' }}>
-            <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 10 }}>✦ 이달의 일정</div>
+            <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 10 }}>이달의 일정</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {eventDays.sort().map(key => {
                 const [, , d] = key.split('-');
@@ -977,7 +977,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
         {/* ── 빠른 연결 버튼 ── */}
         <div style={{ marginTop: 28, borderTop: '1px solid var(--line)', paddingTop: 20 }}>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', fontWeight: 600, marginBottom: 12, letterSpacing: '.04em' }}>
-            ✦ 함께 이용해보세요
+            함께 이용해보세요
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <button
@@ -995,7 +995,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               onClick={() => setStep(STEP.TODAY_DETAIL)}
               style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
             >
-              <span style={{ fontSize: '1rem' }}>✦</span>
+              <span style={{ fontSize: '1rem' }}></span>
               <div>
                 <div style={{ fontWeight: 600, marginBottom: 2 }}>오늘 하루 나의 별숨</div>
                 <div style={{ color: 'var(--t4)', fontSize: '0.65rem' }}>오늘의 운세 카드를 확인해봐요</div>

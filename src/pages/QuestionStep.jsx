@@ -100,7 +100,7 @@ export default function QuestionStep({
 
 <div className="q-shell">
           <div className="combo-banner">
-            <div className="combo-title">✦ 사주 × 별자리 통합 분석</div>
+            <div className="combo-title">사주 × 별자리 통합 분석</div>
             <div className="combo-sub">
               {activeProfileIdx === 0
                 ? (saju && sun ? `${ON[saju.dom]} 기운의 ${sun.n} · 달 ${moon?.n || ''}` : '동양과 서양의 별이 함께 읽어드려요')
@@ -122,7 +122,7 @@ export default function QuestionStep({
           </div>
 
           <div className="diy-wrap" style={{ marginBottom: diy.trim() ? 0 : 'var(--sp2)' }}>
-            <div style={{ fontSize: '10px', color: 'var(--t4)', fontWeight: 600, marginBottom: 8, letterSpacing: '.1em', textTransform: 'uppercase' }}>직접 묻기</div>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', fontWeight: 700, marginBottom: 8 }}>지금 떠오른 질문</div>
             {recentQs.length > 0 && !diy.trim() && (
               <div style={{ marginBottom: 10 }}>
                 <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.04em' }}>최근 질문</div>
@@ -144,39 +144,26 @@ export default function QuestionStep({
               </div>
             )}
             <textarea className="diy-inp"
-              placeholder="직접 묻고 싶은 게 있어요? 자유롭게 써봐요"
+              placeholder="예: 이번 주에 이직 제안을 받아도 괜찮을까요?"
               maxLength={200} value={diy} onChange={e => setDiy(e.target.value)} />
             <div className="diy-row"><span className="hint">{diy.length}/200</span></div>
             {diy.trim() && (
               <button className="btn-main" style={{ marginTop: 8 }}
                 onClick={() => handleAskQuick(diy.trim())}>
-                ✦ 질문하기
+                질문하기
               </button>
             )}
           </div>
 
           {!diy.trim() && (
             <>
-              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6, letterSpacing: '.06em' }}>또는 고민 카테고리에서 골라봐요</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 6 }}>고민 주제를 고르면 질문 예시가 바뀌어요</div>
               <div className="cat-tabs">
                 {(showAllCats ? CATS_ALL : CATS).map((c, i) => <button key={c.id} className={`cat-tab ${cat === i ? 'on' : ''}`} onClick={() => { setCat(i); if (typeof window.gtag === 'function') window.gtag('event', 'category_select', { cat: CATS[i]?.id }); }}>{c.icon} {c.label}</button>)}
               </div>
               <button className="res-btn" style={{ margin: '0 0 var(--sp2)', fontSize: 'var(--xs)' }} onClick={() => setShowAllCats(p => !p)}>
                 {showAllCats ? '주요 주제만 보기 ▲' : '더 많은 주제 보기 ▼ (9개)'}
               </button>
-
-              {selQs.length < maxQ && (
-                <div>
-                  <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, margin: '10px 0 6px', letterSpacing: '.04em' }}>✦ 이런 질문 어때요?</div>
-                  <div className="suggest-row">
-                    {(showAllCats ? CATS_ALL : CATS)[cat]?.qs.slice(0, 3).filter(q => !selQs.includes(q)).map((q, i) => (
-                      <button key={i} className="suggest-chip" onClick={() => askQuick(q)}>
-                        {q.length > 22 ? q.slice(0, 22) + '…' : q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className="q-list">
                 {(showAllCats ? CATS_ALL : CATS)[cat]?.qs.map((q, i) => {
@@ -206,13 +193,13 @@ export default function QuestionStep({
               <div className="q-stat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <Mascot mood="pointing" size={36} aria-hidden="true" style={{ flexShrink: 0 }} />
                 <span>
-                  {selQs.length === 0 && '질문을 하나 이상 골라봐요'}
+                  {selQs.length === 0 && '마음에 가까운 질문을 하나 골라보세요'}
                   {selQs.length > 0 && selQs.length < maxQ && <><strong>{maxQ - selQs.length}개</strong> 더 고를 수 있어요</>}
-                  {selQs.length === maxQ && <><strong>준비 완료!</strong> 두 별이 읽어드릴게요</>}
+                  {selQs.length === maxQ && <><strong>준비됐어요.</strong> 바로 읽어드릴게요</>}
                 </span>
               </div>
               <button ref={askBtnRef} className="btn-main" disabled={!selQs.length} onClick={askClaude}>
-                {selQs.length === 0 ? '질문을 먼저 골라봐요' : `✦ 두 별에게 물어보기 (${selQs.length}개)`}
+                {selQs.length === 0 ? '질문을 먼저 골라봐요' : `선택한 질문 물어보기 (${selQs.length}개)`}
               </button>
             </>
           )}

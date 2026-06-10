@@ -36,7 +36,7 @@ export default function SynergyDashboard({
         }}
       >
         <div style={{ fontSize: '12px', opacity: 0.9, marginBottom: '8px' }}>
-          ✦ 오늘의 시너지 지수
+          오늘의 시너지 지수
         </div>
         <div
           style={{
@@ -179,7 +179,7 @@ export default function SynergyDashboard({
               lineHeight: 1.6,
             }}
           >
-            <div style={{ fontWeight: '600', marginBottom: '8px' }}>✦ 시너지 미션 안내</div>
+            <div style={{ fontWeight: '600', marginBottom: '8px' }}>시너지 미션 안내</div>
             <ul style={{ margin: '0', paddingLeft: '20px' }}>
               <li>매일 새로운 미션이 추가돼요</li>
               <li>미션을 완료하면 쌍방 모두에게 BP가 지급돼요</li>

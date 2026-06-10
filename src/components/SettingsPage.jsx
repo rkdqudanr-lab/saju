@@ -41,7 +41,7 @@ const LIFE_STAGE_OPTIONS = [
   { value: 'student', label: '학업·시험 준비 중', emoji: '📚', desc: '학업 집중력·시험 기운을 중심으로 이야기해드려요' },
   { value: 'parenting', label: '육아 중', emoji: '🏡', desc: '가정 에너지와 자녀 관계 흐름을 중심으로 읽어드려요' },
   { value: 'reentry', label: '경력 재진입 준비 중', emoji: '🌱', desc: '새 시작의 기운과 방향성을 함께 살펴드려요' },
-  { value: 'free', label: '자유 선택 (기본)', emoji: '✦', desc: '특정 상황에 치우치지 않고 전반적으로 풀어드려요' },
+  { value: 'free', label: '자유 선택 (기본)', emoji: '🎲', desc: '특정 상황에 치우치지 않고 전반적으로 풀어드려요' },
 ];
 
 const STYLE_OPTIONS = [
@@ -181,7 +181,7 @@ export default function SettingsPage({
       }
 
       setPushEnabled(true);
-      showToast?.('배드타임 및 운세 알림을 켰어요 ✦', 'success');
+      showToast?.('배드타임 및 운세 알림을 켰어요', 'success');
       
     } catch (err) {
       console.error(err);
@@ -203,7 +203,7 @@ export default function SettingsPage({
 
   const handleStyleChange = useCallback((val) => {
     onStyleChange?.(val);
-    showToast?.('스타일이 저장됐어요 ✦', 'success');
+    showToast?.('스타일이 저장됐어요', 'success');
   }, [onStyleChange, showToast]);
 
   const handleThemeChange = useCallback((val) => {
@@ -241,7 +241,7 @@ export default function SettingsPage({
     try {
       setForm({ ...localForm, nickname: newNickname || localForm.nickname });
       if (user) await saveProfileToSupabase({ ...localForm, nickname: newNickname || localForm.nickname }, user);
-      showToast?.('개인정보가 저장됐어요 ✦', 'success');
+      showToast?.('개인정보가 저장됐어요', 'success');
       setNicknameError('');
     } catch {
       showToast?.('저장에 실패했어요. 다시 시도해봐요', 'error');
@@ -253,7 +253,7 @@ export default function SettingsPage({
   return (
     <div className="page step-fade" style={{ paddingTop: 56 }}>
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 60 }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.1em', marginBottom: 4 }}>✦ 설정</div>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.1em', marginBottom: 4 }}>설정</div>
         <div style={{ fontSize: 'var(--lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: 20 }}>나의 별숨 설정</div>
 
         {/* ── 탭 ── */}
@@ -438,7 +438,7 @@ export default function SettingsPage({
               disabled={saving || !localForm.by || !localForm.bm || !localForm.bd}
               onClick={handleSaveProfile}
             >
-              {saving ? '저장 중...' : '저장하기 ✦'}
+              {saving ? '저장 중...' : '저장하기'}
             </button>
           </div>
         )}
@@ -454,7 +454,7 @@ export default function SettingsPage({
                 정식 출시 이후 요금제 정보가 업데이트될 예정이에요.
               </div>
               <div style={{ marginTop: 14, padding: '12px 14px', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--gold)', lineHeight: 1.7 }}>
-                ✦ 현재 사용 가능한 기능<br />
+                현재 사용 가능한 기능<br />
                 <span style={{ color: 'var(--t2)' }}>
                   별숨에게 질문하기 · 월간 리포트 · 별숨과 대화하기 · 예언 · 궁합 · 달력 · 모임 별숨 · 나의 별숨 · 종합사주 · 종합점성술 · 일기
                 </span>
@@ -589,7 +589,7 @@ export default function SettingsPage({
                     border: '1px solid var(--acc)',
                   }}>
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 8 }}>
-                      ✦ 현재: {cur?.label} ({cur?.sub})
+                      현재: {cur?.label} ({cur?.sub})
                     </div>
                     {(styleDescriptions[responseStyle] || []).map((line, i) => (
                       <div key={i} style={{ fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.7, marginBottom: i < 2 ? 4 : 0 }}>
@@ -701,7 +701,7 @@ export default function SettingsPage({
                   key={opt.value}
                   onClick={() => {
                     onLifeStageChange?.(opt.value);
-                    showToast?.('상황이 저장됐어요 ✦', 'success');
+                    showToast?.('상황이 저장됐어요', 'success');
                   }}
                   title={opt.desc}
                   style={{
@@ -745,7 +745,7 @@ export default function SettingsPage({
               onClick={() => {
                 const next = fontSize === 'large' ? 'standard' : 'large';
                 onFontSizeChange?.(next);
-                showToast?.(next === 'large' ? '큰 글씨 모드로 바꿨어요 ✦' : '기본 글씨 크기로 돌아왔어요', 'success');
+                showToast?.(next === 'large' ? '큰 글씨 모드로 바꿨어요' : '기본 글씨 크기로 돌아왔어요', 'success');
               }}
             >
               <button
@@ -757,7 +757,7 @@ export default function SettingsPage({
                   e.stopPropagation();
                   const next = fontSize === 'large' ? 'standard' : 'large';
                   onFontSizeChange?.(next);
-                  showToast?.(next === 'large' ? '큰 글씨 모드로 바꿨어요 ✦' : '기본 글씨 크기로 돌아왔어요', 'success');
+                  showToast?.(next === 'large' ? '큰 글씨 모드로 바꿨어요' : '기본 글씨 크기로 돌아왔어요', 'success');
                 }}
               />
               <span className="toggle-label">큰 글씨 모드 {fontSize === 'large' ? '(켜짐)' : '(꺼짐)'}</span>
@@ -798,14 +798,14 @@ export default function SettingsPage({
               const next = !communityShowSaju;
               setCommunityShowSajuState(next);
               setCommunityShowSaju(next);
-              showToast?.(next ? '별자리·일간 정보를 표시해요 ✦' : '별자리·일간 정보를 숨겼어요', 'success');
+              showToast?.(next ? '별자리·일간 정보를 표시해요' : '별자리·일간 정보를 숨겼어요', 'success');
             }}>
               <button
                 className={`toggle ${communityShowSaju ? 'on' : 'off'}`}
                 role="switch"
                 aria-checked={communityShowSaju}
                 aria-label="광장에서 사주 정보 표시"
-                onClick={e => { e.stopPropagation(); const next = !communityShowSaju; setCommunityShowSajuState(next); setCommunityShowSaju(next); showToast?.(next ? '별자리·일간 정보를 표시해요 ✦' : '별자리·일간 정보를 숨겼어요', 'success'); }}
+                onClick={e => { e.stopPropagation(); const next = !communityShowSaju; setCommunityShowSajuState(next); setCommunityShowSaju(next); showToast?.(next ? '별자리·일간 정보를 표시해요' : '별자리·일간 정보를 숨겼어요', 'success'); }}
               />
               <span className="toggle-label" style={{ fontSize: '13px' }}>
                 별자리·일간 정보 공개 {communityShowSaju ? '(켜짐)' : '(꺼짐)'}
@@ -837,7 +837,7 @@ export default function SettingsPage({
                 const prev = sidebarPrefs?.hiddenGroups || [];
                 const next = hidden ? prev.filter(k => k !== key) : [...prev, key];
                 onSidebarPrefsChange?.({ ...(sidebarPrefs || {}), hiddenGroups: next });
-                showToast?.(hidden ? `'${label}' 메뉴를 표시해요 ✦` : `'${label}' 메뉴를 숨겼어요`, 'success');
+                showToast?.(hidden ? `'${label}' 메뉴를 표시해요` : `'${label}' 메뉴를 숨겼어요`, 'success');
               };
               return (
                 <div key={key} className="toggle-row" onClick={toggle} style={{ cursor: 'pointer', marginBottom: 8 }}>

@@ -11,7 +11,7 @@ export const RELATION_TYPES = [
   { value: 'family',  label: '가족',   emoji: '🏠' },
   { value: 'friend',  label: '친구',   emoji: '🤝' },
   { value: 'coworker',label: '동료',   emoji: '💼' },
-  { value: 'other',   label: '기타',   emoji: '✦' },
+  { value: 'other',   label: '기타',   emoji: '○' },
 ];
 
 export default function OtherProfileModal({
@@ -96,7 +96,7 @@ export default function OtherProfileModal({
         <button className="btn-main"
           disabled={!otherForm.by || !otherForm.bm || !otherForm.bd || !otherForm.gender}
           onClick={() => saveOtherProfile()}>
-          {editingOtherIdx !== null ? '수정하기 ✦' : '추가하기 ✦'}
+          {editingOtherIdx !== null ? '수정하기' : '추가하기'}
         </button>
         <button style={{ width: '100%', padding: 10, background: 'none', border: 'none', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer', marginTop: 6 }}
           onClick={() => { onClose(); setEditingOtherIdx(null); }}>취소</button>

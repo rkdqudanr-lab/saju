@@ -110,7 +110,7 @@ export default function OwnedItemCard({ item, onUse, onDetail, compact }) {
               fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
             }}
           >
-            ✦ 살펴보기
+            살펴보기
           </button>
         ) : null}
       </div>

@@ -281,7 +281,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
                 {/* 1순위 추천 히어로 카드 */}
                 {secs['종합추천'] && (
                   <div style={{ background: 'linear-gradient(135deg,rgba(232,176,72,.12),rgba(200,160,255,.06))', border: '1px solid var(--acc)', borderRadius: 20, padding: '18px 16px', marginBottom: 12 }}>
-                    <div style={{ ...eyebrowStyle, marginBottom: 10 }}>✦ 별숨 추천 길일</div>
+                    <div style={{ ...eyebrowStyle, marginBottom: 10 }}>별숨 추천 길일</div>
                     <div style={{ ...bodyStyle }}>{secs['종합추천']}</div>
                   </div>
                 )}
@@ -327,7 +327,7 @@ export default function TaegillPage({ form, buildCtx, callApi: callApiProp, show
               </>
             ) : (
               <div style={{ padding: '24px', borderRadius: 28, background: 'var(--bg2)', border: '1px solid var(--acc)' }}>
-                <div style={{ ...eyebrowStyle, marginBottom: 14 }}>✦ 별숨의 택일 Insight</div>
+                <div style={{ ...eyebrowStyle, marginBottom: 14 }}>별숨의 택일 Insight</div>
                 <div style={bodyStyle}>{result}</div>
               </div>
             )}

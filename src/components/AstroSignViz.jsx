@@ -15,7 +15,7 @@ function getColor(sign) {
 function SignOrb({ roleIcon, roleLabel, sign, size = 58 }) {
   if (!sign) return <div style={{ minWidth: 72 }} />;
   const color   = getColor(sign);
-  const glyph   = sign.s || '✦';       // ♉ ♏ etc.
+  const glyph   = sign.s || '·';       // ♉ ♏ etc.
   const dispName = sign.n || '';        // 황소자리
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, minWidth: 72 }}>

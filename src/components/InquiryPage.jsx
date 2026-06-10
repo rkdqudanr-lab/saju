@@ -243,7 +243,7 @@ export default function InquiryPage() {
       {/* ── 내 문의 내역 ── */}
       <div style={{ padding: '28px 20px 0' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', letterSpacing: '.06em', fontWeight: 700, marginBottom: 12 }}>
-          ✦ 내 문의 내역
+          내 문의 내역
         </div>
 
         {historyLoading ? (

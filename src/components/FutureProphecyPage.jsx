@@ -241,7 +241,7 @@ export default function FutureProphecyPage({
                 <ProphSectionCard eyebrow="동양 관점" body={secs['동양관점']} />
                 <ProphSectionCard eyebrow="서양 관점" body={secs['서양관점']} />
               </div>
-              <ProphSectionCard eyebrow="✦ 두 관점의 교차점" body={secs['교차해석']} highlight />
+              <ProphSectionCard eyebrow="두 관점의 교차점" body={secs['교차해석']} highlight />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <ProphActionCard title="지금 할 일" body={secs['지금할일']} />
                 <ProphActionCard title="피할 것" body={secs['피할일']} />

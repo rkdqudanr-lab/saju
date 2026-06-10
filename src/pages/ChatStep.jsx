@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { ChatBubble } from '../components/AccItem.jsx';
+import AnimatedMascot from '../components/AnimatedMascot.jsx';
 import { useAppStore } from '../store/useAppStore.js';
 import { STEP } from '../utils/steps.js';
 
@@ -152,7 +153,7 @@ export default function ChatStep({
               padding: 'var(--sp4) var(--sp3)',
             }}
           >
-            <div style={{ fontSize: '2rem', marginBottom: 12 }}>✦</div>
+            <div style={{ fontSize: '2rem', marginBottom: 12 }}></div>
             방금 본 흐름을 바탕으로 자연스럽게 이어서 물어보세요.
           </div>
         )}
@@ -173,7 +174,8 @@ export default function ChatStep({
             <div className="chat-role">{message.role === 'ai' ? '별숨' : '나'}</div>
             {message.role === 'ai' ? (
               message.streaming && !message.text ? (
-                <div style={{ padding: '8px 0' }}>
+                <div className="chat-typing-mascot">
+                  <AnimatedMascot name="loading-thinking" size={46} fps={6} staticMood="thinking" aria-hidden="true" />
                   <div className="typing-dots"><span /><span /><span /></div>
                 </div>
               ) : (
@@ -192,7 +194,8 @@ export default function ChatStep({
         {chatLoading && !lastMsgIsStreaming && (
           <div className="chat-msg ai">
             <div className="chat-role">별숨</div>
-            <div style={{ padding: '8px 0' }}>
+            <div className="chat-typing-mascot">
+              <AnimatedMascot name="loading-thinking" size={46} fps={6} staticMood="thinking" aria-hidden="true" />
               <div className="typing-dots"><span /><span /><span /></div>
             </div>
           </div>
@@ -267,7 +270,7 @@ export default function ChatStep({
               padding: '14px 16px',
             }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: 4, textAlign: 'center' }}>
-                ✦ 오늘 채팅을 모두 사용했어요
+                오늘 채팅을 모두 사용했어요
               </div>
               <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 12, textAlign: 'center' }}>
                 미션을 완료하면 BP를 얻어 더 많은 기능을 쓸 수 있어요

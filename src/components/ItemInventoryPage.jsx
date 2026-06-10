@@ -218,7 +218,7 @@ export default function ItemInventoryPage({ showToast, callApi, spendBP }) {
       <div style={{ padding: '6px 24px 0' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--t4)', fontSize: 'var(--sm)' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>✦</div>불러오는 중...
+            <div style={{ fontSize: 28, marginBottom: 8 }}></div>불러오는 중...
           </div>
         ) : sortedFiltered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', background: 'var(--bg2)', borderRadius: 'var(--r1)', border: '1px solid var(--line)' }}>

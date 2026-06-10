@@ -47,7 +47,7 @@ function GrowthWidget({ userId }) {
   if (scores.length < 2) {
     return (
       <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t4)', fontSize: 'var(--xs)', textAlign: 'center', lineHeight: 1.6 }}>
-        기운 흐름을 보려면<br/>하루 더 별숨 점수를 받아주세요 ✦
+        기운 흐름을 보려면<br/>하루 더 별숨 점수를 받아주세요
       </div>
     );
   }
@@ -277,11 +277,11 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             ? <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', border: '2px solid var(--gold)', boxShadow: '0 0 10px rgba(232,176,72,.2)' }}>{equippedAvatar.emoji}</div>
             : user?.profileImage
               ? <img src={user.profileImage} alt="프로필" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} />
-              : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: 'var(--gold)', border: '2px solid var(--line)' }}>✦</div>
+              : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', fontWeight: 700, color: 'var(--gold)', border: '2px solid var(--line)' }}>{user?.nickname?.[0] || '별'}</div>
           }
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 3 }}>
-              {user?.nickname ?? '별숨 유저'} <span style={{ color: 'var(--gold)' }}>✦</span>
+              {user?.nickname ?? '별숨 유저'}
             </div>
             {ilgan && (
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>{ilgan}</div>
@@ -301,7 +301,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
 
       {/* ── 수호자 대시보드 ── */}
       <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)', background: 'var(--bg2)' }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', letterSpacing: '.06em', fontWeight: 700, marginBottom: 12 }}>✦ 수호자 대시보드</div>
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', letterSpacing: '.06em', fontWeight: 700, marginBottom: 12 }}>수호자 대시보드</div>
 
         {/* BP 현황 */}
         <BPDisplay
@@ -395,17 +395,17 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>현재 플랜</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', marginTop: 2 }}>{planLabel}</div>
           </div>
-          <span style={{ fontSize: 16, color: 'var(--gold)' }}>✦</span>
+          <span style={{ fontSize: 16, color: 'var(--gold)' }}></span>
         </div>
 
         {/* 별숨 가이드 아코디언 */}
         <InfoAccordion items={[
           {
-            icon: '✦',
+            icon: '⭐',
             title: '별숨 포인트 쌓는 방법',
             content: (
               <div style={{ paddingTop: 8 }}>
-                <BpGuideRow icon="✦" text="매일 첫 로그인" bp="+100 BP" />
+                <BpGuideRow icon="📅" text="매일 첫 로그인" bp="+100 BP" />
                 <BpGuideRow icon="🎨" text="색상 처방 · 음식 처방 · 라이프 아이템 미션 완료" bp="+10 BP" />
                 <BpGuideRow icon="✅" text="오늘의 실천 DO 미션 완료" bp="+5 BP" />
                 <BpGuideRow icon="⚠️" text="오늘의 주의 DONT 미션 완료" bp="+5 BP" />
@@ -472,8 +472,8 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
 
       {/* ── 나의 성장 메뉴 ── */}
       <div style={{ padding: '16px 20px 0' }}>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>✦ 나의 별숨</div>
-        <MenuRow icon="✦" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달 별자리 해석" onClick={() => setStep(STEP.NATAL)} />
+        <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 4 }}>나의 별숨</div>
+        <MenuRow icon="⭐" label="나의 별숨 (사주원국·별자리)" sub="일간·오행·태양·달 별자리 해석" onClick={() => setStep(STEP.NATAL)} />
         <MenuRow icon="🌊" label="나의 대운 흐름" sub="10년 단위 대운 사이클 분석" onClick={() => setStep(STEP.DAEUN)} />
         <MenuRow icon="🎴" label="사주 명함 카드" sub="나만의 사주 명함 만들기" onClick={() => setStep(STEP.SAJU_CARD)} />
         <MenuRow icon="◈" label="별숨 타로" sub="타로 카드로 보는 오늘의 메시지" onClick={() => setStep(STEP.TAROT)} />
@@ -520,7 +520,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
       {/* ── 알림 설정 ── */}
       <div style={{ padding: '20px 20px 0' }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 12 }}>
-          ✦ 알림 설정
+          알림 설정
         </div>
         {!pushSupported ? (
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', padding: '8px 0' }}>

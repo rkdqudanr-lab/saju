@@ -8,7 +8,7 @@ import { TIMING } from "../utils/constants.js";
 // ═══════════════════════════════════════════════════════════
 export function FeedbackBtn({ qIdx }) {
   const [sel, setSel] = useState(null);
-  if (sel !== null) return <div className="fb-wrap"><span className="fb-done">✦ 고마워요!</span></div>;
+  if (sel !== null) return <div className="fb-wrap"><span className="fb-done">고마워요!</span></div>;
   return (
     <div className="fb-wrap" role="group" aria-label="피드백">
       <span className="fb-label">이 이야기가 도움이 됐나요?</span>
@@ -52,7 +52,7 @@ export default function AccItem({ q, text, idx, isOpen, onToggle, shouldType, on
           <div className="acc-q-num">Q{idx + 1}</div>
           <div className="acc-q-text">{q}</div>
           {!isOpen && isError && <div style={{ fontSize: 'var(--xs)', color: '#e06', marginTop: 3 }}>⚠ 오류 · 탭하여 다시 시도</div>}
-          {!isOpen && !display && !isError && !text && <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 3 }}>이 이야기도 기다리고 있어요 ✦</div>}
+          {!isOpen && !display && !isError && !text && <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 3 }}>이 이야기도 기다리고 있어요</div>}
         </div>
         <div className="acc-right">
           <span className={`acc-chevron${isOpen ? ' open' : ''}`} aria-hidden="true">▼</span>

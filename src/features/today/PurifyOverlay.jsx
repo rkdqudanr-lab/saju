@@ -9,7 +9,7 @@ export default function PurifyOverlay({ visible }) {
         <div className="purify-ring purify-ring-3" />
       </div>
       <div className="purify-sparks">
-        {['✦', '✧', '✦', '✧', '✦'].map((spark, idx) => (
+        {['✧', '✧', '✧', '✧', '✧'].map((spark, idx) => (
           <span key={idx} className={`purify-spark purify-spark-${idx + 1}`}>{spark}</span>
         ))}
       </div>

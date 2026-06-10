@@ -262,7 +262,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
   if (!form?.by) {
     return (
       <div className="page" style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)' }}>
-        <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
+        <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}></div>
         <div style={{ fontSize: 'var(--sm)' }}>생년월일을 입력하면 대운 흐름을 볼 수 있어요</div>
       </div>
     );
@@ -288,7 +288,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
       <div style={{ padding: '28px 20px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
-            ✦ 나의 대운 흐름
+            나의 대운 흐름
           </div>
           <button
             onClick={handleSavePDF}
@@ -424,7 +424,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
                   letterSpacing: '.02em',
                 }}
               >
-                ✦ 해설 읽기
+                해설 읽기
               </button>
             </div>
           );
@@ -470,7 +470,7 @@ export default function DaeunPage({ form, saju, callApi, buildCtx, showToast }) 
           return (
             <div style={{ animation: 'fadeUp .4s ease' }}>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 12, letterSpacing: '.06em' }}>
-                ✦ {config.title}
+                {config.title}
               </div>
               {hasStructure ? config.meta.map(({ tag, label, desc, icon, color, border }) => secs[tag] ? (
                 <div key={tag} style={{

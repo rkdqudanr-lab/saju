@@ -67,7 +67,7 @@ export default function ProfileStep({
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}>✦</span>}
+                {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}></span>}
                 <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
                   onClick={e => { e.stopPropagation(); setEditingMyProfile(p => !p); }}>수정</button>
               </div>
@@ -78,14 +78,14 @@ export default function ProfileStep({
               return (
                 <div key={i} className={`profile-pick-card ${activeProfileIdx === i + 1 ? 'active' : ''}`} onClick={() => setActiveProfileIdx(i + 1)}>
                   <div className="ppc-left">
-                    <div className="ppc-av" style={{ background: 'var(--bg3)' }}>✦</div>
+                    <div className="ppc-av" style={{ background: 'var(--bg3)' }}></div>
                     <div>
                       <div className="ppc-name">{p.name || '이름 없이 저장됨'}</div>
                       <div className="ppc-sub">{pSun ? `${pSun.s} ${pSun.n}` : '별자리 계산 가능해요'}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {activeProfileIdx === i + 1 && <span style={{ color: 'var(--gold)' }}>✦</span>}
+                    {activeProfileIdx === i + 1 && <span style={{ color: 'var(--gold)' }}></span>}
                     <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
                       onClick={e => { e.stopPropagation(); startEditOtherProfile(i); }}>수정</button>
                     <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
@@ -102,7 +102,7 @@ export default function ProfileStep({
             )}
 
             <button className="btn-main" style={{ marginTop: 'var(--sp3)' }} onClick={() => { setSelQs([]); setStep(STEP.QUESTION); }}>
-              {activeProfileIdx === 0 ? `${form.nickname || form.name || '나'}의 별숨 보기 ✦` : `${otherProfiles[activeProfileIdx - 1]?.name || '이 사람'}의 별숨 보기 ✦`}
+              {activeProfileIdx === 0 ? `${form.nickname || form.name || '나'}의 별숨 보기` : `${otherProfiles[activeProfileIdx - 1]?.name || '이 사람'}의 별숨 보기`}
             </button>
           </div>
         )}
@@ -203,7 +203,7 @@ export default function ProfileStep({
 
             {saju && (
               <div className="pillars-wrap">
-                <div className="pillars-hint"><span style={{ color: 'var(--gold)' }}>✦</span> 사주 원국</div>
+                <div className="pillars-hint"><span style={{ color: 'var(--gold)' }}></span> 사주 원국</div>
                 <div className="pillars">
                   {[['연', 'yeon'], ['월', 'wol'], ['일', 'il'], ['시', 'si']].map(([l, k]) => (
                     <div key={l} className="pillar">
@@ -247,7 +247,7 @@ export default function ProfileStep({
                 else if (!onboardingDone) { setSelQs([]); setStep(STEP.ONBOARDING); }
                 else { setSelQs([]); setStep(STEP.QUESTION); }
               }}>
-              {editingMyProfile ? '저장하기 ✦' : '다음 단계 →'}
+              {editingMyProfile ? '저장하기' : '다음 단계 →'}
             </button>
           </div>
         )}

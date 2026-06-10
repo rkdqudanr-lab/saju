@@ -10,6 +10,7 @@ import { useAppStore } from "../store/useAppStore.js";
 export default function PWAInstallBanner() {
   const user = useAppStore((s) => s.user);
   const showToast = useAppStore((s) => s.showToast);
+  const step = useAppStore((s) => s.step);
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [show, setShow] = useState(false);
@@ -47,7 +48,7 @@ export default function PWAInstallBanner() {
     const installHandler = () => {
       setShow(false);
       localStorage.setItem('byeolsoom_pwa_dismissed', 'permanent');
-      showToast?.('앱 설치 완료! 다음 접속 시 +20 BP가 적립돼요 ✦', 'success');
+      showToast?.('앱 설치 완료! 다음 접속 시 +20 BP가 적립돼요', 'success');
     };
     window.addEventListener('appinstalled', installHandler);
 
@@ -63,7 +64,7 @@ export default function PWAInstallBanner() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       localStorage.setItem('byeolsoom_pwa_dismissed', 'permanent');
-      showToast?.('설치해줘서 고마워요! +20 BP 적립 예정 ✦', 'success');
+      showToast?.('설치해줘서 고마워요! +20 BP 적립 예정', 'success');
     }
     setShow(false);
     setDeferredPrompt(null);
@@ -80,92 +81,38 @@ export default function PWAInstallBanner() {
     localStorage.setItem('byeolsoom_pwa_dismissed', 'permanent');
   };
 
-  if (!show) return null;
+  if (!show || step === 0) return null;
 
   return (
     <div
       role="dialog"
       aria-label="앱 설치 안내"
-      style={{
-        position: 'fixed',
-        bottom: 'calc(72px + env(safe-area-inset-bottom, 0px) + 12px)',
-        left: 12,
-        right: 12,
-        zIndex: 9998,
-        background: 'var(--bg1)',
-        border: '1.5px solid var(--acc)',
-        borderRadius: 'var(--r2, 16px)',
-        padding: '16px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 12,
-      }}
+      className="pwa-install-chip"
     >
-      <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>📲</div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 3 }}>
-          별숨을 앱으로 저장해요
-        </div>
-        <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5, marginBottom: 10 }}>
-          홈 화면에 추가하면 더 빠르게 접근할 수 있어요
-        </div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 4,
-          padding: '4px 10px',
-          borderRadius: 20,
-          background: 'var(--goldf)',
-          border: '1px solid var(--acc)',
-          fontSize: '10px',
-          color: 'var(--gold)',
-          fontWeight: 700,
-          marginBottom: 10,
-        }}>
-          ✦ 설치 완료 시 +20 BP 지급
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={handleInstall}
-            style={{
-              flex: 2,
-              padding: '10px',
-              border: 'none',
-              borderRadius: 'var(--r1)',
-              background: 'var(--gold)',
-              color: '#fff',
-              fontFamily: 'var(--ff)',
-              fontSize: 'var(--xs)',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            설치하기
-          </button>
-          <button
-            onClick={handleDismiss}
-            style={{
-              flex: 1,
-              padding: '10px',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--r1)',
-              background: 'none',
-              color: 'var(--t3)',
-              fontFamily: 'var(--ff)',
-              fontSize: 'var(--xs)',
-              cursor: 'pointer',
-            }}
-          >
-            나중에
-          </button>
+      <div className="pwa-install-chip__body">
+        <div className="pwa-install-chip__title">
+          앱으로 저장하면 +20 BP
         </div>
       </div>
       <button
+        type="button"
+        onClick={handleInstall}
+        className="pwa-install-chip__install"
+      >
+        설치
+      </button>
+      <button
+        type="button"
+        onClick={handleDismiss}
+        className="pwa-install-chip__later"
+      >
+        나중에
+      </button>
+      <button
+        type="button"
         onClick={handlePermanentDismiss}
         aria-label="닫기"
-        style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: 'var(--t4)', fontSize: 14, flexShrink: 0, padding: 2,
-        }}
+        className="pwa-install-chip__close"
       >
         ✕
       </button>

@@ -80,7 +80,7 @@ function LuckyNumberSection({ user, saju }) {
   return (
     <div style={{ padding: '0 20px 24px' }}>
       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
-        ✦ 오늘의 행운 번호
+        오늘의 행운 번호
       </div>
       <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>
         별숨이 뽑아주는 숫자
@@ -140,7 +140,7 @@ function LuckyNumberSection({ user, saju }) {
           )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleSingle} style={{ flex: 1, padding: '12px', background: 'var(--goldf)', border: '1.5px solid var(--acc)', borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
-              ✦ {result !== null ? '다시 뽑기' : '뽑기'}
+              {result !== null ? '다시 뽑기' : '뽑기'}
             </button>
             <button onClick={() => { setMode(null); setResult(null); }} style={{ padding: '12px 16px', background: 'var(--bg1)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', color: 'var(--t3)', fontFamily: 'var(--ff)', cursor: 'pointer', fontSize: 'var(--xs)' }}>
               취소
@@ -352,7 +352,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
 
       <div style={{ margin: '0 20px 16px', borderTop: '1px solid var(--line)', paddingTop: 20 }}>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.06em', marginBottom: 6 }}>
-          ✦ 특별 상담
+          특별 상담
         </div>
         <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>별숨 심층 분석</div>
         <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
@@ -390,7 +390,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
       {/* 아이템 미보유 */}
       {!loading && !result && ownedItems !== null && !hasItems && (
         <div style={{ margin: '0 24px', padding: '28px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', textAlign: 'center' }}>
-          <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
+          <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}></div>
           <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>
             특별 상담권이 없어요
           </div>
@@ -409,7 +409,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
               fontFamily: 'var(--ff)', cursor: 'pointer',
             }}
           >
-            ✦ 별숨 숍 가기
+            별숨 숍 가기
           </button>
         </div>
       )}
@@ -459,7 +459,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
                       fontFamily: 'var(--ff)', cursor: 'pointer',
                     }}
                   >
-                    ✦ 이 분석 받기 (상담권 1개 소비)
+                    이 분석 받기 (상담권 1개 소비)
                   </button>
                 </div>
               </div>

@@ -587,7 +587,7 @@ function WeeklyActivityRow({ activityDays, dates }) {
                   boxShadow: active ? '0 10px 20px rgba(176,120,32,0.22)' : 'none',
                 }}
               >
-                {active ? '✦' : '·'}
+                {active ? '●' : '·'}
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '10px', fontWeight: active ? 800 : 600, color: active ? 'var(--gold)' : 'var(--t3)' }}>
@@ -863,7 +863,7 @@ export default function GrowthDashboardPage({ onRechargeFreeBP }) {
             boxShadow: '0 10px 24px rgba(176,120,32,0.08)',
           }}
         >
-          ✦ 무료 BP 충전 (+{freeRecharge} BP) · 하루 1회
+          무료 BP 충전 (+{freeRecharge} BP) · 하루 1회
         </button>
 
         <div

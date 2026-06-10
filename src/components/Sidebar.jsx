@@ -151,7 +151,7 @@ export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKa
       <div className="sidebar-overlay" onClick={onClose} aria-hidden="true" />
       <nav className="sidebar" aria-label="주 네비게이션" role="navigation">
         <div className="sidebar-head">
-          <div className="sidebar-logo">✦ byeolsoom</div>
+          <div className="sidebar-logo">byeolsoom</div>
           {user ? (
             <div className="sidebar-user" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {equippedAvatar

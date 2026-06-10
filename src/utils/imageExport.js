@@ -40,7 +40,7 @@ function wrapText(ctx, text, maxW, fontSize, weight = '400') {
 function drawHeader(ctx, { gold, t3, subtitle }, PADDING) {
   ctx.font = `600 28px ${FONT}`;
   ctx.fillStyle = gold;
-  ctx.fillText('byeolsoom  ✦', PADDING, 64);
+  ctx.fillText('byeolsoom ', PADDING, 64);
   ctx.font = `400 20px ${FONT}`;
   ctx.fillStyle = t3;
   ctx.fillText(subtitle, PADDING, 92);
@@ -123,7 +123,7 @@ export function saveShareCard({ idx, q, parsedText, isDark, today }) {
 
     ctx.font = `400 18px ${FONT}`;
     ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
+    ctx.fillText('별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
 
     const suffix = totalPages > 1 ? `_${page + 1}of${totalPages}` : '';
     downloadCanvas(canvas, `byeolsoom_Q${idx + 1}${suffix}.png`);
@@ -199,7 +199,7 @@ export function saveReportImage({ reportText, isDark, today, name }) {
 
     ctx.font = `400 18px ${FONT}`;
     ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
+    ctx.fillText('별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
 
     const suffix = totalPages > 1 ? `_${page + 1}of${totalPages}` : '';
     downloadCanvas(canvas, `byeolsoom_report_${today.month}월${suffix}.png`);
@@ -261,7 +261,7 @@ export function saveProphecyImage({ text, period, isDark, today }) {
 
     ctx.font = `400 18px ${FONT}`;
     ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
+    ctx.fillText('별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
 
     const suffix = totalPages > 1 ? `_${page + 1}of${totalPages}` : '';
     downloadCanvas(canvas, `byeolsoom_prophecy${suffix}.png`);
@@ -295,7 +295,7 @@ export function saveCompatImage({ result, myF, partnerF, placeObj, score, isDark
     ctx.fillStyle = GOLD; ctx.fillRect(0, 0, IG_W, 6);
 
     ctx.font = `600 28px ${FONT}`; ctx.fillStyle = GOLD;
-    ctx.fillText('byeolsoom  ✦', PADDING, 64);
+    ctx.fillText('byeolsoom ', PADDING, 64);
     ctx.font = `400 20px ${FONT}`; ctx.fillStyle = t3;
     ctx.fillText(`우리가 만나면 · ${placeObj.label}${totalPages > 1 ? ` (${page + 1}/${totalPages})` : ''}`, PADDING, 92);
 
@@ -320,7 +320,7 @@ export function saveCompatImage({ result, myF, partnerF, placeObj, score, isDark
 
     ctx.font = `400 18px ${FONT}`;
     ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
+    ctx.fillText('별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
 
     const suffix = totalPages > 1 ? `_${page + 1}of${totalPages}` : '';
     downloadCanvas(canvas, `byeolsoom_compat${suffix}.png`);
@@ -389,7 +389,7 @@ export function saveChatImage({ chatHistory, isDark, today }) {
       // 역할 레이블
       ctx.font = `600 17px ${FONT}`;
       ctx.fillStyle = isAi ? GOLD : t3;
-      ctx.fillText(isAi ? '✦ 별숨' : '나', bubbleX, y + 18);
+      ctx.fillText(isAi ? '별숨' : '나', bubbleX, y + 18);
       y += ROLE_H;
 
       // 말풍선 배경
@@ -412,7 +412,7 @@ export function saveChatImage({ chatHistory, isDark, today }) {
 
     ctx.font = `400 18px ${FONT}`;
     ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-    ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
+    ctx.fillText('별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
 
     const suffix = totalPages > 1 ? `_${page + 1}of${totalPages}` : '';
     downloadCanvas(canvas, `byeolsoom_chat${suffix}.png`);
@@ -460,7 +460,7 @@ export function saveFortuneCard({ name, sun, saju, today, summary, moodWord, isD
   // ── 브랜드 + 날짜 (상단) ──
   ctx.font = `600 26px ${FONT}`;
   ctx.fillStyle = GOLD;
-  ctx.fillText('byeolsoom  ✦', PADDING, 68);
+  ctx.fillText('byeolsoom ', PADDING, 68);
 
   ctx.font = `400 20px ${FONT}`;
   ctx.fillStyle = '#8A7FA0';
@@ -557,7 +557,7 @@ export function saveFortuneCard({ name, sun, saju, today, summary, moodWord, isD
   // ── 하단 브랜딩 ──
   ctx.font = `400 18px ${FONT}`;
   ctx.fillStyle = 'rgba(255,255,255,0.18)';
-  ctx.fillText('✦ 별숨 — 사주와 별자리로 읽는 나의 운명', PADDING, SIZE - 36);
+  ctx.fillText('별숨 — 사주와 별자리로 읽는 나의 운명', PADDING, SIZE - 36);
 
   downloadCanvas(canvas, `byeolsoom_fortune_${today.month}${today.day}.png`);
 }
@@ -633,7 +633,7 @@ export function saveEnhancedSajuCard({ name, saju, sun, theme, stickerId }) {
   ctx.font = '500 22px Pretendard, sans-serif';
   ctx.fillStyle = theme.accent;
   ctx.textAlign = 'center';
-  ctx.fillText('✦ 별숨', 450, 80);
+  ctx.fillText('별숨', 450, 80);
 
   // 이름
   ctx.font = 'bold 68px Pretendard, sans-serif';
@@ -777,7 +777,7 @@ export function saveStatsCard({ nickname, total, catData, monthData, slotCount, 
   // ── 상위 카테고리 ──
   ctx.font = `700 26px ${FONT}`;
   ctx.fillStyle = GOLD;
-  ctx.fillText('✦ 가장 많이 물어본 주제', PADDING, y);
+  ctx.fillText('가장 많이 물어본 주제', PADDING, y);
   y += 44;
 
   const TOP = catData.slice(0, 4);
@@ -806,7 +806,7 @@ export function saveStatsCard({ nickname, total, catData, monthData, slotCount, 
   // ── 시간대 패턴 ──
   ctx.font = `700 26px ${FONT}`;
   ctx.fillStyle = GOLD;
-  ctx.fillText('✦ 시간대별 패턴', PADDING, y);
+  ctx.fillText('시간대별 패턴', PADDING, y);
   y += 44;
 
   const SLOTS = ['새벽','오전','오후','저녁'];
@@ -836,7 +836,7 @@ export function saveStatsCard({ nickname, total, catData, monthData, slotCount, 
   // ── 수호자 레벨 & BP ──
   ctx.font = `700 26px ${FONT}`;
   ctx.fillStyle = GOLD;
-  ctx.fillText('✦ 별숨 포인트', PADDING, y);
+  ctx.fillText('별숨 포인트', PADDING, y);
   y += 44;
   ctx.font = `800 52px ${FONT}`;
   ctx.fillStyle = GOLD2;
@@ -848,7 +848,7 @@ export function saveStatsCard({ nickname, total, catData, monthData, slotCount, 
   // 하단 브랜딩
   ctx.font = `400 18px ${FONT}`;
   ctx.fillStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-  ctx.fillText('✦ 별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
+  ctx.fillText('별숨 - 사주와 별자리로 읽는 나의 운명', PADDING, IG_H - 36);
 
   downloadCanvas(canvas, `byeolsoom_stats_${nickname}.png`);
 }

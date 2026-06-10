@@ -178,6 +178,7 @@ export default function AppRouter({ ctx }) {
           onFreeRecharge={handleFreeRecharge}
           freeRechargeAvailable={freeRechargeAvailable}
           onEarnBP={earnBP}
+          spendBP={spendBP}
           hasDiaryToday={hasDiaryToday}
           setEditingMyProfile={setEditingMyProfile}
           setShowProfileModal={setShowProfileModal}
@@ -608,13 +609,13 @@ export default function AppRouter({ ctx }) {
       {featureLoading && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 8500,
-          background: 'rgba(250, 247, 241, 0.97)',
+          background: 'var(--loading-overlay)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           animation: 'fadeIn .25s ease',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <FeatureLoadingScreen type={featureLoading.type} text={featureLoading.text} fullPage={false} />
+          <FeatureLoadingScreen type={featureLoading.type} subtitle={featureLoading.text} fullPage={false} />
         </div>
       )}
     </div>

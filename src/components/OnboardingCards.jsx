@@ -6,7 +6,7 @@ import Mascot from "./Mascot.jsx";
 // ── 핵심 기능 소개 ──
 const FEATURES_CORE = [
   {
-    icon: "✦",
+    icon: "◆",
     title: "매일 별숨",
     subtitle: "오늘 나의 기운은?",
     desc: "매일 아침, 사주와 별자리로 오늘 하루를 미리 읽어드려요. 무엇을 조심하고, 무엇을 믿어야 할지.",
@@ -29,7 +29,7 @@ const FEATURES_CORE = [
 ];
 
 const FEATURES_MORE = [
-  { icon: "✦", title: "사이 별점", desc: "두 사람의 사주+별자리로 보는 진짜 궁합" },
+  { icon: "◆", title: "사이 별점", desc: "두 사람의 사주+별자리로 보는 진짜 궁합" },
   { icon: "◈", title: "별숨 일기", desc: "오늘 있었던 일을 별이 다시 읽어줘요" },
   { icon: "◇", title: "종합 사주", desc: "기질·연애·재물·직업·건강을 한 번에" },
 ];
@@ -322,7 +322,7 @@ export default function OnboardingCards({ saju, sun, onFinish }) {
         {/* 버튼 그룹 */}
         <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 10 }}>
           <button className="btn-main" onClick={next} style={{ width: "100%" }}>
-            {isLast ? "별숨 시작하기 ✦" : "다음 →"}
+            {isLast ? "별숨 시작하기" : "다음 →"}
           </button>
           {isLast && (
             <button

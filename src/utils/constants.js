@@ -162,7 +162,7 @@ ${sajuCtx ? `[사용자 사주 정보]\n${sajuCtx}` : ''}
 이 목표가 사주 흐름과 얼마나 잘 맞는지, 지금 타이밍이 좋은지 나쁜지,
 무엇을 준비하면 성공 가능성이 높아지는지를 구체적으로 알려주세요.
 응원하되 막연하지 않게, 실질적인 방향을 제시해주세요.
-마지막에 이 목표를 위한 별숨의 조언 한 문장을 '✦ 별숨의 한마디' 형식으로 남겨주세요.`;
+마지막에 이 목표를 위한 별숨의 조언 한 문장을 '별숨의 한마디' 형식으로 남겨주세요.`;
 
 // ═══════════════════════════════════════════════════════════
 //  AI 사주사 캐릭터 프롬프트
@@ -284,7 +284,7 @@ export function parseAccSummary(text) {
     return { score, summary, text: restText };
   }
 
-  // 2순위: 🀄 또는 ✦ 앵커 이전 첫 문장을 요약으로 추출
+  // 2순위: 🀄 또는 앵커 이전 첫 문장을 요약으로 추출
   const anchorIdx = processedText.search(/[🀄✦]/);
   if (anchorIdx > 10) {
     const beforeAnchor = processedText.slice(0, anchorIdx).trim();
@@ -391,12 +391,15 @@ export const CATS=[
   CATS_ALL.find(c => c.id === 'future'),
 ];
 
+// 베타 기간 플래그 — 결제 도입 시 false로 전환 (가격 표기·플랜 게이트 일괄 제어)
+export const IS_BETA = true;
+
 // 구독 플랜 (2단계)
 // basic: 하루 1개 무료, 오늘의 별숨 불가, 추가 질문 500원
 // premium: 하루 100개, 오늘의 별숨 가능, 월 5,500원
 // 베타 기간에는 기본 설정이 premium (무료 이용)
 export const PLANS=[
-  {id:"basic",isFree:true,e:"✦",n:"기본",p:"무료",q:1,chat:0,dailyStar:false,dailyQ:1,extraQPrice:500},
+  {id:"basic",isFree:true,e:"🌙",n:"기본",p:"무료",q:1,chat:0,dailyStar:false,dailyQ:1,extraQPrice:500},
   {id:"premium",e:"🌟",n:"별숨 요금제",p:"월 5,500원",q:10,chat:999,dailyStar:true,dailyQ:100,extraQPrice:0,hot:true},
 ];
 
@@ -686,10 +689,10 @@ export const DAILY_QUESTIONS = [
 ];
 
 export const LOAD_STATES=[
-  {t:"동양의 별과 서양의 별이 함께 당신을 읽고 있어요",s:"잠깐만요 ✦"},
+  {t:"동양의 별과 서양의 별이 함께 당신을 읽고 있어요",s:"잠깐만요"},
   {t:"태어난 순간의 기운을 조용히 불러오는 중이에요",s:"조금만 기다려줘요 🌙"},
   {t:"당신에게 꼭 맞는 이야기를 고르고 있어요",s:"거의 다 왔어요 ✨"},
-  {t:"오늘 당신의 별이 어떤 말을 건네는지 듣고 있어요",s:"잠깐만요 ✦"},
+  {t:"오늘 당신의 별이 어떤 말을 건네는지 듣고 있어요",s:"잠깐만요"},
 ];
 
 /** 텍스트 파일로 다운로드 */

@@ -9,7 +9,7 @@ export default function OhaengBar({ members }) {
   const dominant = sorted[0];
   return (
     <div style={{ marginBottom: 16, background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', padding: '16px 16px 14px' }}>
-      <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 14, letterSpacing: '.05em' }}>✦ 우리 모임의 오행 기운</div>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 14, letterSpacing: '.05em' }}>우리 모임의 오행 기운</div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 72 }}>
         {Object.entries(counts).map(([el, cnt]) => {
           const pct = total ? cnt / total : 0;

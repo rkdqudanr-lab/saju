@@ -324,7 +324,7 @@ ${qaPairs}
                 {[
                   { icon: '🜂', text: '별숨이 지금의 나에게 맞는 질문 10개를 준비해요' },
                   { icon: '✍', text: '질문에 답하면서 내 마음과 패턴을 더 보여줘요' },
-                  { icon: '✦', text: '답변을 바탕으로 깊은 개인 해석을 받아요' },
+                  { icon: '◆', text: '답변을 바탕으로 깊은 개인 해석을 받아요' },
                 ].map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div

@@ -9,11 +9,14 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore.js';
 import Icon from './Icon.jsx';
+import Mascot from './Mascot.jsx';
 import { STEP, STEP_GROUPS } from '../utils/steps.js';
 
 const MENU_GROUPS = {
   today: {
-    label: '별숨질문',
+    label: '오늘',
+    desc: '운세, 기록, 달력을 한곳에서 봐요',
+    mood: 'wave',
     items: [
       { icon: 'home', label: '홈', step: STEP.HOME },
       { icon: 'sun', label: '오늘 하루 나의 별숨', step: STEP.TODAY_DETAIL },
@@ -23,7 +26,9 @@ const MENU_GROUPS = {
     ],
   },
   consult: {
-    label: '별숨 상담',
+    label: '상담',
+    desc: '고민의 종류에 맞춰 바로 시작해요',
+    mood: 'thinking',
     items: [
       // ── 자주 쓰는 상담 ──
       { icon: 'chat', label: '별숨에게 물어보기', step: STEP.QUESTION },
@@ -44,7 +49,9 @@ const MENU_GROUPS = {
     ],
   },
   growth: {
-    label: '별숨성장',
+    label: '성장',
+    desc: '모은 기록과 보상을 정리해요',
+    mood: 'reward',
     items: [
       { icon: 'presentation-chart', label: '별숨성장 대시보드', step: STEP.GROWTH_DASHBOARD },
       { icon: 'sparkles', label: '별숨 도감', step: STEP.BYEOLSOOM_SPACE },
@@ -55,7 +62,9 @@ const MENU_GROUPS = {
     ],
   },
   square: {
-    label: '별숨광장',
+    label: '광장',
+    desc: '함께 보는 궁합과 이야기를 모았어요',
+    mood: 'love',
     items: [
       { icon: 'grid', label: '별숨 광장', step: STEP.COMMUNITY },
       { icon: 'heart-users', label: '익명 궁합 광장', step: STEP.ANON_COMPAT },
@@ -64,7 +73,9 @@ const MENU_GROUPS = {
     ],
   },
   settings: {
-    label: '별숨설정',
+    label: '설정',
+    desc: '프로필과 앱 설정을 정리해요',
+    mood: 'normal',
     items: [
       { icon: 'user-circle', label: '마이페이지', step: STEP.MY_PAGE },
       { icon: 'cog', label: '설정', step: STEP.SETTINGS },
@@ -123,9 +134,9 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
           maxWidth: 480,
           margin: '0 auto',
           background: 'var(--bg1)',
-          borderRadius: '20px 20px 0 0',
-          boxShadow: '0 -4px 24px rgba(0,0,0,0.25)',
-          padding: '16px 0 8px',
+          borderRadius: '18px 18px 0 0',
+          boxShadow: '0 -10px 34px rgba(0,0,0,0.18)',
+          padding: '14px 0 10px',
           animation: 'slideUpDrawer 0.22s ease',
         }}
       >
@@ -140,21 +151,34 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
         />
         <div
           style={{
-            fontSize: 'var(--xs)',
-            fontWeight: 700,
-            color: 'var(--gold)',
-            letterSpacing: '.06em',
-            padding: '0 20px',
-            marginBottom: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '0 18px',
+            marginBottom: 12,
           }}
         >
-          {group.label}
+          <Mascot mood={group.mood} size={44} aria-hidden="true" style={{ flexShrink: 0 }} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{
+              fontSize: 'var(--xs)',
+              fontWeight: 800,
+              color: 'var(--t1)',
+              letterSpacing: '.06em',
+              marginBottom: 2,
+            }}>
+              {group.label}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.45, wordBreak: 'keep-all' }}>
+              {group.desc}
+            </div>
+          </div>
         </div>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 4,
+            gridTemplateColumns: group.items.length > 6 ? '1fr 1fr' : '1fr',
+            gap: 6,
             padding: '0 12px',
             maxHeight: '50vh',
             overflowY: 'auto',
@@ -168,10 +192,10 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-                padding: '12px 14px',
+                padding: group.items.length > 6 ? '11px 13px' : '13px 14px',
                 border: '1px solid var(--line)',
-                borderRadius: 'var(--r1)',
-                background: 'var(--bg2)',
+                borderRadius: group.items.length > 6 ? 12 : 10,
+                background: idx === 0 ? 'var(--home-surface-strong)' : 'var(--bg2)',
                 cursor: 'pointer',
                 fontFamily: 'var(--ff)',
                 textAlign: 'left',
@@ -179,8 +203,8 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
                 ...(idx === group.items.length - 1 && group.items.length % 2 !== 0 ? { gridColumn: 'span 2' } : {}),
               }}
             >
-              <Icon name={item.icon} size={18} color="var(--gold)" />
-              <span style={{ fontSize: 'var(--xs)', color: 'var(--t1)', lineHeight: 1.3, wordBreak: 'keep-all' }}>
+              <Icon name={item.icon} size={18} color={idx === 0 ? 'var(--gold)' : 'var(--t3)'} />
+              <span style={{ fontSize: group.items.length > 6 ? 'var(--xs)' : 'var(--sm)', color: 'var(--t1)', lineHeight: 1.3, wordBreak: 'keep-all', fontWeight: idx === 0 ? 700 : 500 }}>
                 {item.label}
               </span>
             </button>
@@ -304,7 +328,7 @@ export default function BottomNav() {
                 position: 'relative',
               }}
             >
-              <Icon name={TAB_ICONS[tab.id]} size={22} color={isActive ? 'var(--gold)' : 'var(--t3)'} />
+              <Icon name={TAB_ICONS[tab.id]} size={20} color={isActive ? 'var(--gold)' : 'var(--t3)'} />
               <span
                 style={{
                   fontSize: 'var(--xs)',

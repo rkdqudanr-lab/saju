@@ -122,7 +122,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
     );
     if (already) { setSavedMsg('이미 저장된 사람이에요'); setTimeout(() => setSavedMsg(''), 2500); return; }
     saveOtherProfile?.({ ...partner, noTime: true });
-    setSavedMsg('별숨 목록에 저장했어요 ✦'); setTimeout(() => setSavedMsg(''), 2500);
+    setSavedMsg('별숨 목록에 저장했어요'); setTimeout(() => setSavedMsg(''), 2500);
   }, [partner, otherProfiles, saveOtherProfile]);
 
   const partnerSaju = useMemo(() => {
@@ -261,7 +261,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                           fontSize: 'var(--xs)', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--ff)',
                           transition: 'all .15s',
                         }}>
-                        {rel ? rel.emoji : '✦'} {p.name || '이름없음'} ({p.by}년)
+                        {rel ? rel.emoji : '·'} {p.name || '이름없음'} ({p.by}년)
                       </button>
                     );
                   })}
@@ -337,7 +337,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                   fontWeight: 600, fontFamily: 'var(--ff)', cursor: 'pointer',
                 }}
               >
-                ✦ 별숨 목록에 저장하기
+                별숨 목록에 저장하기
               </button>
               {savedMsg && <span style={{ fontSize: 'var(--xs)', color: 'var(--gold)' }}>{savedMsg}</span>}
             </div>
@@ -346,7 +346,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
           {/* 궁합 점수 (상대 입력 시) */}
           {partnerOk && (
             <div className="compat-total" style={{ marginBottom: 'var(--sp2)' }}>
-              <div className="compat-total-label">✦ 두 별의 공명 지수</div>
+              <div className="compat-total-label">두 별의 공명 지수</div>
               <div className="kizmet-score">{compatScore}%</div>
               <div className="kizmet-bar"><div className="kizmet-fill" style={{ width: `${compatScore}%` }} /></div>
               {mySaju && partnerSaju && (
@@ -364,7 +364,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
             onClick={runStory}
             style={{ marginBottom: 8 }}
           >
-            {storyLoading ? '두 별의 인연을 읽고 있어요...' : '별숨에게 두 별의 인연 풀어보기 ✦'}
+            {storyLoading ? '두 별의 인연을 읽고 있어요...' : '별숨에게 두 별의 인연 풀어보기'}
           </button>
 
           {/* 이야기 결과 */}
@@ -415,7 +415,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                       marginBottom: 12, paddingBottom: 10,
                       borderBottom: '1px solid rgba(180,140,50,0.15)',
                     }}>
-                      ✦ {storyResult.todayVibe}
+                      {storyResult.todayVibe}
                     </div>
                   )}
                   {storyResult.story && (
@@ -429,7 +429,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                   {storyResult.moments?.length > 0 && (
                     <div style={{ marginBottom: 14 }}>
                       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 600, marginBottom: 8 }}>
-                        ✦ 별숨이 본 핵심 포인트
+                        별숨이 본 핵심 포인트
                       </div>
                       {storyResult.moments.map((m, i) => (
                         <div key={i} style={{
@@ -437,7 +437,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                           marginBottom: i < storyResult.moments.length - 1 ? 8 : 0,
                           fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.65,
                         }}>
-                          <span style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }}>✦</span>
+                          <span style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }}></span>
                           <span>{m}</span>
                         </div>
                       ))}
@@ -488,7 +488,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                         compatTier: getCompatTier(compatScore).label,
                       })}
                     >
-                      ✦ 익명 궁합 광장에 공유
+                      익명 궁합 광장에 공유
                     </button>
                   )}
                 </>
