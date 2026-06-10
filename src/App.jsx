@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 
 // store (showToast를 스토어에 주입)
 import { useAppStore } from "./store/useAppStore.js";
@@ -382,7 +383,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <StarCanvas isDark={isDark} />
       <PWAInstallBanner />
 
@@ -398,23 +399,26 @@ export default function App() {
         summary={cardSummary}
       />
 
-      {/* 엑스트라 알림 */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            key={toast.message}
-            role="alert"
-            aria-live="assertive"
-            className={`toast toast-${toast.type}`}
-            initial={{ opacity: 0, y: -16, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.96 }}
-            transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-          >
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 엑스트라 알림 — body 포털: 모달(z 9990~10000) 위에 항상 보이도록 */}
+      {createPortal(
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              key={toast.message}
+              role="alert"
+              aria-live="assertive"
+              className={`toast toast-${toast.type}`}
+              initial={{ opacity: 0, y: -16, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.96 }}
+              transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+            >
+              {toast.message}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {chatTransitioning && (
         <div className="chat-transition-overlay" aria-hidden="true">
@@ -434,7 +438,7 @@ export default function App() {
       )}
 
       {/* 사이드바 메뉴 버튼 */}
-      <button className={`menu-btn ${isMenuVisible || showSidebar ? "" : "is-hidden"}`} data-tour="menu-btn" onClick={() => setShowSidebar(true)} aria-label="menu" aria-expanded={showSidebar}><Icon name="grid" size={18} color="currentColor" /></button>
+      <button className={`menu-btn ${(isMenuVisible || showSidebar) && !STEP_GROUPS.HAS_OWN_HEADER.includes(step) ? "" : "is-hidden"}`} data-tour="menu-btn" onClick={() => setShowSidebar(true)} aria-label="메뉴 열기" aria-expanded={showSidebar}><Icon name="grid" size={18} color="currentColor" /></button>
 
       {showSidebar && (
         <Sidebar
@@ -467,7 +471,7 @@ export default function App() {
           ) : user.profileImage ? (
             <img src={user.profileImage} alt="Profile" />
           ) : (
-            <span className="user-chip-avatar">✦</span>
+            <span className="user-chip-avatar">{user.nickname?.[0] || '별'}</span>
           )}
           <span className="user-chip-name">{user.nickname}</span>
         </button>
@@ -478,12 +482,12 @@ export default function App() {
         </button>
       )}
 
-      {step > STEP.HOME && step < STEP.RESULT && step !== STEP.HISTORY && <button className="back-btn" aria-label="go back" onClick={() => setStep(p => p === STEP.RESULT ? STEP.QUESTION : Math.max(STEP.HOME, p - 1))}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {STEP_GROUPS.BACK_TO_RESULT.includes(step) && <button className="back-btn" aria-label="back to result" onClick={() => setStep(STEP.RESULT)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {step === STEP.HISTORY && <button className="back-btn" aria-label="back home" onClick={() => { setHistItem(null); setStep(STEP.HOME); }}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {STEP_GROUPS.BACK_TO_HOME.includes(step) && <button className="back-btn" aria-label="back home" onClick={() => setStep(STEP.HOME)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {step === STEP.ONBOARDING && <button className="back-btn" aria-label="go back" onClick={() => setStep(STEP.PROFILE)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
-      {step > STEP.HOME && <button className="home-btn" aria-label="go home" onClick={() => setStep(STEP.HOME)}><Icon name="home" size={18} color="currentColor" /></button>}
+      {step > STEP.HOME && step < STEP.RESULT && step !== STEP.HISTORY && <button className="back-btn" aria-label="뒤로 가기" onClick={() => setStep(p => Math.max(STEP.HOME, p - 1))}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {STEP_GROUPS.BACK_TO_RESULT.includes(step) && <button className="back-btn" aria-label={answers.length > 0 ? "결과로 돌아가기" : "홈으로 가기"} onClick={() => setStep(answers.length > 0 ? STEP.RESULT : STEP.HOME)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step === STEP.HISTORY && <button className="back-btn" aria-label="홈으로 가기" onClick={() => { setHistItem(null); setStep(STEP.HOME); }}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {STEP_GROUPS.BACK_TO_HOME.includes(step) && <button className="back-btn" aria-label="홈으로 가기" onClick={() => setStep(STEP.HOME)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step === STEP.ONBOARDING && <button className="back-btn" aria-label="뒤로 가기" onClick={() => setStep(STEP.PROFILE)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step > STEP.HOME && !STEP_GROUPS.HAS_OWN_HEADER.includes(step) && <button className="home-btn" aria-label="홈으로 가기" onClick={() => setStep(STEP.HOME)}><Icon name="home" size={18} color="currentColor" /></button>}
 
       {/* 하단 네비게이션 바(Zustand store에서 step/user/formOkApprox 직접 읽음) */}
       <BottomNav />
@@ -509,6 +513,6 @@ export default function App() {
         guardianLevelUp={guardianLevelUp} setGuardianLevelUp={setGuardianLevelUp}
         guardianMessage={guardianMessage} guardianMsgLoading={guardianMsgLoading}
       />
-    </>
+    </MotionConfig>
   );
 }
