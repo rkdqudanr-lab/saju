@@ -6,13 +6,9 @@ import { buildAiRequestContext, validateAiRequest } from './lib/aiRequest.js'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const apiKey = env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || '';
-  return {
-  plugins: [
-    react(),
-    // ── 로컬 dev용 API 미들웨어 (/api/ask, /api/stream) ──
-    {
-      name: 'byeolsoom-api',
-      configureServer(server) {
+  // ── 로컬용 API 미들웨어 (/api/ask, /api/stream) ──
+  // dev(5173)와 preview(4173) 모두 등록 — preview에 등록하지 않으면 빌드 확인 시 AI 기능 전체가 404
+  const registerApiMiddlewares = (server) => {
         // POST /api/ask
         server.middlewares.use('/api/ask', async (req, res) => {
           if (req.method !== 'POST') {
@@ -168,7 +164,15 @@ export default defineConfig(({ mode }) => {
             }
           });
         });
-      },
+  };
+
+  return {
+  plugins: [
+    react(),
+    {
+      name: 'byeolsoom-api',
+      configureServer: registerApiMiddlewares,
+      configurePreviewServer: registerApiMiddlewares,
     },
     VitePWA({
       // injectManifest 전략: src/sw.js를 커스텀 SW로 사용
