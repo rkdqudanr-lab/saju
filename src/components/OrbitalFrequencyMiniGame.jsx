@@ -166,7 +166,7 @@ export default function OrbitalFrequencyMiniGame({
           style={{
             fontSize: '16px',
             fontWeight: '700',
-            color: '#0D0B14',
+            color: 'var(--on-gold)',
             margin: '0 0 4px 0',
           }}
         >
@@ -326,7 +326,7 @@ export default function OrbitalFrequencyMiniGame({
               style={{
                 fontSize: '24px',
                 fontWeight: '700',
-                color: '#0D0B14',
+                color: 'var(--on-gold)',
                 marginBottom: '8px',
               }}
             >

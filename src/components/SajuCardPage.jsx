@@ -29,7 +29,7 @@ export default function SajuCardPage({ form, saju, sun, setStep, showToast }) {
     return (
       <div className="page">
         <div className="inner" style={{ textAlign: 'center', paddingTop: 40 }}>
-          <div style={{ fontSize: '1.5rem', marginBottom: 20, color: 'var(--gold)' }}></div>
+          <div style={{ fontSize: '1.5rem', marginBottom: 20, color: 'var(--gold)' }}>✦</div>
           <div style={{ fontSize: 'var(--md)', fontWeight: 700, marginBottom: 16 }}>명함 카드 만들기</div>
           <div style={{ fontSize: 'var(--sm)', color: 'var(--t3)', marginBottom: 20 }}>
             생년월일을 입력해서<br/>당신의 사주 명함을 만들어봐요

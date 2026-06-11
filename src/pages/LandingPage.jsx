@@ -33,6 +33,7 @@ import GachaGraphic from '../components/GachaGraphic.jsx';
 import Mascot from '../components/Mascot.jsx';
 import AnimatedMascot from '../components/AnimatedMascot.jsx';
 import { ASPECTS, getDailyResonanceItems } from '../utils/gachaItems.js';
+import { scanScoreEvents } from '../utils/dailyScoreEngine.js';
 
 const _SI = { viewBox: '0 0 24 24', width: 18, height: 18, fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
 const TILE_ICONS = {
@@ -158,6 +159,24 @@ export default function LandingPage({
   const nearbyJeolgi = useMemo(() => getNearbyJeolgi(), []);
   const kakaoId = user?.kakaoId || user?.id;
 
+  // 길일/흉일 희소 이벤트 (결정론적 엔진 — 홈 점수와 동일 소스)
+  const scoreEvents = useMemo(() => {
+    if (!user?.id || !saju?.ilgan) return null;
+    try { return scanScoreEvents(String(user.id), getDailyDateKey(), saju); } catch { return null; }
+  }, [user?.id, saju]);
+
+  // 흉일 액막이 성공 시 표시 점수 +15 "정화 보정" (badtimeBlocksCount 변경 시 재평가)
+  const purifyDelta = useMemo(() => {
+    try { return Number(localStorage.getItem(`byeolsoom_purify_${getDailyDateKey()}`)) || 0; } catch { return 0; }
+  }, [gamificationState.badtimeBlocksCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 흉일 당일 노출 KPI (이탈 추적용)
+  useEffect(() => {
+    if (scoreEvents?.isUnluckyToday && typeof window.gtag === 'function') {
+      window.gtag('event', 'unlucky_day_view');
+    }
+  }, [scoreEvents?.isUnluckyToday]);
+
   // ── 데이터 페칭 상태 ──
   const [boostMap, setBoostMap] = useState(() => {
     const uid = user?.kakaoId || user?.id;
@@ -191,10 +210,14 @@ export default function LandingPage({
     () => scoreHistory.map((s) => s.score).filter((s) => s !== null),
     [scoreHistory],
   );
-  const normalizedTodayScore = useMemo(
-    () => normalizeAndClamp(todayScore, allRawHistoryScores),
-    [todayScore, allRawHistoryScores],
-  );
+  const normalizedTodayScore = useMemo(() => {
+    // 결정론 엔진 점수는 분포가 이미 설계됨 — 히스토리 정규화를 거치면 0~100 설계가 압축되므로 우회.
+    // (정규화는 AI 점수가 60~75에 뭉치던 시절의 보정 장치)
+    if (scoreEvents?.score != null) {
+      return Math.max(1, Math.min(100, scoreEvents.score + purifyDelta));
+    }
+    return normalizeAndClamp(todayScore, allRawHistoryScores);
+  }, [scoreEvents?.score, purifyDelta, todayScore, allRawHistoryScores]);
   // WeeklyScoreSummary에 넘길 마지막 7일 — 각 점수도 정규화
   const normalizedWeeklyHistory = useMemo(
     () => scoreHistory.slice(-7).map((item) => ({
@@ -338,6 +361,9 @@ export default function LandingPage({
   // ── useEffect: streak 팝업 ──
   useEffect(() => {
     if (!user || !gamificationState.loginStreak) return;
+    // 가입 당일(1일차)·기능 투어가 아직 안 끝난 첫 세션에는 팝업 생략 (투어와 겹침 방지)
+    if (gamificationState.loginStreak <= 1) return;
+    if (localStorage.getItem('byeolsoom_tour_v1') !== 'done') return;
     const key = `streak_popup_${getDailyDateKey()}`;
     if (localStorage.getItem(key)) return;
     const t = setTimeout(() => {
@@ -527,9 +553,24 @@ export default function LandingPage({
           </p>
           <div className="land-login-section">
             <div className="land-login-card" style={{ padding: '24px 20px', gap: '16px' }}>
-              <p style={{ fontSize: 'var(--sm)', color: 'var(--t2)', textAlign: 'center', lineHeight: 1.8, margin: 0 }}>
-                사주와 별자리, 두 개의 언어로<br />지금의 당신을 읽어드려요
-              </p>
+              {form?.by ? (
+                <>
+                  <p style={{ fontSize: 'var(--sm)', color: 'var(--t2)', textAlign: 'center', lineHeight: 1.8, margin: 0 }}>
+                    입력해주신 사주로 별숨을<br />먼저 체험해볼 수 있어요
+                  </p>
+                  <button
+                    className="cta-main"
+                    style={{ width: '100%', justifyContent: 'center', animation: 'none' }}
+                    onClick={() => setStep(STEP.QUESTION)}
+                  >
+                    지금 고민 물어보기 →
+                  </button>
+                </>
+              ) : (
+                <p style={{ fontSize: 'var(--sm)', color: 'var(--t2)', textAlign: 'center', lineHeight: 1.8, margin: 0 }}>
+                  사주와 별자리, 두 개의 언어로<br />지금의 당신을 읽어드려요
+                </p>
+              )}
               <button
                 className="kakao-login-full"
                 onClick={() => {
@@ -543,11 +584,13 @@ export default function LandingPage({
                     <path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.54-2.34c.39.06.81.09 1.26.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#191919" />
                   </svg>
                 </span>
-                카카오로 3초 만에 시작하기
+                {form?.by ? '카카오 로그인하고 결과 저장하기' : '카카오로 3초 만에 시작하기'}
               </button>
-              <button className="land-ghost-link" onClick={() => setStep(STEP.PROFILE)}>
-                로그인 없이 먼저 체험하기 →
-              </button>
+              {!form?.by && (
+                <button className="land-ghost-link" onClick={() => setStep(STEP.PROFILE)}>
+                  로그인 없이 먼저 체험하기 →
+                </button>
+              )}
             </div>
           </div>
           <div className="land-scroll-hint"><span>↓</span></div>
@@ -652,6 +695,29 @@ export default function LandingPage({
           onFreeRecharge={onFreeRecharge}
           onStreakClick={() => setStep(STEP.SCORE_TREND)}
         />
+
+        {/* 1.5 길일/흉일 희소 이벤트 배너 */}
+        {scoreEvents?.banner && (
+          <button
+            onClick={() => setStep(STEP.TODAY_DETAIL)}
+            aria-label={scoreEvents.banner.text}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              width: '100%', padding: '13px 16px',
+              background: scoreEvents.banner.type.startsWith('lucky') ? 'var(--goldf)' : 'var(--lavf)',
+              border: `1px solid ${scoreEvents.banner.type.startsWith('lucky') ? 'var(--acc)' : 'var(--lavacc)'}`,
+              borderRadius: 'var(--r1)', cursor: 'pointer', fontFamily: 'var(--ff)',
+              textAlign: 'left',
+            }}
+          >
+            <span style={{ fontSize: '1.1rem', flexShrink: 0 }} aria-hidden="true">
+              {scoreEvents.banner.type.startsWith('lucky') ? '✦' : '🛡️'}
+            </span>
+            <span style={{ fontSize: 'var(--sm)', color: 'var(--t1)', lineHeight: 1.55, wordBreak: 'keep-all' }}>
+              {scoreEvents.banner.text}
+            </span>
+          </button>
+        )}
 
         {/* 2. 히어로: 오늘의 별숨 미니카드 */}
         <DailyMiniCard

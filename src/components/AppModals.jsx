@@ -9,6 +9,7 @@ import { useAppStore } from "../store/useAppStore.js";
 import UpgradeModal         from "./UpgradeModal.jsx";
 import GuardianLevelUpModal from "./GuardianLevelUpModal.jsx";
 import BPConfirmModal       from "./BPConfirmModal.jsx";
+import ConfirmSheet         from "./ConfirmSheet.jsx";
 import OtherProfileModal    from "./OtherProfileModal.jsx";
 import InviteModal          from "./InviteModal.jsx";
 import ShareModal           from "./ShareModal.jsx";
@@ -95,6 +96,7 @@ export default function AppModals({
       )}
 
       <BPConfirmModal />
+      <ConfirmSheet />
 
       {guardianLevelUp && (
         <GuardianLevelUpModal

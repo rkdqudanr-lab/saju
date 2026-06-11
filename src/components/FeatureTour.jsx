@@ -177,9 +177,9 @@ export default function FeatureTour({ onFinish }) {
         />
       )}
 
-      {/* 오버레이 클릭 → 건너뛰기 */}
+      {/* 오버레이 클릭 → 다음 단계 (실수 탭으로 투어가 영구 소멸하지 않게 — 스킵은 명시 버튼만) */}
       <div
-        onClick={handleSkip}
+        onClick={handleNext}
         style={{
           position: 'fixed',
           inset: 0,
@@ -232,7 +232,7 @@ export default function FeatureTour({ onFinish }) {
               flex: 1,
               padding: '9px 0',
               background: 'var(--gold)',
-              color: '#0D0B14',
+              color: 'var(--on-gold)',
               border: 'none',
               borderRadius: 10,
               fontSize: 'var(--sm)',

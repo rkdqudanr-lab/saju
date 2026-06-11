@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => {
               }
               const { systemWithContext, maxTokens } = await buildAiRequestContext(validation.data);
               const controller = new AbortController();
-              const timeout = setTimeout(() => controller.abort(), 25000);
+              const timeout = setTimeout(() => controller.abort(), 50000); // api/ask.js와 동일
               let anthropicRes;
               try {
                 anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -53,7 +53,8 @@ export default defineConfig(({ mode }) => {
                   body: JSON.stringify({
                     model: 'claude-haiku-4-5-20251001',
                     max_tokens: maxTokens,
-                    ...(validation.data.isDaily ? { temperature: 0.65 } : {}),
+                    // api/ask.js와 동일하게 유지 — 기본 1.0은 한국어 오타·조사 누락이 잦음
+                    temperature: validation.data.isDaily ? 0.65 : 0.8,
                     system: [{ type: 'text', text: systemWithContext }],
                     messages: [{ role: 'user', content: validation.data.userMessage }],
                   }),
@@ -113,7 +114,7 @@ export default defineConfig(({ mode }) => {
               if (!apiKey) { sendError(); return; }
               const { systemWithContext, maxTokens } = await buildAiRequestContext(validation.data);
               const streamController = new AbortController();
-              const streamTimeout = setTimeout(() => streamController.abort(), 30000);
+              const streamTimeout = setTimeout(() => streamController.abort(), 48000); // api/stream.js와 동일 (종합분석 7000토큰 스트림이 30초 초과)
               let anthropicRes;
               try {
                 anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -127,6 +128,8 @@ export default defineConfig(({ mode }) => {
                   body: JSON.stringify({
                     model: 'claude-haiku-4-5-20251001',
                     max_tokens: maxTokens,
+                    // api/stream.js와 동일하게 유지
+                    temperature: validation.data.isDaily ? 0.65 : 0.8,
                     stream: true,
                     system: [{ type: 'text', text: systemWithContext }],
                     messages: [{ role: 'user', content: validation.data.userMessage }],

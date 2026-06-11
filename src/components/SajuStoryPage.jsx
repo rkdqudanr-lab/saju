@@ -314,7 +314,7 @@ export default function SajuStoryPage({ callApi, showToast }) {
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: 24, marginBottom: 8 }}></div>
+            <div style={{ fontSize: 24, marginBottom: 8 }}>✦</div>
             <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--gold)', marginBottom: 6 }}>
               이야기가 완성됐어요
             </div>

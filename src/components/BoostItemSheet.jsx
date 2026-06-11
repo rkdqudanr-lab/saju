@@ -88,7 +88,7 @@ export default function BoostItemSheet({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 300,
+        zIndex: 'var(--z-sheet, 9990)',
         background: 'rgba(0,0,0,0.55)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
@@ -147,7 +147,7 @@ export default function BoostItemSheet({
             </div>
           ) : !hasItems ? (
             <div style={{ textAlign: 'center', padding: '32px 0' }}>
-              <div style={{ fontSize: '2rem', marginBottom: 12 }}></div>
+              <div style={{ fontSize: '2rem', marginBottom: 12 }}>✦</div>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginBottom: 16 }}>
                 사용할 아이템이 없어요
               </div>

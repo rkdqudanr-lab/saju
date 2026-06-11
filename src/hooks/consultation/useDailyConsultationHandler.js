@@ -3,6 +3,7 @@ import { useAppStore } from "../../store/useAppStore.js";
 import { supabase, getAuthenticatedClient } from "../../lib/supabase.js";
 import { getDailyDateKey } from "../../lib/dailyDataAccess.js";
 import { parseHoroscopeForGamification } from "../../utils/missionGenerator.js";
+import { getByeolsoomScore } from "../../utils/dailyScoreEngine.js";
 import { spendBP as spendBPUtil } from "../../utils/gamificationLogic.js";
 import { isLocalLayoutUser } from "../../utils/localLayoutMode.js";
 
@@ -110,10 +111,16 @@ export function useDailyConsultationHandler({
 
         try {
           const gamData = parseHoroscopeForGamification(ans);
+          // 결정론적 엔진 점수가 단일 진실 — AI가 주입값을 베끼다 틀려도 UI·캐시는 엔진 값 사용
+          let finalScore = gamData.score;
+          try {
+            const { saju: storeSaju } = useAppStore.getState();
+            if (storeSaju?.ilgan) finalScore = getByeolsoomScore(String(user.id), getDailyDateKey(), storeSaju);
+          } catch { /* 엔진 실패 시 파싱값 폴백 */ }
           if (isLocalLayoutUser(user)) {
             setDailyResult((prev) => ({
               ...prev,
-              score: gamData.score,
+              score: finalScore,
               ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
             }));
             return true;
@@ -124,7 +131,7 @@ export function useDailyConsultationHandler({
           if (!client) {
             setDailyResult((prev) => ({
               ...prev,
-              score: gamData.score,
+              score: finalScore,
               ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
             }));
             return true;
@@ -153,15 +160,15 @@ export function useDailyConsultationHandler({
 
           setDailyResult((prev) => ({
             ...prev,
-            score: gamData.score,
+            score: finalScore,
             ...(gamData.badtime?.detected ? { badtime: gamData.badtime } : {}),
           }));
 
-          if (gamData.score != null) {
-            saveDailyCache(user.id, "horoscope_score", String(gamData.score)).catch(() => {});
+          if (finalScore != null) {
+            saveDailyCache(user.id, "horoscope_score", String(finalScore)).catch(() => {});
             const scoreDate = getDailyDateKey();
             await client.from("daily_scores").upsert(
-              { kakao_id: String(user.id), score_date: scoreDate, score: gamData.score },
+              { kakao_id: String(user.id), score_date: scoreDate, score: finalScore },
               { onConflict: "kakao_id,score_date" }
             );
           }

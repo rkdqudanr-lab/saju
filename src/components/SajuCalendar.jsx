@@ -5,6 +5,8 @@ import { CATS_ALL, breakAtNatural } from "../utils/constants.js";
 import { STEP } from "../utils/steps.js";
 import { calcBiorhythm, BIORHYTHM_CHANNELS, toBarWidth, getBiorhythmStatus, BIORHYTHM_STATUS_LABEL } from "../utils/biorhythm.js";
 import { parseBirthTime } from "../utils/birthTime.js";
+import { useAppStore } from "../store/useAppStore.js";
+import { getByeolsoomScore } from "../utils/dailyScoreEngine.js";
 
 // ─────────────────────────────────────────────
 // 일진 점수 계산 (5단계 색상)
@@ -240,28 +242,32 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   // 월 변경 시 월별 분석 결과 초기화
   useEffect(() => { setMonthlyResult(null); }, [viewYear, viewMonth]);
 
-  const userIlji = useMemo(() => {
+  const userSaju = useMemo(() => {
     if (!form?.by || !form?.bm || !form?.bd) return null;
     try {
       const [h, min] = parseBirthTime(form.noTime, form.bh);
-      const s = getSaju(+form.by, +form.bm, +form.bd, h, min);
-      return s ? s.ilji : null;
+      return getSaju(+form.by, +form.bm, +form.bd, h, min);
     } catch { return null; }
   }, [form]);
+  const userIlji = userSaju?.ilji ?? null;
 
   const daysData = useMemo(() => {
     const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+    const userKey = String(user?.id || 'guest');
     return Array.from({ length: daysInMonth }, (_, i) => {
       const d = i + 1;
       try {
         const s = getSaju(viewYear, viewMonth, d, 12);
-        const score = getDayScore(s, userIlji);
+        // 홈 별숨 점수와 동일한 결정론적 엔진 사용 (달력≠홈 점수 이원화 방지)
+        const score = userSaju
+          ? getByeolsoomScore(userKey, dateKey(viewYear, viewMonth, d), userSaju)
+          : getDayScore(s, userIlji);
         return { d, saju: s, score };
       } catch {
         return { d, saju: null, score: 50 };
       }
     });
-  }, [viewYear, viewMonth, userIlji]);
+  }, [viewYear, viewMonth, userSaju, userIlji, user?.id]);
 
   const firstWeekday = new Date(viewYear, viewMonth - 1, 1).getDay();
   const isToday = (d) => d === now.getDate() && viewMonth === now.getMonth() + 1 && viewYear === now.getFullYear();
@@ -370,7 +376,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
   };
 
   const handleDeleteDiary = async (dateKey) => {
-    if (!window.confirm('이 일기를 삭제할까요?')) return;
+    if (!(await useAppStore.getState().showConfirm('이 일기를 삭제할까요?'))) return;
     const entry = diaryEntries[dateKey];
     if (!entry?.id) { showToast?.('삭제할 일기 정보가 없어요.', 'error'); return; }
     const authClient = getAuthenticatedClient(user.id);
@@ -592,13 +598,13 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                     onChange={e => setInputTime(e.target.value)}
                     style={{
                       padding: '10px 8px', border: '1px solid var(--line)', borderRadius: 'var(--r1)',
-                      background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--xs)',
-                      fontFamily: 'var(--ff)', outline: 'none', width: 96, flexShrink: 0,
+                      background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'max(16px, var(--sm))', /* iOS 포커스 자동 줌 방지 */
+                      fontFamily: 'var(--ff)', width: 96, flexShrink: 0,
                     }}
                   />
                   <input
                     className="inp"
-                    style={{ flex: 1, marginBottom: 0, padding: '10px 12px', fontSize: 'var(--sm)' }}
+                    style={{ flex: 1, marginBottom: 0, padding: '10px 12px', fontSize: 'max(16px, var(--sm))' }}
                     placeholder="오늘 일정 제목"
                     value={inputText}
                     onChange={e => setInputText(e.target.value)}
@@ -876,7 +882,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                         <>
                           <input
                             className="inp"
-                            style={{ flex: 1, marginBottom: 0, padding: '6px 10px', fontSize: 'var(--sm)' }}
+                            style={{ flex: 1, marginBottom: 0, padding: '6px 10px', fontSize: 'max(16px, var(--sm))' }}
                             value={editingEventText}
                             onChange={e => setEditingEventText(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) saveEditEvent(selectedKey, ev.id); if (e.key === 'Escape') cancelEditEvent(); }}
@@ -885,7 +891,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
                           />
                           <button
                             onClick={() => saveEditEvent(selectedKey, ev.id)}
-                            style={{ background: 'var(--gold)', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 'var(--xs)', color: '#0D0B14', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}
+                            style={{ background: 'var(--gold)', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 'var(--xs)', color: 'var(--on-gold)', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700, whiteSpace: 'nowrap' }}
                           >저장</button>
                           <button
                             onClick={cancelEditEvent}
@@ -995,7 +1001,7 @@ export default function SajuCalendar({ form, setStep, askQuick, user, callApi, s
               onClick={() => setStep(STEP.TODAY_DETAIL)}
               style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r1)', padding: '12px 14px', fontFamily: 'var(--ff)', fontSize: 'var(--xs)', color: 'var(--t2)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10 }}
             >
-              <span style={{ fontSize: '1rem' }}></span>
+              <span style={{ fontSize: '1rem' }}>✦</span>
               <div>
                 <div style={{ fontWeight: 600, marginBottom: 2 }}>오늘 하루 나의 별숨</div>
                 <div style={{ color: 'var(--t4)', fontSize: '0.65rem' }}>오늘의 운세 카드를 확인해봐요</div>

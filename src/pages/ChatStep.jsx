@@ -153,7 +153,7 @@ export default function ChatStep({
               padding: 'var(--sp4) var(--sp3)',
             }}
           >
-            <div style={{ fontSize: '2rem', marginBottom: 12 }}></div>
+            <div style={{ fontSize: '2rem', marginBottom: 12 }}>✦</div>
             방금 본 흐름을 바탕으로 자연스럽게 이어서 물어보세요.
           </div>
         )}

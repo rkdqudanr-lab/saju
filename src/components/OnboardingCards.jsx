@@ -278,24 +278,33 @@ export default function OnboardingCards({ saju, sun, onFinish }) {
       <div className="inner" style={{ paddingTop: 16, paddingBottom: 80 }}>
         {/* 상단: 진행 점 + 건너뛰기 */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex" }}>
+            {/* 시각 크기는 6px 유지, 히트 영역은 패딩으로 44px급 확보 */}
             {Array.from({ length: TOTAL }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => setIdx(i)}
                 aria-label={`${i + 1}번째 카드로 이동`}
+                aria-current={i === idx}
                 style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "14px 5px",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{
                   width: i === idx ? 20 : 6,
                   height: 6,
                   borderRadius: 3,
                   background: i === idx ? "var(--gold)" : "var(--line)",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
                   transition: "all .3s ease",
-                  flexShrink: 0,
-                }}
-              />
+                  display: "inline-block",
+                }} />
+              </button>
             ))}
           </div>
           <button
@@ -307,7 +316,7 @@ export default function OnboardingCards({ saju, sun, onFinish }) {
               fontSize: "var(--xs)",
               fontFamily: "var(--ff)",
               cursor: "pointer",
-              padding: "4px 0",
+              padding: "14px 0 14px 14px",
             }}
           >
             건너뛰기
@@ -319,29 +328,11 @@ export default function OnboardingCards({ saju, sun, onFinish }) {
           {cards[idx]}
         </div>
 
-        {/* 버튼 그룹 */}
+        {/* 버튼 그룹 — '다시 보지 않기'는 '별숨 시작하기'와 동작이 동일해 제거 */}
         <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 10 }}>
           <button className="btn-main" onClick={next} style={{ width: "100%" }}>
             {isLast ? "별숨 시작하기" : "다음 →"}
           </button>
-          {isLast && (
-            <button
-              onClick={onFinish}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--t4)",
-                fontSize: "var(--xs)",
-                fontFamily: "var(--ff)",
-                cursor: "pointer",
-                padding: "6px",
-                textAlign: "center",
-                width: "100%",
-              }}
-            >
-              다시 보지 않기
-            </button>
-          )}
         </div>
       </div>
     </div>

@@ -164,7 +164,7 @@ export default function GamificationDashboard({
               >
                 Lv{guardianLevel}
               </div>
-              <div style={{ fontSize: '11px', color: '#999' }}>
+              <div style={{ fontSize: 'var(--xs)', color: '#999' }}>
                 {currentLevelData?.label}
               </div>
             </div>
@@ -191,7 +191,7 @@ export default function GamificationDashboard({
               >
                 🔥 {loginStreak}
               </div>
-              <div style={{ fontSize: '11px', color: '#999' }}>
+              <div style={{ fontSize: 'var(--xs)', color: '#999' }}>
                 {loginStreak}일 연속
               </div>
             </div>
@@ -227,7 +227,7 @@ export default function GamificationDashboard({
               >
                 🎯 {totalMissionsCompleted}
               </div>
-              <div style={{ fontSize: '11px', color: '#999' }}>
+              <div style={{ fontSize: 'var(--xs)', color: '#999' }}>
                 총 {missions.length}개 진행 중
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function GamificationDashboard({
               >
                 🛡️ {badtimeBlocksCount}
               </div>
-              <div style={{ fontSize: '11px', color: '#999' }}>
+              <div style={{ fontSize: 'var(--xs)', color: '#999' }}>
                 배드타임 차단
               </div>
             </div>
@@ -425,7 +425,7 @@ export default function GamificationDashboard({
           }}
         >
           <div>
-            <div style={{ fontSize: '1.4rem', marginBottom: '8px', color: 'var(--t4)' }}></div>
+            <div style={{ fontSize: '1.4rem', marginBottom: '8px', color: 'var(--t4)' }}>✦</div>
             <div>곧 상세 이력이 추가됩니다</div>
           </div>
         </div>

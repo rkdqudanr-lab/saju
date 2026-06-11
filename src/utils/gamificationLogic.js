@@ -286,7 +286,7 @@ export function getBPGaugeColor(currentBp, level) {
  * @param {number} amount - 차감할 BP (양수)
  * @param {string} reason - 차감 사유 (예: 'SHOP_PURCHASE')
  * @param {string} note   - 추가 메모 (예: 아이템 이름)
- * @returns {Promise<{ok: boolean, newBP: number|null}>}
+ * @returns {Promise<{ok: boolean, newBP: number|null, failReason?: 'insufficient'|'network'}>}
  */
 export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE', note = '') {
   if (isLocalLayoutKakaoId(kakaoId)) {
@@ -295,22 +295,24 @@ export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE',
 
   try {
     // 현재 BP 조회
-    const { data: userData } = await client
+    const { data: userData, error: selectError } = await client
       .from('users')
       .select('current_bp')
       .eq('kakao_id', String(kakaoId))
       .single();
+    if (selectError) return { ok: false, newBP: null, failReason: 'network' };
 
     const currentBP = userData?.current_bp ?? 0;
-    if (currentBP < amount) return { ok: false, newBP: currentBP };
+    if (currentBP < amount) return { ok: false, newBP: currentBP, failReason: 'insufficient' };
 
     const newBP = currentBP - amount;
 
-    // BP 차감
-    await client
+    // BP 차감 — update 실패를 성공으로 처리하면 안 됨
+    const { error: updateError } = await client
       .from('users')
       .update({ current_bp: newBP })
       .eq('kakao_id', String(kakaoId));
+    if (updateError) return { ok: false, newBP: currentBP, failReason: 'network' };
 
     // 로그 기록 (실패해도 구매 자체는 성공으로 처리)
     try {
@@ -324,7 +326,7 @@ export async function spendBP(client, kakaoId, amount, reason = 'SHOP_PURCHASE',
 
     return { ok: true, newBP };
   } catch {
-    return { ok: false, newBP: null };
+    return { ok: false, newBP: null, failReason: 'network' };
   }
 }
 

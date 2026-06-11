@@ -11,6 +11,7 @@ import {
 } from "../lib/dailyDataAccess.js";
 import { readStreamResponse } from "../lib/streamTransport.js";
 import { parseHoroscopeForGamification } from "../utils/missionGenerator.js";
+import { scanScoreEvents, buildScoreContextBlock } from "../utils/dailyScoreEngine.js";
 import { spendBP as spendBPUtil } from "../utils/gamificationLogic.js";
 import { isLocalLayoutUser, isLocalMockUser } from "../utils/localLayoutMode.js";
 import { useDailyConsultationHandler } from "./consultation/useDailyConsultationHandler.js";
@@ -331,6 +332,14 @@ export function useConsultation(
 
         if (opts.isDaily) {
           fullContext += "\n\n[일일 운세 출력 우선 규칙]\n위 맥락의 일반 특별 지침보다 일일 운세 시스템 프롬프트의 필수 구조가 우선입니다. 반드시 [점수] 태그로 시작하고, [점수] 다음에 [요약]을 출력하세요.";
+          // 결정론적 별숨 점수 주입 — AI는 점수를 배정하지 않고 서술만 담당 (십신 주입과 동일 패턴)
+          try {
+            const { saju: storeSaju } = useAppStore.getState();
+            if (storeSaju?.ilgan) {
+              const events = scanScoreEvents(String(user.id), getDailyDateKey(), storeSaju);
+              fullContext += `\n\n${buildScoreContextBlock(events)}`;
+            }
+          } catch { /* 점수 주입 실패 시 프롬프트 자체 배정으로 폴백 */ }
         }
 
         // 정화재점 시 boostMap 컨텍스트 반영 (발동=소비된 아이템들의 boost 기록)

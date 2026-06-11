@@ -395,7 +395,7 @@ export default function MyPage({ onFreeRecharge = null, freeRechargeAvailable = 
             <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>현재 플랜</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', marginTop: 2 }}>{planLabel}</div>
           </div>
-          <span style={{ fontSize: 16, color: 'var(--gold)' }}></span>
+          <span style={{ fontSize: 16, color: 'var(--gold)' }}>✦</span>
         </div>
 
         {/* 별숨 가이드 아코디언 */}

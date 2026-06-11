@@ -95,11 +95,13 @@ function PullResultOverlay({ results, system, onClose }) {
   function isShopItem(item) { return !!item.rarity && !item.grade; }
 
   return createPortal(
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9000,
+    /* 연출상 항상 다크 배경 — data-theme 강제로 내부 var()가 라이트 값으로 풀리는 것 방지 */
+    <div data-theme="dark" style={{
+      position: 'fixed', inset: 0, zIndex: 'var(--z-modal, 10000)',
       background: 'linear-gradient(180deg, #171222 0%, #120f1f 55%, #0d0b14 100%)',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       animation: 'gacha-result-bg .3s ease',
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
     }}>
       <div style={{ width: '100%', maxWidth: 520, flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -141,7 +143,7 @@ function PullResultOverlay({ results, system, onClose }) {
                       : <GachaGraphic item={item} size={90} />
                     }
                   </div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: cfg.color, letterSpacing: '.06em' }}>
+                  <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: cfg.color, letterSpacing: '.06em' }}>
                     {item.grade
                       ? (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[item.grade]?.label
                       : RARITY_LABEL[item.rarity]}
@@ -154,14 +156,14 @@ function PullResultOverlay({ results, system, onClose }) {
                   </div>
                   <div style={{
                     padding: '5px 12px', borderRadius: 20, background: cfg.bg,
-                    border: `1px solid ${cfg.border}`, fontSize: '11px', color: cfg.color, fontWeight: 600, textAlign: 'center',
+                    border: `1px solid ${cfg.border}`, fontSize: 'var(--xs)', color: cfg.color, fontWeight: 600, textAlign: 'center',
                   }}>
                     {item.effectLabel || item.effect}
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: 44, opacity: .3 }}></div>
+                  <div style={{ fontSize: 44, opacity: .3 }}>✦</div>
                   <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.3)' }}>공개 중...</div>
                 </>
               )}
@@ -197,19 +199,19 @@ function PullResultOverlay({ results, system, onClose }) {
                           : <GachaGraphic item={item} size={34} />
                         }
                       </div>
-                      <div style={{ fontSize: '9px', fontWeight: 700, color: cfg.color, letterSpacing: '.04em' }}>
+                      <div style={{ fontSize: 'var(--2xs)', fontWeight: 700, color: cfg.color, letterSpacing: '.04em' }}>
                         {item.grade
                           ? (system === 'saju' ? SAJU_GRADE_CONFIG : GRADE_CONFIG)[item.grade]?.label
                           : RARITY_LABEL[item.rarity]}
                       </div>
-                      <div style={{ fontSize: '10px', fontWeight: 600, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>
+                      <div style={{ fontSize: 'var(--2xs)', fontWeight: 600, color: '#fff', textAlign: 'center', lineHeight: 1.25 }}>
                         {item.name}
                       </div>
                     </>
                   ) : (
                     <>
-                      <div style={{ fontSize: 18, opacity: .35 }}></div>
-                      <div style={{ fontSize: '9px', color: 'var(--t4)' }}>탭</div>
+                      <div style={{ fontSize: 18, opacity: .35 }}>✦</div>
+                      <div style={{ fontSize: 'var(--2xs)', color: 'var(--t4)' }}>탭</div>
                     </>
                   )}
                 </div>
@@ -260,7 +262,7 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ fontSize: 'var(--xs)', color: accentColor, fontWeight: 700, letterSpacing: '.08em', marginBottom: 4, opacity: .9 }}>{title}</div>
         <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: '#fff', marginBottom: 3 }}>{subtitle}</div>
-        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.4)', marginBottom: 14, lineHeight: 1.6 }}>{stats}</div>
+        <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.4)', marginBottom: 14, lineHeight: 1.6 }}>{stats}</div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => onPull(1)} disabled={!!pulling || !canAfford1} style={{
             flex: 1, padding: '11px 6px', borderRadius: 'var(--r1)',
@@ -279,7 +281,7 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
             ) : (
               <>
                 <span style={{ fontSize: 'var(--xs)', whiteSpace: 'nowrap' }}>1회 뽑기</span>
-                <span style={{ fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap' }}>{cost1} BP</span>
+                <span style={{ fontSize: 'var(--xs)', fontWeight: 400, whiteSpace: 'nowrap' }}>{cost1} BP</span>
               </>
             )}
           </button>
@@ -302,8 +304,8 @@ function PullBanner({ currentBP, pulling, onPull, cost1, cost10, title, subtitle
               <>
                 <span style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent)', animation: canAfford10 ? 'gacha-shine 2.5s ease infinite' : 'none' }} />
                 <span style={{ fontSize: 'var(--xs)', whiteSpace: 'nowrap' }}>10연 뽑기</span>
-                <span style={{ fontSize: '11px', fontWeight: 400, whiteSpace: 'nowrap' }}>{cost10} BP</span>
-                <span style={{ fontSize: '10px', color: guarantee10Label.color, whiteSpace: 'nowrap' }}>{guarantee10Label.text}</span>
+                <span style={{ fontSize: 'var(--xs)', fontWeight: 400, whiteSpace: 'nowrap' }}>{cost10} BP</span>
+                <span style={{ fontSize: 'var(--2xs)', color: guarantee10Label.color, whiteSpace: 'nowrap' }}>{guarantee10Label.text}</span>
               </>
             )}
           </button>
@@ -382,10 +384,10 @@ function ShopItemPreviewGrid({ pool, gradeConfig, gradeOrder }) {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
               <ShopItemGraphic item={item} size={48} />
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, wordBreak: 'keep-all', width: '100%' }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, wordBreak: 'keep-all', width: '100%' }}>
               {item.name}
             </div>
-            <div style={{ fontSize: '10px', color: cfg.color, lineHeight: 1.4, wordBreak: 'keep-all', width: '100%' }}>
+            <div style={{ fontSize: 'var(--2xs)', color: cfg.color, lineHeight: 1.4, wordBreak: 'keep-all', width: '100%' }}>
               {item.effect}
             </div>
           </div>
@@ -434,10 +436,10 @@ function SpiritItemPreview({ pool, gradeConfig, gradeOrder }) {
             borderRadius: 12, padding: '14px 8px', textAlign: 'center',
           }}>
             <div style={{ fontSize: 24, marginBottom: 5 }}>{item.emoji}</div>
-            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 3, wordBreak: 'keep-all' }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 3, wordBreak: 'keep-all' }}>
               {item.bodyName}
             </div>
-            <div style={{ fontSize: '10px', color: cfg.color, wordBreak: 'keep-all' }}>{item.effectLabel}</div>
+            <div style={{ fontSize: 'var(--2xs)', color: cfg.color, wordBreak: 'keep-all' }}>{item.effectLabel}</div>
           </div>
         ))}
       </div>
@@ -511,7 +513,7 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
       minHeight: 160,
     }}>
       {item.rarity && item.rarity !== 'common' && (
-        <div style={{ position: 'absolute', top: 8, right: 10, fontSize: '10px', fontWeight: 700, color: rarityColor }}>
+        <div style={{ position: 'absolute', top: 8, right: 10, fontSize: 'var(--2xs)', fontWeight: 700, color: rarityColor }}>
           {rarityLabel}
         </div>
       )}
@@ -525,7 +527,7 @@ function InvCard({ item, isEquipped, onEquip, onUse }) {
       </div>
 
       <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center', wordBreak: 'keep-all', lineHeight: 1.3 }}>{item.name}</div>
-      <div style={{ fontSize: '10px', color: 'var(--t4)', lineHeight: 1.4, textAlign: 'center', flex: 1, wordBreak: 'keep-all' }}>{item.description || CAT_DESC[item.category]}</div>
+      <div style={{ fontSize: 'var(--2xs)', color: 'var(--t4)', lineHeight: 1.4, textAlign: 'center', flex: 1, wordBreak: 'keep-all' }}>{item.description || CAT_DESC[item.category]}</div>
 
       {canEquip && (
         <button onClick={onEquip} style={{
@@ -690,14 +692,20 @@ export default function ShopPage({ showToast }) {
     setPulling(count === 1 ? 'single' : '10');
     try {
       const client = getAuthenticatedClient(kakaoId);
-      const { ok, newBP } = await spendBP(client, kakaoId, cost, `GACHA_SPIRIT_${spiritTab}_${count}_${Date.now()}`, `${spiritTab === 'saju' ? '사주' : '우주'} 기운 ${count}회`);
-      if (!ok) { showToast?.('BP가 부족해요', 'error'); return; }
+      const { ok, newBP, failReason } = await spendBP(client, kakaoId, cost, `GACHA_SPIRIT_${spiritTab}_${count}_${Date.now()}`, `${spiritTab === 'saju' ? '사주' : '우주'} 기운 ${count}회`);
+      if (!ok) { showToast?.(failReason === 'network' ? '연결이 불안정해요. 잠시 후 다시 시도해주세요' : 'BP가 부족해요', 'error'); return; }
       const pulled = spiritTab === 'saju'
         ? (count === 1 ? [pullOneSaju()] : pull10Saju())
         : (count === 1 ? [pullOne()]     : pull10());
-      await client.from('user_shop_inventory').insert(
+      const { error: invError } = await client.from('user_shop_inventory').insert(
         pulled.map(item => ({ kakao_id: String(kakaoId), item_id: item.id, is_equipped: false, unlocked_at: new Date().toISOString() }))
       );
+      if (invError) {
+        // 지급 실패 — 차감한 BP 환급 (BP만 사라지는 사고 방지)
+        await client.from('users').update({ current_bp: (newBP ?? currentBP - cost) + cost }).eq('kakao_id', String(kakaoId));
+        showToast?.('지급에 실패해 BP를 돌려드렸어요. 다시 시도해주세요', 'error');
+        return;
+      }
       syncBP(newBP ?? currentBP - cost);
       setResultSys(spiritTab);
       setResults(pulled);
@@ -718,8 +726,8 @@ export default function ShopPage({ showToast }) {
     const ownedSnap = new Set(ownedIds);
     try {
       const client = getAuthenticatedClient(kakaoId);
-      const { ok, newBP } = await spendBP(client, kakaoId, cost, `GACHA_SHOP_${category}_${count}_${Date.now()}`, `${category} 뽑기 ${count}회`);
-      if (!ok) { showToast?.('BP가 부족해요', 'error'); return; }
+      const { ok, newBP, failReason } = await spendBP(client, kakaoId, cost, `GACHA_SHOP_${category}_${count}_${Date.now()}`, `${category} 뽑기 ${count}회`);
+      if (!ok) { showToast?.(failReason === 'network' ? '연결이 불안정해요. 잠시 후 다시 시도해주세요' : 'BP가 부족해요', 'error'); return; }
 
       const pulled = count === 1 ? [pullOneShop(pool)] : pull10Shop(pool);
 
@@ -736,9 +744,15 @@ export default function ShopPage({ showToast }) {
         }
       }
       if (toInsert.length > 0) {
-        await client.from('user_shop_inventory').insert(
+        const { error: invError } = await client.from('user_shop_inventory').insert(
           toInsert.map(item => ({ kakao_id: String(kakaoId), item_id: item.id, is_equipped: false }))
         );
+        if (invError) {
+          // 지급 실패 — 차감한 BP 환급 (BP만 사라지는 사고 방지)
+          await client.from('users').update({ current_bp: (newBP ?? currentBP - cost) + cost }).eq('kakao_id', String(kakaoId));
+          showToast?.('지급에 실패해 BP를 돌려드렸어요. 다시 시도해주세요', 'error');
+          return;
+        }
         setOwnedIds(prev => new Set([...prev, ...toInsert.map(i => i.id)]));
       }
       let finalBP = newBP ?? currentBP - cost;
@@ -896,7 +910,7 @@ export default function ShopPage({ showToast }) {
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
               뽑은 기운은 내 아이템에서 합성하고 장착해요
             </div>
-            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'var(--goldf)', border: '1px solid var(--acc)', color: 'var(--gold)', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'var(--goldf)', border: '1px solid var(--acc)', color: 'var(--gold)', fontSize: 'var(--xs)', fontWeight: 700, fontFamily: 'var(--ff)', cursor: 'pointer' }}>
               내 아이템 →
             </button>
           </div>
@@ -976,11 +990,11 @@ export default function ShopPage({ showToast }) {
                 {dbItems.filter(i => !ownedIds.has(String(i.id)) && (invFilter === 'all' || i.category === invFilter)).map(item => (
                   <div key={item.id} style={{ background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)', padding: '14px', display: 'flex', flexDirection: 'column', gap: 7, alignItems: 'center', minHeight: 160 }}>
                     <div style={{ fontSize: 28 }}>{item.emoji}</div>
-                    <div style={{ fontSize: '10px', color: item.category === 'streak_repair' ? 'var(--gold)' : 'var(--t4)', fontWeight: 700 }}>
+                    <div style={{ fontSize: 'var(--2xs)', color: item.category === 'streak_repair' ? 'var(--gold)' : 'var(--t4)', fontWeight: 700 }}>
                       {item.category === 'streak_repair' ? '출석 보호' : '특별 상담'}
                     </div>
                     <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t1)', textAlign: 'center', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{item.name}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.5, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{item.description}</div>
+                    <div style={{ fontSize: 'var(--2xs)', color: 'var(--t4)', textAlign: 'center', lineHeight: 1.5, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{item.description}</div>
                     <button onClick={() => setConfirmItem(item)} style={{
                       padding: '8px', width: '100%', background: 'var(--goldf)', border: '1.5px solid var(--acc)',
                       borderRadius: 'var(--r1)', color: 'var(--gold)', fontWeight: 700,
@@ -1024,7 +1038,7 @@ export default function ShopPage({ showToast }) {
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
               장착 중인 테마와 보유 아이템을 한곳에서 관리해요
             </div>
-            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'none', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: '11px', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
+            <button onClick={() => setStep(STEP.ITEM_INVENTORY)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 20, background: 'none', border: '1px solid var(--line)', color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}>
               관리하러 가기 →
             </button>
           </div>
@@ -1032,7 +1046,7 @@ export default function ShopPage({ showToast }) {
       )}
 
       {/* BP 획득 안내 */}
-      <div style={{ margin: '20px 0 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', fontSize: '11px', color: 'var(--t4)', lineHeight: 1.7 }}>
+      <div style={{ margin: '20px 0 0', padding: '12px 14px', background: 'var(--bg2)', borderRadius: 'var(--r1)', fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.7 }}>
         <div style={{ fontWeight: 700, color: 'var(--t3)', marginBottom: 5 }}>BP 획득 방법</div>
         일일 출석 +100 · 미션 완료 +10 · 일기 작성 +5 · 앱 설치 +20 · 친구 공유 +3
       </div>

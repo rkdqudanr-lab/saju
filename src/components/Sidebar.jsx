@@ -3,6 +3,7 @@ import { exportHistory } from "../utils/history.js";
 import { STEP } from "../utils/steps.js";
 import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { useAppStore } from "../store/useAppStore.js";
+import { useModalBackClose } from "../hooks/useModalA11y.js";
 import Icon from "./Icon.jsx";
 
 // ═══════════════════════════════════════════════════════════
@@ -17,7 +18,7 @@ function Highlight({ text, query }) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark style={{ background: 'var(--gold)', color: '#0D0B14', borderRadius: 2, padding: '0 1px' }}>
+      <mark style={{ background: 'var(--gold)', color: 'var(--on-gold)', borderRadius: 2, padding: '0 1px' }}>
         {text.slice(idx, idx + query.length)}
       </mark>
       {text.slice(idx + query.length)}
@@ -58,6 +59,7 @@ function getDateRange(filter) {
 }
 
 export default function Sidebar({ user, step, onClose, onNav, onKakaoLogin, onKakaoLogout, onProfileOpen, onInvite, onAddOther, onSettings, histItems: histItemsProp, onDeleteAllHistory, sidebarPrefs, todayDiaryWritten }) {
+  useModalBackClose('sidebar', true, onClose);
   const [histItems, setHistItems] = useState(() => histItemsProp || []);
   const [rawSearch, setRawSearch] = useState('');
   const [search, setSearch] = useState('');

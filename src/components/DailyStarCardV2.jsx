@@ -106,10 +106,10 @@ export default function DailyStarCardV2({
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
     >
-      <span className="dsc-spark dsc-spark-1"></span>
+      <span className="dsc-spark dsc-spark-1">✦</span>
       <span className="dsc-spark dsc-spark-2">✧</span>
       <span className="dsc-spark dsc-spark-3">⋆</span>
-      <span className="dsc-spark dsc-spark-4"></span>
+      <span className="dsc-spark dsc-spark-4">✦</span>
 
       <div className="dsc-card">
         <div className="dsc-top-shimmer" />

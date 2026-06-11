@@ -151,8 +151,8 @@ function CardBack({ opacity = 1 }) {
           stroke="rgba(200,165,80,0.2)" strokeWidth="0.5"/>;
       })}
       <circle cx="29" cy="46" r="2" fill="rgba(200,165,80,0.85)"/>
-      <text x="4" y="11" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif"></text>
-      <text x="47" y="88" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif" textAnchor="middle"></text>
+      <text x="4" y="11" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif">✦</text>
+      <text x="47" y="88" fontSize="7" fill="rgba(200,165,80,0.4)" fontFamily="serif" textAnchor="middle">✦</text>
     </svg>
   );
 }
@@ -444,7 +444,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
               fontSize: '8px', color: 'rgba(200,165,80,0.7)',
               animation: `sparkle ${0.8 + i * 0.2}s ease-in-out ${i * 180}ms infinite`,
               pointerEvents: 'none',
-            }}></div>
+            }}>✦</div>
           ))}
         </div>
       )}
@@ -476,7 +476,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                         : <TarotImage src={card.img} alt={card.name} onError={() => handleImgError(card.id)}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     ) : (
-                      <div style={{ fontSize: '16px', color: 'rgba(200,165,80,0.18)' }}></div>
+                      <div style={{ fontSize: '16px', color: 'rgba(200,165,80,0.18)' }}>✦</div>
                     )}
                   </div>
                   <div style={{ fontSize: '8px', color: card ? 'rgba(200,165,80,0.75)' : 'var(--t4)', fontWeight: card ? 700 : 400, textAlign: 'center', lineHeight: 1.4, transition: 'color .3s' }}>
@@ -557,7 +557,7 @@ export default function TarotPage({ callApi, buildCtx, showToast, consentFlags }
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: 'rgba(13,11,30,0.5)',
                     }}>
-                      <span style={{ fontSize: 18, color: 'rgba(200,165,80,0.7)' }}></span>
+                      <span style={{ fontSize: 18, color: 'rgba(200,165,80,0.7)' }}>✦</span>
                     </div>
                   )}
                 </div>

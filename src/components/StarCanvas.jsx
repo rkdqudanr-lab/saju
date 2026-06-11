@@ -20,7 +20,12 @@ export default function StarCanvas({isDark}){
     const resize = () => { c.width = window.innerWidth; c.height = window.innerHeight; };
     resize();
     window.addEventListener('resize', resize);
-    const draw = () => {
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    let last = 0;
+    const FRAME_MS = 1000 / 24; // 풀 rAF 대신 ~24fps 스로틀 (배터리 절약)
+    const draw = (ts = 0) => {
+      if (!reduceMotion && ts - last < FRAME_MS) { raf = requestAnimationFrame(draw); return; }
+      last = ts;
       ctx.clearRect(0, 0, c.width, c.height);
       stars.forEach(s => {
         s.a = Math.max(.04, Math.min(.65, s.a + s.da));
@@ -29,7 +34,7 @@ export default function StarCanvas({isDark}){
         ctx.fillStyle = darkRef.current ? `rgba(255,255,255,${s.a})` : `rgba(160,140,90,${s.a * .35})`;
         ctx.fill();
       });
-      raf = requestAnimationFrame(draw);
+      if (!reduceMotion) raf = requestAnimationFrame(draw); // reduce 모드는 정적 1회 드로우
     };
     draw();
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };

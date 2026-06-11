@@ -60,6 +60,7 @@ export default function App() {
 
   // ── Zustand State (App level) ──
   const step                = useAppStore((s) => s.step);
+  const prevStep            = useAppStore((s) => s.prevStep);
   const setStep             = useAppStore((s) => s.setStep);
   const equippedAvatar      = useAppStore((s) => s.equippedAvatar);
   const setShowUpgradeModal = useAppStore((s) => s.setShowUpgradeModal);
@@ -482,7 +483,11 @@ export default function App() {
         </button>
       )}
 
-      {step > STEP.HOME && step < STEP.RESULT && step !== STEP.HISTORY && <button className="back-btn" aria-label="뒤로 가기" onClick={() => setStep(p => Math.max(STEP.HOME, p - 1))}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
+      {step > STEP.HOME && step < STEP.RESULT && step !== STEP.HISTORY && <button className="back-btn" aria-label="뒤로 가기" onClick={() => setStep(p => {
+        // QUESTION은 대부분 홈 드로어에서 직행 — 프로필 플로우에서 온 경우에만 PROFILE로 복귀
+        if (p === STEP.QUESTION) return prevStep === STEP.PROFILE ? STEP.PROFILE : STEP.HOME;
+        return Math.max(STEP.HOME, p - 1);
+      })}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {STEP_GROUPS.BACK_TO_RESULT.includes(step) && <button className="back-btn" aria-label={answers.length > 0 ? "결과로 돌아가기" : "홈으로 가기"} onClick={() => setStep(answers.length > 0 ? STEP.RESULT : STEP.HOME)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {step === STEP.HISTORY && <button className="back-btn" aria-label="홈으로 가기" onClick={() => { setHistItem(null); setStep(STEP.HOME); }}><Icon name="arrow-left" size={18} color="currentColor" /></button>}
       {STEP_GROUPS.BACK_TO_HOME.includes(step) && <button className="back-btn" aria-label="홈으로 가기" onClick={() => setStep(STEP.HOME)}><Icon name="arrow-left" size={18} color="currentColor" /></button>}

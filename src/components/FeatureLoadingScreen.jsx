@@ -3,6 +3,7 @@
  * type: 'daily' | 'tarot' | 'dream' | 'compat' | 'report' | 'prophecy'
  *       | 'comprehensive' | 'name' | 'taegil' | 'letter' | 'group' | 'special' | 'diary'
  */
+import { useState, useEffect } from 'react';
 import AnimatedMascot from './AnimatedMascot.jsx';
 
 // ── 공통 래퍼 ──────────────────────────────────────────────
@@ -100,7 +101,7 @@ function TarotAnim() {
               alignItems: 'center', justifyContent: 'center',
               fontSize: i === 1 ? '1.3rem' : '1rem',
               color: 'rgba(232,176,72,.5)',
-            }}></div>
+            }}>✦</div>
             {/* 빛 스윕 */}
             <div style={{
               position: 'absolute', top: 0, bottom: 0, width: '40%',
@@ -135,7 +136,7 @@ function DreamAnim() {
           fontSize: '.5rem', color: 'rgba(232,176,72,.6)',
           animation: `fl-glow-soft ${1.5 + i * 0.4}s ease-in-out infinite`,
           animationDelay: `${i * 0.35}s`,
-        }}></div>
+        }}>✦</div>
       ))}
       {/* 떠오르는 Z (꿈) */}
       {[0.6, 1.3, 2.1].map((delay, i) => (
@@ -176,7 +177,7 @@ function CompatAnim() {
           background: 'radial-gradient(circle, var(--gold), rgba(232,176,72,.5))',
           boxShadow: '0 0 10px var(--gold)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.5rem', color: '#0D0B14',
+          fontSize: '0.5rem', color: 'var(--on-gold)',
         }}>♡</div>
       </div>
       {/* 별 B — 반시계방향 */}
@@ -198,7 +199,7 @@ function CompatAnim() {
         fontSize: '1.2rem',
         animation: 'fl-glow-soft 2s ease-in-out infinite',
         color: 'rgba(232,176,72,.8)',
-      }}></div>
+      }}>✦</div>
     </div>
   );
 }
@@ -264,7 +265,7 @@ function ProphecyAnim() {
         position: 'absolute', top: '50%', left: '50%',
         animation: 'fl-orbit-rev 3s linear infinite',
       }}>
-        <div style={{ fontSize: '.7rem', color: 'var(--gold)', marginTop: -6, marginLeft: -6 }}></div>
+        <div style={{ fontSize: '.7rem', color: 'var(--gold)', marginTop: -6, marginLeft: -6 }}>✦</div>
       </div>
     </div>
   );
@@ -332,7 +333,7 @@ function ComprehensiveAnim() {
       {/* 중심 별 */}
       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
         fontSize="16" fill="var(--gold)"
-        style={{ animation: 'fl-glow-soft 2.2s ease-in-out infinite' }}></text>
+        style={{ animation: 'fl-glow-soft 2.2s ease-in-out infinite' }}>✦</text>
     </svg>
   );
 }
@@ -417,7 +418,7 @@ function LetterAnim() {
           transform: 'translate(-50%,-50%)',
           fontSize: '.9rem', color: 'rgba(232,176,72,.6)',
           animation: 'fl-glow-soft 2s ease-in-out infinite',
-        }}></div>
+        }}>✦</div>
       </div>
       {/* 편지지가 올라옴 */}
       <div style={{
@@ -473,7 +474,7 @@ function GroupAnim() {
         transform: 'translate(-50%,-50%)',
         fontSize: '1.1rem', color: 'var(--gold)',
         animation: 'fl-glow-soft 2s ease-in-out infinite',
-      }}></div>
+      }}>✦</div>
     </div>
   );
 }
@@ -540,19 +541,43 @@ const FEATURE_MAP = {
   diary:         { Anim: () => (
     <div style={{ position: 'relative', width: 72, height: 72 }}>
       <div style={{ width: 72, height: 72, border: '3px solid var(--line)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'orbSpin 1.2s linear infinite' }} />
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '1.6rem' }}></div>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '1.6rem' }}>✦</div>
     </div>
   ), title: '별숨이 오늘 하루를 읽고 있어요', subtitle: '사주와 별자리로\n오늘의 기운을 분석하는 중이에요' },
 };
 
-export default function FeatureLoadingScreen({ type = 'daily', fullPage = true, title: titleOverride, subtitle: subtitleOverride }) {
+export default function FeatureLoadingScreen({ type = 'daily', fullPage = true, title: titleOverride, subtitle: subtitleOverride, onCancel }) {
   const config = FEATURE_MAP[type] || FEATURE_MAP.daily;
   const { Anim, title, subtitle } = config;
+
+  // 15초 이상 지연 시 안내 + 탈출구 표시 ('BP 차감 후 영원한 로딩' 방지)
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), 15000);
+    return () => clearTimeout(t);
+  }, []);
 
   const inner = (
     <Wrap>
       <Anim />
       <Label title={titleOverride ?? title} subtitle={subtitleOverride ?? subtitle} />
+      <div role="status" aria-live="polite" style={{ minHeight: 20, textAlign: 'center' }}>
+        {slow && (
+          <>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', marginBottom: onCancel ? 10 : 0 }}>
+              평소보다 조금 오래 걸리고 있어요...
+            </div>
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                style={{ padding: '9px 22px', borderRadius: 'var(--r1)', border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+              >
+                그만 기다리고 돌아가기
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </Wrap>
   );
 

@@ -11,7 +11,7 @@ import { STEP } from "../utils/steps.js";
 const PAGE_ANIM = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0 },
-  exit:    { opacity: 0, y: -8 },
+  exit:    { opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } }, // 퇴장은 짧게 — 체감 전환 속도 개선
   transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] },
 };
 
@@ -165,7 +165,7 @@ export default function AppRouter({ ctx }) {
 
   return (
     <div className="app" id="main-content" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 16px))' }}>
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
       <motion.div key={step} {...PAGE_ANIM} style={{ minHeight: '100%' }}>
 
       {/* HOME */}
@@ -615,7 +615,7 @@ export default function AppRouter({ ctx }) {
           animation: 'fadeIn .25s ease',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <FeatureLoadingScreen type={featureLoading.type} subtitle={featureLoading.text} fullPage={false} />
+          <FeatureLoadingScreen type={featureLoading.type} subtitle={featureLoading.text} fullPage={false} onCancel={() => useAppStore.getState().setFeatureLoading(null)} />
         </div>
       )}
     </div>

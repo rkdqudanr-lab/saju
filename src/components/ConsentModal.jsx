@@ -1,10 +1,11 @@
 import { useState } from 'react';
 
+// 전 항목 opt-in(OFF 시작) — OFF일 때의 결과는 offWarn으로 알려준다
 const ITEMS = [
-  { key: 'history',   label: '상담 기록',  desc: '기기 바꿔도 이어볼 수 있어요',          defaultOn: true  },
-  { key: 'partner',   label: '연인 정보',  desc: '두 사람 기운을 더 정확히 읽어요',        defaultOn: false },
-  { key: 'workplace', label: '직장·상황', desc: '커리어 흐름을 더 구체적으로 봐요',        defaultOn: true  },
-  { key: 'worry',     label: '고민 내용', desc: '지금 상황에 딱 맞는 별풀이를 해요',       defaultOn: false },
+  { key: 'history',   label: '상담 기록',  desc: '기기 바꿔도 이어볼 수 있어요', offWarn: '기기를 바꾸면 상담 기록이 사라져요' },
+  { key: 'partner',   label: '연인 정보',  desc: '두 사람 기운을 더 정확히 읽어요' },
+  { key: 'workplace', label: '직장·상황', desc: '커리어 흐름을 더 구체적으로 봐요' },
+  { key: 'worry',     label: '고민 내용', desc: '지금 상황에 딱 맞는 별풀이를 해요' },
 ];
 
 export default function ConsentModal({ flags, setFlags, onConfirm }) {
@@ -20,7 +21,7 @@ export default function ConsentModal({ flags, setFlags, onConfirm }) {
       <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
 
         {/* 헤더 */}
-        <div style={{ textAlign: 'center', fontSize: '1.2rem', marginBottom: 6, color: 'var(--gold)' }}></div>
+        <div style={{ textAlign: 'center', fontSize: '1.2rem', marginBottom: 6, color: 'var(--gold)' }}>✦</div>
         <div className="upgrade-modal-title" style={{ marginBottom: 4 }}>
           별숨이 당신을 더 깊이 알수록<br />별풀이가 더 정확해져요
         </div>
@@ -47,7 +48,7 @@ export default function ConsentModal({ flags, setFlags, onConfirm }) {
         <div style={{ height: 1, background: 'var(--line)', margin: '12px 0' }} />
 
         {/* 선택 항목 토글 */}
-        {ITEMS.map(({ key, label, desc }) => (
+        {ITEMS.map(({ key, label, desc, offWarn }) => (
           <div
             key={key}
             className="toggle-row"
@@ -58,7 +59,9 @@ export default function ConsentModal({ flags, setFlags, onConfirm }) {
               <div style={{ fontSize: 'var(--sm)', color: 'var(--t1)', fontWeight: 600, marginBottom: 2 }}>{label}</div>
               <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)' }}>{desc}</div>
               {!flags[key] && (
-                <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 3 }}>당신의 기기 내에만 저장돼요</div>
+                <div style={{ fontSize: 'var(--xs)', color: offWarn ? 'var(--rose)' : 'var(--t4)', marginTop: 3 }}>
+                  {offWarn || '당신의 기기 내에만 저장돼요'}
+                </div>
               )}
             </div>
             <button
@@ -76,6 +79,9 @@ export default function ConsentModal({ flags, setFlags, onConfirm }) {
         <button className="btn-main" style={{ marginTop: 20 }} onClick={onConfirm}>
           이대로 별숨 시작하기
         </button>
+        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.6 }}>
+          선택 항목은 설정에서 언제든 바꿀 수 있어요
+        </div>
       </div>
     </div>
   );

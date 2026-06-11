@@ -437,7 +437,7 @@ export default function CompatPage({ myForm, mySaju, mySun, buildCtx, onBack, sh
                           marginBottom: i < storyResult.moments.length - 1 ? 8 : 0,
                           fontSize: 'var(--sm)', color: 'var(--t2)', lineHeight: 1.65,
                         }}>
-                          <span style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }}></span>
+                          <span style={{ color: 'var(--gold)', flexShrink: 0, marginTop: 2 }}>✦</span>
                           <span>{m}</span>
                         </div>
                       ))}

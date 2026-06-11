@@ -49,7 +49,9 @@ export default function ProfileStep({
           <div className="card" style={{ marginBottom: 'var(--sp2)' }}>
             <div className="card-title" style={{ fontSize: 'var(--md)' }}>누구의 별숨을 볼까요?</div>
 
-            <div className={`profile-pick-card ${activeProfileIdx === 0 ? 'active' : ''}`} onClick={() => setActiveProfileIdx(0)}>
+            <div className={`profile-pick-card ${activeProfileIdx === 0 ? 'active' : ''}`} role="button" tabIndex={0} aria-pressed={activeProfileIdx === 0}
+              onClick={() => setActiveProfileIdx(0)}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveProfileIdx(0); } }}>
               <div className="ppc-left">
                 <div className="ppc-av">{user?.profileImage ? <img src={user.profileImage} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : '🌙'}</div>
                 <div>
@@ -67,7 +69,7 @@ export default function ProfileStep({
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}></span>}
+                {activeProfileIdx === 0 && <span style={{ color: 'var(--gold)' }}>✦</span>}
                 <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
                   onClick={e => { e.stopPropagation(); setEditingMyProfile(p => !p); }}>수정</button>
               </div>
@@ -76,16 +78,18 @@ export default function ProfileStep({
             {otherProfiles.map((p, i) => {
               const pSun = p.by && p.bm && p.bd ? getSun(+p.by, +p.bm, +p.bd) : null;
               return (
-                <div key={i} className={`profile-pick-card ${activeProfileIdx === i + 1 ? 'active' : ''}`} onClick={() => setActiveProfileIdx(i + 1)}>
+                <div key={i} className={`profile-pick-card ${activeProfileIdx === i + 1 ? 'active' : ''}`} role="button" tabIndex={0} aria-pressed={activeProfileIdx === i + 1}
+                  onClick={() => setActiveProfileIdx(i + 1)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveProfileIdx(i + 1); } }}>
                   <div className="ppc-left">
-                    <div className="ppc-av" style={{ background: 'var(--bg3)' }}></div>
+                    <div className="ppc-av" style={{ background: 'var(--bg3)' }}>✦</div>
                     <div>
                       <div className="ppc-name">{p.name || '이름 없이 저장됨'}</div>
                       <div className="ppc-sub">{pSun ? `${pSun.s} ${pSun.n}` : '별자리 계산 가능해요'}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {activeProfileIdx === i + 1 && <span style={{ color: 'var(--gold)' }}></span>}
+                    {activeProfileIdx === i + 1 && <span style={{ color: 'var(--gold)' }}>✦</span>}
                     <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
                       onClick={e => { e.stopPropagation(); startEditOtherProfile(i); }}>수정</button>
                     <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 50, padding: '4px 10px', color: 'var(--t4)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
@@ -203,7 +207,7 @@ export default function ProfileStep({
 
             {saju && (
               <div className="pillars-wrap">
-                <div className="pillars-hint"><span style={{ color: 'var(--gold)' }}></span> 사주 원국</div>
+                <div className="pillars-hint"><span style={{ color: 'var(--gold)' }}>✦</span> 사주 원국</div>
                 <div className="pillars">
                   {[['연', 'yeon'], ['월', 'wol'], ['일', 'il'], ['시', 'si']].map(([l, k]) => (
                     <div key={l} className="pillar">
@@ -233,10 +237,15 @@ export default function ProfileStep({
               </div>
             )}
             <button className="btn-main"
-              disabled={!profileReady}
+              aria-disabled={!profileReady}
+              style={!profileReady ? { opacity: 0.55 } : undefined}
               onClick={async () => {
                 if (!profileReady) {
-                  showToast?.('태어난 시각(또는 모름 선택)과 성별을 모두 입력해주세요', 'error');
+                  const missing = [];
+                  if (!(String(form?.by || '').length === 4) || !form?.bm || !form?.bd) missing.push('생년월일');
+                  if (!hasBirthTimeAnswer(form)) missing.push('태어난 시각(모름 선택 가능)');
+                  if (!form?.gender) missing.push('성별');
+                  showToast?.(`${missing.join(', ')}을 입력해주세요`, 'error');
                   return;
                 }
                 if (user) {

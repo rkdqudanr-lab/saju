@@ -19,6 +19,7 @@ import {
   calculateLoginStreak,
   calculateLevelProgress,
 } from '../utils/gamificationLogic.js';
+import { getByeolsoomScore, UNLUCKY_THRESHOLD } from '../utils/dailyScoreEngine.js';
 
 // do/dont 미션은 5 BP, 나머지는 10 BP
 function getMissionBpReward(missionType) {
@@ -234,18 +235,43 @@ export function useGamification(user, showToast) {
 
       const currentState = gamificationState;
 
-      // BP 부족 체크
-      if (currentState.currentBp < cost) {
-        if (showToast) showToast('BP가 부족합니다 😢');
-        return { success: false, message: 'BP 부족' };
-      }
-
       try {
         const authClient = getAuthenticatedClient(user.id);
         const client = authClient || supabase;
+        const today = getTodayDateStr();
+
+        // ── 흉일 특전 판정 (결정론 엔진 — 홈 점수와 동일 소스) ──
+        let isUnluckyDay = false;
+        try {
+          const { saju: storeSaju } = useAppStore.getState();
+          if (storeSaju?.ilgan) {
+            isUnluckyDay = getByeolsoomScore(String(user.id), today, storeSaju) <= UNLUCKY_THRESHOLD;
+          }
+        } catch { /* 판정 실패 시 일반 액막이로 처리 */ }
+
+        // 첫 흉일 액막이는 무료 (BP 부족으로 흉일에 아무것도 못 하는 신규 유저 방지)
+        let effectiveCost = cost;
+        if (isUnluckyDay) {
+          try {
+            const { data: firstRow } = await client
+              .from('daily_bp_log')
+              .select('reason')
+              .eq('kakao_id', String(user.id))
+              .eq('reason', 'unlucky_first_free_block')
+              .limit(1)
+              .maybeSingle();
+            if (!firstRow) effectiveCost = 0;
+          } catch { /* 조회 실패 시 유료 유지 */ }
+        }
+
+        // BP 부족 체크
+        if (currentState.currentBp < effectiveCost) {
+          if (showToast) showToast('BP가 부족합니다 😢');
+          return { success: false, message: 'BP 부족' };
+        }
 
         // BP 소비
-        const newBp = currentState.currentBp - cost;
+        const newBp = currentState.currentBp - effectiveCost;
 
         await client
           .from('users')
@@ -259,13 +285,23 @@ export function useGamification(user, showToast) {
         await client.from('daily_bp_log').upsert(
           {
             kakao_id: String(user.id),
-            date: getTodayDateStr(),
-            bp_amount: -cost,
+            date: today,
+            bp_amount: -effectiveCost,
             reason: `badtime_block_${badtimeId}`,
             mission_id: badtimeId,
           },
           { onConflict: 'kakao_id,date,reason', ignoreDuplicates: true }
         );
+        if (isUnluckyDay && effectiveCost === 0) {
+          // 무료 1회 사용 기록 (영속 플래그 역할)
+          await client.from('daily_bp_log').upsert(
+            { kakao_id: String(user.id), date: today, bp_amount: 0, reason: 'unlucky_first_free_block' },
+            { onConflict: 'kakao_id,date,reason', ignoreDuplicates: true }
+          );
+        }
+
+        // 흉일 액막이는 수호령 경험치 2배 적립
+        const blocksIncrement = isUnluckyDay ? 2 : 1;
 
         // user_gamification 누적 upsert (row 없어도 생성)
         const { data: gamRow } = await client
@@ -278,23 +314,75 @@ export function useGamification(user, showToast) {
           {
             kakao_id: String(user.id),
             last_badtime_blocked: new Date().toISOString(),
-            badtime_blocks_count: currentState.badtimeBlocksCount + 1,
-            total_bp_spent: (gamRow?.total_bp_spent || 0) + cost,
+            badtime_blocks_count: currentState.badtimeBlocksCount + blocksIncrement,
+            total_bp_spent: (gamRow?.total_bp_spent || 0) + effectiveCost,
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'kakao_id' }
         );
 
+        // ── 흉일 생존 카운트 + 5회마다 무료 뽑기 1회분 보상 ──
+        let survivalBonus = 0;
+        if (isUnluckyDay) {
+          try {
+            // 흉일 액막이 마커 (하루 1개)
+            await client.from('daily_bp_log').upsert(
+              { kakao_id: String(user.id), date: today, bp_amount: 0, reason: `unlucky_block_${today}` },
+              { onConflict: 'kakao_id,date,reason', ignoreDuplicates: true }
+            );
+            const { count } = await client
+              .from('daily_bp_log')
+              .select('reason', { count: 'exact', head: true })
+              .eq('kakao_id', String(user.id))
+              .like('reason', 'unlucky_block_%');
+            if (count && count > 0 && count % 5 === 0) {
+              // 같은 흉일에 액막이를 반복 발동해도 중복 지급되지 않도록 기지급 여부 확인
+              const { data: rewardRow } = await client
+                .from('daily_bp_log')
+                .select('reason')
+                .eq('kakao_id', String(user.id))
+                .eq('reason', `unlucky_survival_reward_${count}`)
+                .limit(1)
+                .maybeSingle();
+              if (!rewardRow) {
+                survivalBonus = 10; // 가챠 1회 비용
+                await client.from('users').update({ current_bp: newBp + survivalBonus, updated_at: new Date().toISOString() }).eq('kakao_id', String(user.id));
+                await client.from('daily_bp_log').upsert(
+                  { kakao_id: String(user.id), date: today, bp_amount: survivalBonus, reason: `unlucky_survival_reward_${count}` },
+                  { onConflict: 'kakao_id,date,reason', ignoreDuplicates: true }
+                );
+              }
+            }
+          } catch { /* 보상 실패는 액막이 자체를 막지 않음 */ }
+        }
+
+        // 흉일 액막이 성공 → 오늘 표시 점수 +15 "정화 보정" (캐시 원점수는 불변)
+        if (isUnluckyDay) {
+          try { localStorage.setItem(`byeolsoom_purify_${today}`, '15'); } catch {}
+          if (typeof window.gtag === 'function') window.gtag('event', 'unlucky_block', { free: effectiveCost === 0 });
+        }
+
         // 로컬 상태 업데이트
         setGamificationState(prev => ({
           ...prev,
-          currentBp: newBp,
-          badtimeBlocksCount: prev.badtimeBlocksCount + 1,
+          currentBp: newBp + survivalBonus,
+          badtimeBlocksCount: prev.badtimeBlocksCount + blocksIncrement,
         }));
 
-        if (showToast) showToast(`액막이 발동! -${cost} BP 🛡️`);
+        if (showToast) {
+          if (isUnluckyDay) {
+            showToast(effectiveCost === 0
+              ? '첫 흉일 액막이는 무료예요! 🛡️ 오늘은 수호령 경험치 2배'
+              : `액막이 발동! -${effectiveCost} BP 🛡️ 흉일이라 수호령 경험치 2배예요`);
+            if (survivalBonus > 0) {
+              setTimeout(() => showToast(`흉일 액막이 5회 달성! 무료 뽑기 1회분 +${survivalBonus} BP 🎟️`, 'success'), 1600);
+            }
+          } else {
+            showToast(`액막이 발동! -${effectiveCost} BP 🛡️`);
+          }
+        }
 
-        return { success: true, newBp };
+        return { success: true, newBp: newBp + survivalBonus, isUnluckyDay, freeBlock: effectiveCost === 0 };
       } catch (error) {
         console.error('[별숨] 배드타임 액막이 오류:', error);
         return { success: false, message: '네트워크 오류' };

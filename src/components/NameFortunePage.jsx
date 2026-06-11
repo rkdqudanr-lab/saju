@@ -126,7 +126,8 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
 4. 이름 오행 구성
 5. 사주와의 조화 설명 (2-3줄)
 
-따뜻하고 희망적인 에너지가 담긴 이름으로 추천해주세요.`;
+따뜻하고 희망적인 의미가 담긴 이름으로 추천해주세요.
+마크다운(#, ##, **) 절대 금지, [월간요약] 같은 태그도 금지 — 일반 텍스트로만 써주세요.`;
       const text = await callApiProp(prompt, { isReport: true });
       setCreateResult(text);
       saveConsultationHistoryEntry({
@@ -162,7 +163,8 @@ ${sajuCtx ? `[사주 정보]\n${sajuCtx}` : ''}
 4. 해당 이름이 이 사람에게 어울리는 이유
 
 여자/남자 구분 없이 성별 중립적인 이름도 포함해 다양하게 추천해주세요.
-친근하고 부르기 쉬운 영어 이름 위주로 추천해주세요.`;
+친근하고 부르기 쉬운 영어 이름 위주로 추천해주세요.
+마크다운(#, ##, **) 절대 금지, [월간요약] 같은 태그도 금지 — 일반 텍스트로만 써주세요.`;
       const text = await callApiProp(prompt, { isReport: true });
       setEngResult(text);
       saveConsultationHistoryEntry({

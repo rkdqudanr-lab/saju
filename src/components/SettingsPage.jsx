@@ -765,6 +765,58 @@ export default function SettingsPage({
           </div>
         )}
 
+        {/* ── Tab 2 추가 섹션: 결과 바로 보기 ── */}
+        {tab === 2 && (
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>
+            <div className="card-title">결과 바로 보기</div>
+            <div className="card-sub" style={{ marginBottom: 8 }}>
+              타이핑 연출 없이 상담 결과를 한 번에 보여줘요.
+            </div>
+            <div
+              className="toggle-row"
+              onClick={() => {
+                const next = !instantTyping;
+                onInstantTypingChange?.(next);
+                showToast?.(next ? '결과를 바로 보여드릴게요' : '타이핑 연출로 보여드릴게요', 'success');
+              }}
+            >
+              <button
+                className={`toggle ${instantTyping ? 'on' : 'off'}`}
+                role="switch"
+                aria-checked={instantTyping}
+                aria-label="결과 바로 보기"
+                onClick={e => {
+                  e.stopPropagation();
+                  const next = !instantTyping;
+                  onInstantTypingChange?.(next);
+                  showToast?.(next ? '결과를 바로 보여드릴게요' : '타이핑 연출로 보여드릴게요', 'success');
+                }}
+              />
+              <span className="toggle-label">결과 바로 보기 {instantTyping ? '(켜짐)' : '(꺼짐)'}</span>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab 2 추가 섹션: 기능 안내 다시 보기 ── */}
+        {tab === 2 && (
+          <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>
+            <div className="card-title">기능 안내 다시 보기</div>
+            <div className="card-sub" style={{ marginBottom: 8 }}>
+              처음 만났을 때 보여드린 화면 안내를 다시 볼 수 있어요.
+            </div>
+            <button
+              className="btn-sub"
+              style={{ width: '100%', padding: '12px 0', borderRadius: 'var(--r1)', border: '1px solid var(--line)', background: 'var(--bg2)', color: 'var(--t2)', fontSize: 'var(--sm)', fontFamily: 'var(--ff)', cursor: 'pointer' }}
+              onClick={() => {
+                try { localStorage.removeItem('byeolsoom_tour_v1'); } catch {}
+                showToast?.('홈 화면으로 가면 안내가 다시 시작돼요', 'success');
+              }}
+            >
+              안내 다시 보기
+            </button>
+          </div>
+        )}
+
         {/* ── Tab 2 추가 섹션: 푸시 알림 설정 ── */}
         {tab === 2 && (
           <div className="card" style={{ gap: 'var(--sp2)', marginTop: 12 }}>

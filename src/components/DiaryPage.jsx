@@ -6,6 +6,7 @@ import { loadAnalysisCache, saveAnalysisCache } from "../lib/analysisCache.js";
 import { getDailyDateKey } from "../lib/dailyDataAccess.js";
 import { postAskText } from "../lib/askApi.js";
 import { useUserCtx, useSajuCtx } from "../context/AppContext.jsx";
+import { useAppStore } from "../store/useAppStore.js";
 
 // ═══════════════════════════════════════════════════════════
 //  📓 나의 하루를 별숨에게 — 일기 페이지
@@ -89,6 +90,34 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
   const today = getDailyDateKey();
   const targetDate = viewDate || today;
   const isPastEntry = !!(viewDate && viewDate !== today);
+
+  // ── 작성 중 임시저장 — 모바일 PWA 탭 회수/새로고침으로 입력이 날아가지 않게 ──
+  const draftKey = `byeolsoom_diary_draft_${targetDate}`;
+  useEffect(() => {
+    if (isPastEntry || initialContent) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d.mood) setMood(d.mood);
+      if (d.weather) setWeather(d.weather);
+      if (d.energy) setEnergy(d.energy);
+      if (d.gratitude) setGratitude(d.gratitude);
+      if (d.tomorrowGoal) setTomorrowGoal(d.tomorrowGoal);
+      if (d.content) setContent(d.content);
+    } catch {}
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (isPastEntry || submitted) return;
+    const t = setTimeout(() => {
+      if (!mood && !weather && !energy && !gratitude && !tomorrowGoal && !content) return;
+      try { localStorage.setItem(draftKey, JSON.stringify({ mood, weather, energy, gratitude, tomorrowGoal, content })); } catch {}
+    }, 400);
+    return () => clearTimeout(t);
+  }, [mood, weather, energy, gratitude, tomorrowGoal, content, submitted, isPastEntry, draftKey]);
+  useEffect(() => {
+    if (submitted) { try { localStorage.removeItem(draftKey); } catch {} }
+  }, [submitted, draftKey]);
 
   // 연속 작성 스트릭 계산
   useEffect(() => {
@@ -248,7 +277,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('이 일기를 삭제할까요?')) return;
+    if (!(await useAppStore.getState().showConfirm('이 일기를 삭제할까요?'))) return;
     if (!todayEntry?.id) return;
     const client = getAuthenticatedClient(user.id) || supabase;
     try {
@@ -395,7 +424,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
         <div style={{ marginBottom: 16 }}>
           <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.1rem' }}></span>
+              <span style={{ fontSize: '1.1rem' }}>✦</span>
               <div>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>별숨의 해석</div>
                 <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 오늘을 읽었어요</div>
@@ -551,7 +580,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
         <div style={{ marginBottom: 16 }}>
           <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.1rem' }}></span>
+              <span style={{ fontSize: '1.1rem' }}>✦</span>
               <div>
                 <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700 }}>별숨의 해석</div>
                 <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 그날을 읽었어요</div>
@@ -790,7 +819,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
             <div style={{ marginTop: 8, marginBottom: 8 }}>
               <div style={{ background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--acc)', overflow: 'hidden' }}>
                 <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: '1.1rem' }}></span>
+                  <span style={{ fontSize: '1.1rem' }}>✦</span>
                   <div>
                     <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, letterSpacing: '.04em' }}>별숨의 해석</div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--t4)', marginTop: 2 }}>사주와 별자리로 오늘을 읽었어요</div>
@@ -882,7 +911,7 @@ export default function DiaryPage({ askReview, setStep, setDiy, callApi, viewDat
               position: 'absolute', top: '50%', left: '50%',
               transform: 'translate(-50%, -50%)',
               fontSize: '1.6rem',
-            }}></div>
+            }}>✦</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 10 }}>

@@ -1006,7 +1006,7 @@ export default function CommunityPage({ showToast, dailyResult }) {
 
   async function handleDeletePost(postId) {
     if (!kakaoId) return;
-    if (!window.confirm('이 게시글을 삭제할까요?')) return;
+    if (!(await useAppStore.getState().showConfirm('이 게시글을 삭제할까요?'))) return;
     const client = getAuthenticatedClient(kakaoId);
     const { error } = await client.from('community_posts')
       .delete()

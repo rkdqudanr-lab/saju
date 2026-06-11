@@ -4,7 +4,7 @@
  * 탭 2: ☯️ 사주 뽑기 (오행/천간/지지/육십갑자)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { getAuthenticatedClient } from '../lib/supabase.js';
 import { useAppStore } from '../store/useAppStore.js';
@@ -16,6 +16,7 @@ import {
   SAJU_POOL,    SAJU_GRADE_CONFIG,  SAJU_PROB_TABLE, pullOneSajuResonance, pull10SajuResonance, SAJU_GRADE_ORDER,
   ASPECTS, getDailyResonanceItems, getItemResonanceReason,
 } from '../utils/gachaItems.js';
+import { useModalA11y, useModalBackClose } from '../hooks/useModalA11y.js';
 import GachaGraphic from './GachaGraphic.jsx';
 import Mascot from './Mascot.jsx';
 import AnimatedMascot from './AnimatedMascot.jsx';
@@ -23,33 +24,41 @@ import AnimatedMascot from './AnimatedMascot.jsx';
 // ─── 공용 — 반짝이 파티클 ─────────────────────────────────────
 function Sparkles({ grade, cfg }) {
   const count = { 2: 5, 3: 9, 4: 14 }[['satellite','ohaeng'].includes(grade) ? 1 : ['planet','cheongan'].includes(grade) ? 2 : ['galaxy','jiji'].includes(grade) ? 3 : 4] ?? 5;
+  // 랜덤값을 마운트 시 1회만 생성 — 리렌더마다 파티클이 재발화하는 문제 방지
+  const particles = useMemo(() => Array.from({ length: count }).map((_, i) => {
+    const angle = (i / count) * 360;
+    const dist  = 28 + Math.random() * 18;
+    return {
+      sx: Math.cos((angle * Math.PI) / 180) * dist,
+      sy: Math.sin((angle * Math.PI) / 180) * dist,
+      dur: 0.55 + Math.random() * 0.45,
+    };
+  }), [count]);
   if (count <= 1) return null;
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', borderRadius: 'inherit' }}>
-      {Array.from({ length: count }).map((_, i) => {
-        const angle = (i / count) * 360;
-        const dist  = 28 + Math.random() * 18;
-        return (
-          <div key={i} style={{
-            position: 'absolute', top: '50%', left: '50%',
-            width: 4, height: 4, borderRadius: '50%', background: cfg.color,
-            '--sx': `${Math.cos((angle * Math.PI) / 180) * dist}px`,
-            '--sy': `${Math.sin((angle * Math.PI) / 180) * dist}px`,
-            animation: `gacha-sparkle ${0.55 + Math.random() * 0.45}s ease-out ${i * 0.05}s forwards`,
-            opacity: 0,
-          }} />
-        );
-      })}
+      {particles.map((p, i) => (
+        <div key={i} style={{
+          position: 'absolute', top: '50%', left: '50%',
+          width: 4, height: 4, borderRadius: '50%', background: cfg.color,
+          '--sx': `${p.sx}px`,
+          '--sy': `${p.sy}px`,
+          animation: `gacha-sparkle ${p.dur}s ease-out ${i * 0.05}s forwards`,
+          opacity: 0,
+        }} />
+      ))}
     </div>
   );
 }
 
 // ─── 공용 — 소형 결과 카드 (10연 그리드) ─────────────────────
-function SmallResultCard({ item, index, revealed, gradeConfig, onClick }) {
+const SmallResultCard = memo(function SmallResultCard({ item, index, revealed, gradeConfig, onClick }) {
   const cfg = gradeConfig[item.grade];
   return (
-    <div
+    <button
       onClick={() => !revealed && onClick(index)}
+      disabled={revealed}
+      aria-label={revealed ? `${cfg.label} ${item.name}` : `${index + 1}번째 카드 공개하기`}
       style={{
         position: 'relative', borderRadius: 12,
         border: `1.5px solid ${revealed ? cfg.border : 'var(--line)'}`,
@@ -60,6 +69,7 @@ function SmallResultCard({ item, index, revealed, gradeConfig, onClick }) {
         animation: `gacha-card-in .4s cubic-bezier(.34,1.56,.64,1) ${index * 0.06}s both`,
         minHeight: 92, justifyContent: 'center',
         transition: 'background .3s, border-color .3s',
+        fontFamily: 'var(--ff)',
       }}
     >
       {revealed ? (
@@ -68,28 +78,30 @@ function SmallResultCard({ item, index, revealed, gradeConfig, onClick }) {
           <div style={{ animation: `gacha-bounce .5s ease ${index * 0.06 + 0.15}s both`, display:'flex', justifyContent:'center', marginBottom: 4 }}>
             <GachaGraphic item={item} size={36} />
           </div>
-          <div style={{ fontSize: '9px', fontWeight: 700, color: cfg.color, letterSpacing: '.04em' }}>
+          <div style={{ fontSize: 'var(--2xs)', fontWeight: 700, color: cfg.color, letterSpacing: '.04em' }}>
             {cfg.label}
           </div>
-          <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--t1)', textAlign: 'center', lineHeight: 1.25 }}>
+          <div style={{ fontSize: 'var(--2xs)', fontWeight: 600, color: 'var(--t1)', textAlign: 'center', lineHeight: 1.25 }}>
             {item.name}
           </div>
         </>
       ) : (
         <>
-          <div style={{ fontSize: 18, opacity: .35 }}></div>
-          <div style={{ fontSize: '9px', color: 'var(--t4)' }}>탭</div>
+          <div style={{ fontSize: 18, opacity: .35 }}>✦</div>
+          <div style={{ fontSize: 'var(--2xs)', color: 'var(--t4)' }}>탭</div>
         </>
       )}
-    </div>
+    </button>
   );
-}
+});
 
 // ─── 공용 — 결과 오버레이 ─────────────────────────────────────
 function ResultOverlay({ results, gradeConfig, onClose, onGoSpace, resonanceContext }) {
   const [revealed, setRevealed] = useState(new Set());
   const isSingle    = results.length === 1;
   const allRevealed = revealed.size === results.length;
+  const overlayRef  = useModalA11y({ open: true, onClose: () => { if (revealed.size === results.length) onClose(); } });
+  useModalBackClose('gacha-result', true, onClose);
   const gradeOrder  = Object.keys(gradeConfig);
   const topGrade    = gradeOrder.slice().reverse().find(g => results.some(r => r.grade === g));
   const topCfg      = gradeConfig[topGrade] || {};
@@ -111,11 +123,13 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace, resonanceCont
     : '#0d0b14';
 
   return createPortal(
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9000,
+    /* 연출상 항상 다크 배경 — data-theme 강제로 내부 var()가 라이트 값으로 풀리는 것 방지 */
+    <div data-theme="dark" ref={overlayRef} role="dialog" aria-modal="true" aria-label="뽑기 결과" style={{
+      position: 'fixed', inset: 0, zIndex: 'var(--z-modal, 10000)',
       background: bgGradient,
       display: 'flex', flexDirection: 'column',
       animation: 'gacha-result-bg .3s ease',
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)',
     }}>
       <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: '#fff' }}>
@@ -157,11 +171,11 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace, resonanceCont
                   <div style={{ animation: 'gacha-bounce .6s ease .2s both', marginTop: 10, marginBottom: 5 }}>
                     <GachaGraphic item={item} size={90} />
                   </div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: cfg.color, letterSpacing: '.06em' }}>{cfg.label}</div>
+                  <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: cfg.color, letterSpacing: '.06em' }}>{cfg.label}</div>
                   <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: item.affixColor || '#fff', textAlign: 'center' }}>{item.name}</div>
                   <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.55)', textAlign: 'center', lineHeight: 1.6 }}>{item.description}</div>
                   <div style={{
-                    fontSize: '11px', color: 'rgba(255,255,255,.72)', textAlign: 'left', lineHeight: 1.65,
+                    fontSize: 'var(--xs)', color: 'rgba(255,255,255,.72)', textAlign: 'left', lineHeight: 1.65,
                     background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.12)',
                     borderRadius: 12, padding: '9px 10px', width: '100%',
                   }}>
@@ -169,7 +183,7 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace, resonanceCont
                   </div>
                   <div style={{
                     padding: '5px 12px', borderRadius: 20, background: cfg.bg,
-                    border: `1px solid ${cfg.border}`, fontSize: '11px', color: cfg.color, fontWeight: 600, textAlign: 'center',
+                    border: `1px solid ${cfg.border}`, fontSize: 'var(--xs)', color: cfg.color, fontWeight: 600, textAlign: 'center',
                   }}>컬렉션 오브제</div>
                 </>
               ) : (
@@ -198,7 +212,7 @@ function ResultOverlay({ results, gradeConfig, onClose, onGoSpace, resonanceCont
                 background: 'rgba(255,255,255,.06)',
                 padding: '11px 12px',
                 color: 'rgba(255,255,255,.74)',
-                fontSize: '11px',
+                fontSize: 'var(--xs)',
                 lineHeight: 1.65,
               }}>
                 <div style={{ color: topCfg.color || '#fff', fontWeight: 800, marginBottom: 4 }}>
@@ -251,7 +265,7 @@ function DailyResonancePanel({ items, axisKey, onGoSpace }) {
           <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 900, letterSpacing: '.04em' }}>
             오늘의 인연 오브제
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1.5, marginTop: 3 }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5, marginTop: 3 }}>
             오늘 가까운 기운: {axis.emoji} {axis.label}
           </div>
         </div>
@@ -261,7 +275,7 @@ function DailyResonancePanel({ items, axisKey, onGoSpace }) {
           style={{
             flexShrink: 0, border: '1px solid var(--acc)', background: 'var(--bg1)',
             color: 'var(--gold)', borderRadius: 20, padding: '4px 10px',
-            fontSize: '10px', fontWeight: 800, fontFamily: 'var(--ff)', cursor: 'pointer',
+            fontSize: 'var(--2xs)', fontWeight: 800, fontFamily: 'var(--ff)', cursor: 'pointer',
           }}
         >
           도감
@@ -282,17 +296,17 @@ function DailyResonancePanel({ items, axisKey, onGoSpace }) {
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
                 <GachaGraphic item={item} size={34} />
               </div>
-              <div style={{ fontSize: '10px', color: cfg?.color || 'var(--gold)', fontWeight: 800, marginBottom: 4 }}>
+              <div style={{ fontSize: 'var(--2xs)', color: cfg?.color || 'var(--gold)', fontWeight: 800, marginBottom: 4 }}>
                 {cfg?.label}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 800, lineHeight: 1.25, wordBreak: 'keep-all' }}>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 800, lineHeight: 1.25, wordBreak: 'keep-all' }}>
                 {item.bodyName}
               </div>
             </div>
           );
         })}
       </div>
-      <div style={{ marginTop: 10, fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6 }}>
+      <div style={{ marginTop: 10, fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.6 }}>
         인연 오브제는 오늘의 사주 균형과 날짜 흐름을 바탕으로 고른 후보예요. 오늘 뽑기는 같은 등급 안에서 인연 후보가 조금 더 가까워져요.
       </div>
     </section>
@@ -323,7 +337,7 @@ function GachaBanner({ currentBP, pulling, onPull, bgStyle, accentColor, title, 
           {title}
         </div>
         <div style={{ fontSize: 'var(--md)', fontWeight: 800, color: '#fff', marginBottom: 4 }}>{subtitle}</div>
-        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.45)', marginBottom: 18, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 'var(--xs)', color: 'rgba(255,255,255,.45)', marginBottom: 18, lineHeight: 1.6 }}>
           {statsLine}
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -335,7 +349,7 @@ function GachaBanner({ currentBP, pulling, onPull, bgStyle, accentColor, title, 
               flex: 1, padding: '13px 8px', borderRadius: 'var(--r1)',
               background: currentBP >= 10 ? `${accentColor}22` : 'rgba(255,255,255,.04)',
               border: `1.5px solid ${currentBP >= 10 ? `${accentColor}80` : 'rgba(255,255,255,.08)'}`,
-              color: currentBP >= 10 ? accentColor : 'rgba(255,255,255,.25)',
+              color: currentBP >= 10 ? accentColor : 'rgba(255,255,255,.65)',
               fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
               cursor: currentBP >= 10 && !pulling ? 'pointer' : 'not-allowed', transition: 'all .2s',
             }}
@@ -346,7 +360,7 @@ function GachaBanner({ currentBP, pulling, onPull, bgStyle, accentColor, title, 
                 뽑는 중...
               </span>
             ) : (
-              <>1회 뽑기<br /><span style={{ fontSize: '11px', fontWeight: 400 }}>10 BP</span></>
+              <>1회 뽑기<br /><span style={{ fontSize: 'var(--xs)', fontWeight: 400 }}>{currentBP >= 10 ? '10 BP' : '10 BP 필요'}</span></>
             )}
           </button>
           {/* 10연 */}
@@ -357,7 +371,7 @@ function GachaBanner({ currentBP, pulling, onPull, bgStyle, accentColor, title, 
               flex: 1.4, padding: '13px 8px', borderRadius: 'var(--r1)',
               background: currentBP >= 90 ? `${accentColor}30` : 'rgba(255,255,255,.04)',
               border: `1.5px solid ${currentBP >= 90 ? `${accentColor}70` : 'rgba(255,255,255,.08)'}`,
-              color: currentBP >= 90 ? accentColor : 'rgba(255,255,255,.25)',
+              color: currentBP >= 90 ? accentColor : 'rgba(255,255,255,.65)',
               fontWeight: 700, fontSize: 'var(--xs)', fontFamily: 'var(--ff)',
               cursor: currentBP >= 90 && !pulling ? 'pointer' : 'not-allowed',
               transition: 'all .2s', position: 'relative', overflow: 'hidden',
@@ -376,8 +390,8 @@ function GachaBanner({ currentBP, pulling, onPull, bgStyle, accentColor, title, 
                   animation: currentBP >= 90 ? 'gacha-shine 2.5s ease infinite' : 'none',
                 }} />
                 10연 뽑기<br />
-                <span style={{ fontSize: '11px' }}>90 BP</span>
-                <span style={{ display: 'block', fontSize: '10px', color: single10Label.color, marginTop: 2 }}>
+                <span style={{ fontSize: 'var(--xs)' }}>{currentBP >= 90 ? '90 BP' : '90 BP 필요'}</span>
+                <span style={{ display: 'block', fontSize: 'var(--2xs)', color: single10Label.color, marginTop: 2 }}>
                   {single10Label.text}
                 </span>
               </>
@@ -430,14 +444,14 @@ function ItemPreview({ pool, gradeConfig, gradeOrder, probTable }) {
             borderRadius: 12, padding: '16px 8px', textAlign: 'center',
           }}>
             <div style={{ fontSize: 24, marginBottom: 6 }}>{item.emoji}</div>
-            <div style={{ fontSize: '11px', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 4, wordBreak: 'keep-all' }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t1)', fontWeight: 600, lineHeight: 1.3, marginBottom: 4, wordBreak: 'keep-all' }}>
               {item.bodyName}
             </div>
-            <div style={{ fontSize: '10px', color: cfg.color, wordBreak: 'keep-all' }}>{item.effectLabel}</div>
+            <div style={{ fontSize: 'var(--2xs)', color: cfg.color, wordBreak: 'keep-all' }}>{item.effectLabel}</div>
           </div>
         ))}
       </div>
-      <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 8 }}>
+      <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8 }}>
         {cfg.label} 등급: {pool.filter(i => i.grade === activeGrade).length}종
         ({previewBodies.length}개 × 6가지 속성)
       </div>
@@ -460,9 +474,9 @@ function SynthGuide({ gradeConfig, gradeOrder, setStep }) {
             <span key={grade} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{
                 padding: '3px 8px', borderRadius: 12, background: gcfg.bg,
-                border: `1px solid ${gcfg.border}`, color: gcfg.color, fontWeight: 700, fontSize: '11px',
+                border: `1px solid ${gcfg.border}`, color: gcfg.color, fontWeight: 700, fontSize: 'var(--xs)',
               }}>{gcfg.label}</span>
-              {i < arr.length - 1 && <span style={{ color: 'var(--t4)', fontSize: '11px' }}>×3 →</span>}
+              {i < arr.length - 1 && <span style={{ color: 'var(--t4)', fontSize: 'var(--xs)' }}>×3 →</span>}
             </span>
           );
         })}
@@ -537,21 +551,27 @@ export default function GachaPage({ showToast, consentFlags }) {
         showToast?.('로컬 환경에서는 Supabase 연결 후 이용 가능해요', 'info');
         return;
       }
-      const { ok, newBP } = await spendBP(client, kakaoId, cost, `GACHA_${tab.toUpperCase()}_${count}_${Date.now()}`, `${tab === 'saju' ? '사주' : '우주'} 뽑기 ${count}회`);
-      if (!ok) { showToast?.('BP가 부족해요', 'error'); return; }
+      const { ok, newBP, failReason } = await spendBP(client, kakaoId, cost, `GACHA_${tab.toUpperCase()}_${count}_${Date.now()}`, `${tab === 'saju' ? '사주' : '우주'} 뽑기 ${count}회`);
+      if (!ok) { showToast?.(failReason === 'network' ? '연결이 불안정해요. 잠시 후 다시 시도해주세요' : 'BP가 부족해요', 'error'); return; }
 
       const resonancePullContext = { saju, today, userId: kakaoId || user?.nickname || 'guest' };
       const pulled = tab === 'saju'
         ? (count === 1 ? [pullOneSajuResonance(resonancePullContext)] : pull10SajuResonance(resonancePullContext))
         : (count === 1 ? [pullOneResonance(resonancePullContext)]     : pull10Resonance(resonancePullContext));
 
-      await client.from('user_shop_inventory').upsert(
+      const { error: invError } = await client.from('user_shop_inventory').upsert(
         pulled.map(item => ({
           kakao_id: String(kakaoId), item_id: item.id,
           is_equipped: false, unlocked_at: new Date().toISOString(),
         })),
         { onConflict: 'kakao_id,item_id', ignoreDuplicates: true },
       );
+      if (invError) {
+        // 지급 실패 — 차감한 BP 환급 후 종료 (BP만 사라지는 사고 방지)
+        await client.from('users').update({ current_bp: (newBP ?? currentBP - cost) + cost }).eq('kakao_id', String(kakaoId));
+        showToast?.('오브제 지급에 실패해 BP를 돌려드렸어요. 다시 시도해주세요', 'error');
+        return;
+      }
 
       setCurrentBP(newBP ?? currentBP - cost);
       setLastPullMeta({ count, label: tab === 'saju' ? '사주 뽑기' : '우주 뽑기' });
@@ -592,7 +612,7 @@ export default function GachaPage({ showToast, consentFlags }) {
           display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '7px 18px', borderRadius: 24, background: 'var(--goldf)', border: '1px solid var(--acc)',
         }}>
-          <span style={{ fontSize: 13, color: 'var(--gold)' }}></span>
+          <span style={{ fontSize: 13, color: 'var(--gold)' }}>✦</span>
           <span style={{ fontSize: 'var(--sm)', fontWeight: 800, color: 'var(--gold)' }}>
             {loadingBP ? '...' : currentBP} BP
           </span>
@@ -605,7 +625,7 @@ export default function GachaPage({ showToast, consentFlags }) {
           <div style={{ fontSize: 'var(--xs)', color: 'var(--t3)', lineHeight: 1.5 }}>
             같은 오브제를 <strong style={{ color: 'var(--gold)' }}>일반·레어·영웅·전설</strong> 모두 모으면 컬렉션 완성!
           </div>
-          <button onClick={() => setStep(STEP.BYEOLSOOM_SPACE)} style={{ flexShrink: 0, fontSize: '10px', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
+          <button onClick={() => setStep(STEP.BYEOLSOOM_SPACE)} style={{ flexShrink: 0, fontSize: 'var(--2xs)', color: 'var(--gold)', background: 'var(--goldf)', border: '1px solid var(--acc)', borderRadius: 20, padding: '3px 10px', fontFamily: 'var(--ff)', cursor: 'pointer', fontWeight: 700 }}>
             도감
           </button>
         </div>
@@ -698,7 +718,7 @@ export default function GachaPage({ showToast, consentFlags }) {
                 <span style={{ fontSize: 'var(--xs)', fontWeight: 700, color: row.color }}>{row.prob}%</span>
               </div>
             ))}
-            <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 8, lineHeight: 1.8 }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 8, lineHeight: 1.8 }}>
               10연: {isSaju ? '천간' : '행성'} 이상 1개 보장<br />
               합성: {gradeOrder.map(g => gradeConfig[g].label).join(' → ')}
             </div>
@@ -723,7 +743,7 @@ export default function GachaPage({ showToast, consentFlags }) {
           <div style={{ fontSize: 'var(--xs)', fontWeight: 700, color: 'var(--t2)', marginBottom: 2 }}>
             🛍️ 오브제를 모아 컬렉션을 완성해봐요
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.5 }}>
             숍과 뽑기로 모은 소재를 공간 장식으로 전환해요
           </div>
         </div>
@@ -732,7 +752,7 @@ export default function GachaPage({ showToast, consentFlags }) {
           style={{
             flexShrink: 0, padding: '6px 12px', borderRadius: 20,
             background: 'none', border: '1px solid var(--line)',
-            color: 'var(--t3)', fontSize: '11px', fontFamily: 'var(--ff)', cursor: 'pointer',
+            color: 'var(--t3)', fontSize: 'var(--xs)', fontFamily: 'var(--ff)', cursor: 'pointer',
           }}
         >
           별숨 숍 →

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppStore } from '../store/useAppStore.js';
-import { useModalA11y } from '../hooks/useModalA11y.js';
+import { useModalA11y, useModalBackClose } from '../hooks/useModalA11y.js';
 
 export default function BPConfirmModal() {
   const bpConfirmState   = useAppStore((s) => s.bpConfirmState);
   const resolveBPConfirm = useAppStore((s) => s.resolveBPConfirm);
   const [visible, setVisible] = useState(false);
   const sheetRef = useModalA11y({ open: bpConfirmState.open, onClose: () => resolveBPConfirm(false) });
+  useModalBackClose('bp-confirm', bpConfirmState.open, () => resolveBPConfirm(false));
 
   useEffect(() => {
     if (bpConfirmState.open) {
@@ -101,7 +102,7 @@ export default function BPConfirmModal() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <div style={{ fontSize: 11, color: 'var(--t4)' }}>−{cost}</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>−{cost}</div>
               <svg width="28" height="12" viewBox="0 0 28 12" fill="none">
                 <path d="M2 6h20M16 2l6 4-6 4" stroke="var(--t4)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -141,7 +142,7 @@ export default function BPConfirmModal() {
                 background: 'var(--gold)',
                 border: 'none',
                 borderRadius: 'var(--r1)',
-                color: '#0D0B14',
+                color: 'var(--on-gold)',
                 fontSize: 'var(--sm)', fontWeight: 700,
                 fontFamily: 'var(--ff)', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,

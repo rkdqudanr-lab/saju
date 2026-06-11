@@ -158,9 +158,9 @@ export default function DreamPage({ user, form, buildCtx, callApi: callApiProp, 
         return;
       }
       const client = getAuthenticatedClient(user.id);
-      const { ok, newBP } = await spendBP(client, user.id, FEATURE_COST, 'DREAM_READING', '꿈해몽');
+      const { ok, newBP, failReason } = await spendBP(client, user.id, FEATURE_COST, 'DREAM_READING', '꿈해몽');
       if (!ok) {
-        showToast('BP가 부족해요', 'error');
+        showToast(failReason === 'network' ? '연결이 불안정해요. 잠시 후 다시 시도해주세요' : 'BP가 부족해요', 'error');
         return;
       }
       const cur = useAppStore.getState().gamificationState || {};

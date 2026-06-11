@@ -67,7 +67,7 @@ export default function BPInsufficientModal({
 
         {/* 헤더 */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: '1.6rem', marginBottom: 8 }}></div>
+          <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>✦</div>
           <div style={{ fontSize: 'var(--md)', fontWeight: 700, color: 'var(--t1)', marginBottom: 6 }}>
             BP가 부족해요
           </div>
@@ -85,12 +85,12 @@ export default function BPInsufficientModal({
           marginBottom: 16,
         }}>
           <div>
-            <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 3, letterSpacing: '.04em' }}>현재 BP</div>
+            <div style={{ fontSize: 'var(--2xs)', color: 'var(--t4)', marginBottom: 3, letterSpacing: '.04em' }}>현재 BP</div>
             <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--gold)' }}>{currentBp}</div>
           </div>
           <div style={{ color: 'var(--t4)', fontSize: 'var(--sm)' }}>→</div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', color: 'var(--t4)', marginBottom: 3, letterSpacing: '.04em' }}>필요 BP</div>
+            <div style={{ fontSize: 'var(--2xs)', color: 'var(--t4)', marginBottom: 3, letterSpacing: '.04em' }}>필요 BP</div>
             <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--rose)' }}>{requiredBp}</div>
           </div>
         </div>

@@ -84,7 +84,8 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
         max_tokens: maxTokens,
-        ...(data.isDaily ? { temperature: 0.65 } : {}),
+        // 기본 1.0은 한국어 오타·조사 누락이 잦음 — 다양성 요구는 프롬프트가 담당
+        temperature: data.isDaily ? 0.65 : 0.8,
         stream: true,
         system: [{ type: "text", text: systemWithContext, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: data.userMessage }],

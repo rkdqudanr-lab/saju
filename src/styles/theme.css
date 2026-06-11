@@ -5,7 +5,7 @@
   --ff:'Pretendard',-apple-system,sans-serif;
   --bg:#07050A;--bg1:#0D0B14;--bg2:#151221;--bg3:#1C182B;--bg4:#25203A;
   --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.05);
-  --t1:#F8F6FF;--t2:#D4CCE6;--t3:#A499C0;--t4:#7A6E9B;
+  --t1:#F8F6FF;--t2:#D4CCE6;--t3:#A499C0;--t4:#8E82B0; /* t4: WCAG 4.5:1 대비 보정 (#7A6E9B→) */
   --gold:#FFC85C;--gold2:#E8B048;
   --goldf:rgba(255,200,92,.08);--golds:rgba(255,200,92,.04);--acc:rgba(255,200,92,.15);
   --lav:#9B8EC4;--lavf:rgba(155,142,196,.1);--lavacc:rgba(155,142,196,.25);

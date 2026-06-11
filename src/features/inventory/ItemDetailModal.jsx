@@ -32,7 +32,7 @@ export default function ItemDetailModal({ item, onClose }) {
         )}
         {(item.effect || item.effectLabel) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 'var(--xs)', color: cfg?.color || 'var(--gold)' }}>
-            <span></span><span style={{ fontWeight: 600 }}>{item.effect || item.effectLabel}</span>
+            <span>✦</span><span style={{ fontWeight: 600 }}>{item.effect || item.effectLabel}</span>
           </div>
         )}
         {item.grade && (

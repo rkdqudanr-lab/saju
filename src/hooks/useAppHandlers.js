@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { parseAccSummary, PKGS, DAILY_QUESTIONS, SIGN_MOOD } from "../utils/constants.js";
+import { parseAccSummary, PKGS, DAILY_QUESTIONS, SIGN_MOOD, IS_BETA } from "../utils/constants.js";
 import { STEP } from "../utils/steps.js";
 import { saveShareCard, saveReportImage, saveProphecyImage, saveCompatImage, saveChatImage, captureShareCard } from "../utils/imageExport.js";
 import { getTodayStr } from "../utils/quiz.js";
@@ -42,8 +42,6 @@ export function useAppHandlers({
     setCardSummary(s);
   }, [answers]);
 
-  const IS_BETA = true;
-
   // ── 채팅 중 프로필 감지 넛지 ──
   useEffect(() => {
     if (chatHistory.length < 2) return;
@@ -65,8 +63,9 @@ export function useAppHandlers({
   // ── 온보딩 완료 ──
   const handleOnboardingFinish = useCallback(() => {
     saveSettings({ onboarded: true });
-    setStep(STEP.HOME);
-  }, [saveSettings, setStep]);
+    // 게스트는 홈(로그인 랜딩)으로 돌려보내면 데드엔드 — 바로 체험 상담으로 보낸다
+    setStep(user ? STEP.HOME : STEP.QUESTION);
+  }, [saveSettings, setStep, user]);
 
   // ── 퀴즈 답변 ──
   const handleQuizAnswer = useCallback((question, value) => {

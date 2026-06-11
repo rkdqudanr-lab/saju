@@ -214,7 +214,7 @@ const READING_TYPES = [
     emoji: '📅',
     title: '올해 운세 심층 분석',
     desc: '올해 연도의 운세를 월별로 상세히 분석해드려요. 중요한 시점과 기회를 미리 파악하세요.',
-    flag: { isWeekly: true, responseStyle: 'F', precision_level: 'high' },
+    flag: { isYearly: true, responseStyle: 'F', precision_level: 'high' },
     prompt: `올해(${new Date().getFullYear()}년) 운세를 심층 분석해줘요. 분기별 흐름, 중요 시점, 조심할 달, 기회가 오는 달을 상세히 알려주세요.`,
   },
 ];
@@ -390,7 +390,7 @@ export default function SpecialReadingPage({ callApi, showToast, consentFlags })
       {/* 아이템 미보유 */}
       {!loading && !result && ownedItems !== null && !hasItems && (
         <div style={{ margin: '0 24px', padding: '28px 20px', background: 'var(--bg2)', borderRadius: 'var(--r2)', border: '1px solid var(--line)', textAlign: 'center' }}>
-          <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}></div>
+          <div style={{ fontSize: '1.8rem', marginBottom: 12, color: 'var(--t4)' }}>✦</div>
           <div style={{ fontSize: 'var(--sm)', fontWeight: 700, color: 'var(--t1)', marginBottom: 8 }}>
             특별 상담권이 없어요
           </div>

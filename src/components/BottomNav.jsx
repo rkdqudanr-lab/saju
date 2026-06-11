@@ -11,6 +11,7 @@ import { useAppStore } from '../store/useAppStore.js';
 import Icon from './Icon.jsx';
 import Mascot from './Mascot.jsx';
 import { STEP, STEP_GROUPS } from '../utils/steps.js';
+import { useModalA11y, useModalBackClose } from '../hooks/useModalA11y.js';
 
 const MENU_GROUPS = {
   today: {
@@ -99,16 +100,30 @@ const TAB_ICONS = {
   settings: 'cog',
 };
 
-function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
+function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox, showToast }) {
+  const sheetRef = useModalA11y({ open: true, onClose });
   const group = MENU_GROUPS[groupId];
+
+  // 드로어 열린 동안 배경 스크롤 잠금 (스크롤 전파로 드로어가 저절로 닫히는 문제 방지)
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   if (!group) return null;
 
   const requiresLogin = new Set([STEP.QUESTION, STEP.DEEP_INTERVIEW, STEP.FUTURE_PROPHECY, STEP.NATAL, STEP.COMPREHENSIVE, STEP.DIARY, STEP.DAILY_HOROSCOPE, STEP.TODAY_DETAIL, STEP.DIARY_LIST, STEP.DREAM, STEP.TAEGIL, STEP.NAME_FORTUNE, STEP.MY_PAGE, STEP.STATS, STEP.COMMUNITY, STEP.DAEUN, STEP.ANON_COMPAT, STEP.SPECIAL_READING, STEP.TAROT, STEP.LETTER]);
 
   const handleNav = (item) => {
     let targetStep = item.step;
-    if (requiresLogin.has(targetStep) && !user) targetStep = STEP.PROFILE;
-    if (targetStep === STEP.QUESTION && !formOkApprox) targetStep = STEP.PROFILE;
+    if (requiresLogin.has(targetStep) && !user) {
+      targetStep = STEP.PROFILE;
+      showToast?.('로그인 후 이용할 수 있어요', 'info');
+    } else if (targetStep === STEP.QUESTION && !formOkApprox) {
+      targetStep = STEP.PROFILE;
+      showToast?.('생년월일을 먼저 입력해주세요', 'info');
+    }
     onNav(targetStep);
     onClose();
   };
@@ -125,6 +140,10 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
         }}
       />
       <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${group.label} 메뉴`}
         style={{
           position: 'fixed',
           bottom: 'calc(57px + max(env(safe-area-inset-bottom), 16px))',
@@ -169,7 +188,7 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
             }}>
               {group.label}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--t4)', lineHeight: 1.45, wordBreak: 'keep-all' }}>
+            <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', lineHeight: 1.45, wordBreak: 'keep-all' }}>
               {group.desc}
             </div>
           </div>
@@ -182,6 +201,7 @@ function MenuDrawer({ groupId, onClose, onNav, user, formOkApprox }) {
             padding: '0 12px',
             maxHeight: '50vh',
             overflowY: 'auto',
+            overscrollBehavior: 'contain',
           }}
         >
           {group.items.map((item, idx) => (
@@ -222,11 +242,13 @@ export default function BottomNav() {
   const setStep = useAppStore((s) => s.setStep);
   const user = useAppStore((s) => s.user);
   const formOkApprox = useAppStore((s) => s.formOkApprox);
+  const showToast = useAppStore((s) => s.showToast);
   const [openDrawer, setOpenDrawer] = useState(null);
   const [visible, setVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const openDrawerRef = useRef(openDrawer);
   useEffect(() => { openDrawerRef.current = openDrawer; }, [openDrawer]);
+  useModalBackClose('bottom-drawer', !!openDrawer, () => setOpenDrawer(null));
 
   useEffect(() => {
     setOpenDrawer(null);
@@ -235,14 +257,16 @@ export default function BottomNav() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      if (currentScrollY < 0) return; // iOS 바운스 무시
+      if (openDrawerRef.current) return; // 드로어 열린 동안 숨김/닫힘 동작 없음
       const lastScrollY = lastScrollYRef.current;
+      const delta = currentScrollY - lastScrollY;
       if (currentScrollY < 10) {
         setVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 60) {
-        // 스크롤 다운 중 (숨김)
+      } else if (delta > 8 && currentScrollY > 60) {
+        // 스크롤 다운 중 (숨김) — 8px 히스테리시스로 미세 흔들림 무시
         setVisible(false);
-        if (openDrawerRef.current) setOpenDrawer(null); // 바가 숨겨지면 드로어도 닫음
-      } else if (currentScrollY < lastScrollY) {
+      } else if (delta < -8) {
         // 스크롤 업 중 (보임)
         setVisible(true);
       }
@@ -286,16 +310,20 @@ export default function BottomNav() {
           onNav={(s) => setStep(s)}
           user={user}
           formOkApprox={formOkApprox}
+          showToast={showToast}
         />
       )}
 
       <nav
+        aria-label="주 메뉴"
         style={{
           position: 'fixed',
           bottom: 0,
           left: 0,
           right: 0,
-          zIndex: 9999,
+          zIndex: 'var(--z-nav, 9999)',
+          maxWidth: 480,
+          margin: '0 auto',
           background: 'var(--bg1)',
           borderTop: '1px solid var(--line)',
           display: 'flex',
@@ -312,6 +340,8 @@ export default function BottomNav() {
               data-tour={`nav-${tab.id}`}
               onClick={() => handleTabPress(tab)}
               aria-label={tab.label}
+              aria-current={activeId === tab.id ? 'page' : undefined}
+              aria-expanded={tab.hasDrawer ? openDrawer === tab.id : undefined}
               style={{
                 flex: 1,
                 display: 'flex',
@@ -323,8 +353,6 @@ export default function BottomNav() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                transition: 'opacity var(--trans-fast)',
-                opacity: isActive ? 1 : 0.45,
                 position: 'relative',
               }}
             >

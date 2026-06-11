@@ -162,9 +162,9 @@ export default function FutureProphecyPage({
           return;
         }
         const client = getAuthenticatedClient(user.id);
-        const { ok, newBP } = await spendBP(client, user.id, FEATURE_COST, `PROPHECY_${period}`, '미래 예언');
+        const { ok, newBP, failReason } = await spendBP(client, user.id, FEATURE_COST, `PROPHECY_${period}`, '미래 예언');
         if (!ok) {
-          showToast?.('BP가 부족해요', 'error');
+          showToast?.(failReason === 'network' ? '연결이 불안정해요. 잠시 후 다시 시도해주세요' : 'BP가 부족해요', 'error');
           setPhase('intro');
           return;
         }

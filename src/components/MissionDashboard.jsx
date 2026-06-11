@@ -55,7 +55,7 @@ function MissionRow({ mission, onComplete, isLoading, isJustCompleted }) {
           width: '20px', height: '20px', borderRadius: '4px', flexShrink: 0,
           backgroundColor: isCompleted ? cfg.color : 'var(--bg3)',
           border: isCompleted ? 'none' : `1.5px solid ${cfg.color}66`,
-          color: '#fff', fontSize: '11px', fontWeight: 700,
+          color: '#fff', fontSize: 'var(--xs)', fontWeight: 700,
           transition: 'background-color 0.2s ease',
         }}>
           {isCompleted && <CheckMark />}
@@ -71,7 +71,7 @@ function MissionRow({ mission, onComplete, isLoading, isJustCompleted }) {
           }}>
             {cfg.emoji} {mission.mission_content}
           </div>
-          <div style={{ fontSize: '11px', color: cfg.color, marginTop: '2px', opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--xs)', color: cfg.color, marginTop: '2px', opacity: 0.8 }}>
             {cfg.label}
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function MissionDashboard({
 
         {milestoneReached && (
           <div style={{
-            marginTop: 6, fontSize: '11px', color: 'var(--teal)', fontWeight: 600,
+            marginTop: 6, fontSize: 'var(--xs)', color: 'var(--teal)', fontWeight: 600,
             display: 'flex', alignItems: 'center', gap: 4,
           }}>
             🎉 50% 달성 보너스 +5 BP 지급!
@@ -209,7 +209,7 @@ export default function MissionDashboard({
       <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
         {prescriptions.length > 0 && (
           <>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--t4)', letterSpacing: '.06em', textTransform: 'uppercase', paddingLeft: 2 }}>
+            <div style={{ fontSize: 'var(--2xs)', fontWeight: 700, color: 'var(--t4)', letterSpacing: '.06em', textTransform: 'uppercase', paddingLeft: 2 }}>
               오늘의 처방
             </div>
             {prescriptions.map(m => (
@@ -227,7 +227,7 @@ export default function MissionDashboard({
             {prescriptions.length > 0 && (
               <div style={{ height: '1px', background: 'var(--line)', margin: '4px 0 2px' }} />
             )}
-            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--t4)', letterSpacing: '.06em', textTransform: 'uppercase', paddingLeft: 2 }}>
+            <div style={{ fontSize: 'var(--2xs)', fontWeight: 700, color: 'var(--t4)', letterSpacing: '.06em', textTransform: 'uppercase', paddingLeft: 2 }}>
               오늘의 실천
             </div>
             {behavioral.map(m => (
@@ -260,7 +260,7 @@ export default function MissionDashboard({
             <span style={{ fontSize: '16px' }}>📓</span>
             <div style={{ flex: 1, textAlign: 'left' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold)' }}>오늘 일기를 쓰면 +5 BP</div>
-              <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: 1 }}>별숨에게 오늘 하루를 들려주세요</div>
+              <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)', marginTop: 1 }}>별숨에게 오늘 하루를 들려주세요</div>
             </div>
             <span style={{ fontSize: '12px', color: 'var(--acc)', fontWeight: 700 }}>→</span>
           </button>

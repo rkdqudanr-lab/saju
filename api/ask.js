@@ -74,7 +74,8 @@ export default async function handler(req, res) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    // yearly(2800토큰) 등 장문 모드가 25초를 넘김 — vercel.json maxDuration 60과 함께 상향
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
 
     let response;
     try {
@@ -90,7 +91,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: maxTokens,
-          ...(data.isDaily ? { temperature: 0.65 } : {}),
+          // 기본 1.0은 한국어 오타·조사 누락이 잦음 — 다양성 요구는 프롬프트가 담당
+          temperature: data.isDaily ? 0.65 : 0.8,
           system: [{ type: "text", text: systemWithContext, cache_control: { type: "ephemeral" } }],
           messages: [{ role: "user", content: data.userMessage }],
         }),
@@ -108,7 +110,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ text: body.content?.[0]?.text || "" });
   } catch (error) {
     if (error?.name === "AbortError") {
-      console.error("Anthropic API timeout (25s exceeded)");
+      console.error("Anthropic API timeout (50s exceeded)");
       return res.status(504).json({ error: "별이 잠시 바빴어요. 다시 시도해주세요." });
     }
 

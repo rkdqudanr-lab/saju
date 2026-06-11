@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
+import { IS_BETA } from "../../utils/constants.js";
 
-const IS_BETA = true;
 const REPORT_ERROR_MESSAGE = "별숨이 잠시 길을 잃었어요.\n조금 뒤에 다시 시도해 주세요.";
 
 export function useReportConsultationHandler({ callApi, curPkg, setShowUpgradeModal }) {

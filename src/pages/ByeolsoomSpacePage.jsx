@@ -272,7 +272,7 @@ export default function ByeolsoomSpacePage() {
         {/* 컬렉션 카드 목록 */}
         {loading ? (
           <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--t4)', fontSize: 'var(--xs)' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}></div>불러오는 중...
+            <div style={{ fontSize: 28, marginBottom: 8 }}>✦</div>불러오는 중...
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

@@ -28,7 +28,7 @@ export default function SocialSynergyMission({
           color: '#999',
         }}
       >
-        <div style={{ fontSize: '32px', marginBottom: '8px' }}></div>
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>✦</div>
         <div style={{ fontSize: '13px', lineHeight: 1.6 }}>
           친구로부터 받은 시너지 미션이 없어요
           <br />
@@ -75,7 +75,7 @@ export default function SocialSynergyMission({
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#0D0B14' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--on-gold)' }}>
                       {mission.icon} {mission.title}
                     </div>
                     <div
@@ -201,7 +201,7 @@ export default function SocialSynergyMission({
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#0D0B14' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--on-gold)' }}>
                       {mission.icon} {mission.title}
                     </div>
                     <div

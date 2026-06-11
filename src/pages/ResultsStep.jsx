@@ -33,6 +33,16 @@ function extractFollowUpQuestions(raw) {
       return null;
     }).filter(Boolean);
   }
+
+  // 폴백: 모델이 JSON 대신 번호 목록으로 응답한 경우에도 질문을 살린다
+  const lines = raw.split('\n')
+    .map(l => l.replace(/^\s*\d+[.)]\s*/, '').trim())
+    .filter(l => l.length >= 8 && l.length <= 60 && /[?까요래요까]\s*$/.test(l) && l !== '직접 물어볼게요');
+  if (lines.length >= 2) {
+    const qs = lines.slice(0, 4).map((text, i) => ({ id: `fq_${i + 1}`, text }));
+    qs.push({ id: 'fq_custom', text: '직접 물어볼게요' });
+    return qs;
+  }
   return [];
 }
 

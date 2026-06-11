@@ -397,7 +397,7 @@ export default function ComprehensivePage({ saju, sun, moon, asc, form, buildCtx
         <div style={{ paddingBottom: 40 }}>
           {/* 헤더 */}
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <div style={{ fontSize: '1.6rem', marginBottom: 8 }}></div>
+            <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>✦</div>
             <div style={{ fontSize: 'var(--lg)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '.04em', marginBottom: 6 }}>
               종합 분석
             </div>

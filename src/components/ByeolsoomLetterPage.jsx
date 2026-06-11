@@ -503,7 +503,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
             textAlign: 'center', padding: '40px 20px',
             background: 'var(--bg2)', border: '1px solid var(--line)', borderRadius: 'var(--r2)',
           }}>
-            <div style={{ fontSize: '1.4rem', color: 'var(--t4)', marginBottom: 12 }}></div>
+            <div style={{ fontSize: '1.4rem', color: 'var(--t4)', marginBottom: 12 }}>✦</div>
             <div style={{ fontSize: 'var(--sm)', color: 'var(--t2)', marginBottom: 6 }}>로그인이 필요해요</div>
             <div style={{ fontSize: 'var(--xs)', color: 'var(--t4)' }}>카카오 로그인 후 별숨편지를 이용할 수 있어요</div>
           </div>
@@ -522,7 +522,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
                     padding: '12px 14px', background: 'var(--goldf)', border: '1px solid var(--acc)',
                     borderRadius: 'var(--r1)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10,
                   }}>
-                    <div style={{ fontSize: '1rem', color: 'var(--gold)' }}></div>
+                    <div style={{ fontSize: '1rem', color: 'var(--gold)' }}>✦</div>
                     <div>
                       <div style={{ fontSize: 'var(--xs)', color: 'var(--gold)', fontWeight: 700, marginBottom: 2 }}>이 편지에 담기는 나의 기운</div>
                       <div style={{ fontSize: 'var(--xs)', color: 'var(--t2)' }}>
@@ -616,7 +616,7 @@ export default function ByeolsoomLetterPage({ showToast }) {
                   </div>
                 ) : sentLetters.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--t4)' }}>
-                    <div style={{ fontSize: '1.4rem', marginBottom: 12 }}></div>
+                    <div style={{ fontSize: '1.4rem', marginBottom: 12 }}>✦</div>
                     <div style={{ fontSize: 'var(--sm)', marginBottom: 6 }}>아직 보낸 편지가 없어요</div>
                     <div style={{ fontSize: 'var(--xs)' }}>편지 쓰기 탭에서 첫 편지를 써봐요</div>
                     <button className="btn-main" style={{ marginTop: 20, maxWidth: 160 }} onClick={() => setTab('write')}>
